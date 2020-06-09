@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -103,9 +104,9 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 					WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.seattaken"), player);
 				}else{
 					//We are an assigned ticket, load the entity.
-					EntityLiving entityliving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
-					if(entityliving != null && entityliving.getPositionVector().distanceTo(seat.worldPos) < 35){
-						vehicle.setRiderInSeat(entityliving, seat);
+					EntityLiving entityLiving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
+					if(entityLiving != null && seat.worldPos.distanceTo(new Point3d(entityLiving.posX, entityLiving.posY, entityLiving.posZ)) < 35){
+						vehicle.setRiderInSeat(entityLiving, seat);
 						stack.setTagCompound(null);
 					}else{
 						WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.toofar"), player);

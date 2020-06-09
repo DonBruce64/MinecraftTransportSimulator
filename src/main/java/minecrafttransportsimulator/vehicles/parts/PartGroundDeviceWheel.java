@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
@@ -15,7 +16,6 @@ import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -49,7 +49,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 		if(this.isOnGround()){
 			//Set contact for wheel skid.
 			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
-				BlockPos blockBelow = new BlockPos(worldPos).down();
+				BlockPos blockBelow = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
 				if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
 					contactThisTick = true;
 				}
@@ -104,8 +104,8 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	}
 	
 	@Override
-	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
+	public Point3d getActionRotation(float partialTicks){
+		return new Point3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
 	}
 	
 	@Override

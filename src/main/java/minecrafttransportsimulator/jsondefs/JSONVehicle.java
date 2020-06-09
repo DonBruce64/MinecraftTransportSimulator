@@ -52,8 +52,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float wingSpan;
         public float wingArea;
         public float tailDistance;
-        public float rudderArea;
+        public float aileronArea;
         public float elevatorArea;
+        public float rudderArea;
     }
     
     public class VehicleBlimp{
@@ -74,8 +75,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehiclePart{
     	public boolean isSubPart;
-        public float[] pos;
-        public float[] rot;
+        public double[] pos;
+        public double[] rot;
         public boolean turnsWithSteer;
         public boolean isController;
         public boolean inverseMirroring;
@@ -88,13 +89,13 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         
         //Animation variables.
         public String translationVariable;
-        public float[] translationPosition;
+        public double[] translationPosition;
         public float translationClampMin;
         public float translationClampMax;
         public boolean translationAbsolute;
         public String rotationVariable;
-        public float[] rotationPosition;
-        public float[] rotationAngles;
+        public double[] rotationPosition;
+        public double[] rotationAngles;
         public float rotationClampMin;
         public float rotationClampMax;
         public boolean rotationAbsolute;
@@ -156,8 +157,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleRotatableModelObject{
     	public String partName;
-    	public float[] rotationPoint;
-    	public float[] rotationAxis;
+    	public double[] rotationPoint;
+    	public double[] rotationAxis;
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
@@ -166,7 +167,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleTranslatableModelObject{
     	public String partName;
-    	public float[] translationAxis;
+    	public double[] translationAxis;
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;

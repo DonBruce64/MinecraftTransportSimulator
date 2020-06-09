@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -19,7 +20,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -258,12 +258,12 @@ public class PartGun extends APart implements FXPart{
 	}
 
 	@Override
-	public Vec3d getActionRotation(float partialTicks){
+	public Point3d getActionRotation(float partialTicks){
 		//Don't return pitch if we are a turret.
 		if(definition.gun.isTurret){
-			return new Vec3d(0, currentYaw - (currentYaw - prevYaw)*(1 - partialTicks), 0);
+			return new Point3d(0, currentYaw - (currentYaw - prevYaw)*(1 - partialTicks), 0);
 		}else{
-			return new Vec3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+			return new Point3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
 		}
 	}
 		
@@ -285,7 +285,7 @@ public class PartGun extends APart implements FXPart{
 	        float f1 = MathHelper.sin(-bulletYaw * 0.017453292F - (float)Math.PI);
 	        float f2 = -MathHelper.cos(-bulletPitch * 0.017453292F);
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
-	        Vec3d bulletOrientation = new Vec3d(f1 * f2, f3, f * f2);
+	        Point3d bulletOrientation = new Point3d(f1 * f2, f3, f * f2);
 			
 			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX*ConfigSystem.configObject.general.speedFactor.value;
 			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY*ConfigSystem.configObject.general.speedFactor.value;

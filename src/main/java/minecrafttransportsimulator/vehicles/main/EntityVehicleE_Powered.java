@@ -31,7 +31,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
@@ -60,7 +59,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public double electricUsage;
 	public double electricFlow;
 	public String fluidName = "";
-	public Vec3d velocityVec = Vec3d.ZERO;
+	
 	
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();

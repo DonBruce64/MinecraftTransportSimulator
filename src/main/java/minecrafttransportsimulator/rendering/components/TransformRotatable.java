@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Vector3f;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -18,9 +18,9 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * @author don_bruce
  */
 public class TransformRotatable extends ARenderableTransform{
-	private final Vector3f[] rotationPoints;
-	private final Vector3f[] rotationAxis;
-	private final Float[] rotationMagnitudes;
+	private final Point3d[] rotationPoints;
+	private final Point3d[] rotationAxis;
+	private final Double[] rotationMagnitudes;
 	private final String[] rotationVariables;
 	private final Float[] rotationClampsMin;
 	private final Float[] rotationClampsMax;
@@ -29,9 +29,9 @@ public class TransformRotatable extends ARenderableTransform{
 	public TransformRotatable(String modelName, String objectName, List<VehicleRotatableModelObject> rotatableModelObjects){
 		//Get all rotation points from the passed-in rotatableModelObjects.
 		//We put these in lists for now as we don't know how many we will have.
-		List<Vector3f> rotationPointsList = new ArrayList<Vector3f>();
-		List<Vector3f> rotationAxisList = new ArrayList<Vector3f>();
-		List<Float> rotationMagnitudesList = new ArrayList<Float>();
+		List<Point3d> rotationPointsList = new ArrayList<Point3d>();
+		List<Point3d> rotationAxisList = new ArrayList<Point3d>();
+		List<Double> rotationMagnitudesList = new ArrayList<Double>();
 		List<String> rotationVariablesList = new ArrayList<String>();
 		List<Float> rotationClampsMinList = new ArrayList<Float>();
 		List<Float> rotationClampsMaxList = new ArrayList<Float>();
@@ -39,14 +39,14 @@ public class TransformRotatable extends ARenderableTransform{
 		for(VehicleRotatableModelObject rotatable : rotatableModelObjects){
 			if(rotatable != null && rotatable.partName.equals(objectName)){
 				if(rotatable.rotationPoint != null){
-					rotationPointsList.add(new Vector3f(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
+					rotationPointsList.add(new Point3d(rotatable.rotationPoint[0], rotatable.rotationPoint[1], rotatable.rotationPoint[2]));
 				}else{
 					throw new NullPointerException("ERROR: Attempted to make rotatable object:" + objectName + " from model:" + modelName + ", but no rotationPoint is in the JSON!");
 				}
 				if(rotatable.rotationAxis != null){
 					//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 					//rotation magnitude is the magnitude of that vector.
-					Vector3f axisVector = new Vector3f(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]);
+					Point3d axisVector = new Point3d(rotatable.rotationAxis[0], rotatable.rotationAxis[1], rotatable.rotationAxis[2]);
 					rotationMagnitudesList.add(axisVector.length());
 					axisVector.normalize();
 					rotationAxisList.add(axisVector);
@@ -65,9 +65,9 @@ public class TransformRotatable extends ARenderableTransform{
 		}
 		
 		//Covert lists to arrays.  This allows for easier indexing later.
-		this.rotationPoints = rotationPointsList.toArray(new Vector3f[rotationPointsList.size()]);
-		this.rotationAxis = rotationAxisList.toArray(new Vector3f[rotationAxisList.size()]);
-		this.rotationMagnitudes = rotationMagnitudesList.toArray(new Float[rotationMagnitudesList.size()]);
+		this.rotationPoints = rotationPointsList.toArray(new Point3d[rotationPointsList.size()]);
+		this.rotationAxis = rotationAxisList.toArray(new Point3d[rotationAxisList.size()]);
+		this.rotationMagnitudes = rotationMagnitudesList.toArray(new Double[rotationMagnitudesList.size()]);
 		this.rotationVariables = rotationVariablesList.toArray(new String[rotationVariablesList.size()]);
 		this.rotationClampsMin = rotationClampsMinList.toArray(new Float[rotationClampsMinList.size()]);
 		this.rotationClampsMax = rotationClampsMaxList.toArray(new Float[rotationClampsMaxList.size()]);

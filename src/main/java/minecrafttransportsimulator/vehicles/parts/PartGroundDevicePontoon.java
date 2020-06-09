@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.Vec3d;
 
 public final class PartGroundDevicePontoon extends APartGroundDevice{
 	
@@ -28,8 +28,8 @@ public final class PartGroundDevicePontoon extends APartGroundDevice{
 	}
 	
 	@Override
-	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		if(super.isPartCollidingWithBlocks(collisionOffset)){
+	public boolean wouldPartCollide(Point3d collisionOffset){
+		if(super.wouldPartCollide(collisionOffset)){
 			return true;
     	}else{
     		return isPartCollidingWithLiquids(collisionOffset);

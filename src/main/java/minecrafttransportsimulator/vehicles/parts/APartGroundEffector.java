@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
 public abstract class APartGroundEffector extends APart{
 	protected final BlockPos[] lastBlocksModified;
@@ -24,10 +24,11 @@ public abstract class APartGroundEffector extends APart{
 		int startingIndex = -definition.effector.blocksWide/2;
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
+			Point3d partAffectorPosition = RotationSystem.getRotatedPoint(new Point3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos);
 			if(effectIsBelowPart()){
-				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos)).down();
+				affectedBlocks[i] = new BlockPos(partAffectorPosition.x, partAffectorPosition.y - 1, partAffectorPosition.z);
 			}else{
-				affectedBlocks[i] = new BlockPos(RotationSystem.getRotatedPoint(new Vec3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos));
+				affectedBlocks[i] = new BlockPos(partAffectorPosition.x, partAffectorPosition.y, partAffectorPosition.z);
 			}
 		}
 		

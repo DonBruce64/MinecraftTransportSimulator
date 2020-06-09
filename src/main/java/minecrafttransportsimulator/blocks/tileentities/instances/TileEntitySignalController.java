@@ -51,7 +51,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
 			//Change light status based on redstone state.
-			if(lightsOn ^ world.getRedstonePower(position.newOffset(0, -1, 0)) == 0){
+			if(lightsOn ^ world.getRedstonePower(position.copy().add(0, -1, 0)) == 0){
 				lightsOn = !lightsOn;
 				updateState(currentOpState, false);
 			}

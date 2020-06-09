@@ -8,6 +8,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -26,7 +27,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This is the next class level above the base vehicle.
@@ -41,13 +41,22 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
+	//Saved variables.
 	public boolean locked;
-	public double airDensity;
-	public double currentMass;
+	public byte throttle;
 	public String ownerName="";
 	public String displayText="";
-	public Vec3d headingVec = Vec3d.ZERO;
-	public byte throttle;
+	
+	//Runtime variables.
+	public double airDensity;
+	public double currentMass;
+	public double velocity;
+	public Point3d currentPosition = new Point3d(0, 0, 0);
+	public Point3d currentHeading = new Point3d(0, 0, 0);
+	public Point3d currentVelocity = new Point3d(0, 0, 0);
+	public Point3d verticalVector = new Point3d(0, 0, 0);
+	public Point3d sideVector = new Point3d(0, 0, 0);
+
 	
 	/**Cached map that links entity IDs to the seats riding them.  Used for mounting/dismounting functions.*/
 	private final BiMap<Integer, PartSeat> riderSeats = HashBiMap.create();
@@ -68,6 +77,13 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
+		currentPosition.set(posX, posY, posZ);
+		currentVelocity = new Point3d(motionX, motionY, motionZ);
+		velocity = currentVelocity.dotProduct(currentHeading);
+		currentVelocity.normalize();
+		verticalVector = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
+		sideVector = currentHeading.crossProduct(verticalVector);
+		
 		if(definition != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
@@ -108,13 +124,13 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void updatePassenger(Entity passenger){
 		PartSeat seat = this.getSeatForRider(passenger);
 		if(seat != null){
-			Vec3d seatOffsetRotation = RotationSystem.getRotatedPoint(new Vec3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), (float)seat.placementRotation.x, (float)seat.placementRotation.y, (float)seat.placementRotation.z);
-			if (seat.parentPart != null) {
-				seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, (float)seat.parentPart.getActionRotation(0).x, (float)seat.parentPart.getActionRotation(0).y, (float)seat.parentPart.getActionRotation(0).z);
+			Point3d seatOffset = RotationSystem.getRotatedPoint(new Point3d(0, -seat.getHeight()/2F + passenger.getYOffset() + passenger.height, 0), seat.placementRotation.x, seat.placementRotation.y, seat.placementRotation.z);
+			if(seat.parentPart != null){
+				seatOffset = RotationSystem.getRotatedPoint(seatOffset, seat.parentPart.getActionRotation(0).x, seat.parentPart.getActionRotation(0).y, seat.parentPart.getActionRotation(0).z);
 			}
-			seatOffsetRotation = RotationSystem.getRotatedPoint(seatOffsetRotation, this.rotationPitch, this.rotationYaw, this.rotationRoll);
-			Vec3d playerOffsetVec = seat.worldPos.add(seatOffsetRotation);
-			passenger.setPosition(playerOffsetVec.x, playerOffsetVec.y - passenger.height, playerOffsetVec.z);
+			seatOffset = RotationSystem.getRotatedPoint(seatOffset, rotationPitch, rotationYaw, rotationRoll);
+			seatOffset = seatOffset.add(seat.worldPos);
+			passenger.setPosition(seatOffset.x, seatOffset.y - passenger.height, seatOffset.z);
 
 		}else if(definition != null && !this.riderSeatPositions.isEmpty()){
 			Double[] seatLocation = this.riderSeatPositions.get(this.getPassengers().indexOf(passenger));
@@ -155,16 +171,16 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void removeRiderFromSeat(Entity rider, PartSeat seat){
 		riderSeats.remove(rider.getEntityId());
 		if(!world.isRemote){
-			Vec3d placePosition;
 			VehiclePart packPart = this.getPackDefForLocation(seat.placementOffset.x, seat.placementOffset.y, seat.placementOffset.z);
+			Point3d dismountPosition;
 			if(packPart.dismountPos != null){
-				placePosition = RotationSystem.getRotatedPoint(new Vec3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());
+				dismountPosition = RotationSystem.getRotatedPoint(new Point3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), rotationPitch, rotationYaw, rotationRoll).add(currentPosition);
 			}else{
-				placePosition = RotationSystem.getRotatedPoint(seat.placementOffset.addVector(seat.placementOffset.x > 0 ? 2 : -2, 0, 0), this.rotationPitch, this.rotationYaw, this.rotationRoll).add(this.getPositionVector());	
+				dismountPosition = RotationSystem.getRotatedPoint(seat.placementOffset.copy().add(seat.placementOffset.x > 0 ? 2D : -2D, 0D, 0D), rotationPitch, rotationYaw, rotationRoll).add(currentPosition);	
 			}
-			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(placePosition));
+			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(dismountPosition.x, dismountPosition.y, dismountPosition.z));
 			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
-				rider.setPositionAndRotation(placePosition.x, collisionDetectionBox.minY, placePosition.z, rider.rotationYaw, rider.rotationPitch);
+				rider.setPositionAndRotation(dismountPosition.x, collisionDetectionBox.minY, dismountPosition.z, rider.rotationYaw, rider.rotationPitch);
 			}
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
 		}
@@ -255,11 +271,11 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
 	
 	protected void updateHeadingVec(){
-        double f1 = Math.cos(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f2 = Math.sin(-this.rotationYaw * 0.017453292F - (float)Math.PI);
-        double f3 = -Math.cos(-this.rotationPitch * 0.017453292F);
-        double f4 = Math.sin(-this.rotationPitch * 0.017453292F);
-        headingVec = new Vec3d((f2 * f3), f4, (f1 * f3));
+        double d1 = Math.cos(-Math.toRadians(rotationYaw) - Math.PI);
+        double d2 = Math.sin(-Math.toRadians(rotationYaw) - Math.PI);
+        double d3 = -Math.cos(-Math.toRadians(rotationPitch));
+        double d4 = Math.sin(-Math.toRadians(rotationPitch));
+        currentHeading = new Point3d((d2 * d3), d4, (d1 * d3));
    	}
 	
 	/**

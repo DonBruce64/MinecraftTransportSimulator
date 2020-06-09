@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -36,7 +37,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public float motionRoll;
 	public float motionPitch;
 	public float motionYaw;
-	public double velocity;
 	
 	private double clientDeltaX;
 	private double clientDeltaY;
@@ -344,9 +344,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionYaw != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionYaw != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -364,8 +364,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionPitch != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionPitch != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -382,8 +382,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionRoll != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionRoll != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -709,8 +709,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//That is done through trig functions.  If we hit something, however, we need to inhibit the movement so we don't do that.
 		boolean collisionBoxCollided = false;
 		for(VehicleAxisAlignedBB box : collisionBoxes){
-			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+			Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 			List<AxisAlignedBB> collisionBoxes = offsetBox.getAABBCollisions(world, null);
 			if(!collisionBoxes.isEmpty()){
 				collisionBoxCollided = true;
@@ -864,7 +864,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
 			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
+			Vec3d groundHeadingVec = new Vec3d(currentHeading.x, 0, currentHeading.z).normalize();
 			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
@@ -914,7 +914,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		for(VehicleAxisAlignedBB box : collisionBoxes){
 			if(!world.getCollisionBoxes(null, box.offset(0, -0.05F, 0)).isEmpty()){
 				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
+				BlockPos pos = new BlockPos(box.pos.x, box.pos.y - 1, box.pos.z);
 				float frictionLoss = 0.6F - world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null) + (world.isRainingAt(pos.up()) ? 0.25F : 0);
 				brakingFactor += Math.max(2.0 - frictionLoss, 0);
 			}
@@ -968,7 +968,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Also check for boat engines, which can make us turn if we are in water.
 			for(APart part : this.getVehicleParts()){
 				if(part instanceof PartPropeller){
-					if(part.isPartCollidingWithLiquids(Vec3d.ZERO)){
+					if(part.isPartCollidingWithLiquids(null)){
 						turningFactor += 1.0F;
 						turningDistance = (float) Math.max(turningDistance, Math.abs(part.placementOffset.z));
 					}
@@ -999,7 +999,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	protected void reAdjustGroundSpeed(double groundSpeed){
-		Vec3d groundVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
+		Vec3d groundVec = new Vec3d(currentHeading.x, 0, currentHeading.z).normalize();
 		motionX = groundVec.x * groundSpeed;
 		motionZ = groundVec.z * groundSpeed;
 	}

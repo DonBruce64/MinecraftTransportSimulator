@@ -4,7 +4,6 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -30,7 +29,7 @@ public abstract class AGUIPanel<EntityVehicleX_Type extends EntityVehicleE_Power
 	public AGUIPanel(EntityVehicleX_Type vehicle){
 		this.vehicle = vehicle;
 		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
-		if(vehicle instanceof EntityVehicleG_Blimp){
+		if(vehicle.definition.blimp != null){
 			haveReverseThrustOption = true;
 		}else{
 			for(APart part : vehicle.getVehicleParts()){

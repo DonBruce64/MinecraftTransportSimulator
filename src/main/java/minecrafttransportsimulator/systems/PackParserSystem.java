@@ -42,10 +42,9 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartBrewingStand;
@@ -235,9 +234,9 @@ public final class PackParserSystem{
     
     public static EntityVehicleE_Powered createVehicle(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition, String subName){
     	switch(definition.general.type){
-			case "plane": return new EntityVehicleG_Plane(world, posX, posY, posZ, playerRotation, definition);
+			case "plane": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
 			case "car": return new EntityVehicleG_Car(world, posX, posY, posZ, playerRotation, definition);
-			case "blimp": return new EntityVehicleG_Blimp(world, posX, posY, posZ, playerRotation, definition);
+			case "blimp": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
 			case "boat": return new EntityVehicleG_Boat(world, posX, posY, posZ, playerRotation, definition);
 			
 			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a vehicle.");

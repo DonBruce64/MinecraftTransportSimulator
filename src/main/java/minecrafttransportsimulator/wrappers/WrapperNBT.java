@@ -98,7 +98,7 @@ public class WrapperNBT{
 		int count = getInteger(name + "count");
 		for(int i=0; i<count; ++i){
 			Point3i point = new Point3i(getInteger(name + i + "x"), getInteger(name + i + "y"), getInteger(name + i + "z"));
-			if(!point.equals(Point3i.ZERO)){
+			if(!point.isZero()){
 				values.add(point);
 			}
         }

@@ -6,7 +6,6 @@ import java.util.List;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class is an upgraded AABB class that allows for AABBs to put into a collective for
@@ -21,12 +20,12 @@ import net.minecraft.world.World;
 public class VehicleAxisAlignedBB extends AxisAlignedBB{
 	public final boolean isInterior;
 	public final boolean collidesWithLiquids;
-	public final Vec3d pos;
-	public final Vec3d rel;
+	public final Point3d pos;
+	public final Point3d rel;
 	public final float width;
 	public final float height;
 	
-	public VehicleAxisAlignedBB(Vec3d pos, Vec3d rel, float width, float height, boolean isInterior, boolean collidesWithLiquids){
+	public VehicleAxisAlignedBB(Point3d pos, Point3d rel, float width, float height, boolean isInterior, boolean collidesWithLiquids){
 		super(pos.x - width/2F, pos.y - height/2F, pos.z - width/2F, pos.x + width/2F, pos.y + height/2F, pos.z + width/2F);
 		this.pos = pos;
 		this.rel = rel;
@@ -36,13 +35,13 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
 		this.collidesWithLiquids = collidesWithLiquids;
 	}
 	
-	public VehicleAxisAlignedBB getBoxWithOrigin(Vec3d pos){
+	public VehicleAxisAlignedBB getBoxWithOrigin(Point3d pos){
 		return new VehicleAxisAlignedBB(pos, this.rel, this.width, this.height, this.isInterior, this.collidesWithLiquids);
 	}
 	
 	@Override
 	public VehicleAxisAlignedBB offset(double xOffset, double yOffset, double zOffset){
-		return getBoxWithOrigin(this.pos.addVector(xOffset, yOffset, zOffset));
+		return getBoxWithOrigin(this.pos.copy().add(xOffset, yOffset, zOffset));
 	}
 	
 	@Override

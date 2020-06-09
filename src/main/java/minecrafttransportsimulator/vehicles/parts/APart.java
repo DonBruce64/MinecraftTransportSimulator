@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -20,7 +21,6 @@ import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
  * Use {@link EntityVehicleA_Base#addPart(APart, boolean)} to add parts 
@@ -31,12 +31,14 @@ import net.minecraft.util.math.Vec3d;
  * 
  * @author don_bruce
  */
-public abstract class APart implements ISoundProvider{	
+public abstract class APart implements ISoundProvider{
+	private static final Point3d ZERO_POINT = new Point3d(0, 0, 0);
+	
 	//JSON properties.
 	public final JSONPart definition;
 	public final VehiclePart vehicleDefinition;
-	public final Vec3d placementOffset;
-	public final Vec3d placementRotation;
+	public final Point3d placementOffset;
+	public final Point3d placementRotation;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
@@ -48,19 +50,20 @@ public abstract class APart implements ISoundProvider{
 	
 	//Runtime variables.
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
-	public Vec3d totalOffset;
-	public Vec3d movementRotation;
-	public Vec3d worldPos;
+	public Point3d totalOffset;
+	public Point3d worldPos;
+	public VehicleAxisAlignedBB boundingBox;
 	private boolean isValid;
 		
 	public APart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
-		this.placementOffset = new Vec3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
+		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.totalOffset = placementOffset;
 		this.definition = definition;;
 		this.vehicleDefinition = packVehicleDef;
-		this.worldPos = RotationSystem.getRotatedPoint(this.placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(this.vehicle.getPositionVector());
-		this.placementRotation = packVehicleDef.rot != null ? new Vec3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : Vec3d.ZERO;
+		this.worldPos = RotationSystem.getRotatedPoint(placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
+		this.boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
+		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
 		this.isValid = true;
 		
 		//Check to see if we are an additional part to a part on our parent.
@@ -122,22 +125,23 @@ public abstract class APart implements ISoundProvider{
 		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
 		if(parentPart != null && vehicleDefinition.isSubPart){
 			//Get the relative distance between our offset and our parent's offset.
-			Vec3d relativeOffset = placementOffset.add(getPositionOffset(0)).subtract(parentPart.placementOffset);
+			Point3d relativeOffset = getPositionOffset(0).add(placementOffset).subtract(parentPart.placementOffset);
 			
 			//Rotate by the parent's rotation to match orientation.
-			Vec3d parentRotation = parentPart.getPositionRotation(0);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+			Point3d parentRotation = parentPart.getPositionRotation(0);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentRotation.x, parentRotation.y, parentRotation.z);
 			
 			//Rotate again to take the action rotation into account.
 			parentRotation = parentPart.getActionRotation(0);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentRotation.x, parentRotation.y, parentRotation.z);
 			
 			//Add parent offset to our offset to get actual point.
-			totalOffset = parentPart.placementOffset.add(parentPart.getPositionOffset(0)).add(relativeOffset);
+			totalOffset = relativeOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
 		}else{
-			totalOffset = placementOffset.add(getPositionOffset(0));
+			totalOffset = getPositionOffset(0).add(placementOffset);
 		}
-		worldPos = RotationSystem.getRotatedPoint(totalOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
+		worldPos = RotationSystem.getRotatedPoint(totalOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
+		boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
 
 		//Update sound variables.
 		soundPosition.rewind();
@@ -147,34 +151,31 @@ public abstract class APart implements ISoundProvider{
 		soundPosition.flip();
 	}
 	
-	public final VehicleAxisAlignedBB getAABBWithOffset(Vec3d boxOffset){
-		return new VehicleAxisAlignedBB(Vec3d.ZERO.equals(boxOffset) ? worldPos : worldPos.add(boxOffset), this.placementOffset.add(getPositionOffset(0)), this.getWidth(), this.getHeight(), false, false);
-	}
-	
 	/**Gets the movement position offset for the part as a vector.
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
-	public final Vec3d getPositionOffset(float partialTicks){
+	public final Point3d getPositionOffset(float partialTicks){
+		Point3d positionOffset = new Point3d(0, 0, 0);
+		
 		//First rotate about the rotation point and angles.
-		Vec3d rotationAngles = getPositionRotation(partialTicks);
-		Vec3d rotationOffset = Vec3d.ZERO;
-		if(!rotationAngles.equals(Vec3d.ZERO)){
-			rotationOffset = RotationSystem.getRotatedPoint(new Vec3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]), (float) rotationAngles.x, (float) rotationAngles.y, (float) rotationAngles.z);
-			rotationOffset = rotationOffset.addVector(vehicleDefinition.rotationPosition[0], vehicleDefinition.rotationPosition[1], vehicleDefinition.rotationPosition[2]);
+		Point3d rotationAngles = getPositionRotation(partialTicks);
+		if(!rotationAngles.isZero()){
+			positionOffset = RotationSystem.getRotatedPoint(new Point3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]), rotationAngles.x, rotationAngles.y, rotationAngles.z);
+			positionOffset.add(vehicleDefinition.rotationPosition[0], vehicleDefinition.rotationPosition[1], vehicleDefinition.rotationPosition[2]);
 		}
 		
 		//Now translate.  This may incorporate rotation angles.
-		Vec3d translationOffset = Vec3d.ZERO;
 		if(vehicleDefinition.translationVariable != null){
 			double translationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.translationVariable, 1, 0, vehicleDefinition.translationClampMin, vehicleDefinition.translationClampMax, vehicleDefinition.translationAbsolute, partialTicks, vehicle, this);
-			translationOffset = new Vec3d(translationValue*vehicleDefinition.translationPosition[0], translationValue*vehicleDefinition.translationPosition[1], translationValue*vehicleDefinition.translationPosition[2]); 
-			if(!rotationAngles.equals(Vec3d.ZERO)){
+			Point3d translationOffset = new Point3d(translationValue*vehicleDefinition.translationPosition[0], translationValue*vehicleDefinition.translationPosition[1], translationValue*vehicleDefinition.translationPosition[2]); 
+			if(!rotationAngles.isZero()){
 				translationOffset = RotationSystem.getRotatedPoint(translationOffset, (float) rotationAngles.x, (float) rotationAngles.y, (float) rotationAngles.z);
 			}
+			positionOffset.add(translationOffset);
 		}
 		
-		//Add rotation and translation offset and return net offset.
-		return rotationOffset.add(translationOffset);
+		//Return the net offset from rotation and translation.
+		return positionOffset;
 	}
 	
 	/**Gets the rotation angles for the part as a vector.
@@ -182,35 +183,57 @@ public abstract class APart implements ISoundProvider{
 	 * It may be used for stacked rotations, and should return the final
 	 * rotation vector for all operations.
 	 */
-	public final Vec3d getPositionRotation(float partialTicks){
+	public final Point3d getPositionRotation(float partialTicks){
 		if(vehicleDefinition.rotationVariable != null){
 			double rotationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.rotationVariable, 1, 0, vehicleDefinition.rotationClampMin, vehicleDefinition.rotationClampMax, vehicleDefinition.rotationAbsolute, partialTicks, vehicle, this);
-			return new Vec3d(rotationValue*vehicleDefinition.rotationAngles[0], rotationValue*vehicleDefinition.rotationAngles[1], rotationValue*vehicleDefinition.rotationAngles[2]);
-		}else{
-			return Vec3d.ZERO;
+			if(rotationValue != 0){
+				return new Point3d(rotationValue*vehicleDefinition.rotationAngles[0], rotationValue*vehicleDefinition.rotationAngles[1], rotationValue*vehicleDefinition.rotationAngles[2]);
+			}
 		}
+		return new Point3d(0, 0, 0);
 	}
 	
 	/**Gets the rotation angles for the part as a vector.
 	 * This rotation is based on the internal part state, and cannot be modified via JSON.
 	 */
-	public Vec3d getActionRotation(float partialTicks){
-		return Vec3d.ZERO;
+	public Point3d getActionRotation(float partialTicks){
+		return ZERO_POINT;
 	}
+	
+	
+	
+	
+	//--------------------START OF COLLISION BOX CODE--------------------
 
-	/**Checks to see if this part is collided with any collidable blocks.
-	 * Uses a regular Vanilla check: liquid checks may be done by overriding this method.
-	 * Can be given an offset vector to check for potential collisions. 
+	/**
+	 * Checks to see if this part is currently colliding with blocks.
 	 */
-	public boolean isPartCollidingWithBlocks(Vec3d collisionOffset){
-		return !vehicle.world.getCollisionBoxes(null, this.getAABBWithOffset(collisionOffset)).isEmpty();
+	public boolean isPartColliding(){
+		return !vehicle.world.getCollisionBoxes(null, boundingBox).isEmpty();
     }
 	
-	/**Checks to see if this part is collided with any liquid blocks.
-	 * Can be given an offset vector to check for potential collisions. 
+	/**Checks to see if this part would collide with any blocks, should it be offset
+	 * by the passed-in offset.  Uses a regular Vanilla check: liquid checks may be 
+	 * done by overriding this method.  Can be given an offset vector to check for potential 
+	 * collisions. 
 	 */
-	public boolean isPartCollidingWithLiquids(Vec3d collisionOffset){
-		VehicleAxisAlignedBB collisionBox = this.getAABBWithOffset(collisionOffset);
+	public boolean wouldPartCollide(Point3d collisionOffset){
+		return !vehicle.world.getCollisionBoxes(null, getAABBWithOffset(collisionOffset)).isEmpty();
+    }
+	
+	/**Returns the bounding box for this part, offset by the passed-in point.
+	 * Offset is done with this part's coordinate system. 
+	 */
+	public final VehicleAxisAlignedBB getAABBWithOffset(Point3d boxOffset){
+		return new VehicleAxisAlignedBB(worldPos.copy().add(boxOffset), getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
+	}
+	
+	/**Checks to see if this part is collided with any liquid blocks.
+	 * Can be given an offset vector to check for potential collisions.
+	 * Passing in null will use the part's current collision box.
+	 */
+	public boolean isPartCollidingWithLiquids(Point3d collisionOffset){
+		VehicleAxisAlignedBB collisionBox = collisionOffset == null ? boundingBox : getAABBWithOffset(collisionOffset);
 		int minX = (int) Math.floor(collisionBox.minX);
     	int maxX = (int) Math.floor(collisionBox.maxX + 1.0D);
     	int minY = (int) Math.floor(collisionBox.minY);

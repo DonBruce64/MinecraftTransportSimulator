@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.google.common.collect.ImmutableList;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -23,7 +23,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**Base vehicle class.  All vehicle entities should extend this class.
@@ -97,7 +96,6 @@ abstract class EntityVehicleA_Base extends Entity{
     	return true;
     }
     
-    
     /**
 	 * Adds the passed-part to this vehicle, but in this case the part is in item form
 	 * with associated data rather than a fully-constructed form.  This method will check
@@ -107,23 +105,20 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * Note that the passed-in data MAY be null if the item didn't have any.
 	 */
     public boolean addPartFromItem(AItemPart partItem, NBTTagCompound partTag, double xPos, double yPos, double zPos){
-    	for(Entry<Vec3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
-    		//Check to see if this is the part we want to add.
-    		if(packPartEntry.getKey().x == xPos && packPartEntry.getKey().y == yPos && packPartEntry.getKey().z == zPos){
-	    		//Check to make sure the spot is free.
-				if(getPartAtLocation(xPos, yPos, zPos) == null){
-					//Check to make sure the part is valid.
-					if(packPartEntry.getValue().types.contains(partItem.definition.general.type)){
-						//Check to make sure the part is in parameter ranges.
-						if(partItem.isPartValidForPackDef(packPartEntry.getValue())){
-							//Part is valid.  Create it and add it.
-							addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPartEntry.getValue(), partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
-							MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleE_Powered) this, xPos, yPos, zPos, partItem, partTag));
-							return true;
-						}
-					}
+		//Get the part to add.
+		VehiclePart packPart = getPackDefForLocation(xPos, yPos, zPos);
+		//Check to make sure the spot is free.
+		if(getPartAtLocation(xPos, yPos, zPos) == null){
+			//Check to make sure the part is valid.
+			if(packPart.types.contains(partItem.definition.general.type)){
+				//Check to make sure the part is in parameter ranges.
+				if(partItem.isPartValidForPackDef(packPart)){
+					//Part is valid.  Create it and add it.
+					addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleE_Powered) this, xPos, yPos, zPos, partItem, partTag));
+					return true;
 				}
-    		}
+			}
 		}
     	return false;
     }
@@ -132,14 +127,14 @@ abstract class EntityVehicleA_Base extends Entity{
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
-			if(part.isPartCollidingWithBlocks(Vec3d.ZERO)){
+			if(part.isPartColliding()){
 				//Adjust roll first, as otherwise we could end up with a sunk vehicle.
 				rotationRoll = 0;
 				setPositionAndRotation(posX, posY + part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.isPartCollidingWithBlocks(new Vec3d(0, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0))){
+			if(part.wouldPartCollide(new Point3d(0, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0))){
 				setPositionAndRotation(posX, posY +  part.getHeight(), posZ, rotationYaw, rotationPitch);
 			}
 		}
@@ -175,7 +170,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	 */
 	public APart getPartAtLocation(double offsetX, double offsetY, double offsetZ){
 		for(APart part : this.parts){
-			if(part.placementOffset.x == offsetX && part.placementOffset.y == offsetY && part.placementOffset.z == offsetZ){
+			if((float)part.placementOffset.x == (float)offsetX && (float)part.placementOffset.y == (float)offsetY && (float)part.placementOffset.z == (float)offsetZ){
 				return part;
 			}
 		}
@@ -189,11 +184,11 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public Map<Vec3d, VehiclePart> getAllPossiblePackParts(){
-		Map<Vec3d, VehiclePart> packParts = new HashMap<Vec3d, VehiclePart>();
+	public Map<Point3d, VehiclePart> getAllPossiblePackParts(){
+		Map<Point3d, VehiclePart> packParts = new HashMap<Point3d, VehiclePart>();
 		//First get all the regular part spots.
 		for(VehiclePart packPart : definition.parts){
-			Vec3d partPos = new Vec3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
+			Point3d partPos = new Point3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 			packParts.put(partPos, packPart);
 			
 			//Check to see if we can put an additional part in this location.
@@ -202,7 +197,7 @@ abstract class EntityVehicleA_Base extends Entity{
 				boolean foundPart = false;
 				for(APart part : this.parts){
 					if(part.placementOffset.equals(partPos)){
-						partPos = new Vec3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
+						partPos = new Point3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
 						packPart = packPart.additionalPart;
 						packParts.put(partPos, packPart);
 						foundPart = true;
@@ -221,7 +216,7 @@ abstract class EntityVehicleA_Base extends Entity{
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					packParts.put(new Vec3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
+					packParts.put(new Point3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
 				}
 			}
 			
@@ -235,13 +230,13 @@ abstract class EntityVehicleA_Base extends Entity{
 	public VehiclePart getPackDefForLocation(double offsetX, double offsetY, double offsetZ){
 		//Check to see if this is a main part.
 		for(VehiclePart packPart : definition.parts){
-			if(packPart.pos[0] == offsetX && packPart.pos[1] == offsetY && packPart.pos[2] == offsetZ){
+			if(isPackAtPosition(packPart, offsetX, offsetY, offsetZ)){
 				return packPart;
 			}
 			
 			//Not a main part.  Check if this is an additional part.
 			while(packPart.additionalPart != null){
-				if(packPart.additionalPart.pos[0] == offsetX && packPart.additionalPart.pos[1] == offsetY && packPart.additionalPart.pos[2] == offsetZ){
+				if(isPackAtPosition(packPart.additionalPart, offsetX, offsetY, offsetZ)){
 					return packPart.additionalPart;
 				}else{
 					packPart = packPart.additionalPart;
@@ -255,7 +250,7 @@ abstract class EntityVehicleA_Base extends Entity{
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset.x, part.placementOffset.y, part.placementOffset.z);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					if(correctedPack.pos[0] == offsetX && correctedPack.pos[1] == offsetY && correctedPack.pos[2] == offsetZ){
+					if(isPackAtPosition(correctedPack, offsetX, offsetY, offsetZ)){
 						return correctedPack;
 					}
 				}
@@ -266,20 +261,27 @@ abstract class EntityVehicleA_Base extends Entity{
 	}
 	
 	/**
+	 *Helper method to prevent casting to floats all over for position-specific tests.
+	 */
+	private static boolean isPackAtPosition(VehiclePart packPart, double offsetX, double offsetY, double offsetZ){
+		return (float)packPart.pos[0] == (float)offsetX && (float)packPart.pos[1] == (float)offsetY && (float)packPart.pos[2] == (float)offsetZ;
+	}
+	
+	/**
 	 * Returns a PackPart with the correct properties for a SubPart.  This is because
 	 * subParts inherit some properties from their parent parts. 
 	 */
 	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
 		VehiclePart correctPack = definition.new VehiclePart();
 		correctPack.isSubPart = true;
-		correctPack.pos = new float[3];
+		correctPack.pos = new double[3];
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
 		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
 		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
 		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
 		
 		if(parentPack.rot != null || subPack.rot != null){
-			correctPack.rot = new float[3];
+			correctPack.rot = new double[3];
 		}
 		if(parentPack.rot != null){
 			correctPack.rot[0] += parentPack.rot[0];

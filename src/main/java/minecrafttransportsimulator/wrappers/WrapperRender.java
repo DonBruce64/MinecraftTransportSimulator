@@ -15,6 +15,7 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -36,7 +37,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -257,7 +257,7 @@ public class WrapperRender{
 				PartSeat seat = vehicle.getSeatForRider(passenger);
 				if(seat != null){
 					GL11.glPushMatrix();
-					Vec3d offset = seat.worldPos.subtract(vehicle.getPositionVector());
+					Point3d offset = vehicle.currentPosition.copy().add(seat.worldPos);
 					GL11.glTranslated(offset.x, offset.y - seat.getHeight()/2F + passenger.getYOffset(), offset.z);
 					Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
 					GL11.glPopMatrix();

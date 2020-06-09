@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Vector3f;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -18,8 +18,8 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * @author don_bruce
  */
 public class TransformTranslatable extends ARenderableTransform{
-	private final Vector3f[] translationAxis;
-	private final Float[] translationMagnitudes;
+	private final Point3d[] translationAxis;
+	private final Double[] translationMagnitudes;
 	private final String[] translationVariables;
 	private final Float[] translationClampsMin;
 	private final Float[] translationClampsMax;
@@ -28,8 +28,8 @@ public class TransformTranslatable extends ARenderableTransform{
 	public TransformTranslatable(String modelName, String objectName, List<VehicleTranslatableModelObject> translatableModelObjects){
 		//Get all translation points from the passed-in translatableModelObjects.
 		//We put these in lists for now as we don't know how many we will have.
-		List<Vector3f> translationAxisList = new ArrayList<Vector3f>();
-		List<Float> translationMagnitudesList = new ArrayList<Float>();
+		List<Point3d> translationAxisList = new ArrayList<Point3d>();
+		List<Double> translationMagnitudesList = new ArrayList<Double>();
 		List<String> translationVariablesList = new ArrayList<String>();
 		List<Float> translationClampsMinList = new ArrayList<Float>();
 		List<Float> translationClampsMaxList = new ArrayList<Float>();
@@ -39,7 +39,7 @@ public class TransformTranslatable extends ARenderableTransform{
 				if(translatable.translationAxis != null){
 					//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 					//rotation magnitude is the magnitude of that vector.
-					Vector3f axisVector = new Vector3f(translatable.translationAxis[0], translatable.translationAxis[1], translatable.translationAxis[2]);
+					Point3d axisVector = new Point3d(translatable.translationAxis[0], translatable.translationAxis[1], translatable.translationAxis[2]);
 					translationMagnitudesList.add(axisVector.length());
 					axisVector.normalize();
 					translationAxisList.add(axisVector);
@@ -58,8 +58,8 @@ public class TransformTranslatable extends ARenderableTransform{
 		}
 		
 		//Covert lists to arrays.  This allows for easier indexing later.
-		this.translationAxis = translationAxisList.toArray(new Vector3f[translationAxisList.size()]);
-		this.translationMagnitudes = translationMagnitudesList.toArray(new Float[translationMagnitudesList.size()]);
+		this.translationAxis = translationAxisList.toArray(new Point3d[translationAxisList.size()]);
+		this.translationMagnitudes = translationMagnitudesList.toArray(new Double[translationMagnitudesList.size()]);
 		this.translationVariables = translationVariablesList.toArray(new String[translationVariablesList.size()]);
 		this.translationClampsMin = translationClampsMinList.toArray(new Float[translationClampsMinList.size()]);
 		this.translationClampsMax = translationClampsMaxList.toArray(new Float[translationClampsMaxList.size()]);

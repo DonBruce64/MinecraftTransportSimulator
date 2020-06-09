@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -7,7 +8,6 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class adds control surfaces common to most airborne vehicles.
@@ -18,43 +18,72 @@ import net.minecraft.world.World;
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
+public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	//Note that angle variable should be divided by 10 to get actual angle.
-	public final short MAX_AILERON_ANGLE = 250;
-	public final short AILERON_DAMPEN_RATE = 6;
+	
+	//Aileron.
+	public static final short MAX_AILERON_ANGLE = 250;
+	public static final short AILERON_DAMPEN_RATE = 6;
 	public short aileronAngle;
 	public short aileronTrim;
 	public byte aileronCooldown;
 	
-	public final short MAX_ELEVATOR_ANGLE = 250;
-	public final short ELEVATOR_DAMPEN_RATE = 6;
+	//Elevator.
+	public static final short MAX_ELEVATOR_ANGLE = 250;
+	public static final short ELEVATOR_DAMPEN_RATE = 6;
 	public short elevatorAngle;
 	public short elevatorTrim;
 	public byte elevatorCooldown;
 	
-	public final short MAX_RUDDER_ANGLE = 450;
-	public final short RUDDER_DAMPEN_RATE = 20;
+	//Rudder.
+	public static final short MAX_RUDDER_ANGLE = 450;
+	public static final short RUDDER_DAMPEN_RATE = 20;
 	public short rudderAngle;
 	public short rudderTrim;
 	public byte rudderCooldown;
 	
-	//Other variables.
-	public boolean autopilot;
-	public double trackAngle;
-	public Vec3d verticalVec = Vec3d.ZERO;
-	public Vec3d sideVec = Vec3d.ZERO;
-
-	//Internal aircraft variables
-	protected float momentRoll;
-	protected float momentPitch;
-	protected float momentYaw;
-	protected double aileronLiftCoeff;
-	protected double elevatorLiftCoeff;
-	protected double rudderLiftCoeff;
+	//Flaps.
+	public static final short MAX_FLAP_ANGLE = 450;
+	public short flapDesiredAngle;
+	public short flapCurrentAngle;
 	
-	protected double thrustForce;//kg*m/ticks^2
-	protected double gravitationalForce;//kg*m/ticks^2
-	protected double thrustTorque;//kg*m^2/ticks^2
+	//External state control.
+	public boolean autopilot;
+	
+	//Internal states.
+	public double trackAngle;
+	private double currentWingArea;
+	
+	//Coefficients.
+	private double wingLiftCoeff;
+	private double aileronLiftCoeff;
+	private double elevatorLiftCoeff;
+	private double rudderLiftCoeff;
+	private double dragCoeff;
+	
+	//Forces.
+	private double dragForce;//kg*m/ticks^2
+	private double wingForce;//kg*m/ticks^2
+	private double aileronForce;//kg*m/ticks^2
+	private double elevatorForce;//kg*m/ticks^2
+	private double rudderForce;//kg*m/ticks^2
+	private double ballastForce;//kg*m/ticks^2
+	private double gravitationalForce;//kg*m/ticks^2
+	private Point3d thrustForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	private Point3d totalAxialForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	private Point3d totalMotiveForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	private Point3d totalGlobalForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	private Point3d totalForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	
+	//Torques.
+	private float momentRoll;//kg*m^2
+	private float momentPitch;//kg*m^2
+	private float momentYaw;//kg*m^2
+	private double aileronTorque;//kg*m^2/ticks^2
+	private double elevatorTorque;//kg*m^2/ticks^2
+	private double rudderTorque;//kg*m^2/ticks^2
+	private Point3d thrustTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
+	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 
 			
 	public EntityVehicleF_Air(World world){
@@ -67,32 +96,139 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getBasicProperties(){
+		//Set moments.
 		momentRoll = (float) (definition.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
 		momentYaw = (float) (3*currentMass);
 		
-		verticalVec = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-		sideVec = headingVec.crossProduct(verticalVec);
-		velocityVec = new Vec3d(motionX, motionY, motionZ);
-		velocity = velocityVec.dotProduct(headingVec);
-		velocityVec = velocityVec.normalize();
-		
-		trackAngle = Math.toDegrees(Math.atan2(velocityVec.dotProduct(verticalVec), velocityVec.dotProduct(headingVec)));
+		//Set angles and coefficients.
+		trackAngle = Math.toDegrees(Math.atan2(currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading)));
+		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(-2.5 - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(velocityVec.dotProduct(sideVec), velocityVec.dotProduct(headingVec))), 2);
+		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(currentVelocity.dotProduct(sideVector), currentVelocity.dotProduct(currentHeading))), 2);
+		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
+		
+		//Adjust flaps to current setting.  If no flaps are present, then this will never change.
+		if(flapCurrentAngle < flapDesiredAngle){
+			++flapCurrentAngle;
+		}else if(flapCurrentAngle > flapDesiredAngle){
+			--flapCurrentAngle;
+		}
+		
+		//Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
+		//we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
+		//which key is pressed, they both activate the rudder for turning.
+		//Blimps also have more drag than planes, so we 
+		if(definition.blimp != null && ((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle))){
+			rudderAngle = aileronAngle;
+			rudderCooldown = aileronCooldown;
+		}
+		
+		//If we are a plane, set our current wing area.
+		if(definition.plane != null){
+			//If aileronArea is 0, we're a legacy plane and need to adjust.
+			if(definition.plane.aileronArea == 0){
+				definition.plane.aileronArea = definition.plane.wingArea/5F;
+			}
+			currentWingArea = definition.plane.wingArea + definition.plane.wingArea*flapCurrentAngle/250F;
+		}
 	}
 	
 	@Override
 	protected void getForcesAndMotions(){
-		thrustForce = thrustTorque = 0;
-		double thrust = 0;
+		//Get engine thrust force contributions.
+		thrustForce.set(0D, 0D, 0D);
+		thrustTorque.set(0D, 0D, 0D);
 		for(PartEngine engine : engines.values()){
-			thrust = engine.getForceOutput();
-			thrustForce += thrust;
-			thrustTorque += thrust*engine.placementOffset.x;
+			Point3d engineForce = engine.getForceOutput();
+			thrustForce.add(engineForce);
+			thrustTorque.add(engineForce.y*-engine.placementOffset.z, engineForce.z*engine.placementOffset.x, engineForce.y*engine.placementOffset.x);
 		}
+		
+		//Get forces.  Some forces are specific to JSON sections.
 		gravitationalForce = currentMass*(9.8/400);
+		if(definition.blimp != null){
+			dragForce += 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
+			rudderForce = 0.5F*airDensity*velocity*velocity*definition.blimp.rudderArea*rudderLiftCoeff;
+			//Blimps aren't affected by gravity.
+			gravitationalForce = 0;
+			
+			rudderTorque = rudderForce*definition.blimp.tailDistance;
+			
+			//Ballast gets less effective at applying positive lift at higher altitudes.
+			//This prevents blimps from ascending into space.
+			//Also take into account motionY, as we should provide less force if we are already going in the same direction.
+			if(elevatorAngle < 0){
+				ballastForce = 5*airDensity*definition.blimp.ballastVolume*-elevatorAngle;
+			}else{
+				ballastForce = 5*1.225*definition.blimp.ballastVolume*-elevatorAngle;
+			}		
+			if(motionY*ballastForce > 0){
+				ballastForce /= Math.pow(1 + Math.abs(motionY), 2);
+			}
+			
+			//If we don't have any force, or the throttle is idle, start slowing down.
+			//We can't use brakes because those don't exist on blimps!
+			if(thrustForce.isZero() || throttle == 0){
+				motionX *= 0.95;
+				motionZ *= 0.95;
+				thrustForce.set(0D, 0D, 0D);
+				thrustTorque.set(0D, 0D, 0D);
+			}
+			
+			//Roll and pitch are applied only if we aren't level.
+			//This only happens if we fall out of the sky and land on the ground and tilt.
+			if(rotationRoll > 0){
+				aileronTorque = -Math.min(0.5F, rotationRoll)*currentMass;
+			}else if(rotationRoll < 0){
+				aileronTorque = -Math.max(-0.5F, rotationRoll)*currentMass;
+			}else{
+				aileronTorque = 0;
+			}
+			if(rotationPitch > 0){
+				elevatorTorque = -Math.min(0.5F, rotationPitch)*currentMass;
+			}else if(rotationPitch < 0){
+				elevatorTorque = -Math.max(-0.5F, rotationPitch)*currentMass;
+			}else{
+				elevatorTorque = 0;
+			}
+		}else if(definition.plane != null){
+			dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.plane.wingSpan*definition.plane.wingSpan/currentWingArea*0.8));
+			wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
+			aileronForce = 0.5F*airDensity*velocity*velocity*definition.plane.aileronArea*aileronLiftCoeff;
+			elevatorForce = 0.5F*airDensity*velocity*velocity*definition.plane.elevatorArea*elevatorLiftCoeff;			
+			rudderForce = 0.5F*airDensity*velocity*velocity*definition.plane.rudderArea*rudderLiftCoeff;
+			
+			aileronTorque = aileronForce*definition.plane.wingSpan*0.5F*0.75F;
+			elevatorTorque = elevatorForce*definition.plane.tailDistance;
+			rudderTorque = rudderForce*definition.plane.tailDistance;
+			
+			//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
+			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
+			if(velocity < 0 && groundedGroundDevices.isEmpty()){
+				if(rotationPitch < 0 && rotationPitch >= -120){
+					elevatorTorque += 100;
+				}
+			}
+		}
+		
+		//Add all forces to the main force matrix and apply them.
+		totalAxialForce.set(0D, wingForce + elevatorForce, 0D).add(thrustForce);
+		totalAxialForce = RotationSystem.getRotatedPoint(totalAxialForce, rotationPitch, rotationYaw, rotationRoll);
+		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(currentVelocity);
+		totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
+		totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
+		
+		motionX += totalForce.x;
+		motionY += totalForce.y;
+		motionZ += totalForce.z; 
+		
+		//Add all torques to the main force matrix and apply them.
+		totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).multiply(180D/Math.PI);
+		motionPitch = (float) totalTorque.x/momentPitch;
+		motionYaw = (float) totalTorque.y/momentYaw;
+		motionRoll = (float) totalTorque.z/momentRoll;
 	}
 	
 	@Override
@@ -183,6 +319,8 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		this.aileronAngle=tagCompound.getShort("aileronAngle");
 		this.elevatorAngle=tagCompound.getShort("elevatorAngle");
 		this.rudderAngle=tagCompound.getShort("rudderAngle");
+		this.flapDesiredAngle=tagCompound.getShort("flapDesiredAngle");
+		this.flapCurrentAngle=tagCompound.getShort("flapCurrentAngle");
 		this.aileronTrim=tagCompound.getShort("aileronTrim");
 		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
 		this.rudderTrim=tagCompound.getShort("rudderTrim");
@@ -194,6 +332,8 @@ public abstract class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		tagCompound.setShort("aileronAngle", this.aileronAngle);
 		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
 		tagCompound.setShort("rudderAngle", this.rudderAngle);
+		tagCompound.setShort("flapDesiredAngle", this.flapDesiredAngle);
+		tagCompound.setShort("flapCurrentAngle", this.flapCurrentAngle);
 		tagCompound.setShort("aileronTrim", this.aileronTrim);
 		tagCompound.setShort("elevatorTrim", this.elevatorTrim);
 		tagCompound.setShort("rudderTrim", this.rudderTrim);

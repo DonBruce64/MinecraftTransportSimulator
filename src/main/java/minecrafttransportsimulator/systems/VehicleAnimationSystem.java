@@ -5,7 +5,6 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Plane;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -24,7 +23,7 @@ public final class VehicleAnimationSystem{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, float scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
+	public static double getVariableValue(String variable, double scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
 		double value = offset + scaling*(absolute ? Math.abs(getVariableValue(variable, partialTicks, vehicle, optionalPart)) : getVariableValue(variable, partialTicks, vehicle, optionalPart));
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
@@ -177,21 +176,16 @@ public final class VehicleAnimationSystem{
 				case("aileron"): return aircraft.aileronAngle/10D;
 				case("elevator"): return aircraft.elevatorAngle/10D;
 				case("rudder"): return aircraft.rudderAngle/10D;
+				case("flaps_setpoint"): return aircraft.flapDesiredAngle/10D;
+				case("flaps_actual"): return aircraft.flapCurrentAngle/10D;
 				case("trim_aileron"): return aircraft.aileronTrim/10D;
 				case("trim_elevator"): return aircraft.elevatorTrim/10D;
 				case("trim_rudder"): return aircraft.rudderTrim/10D;
 				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
-				case("slip"): return 75*aircraft.sideVec.dotProduct(vehicle.velocityVec);
+				case("lift_reserve"): return aircraft.trackAngle*3 + 20;
+				case("slip"): return 75*aircraft.sideVector.dotProduct(vehicle.currentVelocity);
 				case("gear_setpoint"): return aircraft.gearUpCommand ? 1 : 0;
 				case("gear_actual"): return aircraft.gearMovementTime/((double) aircraft.definition.motorized.gearSequenceDuration);
-			}
-			if(aircraft instanceof EntityVehicleG_Plane){
-				EntityVehicleG_Plane plane = (EntityVehicleG_Plane) aircraft;
-				switch(variable){
-					case("lift_reserve"): return aircraft.trackAngle*3 + 20;
-					case("flaps_setpoint"): return plane.flapDesiredAngle/10D;
-					case("flaps_actual"): return plane.flapCurrentAngle/10D;
-				}
 			}
 		}
 		

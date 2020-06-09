@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Vector3d;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -40,7 +40,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
@@ -156,7 +155,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 */
 	private static void render(EntityVehicleE_Powered vehicle, float partialTicks){
 		//Set render camera position.
-		Vector3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
+		Point3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
 		
 		//Get vehicle position and rotation.
         double vehicleX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
@@ -194,7 +193,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					GL11.glTranslated(part.placementOffset.x, 0, 0);
 					renderPart(part, partialTicks, part.placementOffset);
 				}else{
-					Vec3d offset = part.placementOffset.add(part.getPositionOffset(partialTicks));
+					Point3d offset = part.getPositionOffset(partialTicks).add(part.placementOffset);
 					GL11.glTranslated(offset.x, offset.y, offset.z);
 					renderPart(part, partialTicks, offset);
 				}
@@ -305,13 +304,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	
 	/**
 	 *  Renders all parts on the vehicle.  Parts are first translated to their actual position, which they keep track of.
-	 *  After this they are rotated via {@link #rotatePart(APart, Vec3d, boolean)}.  Finally, any parts of the part
+	 *  After this they are rotated via {@link #rotatePart(APart, float)}.  Finally, any parts of the part
 	 *  model that are {@link TransformRotatable}s or {@link TransformTranslatable}s are rendered with
 	 *  their rotations applied.  This makes rendering a split process.  Translate to position, rotate at position,
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderPart(APart part, float partialTicks, Vec3d offset){
+	private static void renderPart(APart part, float partialTicks, Point3d offset){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			//Create the part display list and modelObjects.
@@ -378,14 +377,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			for(APart childPart : part.childParts){
 				if(childPart.vehicleDefinition.isSubPart){
 					//Get the relative distance between our offset and our parent's offset.
-					Vec3d relativeOffset = childPart.placementOffset.add(childPart.getPositionOffset(partialTicks)).subtract(part.placementOffset);
+					Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
 					
 					//Rotate by the parent's rotation to match orientation.
-					Vec3d parentRotation = part.getPositionRotation(partialTicks);
+					Point3d parentRotation = part.getPositionRotation(partialTicks);
 					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
 					
 					//Add parent offset to our offset to get actual point.
-					Vec3d totalOffset = offset.add(relativeOffset);
+					Point3d totalOffset = offset.add(relativeOffset);
 					GL11.glPushMatrix();
 					GL11.glTranslated(totalOffset.x, totalOffset.y, totalOffset.z);
 					renderPart(childPart, partialTicks, totalOffset);
@@ -412,7 +411,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			GL11.glCullFace(GL11.GL_FRONT);
 		}
 		
-		if(!part.placementRotation.equals(Vec3d.ZERO)){
+		if(!part.placementRotation.isZero()){
 			if(part.parentPart != null){
 				GL11.glRotated(part.placementRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
 				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
@@ -424,8 +423,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 		
-		Vec3d positionRotation = part.getPositionRotation(partialTicks);
-		if(!positionRotation.equals(Vec3d.ZERO)){
+		Point3d positionRotation = part.getPositionRotation(partialTicks);
+		if(!positionRotation.isZero()){
 			if(mirrored){
 				GL11.glRotated(-positionRotation.y, 0, 1, 0);
 				GL11.glRotated(-positionRotation.x, 1, 0, 0);
@@ -437,8 +436,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 		}
 
-		Vec3d actionRotation = part.getActionRotation(partialTicks);
-		if(!actionRotation.equals(Vec3d.ZERO)){
+		Point3d actionRotation = part.getActionRotation(partialTicks);
+		if(!actionRotation.isZero()){
 			GL11.glRotated(actionRotation.y, 0, 1, 0);
 			GL11.glRotated(actionRotation.x, 1, 0, 0);
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
@@ -900,7 +899,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			if(heldStack != null){
 				if(heldStack.getItem() instanceof AItemPart){
 					AItemPart heldItem = (AItemPart) heldStack.getItem();
-					for(Entry<Vec3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
+					for(Entry<Point3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
 						boolean isPresent = false;
 						boolean isHoldingPart = false;
 						boolean isPartValid = false;
@@ -917,13 +916,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 						}
 								
 						if(!isPresent && isHoldingPart){
-							Vec3d offset = packPartEntry.getKey();
+							Point3d offset = packPartEntry.getKey();
 							//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
 							AxisAlignedBB box;
 							if(packPartEntry.getValue().types.contains("custom") && heldItem.definition.general.type.equals("custom")){
-								box = new AxisAlignedBB((float) (offset.x) - heldItem.definition.custom.width/2F, (float) (offset.y) - heldItem.definition.custom.height/2F, (float) (offset.z) - heldItem.definition.custom.width/2F, (float) (offset.x) + heldItem.definition.custom.width/2F, (float) (offset.y) + heldItem.definition.custom.height/2F, (float) (offset.z) + heldItem.definition.custom.width/2F);		
+								box = new AxisAlignedBB(offset.x - heldItem.definition.custom.width/2F, offset.y - heldItem.definition.custom.height/2F, offset.z - heldItem.definition.custom.width/2F, offset.x + heldItem.definition.custom.width/2F, offset.y + heldItem.definition.custom.height/2F, offset.z + heldItem.definition.custom.width/2F);		
 							}else{
-								box = new AxisAlignedBB((float) (offset.x) - 0.375F, (float) (offset.y) - 0.5F, (float) (offset.z) - 0.375F, (float) (offset.x) + 0.375F, (float) (offset.y) + 1.25F, (float) (offset.z) + 0.375F);
+								box = new AxisAlignedBB(offset.x - 0.375F, offset.y - 0.5F, offset.z - 0.375F, offset.x + 0.375F, offset.y + 1.25F, offset.z + 0.375F);
 							}
 							
 							if(isPartValid){
@@ -983,7 +982,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		
 		//Draw collision boxes for the vehicle.
 		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
-			Vec3d boxOffset = box.pos.subtract(vehicle.posX, vehicle.posY, vehicle.posZ);
+			Point3d boxOffset = box.pos.copy().add(-vehicle.posX, -vehicle.posY, -vehicle.posZ);
 			GL11.glBegin(GL11.GL_LINES);
 			//Bottom
 			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);

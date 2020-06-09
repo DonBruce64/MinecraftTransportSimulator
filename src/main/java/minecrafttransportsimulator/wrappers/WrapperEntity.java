@@ -2,7 +2,7 @@ package minecrafttransportsimulator.wrappers;
 
 import java.nio.FloatBuffer;
 
-import minecrafttransportsimulator.baseclasses.Vector3d;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.entity.Entity;
 
@@ -73,13 +73,13 @@ public class WrapperEntity{
 	 *  Used for interpolation in movement.  Returned vector is re-used for
 	 *  all operations to prevent new objects from being created each tick.
 	 */
-	public Vector3d getRenderedPosition(float partialTicks){
+	public Point3d getRenderedPosition(float partialTicks){
 		mutableRenderPosition.x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
 		mutableRenderPosition.y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
 		mutableRenderPosition.z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
 		return mutableRenderPosition;
 	}
-	private final Vector3d mutableRenderPosition = new Vector3d(0D, 0D, 0D);
+	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
 	
 	/**
 	 *  Puts the entity's position into the passed-in buffer.

@@ -62,7 +62,7 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 				//Note that if we're on top of a bottom-part half-slab we translate down 0.5 units to make ourselves flush.
 				GL11.glPushMatrix();
 				GL11.glTranslated(x, y, z);
-				GL11.glTranslatef(0.5F, render.translateToSlabs() && wrapper.tileEntity.world.isBlockBottomSlab(wrapper.tileEntity.position.newOffset(0, -1, 0)) ? -0.5F : 0.0F, 0.5F);			
+				GL11.glTranslatef(0.5F, render.translateToSlabs() && wrapper.tileEntity.world.isBlockBottomSlab(wrapper.tileEntity.position.copy().add(0, -1, 0)) ? -0.5F : 0.0F, 0.5F);			
 				if(render.rotateToBlock()){
 					ABlockBase block = wrapper.tileEntity.getBlock();
 					if(block != null){

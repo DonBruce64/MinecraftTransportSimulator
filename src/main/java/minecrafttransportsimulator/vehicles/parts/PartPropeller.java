@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -10,13 +11,11 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.Vec3d;
 
 public class PartPropeller extends APart{	
 	public float angularPosition;
@@ -54,8 +53,7 @@ public class PartPropeller extends APart{
 	public void updatePart(){
 		super.updatePart();
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
-		//But don't do this for blimps, as they reverse their engines rather than adjust their propellers.
-		if(definition.propeller.isDynamicPitch && !(vehicle instanceof EntityVehicleG_Blimp)){
+		if(definition.propeller.isDynamicPitch){
 			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
 				--currentPitch;
 			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
@@ -84,7 +82,7 @@ public class PartPropeller extends APart{
 		//Damage propeller or entities if required.
 		if(!vehicle.world.isRemote){
 			if(connectedEngine.rpm >= 100){
-				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.2F, 0.2F, 0.2F));
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox.expand(0.2F, 0.2F, 0.2F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -99,7 +97,7 @@ public class PartPropeller extends APart{
 						}
 					}
 				}
-				if(this.isPartCollidingWithBlocks(Vec3d.ZERO)){
+				if(isPartColliding()){
 					damagePropeller(1);
 					
 				}
@@ -128,14 +126,8 @@ public class PartPropeller extends APart{
 	}
 
 	@Override
-	public Vec3d getActionRotation(float partialTicks){
-		//If we are on an engine that can reverse, adjust our direction.
-		//Getting smooth changes here is a PITA, and I ain't gonna do it myself.
-		if(vehicle instanceof EntityVehicleG_Blimp && vehicle.reversePercent != 0){
-			return vehicle.reversePercent != 20 ? Vec3d.ZERO : new Vec3d(0, 0, -(this.angularPosition + this.angularVelocity*partialTicks)*360D);
-		}else{
-			return new Vec3d(0, 0, (this.angularPosition + this.angularVelocity*partialTicks)*360D);
-		}
+	public Point3d getActionRotation(float partialTicks){
+		return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 	}
 	
 	private void damagePropeller(float damage){

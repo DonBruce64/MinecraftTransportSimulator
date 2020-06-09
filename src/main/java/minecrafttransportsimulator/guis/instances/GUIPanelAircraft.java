@@ -101,7 +101,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		//Create magneto and stater selectors for the engines.
 		for(Byte engineNumber : vehicle.engines.keySet()){
 			//Go to next column if we are on our 5th engine.
-			if(engineNumber == 5){
+			if(engineNumber == 4){
 				xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 			}
 			

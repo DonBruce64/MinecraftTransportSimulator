@@ -67,8 +67,8 @@ public class TransformTreadRoller extends TransformRotatable{
 			VehicleRotatableModelObject rotatable = vehicle.definition.new VehicleRotatableModelObject();
 			rotatable.partName = objectName;
 			rotatable.rotationVariable = "speed";
-			rotatable.rotationPoint = new float[]{0, (float) yPos, (float) zPos};
-			rotatable.rotationAxis = new float[]{(float) (1D/radius), 0, 0};
+			rotatable.rotationPoint = new double[]{0, yPos, zPos};
+			rotatable.rotationAxis = new double[]{1D/radius, 0, 0};
 			vehicle.definition.rendering.rotatableModelObjects.add(rotatable);
 		}
 		

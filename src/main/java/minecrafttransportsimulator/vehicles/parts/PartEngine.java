@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.PartEngine.EngineSound;
@@ -17,7 +18,6 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Blimp;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
@@ -27,7 +27,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -421,7 +420,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//If wheel friction is 0, and we have a propeller, and arne't in neutral, get RPM contributions for that.
 		if(wheelFriction == 0 && propeller != null && currentGearRatio != 0){
-			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos)).getMaterial().isLiquid();
+			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
 			propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 			double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
 			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*rpm/propellerGearboxRatio/60D/20D;
@@ -457,7 +456,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//If we provide jet thrust, check for entities forward and aft of the engine and damage them.
 		if(definition.engine.jetPowerFactor > 0 && vehicle.world.isRemote && rpm >= 5000){
-			List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec).expand(-0.25F, -0.25F, -0.25F));
+			List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().add(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
 			if(!collidedEntites.isEmpty()){
 				Entity attacker = null;
 				for(Entity passenger : vehicle.getPassengers()){
@@ -473,7 +472,7 @@ public class PartEngine extends APart implements FXPart{
 				}
 			}
 			
-			collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(vehicle.headingVec.scale(-1.0D)).expand(0.25F, 0.25F, 0.25F));
+			collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().subtract(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
 			if(!collidedEntites.isEmpty()){
 				Entity attacker = null;
 				for(Entity passenger : vehicle.getPassengers()){
@@ -746,7 +745,9 @@ public class PartEngine extends APart implements FXPart{
 			}
 		}else if(currentGear < definition.engine.gearRatios.length - 2){
 			if(definition.engine.isAutomatic && packet){
-				currentGear = 1;
+				if(currentGear < 1){
+					currentGear = 1;
+				}
 			}else{
 				++currentGear;
 			}
@@ -794,7 +795,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public boolean isInLiquid(){
-		return vehicle.world.getBlockState(new BlockPos(worldPos.addVector(0, vehicleDefinition.intakeOffset, 0))).getMaterial().isLiquid();
+		return vehicle.world.getBlockState(new BlockPos(worldPos.x, worldPos.y + vehicleDefinition.intakeOffset, worldPos.z)).getMaterial().isLiquid();
 	}
 	
 	public double getEngineRotation(float partialTicks){
@@ -805,29 +806,30 @@ public class PartEngine extends APart implements FXPart{
 		return driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation)*partialTicks;
 	}
 	
-	public double getForceOutput(){
+	public Point3d getForceOutput(){
 		//Get all the forces this part can output.
-		double engineForce = 0;
+		Point3d engineForce = new Point3d(0D, 0D, 0D);
 		
 		//First get wheel forces, if we have friction to do so.
 		if(wheelFriction != 0){
+			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
-				engineForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+				wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				//Check to see if the wheels need to spin out.
 				//If they do, we'll need to provide less force.
-				if(Math.abs(engineForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(engineForce/300F))){
-					engineForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(engineForce/300F);					
+				if(Math.abs(wheelForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300F))){
+					wheelForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(wheelForce/300F);					
 					for(APartGroundDevice wheel : vehicle.wheels){
 						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 							if(currentGearRatio > 0){
-								if(engineForce >= 0){
+								if(wheelForce >= 0){
 									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity + 0.01);
 								}else{
 									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity - 0.01);
 								}
 							}else{
-								if(engineForce >= 0){
+								if(wheelForce >= 0){
 									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity - 0.01);
 								}else{
 									
@@ -849,13 +851,14 @@ public class PartEngine extends APart implements FXPart{
 				
 				//Don't let us have negative engine force at low speeds.
 				//This causes odd reversing behavior when the engine tries to maintain speed.
-				if((engineForce < 0 && currentGear > 0 && vehicle.velocity < 0.25) || (engineForce > 0 && currentGear < 0 && vehicle.velocity > -0.25)){
-					engineForce = 0;
+				if((wheelForce < 0 && currentGear > 0 && vehicle.velocity < 0.25) || (wheelForce > 0 && currentGear < 0 && vehicle.velocity > -0.25)){
+					wheelForce = 0;
 				}
 			}else{
 				//Not running, do engine braking.
-				engineForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*30;
+				wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*30;
 			}
+			engineForce.z += wheelForce;
 		}else{
 			//No wheel force.  Check for propellers to provide force.
 			if(propeller != null && Math.abs(propeller.currentPitch) > 5 && state.running){
@@ -878,16 +881,24 @@ public class PartEngine extends APart implements FXPart{
 					if(angleOfAttack > 0.4663D){
 						thrust *= 0.4663D/angleOfAttack;
 					}
-					//Get the correct sign of the force, taking engine systems into account.
-					if(vehicle instanceof EntityVehicleG_Blimp && vehicle.reverseThrust){
-						thrust *= -Math.signum(effectivePitchVelocity);
-					}else{
-						thrust *= Math.signum(effectivePitchVelocity);
+					
+					//Get the correct sign of the force.
+					thrust *= Math.signum(effectivePitchVelocity);
+					
+					//If the propeller is in the water, increase thrust.
+					if(isPropellerInLiquid){
+						thrust *= 50;
 					}
 					
-					//Add thrust as a force to engine force.
-					//Note that propellers in water are more effective than those in air due to fluid dynamics.
-					engineForce += isPropellerInLiquid ? thrust*50 : thrust;
+					//Add propeller force to total engine force as a vector.
+					//Depends on propeller orientation, as upward propellers provide upwards thrust.
+					Point3d propellerRotation;
+					if(propeller.vehicleDefinition.isSubPart){
+						propellerRotation = getPositionRotation(0).add(propeller.placementRotation);
+					}else{
+						propellerRotation = propeller.getPositionRotation(0).add(propeller.placementRotation);
+					}
+					engineForce.add(RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), propellerRotation.x, propellerRotation.y, propellerRotation.z));
 				}
 			}
 		}
@@ -901,13 +912,20 @@ public class PartEngine extends APart implements FXPart{
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
 			double safeRPMFactor = rpm/getSafeRPMFromMax(definition.engine.maxRPM);
 			double coreContribution = Math.max(10*vehicle.airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
+			
 			//The fan portion is calculated similarly to how propellers are calculated.
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
 			//Again, this is "hacky math", as for some reason there's no data on fan pitches.
 			//In this case, however, we don't care about the fuelConsumption as that's only used by the core.
 			double fanVelocityFactor = (0.0254*250*rpm/60/20 - vehicle.velocity)/200D;
 			double fanContribution = 10*vehicle.airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.bypassRatio;
-			engineForce += (vehicle.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
+			double thrust = (vehicle.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
+			
+			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
+			Point3d engineRotation = getPositionRotation(0);
+			engineForce.x += thrust*(placementRotation.x + engineRotation.x);
+			engineForce.y += thrust*(placementRotation.y + engineRotation.y);
+			engineForce.z += thrust*(placementRotation.z + engineRotation.z);
 		}
 		
 		//Finally, return the force we calculated.
@@ -1043,8 +1061,8 @@ public class PartEngine extends APart implements FXPart{
 						}
 					}
 					
-					Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-					Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+					Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+					Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 					if(state.running){
 						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
 						//Also play steam chuff sound if we are a steam engine.
@@ -1065,8 +1083,8 @@ public class PartEngine extends APart implements FXPart{
 				backfired = false;
 				if(vehicleDefinition.exhaustPos != null){
 					for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
-						Vec3d exhaustOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.getPositionVector());
-						Vec3d velocityOffset = RotationSystem.getRotatedPoint(new Vec3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+						Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 						for(byte j=0; j<5; ++j){
 							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.07 - Math.random()*0.14, velocityOffset.y/10D, velocityOffset.z/10D + 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));
 						}
