@@ -15,7 +15,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -136,7 +136,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 					//us what fuel type we will need to add.
 					if(newVehicle.definition.motorized.defaultFuelQty > 0){
 						for(APart part : newVehicle.getVehicleParts()){
-							if(part instanceof APartEngine){
+							if(part instanceof PartEngine){
 								//Get the most potent fuel for the vehicle from the fuel configs.
 								String mostPotentFluid = "";
 								for(String fluidName : ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
@@ -164,7 +164,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				
 				//Next, boost based on parts.
 				for(APart part : newVehicle.getVehicleParts()){
-					minHeight = Math.min(part.offset.x - part.getHeight()/2F, minHeight);
+					minHeight = Math.min(part.placementOffset.y - part.getHeight()/2F, minHeight);
 				}
 				
 				//Apply the boost, and check collisions.

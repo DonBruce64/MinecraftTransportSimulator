@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.vehicles;
+package minecrafttransportsimulator.rendering.components;
 
 import java.awt.Color;
 
@@ -10,17 +10,17 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.world.EnumSkyBlock;
 
-/**This class represents a lighted part on a vehicle.  Inputs are the name of the lighted parts,
- * and all vertices that make up the part.
- *
- * @author don_bruce
- */
-public final class RenderVehicle_LightPart{
-	public final String name;
+/**This class represents a light object of a model.  Inputs are the name of the name model
+* and the name of the light.
+*
+* @author don_bruce
+*/
+public class TransformLight extends ARenderableTransform{
 	public final LightType type;
 	public final boolean isLightupTexture;
 	
@@ -34,27 +34,22 @@ public final class RenderVehicle_LightPart{
 	private final Point3d[] centerPoints;
 	private final Float[] size;
 	
-	//This can't be final as we'll do a double-display-list if we try to do this on construction.
-	private int displayListIndex = -1;
-	
-	public RenderVehicle_LightPart(String name, Float[][] masterVertices){
-		this.name = name;
-		this.type = getTypeFromName(name);
+	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
+		this.type = getTypeFromName(objectName);
 		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZ"
 		//Where NAME is what switch it goes to.
 		//XXXXXX is the color.
 		//YYYYY is the blink rate.
 		//ZZZ is the light type.  The first bit renders the flare, the second the color, and the third the cover.
 		try{
-			this.color = Color.decode("0x" + name.substring(name.indexOf('_') + 1, name.indexOf('_') + 7));
-			this.flashBits = Integer.decode("0x" + name.substring(name.indexOf('_', name.indexOf('_') + 7) + 1, name.lastIndexOf('_')));
-			this.renderFlare = Integer.valueOf(name.substring(name.length() - 3, name.length() - 2)) > 0;
-			this.renderColor = Integer.valueOf(name.substring(name.length() - 2, name.length() - 1)) > 0;
-			this.renderCover = Integer.valueOf(name.substring(name.length() - 1)) > 0;
+			this.color = Color.decode("0x" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
+			this.flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
+			this.renderFlare = Integer.valueOf(objectName.substring(objectName.length() - 3, objectName.length() - 2)) > 0;
+			this.renderColor = Integer.valueOf(objectName.substring(objectName.length() - 2, objectName.length() - 1)) > 0;
+			this.renderCover = Integer.valueOf(objectName.substring(objectName.length() - 1)) > 0;
 		}catch(Exception e){
-			throw new NumberFormatException("ERROR: Attempted to parse light information from: " + this.name + " but faulted.  This is likely due to a naming convention error.");
+			throw new NumberFormatException("ERROR: Attempted to parse light information from " + modelName + ":" + objectName + " but faulted.  This is likely due to a naming convention error.");
 		}
-		
 		
 		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
 		if(renderFlare || renderCover || type.hasBeam){
@@ -108,41 +103,44 @@ public final class RenderVehicle_LightPart{
 		//Set the light-up texture status.
 		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !type.hasBeam;
 	}
+
+	@Override
+	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+		//If we are a light-up texture, disable lighting prior to the render call.
+		//Lights start dimming due to low power at 8V.
+		setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+	}
 	
-	/**
-	 *  Renders this light for this vehicle.  This falls down to the method below for actual rendering.  Segmented
-	 *  to allow for other things to use vehicle lighting code, such as blocks.
-	 */
-	public void renderOnVehicle(EntityVehicleE_Powered vehicle, boolean wasRenderedPrior, String textureDomain, String textureLocation){
+	@Override
+	public void doPostRenderLogic(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+		//We cheat here and render our light bits at this point.
+		//It's safe to do this, as we'll already have applied all the other transforms we need, and
+		//we'll have rendered the object so we can safely change textures.
+		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
 		boolean lightActuallyOn = vehicle.lightsOn.contains(type) && isFlashingLightOn();
 		float sunLight = vehicle.world.getSunBrightness(0)*(vehicle.world.getLightFor(EnumSkyBlock.SKY, vehicle.getPosition()) - vehicle.world.getSkylightSubtracted())/15F;
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, wasRenderedPrior, (float) vehicle.electricPower, electricFactor, lightBrightness, textureDomain, textureLocation);
+		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness);
 	}
+	
 	
 	/**
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
-	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive, String textureDomain, String textureLocation){
-		render(lightActive && isFlashingLightOn(), WrapperRender.getRenderPass() == -1, 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), textureDomain, textureLocation);
+	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive){
+		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false));
 	}
 	
 	/**
 	 *  Renders this light based on the state of the lighting at the passed-in position.  This main call can be used for
-	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes.
+	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes, though -1 is a combination of 0 and 1..
 	 */
-	public void render(boolean lightOn, boolean wasRenderedPrior, float electricPower, float electricFactor, float lightBrightness, String textureDomain, String textureLocation){
+	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness){
 		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
-		if(WrapperRender.getRenderPass() != 1 && !wasRenderedPrior){
-			//Render the texture if we are a light-up texture light.
-			//Otherwise, don't render the texture here as it'll be in the main vehicle DisplayList.
-			if(isLightupTexture){
-				renderTexture(lightOn && electricFactor > 0, textureDomain, textureLocation);
-			}
-			
+		if(WrapperRender.getRenderPass() != 1){
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
 			if(renderColor && lightOn && electricFactor > 0){
@@ -157,7 +155,7 @@ public final class RenderVehicle_LightPart{
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0) && !wasRenderedPrior; 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
@@ -171,8 +169,12 @@ public final class RenderVehicle_LightPart{
 			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
-		//Set color, lighting and blending state back to normal.
-		WrapperRender.resetStates();
+		//Set color back to normal, turn off blending, turn on lighting, and un-bind the light textures.
+		//This resets the operations in here for other transforms.
+		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		WrapperRender.setBlendState(false, false);
+		WrapperRender.setLightingState(true);
+		WrapperRender.recallTexture();
 	}
 	
 	/**
@@ -185,28 +187,12 @@ public final class RenderVehicle_LightPart{
 	}
 	
 	/**
-	 *  Renders the textured portion of this light.  All that really needs to be done here
-	 *  is disabling lighting to make the texture be bright if we have enough electricity to do so.
+	 *  Sets the lighting status for light-up texture rendering.  Has no effect if such rendering isn't part of this light.
 	 */
-	private void renderTexture(boolean disableLighting, String textureDomain, String textureLocation){
-		WrapperRender.bindTexture(textureDomain, textureLocation);
-		WrapperRender.setLightingState(!disableLighting);
-		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		
-		//If we don't have a DisplayList, create one now.
-		if(displayListIndex == -1){
-			displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Float[] vertex : vertices){
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);	
-			}
-			GL11.glEnd();
-			GL11.glEndList();
+	public void setLightupTextureState(boolean lightOn, float electricFactor){
+		if(WrapperRender.getRenderPass() != 1 && isLightupTexture){
+			WrapperRender.setLightingState(lightOn && isFlashingLightOn() && electricFactor > 0);
 		}
-		GL11.glCallList(displayListIndex);
 	}
 	
 	/**

@@ -13,7 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperInput;
@@ -32,7 +32,7 @@ public final class ControlSystem{
 	 * prior to using them in any of the methods contained in this wrapper (cause they'll be null).
 	 * Joystick enums need to come first, as the Keyboard enums take them as constructor args.
 	 * After we initialize the keboard enums, we set their default values.  If we don't initialize
-	 * them first, we hit a switch error in {@link WrapperInput#getDefaultKeyCode(ControlsKeyboard)}.
+	 * them first, we hit a switch error in {@link WrapperInput#getDefaultKeyCode}.
 	 * Once all this is done, save the results back to the disk to ensure the systems are synced.
 	 * Note that since this class won't be called until the world loads because we won't process inputs
 	 * out-of-world, it can be assumed that the ConfigSystem has already been initialized.
@@ -141,19 +141,19 @@ public final class ControlSystem{
 			//If we are seated, attempt to control guns.
 			//Only control guns our seat is a part of, or guns with no seats part of them.
 			//First check our parent part.
-			if(seat.parentPart instanceof APartGun){
-				MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+			if(seat.parentPart instanceof PartGun){
+				MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 			}
 			//Now check subParts of our seat.
 			for(APart subPart : seat.childParts){
-				if(subPart instanceof APartGun){
-					MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+				if(subPart instanceof PartGun){
+					MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
-			if(seat.isController){
+			if(seat.vehicleDefinition.isController){
 				for(APart part : vehicle.getVehicleParts()){
-					if(part instanceof APartGun){
+					if(part instanceof PartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
 							for(APart subPart : part.childParts){
@@ -162,7 +162,7 @@ public final class ControlSystem{
 								}
 							}
 							if(!hasControllingSeats){
-								MTS.MTSNet.sendToServer(new PacketPartGunSignal((APartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+								MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
 							}
 						}
 					}
@@ -229,7 +229,7 @@ public final class ControlSystem{
 		
 		//Check yaw.
 		if(ControlsJoystick.AIRCRAFT_YAW.config.joystickName != null){
-			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(aircraft.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Air.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
@@ -256,7 +256,7 @@ public final class ControlSystem{
 		}else{
 			//Check pitch.
 			if(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName != null){
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(aircraft.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Air.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
 					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
@@ -274,7 +274,7 @@ public final class ControlSystem{
 			
 			//Check roll.
 			if(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName != null){
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(aircraft.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Air.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
 					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));

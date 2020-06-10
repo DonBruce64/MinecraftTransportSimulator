@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -18,7 +18,7 @@ public class PacketPartGunReload extends APacketPart{
 
 	public PacketPartGunReload(){}
 	
-	public PacketPartGunReload(APartGun gun, ItemPartBullet bullet){
+	public PacketPartGunReload(PartGun gun, ItemPartBullet bullet){
 		super(gun);
 		this.bulletPackID = bullet.definition.packID;
 		this.bulletSystemName = bullet.definition.systemName;
@@ -43,7 +43,7 @@ public class PacketPartGunReload extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
+					PartGun gun = (PartGun) getVehiclePartFromMessage(message, ctx);
 					if(gun != null){
 						gun.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(message.bulletPackID).get(message.bulletSystemName);
 						gun.bulletsLeft += gun.loadedBullet.definition.bullet.quantity;

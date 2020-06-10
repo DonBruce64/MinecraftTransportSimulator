@@ -56,7 +56,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 					if(droppedItem != null){
 						ItemStack droppedStack = new ItemStack(droppedItem);
 						droppedStack.setTagCompound(part.getPartNBTTag());
-						vehicle.world.spawnEntity(new EntityItem(vehicle.world, part.partPos.x, part.partPos.y, part.partPos.z, droppedStack));
+						vehicle.world.spawnEntity(new EntityItem(vehicle.world, part.worldPos.x, part.worldPos.y, part.worldPos.z, droppedStack));
 					}
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.

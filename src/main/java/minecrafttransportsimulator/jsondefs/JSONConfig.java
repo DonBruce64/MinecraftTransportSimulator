@@ -6,7 +6,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.parts.AItemPartEngine;
+import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Custom Config class.  This contains all fields used in config operation,
@@ -78,8 +78,8 @@ public class JSONConfig{
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
 				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
-					if(item instanceof AItemPartEngine){
-						AItemPartEngine itemEngine = (AItemPartEngine) item;
+					if(item instanceof ItemPartEngine){
+						ItemPartEngine itemEngine = (ItemPartEngine) item;
 						if(itemEngine.definition.general.type.startsWith("engine")){
 							//For old packs, if we don't have a fuelType set it to diesel.
 							//This is because it's the most versatile fuel, and all the old packs have heavy equipment.

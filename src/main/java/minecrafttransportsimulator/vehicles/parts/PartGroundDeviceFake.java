@@ -4,7 +4,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 
 /**A fake ground device that will be added to the vehicle when long ground devices are present.
  * Does not render and will be removed in tandem with the ground device that's linked to it.
@@ -37,12 +36,12 @@ public final class PartGroundDeviceFake extends APartGroundDevice{
 	
 	@Override
 	public float getWidth(){
-		return masterPart.getWidth();
+		return masterPart != null ? masterPart.getWidth() : 1.0F;
 	}
 	
 	@Override
 	public float getHeight(){
-		return masterPart.getHeight();
+		return masterPart != null ? masterPart.getHeight() : 1.0F;
 	}
 	
 	@Override
@@ -51,12 +50,12 @@ public final class PartGroundDeviceFake extends APartGroundDevice{
 	}
 	
 	@Override
-	public ResourceLocation getModelLocation(){
+	public String getModelLocation(){
 		return null;
 	}
 	
 	@Override
-	public ResourceLocation getTextureLocation(){
+	public String getTextureLocation(){
 		return null;
 	}
 	

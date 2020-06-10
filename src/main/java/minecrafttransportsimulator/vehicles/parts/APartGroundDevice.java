@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -12,7 +13,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
 /**Any child that touches the ground should extend this class.
  * It's used to perform ground physics and rendering of wheels, pontoons, and whatever
@@ -21,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public abstract class APartGroundDevice extends APart{
-	public static final Vec3d groundDetectionOffset = new Vec3d(0, -0.05F, 0);
+	public static final Point3d groundDetectionOffset = new Point3d(0, -0.05F, 0);
 	private final PartGroundDeviceFake fakePart;
 	
 	public boolean skipAngularCalcs = false;
@@ -60,20 +60,20 @@ public abstract class APartGroundDevice extends APart{
 			//Long parts use linear propulsion, not rotary, so don't take height into account.
 			if(!skipAngularCalcs){
 				if(getLongPartOffset() == 0){
-					angularVelocity = (float) (vehicle.velocity/(this.getHeight()*Math.PI));
+					angularVelocity = (float) (vehicle.groundVelocity/(this.getHeight()*Math.PI));
 				}else{
-					angularVelocity = (float) vehicle.velocity;
+					angularVelocity = (float) (vehicle.groundVelocity);
 				}
 			}
 			
 			//Check for colliding entities and damage them.
 			if(!vehicle.world.isRemote && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
-				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, this.getAABBWithOffset(Vec3d.ZERO).expand(0.25F, 0, 0.25F));
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox.expand(0.25F, 0, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
 						PartSeat seat = vehicle.getSeatForRider(passenger);
-						if(seat.isController){
+						if(seat.vehicleDefinition.isController){
 							attacker = passenger;
 							break;
 						}
@@ -109,12 +109,12 @@ public abstract class APartGroundDevice extends APart{
 	
 	public float getFrictionLoss(){
 		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-		BlockPos pos = new BlockPos(partPos.addVector(0, -1, 0));
+		BlockPos pos = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
 		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null) + (vehicle.world.isRainingAt(pos.up()) ? 0.25F : 0);
 	}
 	
 	public boolean isOnGround(){
-		return isPartCollidingWithBlocks(groundDetectionOffset);
+		return wouldPartCollide(groundDetectionOffset);
 	}
 	
 	public abstract float getMotiveFriction();

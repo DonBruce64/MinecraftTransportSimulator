@@ -20,10 +20,10 @@ import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
@@ -31,7 +31,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
@@ -53,16 +52,18 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	public double fuel;
 	public boolean reverseThrust;
 	public short reversePercent;
+	public boolean gearUpCommand;
+	public int gearMovementTime;
 	
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
 	public String fluidName = "";
-	public Vec3d velocityVec = Vec3d.ZERO;
+	
 	
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
-	public final Map<Byte, APartEngine> engines = new HashMap<Byte, APartEngine>();
+	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
 	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
 	
@@ -98,7 +99,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
 			//Turn on the DRLs if we have an engine on.
 			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
-			for(APartEngine engine : engines.values()){
+			for(PartEngine engine : engines.values()){
 				if(engine.state.running){
 					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
 					break;
@@ -159,6 +160,13 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				--reversePercent;
 			}
 			
+			//Adjust gear variables.
+			if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
+				++gearMovementTime;
+			}else if(!gearUpCommand && gearMovementTime > 0){
+				--gearMovementTime;
+			}
+			
 			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
 			groundedWheels.clear();
 			for(APartGroundDevice wheel : this.wheels){
@@ -201,7 +209,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		//Now find the controller to see who to display as the killer in the death message.
 		Entity controller = null;
 		for(Entity passenger : this.getPassengers()){
-			if(this.getSeatForRider(passenger).isController && controller != null){
+			if(this.getSeatForRider(passenger).vehicleDefinition.isController && controller != null){
 				controller = passenger;
 				break;
 			}
@@ -246,15 +254,15 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	@Override
 	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
-		if(part instanceof APartEngine){
+		if(part instanceof PartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
 			byte engineNumber = 0;
 			for(VehiclePart packPart : definition.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
-						if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
-							engines.put(engineNumber, (APartEngine) part);
+						if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
+							engines.put(engineNumber, (PartEngine) part);
 							return;
 						}
 						++engineNumber;
@@ -265,7 +273,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			if(((APartGroundDevice) part).canBeDrivenByEngine()){
 				wheels.add((APartGroundDevice) part);
 			}
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			++totalGuns;
 		}
 	}
@@ -277,7 +285,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		for(VehiclePart packPart : definition.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
-					if(part.offset.x == packPart.pos[0] && part.offset.y == packPart.pos[1] && part.offset.z == packPart.pos[2]){
+					if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
 						engines.remove(engineNumber);
 						return;
 					}
@@ -287,7 +295,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
-		}else if(part instanceof APartGun){
+		}else if(part instanceof PartGun){
 			--totalGuns;
 		}
 	}

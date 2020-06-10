@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -14,7 +14,7 @@ public class PacketPartGunSignal extends APacketPart{
 
 	public PacketPartGunSignal(){}
 	
-	public PacketPartGunSignal(APartGun gun, int playerControllerID, boolean firing){
+	public PacketPartGunSignal(PartGun gun, int playerControllerID, boolean firing){
 		super(gun);
 		this.playerControllerID = playerControllerID;
 		this.firing = firing;
@@ -39,7 +39,7 @@ public class PacketPartGunSignal extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					APartGun gun = (APartGun) getVehiclePartFromMessage(message, ctx);
+					PartGun gun = (PartGun) getVehiclePartFromMessage(message, ctx);
 					if(gun != null){
 						gun.playerControllerID = message.playerControllerID;
 						gun.firing = message.firing;

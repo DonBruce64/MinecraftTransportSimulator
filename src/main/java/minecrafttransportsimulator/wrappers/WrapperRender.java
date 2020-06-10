@@ -15,21 +15,28 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -50,7 +57,9 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class WrapperRender{
-	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>(); 
+	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>();
+	private static String pushedTextureDomain;
+	private static String pushedTextureLocation;
 	
 	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
@@ -58,6 +67,13 @@ public class WrapperRender{
 	 */
 	public static int getRenderPass(){
 		return MinecraftForgeClient.getRenderPass();
+	}
+	
+	/**
+	 *  Returns true if bounding boxes should be rendered.
+	 */
+	public static boolean shouldRenderBoundingBoxes(){
+		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox() && getRenderPass() != 1;
 	}
 	
 	/**
@@ -86,31 +102,98 @@ public class WrapperRender{
 	}
 	
 	/**
-	 *  Sets the lighting to either enabled or disabled based on the passed-in parameter.
-	 *  Note that this both disables the internal lightmap as well as the lighting.
+	 *  Like bindTexture, but this method also sets the texture for binding recall later via recallTexture.
+	 *  This allows for us to recall specific textures anywhere in the code.  Useful when we don't know what
+	 *  we will render between this call and another call, but we do know that we want this texture to be
+	 *  re-bound if any other textures were bound.
+	 */
+	public static void setTexture(String textureDomain, String textureLocation){
+		pushedTextureDomain = textureDomain;
+		pushedTextureLocation = textureLocation;
+		bindTexture(textureDomain, textureLocation);
+	}
+	
+	/**
+	 *  Re-binds the last saved texture.
+	 */
+	public static void recallTexture(){
+		if(pushedTextureDomain != null){
+			Minecraft.getMinecraft().getTextureManager().bindTexture(textures.get(pushedTextureDomain).get(pushedTextureLocation));
+		}
+	}
+	
+	/**
+	 *  Helper method to completely disable or enable lighting.
+	 *  This disables both the system lighting and internal lighting.
 	 */
 	public static void setLightingState(boolean enabled){
+		setSystemLightingState(enabled);
+		setInternalLightingState(enabled);
+	}
+	
+	/**
+	 *  Enables or disables OpenGL lighting for this draw sequence.
+	 *  This effectively prevents OpenGL lighting calculations on textures.
+	 *  Do note that the normal internal lightmapping will still be applied.
+	 *  This can be used to prevent OpenGL from doing shadowing on things
+	 *  that it gets wrong, such as text. 
+	 */
+	public static void setSystemLightingState(boolean enabled){
 		if(enabled){
 			GlStateManager.enableLighting();
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}else{
 			GlStateManager.disableLighting();
+		}
+	}
+	
+	/**
+	 *  Enables or disables internal lighting for this draw sequence.
+	 *  This disables the internal lightmapping, effectively making the rendered
+	 *  texture as bright as it would be during daytime.  Do note that the system
+	 *  lighting calculations for shadowing will still be applied to the model.
+	 */
+	public static void setInternalLightingState(boolean enabled){
+		if(enabled){
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		}else{
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		}
 	}
 	
 	/**
-	 *  Tells the renderer to ignore world lighting for this draw sequence.
-	 *  This effectively makes the texture as bright as it would be during
-	 *  daytime.  Do note that it won't make the texture completely ignore
-	 *  lighting.  That only works if lighting is disabled. 
+	 *  Updates the internal lightmap to be consistent with the light at the
+	 *  passed-in vehicle's location.  This will also enable lighting should
+	 *  the current render pass be -1.
 	 */
-	public static void setWorldLightingState(boolean enabled){
-		if(enabled){
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		}else{
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		}
+	public static void setLightingToVehicle(EntityVehicleE_Powered vehicle){
+		if(getRenderPass() == -1){
+	        RenderHelper.enableStandardItemLighting();
+	        setLightingState(true);
+        }
+		int lightVar = vehicle.getBrightnessForRender();
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
+        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
+	}
+	
+	/**
+	 *  Updates the internal lightmap to be consistent with the light at the
+	 *  passed-in block's location.  This will also enable lighting should
+	 *  the current render pass be -1.
+	 */
+	public static void setLightingToBlock(Point3i location){
+		if(getRenderPass() == -1){
+	        RenderHelper.enableStandardItemLighting();
+	        setLightingState(true);
+	        int lightVar = WrapperGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
+	        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
+        }
+        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
+        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
 	}
 	
 	/**
@@ -154,8 +237,33 @@ public class WrapperRender{
 		//For pass 1, we do blending and lighting.
 		//For pass -1, we don't do blending or lighting.
 		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		setLightingState(getRenderPass() != -1);
 		setBlendState(getRenderPass() == 1, false);
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		if(getRenderPass() != -1){
+			setLightingState(true);
+		}else{
+			setLightingState(false);
+			RenderHelper.disableStandardItemLighting();
+		}
+	}
+	
+	/**
+	 *  This method manually renders all riders on a vehicle.  Useful if you're rendering the vehicle manually
+	 *  and the vehicle and its riders have been culled from rendering.
+	 */
+	public static void renderVehicleRiders(EntityVehicleE_Powered vehicle, float partialTicks){
+		for(Entity passenger : vehicle.getPassengers()){
+			if(!(WrapperGame.getClientPlayer().equals(passenger) && WrapperGame.inFirstPerson()) && passenger.posY > passenger.world.getHeight()){
+				PartSeat seat = vehicle.getSeatForRider(passenger);
+				if(seat != null){
+					GL11.glPushMatrix();
+					Point3d offset = vehicle.currentPosition.copy().add(seat.worldPos);
+					GL11.glTranslated(offset.x, offset.y - seat.getHeight()/2F + passenger.getYOffset(), offset.z);
+					Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
+					GL11.glPopMatrix();
+				}
+			}
+		}
 	}
 	
 	/**

@@ -11,7 +11,6 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**This class is a wrapper for vehicle ground device collision points.  It's used to get a point
@@ -82,25 +81,25 @@ public class VehicleGroundDeviceBox{
 			if(part instanceof APartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
-				if(isFront && part.offset.z > 0){
-					if(isLeft && part.offset.x >= 0){
+				if(isFront && part.placementOffset.z > 0){
+					if(isLeft && part.placementOffset.x >= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
-					}else if(!isLeft && part.offset.x <= 0){
+					}else if(!isLeft && part.placementOffset.x <= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
 					}
-				}else if(!isFront && part.offset.z <= 0){
-					if(isLeft && part.offset.x >= 0){
+				}else if(!isFront && part.placementOffset.z <= 0){
+					if(isLeft && part.placementOffset.x >= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
 						}
-					}else if(!isLeft && part.offset.x <= 0){
+					}else if(!isLeft && part.placementOffset.x <= 0){
 						groundDevices.add(part);
 						if(part instanceof PartGroundDevicePontoon){
 							liquidDevices.add(part);
@@ -160,9 +159,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.offset.x;
-			yCoords += groundDevice.offset.y;
-			zCoords += groundDevice.offset.z;
+			xCoords += groundDevice.totalOffset.x;
+			yCoords += groundDevice.totalOffset.y;
+			zCoords += groundDevice.totalOffset.z;
 		}
 		
 		heights /= groundDevices.size();
@@ -171,9 +170,9 @@ public class VehicleGroundDeviceBox{
 		yCoords /= groundDevices.size();
 		zCoords /= groundDevices.size();
 		
-		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
-		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
+		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
+		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
+		return new VehicleAxisAlignedBB(offset.add(vehicle.currentPosition).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -187,9 +186,9 @@ public class VehicleGroundDeviceBox{
 		for(APart groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.offset.x;
-			yCoords += groundDevice.offset.y;
-			zCoords += groundDevice.offset.z;
+			xCoords += groundDevice.totalOffset.x;
+			yCoords += groundDevice.totalOffset.y;
+			zCoords += groundDevice.totalOffset.z;
 		}
 		
 		for(VehicleAxisAlignedBB box : liquidCollisionBoxes){
@@ -206,9 +205,9 @@ public class VehicleGroundDeviceBox{
 		yCoords /= (liquidDevices.size() + liquidCollisionBoxes.size());
 		zCoords /= (liquidDevices.size() + liquidCollisionBoxes.size());
 		
-		Vec3d boxRelativePosition = new Vec3d(xCoords, yCoords, zCoords);
-		Vec3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(vehicle.getPositionVector().add(offset).addVector(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
+		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
+		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
+		return new VehicleAxisAlignedBB(offset.add(vehicle.currentPosition).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
 	}
 	
 	/**

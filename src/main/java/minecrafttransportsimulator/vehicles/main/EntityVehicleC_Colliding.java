@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
 import minecrafttransportsimulator.items.core.ItemWrench;
@@ -17,7 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGun;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -196,9 +197,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			double furthestWidth = 0;
 			double furthestHeight = 0;
 			for(VehicleCollisionBox box : definition.collision){
-				Vec3d boxOffset = new Vec3d(box.pos[0], box.pos[1], box.pos[2]);
-				Vec3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
-				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(this.getPositionVector().add(offset), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
+				Point3d boxOffset = new Point3d(box.pos[0], box.pos[1], box.pos[2]);
+				Point3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
+				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(offset.add(currentPosition), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
 				collisionBoxes.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.x) + box.width/2F);
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
@@ -228,11 +229,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					//This prevents us from clicking on parts when we're trying to place one.
 					//Seats are left in because it'd be a pain to switch items.
 					//Guns are also left in as the player may be clicking them with a bullet part to load them.
-					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof AItemPart && !(part instanceof PartSeat) && !(part instanceof APartGun)){
+					if(Minecraft.getMinecraft().player.getHeldItemMainhand().getItem() instanceof AItemPart && !(part instanceof PartSeat) && !(part instanceof PartGun)){
 						continue;
 					}
 				}
-				partBoxes.add(part.getAABBWithOffset(Vec3d.ZERO));
+				partBoxes.add(part.boundingBox);
 			}
 			
 			//Finally, add all possible part boxes that don't have parts to the list.
@@ -242,7 +243,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			final double PART_SLOT_HITBOX_OFFSET = 0.5D;
 			final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 			final float PART_SLOT_HITBOX_HEIGHT = 1.75F;
-			for(Entry<Vec3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
+			for(Entry<Point3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
 				if(getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) == null){
 					if(world.isRemote){
 						ItemStack heldStack = Minecraft.getMinecraft().player.getHeldItemMainhand();
@@ -253,11 +254,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 								//Part matches.  Add the box.  If we are holding a custom part, add that box
 								//instead of the generic box.
 								if(heldPart instanceof ItemPartCustom){
-									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
-									openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey(), heldPart.definition.custom.width, heldPart.definition.custom.height, false, false));
+									Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), heldPart.definition.custom.width, heldPart.definition.custom.height, false, false));
 								}else{
-									Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, PART_SLOT_HITBOX_OFFSET, 0), rotationPitch, rotationYaw, rotationRoll);
-									openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey().addVector(0, PART_SLOT_HITBOX_OFFSET, 0), PART_SLOT_HITBOX_WIDTH, PART_SLOT_HITBOX_HEIGHT, false, false));
+									packPartEntry.getKey().add(0D, PART_SLOT_HITBOX_OFFSET, 0D);
+									Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), PART_SLOT_HITBOX_WIDTH, PART_SLOT_HITBOX_HEIGHT, false, false));
 								}
 							}
 						}else{
@@ -266,8 +268,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 						}
 					}else{
 						//We are on the server.  Set width and height to 0 to prevent clicking.
-						Vec3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey().addVector(0, 0, 0), rotationPitch, rotationYaw, rotationRoll);
-						openPartSpotBoxes.add(new VehicleAxisAlignedBB(getPositionVector().add(offset), packPartEntry.getKey().addVector(0, 0, 0), 0, 0, false, false));
+						Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
+						openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), 0, 0, false, false));
 					}
 				}
 			}

@@ -9,7 +9,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.rendering.blocks.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import minecrafttransportsimulator.wrappers.WrapperWorld;

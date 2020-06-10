@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.systems.OBJParserSystem;
@@ -177,7 +178,7 @@ public final class PartBullet extends Particle{
         for(Entry<String, Float[][]> modelObjects : parsedBulletModels.get(bulletItem).entrySet()){
         	for(Float[] modelPoints : modelObjects.getValue()){
         		if(index != 4 && index != 6){
-	        		Vec3d rotatedCoords = RotationSystem.getRotatedPoint(new Vec3d(modelPoints[0], modelPoints[1], modelPoints[2]), (float) pitch, (float) yaw, 0);
+        			Point3d rotatedCoords = RotationSystem.getRotatedPoint(new Point3d(modelPoints[0], modelPoints[1], modelPoints[2]), pitch, yaw, 0);
 	        		worldRendererIn.pos(renderPosX + rotatedCoords.x, renderPosY + rotatedCoords.y, renderPosZ + rotatedCoords.z).tex(particleTexture.getMinU() + (particleTexture.getMaxU() - particleTexture.getMinU())*modelPoints[3], particleTexture.getMinV() + (particleTexture.getMaxV() - particleTexture.getMinV())*modelPoints[4]).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(skyLight, blockLight).endVertex();
         		}
         		index = (byte) (index == 6 ? 1 : index + 1);

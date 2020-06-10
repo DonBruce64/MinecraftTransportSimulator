@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.rendering.blocks.RenderDecor;
+import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
 /**Decor tile entity.  Just contains the definiton so we know how
  * to render this in the TESR call.

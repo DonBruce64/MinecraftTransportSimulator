@@ -22,7 +22,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -548,14 +548,14 @@ public class GUIVehicleEditor extends AGUIBase{
 			int dataEntryBoxIndex = 1;
 			try{
 				saving.partName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
-				saving.rotationPoint = new float[3];
-				saving.rotationPoint[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.rotationPoint[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.rotationPoint[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.rotationAxis = new float[3];
-				saving.rotationAxis[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.rotationAxis[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.rotationAxis[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationPoint = new double[3];
+				saving.rotationPoint[0] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationPoint[1] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationPoint[2] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationAxis = new double[3];
+				saving.rotationAxis[0] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationAxis[1] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.rotationAxis[2] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.rotationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.rotationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.rotationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
@@ -623,10 +623,10 @@ public class GUIVehicleEditor extends AGUIBase{
 			int dataEntryBoxIndex = 1;
 			try{
 				saving.partName = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
-				saving.translationAxis = new float[3];
-				saving.translationAxis[0] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.translationAxis[1] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-				saving.translationAxis[2] = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.translationAxis = new double[3];
+				saving.translationAxis[0] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.translationAxis[1] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+				saving.translationAxis[2] = Double.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.translationVariable = dataEntryBoxes.get(dataEntryBoxIndex++).getText();
 				saving.translationClampMin = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				saving.translationClampMax = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());

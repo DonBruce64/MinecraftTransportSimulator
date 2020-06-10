@@ -41,25 +41,9 @@ public class WrapperAudio{
 	 * will stop attempting to play sounds and will throw an error.  Used for when mods take all the sources.**/
 	private static byte sourceGetFailures = 0;
 	
-	private static final WrapperPlayer player;
-	private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
+	//private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
 	private static final FloatBuffer playerVelocity = BufferUtils.createFloatBuffer(3);
-	private static final FloatBuffer playerOrientation = BufferUtils.createFloatBuffer(6);
-	
-	/**
-	 *  Inits this class.  Static as we only need to do this this the first time we play a sound.
-	 */
-	static{
-		//Get a reference to the player.  This will be stored to be updated every
-		//audio tick to allow us to update sound accordingly.
-		//Check to make sure the player exists before we do this.
-		//We start this system before the player loads into the game, so we might
-		//not have one at first loop.
-		player = WrapperGame.getClientPlayer();
-		player.putPosition(playerPosition);
-		player.putVelocity(playerVelocity);
-		player.putOrientation(playerOrientation);
-	}
+	//private static final FloatBuffer playerOrientation = BufferUtils.createFloatBuffer(6);
 	
 	/**
 	 *  Stops all sounds from playing in the passed-in dimension.
@@ -115,15 +99,15 @@ public class WrapperAudio{
 		//Note that players riding vehicles use the vehicle's velocity.
 		//player.putPosition(playerPosition);
 		//AL10.alListener(AL10.AL_POSITION, playerPosition);
-		if(player.getVehicleRiding() != null){
+		if(WrapperGame.getClientPlayer().getVehicleRiding() != null){
 			playerVelocity.clear();
-			FloatBuffer vehicleVelocity = player.getVehicleRiding().getProviderVelocity();
+			FloatBuffer vehicleVelocity = WrapperGame.getClientPlayer().getVehicleRiding().getProviderVelocity();
 			playerVelocity.put(vehicleVelocity);
 			//need to flip this back to normal as it's assumed this won't be used except during an update call.
 			vehicleVelocity.flip();
 			playerVelocity.flip();
 		}else{
-			player.putVelocity(playerVelocity);
+			WrapperGame.getClientPlayer().putVelocity(playerVelocity);
 		}
 		AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
 		//player.putOrientation(playerOrientation);

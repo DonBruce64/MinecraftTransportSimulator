@@ -1,32 +1,79 @@
-package minecrafttransportsimulator.rendering.vehicles;
+package minecrafttransportsimulator.rendering.components;
 
-/**This class is a helper class that's used for creating tread rollers on vehicles.
- * These rollers, and their relations to one another, are used to calculate the tread
- * paths in auto-tread mode.  In all cases, an angle of 0 implies the tread is facing 
- * down to the ground.  This class can't be created directly.  Rather, it's created
- * from a {@link RenderVehicle_RotatablePart}.
+import java.util.List;
+
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+
+/**A specific class of {@link TransformRotatable}, designed
+ * for tread rollers.  Contains an extra method for calculating things.
+ * Also auto-creates rotatableModelObject definitions in the relevant JSON.
  *
  * @author don_bruce
  */
-public final class RenderVehicle_TreadRoller{
-	final double yPos;
-	final double zPos;
-	final double radius;
-	final double circumference;
+public class TransformTreadRoller extends TransformRotatable{
+	public final int rollerNumber;
+	public final double yPos;
+	public final double zPos;
+	public final double radius;
+	public final double circumference;
 	
-	double startY;
-	double startZ;
-	double startAngle;
-	double endY;
-	double endZ;
-	double endAngle;
+	public double startY;
+	public double startZ;
+	public double startAngle;
+	public double endY;
+	public double endZ;
+	public double endAngle;
 	
-	public RenderVehicle_TreadRoller(RenderVehicle_RotatablePart roller, double minY, double maxY, double minZ, double maxZ){
-		//Radius and center are based off of min/max points.
-		radius = (maxZ - minZ)/2D;
-		circumference = 2*Math.PI*radius;
-		yPos = minY + (maxY - minY)/2D;
-		zPos = minZ + (maxZ - minZ)/2D;
+	private TransformTreadRoller(String modelName, String objectName, List<VehicleRotatableModelObject> rotatableModelObjects, double yPos, double zPos, double radius, double circumference){
+		super(modelName, objectName, rotatableModelObjects);
+		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
+		this.zPos = zPos;
+		this.yPos = yPos;
+		this.radius = radius;
+		this.circumference = circumference;
+	}
+	
+	/**
+	 * Helper function to create a tread roller.
+	 */
+	public static TransformTreadRoller create(String modelName, String objectName, EntityVehicleE_Powered vehicle, Float[][] vertices){
+		//Get the points that define this roller.
+		double minY = 999;
+		double maxY = -999;
+		double minZ = 999;
+		double maxZ = -999;
+		for(Float[] point : vertices){
+			minY = Math.min(minY, point[1]);
+			maxY = Math.max(maxY, point[1]);
+			minZ = Math.min(minZ, point[2]);
+			maxZ = Math.max(maxZ, point[2]);
+		}
+		double yPos = minY + (maxY - minY)/2D;
+		double zPos = minZ + (maxZ - minZ)/2D;
+		double radius = (maxZ - minZ)/2D;
+		double circumference = 2*Math.PI*radius;
+		
+		//Add this roller as a rotatable if it doesn't exist.
+		boolean existsInJSON = false;
+		for(VehicleRotatableModelObject rotatable : vehicle.definition.rendering.rotatableModelObjects){
+			if(rotatable.partName.endsWith(objectName)){
+				existsInJSON = true;
+				break;
+			}
+		}
+		if(!existsInJSON){
+			//We don't have this rotatable.  Add it.
+			VehicleRotatableModelObject rotatable = vehicle.definition.new VehicleRotatableModelObject();
+			rotatable.partName = objectName;
+			rotatable.rotationVariable = "speed";
+			rotatable.rotationPoint = new double[]{0, yPos, zPos};
+			rotatable.rotationAxis = new double[]{1D/radius, 0, 0};
+			vehicle.definition.rendering.rotatableModelObjects.add(rotatable);
+		}
+		
+		//Create and return the roller.
+		return new TransformTreadRoller(modelName, objectName, vehicle.definition.rendering.rotatableModelObjects, yPos, zPos, radius, circumference);
 	}
 	
 	/**
@@ -36,7 +83,7 @@ public final class RenderVehicle_TreadRoller{
 	 * Additionally, we know we'll start on the bottom of a roller, so between
 	 * those two things we can tell which tangent we should follow.
 	 */
-	public void calculateEndpoints(RenderVehicle_TreadRoller nextRoller){
+	public void calculateEndpoints(TransformTreadRoller nextRoller){
 		//What calculations we do depend on if the rollers are the same size.
 		//If so, we can do simple calcs.  If not, we get to do trig.
 		if(radius == nextRoller.radius){

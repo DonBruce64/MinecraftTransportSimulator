@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -19,11 +20,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class APartGun extends APart implements FXPart{	
+public class PartGun extends APart implements FXPart{	
 	//Stored variables used to determine bullet firing behavior.
 	public int shotsFired;
 	public int bulletsLeft;
@@ -46,7 +46,7 @@ public abstract class APartGun extends APart implements FXPart{
 	
 	private final double anglePerTickSpeed;
 		
-	public APartGun(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGun(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.shotsFired = dataTag.getInteger("shotsFired");
 		this.bulletsLeft = dataTag.getInteger("bulletsLeft");
@@ -60,7 +60,7 @@ public abstract class APartGun extends APart implements FXPart{
 		//Get the gun number based on how many guns the vehicle has.
 		gunNumber = 1;
 		for(APart part : vehicle.getVehicleParts()){
-			if(part instanceof APartGun){
+			if(part instanceof PartGun){
 				++gunNumber;
 			}
 		}
@@ -193,17 +193,17 @@ public abstract class APartGun extends APart implements FXPart{
 				//When we do yaw, make sure we do calculations with positive values.
 				//Both the vehicle and the player can have yaw greater than 360.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + partRotation.y + 360)%360;
+				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + placementRotation.y + 360)%360;
 				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
 				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
-				if(deltaPitch < currentPitch && currentPitch > -getMaxPitch()){
+				if(deltaPitch < currentPitch && currentPitch > -definition.gun.maxPitch){
 					currentPitch -= Math.min(anglePerTickSpeed, currentPitch - deltaPitch);
-				}else if(deltaPitch > currentPitch && currentPitch < -getMinPitch()){
+				}else if(deltaPitch > currentPitch && currentPitch < -definition.gun.minPitch){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
 				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 				//We need to do special rotation logic for that.
-				if(getMinYaw() == -180  && getMaxYaw() == 180){
+				if(definition.gun.minYaw == -180  && definition.gun.maxYaw == 180){
 					if((deltaYaw - currentYaw + 360)%360 >= 180){
 						currentYaw -= Math.min(anglePerTickSpeed,360 - (deltaYaw - currentYaw + 360)%360);
 					}else if((deltaYaw - currentYaw + 360)%360 < 180){
@@ -221,9 +221,9 @@ public abstract class APartGun extends APart implements FXPart{
 						prevYaw += prevYaw < 0 ? 360 : -360;
 					}
 				}else{
-					if(deltaYaw < currentYaw && currentYaw > getMinYaw()){
+					if(deltaYaw < currentYaw && currentYaw > definition.gun.minYaw){
 						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
-					}else if(deltaYaw > currentYaw && currentYaw < getMaxYaw()){
+					}else if(deltaYaw > currentYaw && currentYaw < definition.gun.maxYaw){
 						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
 					}
 				}
@@ -258,17 +258,14 @@ public abstract class APartGun extends APart implements FXPart{
 	}
 
 	@Override
-	public Vec3d getActionRotation(float partialTicks){
-		return new Vec3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+	public Point3d getActionRotation(float partialTicks){
+		//Don't return pitch if we are a turret.
+		if(definition.gun.isTurret){
+			return new Point3d(0, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+		}else{
+			return new Point3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
+		}
 	}
-	
-	public abstract float getMinYaw();
-	
-	public abstract float getMaxYaw();
-	
-	public abstract float getMinPitch();
-	
-	public abstract float getMaxPitch();
 		
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -278,8 +275,8 @@ public abstract class APartGun extends APart implements FXPart{
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - partRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
-			float bulletPitch = (float) (vehicle.rotationPitch + partRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			float bulletYaw = (float) (vehicle.rotationYaw - placementRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			float bulletPitch = (float) (vehicle.rotationPitch + placementRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
 			
 			//Set initial velocity to the gun muzzle velocity times the speedFactor.
 			//We bring in the code for vectors here to make the velocity calculations easier.
@@ -288,14 +285,14 @@ public abstract class APartGun extends APart implements FXPart{
 	        float f1 = MathHelper.sin(-bulletYaw * 0.017453292F - (float)Math.PI);
 	        float f2 = -MathHelper.cos(-bulletPitch * 0.017453292F);
 	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
-	        Vec3d bulletOrientation = new Vec3d(f1 * f2, f3, f * f2);
+	        Point3d bulletOrientation = new Point3d(f1 * f2, f3, f * f2);
 			
 			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX*ConfigSystem.configObject.general.speedFactor.value;
 			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY*ConfigSystem.configObject.general.speedFactor.value;
 			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D + vehicle.motionZ*ConfigSystem.configObject.general.speedFactor.value;
 			
 			//Now add the bullet as a particle.
-			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, partPos.x + bulletOrientation.x*definition.gun.length, partPos.y + bulletOrientation.y*definition.gun.length, partPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
+			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, worldPos.x + bulletOrientation.x*definition.gun.length, worldPos.y + bulletOrientation.y*definition.gun.length, worldPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
 			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 		}

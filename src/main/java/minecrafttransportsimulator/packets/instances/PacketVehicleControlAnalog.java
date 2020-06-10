@@ -59,19 +59,19 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 			}
 			case AILERON : {
 				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.aileronAngle = (short) clampAngle(-aircraft.MAX_AILERON_ANGLE, aircraft.MAX_AILERON_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.aileronAngle + value);
+				aircraft.aileronAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_AILERON_ANGLE, EntityVehicleF_Air.MAX_AILERON_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.aileronAngle + value);
 				aircraft.aileronCooldown = cooldown; 
 				break;
 			}
 			case ELEVATOR : {
 				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.elevatorAngle = (short) clampAngle(-aircraft.MAX_ELEVATOR_ANGLE, aircraft.MAX_ELEVATOR_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.elevatorAngle + value);
+				aircraft.elevatorAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.elevatorAngle + value);
 				aircraft.elevatorCooldown = cooldown;
 				break;
 			}
 			case RUDDER : {
 				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.rudderAngle = (short) clampAngle(-aircraft.MAX_RUDDER_ANGLE, aircraft.MAX_RUDDER_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.rudderAngle + value);
+				aircraft.rudderAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_RUDDER_ANGLE, EntityVehicleF_Air.MAX_RUDDER_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.rudderAngle + value);
 				aircraft.rudderCooldown = cooldown;
 				break;
 			}

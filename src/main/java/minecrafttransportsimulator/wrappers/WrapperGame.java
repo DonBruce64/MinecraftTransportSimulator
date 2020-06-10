@@ -4,6 +4,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 
 /**Wrapper for the core MC game.  This class has methods used for determining
@@ -14,7 +15,7 @@ import net.minecraftforge.fml.common.Loader;
  *
  * @author don_bruce
  */
-public class WrapperGame{
+public class WrapperGame{	
 	/**
 	 *  Returns true if the mod with the passed-in modID is present.
 	 */
@@ -33,7 +34,7 @@ public class WrapperGame{
 	 *  Returns the text-based name for the passed-in fluid.
 	 */
 	public static String getFluidName(String fluidID){
-		return FluidRegistry.getFluid(fluidID) != null ? FluidRegistry.getFluidName(FluidRegistry.getFluid(fluidID)) : "INVALID";
+		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
 	}
 	
 	/**
@@ -67,14 +68,34 @@ public class WrapperGame{
 	 *  isn't possible. 
 	 */
 	public static WrapperWorld getClientWorld(){
-		return new WrapperWorld(Minecraft.getMinecraft().world);
+		if(cachedClientWorld == null || !cachedClientWorld.world.equals(Minecraft.getMinecraft().world)){
+			cachedClientWorld = new WrapperWorld(Minecraft.getMinecraft().world);
+		}
+		return cachedClientWorld;
 	}
+	private static WrapperWorld cachedClientWorld;
 	
 	/**
 	 *  Returns the player.  Only valid on CLIENTs as on servers
 	 *  there are multiple players.
 	 */
 	public static WrapperPlayer getClientPlayer(){
-		return new WrapperPlayer(Minecraft.getMinecraft().player);
+		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
+			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
+		}
+		return cachedClientPlayer;
 	}
+	private static WrapperPlayer cachedClientPlayer;
+	
+	/**
+	 *  Returns the entity that is used to set up the render camera.
+	 *  Normally the player, but can (may?) change.
+	 */
+	public static WrapperEntity getRenderViewEntity(){
+		if(cachedRenderViewEntity == null || cachedRenderViewEntity.entity.isDead || !cachedRenderViewEntity.entity.equals(Minecraft.getMinecraft().getRenderViewEntity())){
+			cachedRenderViewEntity = new WrapperEntity(Minecraft.getMinecraft().getRenderViewEntity());
+		}
+		return cachedRenderViewEntity;
+	}
+	private static WrapperEntity cachedRenderViewEntity;
 }

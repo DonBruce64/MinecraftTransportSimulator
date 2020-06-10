@@ -17,9 +17,9 @@ public abstract class APacketPart implements IMessage{
 	
 	public APacketPart(APart part){
 		this.id = part.vehicle.getEntityId();
-		this.x = part.offset.x;
-		this.y = part.offset.y;
-		this.z = part.offset.z;
+		this.x = part.placementOffset.x;
+		this.y = part.placementOffset.y;
+		this.z = part.placementOffset.z;
 	}
 	
 	@Override
@@ -47,7 +47,7 @@ public abstract class APacketPart implements IMessage{
 		}
 		if(vehicle != null){
 			for(APart part : vehicle.getVehicleParts()){
-				if(part.offset.x == message.x && part.offset.y == message.y && part.offset.z == message.z){
+				if(part.placementOffset.x == message.x && part.placementOffset.y == message.y && part.placementOffset.z == message.z){
 					return part;
 				}
 			}

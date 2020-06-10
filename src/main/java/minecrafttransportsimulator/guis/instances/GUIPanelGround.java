@@ -12,10 +12,10 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
-import minecrafttransportsimulator.rendering.vehicles.RenderVehicle;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
-import minecrafttransportsimulator.vehicles.parts.APartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
@@ -303,7 +303,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		
 		//Set the state of the engine selectors.
 		for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
-			APartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
+			PartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
 			engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
 		}
 		

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -12,12 +13,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartEngineBoat;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
@@ -36,7 +36,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public float motionRoll;
 	public float motionPitch;
 	public float motionYaw;
-	public double velocity;
 	
 	private double clientDeltaX;
 	private double clientDeltaY;
@@ -109,16 +108,13 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			
 			//Now do update calculations and logic.
 			getForcesAndMotions();
-			//If we are a trailer, we don't want to move ourselves.
-			//This comes from the main vehicle itself.
-			
 			performGroundOperations();
 			moveVehicle();
 			if(!world.isRemote){
 				dampenControlSurfaces();
 			}
 			prevParkingBrakeAngle = parkingBrakeAngle;
-			if(parkingBrakeOn && !locked && Math.abs(velocity) < 0.25){
+			if(parkingBrakeOn && !locked && velocity < 0.25){
 				if(parkingBrakeAngle < 30){
 					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
@@ -157,19 +153,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			throttleTime = 0;
 		}
 		
-        if(throttleTime > 10 && throttleTime < 80 && velocity >= 0){
+        if(throttleTime > 10 && !parkingBrakeOn && groundVelocity >= 3){
         	
-        	bodyAcceleration = (velocity/throttleTime);
+        	bodyAcceleration = (groundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01)); 
         	
         	return bodyAcclAngle;
         	
-        }else if(throttleTime > 10 && throttleTime < 40 && velocity <= 0){
+        }else if(throttleTime > 10 && !parkingBrakeOn && groundVelocity <= -3){
         	
-        	bodyAcceleration = (velocity/throttleTime);
+        	bodyAcceleration = (groundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01)); 
         	
         	return bodyAcclAngle;
         	
@@ -189,15 +185,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
 	    	
-	    	bodyAcceleration = (velocity/brakingTime);
+	    	bodyAcceleration = (groundVelocity/brakingTime);
 	    	
-	        if(velocity < 0) {
+	        if(groundVelocity < -3) {
 	        	
-	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
+	        	bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01));
 	        	
 	        }else {
 	        	
-		        bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01));
+		        bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01));
 		        
 	        }
 	        
@@ -347,9 +343,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionYaw != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionYaw != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -367,8 +363,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionPitch != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionPitch != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -385,8 +381,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motionRoll != 0){
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionRoll != 0){
-					Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -712,8 +708,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//That is done through trig functions.  If we hit something, however, we need to inhibit the movement so we don't do that.
 		boolean collisionBoxCollided = false;
 		for(VehicleAxisAlignedBB box : collisionBoxes){
-			Vec3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(this.getPositionVector().add(offset).addVector(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+			Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
+			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 			List<AxisAlignedBB> collisionBoxes = offsetBox.getAABBCollisions(world, null);
 			if(!collisionBoxes.isEmpty()){
 				collisionBoxCollided = true;
@@ -816,19 +812,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//After all movement is done, try and move players on hitboxes.
 		//Note that we need to interpolate the delta here based on actual movement, so don't use motionX!
-		if(this.velocity != 0){
+		if(velocity != 0){
 			for(EntityPlayer player : world.playerEntities){
 				if(!this.equals(player.getRidingEntity())){
 					for(VehicleAxisAlignedBB box : collisionBoxes){
 						//Add a slight yOffset to every box to "grab" players standing on collision points.
-						if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersects(player.getEntityBoundingBox())){
+						if(box.offset(posX - prevPosX, posY - prevPosY + 0.1F, posZ - prevPosZ).intersects(player.getEntityBoundingBox())){
 							//Player has collided with this vehicle.  Adjust movement to allow them to ride on it.
 							//If we are going too fast, the player should slip off the collision box if it's not an interior box.
-							if(Math.abs(this.velocity) <= ConfigSystem.configObject.general.clingSpeed.value || box.isInterior){
-								player.setPosition(player.posX + (this.posX - this.prevPosX), player.posY + (this.posY - this.prevPosY), player.posZ + (this.posZ - this.prevPosZ));
-							}else if(Math.abs(this.velocity) < 2F*ConfigSystem.configObject.general.clingSpeed.value){
-								double slip = (2F*ConfigSystem.configObject.general.clingSpeed.value - Math.abs(this.velocity))*4D;
-								player.setPosition(player.posX + (this.posX - this.prevPosX)*slip, player.posY + (this.posY - this.prevPosY)*slip, player.posZ + (this.posZ - this.prevPosZ)*slip);
+							if(velocity <= ConfigSystem.configObject.general.clingSpeed.value || box.isInterior){
+								player.setPosition(player.posX + (posX - prevPosX), player.posY + (posY - prevPosY), player.posZ + (posZ - prevPosZ));
+							}else if(velocity < 2F*ConfigSystem.configObject.general.clingSpeed.value){
+								double slip = (2F*ConfigSystem.configObject.general.clingSpeed.value - velocity)*4D;
+								player.setPosition(player.posX + (posX - prevPosX)*slip, player.posY + (posY - prevPosY)*slip, player.posZ + (posZ - prevPosZ)*slip);
 							}
 							break;
 						}
@@ -853,22 +849,24 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private void performGroundOperations(){
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
-			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
-			if(Math.abs(groundSpeed) > 0.1){
-				reAdjustGroundSpeed(groundSpeed);
-			}else{
+			motionX -= 20F*brakingFactor/currentMass*Math.signum(motionX);
+			motionZ -= 20F*brakingFactor/currentMass*Math.signum(motionZ);
+			if(Math.abs(motionX) < 0.1){
 				motionX = 0;
+			}
+			if(Math.abs(motionZ) < 0.1){
 				motionZ = 0;
+			}
+			if(motionX == 0 && motionY == 0){
 				motionYaw = 0;
 			}
 		}
 		
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
-			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
-			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			Point3d groundVelocityVec = new Point3d(motionX, 0, motionZ).normalize();
+			Point3d groundHeadingVec = new Point3d(currentHeading.x, 0, currentHeading.z).normalize();
+			double vectorDelta = groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
 				vectorDelta = Math.min(skiddingFactor, vectorDelta);
@@ -876,7 +874,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				float yawTemp = rotationYaw;
 				rotationYaw += vectorDelta;
 				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
+				double groundSpeed = Math.hypot(motionX, motionZ)*velocitySign;
+				motionX = groundHeadingVec.x * groundSpeed;
+				motionZ = groundHeadingVec.z * groundSpeed;
 				rotationYaw = yawTemp;
 			}
 		}
@@ -917,7 +917,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		for(VehicleAxisAlignedBB box : collisionBoxes){
 			if(!world.getCollisionBoxes(null, box.offset(0, -0.05F, 0)).isEmpty()){
 				//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-				BlockPos pos = new BlockPos(box.pos.addVector(0, -1, 0));
+				BlockPos pos = new BlockPos(box.pos.x, box.pos.y - 1, box.pos.z);
 				float frictionLoss = 0.6F - world.getBlockState(pos).getBlock().getSlipperiness(world.getBlockState(pos), world, pos, null) + (world.isRainingAt(pos.up()) ? 0.25F : 0);
 				brakingFactor += Math.max(2.0 - frictionLoss, 0);
 			}
@@ -963,17 +963,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
-				if(groundDevice.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
+				if(groundDevice.vehicleDefinition.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
 					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
-					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.offset.z));
+					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
 			}
 			//Also check for boat engines, which can make us turn if we are in water.
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof PartEngineBoat){
-					if(((PartEngineBoat) part).isInLiquid){
+				if(part instanceof PartPropeller){
+					if(part.isPartCollidingWithLiquids(null)){
 						turningFactor += 1.0F;
-						turningDistance = (float) Math.max(turningDistance, Math.abs(part.offset.z));
+						turningDistance = (float) Math.max(turningDistance, Math.abs(part.placementOffset.z));
 					}
 				}
 			}
@@ -987,11 +987,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(velocity*SPEED_FACTOR/0.35F) - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + SPEED_FACTOR/0.35F/4F)) - turningFactor/3F));
+				if(groundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = -(float) (steeringAngle*velocity/2F);
+				turningForce = -(float) (steeringAngle*groundVelocity/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.
@@ -999,12 +999,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		return turningForce;
-	}
-	
-	protected void reAdjustGroundSpeed(double groundSpeed){
-		Vec3d groundVec = new Vec3d(headingVec.x, 0, headingVec.z).normalize();
-		motionX = groundVec.x * groundSpeed;
-		motionZ = groundVec.z * groundSpeed;
 	}
 	
 	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){

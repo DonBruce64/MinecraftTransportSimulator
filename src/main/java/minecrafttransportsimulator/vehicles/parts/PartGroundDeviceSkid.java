@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
@@ -44,5 +45,10 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	@Override
 	public boolean canBeDrivenByEngine(){
 		return false;
+	}
+	
+	@Override
+	public Point3d getActionRotation(float partialTicks){
+		return new Point3d(0, vehicleDefinition.turnsWithSteer ? -vehicle.getSteerAngle() : 0, 0);
 	}
 }

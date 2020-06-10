@@ -35,6 +35,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public class VehicleMotorizedConfig{
     	public int fuelCapacity;
     	public int defaultFuelQty;
+    	public int gearSequenceDuration;
     	public String hornSound;
     	public String sirenSound;
         public float[] hitchPos;
@@ -51,8 +52,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float wingSpan;
         public float wingArea;
         public float tailDistance;
-        public float rudderArea;
+        public float aileronArea;
         public float elevatorArea;
+        public float rudderArea;
     }
     
     public class VehicleBlimp{
@@ -72,25 +74,45 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class VehiclePart{
-        public float[] pos;
-        public float[] rot;
+    	public boolean isSubPart;
+        public double[] pos;
+        public double[] rot;
         public boolean turnsWithSteer;
-        public float[] steerRotationOffset;
         public boolean isController;
         public boolean inverseMirroring;
         public List<String> types;
         public List<String> customTypes;
         public float minValue;
         public float maxValue;
+        public VehiclePart additionalPart;
+        public String defaultPart;
+        
+        //Animation variables.
+        public String translationVariable;
+        public double[] translationPosition;
+        public float translationClampMin;
+        public float translationClampMax;
+        public boolean translationAbsolute;
+        public String rotationVariable;
+        public double[] rotationPosition;
+        public double[] rotationAngles;
+        public float rotationClampMin;
+        public float rotationClampMax;
+        public boolean rotationAbsolute;
+        
+        
+        //Seat-specific part variables.
         public float[] dismountPos;
+        
+        //Engine-specific part variables.
         public float[] exhaustPos;
         public float[] exhaustVelocity;
         public float intakeOffset;
-        public VehiclePart additionalPart;
+        
+        //Tread-specific part variables.
         public float[] treadYPoints;
         public float[] treadZPoints;
         public float[] treadAngles;
-        public String defaultPart;
     }
     
     public class VehicleCollisionBox{
@@ -135,8 +157,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleRotatableModelObject{
     	public String partName;
-    	public float[] rotationPoint;
-    	public float[] rotationAxis;
+    	public double[] rotationPoint;
+    	public double[] rotationAxis;
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
@@ -145,7 +167,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleTranslatableModelObject{
     	public String partName;
-    	public float[] translationAxis;
+    	public double[] translationAxis;
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;

@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -48,7 +49,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 		if(!world.isRemote && player.getRidingEntity() instanceof EntityVehicleE_Powered){
 			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) player.getRidingEntity();
 			//Check to see if we're a controller.
-			if(vehicle.getSeatForRider(player).isController){
+			if(vehicle.getSeatForRider(player).vehicleDefinition.isController){
 				//Check if the vehicle is empty and we need to load or unload all NPCs.
 				boolean unloadMode = false;
 				for(Entity passenger : vehicle.getPassengers()){
@@ -64,7 +65,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 						if(entityliving instanceof INpc){
 							//Get the next free seat.
 							for(APart part : vehicle.getVehicleParts()){
-								if(part instanceof PartSeat && vehicle.getRiderForSeat((PartSeat) part) == null && !((PartSeat) part).isController){
+								if(part instanceof PartSeat && vehicle.getRiderForSeat((PartSeat) part) == null && !((PartSeat) part).vehicleDefinition.isController){
 									vehicle.setRiderInSeat(entityliving, (PartSeat) part);
 									break;
 								}
@@ -103,9 +104,9 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 					WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.seattaken"), player);
 				}else{
 					//We are an assigned ticket, load the entity.
-					EntityLiving entityliving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
-					if(entityliving != null && entityliving.getPositionVector().distanceTo(seat.partPos) < 35){
-						vehicle.setRiderInSeat(entityliving, seat);
+					EntityLiving entityLiving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
+					if(entityLiving != null && seat.worldPos.distanceTo(new Point3d(entityLiving.posX, entityLiving.posY, entityLiving.posZ)) < 35){
+						vehicle.setRiderInSeat(entityLiving, seat);
 						stack.setTagCompound(null);
 					}else{
 						WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.toofar"), player);

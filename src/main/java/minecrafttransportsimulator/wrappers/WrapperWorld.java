@@ -173,7 +173,7 @@ public class WrapperWorld{
 	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
 	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
 	            pos = pos.offset(facing);
-	            location.offset(facing.getFrontOffsetX(), facing.getFrontOffsetY(), facing.getFrontOffsetZ());
+	            location.add(facing.getFrontOffsetX(), facing.getFrontOffsetY(), facing.getFrontOffsetZ());
 	        }
 	    	if(!stack.isEmpty() && player.player.canPlayerEdit(pos, facing, stack) && world.mayPlace(wrapper, pos, false, facing, null)){
 	            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
