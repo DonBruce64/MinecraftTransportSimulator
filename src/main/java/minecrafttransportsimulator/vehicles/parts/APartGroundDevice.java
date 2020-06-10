@@ -60,9 +60,9 @@ public abstract class APartGroundDevice extends APart{
 			//Long parts use linear propulsion, not rotary, so don't take height into account.
 			if(!skipAngularCalcs){
 				if(getLongPartOffset() == 0){
-					angularVelocity = (float) (vehicle.velocity/(this.getHeight()*Math.PI));
+					angularVelocity = (float) (vehicle.groundVelocity/(this.getHeight()*Math.PI));
 				}else{
-					angularVelocity = (float) vehicle.velocity;
+					angularVelocity = (float) (vehicle.groundVelocity);
 				}
 			}
 			

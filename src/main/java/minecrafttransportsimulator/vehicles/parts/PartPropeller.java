@@ -86,7 +86,8 @@ public class PartPropeller extends APart{
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
-						if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
+						PartSeat seat = vehicle.getSeatForRider(passenger);
+						if(seat != null && seat.vehicleDefinition.isController){
 							attacker = passenger;
 							break;
 						}

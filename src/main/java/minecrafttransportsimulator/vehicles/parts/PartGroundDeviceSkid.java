@@ -49,6 +49,6 @@ public final class PartGroundDeviceSkid extends APartGroundDevice{
 	
 	@Override
 	public Point3d getActionRotation(float partialTicks){
-		return new Point3d(0, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
+		return new Point3d(0, vehicleDefinition.turnsWithSteer ? -vehicle.getSteerAngle() : 0, 0);
 	}
 }

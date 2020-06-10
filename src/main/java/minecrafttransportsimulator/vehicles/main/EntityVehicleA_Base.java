@@ -263,7 +263,7 @@ abstract class EntityVehicleA_Base extends Entity{
 	/**
 	 *Helper method to prevent casting to floats all over for position-specific tests.
 	 */
-	private static boolean isPackAtPosition(VehiclePart packPart, double offsetX, double offsetY, double offsetZ){
+	public static boolean isPackAtPosition(VehiclePart packPart, double offsetX, double offsetY, double offsetZ){
 		return (float)packPart.pos[0] == (float)offsetX && (float)packPart.pos[1] == (float)offsetY && (float)packPart.pos[2] == (float)offsetZ;
 	}
 	
@@ -274,12 +274,15 @@ abstract class EntityVehicleA_Base extends Entity{
 	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
 		VehiclePart correctPack = definition.new VehiclePart();
 		correctPack.isSubPart = true;
-		correctPack.pos = new double[3];
+		
+		//Get the offset position for this part.
 		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
-		correctPack.pos[0] = parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? parentPack.pos[0] - subPack.pos[0] : parentPack.pos[0] + subPack.pos[0];
+		correctPack.pos = new double[3];
+		correctPack.pos[0] = parentPack.pos[0] + (parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? -subPack.pos[0] : subPack.pos[0]);
 		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
 		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
 		
+		//Add current and parent rotation to make a total rotation for this part.
 		if(parentPack.rot != null || subPack.rot != null){
 			correctPack.rot = new double[3];
 		}

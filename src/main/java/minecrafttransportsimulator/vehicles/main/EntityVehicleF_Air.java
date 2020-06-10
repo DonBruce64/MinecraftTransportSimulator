@@ -43,7 +43,7 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	public byte rudderCooldown;
 	
 	//Flaps.
-	public static final short MAX_FLAP_ANGLE = 450;
+	public static final short MAX_FLAP_ANGLE = 350;
 	public short flapDesiredAngle;
 	public short flapCurrentAngle;
 	
@@ -103,11 +103,14 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		
 		//Set angles and coefficients.
 		trackAngle = Math.toDegrees(Math.atan2(currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading)));
+		//If this is negative, we're going backwards.
+		//currentVelocity.dotProduct(currentHeading)
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 		elevatorLiftCoeff = getLiftCoeff(-2.5 - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(currentVelocity.dotProduct(sideVector), currentVelocity.dotProduct(currentHeading))), 2);
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
+		//System.out.format("DP1:%f DP2:%f DC:%f TA:%f\n", currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading), dragCoeff, trackAngle);
 		
 		//Adjust flaps to current setting.  If no flaps are present, then this will never change.
 		if(flapCurrentAngle < flapDesiredAngle){
@@ -160,13 +163,15 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 			//This prevents blimps from ascending into space.
 			//Also take into account motionY, as we should provide less force if we are already going in the same direction.
 			if(elevatorAngle < 0){
-				ballastForce = 5*airDensity*definition.blimp.ballastVolume*-elevatorAngle;
+				ballastForce = airDensity*definition.blimp.ballastVolume*-elevatorAngle/100D;
 			}else{
-				ballastForce = 5*1.225*definition.blimp.ballastVolume*-elevatorAngle;
+				ballastForce = 1.225*definition.blimp.ballastVolume*-elevatorAngle/100D;
 			}		
-			if(motionY*ballastForce > 0){
-				ballastForce /= Math.pow(1 + Math.abs(motionY), 2);
+			if(motionY*ballastForce != 0){
+				//ballastForce /= (motionY*motionY);
+				System.out.println(ballastForce /= (motionY*motionY));
 			}
+			
 			
 			//If we don't have any force, or the throttle is idle, start slowing down.
 			//We can't use brakes because those don't exist on blimps!
@@ -206,8 +211,8 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 			
 			//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(velocity < 0 && groundedGroundDevices.isEmpty()){
-				if(rotationPitch < 0 && rotationPitch >= -120){
+			if(velocity < 0.25 && groundedGroundDevices.isEmpty()){
+				if(rotationPitch < -45){
 					elevatorTorque += 100;
 				}
 			}
@@ -219,6 +224,7 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(currentVelocity);
 		totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 		totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
+		//System.out.format("X:%f Y:%f Z:%f\n", elevatorTorque, rudderTorque, aileronTorque);
 		
 		motionX += totalForce.x;
 		motionY += totalForce.y;

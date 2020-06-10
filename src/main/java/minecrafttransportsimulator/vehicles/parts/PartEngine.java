@@ -61,6 +61,8 @@ public class PartEngine extends APart implements FXPart{
 	private float propellerGearboxRatio;
 	private float lowestWheelVelocity;
 	private float desiredWheelVelocity;
+	private double propellerAxialVelocity;
+	private double engineAxialVelocity;
 	private float wheelFriction;
 	private double ambientTemp;
 	private double coolingFactor;
@@ -203,7 +205,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//Add cooling for ambient temp.
 		ambientTemp = 25*vehicle.world.getBiome(vehicle.getPosition()).getTemperature(vehicle.getPosition()) - 5*(Math.pow(2, vehicle.posY/400) - 1);
-		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + Math.abs(vehicle.velocity)/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
 		//Check to see if electric or hand starter can keep running.
@@ -257,7 +259,7 @@ public class PartEngine extends APart implements FXPart{
 			
 			//Do engine-type specific update logic.
 			if(definition.engine.isSteamPowered){
-				//FIXME do steam engine logic.
+				//TODO do steam engine logic.
 			}else{
 				//Try to get fuel from the vehicle and calculate fuel flow.
 				if(!isCreative && !vehicle.fluidName.isEmpty()){
@@ -388,55 +390,64 @@ public class PartEngine extends APart implements FXPart{
 					if(wheel.isOnGround()){
 						wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
-						desiredWheelVelocity = (float) Math.max(vehicle.velocity/wheel.getHeight(), desiredWheelVelocity);
+						desiredWheelVelocity = (float) Math.max(vehicle.groundVelocity/wheel.getHeight(), desiredWheelVelocity);
 					}
 				}
 			}
 			
-			//Adjust RPM of the engine.
-			//Don't adjust it down to stall the engine, that can only be done via backfire.
-			if(wheelFriction > 0){
-				double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
-				rpm += (desiredRPM - rpm)/10D;
-				if(rpm < stallRPM && state.running){
-					rpm = stallRPM;
-				}
-			}else{
-				//No wheel force.  Adjust wheels to engine speed.
-				for(APartGroundDevice wheel : vehicle.wheels){
-					wheel.skipAngularCalcs = false;
-					if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
-						if(currentGearRatio != 0){
-							wheel.angularVelocity = (float) rpm/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
-						}else if(wheel.angularVelocity > 0){
-							wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01F);
-						}else{
-							wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01F);
+			//Adjust RPM of the engine to wheels.
+			if(currentGearRatio != 0){
+				//Don't adjust it down to stall the engine, that can only be done via backfire.
+				if(wheelFriction > 0){
+					double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
+					rpm += (desiredRPM - rpm)/10D;
+					if(rpm < stallRPM && state.running){
+						rpm = stallRPM;
+					}
+				}else{
+					//No wheel force.  Adjust wheels to engine speed.
+					for(APartGroundDevice wheel : vehicle.wheels){
+						wheel.skipAngularCalcs = false;
+						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+							if(currentGearRatio != 0){
+								wheel.angularVelocity = (float) rpm/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
+							}else if(wheel.angularVelocity > 0){
+								wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01F);
+							}else{
+								wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01F);
+							}
 						}
 					}
 				}
 			}
 		}
 		
-		//If wheel friction is 0, and we have a propeller, and arne't in neutral, get RPM contributions for that.
-		if(wheelFriction == 0 && propeller != null && currentGearRatio != 0){
-			isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
-			propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
-			double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-			double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*rpm/propellerGearboxRatio/60D/20D;
-			double propellerFeedback = Math.signum(currentGearRatio)*(propellerDesiredSpeed - vehicle.velocity)*(isPropellerInLiquid ? 150 : 50) + propellerForcePenalty*50;
-			if(state.running){
-				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
-				double engineRPMDifference = engineTargetRPM - rpm;
+		//Update propeller variables.
+		if(propeller != null){
+			Point3d propellerThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), propeller.totalRotation.x + vehicle.rotationPitch, propeller.totalRotation.y + vehicle.rotationYaw, propeller.totalRotation.z + vehicle.rotationRoll);
+			propellerAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
+			
+			//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
+			if(wheelFriction == 0 && currentGearRatio != 0){
+				isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
+				propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
+				double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
+				double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*rpm/propellerGearboxRatio/60D/20D;
+				double propellerFeedback = Math.signum(currentGearRatio)*(propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 150 : 50) + propellerForcePenalty*50;
 				
-				//propellerFeedback can't make an engine stall, but hours can.
-				if(rpm + engineRPMDifference/10 > stallRPM && rpm + engineRPMDifference/10 - propellerFeedback < stallRPM){
-					rpm = stallRPM;
+				if(state.running){
+					double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
+					double engineRPMDifference = engineTargetRPM - rpm;
+					
+					//propellerFeedback can't make an engine stall, but hours can.
+					if(rpm + engineRPMDifference/10 > stallRPM && rpm + engineRPMDifference/10 - propellerFeedback < stallRPM){
+						rpm = stallRPM;
+					}else{
+						rpm += engineRPMDifference/10 - propellerFeedback;
+					}
 				}else{
-					rpm += engineRPMDifference/10 - propellerFeedback;
+					rpm -= (propellerFeedback - propellerForcePenalty*50);
 				}
-			}else{
-				rpm = Math.max(rpm - (propellerFeedback - propellerForcePenalty*50), 0);
 			}
 		}
 		
@@ -454,37 +465,43 @@ public class PartEngine extends APart implements FXPart{
 			}
 		}
 		
-		//If we provide jet thrust, check for entities forward and aft of the engine and damage them.
-		if(definition.engine.jetPowerFactor > 0 && vehicle.world.isRemote && rpm >= 5000){
-			List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().add(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
-			if(!collidedEntites.isEmpty()){
-				Entity attacker = null;
-				for(Entity passenger : vehicle.getPassengers()){
-					if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
-						attacker = passenger;
-						break;
-					}
-				}
-				for(int i=0; i < collidedEntites.size(); ++i){
-					if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F));
-					}
-				}
-			}
+		///Update variables used for jet thrust.
+		if(definition.engine.jetPowerFactor > 0){
+			Point3d engineThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), totalRotation.x + vehicle.rotationPitch, totalRotation.y + vehicle.rotationYaw, totalRotation.z + vehicle.rotationRoll);
+			engineAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
 			
-			collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().subtract(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
-			if(!collidedEntites.isEmpty()){
-				Entity attacker = null;
-				for(Entity passenger : vehicle.getPassengers()){
-					if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
-						attacker = passenger;
-						break;
+			//Check for entities forward and aft of the engine and damage them.
+			if(vehicle.world.isRemote && rpm >= 5000){
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().add(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(Entity passenger : vehicle.getPassengers()){
+						if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
+							attacker = passenger;
+							break;
+						}
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, true), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F));
+						}
 					}
 				}
-				for(int i=0; i < collidedEntites.size(); ++i){
-					if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-						collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F));
-						collidedEntites.get(i).setFire(5);
+				
+				collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().subtract(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
+				if(!collidedEntites.isEmpty()){
+					Entity attacker = null;
+					for(Entity passenger : vehicle.getPassengers()){
+						if(vehicle.getSeatForRider(passenger).vehicleDefinition.isController){
+							attacker = passenger;
+							break;
+						}
+					}
+					for(int i=0; i < collidedEntites.size(); ++i){
+						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
+							collidedEntites.get(i).attackEntityFrom(new DamageSourceJet(attacker, false), (float) (definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F));
+							collidedEntites.get(i).setFire(5);
+						}
 					}
 				}
 			}
@@ -502,10 +519,12 @@ public class PartEngine extends APart implements FXPart{
 					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
-			driveshaftRotation += (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.velocity)*360D);
+			driveshaftRotation += (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D);
 		}else{
 			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + 1];
 		}
+		
+		//Update axial 
 	}
 	
 	@Override
@@ -738,7 +757,7 @@ public class PartEngine extends APart implements FXPart{
 		if(currentGear == -1){
 			currentGear = 0;
 		}else if(currentGear == 0){
-			if(vehicle.velocity > -0.25 || wheelFriction == 0){
+			if(vehicle.velocity < 0.25 || wheelFriction == 0){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
@@ -851,7 +870,7 @@ public class PartEngine extends APart implements FXPart{
 				
 				//Don't let us have negative engine force at low speeds.
 				//This causes odd reversing behavior when the engine tries to maintain speed.
-				if((wheelForce < 0 && currentGear > 0 && vehicle.velocity < 0.25) || (wheelForce > 0 && currentGear < 0 && vehicle.velocity > -0.25)){
+				if(((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && vehicle.velocity < 0.25){
 					wheelForce = 0;
 				}
 			}else{
@@ -863,7 +882,7 @@ public class PartEngine extends APart implements FXPart{
 			//No wheel force.  Check for propellers to provide force.
 			if(propeller != null && Math.abs(propeller.currentPitch) > 5 && state.running){
 				//Get what the pitch velocity of the propeller would be at the current velocity.
-				double currentPitchVelocity = vehicle.velocity*20D;
+				double currentPitchVelocity = propellerAxialVelocity*20D;
 				//Get the effective pitch velocity of the propeller at the current RPM.
 				double effectivePitchVelocity = 0.0254D*propeller.currentPitch*20D*propeller.angularVelocity;
 				//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
@@ -892,13 +911,7 @@ public class PartEngine extends APart implements FXPart{
 					
 					//Add propeller force to total engine force as a vector.
 					//Depends on propeller orientation, as upward propellers provide upwards thrust.
-					Point3d propellerRotation;
-					if(propeller.vehicleDefinition.isSubPart){
-						propellerRotation = getPositionRotation(0).add(propeller.placementRotation);
-					}else{
-						propellerRotation = propeller.getPositionRotation(0).add(propeller.placementRotation);
-					}
-					engineForce.add(RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), propellerRotation.x, propellerRotation.y, propellerRotation.z));
+					engineForce.add(RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), propeller.totalRotation.x, propeller.totalRotation.y, propeller.totalRotation.z));
 				}
 			}
 		}
@@ -917,15 +930,12 @@ public class PartEngine extends APart implements FXPart{
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
 			//Again, this is "hacky math", as for some reason there's no data on fan pitches.
 			//In this case, however, we don't care about the fuelConsumption as that's only used by the core.
-			double fanVelocityFactor = (0.0254*250*rpm/60/20 - vehicle.velocity)/200D;
+			double fanVelocityFactor = (0.0254*250*rpm/60/20 - engineAxialVelocity)/200D;
 			double fanContribution = 10*vehicle.airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.bypassRatio;
 			double thrust = (vehicle.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			Point3d engineRotation = getPositionRotation(0);
-			engineForce.x += thrust*(placementRotation.x + engineRotation.x);
-			engineForce.y += thrust*(placementRotation.y + engineRotation.y);
-			engineForce.z += thrust*(placementRotation.z + engineRotation.z);
+			engineForce.add(RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), totalRotation.x, totalRotation.y, totalRotation.z));
 		}
 		
 		//Finally, return the force we calculated.

@@ -48,7 +48,7 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 		super.updatePart();
 		if(this.isOnGround()){
 			//Set contact for wheel skid.
-			if(prevAngularVelocity/(vehicle.velocity/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
+			if(prevAngularVelocity/((vehicle.groundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 				BlockPos blockBelow = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
 				if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
 					contactThisTick = true;
@@ -105,17 +105,17 @@ public final class PartGroundDeviceWheel extends APartGroundDevice implements FX
 	
 	@Override
 	public Point3d getActionRotation(float partialTicks){
-		return new Point3d(vehicle.SPEED_FACTOR*(this.angularPosition + this.angularVelocity*partialTicks)*360D, vehicleDefinition.turnsWithSteer ? vehicle.getSteerAngle() : 0, 0);
+		return new Point3d(vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D, vehicleDefinition.turnsWithSteer ? -vehicle.getSteerAngle() : 0, 0);
 	}
 	
 	@Override
 	public float getMotiveFriction(){
-		return !this.isFlat ? this.definition.wheel.motiveFriction : this.definition.wheel.motiveFriction/10F;
+		return !isFlat ? definition.wheel.motiveFriction : definition.wheel.motiveFriction/10F;
 	}
 	
 	@Override
 	public float getLateralFriction(){
-		return !this.isFlat ? this.definition.wheel.lateralFriction : this.definition.wheel.lateralFriction/10F;
+		return !isFlat ? definition.wheel.lateralFriction : definition.wheel.lateralFriction/10F;
 	}
 	
 	@Override

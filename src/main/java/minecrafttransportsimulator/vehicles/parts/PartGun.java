@@ -261,7 +261,7 @@ public class PartGun extends APart implements FXPart{
 	public Point3d getActionRotation(float partialTicks){
 		//Don't return pitch if we are a turret.
 		if(definition.gun.isTurret){
-			return new Point3d(0, currentYaw - (currentYaw - prevYaw)*(1 - partialTicks), 0);
+			return new Point3d(0, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
 		}else{
 			return new Point3d(prevPitch + (currentPitch - prevPitch)*partialTicks, prevYaw + (currentYaw - prevYaw)*partialTicks, 0);
 		}

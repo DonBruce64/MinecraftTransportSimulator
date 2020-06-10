@@ -18,7 +18,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
@@ -115,7 +114,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				dampenControlSurfaces();
 			}
 			prevParkingBrakeAngle = parkingBrakeAngle;
-			if(parkingBrakeOn && !locked && Math.abs(velocity) < 0.25){
+			if(parkingBrakeOn && !locked && velocity < 0.25){
 				if(parkingBrakeAngle < 30){
 					prevParkingBrakeAngle = parkingBrakeAngle;
 					++parkingBrakeAngle;
@@ -154,19 +153,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			throttleTime = 0;
 		}
 		
-        if(throttleTime > 10 && !parkingBrakeOn && velocity >= 3){
+        if(throttleTime > 10 && !parkingBrakeOn && groundVelocity >= 3){
         	
-        	bodyAcceleration = (velocity/throttleTime);
+        	bodyAcceleration = (groundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01)); 
         	
         	return bodyAcclAngle;
         	
-        }else if(throttleTime > 10 && !parkingBrakeOn && velocity <= -3){
+        }else if(throttleTime > 10 && !parkingBrakeOn && groundVelocity <= -3){
         	
-        	bodyAcceleration = (velocity/throttleTime);
+        	bodyAcceleration = (groundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01)); 
         	
         	return bodyAcclAngle;
         	
@@ -186,15 +185,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
 	    	
-	    	bodyAcceleration = (velocity/brakingTime);
+	    	bodyAcceleration = (groundVelocity/brakingTime);
 	    	
-	        if(velocity < -3) {
+	        if(groundVelocity < -3) {
 	        	
-	        	bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*-0.01));
+	        	bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01));
 	        	
 	        }else {
 	        	
-		        bodyBrakeAngle = Math.toDegrees(Math.atan((velocity/forceOfInertia)*0.01));
+		        bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01));
 		        
 	        }
 	        
@@ -813,19 +812,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//After all movement is done, try and move players on hitboxes.
 		//Note that we need to interpolate the delta here based on actual movement, so don't use motionX!
-		if(this.velocity != 0){
+		if(velocity != 0){
 			for(EntityPlayer player : world.playerEntities){
 				if(!this.equals(player.getRidingEntity())){
 					for(VehicleAxisAlignedBB box : collisionBoxes){
 						//Add a slight yOffset to every box to "grab" players standing on collision points.
-						if(box.offset(this.posX - this.prevPosX, this.posY - this.prevPosY + 0.1F, this.posZ - this.prevPosZ).intersects(player.getEntityBoundingBox())){
+						if(box.offset(posX - prevPosX, posY - prevPosY + 0.1F, posZ - prevPosZ).intersects(player.getEntityBoundingBox())){
 							//Player has collided with this vehicle.  Adjust movement to allow them to ride on it.
 							//If we are going too fast, the player should slip off the collision box if it's not an interior box.
-							if(Math.abs(this.velocity) <= ConfigSystem.configObject.general.clingSpeed.value || box.isInterior){
-								player.setPosition(player.posX + (this.posX - this.prevPosX), player.posY + (this.posY - this.prevPosY), player.posZ + (this.posZ - this.prevPosZ));
-							}else if(Math.abs(this.velocity) < 2F*ConfigSystem.configObject.general.clingSpeed.value){
-								double slip = (2F*ConfigSystem.configObject.general.clingSpeed.value - Math.abs(this.velocity))*4D;
-								player.setPosition(player.posX + (this.posX - this.prevPosX)*slip, player.posY + (this.posY - this.prevPosY)*slip, player.posZ + (this.posZ - this.prevPosZ)*slip);
+							if(velocity <= ConfigSystem.configObject.general.clingSpeed.value || box.isInterior){
+								player.setPosition(player.posX + (posX - prevPosX), player.posY + (posY - prevPosY), player.posZ + (posZ - prevPosZ));
+							}else if(velocity < 2F*ConfigSystem.configObject.general.clingSpeed.value){
+								double slip = (2F*ConfigSystem.configObject.general.clingSpeed.value - velocity)*4D;
+								player.setPosition(player.posX + (posX - prevPosX)*slip, player.posY + (posY - prevPosY)*slip, player.posZ + (posZ - prevPosZ)*slip);
 							}
 							break;
 						}
@@ -850,22 +849,24 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private void performGroundOperations(){
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			double groundSpeed = Math.hypot(motionX, motionZ)*Math.signum(velocity);
-			groundSpeed -= 20F*brakingFactor/currentMass*Math.signum(velocity);
-			if(Math.abs(groundSpeed) > 0.1){
-				reAdjustGroundSpeed(groundSpeed);
-			}else{
+			motionX -= 20F*brakingFactor/currentMass*Math.signum(motionX);
+			motionZ -= 20F*brakingFactor/currentMass*Math.signum(motionZ);
+			if(Math.abs(motionX) < 0.1){
 				motionX = 0;
+			}
+			if(Math.abs(motionZ) < 0.1){
 				motionZ = 0;
+			}
+			if(motionX == 0 && motionY == 0){
 				motionYaw = 0;
 			}
 		}
 		
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
-			Vec3d groundVelocityVec = new Vec3d(motionX, 0, motionZ).normalize();
-			Vec3d groundHeadingVec = new Vec3d(currentHeading.x, 0, currentHeading.z).normalize();
-			float vectorDelta = (float) groundVelocityVec.distanceTo(groundHeadingVec);
+			Point3d groundVelocityVec = new Point3d(motionX, 0, motionZ).normalize();
+			Point3d groundHeadingVec = new Point3d(currentHeading.x, 0, currentHeading.z).normalize();
+			double vectorDelta = groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){
 				vectorDelta = Math.min(skiddingFactor, vectorDelta);
@@ -873,7 +874,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				float yawTemp = rotationYaw;
 				rotationYaw += vectorDelta;
 				updateHeadingVec();
-				reAdjustGroundSpeed(Math.hypot(motionX, motionZ)*velocitySign);
+				double groundSpeed = Math.hypot(motionX, motionZ)*velocitySign;
+				motionX = groundHeadingVec.x * groundSpeed;
+				motionZ = groundHeadingVec.z * groundSpeed;
 				rotationYaw = yawTemp;
 			}
 		}
@@ -984,11 +987,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(velocity*SPEED_FACTOR/0.35F) - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (Math.abs(velocity*(0.75F + SPEED_FACTOR/0.35F/4F)) - turningFactor/3F));
+				if(groundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = -(float) (steeringAngle*velocity/2F);
+				turningForce = -(float) (steeringAngle*groundVelocity/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.
@@ -996,12 +999,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		return turningForce;
-	}
-	
-	protected void reAdjustGroundSpeed(double groundSpeed){
-		Vec3d groundVec = new Vec3d(currentHeading.x, 0, currentHeading.z).normalize();
-		motionX = groundVec.x * groundSpeed;
-		motionZ = groundVec.z * groundSpeed;
 	}
 	
 	private void addToClientDeltas(double dX, double dY, double dZ, float dYaw, float dPitch, float dRoll){

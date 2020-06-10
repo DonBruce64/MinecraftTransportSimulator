@@ -24,7 +24,6 @@ import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.OBJParserSystem;
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
@@ -191,11 +190,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				if(part instanceof PartGroundDeviceTread){
 					//Treads don't get translated by y, or z.
 					GL11.glTranslated(part.placementOffset.x, 0, 0);
-					renderPart(part, partialTicks, part.placementOffset);
+					renderPart(part, partialTicks);
 				}else{
 					Point3d offset = part.getPositionOffset(partialTicks).add(part.placementOffset);
 					GL11.glTranslated(offset.x, offset.y, offset.z);
-					renderPart(part, partialTicks, offset);
+					renderPart(part, partialTicks);
 				}
 				GL11.glPopMatrix();
 			}
@@ -310,7 +309,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderPart(APart part, float partialTicks, Point3d offset){
+	private static void renderPart(APart part, float partialTicks){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			//Create the part display list and modelObjects.
@@ -371,23 +370,15 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 			
 			//Now that we have rendered this part, render any sub-part children.
-			//Make sure to translate "back" to the vehicle center prior to rendering.
-			//This allows the subParts to translate to their correct positions.
-			GL11.glTranslated(-offset.x, -offset.y, -offset.z);
 			for(APart childPart : part.childParts){
 				if(childPart.vehicleDefinition.isSubPart){
 					//Get the relative distance between our offset and our parent's offset.
 					Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
 					
-					//Rotate by the parent's rotation to match orientation.
-					Point3d parentRotation = part.getPositionRotation(partialTicks);
-					relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, (float) parentRotation.x, (float) parentRotation.y, (float) parentRotation.z);
-					
-					//Add parent offset to our offset to get actual point.
-					Point3d totalOffset = offset.add(relativeOffset);
+					//Translate to our new center and render.
 					GL11.glPushMatrix();
-					GL11.glTranslated(totalOffset.x, totalOffset.y, totalOffset.z);
-					renderPart(childPart, partialTicks, totalOffset);
+					GL11.glTranslated(relativeOffset.x, relativeOffset.y, relativeOffset.z);
+					renderPart(childPart, partialTicks);
 					GL11.glPopMatrix();
 				}
 			}
@@ -402,7 +393,8 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	/**
 	 *  Rotates a part on the model.  The rotation takes into account the vehicle, static, JSON-applied rotation, 
 	 *  as well as the dynamic rotation that depend on the part itself.  Rotation needs to be done after translation
-	 *   to the part's position to avoid coordinate system conflicts. 
+	 *   to the part's position to avoid coordinate system conflicts.  Note that yaw rotations are inverted, as MC's
+	 *   Y axis rotation is backwards from RHR convention.
 	 */
 	private static void rotatePart(APart part, float partialTicks){
 		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
@@ -412,33 +404,27 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 		
 		if(!part.placementRotation.isZero()){
-			if(part.parentPart != null){
-				GL11.glRotated(part.placementRotation.z, -Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)));
-				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
-				GL11.glRotated(part.placementRotation.x, Math.cos(Math.toRadians(part.parentPart.getActionRotation(0).y)), 0, Math.sin(Math.toRadians(part.parentPart.getActionRotation(0).y)));
+			if(part.parentPart != null && part.vehicleDefinition.isSubPart){
+				GL11.glRotated(-(part.placementRotation.y - part.parentPart.placementRotation.y), 0, 1, 0);
+				GL11.glRotated(part.placementRotation.x - part.parentPart.placementRotation.x, 1, 0, 0);
+				GL11.glRotated(part.placementRotation.z - part.parentPart.placementRotation.z, 0, 0, 1);
 			}else{
+				GL11.glRotated(-part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
-				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
 			}
 		}
 		
 		Point3d positionRotation = part.getPositionRotation(partialTicks);
 		if(!positionRotation.isZero()){
-			if(mirrored){
-				GL11.glRotated(-positionRotation.y, 0, 1, 0);
-				GL11.glRotated(-positionRotation.x, 1, 0, 0);
-				GL11.glRotated(-positionRotation.z, 0, 0, 1);
-			}else{
-				GL11.glRotated(positionRotation.y, 0, 1, 0);
-				GL11.glRotated(positionRotation.x, 1, 0, 0);
-				GL11.glRotated(positionRotation.z, 0, 0, 1);
-			}
+			GL11.glRotated(-positionRotation.y, 0, 1, 0);
+			GL11.glRotated(positionRotation.x, 1, 0, 0);
+			GL11.glRotated(positionRotation.z, 0, 0, 1);
 		}
 
 		Point3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.isZero()){
-			GL11.glRotated(actionRotation.y, 0, 1, 0);
+			GL11.glRotated(-actionRotation.y, 0, 1, 0);
 			GL11.glRotated(actionRotation.x, 1, 0, 0);
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
 		}

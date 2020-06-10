@@ -51,6 +51,7 @@ public abstract class APart implements ISoundProvider{
 	//Runtime variables.
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	public Point3d totalOffset;
+	public Point3d totalRotation;
 	public Point3d worldPos;
 	public VehicleAxisAlignedBB boundingBox;
 	private boolean isValid;
@@ -64,6 +65,7 @@ public abstract class APart implements ISoundProvider{
 		this.worldPos = RotationSystem.getRotatedPoint(placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
 		this.boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
 		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
+		this.totalRotation = placementRotation;
 		this.isValid = true;
 		
 		//Check to see if we are an additional part to a part on our parent.
@@ -82,7 +84,8 @@ public abstract class APart implements ISoundProvider{
 			for(APart part : vehicle.getVehicleParts()){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
-						if((float) part.placementOffset.x + partSubPartPack.pos[0] == (float) this.placementOffset.x && (float) part.placementOffset.y + partSubPartPack.pos[1] == (float) this.placementOffset.y && (float) part.placementOffset.z + partSubPartPack.pos[2] == (float) this.placementOffset.z){
+						VehiclePart correctedPack = vehicle.getPackForSubPart(part.vehicleDefinition, partSubPartPack);
+						if(EntityVehicleE_Powered.isPackAtPosition(correctedPack, placementOffset.x, placementOffset.y, placementOffset.z)){
 							parentPart = part;
 							parentPart.childParts.add(this);
 							this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
@@ -128,17 +131,19 @@ public abstract class APart implements ISoundProvider{
 			Point3d relativeOffset = getPositionOffset(0).add(placementOffset).subtract(parentPart.placementOffset);
 			
 			//Rotate by the parent's rotation to match orientation.
-			Point3d parentRotation = parentPart.getPositionRotation(0);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentRotation.x, parentRotation.y, parentRotation.z);
+			totalRotation = parentPart.getPositionRotation(0).add(parentPart.placementRotation);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, totalRotation.x, totalRotation.y, totalRotation.z);
 			
 			//Rotate again to take the action rotation into account.
-			parentRotation = parentPart.getActionRotation(0);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentRotation.x, parentRotation.y, parentRotation.z);
+			Point3d parentActionRotation = parentPart.getActionRotation(0);
+			totalRotation.add(parentActionRotation);
+			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentActionRotation.x, parentActionRotation.y, parentActionRotation.z);
 			
 			//Add parent offset to our offset to get actual point.
 			totalOffset = relativeOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
 		}else{
 			totalOffset = getPositionOffset(0).add(placementOffset);
+			totalRotation = getPositionRotation(0).add(placementRotation);
 		}
 		worldPos = RotationSystem.getRotatedPoint(totalOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
 		boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);

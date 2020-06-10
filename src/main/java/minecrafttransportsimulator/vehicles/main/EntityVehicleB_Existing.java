@@ -51,6 +51,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public double airDensity;
 	public double currentMass;
 	public double velocity;
+	public double groundVelocity;
 	public Point3d currentPosition = new Point3d(0, 0, 0);
 	public Point3d currentHeading = new Point3d(0, 0, 0);
 	public Point3d currentVelocity = new Point3d(0, 0, 0);
@@ -78,8 +79,10 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
 		currentPosition.set(posX, posY, posZ);
-		currentVelocity = new Point3d(motionX, motionY, motionZ);
-		velocity = currentVelocity.dotProduct(currentHeading);
+		currentVelocity.set(motionX, 0D, motionZ);
+		groundVelocity = currentVelocity.dotProduct(currentHeading);
+		currentVelocity.y = motionY;
+		velocity = Math.abs(currentVelocity.dotProduct(currentHeading));
 		currentVelocity.normalize();
 		verticalVector = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVector = currentHeading.crossProduct(verticalVector);
