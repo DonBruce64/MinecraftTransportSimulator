@@ -41,7 +41,7 @@ public final class RenderableModelObject{
 					throw new NullPointerException("ERROR: " + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a rotatable object:" + objectName + ", but no rotatableModelObjects are present in the JSON!");
 				}
 			}else{
-				if(isPart ? optionalPart.definition.rendering.rotatableModelObjects != null : vehicle.definition.rendering.rotatableModelObjects != null){
+				if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.rotatableModelObjects != null) : vehicle.definition.rendering.rotatableModelObjects != null){
 					transforms.add(new TransformRotatable(modelName, objectName, isPart ? optionalPart.definition.rendering.rotatableModelObjects : vehicle.definition.rendering.rotatableModelObjects));
 				}else{
 					throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a rotatable object:" + objectName + ", but no rotatableModelObjects are present in the JSON!");
@@ -49,7 +49,7 @@ public final class RenderableModelObject{
 			}
 		}
 		if(objectName.contains("%")){
-			if(isPart ? optionalPart.definition.rendering.translatableModelObjects != null : vehicle.definition.rendering.translatableModelObjects != null){
+			if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.translatableModelObjects != null) : vehicle.definition.rendering.translatableModelObjects != null){
 				transforms.add(new TransformTranslatable(modelName, objectName, isPart ? optionalPart.definition.rendering.translatableModelObjects : vehicle.definition.rendering.translatableModelObjects));
 			}else{
 				throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a translatable object:" + objectName + ", but no translatableModelObjects are present in the JSON!");
