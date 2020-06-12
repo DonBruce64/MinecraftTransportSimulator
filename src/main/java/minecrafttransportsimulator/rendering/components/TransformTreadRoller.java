@@ -2,8 +2,11 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
 /**A specific class of {@link TransformRotatable}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -62,13 +65,14 @@ public class TransformTreadRoller extends TransformRotatable{
 				break;
 			}
 		}
+		
 		if(!existsInJSON){
-			//We don't have this rotatable.  Add it.
+			//We don't have this definition.  Add it.
 			VehicleRotatableModelObject rotatable = vehicle.definition.new VehicleRotatableModelObject();
 			rotatable.partName = objectName;
-			rotatable.rotationVariable = "speed";
+			rotatable.rotationVariable = "engine_driveshaft_rotation_1";
 			rotatable.rotationPoint = new double[]{0, yPos, zPos};
-			rotatable.rotationAxis = new double[]{1D/radius, 0, 0};
+			rotatable.rotationAxis = new double[]{0, 0, 0};
 			vehicle.definition.rendering.rotatableModelObjects.add(rotatable);
 		}
 		
@@ -143,5 +147,25 @@ public class TransformTreadRoller extends TransformRotatable{
 			nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
 			nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}
+	}
+	
+	@Override
+	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+		
+		super.applyTransforms(vehicle, optionalPart, partialTicks);
+	}
+	
+	@Override
+	protected boolean updateRotationAxis(EntityVehicleE_Powered vehicle, Point3d rotationAxis){
+		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
+		if(rotationAxis.x == 0){
+			for(APart part : vehicle.getVehicleParts()){
+				if(part instanceof PartGroundDevice && part.definition.ground.isTread){
+					rotationAxis.x = part.getHeight()/(radius*2D);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

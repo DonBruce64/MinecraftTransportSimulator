@@ -73,16 +73,6 @@ public class TransformRotatable extends ARenderableTransform{
 		this.rotationClampsMax = rotationClampsMaxList.toArray(new Float[rotationClampsMaxList.size()]);
 		this.rotationAbsolutes = rotationAbsolutesList.toArray(new Boolean[rotationAbsolutesList.size()]);
 	}
-	
-	/**
-	 *  This method rotates this part based on the part's parameters.
-	 *  No rendering is performed.  This allows for rotatable parts
-	 *  to be used as rotation helper classes in addition to actual
-	 *  rotatable renderable parts.
-	 */
-	public void rotate(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
-		
-	}
 
 	@Override
 	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
@@ -91,13 +81,18 @@ public class TransformRotatable extends ARenderableTransform{
 		//This also allows for multi-variable clamping.
 		double rotation = 0;
 		for(byte i=0; i<rotationVariables.length; ++i){
+			//Update rotation axis, if required.
+			if(updateRotationAxis(vehicle, rotationAxis[i])){
+				rotationMagnitudes[i] = rotationAxis[i].length();
+				rotationAxis[i] = rotationAxis[i].normalize();
+			}
+			
 			rotation = VehicleAnimationSystem.getVariableValue(rotationVariables[i], rotationMagnitudes[i], (float) rotation, rotationClampsMin[i], rotationClampsMax[i], rotationAbsolutes[i], partialTicks, vehicle, optionalPart);
 			//If the next definition is the same point, don't apply rotation yet.
 			//We need to get cumulative rotation.
+			//if(vehicle.definition.packID.contains("44"))System.out.println(rotationVariables[i]);
 			if(i + 1 < rotationVariables.length && rotationPoints[i].equals(rotationPoints[i + 1])){
-				if(rotationAxis[i].equals(rotationAxis[i + 1])){
-					continue;
-				}
+				continue;
 			}else if(rotation != 0){
 				GL11.glTranslated(rotationPoints[i].x, rotationPoints[i].y, rotationPoints[i].z);
 				GL11.glRotated(rotation, rotationAxis[i].x, rotationAxis[i].y, rotationAxis[i].z);
@@ -105,5 +100,14 @@ public class TransformRotatable extends ARenderableTransform{
 				rotation = 0;
 			}
 		}
+	}
+	
+	/**
+	 *  Manual helper function for updating the rotaitonAxis of a part prior to rendering.
+	 *  Required for auto-rotations.  This function should return true if the axis was updated
+	 *  to allow the calling method to save the axis state.
+	 */
+	protected boolean updateRotationAxis(EntityVehicleE_Powered vehicle, Point3d rotationAxis){
+		return false;
 	}
 }

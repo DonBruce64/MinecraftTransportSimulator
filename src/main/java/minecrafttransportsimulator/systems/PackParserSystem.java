@@ -265,7 +265,6 @@ public final class PackParserSystem{
     				case("wheel"):{
     					partDef.general.type = "ground_" + partDef.general.type;
     					partDef.ground = partDef.new PartGroundDevice();
-    					partDef.ground.connectsToEngine = true;
     					partDef.ground.isWheel = true;
     					partDef.ground.width = partDef.wheel.diameter/2F;
     					partDef.ground.height = partDef.wheel.diameter;
@@ -291,7 +290,6 @@ public final class PackParserSystem{
     				}case("tread"):{
     					partDef.general.type = "ground_" + partDef.general.type;
     					partDef.ground = partDef.new PartGroundDevice();
-    					partDef.ground.connectsToEngine = true;
     					partDef.ground.isTread = true;
     					partDef.ground.width = partDef.tread.width;
     					partDef.ground.height = partDef.tread.width;

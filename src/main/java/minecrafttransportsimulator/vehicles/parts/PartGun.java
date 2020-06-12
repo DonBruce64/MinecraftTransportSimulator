@@ -116,6 +116,11 @@ public class PartGun extends APart implements FXPart{
 		prevPitch = currentPitch;
 		prevYaw = currentYaw;
 		
+		//Decrement cooldown time, if we have any.
+		if(cooldownTimeRemaining > 0){
+			--cooldownTimeRemaining;
+		} 
+		
 		//Before we do any logic, check to make sure the player is still seated in the gunner seat.
 		//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
 		//Otherwise, guns could be set to fire and the player could just run away...
@@ -172,28 +177,26 @@ public class PartGun extends APart implements FXPart{
 				//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 				//We still need to run the gun code on the server, however, as we need to mess with inventory.
 				if(firing && bulletsLeft > 0 && !reloading){
-					//If we aren't in a cooldown time, we can fire.
-					if(cooldownTimeRemaining == 0){
-						//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
-						//Make sure to add-on an offset to our firing point to allow for multi-gun units.
-						//We also add 1 tick here, as it's only subsequent ticks we check for gun firing.
-						long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
-						cooldownTimeRemaining = definition.gun.fireDelay;
-						timeToFire = System.currentTimeMillis() + millisecondCamOffset;
-						--bulletsLeft;
-					}
-					if(cooldownTimeRemaining > 0){
-						--cooldownTimeRemaining;
-					}
+					//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
+					//Make sure to add-on an offset to our firing point to allow for multi-gun units.
+					//We also add 1 tick here, as it's only subsequent ticks we check for gun firing.
+					long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
+					cooldownTimeRemaining = definition.gun.fireDelay;
+					timeToFire = System.currentTimeMillis() + millisecondCamOffset;
+					--bulletsLeft;
 				}
 				
 				//Adjust aim to face direction controller is facing.
 				//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
 				//Pitch and yaw are relative to the vehicle, so use those.
-				//When we do yaw, make sure we do calculations with positive values.
-				//Both the vehicle and the player can have yaw greater than 360.
+				//When we do yaw, make sure to normalize the player's yaw from -180/180.
 				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double deltaYaw = (playerController.rotationYaw + 360 - vehicle.rotationYaw + 360 + placementRotation.y + 360)%360;
+				double playerYaw = ((playerController.rotationYaw - vehicle.rotationYaw)%360 + 360)%360;
+				if(playerYaw >= 180){
+					playerYaw = -(360 - playerYaw);
+				}
+				double deltaYaw = playerYaw -(currentYaw + placementRotation.y);
+				
 				//I know this is weird, but the pitch is bigger when it's pointing the ground and smaller when it's pointing the sky.
 				//At least this won't be confusing on the pack creator's end in this way. -Bunting_chj
 				if(deltaPitch < currentPitch && currentPitch > -definition.gun.maxPitch){
@@ -201,30 +204,43 @@ public class PartGun extends APart implements FXPart{
 				}else if(deltaPitch > currentPitch && currentPitch < -definition.gun.minPitch){
 					currentPitch += Math.min(anglePerTickSpeed, deltaPitch - currentPitch);
 				}
+				
+				//Apply yaw deltas to the gun.
 				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
-				//We need to do special rotation logic for that.
+				//We need to do special logic for this type of gun.
 				if(definition.gun.minYaw == -180  && definition.gun.maxYaw == 180){
-					if((deltaYaw - currentYaw + 360)%360 >= 180){
-						currentYaw -= Math.min(anglePerTickSpeed,360 - (deltaYaw - currentYaw + 360)%360);
-					}else if((deltaYaw - currentYaw + 360)%360 < 180){
-						currentYaw += Math.min(anglePerTickSpeed,(deltaYaw - currentYaw + 360)%360);
-					}
-					if(currentYaw > 180 ){
-						currentYaw -= 360;
-					}else if(currentYaw < -180){
-						currentYaw += 360;
+					//Adjust our deltaYaw if its quicker to rotate the other direction.
+					if(deltaYaw > 180){
+						deltaYaw -= 360;
+					}else if(deltaYaw < -180){
+						deltaYaw += 360;
 					}
 					
-					//If we crossed the -180/180 yaw border this tick, change prevYaw to prevent spazzing.
-					//We know this if we have a sign difference, and yaw is large.
-					if(prevYaw*currentYaw < 0 && prevYaw*currentYaw < -180){
-						prevYaw += prevYaw < 0 ? 360 : -360;
+					//Apply rotations.  We don't check min-max here as we don't have a min or max.
+					if(deltaYaw > 0){
+						currentYaw += Math.min(anglePerTickSpeed, deltaYaw);
+					}else{
+						currentYaw += Math.max(-anglePerTickSpeed, deltaYaw);
+					}
+					
+					//If we are over our yaw bounds, re-clamp.
+					//Also adjust the prev values so we don't get spazzing for rendering.
+					if(currentYaw > 180 ){
+						currentYaw -= 360;
+						prevYaw -= 360;
+					}else if(currentYaw < -180){
+						currentYaw += 360;
+						prevYaw += 360;
 					}
 				}else{
-					if(deltaYaw < currentYaw && currentYaw > definition.gun.minYaw){
-						currentYaw -= Math.min(anglePerTickSpeed, currentYaw - deltaYaw);
-					}else if(deltaYaw > currentYaw && currentYaw < definition.gun.maxYaw){
-						currentYaw += Math.min(anglePerTickSpeed, deltaYaw - currentYaw);
+					if(deltaYaw > 0){
+						if(currentYaw < definition.gun.maxYaw){
+							currentYaw += Math.min(anglePerTickSpeed, deltaYaw);
+						}
+					}else{
+						if(currentYaw > definition.gun.minYaw){
+							currentYaw += Math.max(-anglePerTickSpeed, deltaYaw);
+						}
 					}
 				}
 			}else{

@@ -86,7 +86,6 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     }
     
     public class PartGroundDevice{
-    	public boolean connectsToEngine;
     	public boolean isWheel;
     	public boolean isTread;
     	public boolean canFloat;

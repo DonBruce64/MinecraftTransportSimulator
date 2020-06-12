@@ -270,7 +270,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				}
 			}
 		}else if(part instanceof PartGroundDevice){
-			if(part.definition.ground.connectsToEngine){
+			if(part.definition.ground.isWheel || part.definition.ground.isTread){
 				wheels.add((PartGroundDevice) part);
 			}
 		}else if(part instanceof PartGun){
