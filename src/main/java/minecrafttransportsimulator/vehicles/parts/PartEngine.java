@@ -209,7 +209,11 @@ public class PartEngine extends APart implements FXPart{
 			}
 		}else if(state.hsOn){
 			if(starterLevel == 0){
-				state = state.magnetoOn ? EngineStates.MAGNETO_ON_STARTERS_OFF : EngineStates.ENGINE_OFF;
+				if(state.running){
+					state = EngineStates.RUNNING;
+				}else{
+					state = state.magnetoOn ? EngineStates.MAGNETO_ON_STARTERS_OFF : EngineStates.ENGINE_OFF;
+				}
 			}
 		}
 		
@@ -377,7 +381,7 @@ public class PartEngine extends APart implements FXPart{
 			}
 			
 			//Adjust RPM of the engine to wheels.
-			if(currentGearRatio != 0){
+			if(currentGearRatio != 0 && starterLevel == 0){
 				//Don't adjust it down to stall the engine, that can only be done via backfire.
 				if(wheelFriction > 0){
 					double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
@@ -409,7 +413,7 @@ public class PartEngine extends APart implements FXPart{
 			propellerAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
 			
 			//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
-			if(wheelFriction == 0 && currentGearRatio != 0){
+			if(wheelFriction == 0 && currentGearRatio != 0 && starterLevel == 0){
 				isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
 				propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 				double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
@@ -512,7 +516,7 @@ public class PartEngine extends APart implements FXPart{
 	public void removePart(){
 		super.removePart();
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
-		this.state = EngineStates.ENGINE_OFF;
+		state = EngineStates.ENGINE_OFF;
 		for(PartGroundDevice wheel : vehicle.wheels){
 			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;

@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -79,6 +80,8 @@ public class PacketVehicleInteract extends APacketVehiclePlayer{
 							//Not holding an item that can interact with a vehicle.  Try to interact with parts or slots.
 							if(message.type.equals(PacketVehicleInteractType.PART_RIGHTCLICK)){
 								part.interactPart(player);
+							}else if(message.type.equals(PacketVehicleInteractType.PART_LEFTCLICK)){
+								part.attackPart(DamageSource.causePlayerDamage(player), 1.0F);
 							}else if(message.type.equals(PacketVehicleInteractType.PART_SLOT_RIGHTCLICK)){
 								//Only owners can add vehicle parts.
 								if(!canPlayerEditVehicle){

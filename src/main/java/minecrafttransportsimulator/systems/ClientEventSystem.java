@@ -8,7 +8,6 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
@@ -102,7 +101,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(AttackEntityEvent event){
-    	if(event.getTarget() instanceof EntityVehicleE_Powered && event.getEntityPlayer().getHeldItemMainhand().getItem() instanceof IItemVehicleInteractable){
+    	if(event.getTarget() instanceof EntityVehicleE_Powered){
     		//We clicked the vehicle with an item that can interact with it.
     		//Cancel the attack and check if we need to interact with the vehicle.
     		//Only do checks if we are on the client, as the server does bad hitscanning.
