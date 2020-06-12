@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.packets.parts;
 
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 	public PacketPartGroundDeviceWheelFlat(){}
 	
-	public PacketPartGroundDeviceWheelFlat(PartGroundDeviceWheel part){
+	public PacketPartGroundDeviceWheelFlat(PartGroundDevice part){
 		super(part);
 	}
 
@@ -19,7 +19,7 @@ public final class PacketPartGroundDeviceWheelFlat extends APacketPart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					PartGroundDeviceWheel wheel = (PartGroundDeviceWheel) getVehiclePartFromMessage(message, ctx);
+					PartGroundDevice wheel = (PartGroundDevice) getVehiclePartFromMessage(message, ctx);
 					if(wheel != null){
 						wheel.setFlat();
 					}

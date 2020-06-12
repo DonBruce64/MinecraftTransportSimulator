@@ -6,8 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -38,8 +37,8 @@ public class VehicleGroundDeviceBox{
 	public double zCoord;
 	
 	//The following variables are only used for intermediary calculations.
-	private final List<APart> groundDevices = new ArrayList<APart>();
-	private final List<APart> liquidDevices = new ArrayList<APart>();
+	private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
+	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
@@ -78,31 +77,31 @@ public class VehicleGroundDeviceBox{
 		groundDevices.clear();
 		liquidDevices.clear();
 		for(APart part : vehicle.getVehicleParts()){
-			if(part instanceof APartGroundDevice){
+			if(part instanceof PartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
 				if(isFront && part.placementOffset.z > 0){
 					if(isLeft && part.placementOffset.x >= 0){
-						groundDevices.add(part);
-						if(part instanceof PartGroundDevicePontoon){
-							liquidDevices.add(part);
+						groundDevices.add((PartGroundDevice) part);
+						if(part.definition.ground.canFloat){
+							liquidDevices.add((PartGroundDevice) part);
 						}
 					}else if(!isLeft && part.placementOffset.x <= 0){
-						groundDevices.add(part);
-						if(part instanceof PartGroundDevicePontoon){
-							liquidDevices.add(part);
+						groundDevices.add((PartGroundDevice) part);
+						if(part.definition.ground.canFloat){
+							liquidDevices.add((PartGroundDevice) part);
 						}
 					}
 				}else if(!isFront && part.placementOffset.z <= 0){
 					if(isLeft && part.placementOffset.x >= 0){
-						groundDevices.add(part);
-						if(part instanceof PartGroundDevicePontoon){
-							liquidDevices.add(part);
+						groundDevices.add((PartGroundDevice) part);
+						if(part.definition.ground.canFloat){
+							liquidDevices.add((PartGroundDevice) part);
 						}
 					}else if(!isLeft && part.placementOffset.x <= 0){
-						groundDevices.add(part);
-						if(part instanceof PartGroundDevicePontoon){
-							liquidDevices.add(part);
+						groundDevices.add((PartGroundDevice) part);
+						if(part.definition.ground.canFloat){
+							liquidDevices.add((PartGroundDevice) part);
 						}
 					}
 				}
@@ -120,7 +119,7 @@ public class VehicleGroundDeviceBox{
 			currentBox = getSolidPoint();
 			final List<AxisAlignedBB> groundCollidingBoxes = currentBox.getAABBCollisions(vehicle.world, null);
 			isCollided = !groundCollidingBoxes.isEmpty();
-			isGrounded = isCollided ? false : !currentBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
+			isGrounded = isCollided ? false : !currentBox.offset(0, PartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
 			collisionDepth = isCollided ? getCollisionDepthForCollisions(currentBox, groundCollidingBoxes) : 0;
 			xCoord = currentBox.rel.x;
 			yCoord = currentBox.rel.y - currentBox.height/2D;
@@ -132,7 +131,7 @@ public class VehicleGroundDeviceBox{
 			final List<AxisAlignedBB> liquidCollidingBoxes = getLiquidCollisions(liquidCollisionBox, vehicle.world);
 			//Liquids are checked a bit differently as we already checked solids.
 			isCollidedLiquid = !liquidCollidingBoxes.isEmpty();
-			isGroundedLiquid = isCollidedLiquid ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, APartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
+			isGroundedLiquid = isCollidedLiquid ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, PartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
 			double liquidCollisionDepth = isCollidedLiquid ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
 			
 			//If the liquid boxes are more collided, set collisions to those.

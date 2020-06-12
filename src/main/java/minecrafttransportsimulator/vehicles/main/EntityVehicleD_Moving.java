@@ -12,7 +12,7 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -57,7 +57,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
     private double bodyAcclAngle; 
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
-	protected final List<APartGroundDevice> groundedGroundDevices = new ArrayList<APartGroundDevice>();
+	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
 	
 	//Classes used for ground device collisions.
 	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;
@@ -85,9 +85,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//This needs to be done before movement calculations so we can do checks during them.
 			groundedGroundDevices.clear();
 			for(APart part : this.getVehicleParts()){
-				if(part instanceof APartGroundDevice){
-					if(((APartGroundDevice) part).isOnGround()){
-						groundedGroundDevices.add((APartGroundDevice) part);
+				if(part instanceof PartGroundDevice){
+					if(((PartGroundDevice) part).isOnGround()){
+						groundedGroundDevices.add((PartGroundDevice) part);
 					}
 				}
 			}
@@ -892,7 +892,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
-		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
@@ -936,7 +936,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private float getSkiddingFactor(){
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
-		for(APartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
 			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
 		
@@ -960,7 +960,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			float turningFactor = 0;
 			float turningDistance = 0;
 			//Check grounded wheels for turn contributions.
-			for(APartGroundDevice groundDevice : this.groundedGroundDevices){
+			for(PartGroundDevice groundDevice : this.groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
 				if(groundDevice.vehicleDefinition.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){

@@ -28,7 +28,7 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
@@ -187,7 +187,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//Only render valid parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
 			if(part.isValid() && !part.vehicleDefinition.isSubPart){
 				GL11.glPushMatrix();
-				if(part instanceof PartGroundDeviceTread){
+				if(part.definition.ground != null && part.definition.ground.isTread){
 					//Treads don't get translated by y, or z.
 					GL11.glTranslated(part.placementOffset.x, 0, 0);
 					renderPart(part, partialTicks);
@@ -354,15 +354,18 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		rotatePart(part, partialTicks);
 		
 		//If we are a tread, do the tread-specific render rather than the display list.
-		if(part instanceof PartGroundDeviceTread){
+		//Don't do this for pass 1 though as treads don't have transparency.
+		if(part.definition.ground != null && part.definition.ground.isTread && WrapperRender.getRenderPass() != 1){
 			if(part.vehicleDefinition.treadZPoints != null){
-				doManualTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));	
+				doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
-				doAutomaticTreadRender((PartGroundDeviceTread) part, partialTicks, partDisplayLists.get(partModelLocation));
+				doAutomaticTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));
 			}
 		}else{
-    		//Render the part DisplayList.
-			GL11.glCallList(partDisplayLists.get(partModelLocation));
+    		//Render the part DisplayList, but only if we aren't in the transparent pass.
+			if(WrapperRender.getRenderPass() != 1){
+				GL11.glCallList(partDisplayLists.get(partModelLocation));
+			}
 			
 			//The display list only renders static object.  We need to render dynamic ones manually.
 			for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
@@ -424,9 +427,15 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 		Point3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.isZero()){
-			GL11.glRotated(-actionRotation.y, 0, 1, 0);
-			GL11.glRotated(actionRotation.x, 1, 0, 0);
-			GL11.glRotated(actionRotation.z, 0, 0, 1);
+			if(mirrored){
+				GL11.glRotated(actionRotation.y, 0, 1, 0);
+				GL11.glRotated(-actionRotation.x, 1, 0, 0);
+				GL11.glRotated(-actionRotation.z, 0, 0, 1);
+			}else{
+				GL11.glRotated(-actionRotation.y, 0, 1, 0);
+				GL11.glRotated(actionRotation.x, 1, 0, 0);
+				GL11.glRotated(actionRotation.z, 0, 0, 1);
+			}
 		}
 	}
 	
@@ -434,7 +443,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Renders the treads using a manual system.  Points are defined by pack authors and are located in the
 	 *  vehicle JSON.  This method is more cumbersome for the authors, but allows for precise path control.
 	 */
-	private static void doManualTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
+	private static void doManualTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.definition.genericName);
 		if(deltas == null){
 			//First calculate the total distance the treads need to be rendered.
@@ -574,7 +583,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Renders the treads using an automatic calculation system.  This system is good for simple treads,
 	 *  though will render oddly on complex paths.
 	 */
-	private static void doAutomaticTreadRender(PartGroundDeviceTread treadPart, float partialTicks, int displayListIndex){
+	private static void doAutomaticTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Double[]> points = treadPoints.get(treadPart.vehicle.definition.genericName);
 		if(points == null){
 			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.			

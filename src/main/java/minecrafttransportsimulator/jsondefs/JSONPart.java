@@ -13,6 +13,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartPontoonConfig pontoon;
     public PartSkid skid;
     public PartTread tread;
+    public PartGroundDevice ground;
     public PartPropeller propeller;
     public PartCrate crate;
     public PartBarrel barrel;
@@ -78,6 +79,19 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartTread{
     	public float width;
+    	public float motiveFriction;
+        public float lateralFriction;
+        public float extraCollisionBoxOffset;
+        public float spacing;
+    }
+    
+    public class PartGroundDevice{
+    	public boolean connectsToEngine;
+    	public boolean isWheel;
+    	public boolean isTread;
+    	public boolean canFloat;
+    	public float width;
+    	public float height;
     	public float motiveFriction;
         public float lateralFriction;
         public float extraCollisionBoxOffset;

@@ -18,8 +18,7 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -103,27 +102,9 @@ public class PartEngine extends APart implements FXPart{
 		this.startRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		this.stallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
 		
-		//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
-		if(definition.general.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
-			definition.engine.jetPowerFactor = 1.0F;
-			definition.engine.bypassRatio = definition.engine.gearRatios[0];
-			definition.engine.gearRatios[0] = 1.0F;
-		}
-		
-		//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine.
-		if(definition.engine.gearRatios.length == 1){
-			definition.engine.propellerRatio = 1/definition.engine.gearRatios[0];
-			definition.engine.gearRatios = new float[]{-1, 0, 1};
-		}
-		
-		//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.
-		if(definition.engine.shiftSpeed == 0){
-			definition.engine.shiftSpeed = 20;
-		}
-		
-		//If we aren't connected to a car or boat, set our gear to 1.
-		//This is needed for correct speed setting.
-		if(!(vehicle instanceof EntityVehicleG_Car || vehicle instanceof EntityVehicleG_Boat)){
+		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
+		//Well, except blimps, but that's a special case.
+		if(vehicle instanceof EntityVehicleF_Air){
 			currentGear = 1;
 		}
 	}
@@ -383,7 +364,7 @@ public class PartEngine extends APart implements FXPart{
 			engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - startRPM/1.25 - hours) + startRPM/1.25 : startRPM*1.2;
 			
 			//Update wheel friction and velocity.
-			for(APartGroundDevice wheel : vehicle.wheels){
+			for(PartGroundDevice wheel : vehicle.wheels){
 				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
@@ -406,7 +387,7 @@ public class PartEngine extends APart implements FXPart{
 					}
 				}else{
 					//No wheel force.  Adjust wheels to engine speed.
-					for(APartGroundDevice wheel : vehicle.wheels){
+					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
 						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 							if(currentGearRatio != 0){
@@ -514,7 +495,7 @@ public class PartEngine extends APart implements FXPart{
 		prevDriveshaftRotation = driveshaftRotation;
 		if(vehicle.definition.car != null){
 			float driveShaftDesiredSpeed = -999F;
-			for(APartGroundDevice wheel : vehicle.wheels){
+			for(PartGroundDevice wheel : vehicle.wheels){
 				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
@@ -532,7 +513,7 @@ public class PartEngine extends APart implements FXPart{
 		super.removePart();
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
 		this.state = EngineStates.ENGINE_OFF;
-		for(APartGroundDevice wheel : vehicle.wheels){
+		for(PartGroundDevice wheel : vehicle.wheels){
 			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;
 			}
@@ -839,7 +820,7 @@ public class PartEngine extends APart implements FXPart{
 				//If they do, we'll need to provide less force.
 				if(Math.abs(wheelForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300F))){
 					wheelForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(wheelForce/300F);					
-					for(APartGroundDevice wheel : vehicle.wheels){
+					for(PartGroundDevice wheel : vehicle.wheels){
 						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 							if(currentGearRatio > 0){
 								if(wheelForce >= 0){
@@ -860,7 +841,7 @@ public class PartEngine extends APart implements FXPart{
 					}
 				}else{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
-					for(APartGroundDevice wheel : vehicle.wheels){
+					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
 						if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
 							wheel.angularVelocity = lowestWheelVelocity;

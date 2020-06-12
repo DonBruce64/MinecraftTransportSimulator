@@ -10,10 +10,10 @@ import net.minecraft.nbt.NBTTagCompound;
  * 
  * @author don_bruce
  */
-public final class PartGroundDeviceFake extends APartGroundDevice{
-	private final APartGroundDevice masterPart;
+public final class PartGroundDeviceFake extends PartGroundDevice{
+	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(APartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(masterPart.vehicle, packVehicleDef, definition, dataTag);
 		this.masterPart = masterPart;
 	}
@@ -60,22 +60,7 @@ public final class PartGroundDeviceFake extends APartGroundDevice{
 	}
 	
 	@Override
-	public float getMotiveFriction(){
-		return masterPart.getMotiveFriction();
-	}
-	
-	@Override
-	public float getLateralFriction(){
-		return masterPart.getLateralFriction();
-	}
-	
-	@Override
 	public float getLongPartOffset(){
 		return -masterPart.getLongPartOffset();
-	}
-	
-	@Override
-	public boolean canBeDrivenByEngine(){
-		return masterPart.canBeDrivenByEngine();
 	}
 }

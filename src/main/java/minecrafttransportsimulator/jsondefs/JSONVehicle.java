@@ -109,6 +109,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float[] exhaustVelocity;
         public float intakeOffset;
         
+        //Ground-specific variables.
+        public float extraCollisionBoxOffset;
+        
         //Tread-specific part variables.
         public float[] treadYPoints;
         public float[] treadZPoints;

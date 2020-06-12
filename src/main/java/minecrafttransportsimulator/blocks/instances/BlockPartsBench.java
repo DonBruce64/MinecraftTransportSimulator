@@ -37,6 +37,17 @@ public class BlockPartsBench extends ABlockBase{
 	}
 	
 	public boolean isJSONValid(AJSONItem<?> definition){
-		return validJsonClasses.contains(definition.getClass()) && (definition instanceof JSONPart ? validPartTypes.contains(((JSONPart) definition).general.type) : true);
+		if(validJsonClasses.contains(definition.getClass())){
+			if(definition instanceof JSONPart){
+				for(String partType : validPartTypes){
+					if(((JSONPart) definition).general.type.startsWith(partType)){
+						return true;
+					}
+				}
+			}else{
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -130,10 +130,6 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		
 		//If we are a plane, set our current wing area.
 		if(definition.plane != null){
-			//If aileronArea is 0, we're a legacy plane and need to adjust.
-			if(definition.plane.aileronArea == 0){
-				definition.plane.aileronArea = definition.plane.wingArea/5F;
-			}
 			currentWingArea = definition.plane.wingArea + definition.plane.wingArea*flapCurrentAngle/250F;
 		}
 	}

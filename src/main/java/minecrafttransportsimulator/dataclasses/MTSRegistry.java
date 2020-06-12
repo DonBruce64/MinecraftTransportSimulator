@@ -101,10 +101,10 @@ public final class MTSRegistry{
 	//Crafting benches.
 	public static final WrapperBlock vehicleBench = new WrapperBlock(new BlockPartsBench(JSONVehicle.class));
 	public static final WrapperBlock propellerBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "propeller"));
-	public static final WrapperBlock engineBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "engine_aircraft", "engine_jet", "engine_car", "engine_boat"));
-	public static final WrapperBlock wheelBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "wheel", "skid", "pontoon", "tread"));
+	public static final WrapperBlock engineBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "engine_"));
+	public static final WrapperBlock wheelBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "ground_"));
 	public static final WrapperBlock seatBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand"));
-	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_fixed", "gun_tripod", "gun_turret", "bullet"));
+	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_", "bullet"));
 	public static final WrapperBlock customBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "custom"));
 	public static final WrapperBlock instrumentBench = new WrapperBlock(new BlockPartsBench(JSONInstrument.class));
 	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));

@@ -53,10 +53,7 @@ import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartFurnace;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevicePontoon;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceSkid;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceTread;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDeviceWheel;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
@@ -230,6 +227,104 @@ public final class PackParserSystem{
 			}
 			item.setCreativeTab(MTSRegistry.packTabs.get(packID));
 		}
+    	
+    	//Perform legacy compats.  This is used to allow older packs to remain compatible.
+    	//Legacy compats may be removed ONLY when older packs have updated!
+    	performLegacyCompats(item.definition);
+    }
+    
+    private static <JSONDefinition extends AJSONItem<?>> void performLegacyCompats(JSONDefinition definition){
+    	if(definition instanceof JSONPart){
+    		JSONPart partDef = (JSONPart) definition;
+    		if(partDef.engine != null){
+    			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
+    			if(partDef.general.type.equals("engine_jet") && partDef.engine.jetPowerFactor == 0){
+    				partDef.engine.jetPowerFactor = 1.0F;
+    				partDef.engine.bypassRatio = partDef.engine.gearRatios[0];
+    				partDef.engine.gearRatios[0] = 1.0F;
+    			}
+    			
+    			//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine.
+    			if(partDef.engine.gearRatios.length == 1){
+    				partDef.engine.propellerRatio = 1/partDef.engine.gearRatios[0];
+    				partDef.engine.gearRatios = new float[]{-1, 0, 1};
+    			}
+    			
+    			//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.
+    			if(partDef.engine.shiftSpeed == 0){
+    				partDef.engine.shiftSpeed = 20;
+    			}
+    		}else if(partDef.gun != null){
+    			//Make sure turrets are set as turrets.
+    			if(partDef.general.type.equals("gun_turret")){
+    				partDef.gun.isTurret = true;
+    			}
+    		}else{
+    			//Check for old ground devices.
+    			switch(partDef.general.type){
+    				case("wheel"):{
+    					partDef.general.type = "ground_" + partDef.general.type;
+    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground.connectsToEngine = true;
+    					partDef.ground.isWheel = true;
+    					partDef.ground.width = partDef.wheel.diameter/2F;
+    					partDef.ground.height = partDef.wheel.diameter;
+    					partDef.ground.lateralFriction = partDef.wheel.lateralFriction;
+    					partDef.ground.motiveFriction = partDef.wheel.motiveFriction;
+    					break;
+    				}case("skid"):{
+    					partDef.general.type = "ground_" + partDef.general.type;
+    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground.width = partDef.skid.width;
+    					partDef.ground.height = partDef.skid.width;
+    					partDef.ground.lateralFriction = partDef.skid.lateralFriction;
+    					break;
+    				}case("pontoon"):{
+    					partDef.general.type = "ground_" + partDef.general.type;
+    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground.canFloat = true;
+    					partDef.ground.width = partDef.pontoon.width;
+    					partDef.ground.height = partDef.pontoon.width;
+    					partDef.ground.lateralFriction = partDef.pontoon.lateralFriction;
+    					partDef.ground.extraCollisionBoxOffset = partDef.pontoon.extraCollisionBoxOffset;
+    					break;
+    				}case("tread"):{
+    					partDef.general.type = "ground_" + partDef.general.type;
+    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground.connectsToEngine = true;
+    					partDef.ground.isTread = true;
+    					partDef.ground.width = partDef.tread.width;
+    					partDef.ground.height = partDef.tread.width;
+    					partDef.ground.lateralFriction = partDef.tread.lateralFriction;
+    					partDef.ground.motiveFriction = partDef.tread.motiveFriction;
+    					partDef.ground.extraCollisionBoxOffset = partDef.tread.extraCollisionBoxOffset;
+    					partDef.ground.spacing = partDef.tread.spacing;
+    				}
+    			}
+    		}
+    	}else if(definition instanceof JSONVehicle){
+    		JSONVehicle vehicleDef = (JSONVehicle) definition;
+    		if(((JSONVehicle) definition).plane != null){
+    			JSONVehicle planeDef = (JSONVehicle) definition;
+    			//If aileronArea is 0, we're a legacy plane and need to adjust.
+    			if(planeDef.plane.aileronArea == 0){
+    				planeDef.plane.aileronArea = planeDef.plane.wingArea/5F;
+    			}
+    		}
+    		
+    		//Check all part slots for ground device names and update them.
+    		for(VehiclePart part : vehicleDef.parts){
+    			for(byte i=0; i<part.types.size(); ++i){
+    				String partName = part.types.get(i);
+    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
+    					if(partName.equals("tread")){
+    						part.turnsWithSteer = true;
+    					}
+    					part.types.set(i, "ground_" + partName);
+    				}
+    			}
+    		}
+    	}
     }
     
     public static EntityVehicleE_Powered createVehicle(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition, String subName){
@@ -248,6 +343,8 @@ public final class PackParserSystem{
     		return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
     	}else if(definition.general.type.startsWith("gun_")){
     		return new PartGun(vehicle, packVehicleDef, definition, dataTag);
+    	}else if(definition.general.type.startsWith("ground_")){
+    		return new PartGroundDevice(vehicle, packVehicleDef, definition, dataTag);
     	}else{
 	    	switch(definition.general.type){
 				case "crate": return new PartCrate(vehicle, packVehicleDef, definition, dataTag);
@@ -258,10 +355,6 @@ public final class PackParserSystem{
 				case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
 				case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
 				case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
-				case "wheel": return new PartGroundDeviceWheel(vehicle, packVehicleDef, definition, dataTag);
-				case "skid": return new PartGroundDeviceSkid(vehicle, packVehicleDef, definition, dataTag);
-				case "pontoon": return new PartGroundDevicePontoon(vehicle, packVehicleDef, definition, dataTag);
-				case "tread": return new PartGroundDeviceTread(vehicle, packVehicleDef, definition, dataTag);
 				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
 				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.

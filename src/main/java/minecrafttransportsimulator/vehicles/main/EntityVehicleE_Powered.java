@@ -20,9 +20,9 @@ import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.APartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
@@ -64,8 +64,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
-	public final List<APartGroundDevice> wheels = new ArrayList<APartGroundDevice>();
-	public final List<APartGroundDevice> groundedWheels = new ArrayList<APartGroundDevice>();
+	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
+	public final List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
 	
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
@@ -169,7 +169,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			
 			//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
 			groundedWheels.clear();
-			for(APartGroundDevice wheel : this.wheels){
+			for(PartGroundDevice wheel : this.wheels){
 				if(wheel.isOnGround()){
 					groundedWheels.add(wheel);
 				}
@@ -269,9 +269,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 					}
 				}
 			}
-		}else if(part instanceof APartGroundDevice){
-			if(((APartGroundDevice) part).canBeDrivenByEngine()){
-				wheels.add((APartGroundDevice) part);
+		}else if(part instanceof PartGroundDevice){
+			if(part.definition.ground.connectsToEngine){
+				wheels.add((PartGroundDevice) part);
 			}
 		}else if(part instanceof PartGun){
 			++totalGuns;
