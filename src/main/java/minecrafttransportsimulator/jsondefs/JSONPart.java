@@ -99,6 +99,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     
     public class PartPropeller{
     	public boolean isDynamicPitch;
+    	public boolean isRotor;
     	public byte numberBlades;
     	public short pitch;
     	public int diameter;

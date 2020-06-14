@@ -413,12 +413,16 @@ public class PartEngine extends APart implements FXPart{
 			propellerAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
 			
 			//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
-			if(wheelFriction == 0 && currentGearRatio != 0 && starterLevel == 0){
+			if(wheelFriction == 0 && currentGearRatio != 0){
 				isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
 				propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 				double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-				double propellerDesiredSpeed = 0.0254*Math.abs(propeller.currentPitch)*rpm/propellerGearboxRatio/60D/20D;
-				double propellerFeedback = Math.signum(currentGearRatio)*(propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 150 : 50) + propellerForcePenalty*50;
+				double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
+				double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 150 : 50);
+				if(currentGearRatio < 0 || propeller.currentPitch < 0){
+					propellerFeedback *= -1;
+				}
+				propellerFeedback += propellerForcePenalty*50;
 				
 				if(state.running){
 					double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
@@ -430,8 +434,9 @@ public class PartEngine extends APart implements FXPart{
 					}else{
 						rpm += engineRPMDifference/10 - propellerFeedback;
 					}
+					System.out.format("Axis:%f, ForcePenalty:%f TargetRPM:%f ActualRPM:%f Feedback:%f NetRPMReduction:%f\n", propellerThrustAxis.y, propellerForcePenalty, engineTargetRPM, rpm, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
 				}else{
-					rpm -= (propellerFeedback - propellerForcePenalty*50);
+					rpm -= (propellerFeedback - propellerForcePenalty*50)*0.5F;
 				}
 			}
 		}
@@ -508,8 +513,6 @@ public class PartEngine extends APart implements FXPart{
 		}else{
 			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + 1];
 		}
-		
-		//Update axial 
 	}
 	
 	@Override
@@ -811,6 +814,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public Point3d getForceOutput(){
+		definition.engine.fuelConsumption = 0.4F;
 		//Get all the forces this part can output.
 		Point3d engineForce = new Point3d(0D, 0D, 0D);
 		
@@ -866,28 +870,30 @@ public class PartEngine extends APart implements FXPart{
 		}else{
 			//No wheel force.  Check for propellers to provide force.
 			if(propeller != null && Math.abs(propeller.currentPitch) > 5 && state.running){
-				//Get what the pitch velocity of the propeller would be at the current velocity.
-				double currentPitchVelocity = propellerAxialVelocity*20D;
-				//Get the effective pitch velocity of the propeller at the current RPM.
-				double effectivePitchVelocity = 0.0254D*propeller.currentPitch*20D*propeller.angularVelocity;
-				//Multiply by a factor to get the true effective pitch velocity.  This is slightly higher than ideal.
-				effectivePitchVelocity *= (1D*propeller.currentPitch/propeller.definition.propeller.diameter + 0.2D)/(1D*propeller.currentPitch/propeller.definition.propeller.diameter);
-				if(effectivePitchVelocity != 0){
+				//Get the current linear velocity of the propeller, based on our axial velocity.
+				double currentLinearVelocity = 20D*propellerAxialVelocity;
+				//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
+				double desiredLinearVelocity = 0.0254D*propeller.currentPitch*20D*propeller.angularVelocity;
+				//Multiply by a factor to get the true desired linear velocity.  This is slightly higher than theoretical ideal.
+				desiredLinearVelocity *= (1D*propeller.currentPitch/propeller.definition.propeller.diameter + 0.2D)/(1D*propeller.currentPitch/propeller.definition.propeller.diameter);
+				if(desiredLinearVelocity != 0){
 					//Get the angle of attack of the propeller.
-					//Note that because the effective pitch velocity is in meters per second, 
-					//it needs to be converted to meters per revolution before we can move on.
+					//Note pitch velocity is in linear in meters per second, 
+					//This means we need to convert it to meters per revolution before we can move on.
 					//This gets the angle as a ratio of forward pitch to propeller circumference.
-					double angleOfAttack = Math.abs(((effectivePitchVelocity - currentPitchVelocity)/(20D*rpm/propellerGearboxRatio))/((propeller.definition.propeller.diameter*Math.PI)*0.0254D));
-					double thrust = vehicle.airDensity*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)*
-							(effectivePitchVelocity*effectivePitchVelocity - effectivePitchVelocity*currentPitchVelocity)*
-							Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)/400D;
-					//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
-					if(angleOfAttack > 0.4663D){
-						thrust *= 0.4663D/angleOfAttack;
-					}
+					double angleOfAttack = ((desiredLinearVelocity - currentLinearVelocity)/(rpm/propellerGearboxRatio/60D))/(propeller.definition.propeller.diameter*Math.PI*0.0254D);
+					double thrust = vehicle.airDensity
+							*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)
+							*Math.abs(desiredLinearVelocity)*(desiredLinearVelocity - currentLinearVelocity)
+							*Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)
+							/400D;
+
+					//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack);
 					
-					//Get the correct sign of the force.
-					thrust *= Math.signum(effectivePitchVelocity);
+					//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
+					if(Math.abs(angleOfAttack) > 0.4663D){
+						thrust *= 0.4663D/Math.abs(angleOfAttack);
+					}
 					
 					//If the propeller is in the water, increase thrust.
 					if(isPropellerInLiquid){
@@ -896,7 +902,17 @@ public class PartEngine extends APart implements FXPart{
 					
 					//Add propeller force to total engine force as a vector.
 					//Depends on propeller orientation, as upward propellers provide upwards thrust.
-					engineForce.add(RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), propeller.totalRotation.x, propeller.totalRotation.y, propeller.totalRotation.z));
+					Point3d propellerThrustVector;
+					if(propeller.definition.propeller.isRotor){
+						//Get the X and Y coords of the action rotation for thrust vectoring on rotors.
+						Point3d propellerActionRotation = propeller.getActionRotation(0);
+						propellerThrustVector = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, thrust), propellerActionRotation.x, propellerActionRotation.y, 0); 
+					}else{
+						propellerThrustVector = new Point3d(0D, 0D, thrust);
+					}
+					
+					Point3d propellerForce = RotationSystem.getRotatedPoint(propellerThrustVector, propeller.totalRotation.x, propeller.totalRotation.y, propeller.totalRotation.z);
+					engineForce.add(propellerForce);
 				}
 			}
 		}

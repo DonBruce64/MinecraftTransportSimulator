@@ -11,6 +11,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -128,7 +129,11 @@ public class PartPropeller extends APart{
 
 	@Override
 	public Point3d getActionRotation(float partialTicks){
-		return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
+		if(definition.propeller.isRotor && vehicle instanceof EntityVehicleF_Air){
+			return new Point3d(-((EntityVehicleF_Air) vehicle).elevatorAngle*10D/EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, ((EntityVehicleF_Air) vehicle).aileronAngle*10D/EntityVehicleF_Air.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+		}else{
+			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
+		}
 	}
 	
 	private void damagePropeller(float damage){
