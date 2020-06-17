@@ -30,9 +30,9 @@ public abstract class APacketVehiclePlayer extends APacketVehicle{
 	
 	protected static EntityPlayer getPlayer(APacketVehiclePlayer message, MessageContext ctx){
 		if(ctx.side.isServer()){
-			return (EntityPlayer) ctx.getServerHandler().player.world.getEntityByID(message.player);
+			return ctx.getServerHandler().player;
 		}else{
-			return (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(message.player);
+			return Minecraft.getMinecraft().player;
 		}
 	}
 }
