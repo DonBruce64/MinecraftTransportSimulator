@@ -418,7 +418,7 @@ public class PartEngine extends APart implements FXPart{
 				propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 				double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
 				double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
-				double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 150 : 50);
+				double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
 				if(currentGearRatio < 0 || propeller.currentPitch < 0){
 					propellerFeedback *= -1;
 				}
@@ -434,9 +434,9 @@ public class PartEngine extends APart implements FXPart{
 					}else{
 						rpm += engineRPMDifference/10 - propellerFeedback;
 					}
-					System.out.format("Axis:%f, ForcePenalty:%f TargetRPM:%f ActualRPM:%f Feedback:%f NetRPMReduction:%f\n", propellerThrustAxis.y, propellerForcePenalty, engineTargetRPM, rpm, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
+					//System.out.format("Axis:%f, ForcePenalty:%f TargetRPM:%f ActualRPM:%f Feedback:%f NetRPMReduction:%f\n", propellerThrustAxis.y, propellerForcePenalty, engineTargetRPM, rpm, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
 				}else{
-					rpm -= (propellerFeedback - propellerForcePenalty*50)*0.5F;
+					rpm -= (propellerFeedback - propellerForcePenalty*50);
 				}
 			}
 		}
@@ -814,7 +814,6 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public Point3d getForceOutput(){
-		definition.engine.fuelConsumption = 0.4F;
 		//Get all the forces this part can output.
 		Point3d engineForce = new Point3d(0D, 0D, 0D);
 		
