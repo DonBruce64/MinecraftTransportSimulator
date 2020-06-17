@@ -2,9 +2,7 @@ package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public abstract class APacketVehiclePlayer extends APacketVehicle{
 	private int player;
@@ -28,11 +26,11 @@ public abstract class APacketVehiclePlayer extends APacketVehicle{
 		buf.writeInt(this.player);
 	}
 	
-	protected static EntityPlayer getPlayer(APacketVehiclePlayer message, MessageContext ctx){
+	/*protected static EntityPlayer getPlayer(APacketVehiclePlayer message, MessageContext ctx){
 		if(ctx.side.isServer()){
 			return ctx.getServerHandler().player;
 		}else{
-			return Minecraft.getMinecraft().player;
+			return net.minecraft.client.Minecraft.getMinecraft().player;
 		}
-	}
+	}*/
 }
