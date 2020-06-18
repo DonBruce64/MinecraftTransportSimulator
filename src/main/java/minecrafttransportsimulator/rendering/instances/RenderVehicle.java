@@ -812,8 +812,11 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	/**
 	 *  Renders all instruments on the vehicle.  Uses the instrument's render code.
 	 *  We only apply the appropriate translation and rotation.
+	 *  Normalization is required here, as otherwise the normals get scaled with the
+	 *  scaling operations, and shading gets applied funny. 
 	 */
 	private static void renderInstruments(EntityVehicleE_Powered vehicle){
+		GL11.glEnable(GL11.GL_NORMALIZE);
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			GL11.glPushMatrix();
@@ -828,6 +831,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			}
 			GL11.glPopMatrix();
 		}
+		GL11.glDisable(GL11.GL_NORMALIZE);
 	}
 	
 	/**

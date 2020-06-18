@@ -341,9 +341,10 @@ public final class ClientEventSystem{
                 		final int guiLeft = (event.getResolution().getScaledWidth() - GUIHUD.HUD_WIDTH)/2;
                 		final int guiTop = halfHud ? event.getResolution().getScaledHeight() - GUIHUD.HUD_HEIGHT : (event.getResolution().getScaledHeight() - GUIHUD.HUD_HEIGHT/2);
                 		
-                		//Enable the lightmap to take brightness into account.
-                		//Normally this is disabled for the overlays.
-                		//The same goes for alpha testing.
+                		//Set lighting to vehicle, and enable alpha.
+                		//This makes the GUI the same brightness as the vehicle.
+                		//We need to disable the OpenGL lighting, however.
+                		//This causes the HUD to change lighting based on the vehicle orientation, which we don't want. 
                 		WrapperRender.setLightingToVehicle(vehicle);
                 		WrapperRender.setSystemLightingState(false);
         				GL11.glEnable(GL11.GL_ALPHA_TEST);
