@@ -1034,7 +1034,7 @@ public class PartEngine extends APart implements FXPart{
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			//Render exhaust smoke if we have any exhausts and are running.
 			//If we are starting and have flames set, render those instead.
-			if(vehicleDefinition.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn)) && rpm != 0){
+			if(vehicleDefinition.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 				//Render a smoke for every cycle the exhaust makes.
 				//Depending on the number of positions we have, render an exhaust for every one.
 				//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1042,43 +1042,46 @@ public class PartEngine extends APart implements FXPart{
 				//in their aligned order.
 				
 				//Get timing information and particle information.
+				//Need to check for 0 cycle time if RPM is somehow 0 here.
 				long engineCycleTimeMills = (long) (2D*(1D/(rpm/60D/1000D)));
 				long currentTime = System.currentTimeMillis();
-				long camTime = currentTime%engineCycleTimeMills;
-				
-				float particleColor = definition.engine.isSteamPowered ? 0.0F : (float) Math.max(1 - temp/COLD_TEMP, 0);
-				boolean singleExhaust = vehicleDefinition.exhaustPos.length == 3;
-				
-				//Iterate through all the exhaust positions and fire them if it is time to do so.
-				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
-				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
-					if(singleExhaust){
-						if(lastTimeParticleSpawned + camTime > currentTime){
-							continue;
-						}
-					}else{
-						long camOffset = engineCycleTimeMills*3/vehicleDefinition.exhaustPos.length;
-						long camMin = (i/3)*camOffset;
-						long camMax = camMin + camOffset;
-						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
-							continue;
-						}
-					}
+				if(engineCycleTimeMills != 0){
+					long camTime = currentTime%engineCycleTimeMills;
 					
-					Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
-					Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
-					if(state.running){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
-						//Also play steam chuff sound if we are a steam engine.
-						if(definition.engine.isSteamPowered){
-							WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
+					float particleColor = definition.engine.isSteamPowered ? 0.0F : (float) Math.max(1 - temp/COLD_TEMP, 0);
+					boolean singleExhaust = vehicleDefinition.exhaustPos.length == 3;
+					
+					//Iterate through all the exhaust positions and fire them if it is time to do so.
+					//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
+					//For single-point exhausts, we only fire if we didn't fire this cycle.
+					for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
+						if(singleExhaust){
+							if(lastTimeParticleSpawned + camTime > currentTime){
+								continue;
+							}
+						}else{
+							long camOffset = engineCycleTimeMills*3/vehicleDefinition.exhaustPos.length;
+							long camMin = (i/3)*camOffset;
+							long camMax = camMin + camOffset;
+							if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
+								continue;
+							}
 						}
+						
+						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+						Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
+						if(state.running){
+							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
+							//Also play steam chuff sound if we are a steam engine.
+							if(definition.engine.isSteamPowered){
+								WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
+							}
+						}
+						if(definition.engine.flamesOnStartup && state.esOn){
+							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.EngineFlameParticleFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04));
+						}
+						lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 					}
-					if(definition.engine.flamesOnStartup && state.esOn){
-						Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.EngineFlameParticleFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04));
-					}
-					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 				}
 			}
 			
