@@ -176,7 +176,7 @@ public class PartGun extends APart implements FXPart{
 				//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
 				//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 				//We still need to run the gun code on the server, however, as we need to mess with inventory.
-				if(firing && bulletsLeft > 0 && !reloading){
+				if(firing && bulletsLeft > 0 && !reloading && cooldownTimeRemaining == 0){
 					//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 					//Make sure to add-on an offset to our firing point to allow for multi-gun units.
 					//We also add 1 tick here, as it's only subsequent ticks we check for gun firing.
