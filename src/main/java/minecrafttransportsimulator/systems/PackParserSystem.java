@@ -331,6 +331,7 @@ public final class PackParserSystem{
 			case "car": return new EntityVehicleG_Car(world, posX, posY, posZ, playerRotation, definition);
 			case "blimp": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
 			case "boat": return new EntityVehicleG_Boat(world, posX, posY, posZ, playerRotation, definition);
+			case "helicopter": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
 			
 			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a vehicle.");
 		}

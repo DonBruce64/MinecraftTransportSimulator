@@ -5,7 +5,9 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -143,12 +145,25 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 			Point3d engineForce = engine.getForceOutput();
 			thrustForce.add(engineForce);
 			thrustTorque.add(engineForce.y*-engine.placementOffset.z, engineForce.z*engine.placementOffset.x, engineForce.y*engine.placementOffset.x);
+			//If the engine has a rotor add engine torque.
+			//Torque added is relative to the engine force output, factored by the angle of the control surface.
+			for(APart part : engine.childParts){
+				if(part instanceof PartPropeller){
+					if(part.definition.propeller.isRotor){
+						double engineTotalForce = 5D*engineForce.length();
+						double rollTorque = aileronAngle != 0 ? engineTotalForce*aileronAngle/MAX_AILERON_ANGLE - rotationRoll : (rotationRoll > 0 ? -Math.min(rotationRoll, 5) : Math.min(-rotationRoll, 5));
+						double pitchTorque = elevatorAngle != 0 ? engineTotalForce*-elevatorAngle/MAX_ELEVATOR_ANGLE - rotationPitch : (rotationPitch > 0 ? -Math.min(rotationPitch, 5) : Math.min(-rotationPitch, 5));
+						double yawTorque =  engineTotalForce*rudderAngle/MAX_RUDDER_ANGLE;
+						thrustTorque.add(pitchTorque, yawTorque, rollTorque);
+					}
+				}
+			}
 		}
 		
 		//Get forces.  Some forces are specific to JSON sections.
 		gravitationalForce = currentMass*(9.8/400);
 		if(definition.blimp != null){
-			dragForce += 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
+			dragForce = 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
 			rudderForce = 0.5F*airDensity*velocity*velocity*definition.blimp.rudderArea*rudderLiftCoeff;
 			//Blimps aren't affected by gravity.
 			gravitationalForce = 0;
@@ -212,6 +227,8 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 					elevatorTorque += 100;
 				}
 			}
+		}else{
+			dragForce = 0.5F*airDensity*velocity*velocity*100F*dragCoeff;
 		}
 		
 		//Add all forces to the main force matrix and apply them.
@@ -220,11 +237,11 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(currentVelocity);
 		totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 		totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
-		//System.out.format("X:%f Y:%f Z:%f\n", elevatorTorque, rudderTorque, aileronTorque);
+		//if(thrustForce.length() != 0)System.out.format("X:%f Y:%f Z:%f VF:%f VA:%f\n", thrustForce.x, thrustForce.y, thrustForce.z, groundVelocity, velocity);
 		
 		motionX += totalForce.x;
 		motionY += totalForce.y;
-		motionZ += totalForce.z; 
+		motionZ += totalForce.z;
 		
 		//Add all torques to the main force matrix and apply them.
 		totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).multiply(180D/Math.PI);
