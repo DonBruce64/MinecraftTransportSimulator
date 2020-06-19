@@ -40,14 +40,14 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	//External states for animations.
 	public boolean skipAngularCalcs = false;
-	public float angularPosition;
-	public float angularVelocity;
+	public double angularPosition;
+	public double angularVelocity;
 	
 	//Internal states for control and physics.
 	private boolean isFlat;
 	private boolean contactThisTick = false;
 	private int ticksCalcsSkipped = 0;
-	private float prevAngularVelocity;
+	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
 	public PartGroundDevice(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
@@ -90,14 +90,9 @@ public class PartGroundDevice extends APart implements FXPart{
 		super.updatePart();
 		if(this.isOnGround()){
 			//If we aren't skipping angular calcs, change our velocity accordingly.
-			//Long parts use linear propulsion, not rotary, so don't take height into account.
 			if(!skipAngularCalcs){
 				prevAngularVelocity = angularVelocity;
-				if(getLongPartOffset() == 0){
-					angularVelocity = (float) (vehicle.groundVelocity/(getHeight()*Math.PI));
-				}else{
-					angularVelocity = (float) (vehicle.groundVelocity);
-				}
+				angularVelocity = getDesiredAngularVelocity();
 			}
 			
 			//Set contact for wheel skidding effects.
@@ -227,6 +222,10 @@ public class PartGroundDevice extends APart implements FXPart{
 		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 		BlockPos pos = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
 		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null) + (vehicle.world.isRainingAt(pos.up()) ? 0.25F : 0);
+	}
+	
+	public double getDesiredAngularVelocity(){
+		return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
 	}
 	
 	public boolean isOnGround(){

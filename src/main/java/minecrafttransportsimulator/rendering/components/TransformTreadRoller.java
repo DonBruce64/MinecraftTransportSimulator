@@ -161,7 +161,12 @@ public class TransformTreadRoller extends TransformRotatable{
 		if(rotationAxis.x == 0){
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof PartGroundDevice && part.definition.ground.isTread){
-					rotationAxis.x = part.getHeight()/(radius*2D);
+					//360 degrees is 1 block, so if we have a roller of circumference of 1,
+					//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
+					//Knowing this, we can calculate the linear velocity for this roller, as a roller with
+					//half the circumference needs double the factor, and vice-versa.  Basically, we get
+					//the ratio of the two circumferences of the "standard" roller and our roller.
+					rotationAxis.x = (1.0D/Math.PI)/(radius*2D);
 					return true;
 				}
 			}

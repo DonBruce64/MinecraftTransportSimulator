@@ -58,8 +58,8 @@ public class PartEngine extends APart implements FXPart{
 	private long lastTimeParticleSpawned;
 	private float currentGearRatio;
 	private float propellerGearboxRatio;
-	private float lowestWheelVelocity;
-	private float desiredWheelVelocity;
+	private double lowestWheelVelocity;
+	private double desiredWheelVelocity;
 	private double propellerAxialVelocity;
 	private double engineAxialVelocity;
 	private float wheelFriction;
@@ -362,7 +362,7 @@ public class PartEngine extends APart implements FXPart{
 					if(wheel.isOnGround()){
 						wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
-						desiredWheelVelocity = (float) Math.max(vehicle.groundVelocity/wheel.getHeight(), desiredWheelVelocity);
+						desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
 					}
 				}
 			}
@@ -495,13 +495,13 @@ public class PartEngine extends APart implements FXPart{
 		engineRotation += 360D*rpm/1200D;
 		prevDriveshaftRotation = driveshaftRotation;
 		if(vehicle.definition.car != null){
-			float driveShaftDesiredSpeed = -999F;
+			double driveShaftDesiredSpeed = Double.MIN_VALUE;
 			for(PartGroundDevice wheel : vehicle.wheels){
 				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
 					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
-			driveshaftRotation += (float) (vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D);
+			driveshaftRotation += vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D;
 		}else{
 			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + 1];
 		}

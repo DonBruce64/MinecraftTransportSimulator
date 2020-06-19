@@ -362,6 +362,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				doAutomaticTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));
 			}
 		}else{
+			//Mirror the model if we need to do so.
+			boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
+			if(mirrored){
+				GL11.glScalef(-1.0F, 1.0F, 1.0F);
+				GL11.glCullFace(GL11.GL_FRONT);
+			}
+			
     		//Render the part DisplayList, but only if we aren't in the transparent pass.
 			if(WrapperRender.getRenderPass() != 1){
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
@@ -385,11 +392,12 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					GL11.glPopMatrix();
 				}
 			}
+			
+			//Set cullface back to normal if we switched it.
+			if(mirrored){
+				GL11.glCullFace(GL11.GL_BACK);
+			}
 		}
-		
-		//Set cull face back to normal.  This may have been changed
-		//during rotation operations.
-		GL11.glCullFace(GL11.GL_BACK);
 		GL11.glPopMatrix();
 	}
 	
@@ -400,12 +408,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *   Y axis rotation is backwards from RHR convention.
 	 */
 	private static void rotatePart(APart part, float partialTicks){
-		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
-		if(mirrored){
-			GL11.glScalef(-1.0F, 1.0F, 1.0F);
-			GL11.glCullFace(GL11.GL_FRONT);
-		}
-		
 		if(!part.placementRotation.isZero()){
 			if(part.parentPart != null && part.vehicleDefinition.isSubPart){
 				GL11.glRotated(-(part.placementRotation.y - part.parentPart.placementRotation.y), 0, 1, 0);
@@ -427,15 +429,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 
 		Point3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.isZero()){
-			if(mirrored){
-				GL11.glRotated(actionRotation.y, 0, 1, 0);
-				GL11.glRotated(-actionRotation.x, 1, 0, 0);
-				GL11.glRotated(-actionRotation.z, 0, 0, 1);
-			}else{
-				GL11.glRotated(-actionRotation.y, 0, 1, 0);
-				GL11.glRotated(actionRotation.x, 1, 0, 0);
-				GL11.glRotated(actionRotation.z, 0, 0, 1);
-			}
+			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.x, 1, 0, 0);
+			GL11.glRotated(actionRotation.z, 0, 0, 1);
 		}
 	}
 	
