@@ -219,7 +219,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		
 		//Also drop some crafting ingredients as items.
 		for(ItemStack craftingStack : MTSRegistry.getMaterials(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName))){
-			for(byte i=0; i<craftingStack.getCount(); ++i){
+			for(int i=0; i<craftingStack.getCount(); ++i){
 				if(this.rand.nextDouble() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnEntity(new EntityItem(world, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
 				}
