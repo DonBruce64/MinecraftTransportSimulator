@@ -13,6 +13,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEn
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
@@ -190,7 +191,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
 				}
 				
 				@Override
@@ -214,7 +215,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, WrapperGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+						WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
 					}
 					
 					@Override
@@ -287,7 +288,17 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 		
 		//If we have reverse thrust, set the selector state.
 		if(reverseSelector != null){
-			reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
+			if(vehicle.definition.blimp != null){
+				reverseSelector.selectorState = 0;
+				for(PartEngine engine : vehicle.engines.values()){
+					if(engine.currentGear < 0){
+						reverseSelector.selectorState = 1;
+						break;
+					}
+				}
+			}else{
+				reverseSelector.selectorState = vehicle.reverseThrust ? 1 : 0;
+			}
 		}
 		
 		//If we have autopilot, set the selector state.

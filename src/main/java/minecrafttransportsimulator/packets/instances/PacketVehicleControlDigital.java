@@ -130,11 +130,11 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				if(vehicle.definition.blimp != null){
 					for(PartEngine engine : vehicle.engines.values()){
 						if(controlState){
-							engine.shiftUp(true);
-							engine.shiftUp(true);
+							engine.shiftDown(true);
+							engine.shiftDown(true);
 						}else{
-							engine.shiftDown(true);
-							engine.shiftDown(true);
+							engine.shiftUp(true);
+							engine.shiftUp(true);
 						}
 					}
 				}else{

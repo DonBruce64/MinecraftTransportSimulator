@@ -104,7 +104,14 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		momentYaw = (float) (3*currentMass);
 		
 		//Set angles and coefficients.
-		trackAngle = Math.toDegrees(Math.atan2(currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading)));
+		//trackAngle = Math.toDegrees(Math.atan2(currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading)));
+		trackAngle = Math.toDegrees(Math.acos(currentVelocity.dotProduct(currentHeading)));
+		//If we are going backwards, our angle will be greater than 90, so correct that now.
+		if(trackAngle > 90){
+			trackAngle -= 180;
+		}else if(trackAngle < -90){
+			trackAngle += 180; 
+		}
 		//If this is negative, we're going backwards.
 		//currentVelocity.dotProduct(currentHeading)
 		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
@@ -175,20 +182,21 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 			//Also take into account motionY, as we should provide less force if we are already going in the same direction.
 			if(elevatorAngle < 0){
 				ballastForce = airDensity*definition.blimp.ballastVolume*-elevatorAngle/100D;
-			}else{
+			}else if(elevatorAngle > 0){
 				ballastForce = 1.225*definition.blimp.ballastVolume*-elevatorAngle/100D;
-			}		
+			}else{
+				ballastForce = 1.225*definition.blimp.ballastVolume*10D*-motionY;
+			}
 			if(motionY*ballastForce != 0){
-				//ballastForce /= (motionY*motionY);
-				System.out.println(ballastForce /= (motionY*motionY));
+				ballastForce /= Math.pow(1 + Math.abs(motionY), 2);
 			}
 			
 			
-			//If we don't have any force, or the throttle is idle, start slowing down.
-			//We can't use brakes because those don't exist on blimps!
-			if(thrustForce.isZero() || throttle == 0){
-				motionX *= 0.95;
-				motionZ *= 0.95;
+			//If the throttle is idle, and we have the brake pressed at a slow speed, stop the blimp.
+			//This is needed to prevent runaway blimps.
+			if(throttle == 0 && Math.abs(velocity) < 0.15 && (brakeOn || parkingBrakeOn)){
+				motionX = 0;
+				motionZ = 0;
 				thrustForce.set(0D, 0D, 0D);
 				thrustTorque.set(0D, 0D, 0D);
 			}
@@ -237,7 +245,7 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(currentVelocity);
 		totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 		totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
-		//if(thrustForce.length() != 0)System.out.format("X:%f Y:%f Z:%f VF:%f VA:%f\n", thrustForce.x, thrustForce.y, thrustForce.z, groundVelocity, velocity);
+		//if(thrustForce.length() != 0)System.out.format("X:%f Y:%f Z:%f VF:%f VA:%f\n", totalMotiveForce.x, totalMotiveForce.y, totalMotiveForce.z, dragForce, velocity);
 		
 		motionX += totalForce.x;
 		motionY += totalForce.y;

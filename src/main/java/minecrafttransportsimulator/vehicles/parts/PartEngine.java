@@ -408,7 +408,7 @@ public class PartEngine extends APart implements FXPart{
 					isPropellerInLiquid = vehicle.world.getBlockState(new BlockPos(propeller.worldPos.x, propeller.worldPos.y, propeller.worldPos.z)).getMaterial().isLiquid();
 					propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 					double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-					double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
+					double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio*Math.signum(currentGearRatio)/60D/20D;
 					double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
 					if(currentGearRatio < 0 || propeller.currentPitch < 0){
 						propellerFeedback *= -1;
@@ -425,7 +425,7 @@ public class PartEngine extends APart implements FXPart{
 						}else{
 							rpm += engineRPMDifference/10 - propellerFeedback;
 						}
-						//System.out.format("Axis:%f, ForcePenalty:%f TargetRPM:%f ActualRPM:%f Feedback:%f NetRPMReduction:%f\n", propellerThrustAxis.y, propellerForcePenalty, engineTargetRPM, rpm, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
+						//System.out.format("AxialSpeed:%f, DesiredSpeed:%f TargetRPM:%f ActualRPM:%f ForcePenalty:%f Feedback:%f NetRPMReduction:%f\n", propellerAxialVelocity, propellerDesiredSpeed, engineTargetRPM, rpm, propellerForcePenalty, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
 					}else{
 						rpm -= (propellerFeedback - propellerForcePenalty*50);
 					}
@@ -881,7 +881,7 @@ public class PartEngine extends APart implements FXPart{
 								*Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)
 								/400D;
 	
-						//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack);
+						//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f Gearbox:%f\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack, propellerGearboxRatio);
 						
 						//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
 						if(Math.abs(angleOfAttack) > 0.4663D){
