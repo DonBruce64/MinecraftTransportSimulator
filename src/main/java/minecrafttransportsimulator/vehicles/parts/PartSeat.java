@@ -60,7 +60,10 @@ public final class PartSeat extends APart{
 					}
 				}
 				//Didn't find an animal.  Just mount the player.
-				vehicle.setRiderInSeat(player, this);
+				//Don't mount them if they are sneaking, however.  This will confuse MC.
+				if(!player.isSneaking()){
+					vehicle.setRiderInSeat(player, this);
+				}
 			}
 		}else{
 			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
