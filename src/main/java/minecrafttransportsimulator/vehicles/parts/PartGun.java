@@ -126,7 +126,7 @@ public class PartGun extends APart implements FXPart{
 		//Otherwise, guns could be set to fire and the player could just run away...
 		if(playerControllerID != -1){
 			Entity playerController = vehicle.world.getEntityByID(playerControllerID);
-			PartSeat seat = vehicle.getSeatForRider(playerController);
+			PartSeat seat = playerController != null ? vehicle.getSeatForRider(playerController) : null;
 			if(seat != null){
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
