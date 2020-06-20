@@ -320,6 +320,18 @@ public final class PackParserSystem{
     					}
     					part.types.set(i, "ground_" + partName);
     				}
+    				//If we have additional parts, check those too.
+    				if(part.additionalPart != null){
+    					for(byte j=0; j<part.additionalPart.types.size(); ++j){
+    	    				partName = part.additionalPart.types.get(j);
+    	    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
+    	    					if(partName.equals("tread")){
+    	    						part.additionalPart.turnsWithSteer = true;
+    	    					}
+    	    					part.additionalPart.types.set(j, "ground_" + partName);
+    	    				}
+    	    			}
+    				}
     			}
     		}
     	}
