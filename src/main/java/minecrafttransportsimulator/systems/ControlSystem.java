@@ -115,8 +115,8 @@ public final class ControlSystem{
 	
 	private static void controlBrake(EntityVehicleE_Powered vehicle, ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
-		boolean isParkingBrakePressed = analogBrake.config.joystickName != null ? pBrake.isPressed() : dynamic.isPressed() || pBrake.isPressed();
-		boolean isBrakePressed = analogBrake.config.joystickName != null ? analogBrake.getAxisState((short) 0) > 25 : dynamic.mainControl.isPressed();
+		boolean isParkingBrakePressed = WrapperInput.isJoystickPresent(analogBrake.config.joystickName) ? pBrake.isPressed() : dynamic.isPressed() || pBrake.isPressed();
+		boolean isBrakePressed = WrapperInput.isJoystickPresent(analogBrake.config.joystickName) ? analogBrake.getAxisState((short) 0) > 25 : dynamic.mainControl.isPressed();
 		if(isParkingBrakePressed){
 			if(!vehicle.parkingBrakeOn){
 				WrapperNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
@@ -206,7 +206,7 @@ public final class ControlSystem{
 		}
 		
 		//Increment or decrement throttle.
-		if(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName != null){
+		if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
 			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
@@ -228,7 +228,7 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		if(ControlsJoystick.AIRCRAFT_YAW.config.joystickName != null){
+		if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
 			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Air.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
@@ -255,7 +255,7 @@ public final class ControlSystem{
 			}
 		}else{
 			//Check pitch.
-			if(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName != null){
+			if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Air.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
@@ -273,7 +273,7 @@ public final class ControlSystem{
 			}
 			
 			//Check roll.
-			if(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName != null){
+			if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Air.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
@@ -312,7 +312,7 @@ public final class ControlSystem{
 		}
 		
 		//Change gas to on or off.
-		if(ControlsJoystick.CAR_GAS.config.joystickName != null){
+		if(WrapperInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
@@ -335,7 +335,7 @@ public final class ControlSystem{
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}
 		}else{
-			if(ControlsJoystick.CAR_TURN.config.joystickName != null){
+			if(WrapperInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, ControlsJoystick.CAR_TURN.getAxisState(powered.MAX_STEERING_ANGLE), Byte.MAX_VALUE));
 			}else{
 				//Depending on what we are pressing, send out packets.
@@ -437,7 +437,7 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(linkedJoystick.isPressed()){
 				return true;
-			}else if(linkedJoystick.config.joystickName != null && ConfigSystem.configObject.client.kbOverride.value){
+			}else if(WrapperInput.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.configObject.client.kbOverride.value){
 				return false;
 			}else{
 				if(isMomentary){

@@ -99,6 +99,15 @@ public class WrapperInput{
 	}
 	
 	/**
+	 *  Returns true if the passed-in joystick is present.
+	 *  Can be used to check if a joystick is plugged-in before polling, and if it isn't
+	 *  fallback logic for keyboard controls can be used.
+	 */
+	public static boolean isJoystickPresent(String joystickName){
+		return joystickMap.containsKey(joystickName);
+	}
+	
+	/**
 	 *  Returns a list of all joysticks currently present on the system.
 	 */
 	public static Set<String> getAllJoysticks(){
