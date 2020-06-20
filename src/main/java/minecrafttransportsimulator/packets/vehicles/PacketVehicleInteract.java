@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class PacketVehicleInteract extends APacketVehiclePlayer{
+public class PacketVehicleInteract extends APacketVehicle{
 	private double hitX;
 	private double hitY;
 	private double hitZ;
@@ -26,8 +26,8 @@ public class PacketVehicleInteract extends APacketVehiclePlayer{
 	
 	public PacketVehicleInteract(){}
 	
-	public PacketVehicleInteract(EntityVehicleE_Powered vehicle, EntityPlayer player, double hitX, double hitY, double hitZ, PacketVehicleInteractType type){
-		super(vehicle, player);
+	public PacketVehicleInteract(EntityVehicleE_Powered vehicle, double hitX, double hitY, double hitZ, PacketVehicleInteractType type){
+		super(vehicle);
 		this.hitX = hitX;
 		this.hitY = hitY;
 		this.hitZ = hitZ;
