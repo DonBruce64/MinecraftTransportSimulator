@@ -16,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.ARenderableTransform;
+import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.TransformLight;
@@ -23,7 +24,6 @@ import minecrafttransportsimulator.rendering.components.TransformRotatable;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
 import minecrafttransportsimulator.systems.ClientEventSystem;
-import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
@@ -256,9 +256,9 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 			//No distplay list for this model.  Parse and create it now.
 			Map<String, Float[][]> parsedModel;
 			if(vehicleModelOverrides.containsKey(vehicle.definition.genericName)){
-				parsedModel = OBJParserSystem.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
+				parsedModel = OBJParser.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
 			}else{
-				parsedModel = OBJParserSystem.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
+				parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
 			}
 			
 			//Set up the Gl operations and lists.
@@ -314,7 +314,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			//Create the part display list and modelObjects.
 			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(part.definition.packID, partModelLocation);
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(part.definition.packID, partModelLocation);
 			int displayListIndex = GL11.glGenLists(1);
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 			GL11.glBegin(GL11.GL_TRIANGLES);

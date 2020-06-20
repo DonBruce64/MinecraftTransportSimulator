@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.rendering.components.OBJParser;
 
 /**Custom OBJ render class.  This allows for rendering an OBJ model into a GUI.
  * Mainly used to render vehicles, though can be used for any OBJ model.
@@ -93,7 +93,7 @@ public class GUIComponentOBJModel{
 		float maxY = -999;
 		float minZ = 999;
 		float maxZ = -999;
-		Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(modelDomain, modelLocation);
+		Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelDomain, modelLocation);
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);

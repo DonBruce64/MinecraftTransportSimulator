@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.systems;
+package minecrafttransportsimulator.rendering.components;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,13 +15,13 @@ import java.util.Map;
  * 
  * @author don_bruce
  */
-public final class OBJParserSystem{
+public final class OBJParser{
 	public static Map<String, Float[][]> parseOBJModel(String packID, String modelLocation){
 		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
 		if(packID != null){
 			try{
-				reader = new BufferedReader(new InputStreamReader(OBJParserSystem.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
+				reader = new BufferedReader(new InputStreamReader(OBJParser.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
 			}catch(Exception e){
 				throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + "/assets/" + packID + "/" + modelLocation + " but could not find it.  Check the path and try again.");
 			}

@@ -21,8 +21,8 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
+import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.TransformLight;
-import minecrafttransportsimulator.systems.OBJParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperRender;
@@ -42,7 +42,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 		if(coreComponent != null){
 			//If we don't have the model parsed, do so now.
 			if(!connectorDisplayListMap.containsKey(definition)){
-				Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(definition.packID, "objmodels/poles/" + definition.systemName + ".obj");
+				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, "objmodels/poles/" + definition.systemName + ".obj");
 				
 				Map<Axis, Integer> connectorDisplayLists = new HashMap<Axis, Integer>();
 				Map<Axis, Integer> solidConncectorDisplayLists = new HashMap<Axis, Integer>();
@@ -117,9 +117,9 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					if(!componentDisplayListMap.containsKey(component.definition)){
 						Map<String, Float[][]> parsedModel;
 						if(component.definition.general.modelName != null){
-							parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.general.modelName + ".obj");
+							parsedModel = OBJParser.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.general.modelName + ".obj");
 						}else{
-							parsedModel = OBJParserSystem.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
+							parsedModel = OBJParser.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
 						}
 						List<TransformLight> lightParts = new ArrayList<TransformLight>();
 						

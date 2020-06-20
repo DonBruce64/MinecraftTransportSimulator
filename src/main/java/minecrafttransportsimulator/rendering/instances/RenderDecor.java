@@ -13,7 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFlu
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.TextLine;
-import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperRender;
@@ -27,7 +27,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 		JSONDecor definition = tile.getDefinition();
 		if(!displayListMap.containsKey(definition)){
 			String optionalModelName = definition.general.modelName;
-			Map<String, Float[][]> parsedModel = OBJParserSystem.parseOBJModel(definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : definition.systemName) + ".obj");
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : definition.systemName) + ".obj");
 			int displayListIndex = GL11.glGenLists(1);
 			
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);

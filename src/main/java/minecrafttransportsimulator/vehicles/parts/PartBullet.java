@@ -10,7 +10,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
-import minecrafttransportsimulator.systems.OBJParserSystem;
+import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import net.minecraft.block.state.IBlockState;
@@ -165,7 +165,7 @@ public final class PartBullet extends Particle{
 			}else{
 				modelLocation = new ResourceLocation(bulletItem.definition.packID, "objmodels/parts/" + bulletItem.definition.systemName + ".obj");
 			}
-        	parsedBulletModels.put(bulletItem, OBJParserSystem.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()));
+        	parsedBulletModels.put(bulletItem, OBJParser.parseOBJModel(modelLocation.getResourceDomain(), modelLocation.getResourcePath()));
         }
         
         //Render the parsed model.
