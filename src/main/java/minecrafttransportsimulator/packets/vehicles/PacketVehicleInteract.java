@@ -59,7 +59,7 @@ public class PacketVehicleInteract extends APacketVehiclePlayer{
 				@Override
 				public void run(){
 					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
-					EntityPlayer player = getPlayer(message, ctx);
+					EntityPlayer player = ctx.getServerHandler().player;
 					boolean isPlayerOP = player.getServer() == null || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 					boolean canPlayerEditVehicle = isPlayerOP || vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName);
 					PlayerOwnerState ownerState = isPlayerOP ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
