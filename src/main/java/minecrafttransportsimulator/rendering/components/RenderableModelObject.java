@@ -33,6 +33,13 @@ public final class RenderableModelObject{
 		this.vertices = vertices;
 		
 		boolean isPart = optionalPart != null;
+		if(objectName.contains("%")){
+			if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.translatableModelObjects != null) : vehicle.definition.rendering.translatableModelObjects != null){
+				transforms.add(new TransformTranslatable(modelName, objectName, isPart ? optionalPart.definition.rendering.translatableModelObjects : vehicle.definition.rendering.translatableModelObjects));
+			}else{
+				throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a translatable object:" + objectName + ", but no translatableModelObjects are present in the JSON!");
+			}
+		}
 		if(objectName.contains("$")){
 			if(objectName.toLowerCase().contains("roller")){
 				if(vehicle.definition.rendering.rotatableModelObjects != null){
@@ -46,13 +53,6 @@ public final class RenderableModelObject{
 				}else{
 					throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a rotatable object:" + objectName + ", but no rotatableModelObjects are present in the JSON!");
 				}
-			}
-		}
-		if(objectName.contains("%")){
-			if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.translatableModelObjects != null) : vehicle.definition.rendering.translatableModelObjects != null){
-				transforms.add(new TransformTranslatable(modelName, objectName, isPart ? optionalPart.definition.rendering.translatableModelObjects : vehicle.definition.rendering.translatableModelObjects));
-			}else{
-				throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a translatable object:" + objectName + ", but no translatableModelObjects are present in the JSON!");
 			}
 		}
 		if(objectName.contains("&")){
