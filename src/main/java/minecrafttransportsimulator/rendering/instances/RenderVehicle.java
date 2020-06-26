@@ -353,6 +353,13 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		GL11.glPushMatrix();
 		rotatePart(part, partialTicks);
 		
+		//Mirror the model if we need to do so.
+		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
+		if(mirrored){
+			GL11.glScalef(-1.0F, 1.0F, 1.0F);
+			GL11.glCullFace(GL11.GL_FRONT);
+		}
+		
 		//If we are a tread, do the tread-specific render rather than the display list.
 		//Don't do this for pass 1 though as treads don't have transparency.
 		if(part.definition.ground != null && part.definition.ground.isTread && WrapperRender.getRenderPass() != 1){
@@ -362,13 +369,6 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 				doAutomaticTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));
 			}
 		}else{
-			//Mirror the model if we need to do so.
-			boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
-			if(mirrored){
-				GL11.glScalef(-1.0F, 1.0F, 1.0F);
-				GL11.glCullFace(GL11.GL_FRONT);
-			}
-			
     		//Render the part DisplayList, but only if we aren't in the transparent pass.
 			if(WrapperRender.getRenderPass() != 1){
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
@@ -392,11 +392,10 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					GL11.glPopMatrix();
 				}
 			}
-			
-			//Set cullface back to normal if we switched it.
-			if(mirrored){
-				GL11.glCullFace(GL11.GL_BACK);
-			}
+		}
+		//Set cullface back to normal if we switched it and pop matrix.
+		if(mirrored){
+			GL11.glCullFace(GL11.GL_BACK);
 		}
 		GL11.glPopMatrix();
 	}
@@ -865,8 +864,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 					GL11.glRotatef(text.rot[2], 0, 0, 1);
 				}
 				
-				//Finally, scale and render the text.
-				GL11.glScalef(text.scale, text.scale, text.scale);
+				//Finally, render the text.
 				WrapperGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
 				GL11.glPopMatrix();
 			}
