@@ -37,6 +37,7 @@ public class PartEngine extends APart implements FXPart{
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
+	public byte reverseGears;
 	public byte currentGear;
 	public double hours;
 	public double rpm;
@@ -98,6 +99,11 @@ public class PartEngine extends APart implements FXPart{
 			this.state = EngineStates.ENGINE_OFF;
 		}
 		this.startSounds = vehicle.world.isRemote;
+		for(float gear : definition.engine.gearRatios){
+			if(gear < 0){
+				++reverseGears;
+			}
+		}
 		this.startRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		this.stallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
 		
@@ -132,7 +138,7 @@ public class PartEngine extends APart implements FXPart{
 	public void updatePart(){
 		super.updatePart();
 		//Set current gear ratio based on current gear.
-		currentGearRatio = definition.engine.gearRatios[currentGear + 1];
+		currentGearRatio = definition.engine.gearRatios[currentGear + reverseGears];
 		
 		//Start up sounds if we haven't already.  We don't do this during construction as other mods are
 		//PITA and will construct new vehicles every tick to get data.  I'm looking a YOU The One Probe!
@@ -503,7 +509,7 @@ public class PartEngine extends APart implements FXPart{
 			}
 			driveshaftRotation += vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D;
 		}else{
-			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + 1];
+			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + reverseGears];
 		}
 	}
 	
@@ -708,7 +714,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public float getGearshiftPosition_Vertical(){
-		if(currentGear == -1){
+		if(currentGear < 0){
 			return definition.engine.gearRatios.length%2 == 0 ? 15 : -15; 
 		}else if(currentGear == 0){
 			return 0;
@@ -721,7 +727,7 @@ public class PartEngine extends APart implements FXPart{
 		int columns = (definition.engine.gearRatios.length)/2;
 		int firstColumnAngle = columns/2*-5;
 		float columnAngleDelta = columns != 1 ? -firstColumnAngle*2/(columns - 1) : 0; 
-		if(currentGear == -1){
+		if(currentGear < 0){
 			return -firstColumnAngle;
 		}else if(currentGear == 0){
 			return 0;
@@ -734,15 +740,15 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public void shiftUp(boolean packet){
-		if(currentGear == -1){
-			currentGear = 0;
+		if(currentGear < 0){
+			++currentGear;
 		}else if(currentGear == 0){
 			if(vehicle.velocity < 0.25 || wheelFriction == 0){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
-		}else if(currentGear < definition.engine.gearRatios.length - 2){
+		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){
 			if(definition.engine.isAutomatic && packet){
 				if(currentGear < 1){
 					currentGear = 1;
@@ -770,6 +776,8 @@ public class PartEngine extends APart implements FXPart{
 			}else if(vehicle.world.isRemote){
 				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
+		}else if(currentGear + reverseGears > 0){
+			--currentGear;
 		}
 	}
 	
@@ -958,7 +966,7 @@ public class PartEngine extends APart implements FXPart{
 			}
 		}else if(sound.soundName.endsWith("backup_beeper")){
 			//Turn off backup beeper if we are no longer in reverse.
-			if(currentGear != -1){
+			if(currentGear >= 0){
 				sound.stop();
 			}
 		}else{

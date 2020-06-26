@@ -66,7 +66,7 @@ public class PartPropeller extends APart{
 			}
 		}
 		
-		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio*Math.signum(connectedEngine.currentGear) : (connectedEngine.currentGear != 0 ? connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + 1] : 0);
+		double propellerGearboxRatio = connectedEngine.definition.engine.propellerRatio != 0 ? connectedEngine.definition.engine.propellerRatio*Math.signum(connectedEngine.currentGear) : (connectedEngine.currentGear != 0 ? connectedEngine.definition.engine.gearRatios[connectedEngine.currentGear + connectedEngine.reverseGears] : 0);
 		
 		//Adjust angular position and velocity.
 		if(propellerGearboxRatio != 0){
