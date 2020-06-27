@@ -97,7 +97,7 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected void getBasicProperties(){
+	protected void getForcesAndMotions(){
 		//Set moments.
 		momentRoll = (float) (definition.general.emptyMass*(1.5F+(fuel/10000F)));
 		momentPitch = (float) (2*currentMass);
@@ -131,10 +131,7 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		if(definition.plane != null){
 			currentWingArea = definition.plane.wingArea + definition.plane.wingArea*flapCurrentAngle/250F;
 		}
-	}
-	
-	@Override
-	protected void getForcesAndMotions(){
+		
 		//Get engine thrust force contributions.
 		thrustForce.set(0D, 0D, 0D);
 		thrustTorque.set(0D, 0D, 0D);

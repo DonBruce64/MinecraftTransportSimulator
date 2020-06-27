@@ -57,7 +57,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected void getBasicProperties(){
+	protected void getForcesAndMotions(){
 		if(towedByVehicle != null){
 			if(towingAngle < 30){
 				++towingAngle;
@@ -67,10 +67,7 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				--towingAngle;
 			}
 		}
-	}
-	
-	@Override
-	protected void getForcesAndMotions(){
+		
 		forwardForce = 0;
 		for(PartEngine engine : engines.values()){
 			forwardForce += engine.getForceOutput().z;

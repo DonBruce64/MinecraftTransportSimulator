@@ -90,7 +90,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		if(definition != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
-			getBasicProperties();
 		}
 		
 		//Check every tick to see if we still have riders in seats.
@@ -280,13 +279,6 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
         double d4 = Math.sin(-Math.toRadians(rotationPitch));
         headingVector = new Point3d((d2 * d3), d4, (d1 * d3));
    	}
-	
-	/**
-	 * Method block for basic properties like weight and vectors.
-	 * This should be used by all vehicles to define all properties before
-	 * calculating anything.
-	 */
-	protected abstract void getBasicProperties();
 	
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
