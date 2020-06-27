@@ -167,7 +167,12 @@ public final class ClientEventSystem{
         	}else{
         		//We are on the client.  Do update logic.
         		//Update the sounds in the audio system.
-        		WrapperAudio.update();
+        		//We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
+        		try{
+        			WrapperAudio.update();
+        		}catch(Exception e){
+        			//Do nothing.  We only get exceptions here if OpenAL isn't ready.
+        		}
         		
         		//If we are riding a vehicle, do rotation and control operation.
         		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
