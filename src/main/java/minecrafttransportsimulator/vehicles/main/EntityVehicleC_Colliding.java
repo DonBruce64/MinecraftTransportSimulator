@@ -199,7 +199,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			for(VehicleCollisionBox box : definition.collision){
 				Point3d boxOffset = new Point3d(box.pos[0], box.pos[1], box.pos[2]);
 				Point3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
-				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(offset.add(currentPosition), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
+				VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(offset.add(positionVector), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
 				collisionBoxes.add(newBox);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.x) + box.width/2F);
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
@@ -255,11 +255,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 								//instead of the generic box.
 								if(heldPart instanceof ItemPartCustom){
 									Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
-									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), heldPart.definition.custom.width, heldPart.definition.custom.height, false, false));
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(positionVector), packPartEntry.getKey(), heldPart.definition.custom.width, heldPart.definition.custom.height, false, false));
 								}else{
 									packPartEntry.getKey().add(0D, PART_SLOT_HITBOX_OFFSET, 0D);
 									Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
-									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), PART_SLOT_HITBOX_WIDTH, PART_SLOT_HITBOX_HEIGHT, false, false));
+									openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(positionVector), packPartEntry.getKey(), PART_SLOT_HITBOX_WIDTH, PART_SLOT_HITBOX_HEIGHT, false, false));
 								}
 							}
 						}else{
@@ -269,7 +269,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 					}else{
 						//We are on the server.  Set width and height to 0 to prevent clicking.
 						Point3d offset = RotationSystem.getRotatedPoint(packPartEntry.getKey(), rotationPitch, rotationYaw, rotationRoll);
-						openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(currentPosition), packPartEntry.getKey(), 0, 0, false, false));
+						openPartSpotBoxes.add(new VehicleAxisAlignedBB(offset.add(positionVector), packPartEntry.getKey(), 0, 0, false, false));
 					}
 				}
 			}

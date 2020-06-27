@@ -407,7 +407,7 @@ public class PartEngine extends APart implements FXPart{
 				PartPropeller propeller = (PartPropeller) part;
 				havePropeller = true;
 				Point3d propellerThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), propeller.totalRotation.x + vehicle.rotationPitch, propeller.totalRotation.y + vehicle.rotationYaw, propeller.totalRotation.z + vehicle.rotationRoll);
-				propellerAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
+				propellerAxialVelocity = vehicle.velocityVector.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
@@ -456,11 +456,11 @@ public class PartEngine extends APart implements FXPart{
 		///Update variables used for jet thrust.
 		if(definition.engine.jetPowerFactor > 0){
 			Point3d engineThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), totalRotation.x + vehicle.rotationPitch, totalRotation.y + vehicle.rotationYaw, totalRotation.z + vehicle.rotationRoll);
-			engineAxialVelocity = vehicle.currentVelocity.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
+			engineAxialVelocity = vehicle.velocityVector.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
 			
 			//Check for entities forward and aft of the engine and damage them.
 			if(vehicle.world.isRemote && rpm >= 5000){
-				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().add(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
+				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.positionVector.copy().add(vehicle.headingVector)).expand(0.25F, 0.25F, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -476,7 +476,7 @@ public class PartEngine extends APart implements FXPart{
 					}
 				}
 				
-				collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.currentPosition.copy().subtract(vehicle.currentHeading)).expand(0.25F, 0.25F, 0.25F));
+				collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, getAABBWithOffset(vehicle.positionVector.copy().subtract(vehicle.headingVector)).expand(0.25F, 0.25F, 0.25F));
 				if(!collidedEntites.isEmpty()){
 					Entity attacker = null;
 					for(Entity passenger : vehicle.getPassengers()){
@@ -1076,7 +1076,7 @@ public class PartEngine extends APart implements FXPart{
 							}
 						}
 						
-						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.positionVector);
 						Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 						if(state.running){
 							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
@@ -1099,7 +1099,7 @@ public class PartEngine extends APart implements FXPart{
 				backfired = false;
 				if(vehicleDefinition.exhaustPos != null){
 					for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
-						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+						Point3d exhaustOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.positionVector);
 						Point3d velocityOffset = RotationSystem.getRotatedPoint(new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll);
 						for(byte j=0; j<5; ++j){
 							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.07 - Math.random()*0.14, velocityOffset.y/10D, velocityOffset.z/10D + 0.07 - Math.random()*0.14, 0.0F, 0.0F, 0.0F, 2.5F, 1.0F));

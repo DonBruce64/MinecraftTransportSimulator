@@ -104,22 +104,12 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		momentYaw = (float) (3*currentMass);
 		
 		//Set angles and coefficients.
-		//trackAngle = Math.toDegrees(Math.atan2(currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading)));
-		trackAngle = Math.toDegrees(Math.acos(currentVelocity.dotProduct(currentHeading)));
-		//If we are going backwards, our angle will be greater than 90, so correct that now.
-		if(trackAngle > 90){
-			trackAngle -= 180;
-		}else if(trackAngle < -90){
-			trackAngle += 180; 
-		}
-		//If this is negative, we're going backwards.
-		//currentVelocity.dotProduct(currentHeading)
-		wingLiftCoeff = getLiftCoeff(-trackAngle, 2 + flapCurrentAngle/350F);
+		trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(velocityVector)));
+		wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/350F);
 		aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-		elevatorLiftCoeff = getLiftCoeff(-2.5 - trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.atan2(currentVelocity.dotProduct(sideVector), currentVelocity.dotProduct(currentHeading))), 2);
+		elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+		rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(velocityVector))), 2);
 		dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
-		//System.out.format("DP1:%f DP2:%f DC:%f TA:%f\n", currentVelocity.dotProduct(verticalVector), currentVelocity.dotProduct(currentHeading), dragCoeff, trackAngle);
 		
 		//Adjust flaps to current setting.  If no flaps are present, then this will never change.
 		if(flapCurrentAngle < flapDesiredAngle){
@@ -242,20 +232,21 @@ public class EntityVehicleF_Air extends EntityVehicleE_Powered{
 		//Add all forces to the main force matrix and apply them.
 		totalAxialForce.set(0D, wingForce + elevatorForce, 0D).add(thrustForce);
 		totalAxialForce = RotationSystem.getRotatedPoint(totalAxialForce, rotationPitch, rotationYaw, rotationRoll);
-		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(currentVelocity);
+		totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(velocityVector);
 		totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 		totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
-		//if(thrustForce.length() != 0)System.out.format("X:%f Y:%f Z:%f VF:%f VA:%f\n", totalMotiveForce.x, totalMotiveForce.y, totalMotiveForce.z, dragForce, velocity);
 		
 		motionX += totalForce.x;
 		motionY += totalForce.y;
 		motionZ += totalForce.z;
 		
-		//Add all torques to the main force matrix and apply them.
+		//Add all torques to the main torque matrix and apply them.
+		double pitchDirectionFactor = Math.abs(rotationRoll%360);
+		pitchDirectionFactor = pitchDirectionFactor < 90 || pitchDirectionFactor > 270 ? 1.0D : -1.0D;
 		totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).multiply(180D/Math.PI);
-		motionPitch = (float) totalTorque.x/momentPitch;
-		motionYaw = (float) totalTorque.y/momentYaw;
 		motionRoll = (float) totalTorque.z/momentRoll;
+		motionPitch = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
+		motionYaw = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
 	}
 	
 	@Override

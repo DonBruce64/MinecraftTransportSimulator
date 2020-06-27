@@ -20,7 +20,7 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	public VehicleAxisAlignedBB lastBoxRayTraced;
 	
 	public VehicleAxisAlignedBBCollective(EntityVehicleE_Powered vehicle, float width, float height, List<VehicleAxisAlignedBB> boxes){
-		super(vehicle.currentPosition, new Point3d(0, 0, 0), width, height, false, false);
+		super(vehicle.positionVector, new Point3d(0, 0, 0), width, height, false, false);
 		this.boxes = boxes;
 	}
 	

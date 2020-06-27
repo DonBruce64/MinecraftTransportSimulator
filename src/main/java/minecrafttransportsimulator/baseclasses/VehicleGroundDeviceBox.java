@@ -171,7 +171,7 @@ public class VehicleGroundDeviceBox{
 		
 		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
 		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(offset.add(vehicle.currentPosition).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
+		return new VehicleAxisAlignedBB(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -206,7 +206,7 @@ public class VehicleGroundDeviceBox{
 		
 		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
 		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(offset.add(vehicle.currentPosition).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
+		return new VehicleAxisAlignedBB(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
 	}
 	
 	/**

@@ -345,7 +345,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				while(motionYaw != 0){
 					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch, rotationYaw + motionYaw, rotationRoll);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(positionVector).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR + 0.1, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -364,7 +364,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionPitch != 0){
 					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(positionVector).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -382,7 +382,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(VehicleAxisAlignedBB box : collisionBoxes){
 				while(motionRoll != 0){
 					Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+					VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(positionVector).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 					if(offsetBox.getAABBCollisions(world, null).isEmpty()){
 						break;
 					}
@@ -709,7 +709,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		boolean collisionBoxCollided = false;
 		for(VehicleAxisAlignedBB box : collisionBoxes){
 			Point3d offset = RotationSystem.getRotatedPoint(box.rel, rotationPitch + motionPitch, rotationYaw + motionYaw, rotationRoll + motionRoll);
-			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(currentPosition).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
+			VehicleAxisAlignedBB offsetBox = box.getBoxWithOrigin(offset.add(positionVector).add(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR));
 			List<AxisAlignedBB> collisionBoxes = offsetBox.getAABBCollisions(world, null);
 			if(!collisionBoxes.isEmpty()){
 				collisionBoxCollided = true;
@@ -865,7 +865,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float skiddingFactor = getSkiddingFactor();
 		if(skiddingFactor != 0){
 			Point3d groundVelocityVec = new Point3d(motionX, 0, motionZ).normalize();
-			Point3d groundHeadingVec = new Point3d(currentHeading.x, 0, currentHeading.z).normalize();
+			Point3d groundHeadingVec = new Point3d(headingVector.x, 0, headingVector.z).normalize();
 			double vectorDelta = groundVelocityVec.distanceTo(groundHeadingVec);
 			byte velocitySign = (byte) (vectorDelta < 1 ? 1 : -1);
 			if(vectorDelta > 0.001){

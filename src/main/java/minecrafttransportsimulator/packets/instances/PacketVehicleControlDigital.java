@@ -86,9 +86,9 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 							if(testVehicle.definition.motorized.hookupPos != null){
 								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
 								Point3d hitchOffset = new Point3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]);
-								Point3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.currentPosition);
+								Point3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.positionVector);
 								Point3d hookupOffset = new Point3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]);
-								Point3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.currentPosition);
+								Point3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.positionVector);
 								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){

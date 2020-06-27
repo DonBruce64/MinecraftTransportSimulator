@@ -257,7 +257,7 @@ public class WrapperRender{
 				PartSeat seat = vehicle.getSeatForRider(passenger);
 				if(seat != null){
 					GL11.glPushMatrix();
-					Point3d offset = vehicle.currentPosition.copy().add(seat.worldPos);
+					Point3d offset = vehicle.positionVector.copy().add(seat.worldPos);
 					GL11.glTranslated(offset.x, offset.y - seat.getHeight()/2F + passenger.getYOffset(), offset.z);
 					Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
 					GL11.glPopMatrix();

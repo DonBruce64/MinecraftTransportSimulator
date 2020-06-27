@@ -52,9 +52,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public double currentMass;
 	public double velocity;
 	public double groundVelocity;
-	public Point3d currentPosition = new Point3d(0, 0, 0);
-	public Point3d currentHeading = new Point3d(0, 0, 0);
-	public Point3d currentVelocity = new Point3d(0, 0, 0);
+	public Point3d positionVector = new Point3d(0, 0, 0);
+	public Point3d headingVector = new Point3d(0, 0, 0);
+	public Point3d velocityVector = new Point3d(0, 0, 0);
 	public Point3d verticalVector = new Point3d(0, 0, 0);
 	public Point3d sideVector = new Point3d(0, 0, 0);
 
@@ -78,14 +78,14 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
-		currentPosition.set(posX, posY, posZ);
-		currentVelocity.set(motionX, 0D, motionZ);
-		groundVelocity = currentVelocity.dotProduct(currentHeading);
-		currentVelocity.y = motionY;
-		velocity = Math.abs(currentVelocity.dotProduct(currentHeading));
-		currentVelocity.normalize();
+		positionVector.set(posX, posY, posZ);
+		velocityVector.set(motionX, 0D, motionZ);
+		groundVelocity = velocityVector.dotProduct(headingVector);
+		velocityVector.y = motionY;
+		velocity = Math.abs(velocityVector.dotProduct(headingVector));
+		velocityVector.normalize();
 		verticalVector = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
-		sideVector = currentHeading.crossProduct(verticalVector);
+		sideVector = headingVector.crossProduct(verticalVector);
 		
 		if(definition != null){
 			currentMass = getCurrentMass();
@@ -177,9 +177,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			VehiclePart packPart = this.getPackDefForLocation(seat.placementOffset.x, seat.placementOffset.y, seat.placementOffset.z);
 			Point3d dismountPosition;
 			if(packPart.dismountPos != null){
-				dismountPosition = RotationSystem.getRotatedPoint(new Point3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), rotationPitch, rotationYaw, rotationRoll).add(currentPosition);
+				dismountPosition = RotationSystem.getRotatedPoint(new Point3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]), rotationPitch, rotationYaw, rotationRoll).add(positionVector);
 			}else{
-				dismountPosition = RotationSystem.getRotatedPoint(seat.placementOffset.copy().add(seat.placementOffset.x > 0 ? 2D : -2D, 0D, 0D), rotationPitch, rotationYaw, rotationRoll).add(currentPosition);	
+				dismountPosition = RotationSystem.getRotatedPoint(seat.placementOffset.copy().add(seat.placementOffset.x > 0 ? 2D : -2D, 0D, 0D), rotationPitch, rotationYaw, rotationRoll).add(positionVector);	
 			}
 			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(dismountPosition.x, dismountPosition.y, dismountPosition.z));
 			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
@@ -278,7 +278,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
         double d2 = Math.sin(-Math.toRadians(rotationYaw) - Math.PI);
         double d3 = -Math.cos(-Math.toRadians(rotationPitch));
         double d4 = Math.sin(-Math.toRadians(rotationPitch));
-        currentHeading = new Point3d((d2 * d3), d4, (d1 * d3));
+        headingVector = new Point3d((d2 * d3), d4, (d1 * d3));
    	}
 	
 	/**

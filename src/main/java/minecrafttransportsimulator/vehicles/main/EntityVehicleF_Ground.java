@@ -99,14 +99,14 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 				//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
 				//This is because when the hitch and the hookup are at the same point, the dot product returns floating-point errors.
 				hookupOffset = new Point3d(definition.motorized.hookupPos[0], definition.motorized.hookupPos[1], definition.motorized.hookupPos[2]);
-				hookupPos = RotationSystem.getRotatedPoint(hookupOffset, rotationPitch, rotationYaw, rotationRoll).add(currentPosition);
+				hookupPos = RotationSystem.getRotatedPoint(hookupOffset, rotationPitch, rotationYaw, rotationRoll).add(positionVector);
 				hitchOffset = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2]);
 				hitchOffset2 = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2] + 0.5);
-				hitchPos = RotationSystem.getRotatedPoint(hitchOffset, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.currentPosition);
-				hitchPos2 = RotationSystem.getRotatedPoint(hitchOffset2, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.currentPosition);
+				hitchPos = RotationSystem.getRotatedPoint(hitchOffset, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.positionVector);
+				hitchPos2 = RotationSystem.getRotatedPoint(hitchOffset2, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.positionVector);
 				
 				xzPlaneDelta = new Point3d(hitchPos2.x - hookupPos.x, 0, hitchPos2.z - hookupPos.z).normalize();
-				xzPlaneHeading = new Point3d(currentHeading.x, 0, currentHeading.z).normalize();
+				xzPlaneHeading = new Point3d(headingVector.x, 0, headingVector.z).normalize();
 				deltaYaw = Math.toDegrees(Math.acos(Math.min(Math.abs(xzPlaneDelta.dotProduct(xzPlaneHeading)), 1)));
 				if(xzPlaneDelta.crossProduct(xzPlaneHeading).y < 0){
 					deltaYaw *= -1;
@@ -133,9 +133,9 @@ public abstract class EntityVehicleF_Ground extends EntityVehicleE_Powered{
 
 		}
 		
-		motionX += (currentHeading.x*forwardForce - currentVelocity.x*dragForce)/currentMass;
-		motionZ += (currentHeading.z*forwardForce - currentVelocity.z*dragForce)/currentMass;
-		motionY += (currentHeading.y*forwardForce - currentVelocity.y*dragForce - gravitationalForce)/currentMass;
+		motionX += (headingVector.x*forwardForce - velocityVector.x*dragForce)/currentMass;
+		motionZ += (headingVector.z*forwardForce - velocityVector.z*dragForce)/currentMass;
+		motionY += (headingVector.y*forwardForce - velocityVector.y*dragForce - gravitationalForce)/currentMass;
 		
 		motionYaw = 0;
 		motionPitch = 0;
