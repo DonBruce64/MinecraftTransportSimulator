@@ -64,7 +64,7 @@ public class VehicleAxisAlignedBB extends AxisAlignedBB{
     			for(int k = minTestZ; k < maxTestZ; ++k){
     				BlockPos pos = new BlockPos(i, j, k);
     				IBlockState state = world.getBlockState(pos);
-    				if(state.getBlock().canCollideCheck(state, false)){
+    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
     					state.addCollisionBoxToList(world, pos, this, collidingAABBList, null, false);
         				if(collidedBlockPos != null){
         					collidedBlockPos.add(pos);
