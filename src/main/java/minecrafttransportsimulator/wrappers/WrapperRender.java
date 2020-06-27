@@ -172,10 +172,6 @@ public class WrapperRender{
         }
 		int lightVar = vehicle.getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
 	}
 	
 	/**
@@ -190,10 +186,6 @@ public class WrapperRender{
 	        int lightVar = WrapperGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
 	        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
         }
-        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT0, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_POSITION, RenderHelper.setColorBuffer(0.0F, 1.0F, 0.0F, 0.0F));
-        GlStateManager.glLight(GL11.GL_LIGHT1, GL11.GL_AMBIENT, RenderHelper.setColorBuffer(0.1F, 0.1F, 0.1F, 1.0F));
 	}
 	
 	/**
