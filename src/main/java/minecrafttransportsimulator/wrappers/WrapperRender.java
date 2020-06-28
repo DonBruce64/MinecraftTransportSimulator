@@ -21,7 +21,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -165,7 +165,7 @@ public class WrapperRender{
 	 *  passed-in vehicle's location.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToVehicle(EntityVehicleE_Powered vehicle){
+	public static void setLightingToVehicle(EntityVehicleF_Physics vehicle){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
@@ -243,7 +243,7 @@ public class WrapperRender{
 	 *  This method manually renders all riders on a vehicle.  Useful if you're rendering the vehicle manually
 	 *  and the vehicle and its riders have been culled from rendering.
 	 */
-	public static void renderVehicleRiders(EntityVehicleE_Powered vehicle, float partialTicks){
+	public static void renderVehicleRiders(EntityVehicleF_Physics vehicle, float partialTicks){
 		for(Entity passenger : vehicle.getPassengers()){
 			if(!(WrapperGame.getClientPlayer().equals(passenger) && WrapperGame.inFirstPerson()) && passenger.posY > passenger.world.getHeight()){
 				PartSeat seat = vehicle.getSeatForRider(passenger);
@@ -285,9 +285,9 @@ public class WrapperRender{
 		}
 		
 		//Register the vehicle rendering class.
-		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleE_Powered.class, new IRenderFactory<EntityVehicleE_Powered>(){
+		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleF_Physics.class, new IRenderFactory<EntityVehicleF_Physics>(){
 			@Override
-			public Render<? super EntityVehicleE_Powered> createRenderFor(RenderManager manager){
+			public Render<? super EntityVehicleF_Physics> createRenderFor(RenderManager manager){
 				return new RenderVehicle(manager);
 			}});
 				

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -16,7 +16,7 @@ import net.minecraftforge.common.IPlantable;
 
 public final class PartGroundEffectorPlanter extends APartGroundEffector{
 	
-	public PartGroundEffectorPlanter(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundEffectorPlanter(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 	}
 	

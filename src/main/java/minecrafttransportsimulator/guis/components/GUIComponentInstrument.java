@@ -5,7 +5,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
  * the GUI.  This instrument will render as if it was on the vehicle itself, and will have
@@ -19,10 +19,10 @@ public class GUIComponentInstrument{
 	public final byte instrumentPackIndex;
 	public final PackInstrument packInstrument;
 	public final ItemInstrument itemInstrument;
-	public final EntityVehicleE_Powered vehicle;
+	public final EntityVehicleF_Physics vehicle;
 	
 	    	
-	public GUIComponentInstrument(int guiLeft, int guiTop, byte instrumentPackIndex, EntityVehicleE_Powered vehicle){
+	public GUIComponentInstrument(int guiLeft, int guiTop, byte instrumentPackIndex, EntityVehicleF_Physics vehicle){
 		this.packInstrument = vehicle.definition.motorized.instruments.get(instrumentPackIndex);
 		this.itemInstrument = vehicle.instruments.get(instrumentPackIndex);
 		this.x = guiLeft + packInstrument.hudX;

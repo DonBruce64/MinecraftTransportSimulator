@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
@@ -29,7 +29,7 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleE_Powered vehicle){
+	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
 		//First get the appropriate texture file for this instrument combination.
 		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
 			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));

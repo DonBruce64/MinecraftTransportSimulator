@@ -32,25 +32,27 @@ import net.minecraft.world.World;
 /**This is the next class level above the base vehicle.
  * At this level we add methods for the vehicle's existence in the world.
  * Variables for position are defined here, but no methods for MOVING
- * this vehicle are present until later sub-classes.  Also not present
- * are variables that define how this vehicle COULD move (motions, states
- * of brakes/throttles, collision boxes, etc.)  This is where the pack information comes in
- * as this is where we start needing it.  This is also where we handle players interaction
- * with seats of this vehicle (mounting, dismounting, updates).
+ * this vehicle are present until later sub-classes.  This is also where we 
+ * handle entity interaction with seats of this vehicle (mounting, dismounting, updates).
  * 
  * @author don_bruce
  */
 abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
-	//Saved variables.
+	
+	//External state control.
+	public boolean brakeOn;
+	public boolean parkingBrakeOn;
 	public boolean locked;
-	public byte throttle;
 	public String ownerName="";
 	public String displayText="";
 	
-	//Runtime variables.
+	//Internal states.
+	public byte prevParkingBrakeAngle;
+	public byte parkingBrakeAngle;
 	public double airDensity;
 	public double currentMass;
 	public double velocity;
+	public double prevVelocity;
 	public double groundVelocity;
 	public Point3d positionVector = new Point3d(0, 0, 0);
 	public Point3d headingVector = new Point3d(0, 0, 0);
@@ -78,18 +80,35 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public void onEntityUpdate(){
 		super.onEntityUpdate();
+		//Set vectors to current position and orientation.
 		positionVector.set(posX, posY, posZ);
 		velocityVector.set(motionX, 0D, motionZ);
 		groundVelocity = velocityVector.dotProduct(headingVector);
 		velocityVector.y = motionY;
+		prevVelocity = velocity;
 		velocity = Math.abs(velocityVector.dotProduct(headingVector));
 		velocityVector.normalize();
 		verticalVector = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
 		sideVector = headingVector.crossProduct(verticalVector);
 		
+		//Update mass.
 		if(definition != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
+		}
+		
+		//Update parking brake angle.
+		prevParkingBrakeAngle = parkingBrakeAngle;
+		if(parkingBrakeOn && !locked && velocity < 0.25){
+			if(parkingBrakeAngle < 30){
+				prevParkingBrakeAngle = parkingBrakeAngle;
+				++parkingBrakeAngle;
+			}
+		}else{
+			if(parkingBrakeAngle > 0){
+				prevParkingBrakeAngle = parkingBrakeAngle;
+				--parkingBrakeAngle;
+			}
 		}
 		
 		//Check every tick to see if we still have riders in seats.
@@ -284,9 +303,10 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
 		this.locked=tagCompound.getBoolean("locked");
+		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
+		this.brakeOn=tagCompound.getBoolean("brakeOn");
 		this.ownerName=tagCompound.getString("ownerName");
 		this.displayText=tagCompound.getString("displayText");
-		this.throttle=tagCompound.getByte("throttle");
 		
 		this.riderSeatPositions.clear();
 		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
@@ -301,8 +321,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setBoolean("locked", this.locked);
+		tagCompound.setBoolean("brakeOn", this.brakeOn);
+		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
 		tagCompound.setString("ownerName", this.ownerName);
 		tagCompound.setString("displayText", this.displayText);
 		

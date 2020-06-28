@@ -10,9 +10,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -22,7 +22,7 @@ import minecrafttransportsimulator.wrappers.WrapperNetwork;
  * 
  * @author don_bruce
  */
-public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
+public class GUIPanelAircraft extends AGUIPanel{
 	private static final int NAVIGATION_TEXTURE_WIDTH_OFFSET = 200;
 	private static final int NAVIGATION_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int STROBE_TEXTURE_WIDTH_OFFSET = NAVIGATION_TEXTURE_WIDTH_OFFSET + 20;
@@ -59,7 +59,7 @@ public class GUIPanelAircraft extends AGUIPanel<EntityVehicleF_Air>{
 	private boolean selectedTrimDirection;
 	private boolean appliedTrimThisRender;
 	
-	public GUIPanelAircraft(EntityVehicleF_Air aircraft){
+	public GUIPanelAircraft(EntityVehicleF_Physics aircraft){
 		super(aircraft);
 	}
 	

@@ -13,7 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.entity.player.EntityPlayer;
@@ -43,7 +43,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				pos = pos.up();
 				
 				//First construct the class.
-				EntityVehicleE_Powered newVehicle = PackParserSystem.createVehicle(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, definition, subName);
+				EntityVehicleF_Physics newVehicle = new EntityVehicleF_Physics(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, definition);
 				
 				//Now that the class exists, use the NTB data from this item to add back components.
 				//We use a try-catch for parts in case they've changed since this vehicle was last placed.
@@ -105,8 +105,8 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 						}
 						if(!instrumentPackID.isEmpty()){
 							ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
-							//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-							if(instrument != null && instrument.definition.general.validVehicles.contains(this.definition.general.type)){
+							//Check to prevent loading of faulty instruments due to updates.
+							if(instrument != null){
 								newVehicle.instruments.put(i, instrument);
 							}
 						}
@@ -190,7 +190,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 	/**
 	 * Static helper method to allow for recursion when adding default parts.
 	 */
-	private static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleE_Powered newVehicle){
+	private static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleF_Physics newVehicle){
 		for(VehiclePart packDef : partsToAdd){
 			if(packDef.defaultPart != null){
 				try{

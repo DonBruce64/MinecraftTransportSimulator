@@ -9,9 +9,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -53,11 +51,11 @@ public final class ControlSystem{
 	}
 
 	
-	public static void controlVehicle(EntityVehicleE_Powered vehicle, boolean isPlayerController){
-		if(vehicle instanceof EntityVehicleF_Air){
-			controlAircraft((EntityVehicleF_Air) vehicle, isPlayerController);
-		}else if(vehicle instanceof EntityVehicleF_Ground){
-			controlGroundVehicle((EntityVehicleF_Ground) vehicle, isPlayerController);
+	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
+		if(vehicle.definition.general.isAircraft){
+			controlAircraft(vehicle, isPlayerController);
+		}else{
+			controlGroundVehicle(vehicle, isPlayerController);
 		}
 	}
 	
@@ -113,7 +111,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlBrake(EntityVehicleE_Powered vehicle, ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake){
+	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
 		boolean isParkingBrakePressed = WrapperInput.isJoystickPresent(analogBrake.config.joystickName) ? pBrake.isPressed() : dynamic.isPressed() || pBrake.isPressed();
 		boolean isBrakePressed = WrapperInput.isJoystickPresent(analogBrake.config.joystickName) ? analogBrake.getAxisState((short) 0) > 25 : dynamic.mainControl.isPressed();
@@ -135,7 +133,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlGun(EntityVehicleE_Powered vehicle, ControlsKeyboard gun){
+	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gun){
 		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().player);
 		if(seat != null){
 			//If we are seated, attempt to control guns.
@@ -171,7 +169,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlRadio(EntityVehicleE_Powered vehicle, ControlsKeyboard radio){
+	private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
 			if(WrapperGUI.isGUIActive(null)){
 				WrapperGUI.openGUI(new GUIRadio(vehicle));
@@ -181,7 +179,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlAircraft(EntityVehicleF_Air aircraft, boolean isPlayerController){
+	private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
 		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
@@ -229,7 +227,7 @@ public final class ControlSystem{
 		
 		//Check yaw.
 		if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
-			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Air.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
@@ -256,7 +254,7 @@ public final class ControlSystem{
 		}else{
 			//Check pitch.
 			if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Air.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
 					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
@@ -274,7 +272,7 @@ public final class ControlSystem{
 			
 			//Check roll.
 			if(WrapperInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Air.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
 					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.client.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
@@ -292,7 +290,7 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlGroundVehicle(EntityVehicleF_Ground powered, boolean isPlayerController){
+	private static void controlGroundVehicle(EntityVehicleF_Physics powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
 		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
@@ -332,20 +330,20 @@ public final class ControlSystem{
 		if(ConfigSystem.configObject.client.mouseYoke.value){
 			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
 				long mousePosition = WrapperInput.getTrackedMouseInfo();
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}
 		}else{
 			if(WrapperInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
-				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, ControlsJoystick.CAR_TURN.getAxisState(powered.MAX_STEERING_ANGLE), Byte.MAX_VALUE));
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 			}else{
 				//Depending on what we are pressing, send out packets.
 				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
 				if(turningRight && !turningLeft){
-					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}else if(turningLeft && !turningRight){
-					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.STEERING, (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.steeringAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
+					WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.client.steeringIncrement.value.shortValue()*(powered.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.client.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 		}

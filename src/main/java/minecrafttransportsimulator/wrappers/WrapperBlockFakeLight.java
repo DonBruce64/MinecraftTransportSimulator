@@ -2,7 +2,7 @@ package minecrafttransportsimulator.wrappers;
 
 import java.util.Random;
 
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.BlockAir;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -30,7 +30,7 @@ public class WrapperBlockFakeLight extends BlockAir{
     	//Destroy ourselves if there's no vehicle on top of us.
     	//This prevents abandoned fake blocks.
     	for(Entity entity : world.loadedEntityList){
-    		if(entity instanceof EntityVehicleE_Powered){
+    		if(entity instanceof EntityVehicleF_Physics){
     			if(entity.getPosition().equals(pos)){
     				return;
     			}

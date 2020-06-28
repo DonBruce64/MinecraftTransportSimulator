@@ -12,7 +12,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.ITileEntityProvider;
@@ -92,19 +92,19 @@ public class WrapperWorld{
 	/**
 	 *  Returns the vehicle that has the passed-in ID.
 	 */
-	public EntityVehicleE_Powered getVehicle(int id){
-		return (EntityVehicleE_Powered) world.getEntityByID(id);
+	public EntityVehicleF_Physics getVehicle(int id){
+		return (EntityVehicleF_Physics) world.getEntityByID(id);
 	}
 	
 	/**
 	 *  Returns a list of all vehicles within specified bounds.
 	 */
-	public List<EntityVehicleE_Powered> getVehiclesWithin(BoundingBox bounds){
-		List<EntityVehicleE_Powered> vehicles = new ArrayList<EntityVehicleE_Powered>();
+	public List<EntityVehicleF_Physics> getVehiclesWithin(BoundingBox bounds){
+		List<EntityVehicleF_Physics> vehicles = new ArrayList<EntityVehicleF_Physics>();
 		for(Entity entity : world.loadedEntityList){
-			if(entity instanceof EntityVehicleE_Powered){
+			if(entity instanceof EntityVehicleF_Physics){
 				if(bounds.isPointInside(new Point3d(entity.posX, entity.posY, entity.posZ))){
-					vehicles.add((EntityVehicleE_Powered) entity);
+					vehicles.add((EntityVehicleF_Physics) entity);
 				}
 			}
 		}

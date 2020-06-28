@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.core.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -26,7 +26,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 	
 	public PacketVehicleInteract(){}
 	
-	public PacketVehicleInteract(EntityVehicleE_Powered vehicle, double hitX, double hitY, double hitZ, PacketVehicleInteractType type){
+	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, double hitX, double hitY, double hitZ, PacketVehicleInteractType type){
 		super(vehicle);
 		this.hitX = hitX;
 		this.hitY = hitY;
@@ -58,7 +58,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
+					EntityVehicleF_Physics vehicle = getVehicle(message, ctx);
 					EntityPlayer player = ctx.getServerHandler().player;
 					boolean isPlayerOP = player.getServer() == null || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 					boolean canPlayerEditVehicle = isPlayerOP || vehicle.ownerName.isEmpty() || EntityPlayer.getUUID(player.getGameProfile()).toString().equals(vehicle.ownerName);

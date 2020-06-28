@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -19,7 +19,7 @@ public class VehicleAxisAlignedBBCollective extends VehicleAxisAlignedBB{
 	public final List<VehicleAxisAlignedBB> boxes;
 	public VehicleAxisAlignedBB lastBoxRayTraced;
 	
-	public VehicleAxisAlignedBBCollective(EntityVehicleE_Powered vehicle, float width, float height, List<VehicleAxisAlignedBB> boxes){
+	public VehicleAxisAlignedBBCollective(EntityVehicleF_Physics vehicle, float width, float height, List<VehicleAxisAlignedBB> boxes){
 		super(vehicle.positionVector, new Point3d(0, 0, 0), width, height, false, false);
 		this.boxes = boxes;
 	}

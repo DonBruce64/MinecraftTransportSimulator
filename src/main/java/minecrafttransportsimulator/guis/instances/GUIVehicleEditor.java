@@ -23,7 +23,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This is a special GUI that is called in devMode to allow vehicle editing.
@@ -51,12 +51,12 @@ public class GUIVehicleEditor extends AGUIBase{
 	private static GUIComponentOBJModel componentItemModel;
 	
 	//Static savers for GUI state.
-	private static EntityVehicleE_Powered vehicle;
+	private static EntityVehicleF_Physics vehicle;
 	private static EditScreen currentScreen = EditScreen.NONE;
 	private static int lastComponentIndexModified = -1; 
 	
 	
-	public GUIVehicleEditor(EntityVehicleE_Powered clickedVehicle){
+	public GUIVehicleEditor(EntityVehicleF_Physics clickedVehicle){
 		//If we are modifying the same vehicle as the last time we opened this GUI, re-load the state.
 		if(clickedVehicle.equals(vehicle)){
 			needToLoadState = true;

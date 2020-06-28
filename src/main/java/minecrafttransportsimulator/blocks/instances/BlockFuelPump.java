@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -70,9 +70,9 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 			//We don't have a vehicle connected.  Try to connect one now.
     		if(pump.connectedVehicle == null){
     			//Get the closest vehicle within a 16-block radius.
-    			EntityVehicleE_Powered nearestVehicle = null;
+    			EntityVehicleF_Physics nearestVehicle = null;
     			float lowestDistance = 16;
-    			for(EntityVehicleE_Powered vehicle : world.getVehiclesWithin(new BoundingBox(point.x, point.y, point.z, lowestDistance, lowestDistance, lowestDistance))){
+    			for(EntityVehicleF_Physics vehicle : world.getVehiclesWithin(new BoundingBox(point.x, point.y, point.z, lowestDistance, lowestDistance, lowestDistance))){
     				float distance = (float) vehicle.getDistance(point.x, point.y, point.z);
 					if(distance < lowestDistance){
 						lowestDistance = distance;

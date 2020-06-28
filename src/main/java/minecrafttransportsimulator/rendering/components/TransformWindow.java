@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
@@ -20,12 +20,12 @@ public class TransformWindow extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
 	}
 	
 	@Override
-	public void doPostRenderLogic(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		//Render inner windows, if set.
 		if(ConfigSystem.configObject.client.innerWindows.value){
 			GL11.glBegin(GL11.GL_TRIANGLES);

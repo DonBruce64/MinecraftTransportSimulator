@@ -2,9 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 
@@ -22,7 +20,7 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	private final short value;
 	private final byte cooldown;
 	
-	public PacketVehicleControlAnalog(EntityVehicleE_Powered vehicle, Controls controlType, short value, byte cooldown){
+	public PacketVehicleControlAnalog(EntityVehicleF_Physics vehicle, Controls controlType, short value, byte cooldown){
 		super(vehicle);
 		this.controlType = controlType;
 		this.value = value;
@@ -45,34 +43,25 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case THROTTLE : {
 				vehicle.throttle = (byte) clampAngle(0, 100, cooldown == Byte.MAX_VALUE ? value : vehicle.throttle + value);
 				break;
 			}	
-			case STEERING : {
-				EntityVehicleF_Ground powered = (EntityVehicleF_Ground) vehicle;
-				powered.steeringAngle = (short) clampAngle(-powered.MAX_STEERING_ANGLE, powered.MAX_STEERING_ANGLE, cooldown == Byte.MAX_VALUE ? value : powered.steeringAngle + value);
-				powered.steeringCooldown = cooldown; 
-				break;
-			}
 			case AILERON : {
-				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.aileronAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_AILERON_ANGLE, EntityVehicleF_Air.MAX_AILERON_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.aileronAngle + value);
-				aircraft.aileronCooldown = cooldown; 
+				vehicle.aileronAngle = (short) clampAngle(-EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE, cooldown == Byte.MAX_VALUE ? value : vehicle.aileronAngle + value);
+				vehicle.aileronCooldown = cooldown; 
 				break;
 			}
 			case ELEVATOR : {
-				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.elevatorAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.elevatorAngle + value);
-				aircraft.elevatorCooldown = cooldown;
+				vehicle.elevatorAngle = (short) clampAngle(-EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, cooldown == Byte.MAX_VALUE ? value : vehicle.elevatorAngle + value);
+				vehicle.elevatorCooldown = cooldown;
 				break;
 			}
 			case RUDDER : {
-				EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-				aircraft.rudderAngle = (short) clampAngle(-EntityVehicleF_Air.MAX_RUDDER_ANGLE, EntityVehicleF_Air.MAX_RUDDER_ANGLE, cooldown == Byte.MAX_VALUE ? value : aircraft.rudderAngle + value);
-				aircraft.rudderCooldown = cooldown;
+				vehicle.rudderAngle = (short) clampAngle(-EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, cooldown == Byte.MAX_VALUE ? value : vehicle.rudderAngle + value);
+				vehicle.rudderCooldown = cooldown;
 				break;
 			}
 		}
@@ -81,7 +70,6 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	
 	public enum Controls{
 		THROTTLE,
-		STEERING,
 		AILERON,
 		ELEVATOR,
 		RUDDER;

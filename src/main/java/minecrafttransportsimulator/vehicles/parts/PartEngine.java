@@ -17,8 +17,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -82,7 +81,7 @@ public class PartEngine extends APart implements FXPart{
 	private static final float LOW_OIL_PRESSURE = 40F;
 	
 	
-	public PartEngine(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.isCreative = dataTag.getBoolean("isCreative");
 		this.oilLeak = dataTag.getBoolean("oilLeak");
@@ -109,7 +108,7 @@ public class PartEngine extends APart implements FXPart{
 		
 		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
 		//Well, except blimps, but that's a special case.
-		if(vehicle instanceof EntityVehicleF_Air){
+		if(vehicle.definition.general.isAircraft){
 			currentGear = 1;
 		}
 	}

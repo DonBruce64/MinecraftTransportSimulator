@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -46,8 +46,8 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 	
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
-		if(!world.isRemote && player.getRidingEntity() instanceof EntityVehicleE_Powered){
-			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) player.getRidingEntity();
+		if(!world.isRemote && player.getRidingEntity() instanceof EntityVehicleF_Physics){
+			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) player.getRidingEntity();
 			//Check to see if we're a controller.
 			if(vehicle.getSeatForRider(player).vehicleDefinition.isController){
 				//Check if the vehicle is empty and we need to load or unload all NPCs.
@@ -96,7 +96,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick && part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
 			if(stack.hasTagCompound()){

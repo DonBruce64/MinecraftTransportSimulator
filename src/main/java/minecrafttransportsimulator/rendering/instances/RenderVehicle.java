@@ -16,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.ARenderableTransform;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
@@ -25,8 +26,7 @@ import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -48,7 +48,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends Render<EntityVehicleE_Powered>{	
+public final class RenderVehicle extends Render<EntityVehicleF_Physics>{	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, String> vehicleModelOverrides = new HashMap<String, String>();
@@ -61,14 +61,14 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	private static final Map<String, List<RenderableModelObject>> partObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	
 	//RENDER DATA MAPS.  Keyed by each instance of each vehicle loaded.
-	private static final Map<EntityVehicleE_Powered, RenderTickData> renderData = new HashMap<EntityVehicleE_Powered, RenderTickData>();
+	private static final Map<EntityVehicleF_Physics, RenderTickData> renderData = new HashMap<EntityVehicleF_Physics, RenderTickData>();
 	
 	public RenderVehicle(RenderManager renderManager){
 		super(renderManager);
 	}
 	
 	/**Used to clear out the rendering caches of the passed-in vehicle in dev mode to allow the re-loading of models.**/
-	public static void clearVehicleCaches(EntityVehicleE_Powered vehicle){
+	public static void clearVehicleCaches(EntityVehicleF_Physics vehicle){
 		vehicleDisplayLists.remove(vehicle.definition.genericName);
 		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
 			modelObject.resetDisplayList();
@@ -84,17 +84,17 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 * Used to inject a new model into the model map for vehicles.
 	 * Allow for hotloading models outside of the normal jar locations.
 	 **/
-	public static void injectModel(EntityVehicleE_Powered vehicle, String modelLocation){
+	public static void injectModel(EntityVehicleF_Physics vehicle, String modelLocation){
 		vehicleModelOverrides.put(vehicle.definition.genericName, modelLocation);
 	}
 	
 	@Override
-	protected ResourceLocation getEntityTexture(EntityVehicleE_Powered entity){
+	protected ResourceLocation getEntityTexture(EntityVehicleF_Physics entity){
 		return null;
 	}
 	
 	@Override
-	public void doRender(EntityVehicleE_Powered vehicle, double x, double y, double z, float entityYaw, float partialTicks){
+	public void doRender(EntityVehicleF_Physics vehicle, double x, double y, double z, float entityYaw, float partialTicks){
 		if(vehicle.definition != null){
 			//If we don't have render data yet, create one now.
 			if(!renderData.containsKey(vehicle)){
@@ -114,7 +114,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 		}
 	}
 	
-	public static boolean doesVehicleHaveLight(EntityVehicleE_Powered vehicle, LightType light){
+	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
 		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
 			for(ARenderableTransform transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
@@ -143,7 +143,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
     /**
      * Checks if lights are on for this vehicle and instruments need to be lit up.
      */
-	public static boolean isVehicleIlluminated(EntityVehicleE_Powered vehicle){
+	public static boolean isVehicleIlluminated(EntityVehicleF_Physics vehicle){
 		return (vehicle.lightsOn.contains(LightType.NAVIGATIONLIGHT) || vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) || vehicle.lightsOn.contains(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
@@ -152,7 +152,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  special pass -1 (end) if the vehicle wasn't rendered in either pass 0 or 1 due to chunk render culling.  Some rendering routines
 	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.
 	 */
-	private static void render(EntityVehicleE_Powered vehicle, float partialTicks){
+	private static void render(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Set render camera position.
 		Point3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
 		
@@ -249,7 +249,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  cached in DisplayLists, as we only need to translate and rotate them, not apply any transforms or splits.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderMainModel(EntityVehicleE_Powered vehicle, float partialTicks){
+	private static void renderMainModel(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Normally we use the pack name, but since all displaylists
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
@@ -810,7 +810,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Normalization is required here, as otherwise the normals get scaled with the
 	 *  scaling operations, and shading gets applied funny. 
 	 */
-	private static void renderInstruments(EntityVehicleE_Powered vehicle){
+	private static void renderInstruments(EntityVehicleF_Physics vehicle){
 		GL11.glEnable(GL11.GL_NORMALIZE);
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
@@ -834,7 +834,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
 	 *  in pass 0, as we don't do any alpha blending in this routine.
 	 */
-	private static void renderTextMarkings(EntityVehicleE_Powered vehicle){
+	private static void renderTextMarkings(EntityVehicleF_Physics vehicle){
 		if(WrapperRender.getRenderPass() != 1){
 			//Disable system lighting as we have issues with it in 3D rendering.
 			WrapperRender.setSystemLightingState(false);
@@ -875,7 +875,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Renders holographic part boxes when holding parts that can go on this vehicle.  This
 	 *  needs to be rendered in pass 1 to do alpha blending.
 	 */
-	private static void renderPartBoxes(EntityVehicleE_Powered vehicle){
+	private static void renderPartBoxes(EntityVehicleF_Physics vehicle){
 		if(WrapperRender.getRenderPass() != 0){
 			//Disable lighting and texture rendering, and enable blending.
 			WrapperRender.setLightingState(false);
@@ -966,7 +966,7 @@ public final class RenderVehicle extends Render<EntityVehicleE_Powered>{
 	 *  Renders the bounding boxes for the vehicle collision, and centers of all
 	 *  parts currently on the vehicle.
 	 */
-	private static void renderBoundingBoxes(EntityVehicleE_Powered vehicle){
+	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
 		//Set states for box render.
 		WrapperRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);

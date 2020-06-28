@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.resources.I18n;
@@ -38,7 +38,7 @@ public class ItemKey extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(player.isSneaking()){
 				//Try to change ownership of the vehicle.

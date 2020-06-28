@@ -10,8 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,7 +27,7 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.damage = dataTag.getFloat("damage");
 		this.currentPitch = definition.propeller.pitch;
@@ -129,8 +128,8 @@ public class PartPropeller extends APart{
 
 	@Override
 	public Point3d getActionRotation(float partialTicks){
-		if(definition.propeller.isRotor && vehicle instanceof EntityVehicleF_Air){
-			return new Point3d(-((EntityVehicleF_Air) vehicle).elevatorAngle*10D/EntityVehicleF_Air.MAX_ELEVATOR_ANGLE, ((EntityVehicleF_Air) vehicle).aileronAngle*10D/EntityVehicleF_Air.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+		if(definition.propeller.isRotor){
+			return new Point3d(-vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
 		}else{
 			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 		}

@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a rotatable object of a model.  Inputs are the name of the name model,
@@ -75,7 +75,7 @@ public class TransformRotatable extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		//We need to define the rotation out here in case we encounter rotation definitions in sequence.
 		//If that is the case, we can skip all but the last definition to save on rotation calls.
 		//This also allows for multi-variable clamping.
@@ -107,7 +107,7 @@ public class TransformRotatable extends ARenderableTransform{
 	 *  Required for auto-rotations.  This function should return true if the axis was updated
 	 *  to allow the calling method to save the axis state.
 	 */
-	protected boolean updateRotationAxis(EntityVehicleE_Powered vehicle, Point3d rotationAxis){
+	protected boolean updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
 		return false;
 	}
 }

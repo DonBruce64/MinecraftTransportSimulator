@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a translatable object of a model.  Inputs are the name of the name model,
@@ -67,7 +67,7 @@ public class TransformTranslatable extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		for(byte i=0; i<translationVariables.length; ++i){
 			double translation = VehicleAnimationSystem.getVariableValue(translationVariables[i], translationMagnitudes[i], 0F, translationClampsMin[i], translationClampsMax[i], translationAbsolutes[i], partialTicks, vehicle, null);
 			if(translation != 0){

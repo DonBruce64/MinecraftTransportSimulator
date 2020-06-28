@@ -23,20 +23,12 @@ import net.minecraft.world.World;
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
  * routines and ground device effects come in.  We also add functionality to keep
- * servers and clients from de-syncing, and a few basic variables that will be common for all vehicles.
- * At this point we now have a basic vehicle that can be manipulated for movement in the world.  
+ * servers and clients from de-syncing.  At this point we now have a basic vehicle
+ *  that can be manipulated for movement in the world.  
  * 
  * @author don_bruce
  */
 abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
-	public boolean brakeOn;
-	public boolean parkingBrakeOn;
-	public byte prevParkingBrakeAngle;
-	public byte parkingBrakeAngle;
-	public float motionRoll;
-	public float motionPitch;
-	public float motionYaw;
-	
 	private double clientDeltaX;
 	private double clientDeltaY;
 	private double clientDeltaZ;
@@ -65,7 +57,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected VehicleGroundDeviceBox rearLeftGroundDeviceBox;
 	protected VehicleGroundDeviceBox rearRightGroundDeviceBox;
 	
-	public static final double maxRotationInRadPerTick = 0.0174533D*2D;
+	//Constants.
+	private static final double MAX_ROTATION_RAD_PER_TICK = 0.0174533D*2D;
 	
 	public EntityVehicleD_Moving(World world){
 		super(world);
@@ -95,10 +88,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Init boxes if we haven't yet.
 			//Update ground devices for them if we have.
 			if(frontLeftGroundDeviceBox == null){
-				frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, true, true);
-				frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, true, false);
-				rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, false, true);
-				rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleE_Powered) this, false, false);
+				frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, true);
+				frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, false);
+				rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, true);
+				rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, false);
 			}else{
 				frontLeftGroundDeviceBox.updateGroundDevices();
 				frontRightGroundDeviceBox.updateGroundDevices();
@@ -112,18 +105,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			moveVehicle();
 			if(!world.isRemote){
 				dampenControlSurfaces();
-			}
-			prevParkingBrakeAngle = parkingBrakeAngle;
-			if(parkingBrakeOn && !locked && velocity < 0.25){
-				if(parkingBrakeAngle < 30){
-					prevParkingBrakeAngle = parkingBrakeAngle;
-					++parkingBrakeAngle;
-				}
-			}else{
-				if(parkingBrakeAngle > 0){
-					prevParkingBrakeAngle = parkingBrakeAngle;
-					--parkingBrakeAngle;
-				}
 			}
 			
 			//Finally, update parts.
@@ -144,7 +125,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		forceOfInertia = currentMass*(bodyAcceleration);
 
 		
-		if (throttle > 0) {
+		if (velocity > prevVelocity) {
 			
 			throttleTime++;
 			
@@ -469,7 +450,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
 				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
+				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), MAX_ROTATION_RAD_PER_TICK);
 				motionPitch += Math.toDegrees(angle);
 				ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ);
 			}else{
@@ -480,7 +461,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 				//because we were in the ground then one set would have to be grounded.
-				double angle = -maxRotationInRadPerTick;
+				double angle = -MAX_ROTATION_RAD_PER_TICK;
 				motionPitch += Math.toDegrees(angle);
 				if(motionY < 0){
 					ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ) + motionY*SPEED_FACTOR;
@@ -528,7 +509,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the front in the same place.
 				double distance = Math.hypot(frontY - rearY, frontZ - rearZ);
-				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
+				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), MAX_ROTATION_RAD_PER_TICK);
 				motionPitch += Math.toDegrees(angle);
 				ptichRotationBoost = Math.sin(angle)*Math.hypot(frontY, frontZ);
 			}else{
@@ -539,7 +520,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 				//because we were in the ground then one set would have to be grounded.
-				double angle = maxRotationInRadPerTick;
+				double angle = MAX_ROTATION_RAD_PER_TICK;
 				motionPitch += Math.toDegrees(angle);
 				if(motionY < 0){
 					ptichRotationBoost = -Math.sin(angle)*Math.hypot(rearY, rearZ) + motionY*SPEED_FACTOR;
@@ -605,7 +586,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the rear in the same place.
 				double distance = Math.hypot(rightY - leftY, rightX - leftX);
-				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
+				double angle = -Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), MAX_ROTATION_RAD_PER_TICK);
 				motionRoll += Math.toDegrees(angle);
 				rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX);
 			}else{
@@ -616,7 +597,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 				//because we were in the ground then one set would have to be grounded.
-				double angle = -maxRotationInRadPerTick;
+				double angle = -MAX_ROTATION_RAD_PER_TICK;
 				motionRoll+= Math.toDegrees(angle);
 				if(motionY < 0){
 					rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX) + motionY*SPEED_FACTOR;
@@ -664,7 +645,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
 				//After that, calculate how much we will need to offset the vehicle to keep the right in the same place.
 				double distance = Math.hypot(rightY - leftY, rightX - leftX);
-				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), maxRotationInRadPerTick);
+				double angle = Math.min(Math.asin(Math.min(collisionDepth/distance, 1)), MAX_ROTATION_RAD_PER_TICK);
 				motionRoll += Math.toDegrees(angle);
 				rollRotationBoost = Math.sin(angle)*Math.hypot(rightY, rightX);
 			}else{
@@ -675,7 +656,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//do calcs using the grounded ground device.  Use the collision variable we use for the motionY
 				//as it won't be used at this point as one of the sets of ground devices are free.  If it was used
 				//because we were in the ground then one set would have to be grounded.
-				double angle = maxRotationInRadPerTick;
+				double angle = MAX_ROTATION_RAD_PER_TICK;
 				motionRoll += Math.toDegrees(angle);
 				if(motionY < 0){
 					rollRotationBoost = -Math.sin(angle)*Math.hypot(leftY, leftX) + motionY*SPEED_FACTOR;
@@ -747,7 +728,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				rotationRoll += motionRoll;
 				setPosition(posX + motionX*SPEED_FACTOR, posY + motionY*SPEED_FACTOR, posZ + motionZ*SPEED_FACTOR);
 				addToServerDeltas(motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR, motionYaw, motionPitch, motionRoll);
-				MTS.MTSNet.sendToAll(new PacketVehicleDeltas((EntityVehicleE_Powered) this, motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR, motionYaw, motionPitch, motionRoll));
+				MTS.MTSNet.sendToAll(new PacketVehicleDeltas((EntityVehicleF_Physics) this, motionX*SPEED_FACTOR, motionY*SPEED_FACTOR, motionZ*SPEED_FACTOR, motionYaw, motionPitch, motionRoll));
 			}
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
@@ -1040,9 +1021,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
-		this.brakeOn=tagCompound.getBoolean("brakeOn");
-		
 		this.serverDeltaX=tagCompound.getDouble("serverDeltaX");
 		this.serverDeltaY=tagCompound.getDouble("serverDeltaY");
 		this.serverDeltaZ=tagCompound.getDouble("serverDeltaZ");
@@ -1063,9 +1041,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("brakeOn", this.brakeOn);
-		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
-		
 		tagCompound.setDouble("serverDeltaX", this.serverDeltaX);
 		tagCompound.setDouble("serverDeltaY", this.serverDeltaY);
 		tagCompound.setDouble("serverDeltaZ", this.serverDeltaZ);

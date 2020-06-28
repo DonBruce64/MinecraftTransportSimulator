@@ -174,7 +174,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	public VehicleAxisAlignedBBCollective getEntityBoundingBox(){
 		//Override this to make interaction checks work with the multiple collision points.
 		//We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
-		return this.interactionFrame != null ? this.interactionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, 1, 1, interactionBoxes);
+		return this.interactionFrame != null ? this.interactionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleF_Physics) this, 1, 1, interactionBoxes);
 	}
 	
 	@Override
@@ -182,7 +182,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
     public VehicleAxisAlignedBBCollective getCollisionBoundingBox(){
 		//Override this to make collision checks work with the multiple collision points.
 		//We only return collision boxes here as we don't want the player to collide with interaction boxes.
-		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, 1, 1, collisionBoxes);
+		return this.collisionFrame != null ? this.collisionFrame : new VehicleAxisAlignedBBCollective((EntityVehicleF_Physics) this, 1, 1, collisionBoxes);
     }
     
 	/**
@@ -205,7 +205,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.z) + box.width/2F);
 			}
-			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
+			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleF_Physics) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
 			
 			//Add all part boxes to the part box list.
 			//The server always adds all boxes, the client omits some.
@@ -280,7 +280,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			interactionBoxes.addAll(partBoxes);
 			interactionBoxes.addAll(openPartSpotBoxes);
 			interactionBoxes.addAll(collisionBoxes);
-			this.interactionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleE_Powered) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, interactionBoxes);
+			this.interactionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleF_Physics) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, interactionBoxes);
 		}
 	}
 	

@@ -6,13 +6,13 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperNBT;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 public class TileEntityFuelPump extends ATileEntityFluidTank<JSONDecor>implements ITileEntityTickable{
 	public JSONDecor definition;
-	public EntityVehicleE_Powered connectedVehicle;
+	public EntityVehicleF_Physics connectedVehicle;
     public int totalTransfered;
 	
 	@Override

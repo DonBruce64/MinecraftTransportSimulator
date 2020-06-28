@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.resources.I18n;
@@ -36,7 +36,7 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleE_Powered vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(part instanceof PartEngine){
 				PartEngine engine = (PartEngine) part;

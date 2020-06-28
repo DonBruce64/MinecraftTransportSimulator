@@ -15,7 +15,7 @@ import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
@@ -42,7 +42,7 @@ public abstract class APart implements ISoundProvider{
 	public final boolean disableMirroring;
 	
 	//Instance properties.
-	public final EntityVehicleE_Powered vehicle;
+	public final EntityVehicleF_Physics vehicle;
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
@@ -56,7 +56,7 @@ public abstract class APart implements ISoundProvider{
 	public VehicleAxisAlignedBB boundingBox;
 	private boolean isValid;
 		
-	public APart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		this.vehicle = vehicle;
 		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.totalOffset = placementOffset;
@@ -85,7 +85,7 @@ public abstract class APart implements ISoundProvider{
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
 						VehiclePart correctedPack = vehicle.getPackForSubPart(part.vehicleDefinition, partSubPartPack);
-						if(EntityVehicleE_Powered.isPackAtPosition(correctedPack, placementOffset.x, placementOffset.y, placementOffset.z)){
+						if(EntityVehicleF_Physics.isPackAtPosition(correctedPack, placementOffset.x, placementOffset.y, placementOffset.z)){
 							parentPart = part;
 							parentPart.childParts.add(this);
 							this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;

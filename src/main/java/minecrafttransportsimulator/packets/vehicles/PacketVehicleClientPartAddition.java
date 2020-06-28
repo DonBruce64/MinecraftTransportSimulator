@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -18,7 +18,7 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 
 	public PacketVehicleClientPartAddition(){}
 	
-	public PacketVehicleClientPartAddition(EntityVehicleE_Powered vehicle, double offsetX, double offsetY, double offsetZ, AItemPart partItem, NBTTagCompound partTag){
+	public PacketVehicleClientPartAddition(EntityVehicleF_Physics vehicle, double offsetX, double offsetY, double offsetZ, AItemPart partItem, NBTTagCompound partTag){
 		super(vehicle, offsetX, offsetY, offsetZ);
 		this.partStack = new ItemStack(partItem);
 		if(partTag != null){
@@ -44,7 +44,7 @@ public class PacketVehicleClientPartAddition extends APacketVehiclePart{
 			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
 				@Override
 				public void run(){
-					EntityVehicleE_Powered vehicle = getVehicle(message, ctx);
+					EntityVehicleF_Physics vehicle = getVehicle(message, ctx);
 					if(vehicle != null){
 						VehiclePart packPart = vehicle.getPackDefForLocation(message.offsetX, message.offsetY, message.offsetZ);
 						vehicle.addPart(PackParserSystem.createPart(vehicle, packPart, ((AItemPart) message.partStack.getItem()).definition, message.partStack.hasTagCompound() ? message.partStack.getTagCompound() : new NBTTagCompound()), false);

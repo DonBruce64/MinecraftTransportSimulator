@@ -4,7 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
@@ -40,7 +40,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	/**
 	 * Helper function to create a tread roller.
 	 */
-	public static TransformTreadRoller create(String modelName, String objectName, EntityVehicleE_Powered vehicle, Float[][] vertices){
+	public static TransformTreadRoller create(String modelName, String objectName, EntityVehicleF_Physics vehicle, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;
@@ -150,13 +150,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	}
 	
 	@Override
-	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
-		
-		super.applyTransforms(vehicle, optionalPart, partialTicks);
-	}
-	
-	@Override
-	protected boolean updateRotationAxis(EntityVehicleE_Powered vehicle, Point3d rotationAxis){
+	protected boolean updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
 		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
 		if(rotationAxis.x == 0){
 			for(APart part : vehicle.getVehicleParts()){

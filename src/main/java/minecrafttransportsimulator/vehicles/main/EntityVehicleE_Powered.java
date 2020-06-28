@@ -15,6 +15,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -36,42 +37,42 @@ import net.minecraft.world.World;
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
  * This is added on-top of the D level to keep the crazy movement calculations
- * seperate from the vehicle power overhead bits.  This is the first level of
+ * separate from the vehicle power overhead bits.  This is the first level of
  * class that can be used for references in systems as it's the last common class for
  * vehicles.  All other sub-levels are simply functional building-blocks to keep this
  *  class from having 1000+ lines of code and to better segment things out.
  * 
  * @author don_bruce
  */
-public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider{
-	public boolean soundsNeedInit;
+abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider{
+	
+	//External state control.
 	public boolean hornOn;
 	public boolean sirenOn;
-	
-	public byte totalGuns = 0;
-	public double fuel;
 	public boolean reverseThrust;
-	public short reversePercent;
 	public boolean gearUpCommand;
-	public int gearMovementTime;
+	public byte throttle;
+	public double fuel;
 	
+	//Internal states.
+	public byte totalGuns = 0;
+	public short reversePercent;
+	public int gearMovementTime;
 	public double electricPower = 12;
 	public double electricUsage;
 	public double electricFlow;
 	public String fluidName = "";
-	
+	private BlockPos fakeLightPosition;
+	public EntityVehicleF_Physics towedVehicle;
+	public EntityVehicleF_Physics towedByVehicle;
+	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
+	public final Set<LightType> lightsOn = new HashSet<LightType>();
 	
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	public final List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
-	
-	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
-	public final Set<LightType> lightsOn = new HashSet<LightType>();
-	
-	//Fake light position for this vehicle.
-	private BlockPos fakeLightPosition;
 	
 	//Internal radio variables.
 	private final Radio radio = new Radio(this);
@@ -97,12 +98,33 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 				fluidName = "";
 			}
 			
-			//Turn on the DRLs if we have an engine on.
-			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
-			for(PartEngine engine : engines.values()){
-				if(engine.state.running){
-					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
-					break;
+			//Do trailer-specific logic, if we are one and towed.
+			//Otherwise, do normal update logic for DRLs.
+			if(definition.motorized.isTrailer){
+				//Check to make sure vehicle isn't dead for some reason.
+				if(towedByVehicle != null && towedByVehicle.isDead){
+					towedByVehicle = null;
+				}else{
+					//If we are being towed update our lights to match the vehicle we are being towed by.
+					//Also set the brake state to the same as the towing vehicle.
+					//If we aren't being towed, set the parking brake.
+					if(towedByVehicle != null){
+						lightsOn.clear();
+						lightsOn.addAll(towedByVehicle.lightsOn);
+						parkingBrakeOn = false;
+						brakeOn = towedByVehicle.brakeOn;
+					}else{
+						parkingBrakeOn = true;
+					}
+				}
+			}else{
+				//Turn on the DRLs if we have an engine on.
+				lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
+				for(PartEngine engine : engines.values()){
+					if(engine.state.running){
+						lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
+						break;
+					}
 				}
 			}
 			
@@ -244,6 +266,12 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 			world.newExplosion(this, x, y, z, (float) (fuelPresent/10000F + 1F), true, true);
 		}
+		
+		//Finally, if we are being towed, unhook us from our tower.
+		if(towedByVehicle != null){
+			towedByVehicle.towedVehicle = null;
+			towedByVehicle = null;
+		}
 	}
 	
 	@Override
@@ -349,9 +377,9 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	//-----START OF NBT CODE-----
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
-    	this.soundsNeedInit = world.isRemote && definition == null; 
     	super.readFromNBT(tagCompound);
-		this.fuel=tagCompound.getDouble("fuel");
+    	this.throttle=tagCompound.getByte("throttle");
+    	this.fuel=tagCompound.getDouble("fuel");
 		this.electricPower=tagCompound.getDouble("electricPower");
 		this.fluidName=tagCompound.getString("fluidName");
 		
@@ -385,8 +413,8 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 			if(!instrumentPackID.isEmpty()){
 				ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
-				//Check to prevent loading of faulty instruments for the wrong vehicle due to updates or stupid people.
-				if(instrument != null && instrument.definition.general.validVehicles.contains(this.definition.general.type)){
+				//Check to prevent loading of faulty instruments due to updates.
+				if(instrument != null){
 					instruments.put(i, instrument);
 				}
 			}
@@ -396,6 +424,7 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
 		super.writeToNBT(tagCompound);
+		tagCompound.setByte("throttle", this.throttle);
 		tagCompound.setDouble("fuel", this.fuel);
 		tagCompound.setDouble("electricPower", this.electricPower);
 		tagCompound.setString("fluidName", this.fluidName);
@@ -414,35 +443,5 @@ public abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving imple
 			}
 		}
 		return tagCompound;
-	}
-	
-	public static enum LightType{
-		NAVIGATIONLIGHT(false),
-		STROBELIGHT(false),
-		TAXILIGHT(true),
-		LANDINGLIGHT(true),
-		BRAKELIGHT(false),
-		BACKUPLIGHT(false),
-		LEFTTURNLIGHT(false),
-		RIGHTTURNLIGHT(false),
-		LEFTINDICATORLIGHT(false),
-		RIGHTINDICATORLIGHT(false),
-		RUNNINGLIGHT(false),
-		HEADLIGHT(true),
-		EMERGENCYLIGHT(false),
-		DAYTIMERUNNINGLIGHT(false),
-		
-		//The following light types are only for block-based systems.
-		UNLINKEDLIGHT(false),
-		STOPLIGHT(false),
-		CAUTIONLIGHT(false),
-		GOLIGHT(false),
-		STREETLIGHT(true),
-		DECORLIGHT(false);
-		
-		public final boolean hasBeam;
-		private LightType(boolean hasBeam){
-			this.hasBeam = hasBeam;
-		}
 	}
 }

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
 public abstract class APacketVehicle extends APacketBase{
 	private final int vehicleID;
 	
-	public APacketVehicle(EntityVehicleE_Powered vehicle){
+	public APacketVehicle(EntityVehicleF_Physics vehicle){
 		super(null);
 		this.vehicleID = vehicle.getEntityId();
 	}
@@ -32,7 +32,7 @@ public abstract class APacketVehicle extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		EntityVehicleE_Powered vehicle = world.getVehicle(vehicleID); 
+		EntityVehicleF_Physics vehicle = world.getVehicle(vehicleID); 
 		if(vehicle != null && vehicle.definition != null){
 			if(handle(world, player, vehicle) && !world.isClient()){
 				WrapperNetwork.sendToClientsTracking(this, vehicle);
@@ -57,5 +57,5 @@ public abstract class APacketVehicle extends APacketBase{
 	 *  if the action failed due to an issue) return false.  Otherwise, return true to 
 	 *  send this packet on to all clients.  Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle);
 }

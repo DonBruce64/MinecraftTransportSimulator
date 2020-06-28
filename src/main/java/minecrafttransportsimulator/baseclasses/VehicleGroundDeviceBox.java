@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import net.minecraft.block.state.IBlockState;
@@ -22,7 +22,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class VehicleGroundDeviceBox{
-	private final EntityVehicleE_Powered vehicle;
+	private final EntityVehicleF_Physics vehicle;
 	private final boolean isFront;
 	private final boolean isLeft;
 	
@@ -42,7 +42,7 @@ public class VehicleGroundDeviceBox{
 	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
 	
-	public VehicleGroundDeviceBox(EntityVehicleE_Powered vehicle, boolean isFront, boolean isLeft){
+	public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft){
 		this.vehicle = vehicle;
 		this.isFront = isFront;
 		this.isLeft = isLeft;

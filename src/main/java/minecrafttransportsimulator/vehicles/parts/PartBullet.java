@@ -12,7 +12,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
@@ -42,11 +42,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class PartBullet extends Particle{
 	private final ItemPartBullet bulletItem;
 	private final int playerID;
-	private final EntityVehicleE_Powered vehicle;
+	private final EntityVehicleF_Physics vehicle;
 	
 	private final Map<ItemPartBullet, Map<String, Float[][]>> parsedBulletModels = new HashMap<ItemPartBullet, Map<String, Float[][]>>();
 	
-    public PartBullet(World world, double x, double y, double z, double motionX, double motionY, double motionZ, ItemPartBullet bulletItem, int playerID, EntityVehicleE_Powered vehicle){
+    public PartBullet(World world, double x, double y, double z, double motionX, double motionY, double motionZ, ItemPartBullet bulletItem, int playerID, EntityVehicleF_Physics vehicle){
     	super(world, x, y, z);
         //Set basic properties.
     	this.particleMaxAge = 60;
@@ -89,7 +89,7 @@ public final class PartBullet extends Particle{
 					if(!vehicle.equals(entity.getRidingEntity())){
 						if(collidedEntity == null){
 							collidedEntity = entity;
-						}else if(!(entity instanceof EntityVehicleE_Powered) && (collidedEntity.getDistanceSq(this.posX, this.posY, this.posZ) > entity.getDistanceSq(this.posX, this.posY, this.posZ))){
+						}else if(!(entity instanceof EntityVehicleF_Physics) && (collidedEntity.getDistanceSq(this.posX, this.posY, this.posZ) > entity.getDistanceSq(this.posX, this.posY, this.posZ))){
 							collidedEntity = entity;
 						}
 					}

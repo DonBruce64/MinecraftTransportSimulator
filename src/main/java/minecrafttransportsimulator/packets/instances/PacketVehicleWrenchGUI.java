@@ -5,7 +5,7 @@ import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUIVehicleEditor;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -19,7 +19,7 @@ import minecrafttransportsimulator.wrappers.WrapperWorld;
  */
 public class PacketVehicleWrenchGUI extends APacketVehicle{
 	
-	public PacketVehicleWrenchGUI(EntityVehicleE_Powered vehicle){
+	public PacketVehicleWrenchGUI(EntityVehicleF_Physics vehicle){
 		super(vehicle);
 	}
 	
@@ -28,7 +28,7 @@ public class PacketVehicleWrenchGUI extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		if(vehicle.equals(player.getVehicleRiding()) && ConfigSystem.configObject.client.devMode.value){
 			WrapperGUI.openGUI(new GUIVehicleEditor(vehicle));
 		}else{

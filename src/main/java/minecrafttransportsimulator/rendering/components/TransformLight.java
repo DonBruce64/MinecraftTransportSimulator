@@ -8,8 +8,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
@@ -105,14 +104,14 @@ public class TransformLight extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 8V.
 		setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
 	}
 	
 	@Override
-	public void doPostRenderLogic(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		//We cheat here and render our light bits at this point.
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.

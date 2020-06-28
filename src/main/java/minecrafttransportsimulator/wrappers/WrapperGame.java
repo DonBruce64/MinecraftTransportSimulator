@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.wrappers;
 
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -58,7 +58,7 @@ public class WrapperGame{
 	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
 	public static boolean shouldSoundBeDampened(SoundInstance sound){
-		EntityVehicleE_Powered vehicleRiding = getClientPlayer().getVehicleRiding();
+		EntityVehicleF_Physics vehicleRiding = getClientPlayer().getVehicleRiding();
 		return vehicleRiding != null && vehicleRiding.definition != null && !vehicleRiding.definition.general.openTop && inFirstPerson() && (sound.radio == null || !vehicleRiding.equals(sound.provider));
 	}
 	

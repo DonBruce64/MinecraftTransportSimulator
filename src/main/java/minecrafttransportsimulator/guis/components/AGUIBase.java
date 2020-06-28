@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**Base GUI class.  This type is used in the constructor of {@link WrapperGUI} to allow us to use

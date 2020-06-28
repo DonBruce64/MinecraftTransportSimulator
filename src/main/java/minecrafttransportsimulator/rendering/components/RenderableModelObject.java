@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 
@@ -27,7 +27,7 @@ public final class RenderableModelObject{
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, Float[][] vertices, EntityVehicleE_Powered vehicle, APart optionalPart){
+	public RenderableModelObject(String modelName, String objectName, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
 		this.modelName = modelName;
 		this.objectName = objectName;
 		this.vertices = vertices;
@@ -67,7 +67,7 @@ public final class RenderableModelObject{
 	/**
 	 *  Renders this object, applying any transforms that need to happen.
 	 */
-	public void render(EntityVehicleE_Powered vehicle, APart optionalPart, float partialTicks){
+	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		//Push matrix and Apply transforms.
 		GL11.glPushMatrix();
 		for(ARenderableTransform transform : transforms){

@@ -12,7 +12,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
@@ -66,8 +66,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(PlayerInteractEvent.EntityInteract event){
-    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && event.getTarget() instanceof EntityVehicleE_Powered){
-    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getTarget();
+    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && event.getTarget() instanceof EntityVehicleF_Physics){
+    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getTarget();
     		
     		//Check to see what we clicked, and fire the appropriate packet.
     		VehicleAxisAlignedBB boxClicked = vehicle.getEntityBoundingBox().lastBoxRayTraced;
@@ -101,11 +101,11 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(AttackEntityEvent event){
-    	if(event.getTarget() instanceof EntityVehicleE_Powered){
+    	if(event.getTarget() instanceof EntityVehicleF_Physics){
     		//We clicked the vehicle with an item that can interact with it.
     		//Cancel the attack and check if we need to interact with the vehicle.
     		//Only do checks if we are on the client, as the server does bad hitscanning.
-    		EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getTarget();
+    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getTarget();
     		event.setCanceled(true);
     		
     		if(event.getEntityPlayer().world.isRemote){
@@ -142,7 +142,7 @@ public final class ClientEventSystem{
         if(event.phase.equals(Phase.END)){
     		//If we are on the integrated server, and riding a vehicle, reduce render height.
     		if(event.side.isServer()){
-    			if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
+    			if(event.player.getRidingEntity() instanceof EntityVehicleF_Physics){
             		WorldServer serverWorld = (WorldServer) event.player.world;
             		if(serverWorld.getMinecraftServer().isSinglePlayer()){
         	    		//If default render distance is 0, we must have not set it yet.
@@ -175,8 +175,8 @@ public final class ClientEventSystem{
         		}
         		
         		//If we are riding a vehicle, do rotation and control operation.
-        		if(event.player.getRidingEntity() instanceof EntityVehicleE_Powered){
-        			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.player.getRidingEntity();
+        		if(event.player.getRidingEntity() instanceof EntityVehicleF_Physics){
+        			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.player.getRidingEntity();
 
                     //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
                     if(!minecraft.isGamePaused() && lockedView){
@@ -223,9 +223,9 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
-    	if(event.getEntity().getRidingEntity() instanceof EntityVehicleE_Powered){
+    	if(event.getEntity().getRidingEntity() instanceof EntityVehicleF_Physics){
     		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){            	
-    			EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getEntity().getRidingEntity();
+    			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getEntity().getRidingEntity();
             	//Get yaw delta from vehicle and player.  -180 to 180.
             	float playerYawAngle = (360 + (event.getEntity().rotationYaw - vehicle.rotationYaw))%360;
             	if(playerYawAngle > 180){
@@ -254,7 +254,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
         for(Entity entity : minecraft.world.loadedEntityList){
-            if(entity instanceof EntityVehicleE_Powered){
+            if(entity instanceof EntityVehicleF_Physics){
             	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
             }
         }
@@ -275,8 +275,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleE_Powered){
-        	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) event.getEntityPlayer().getRidingEntity();
+        if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
+        	EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getEntityPlayer().getRidingEntity();
         	GL11.glPushMatrix();
         	if(vehicle.definition != null){
 	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
@@ -322,7 +322,7 @@ public final class ClientEventSystem{
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
-    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleE_Powered){
+    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
     		GL11.glPopMatrix();
         }
     }
@@ -333,9 +333,9 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Post event){
     	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
-        if(minecraft.player.getRidingEntity() instanceof EntityVehicleE_Powered && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
+        if(minecraft.player.getRidingEntity() instanceof EntityVehicleF_Physics && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-            	EntityVehicleE_Powered vehicle = (EntityVehicleE_Powered) minecraft.player.getRidingEntity();
+            	EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) minecraft.player.getRidingEntity();
             	if(vehicle.getSeatForRider(minecraft.player) != null){
                 	if(vehicle.getSeatForRider(minecraft.player).vehicleDefinition.isController){
                 		//Translate far enough to not render behind the items.

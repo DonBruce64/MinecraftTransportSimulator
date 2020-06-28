@@ -6,7 +6,7 @@ import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.item.ItemStack;
@@ -24,7 +24,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketVehicleInstruments(EntityVehicleE_Powered vehicle, byte slot, ItemInstrument instrument){
+	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, byte slot, ItemInstrument instrument){
 		super(vehicle);
 		this.slot = slot;
 		if(instrument != null){
@@ -52,7 +52,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleE_Powered vehicle){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){

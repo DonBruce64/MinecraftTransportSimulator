@@ -3,7 +3,8 @@ package minecrafttransportsimulator.guis.instances;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
  * as well as the {@link ClientEventSystem} to render the HUD.  Note that when
@@ -15,9 +16,9 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
 public class GUIHUD extends AGUIBase{
 	public static final int HUD_WIDTH = 400;
 	public static final int HUD_HEIGHT = 140;
-	private final EntityVehicleE_Powered vehicle;
+	private final EntityVehicleF_Physics vehicle;
 
-	public GUIHUD(EntityVehicleE_Powered vehicle){
+	public GUIHUD(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
 	}
 	

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.client.Minecraft;
@@ -51,7 +51,7 @@ public class PacketPartEngineLinked extends APacketPart{
 				public void run(){
 					PartEngine engine = (PartEngine) getVehiclePartFromMessage(message, ctx);
 					
-					EntityVehicleE_Powered linkedVehicle = (EntityVehicleE_Powered) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
+					EntityVehicleF_Physics linkedVehicle = (EntityVehicleF_Physics) Minecraft.getMinecraft().world.getEntityByID(message.linkedId);
 					PartEngine linkedEngine = null;
 					if(linkedVehicle != null){
 						for(APart part : linkedVehicle.getVehicleParts()){

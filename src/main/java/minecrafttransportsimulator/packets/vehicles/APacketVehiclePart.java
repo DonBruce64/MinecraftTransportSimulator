@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.vehicles;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public abstract class APacketVehiclePart extends APacketVehicle{
 	protected double offsetX;
@@ -10,7 +10,7 @@ public abstract class APacketVehiclePart extends APacketVehicle{
 
 	public APacketVehiclePart(){}
 	
-	public APacketVehiclePart(EntityVehicleE_Powered vehicle, double offsetX, double offsetY, double offsetZ){
+	public APacketVehiclePart(EntityVehicleF_Physics vehicle, double offsetX, double offsetY, double offsetZ){
 		super(vehicle);
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;

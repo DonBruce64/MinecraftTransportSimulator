@@ -21,9 +21,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.TransformLight;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 

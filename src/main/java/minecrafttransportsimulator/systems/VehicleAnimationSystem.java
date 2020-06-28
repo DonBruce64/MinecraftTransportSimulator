@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -23,7 +21,7 @@ public final class VehicleAnimationSystem{
 	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 *  This is in both the positive and negative direction.
 	 */
-	public static double getVariableValue(String variable, double scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
+	public static double getVariableValue(String variable, double scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		double value = offset + scaling*(absolute ? Math.abs(getVariableValue(variable, partialTicks, vehicle, optionalPart)) : getVariableValue(variable, partialTicks, vehicle, optionalPart));
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
@@ -34,7 +32,7 @@ public final class VehicleAnimationSystem{
 		}
 	}
 	
-	private static double getVariableValue(String variable, float partialTicks, EntityVehicleE_Powered vehicle, APart optionalPart){
+	private static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
@@ -154,38 +152,29 @@ public final class VehicleAnimationSystem{
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
 			case("rain"): return vehicle.world.getRainStrength(1.0F) == 1.0F ? (1.0D + Math.sin(((int)(vehicle.world.getRainStrength(1.0F) + vehicle.world.getThunderStrength(1.0F))*Math.toRadians(360*System.currentTimeMillis()/1000))))/2D : 0;
 			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
+			case("trailer"): return vehicle.towingAngle/30D;
+			case("hookup"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.towingAngle/30D : 0;
+			
+			//State cases generally used on aircraft.
+			case("aileron"): return vehicle.aileronAngle/10D;
+			case("elevator"): return vehicle.elevatorAngle/10D;
+			case("rudder"): return vehicle.rudderAngle/10D;
+			case("flaps_setpoint"): return vehicle.flapDesiredAngle/10D;
+			case("flaps_actual"): return vehicle.flapCurrentAngle/10D;
+			case("trim_aileron"): return vehicle.aileronTrim/10D;
+			case("trim_elevator"): return vehicle.elevatorTrim/10D;
+			case("trim_rudder"): return vehicle.rudderTrim/10D;
+			case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
+			case("lift_reserve"): return vehicle.trackAngle*3 + 20;
+			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.velocityVector);
+			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
+			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 		}
 		
 		//Check if this is a light variable.
 		for(LightType light : LightType.values()){
 			if(light.name().toLowerCase().equals(variable)){
 				return vehicle.lightsOn.contains(light) ? 1 : 0;
-			}
-		}
-		
-		//Not a generic variable.  Check vehicle-class-specific variables.
-		if(vehicle instanceof EntityVehicleF_Ground){
-			EntityVehicleF_Ground ground = (EntityVehicleF_Ground) vehicle;
-			switch(variable){
-				case("trailer"): return ground.towingAngle/30D;
-				case("hookup"): return ground.towedByVehicle != null ? ground.towedByVehicle.towingAngle/30D : 0;
-			}
-		}else if(vehicle instanceof EntityVehicleF_Air){
-			EntityVehicleF_Air aircraft = (EntityVehicleF_Air) vehicle;
-			switch(variable){
-				case("aileron"): return aircraft.aileronAngle/10D;
-				case("elevator"): return aircraft.elevatorAngle/10D;
-				case("rudder"): return aircraft.rudderAngle/10D;
-				case("flaps_setpoint"): return aircraft.flapDesiredAngle/10D;
-				case("flaps_actual"): return aircraft.flapCurrentAngle/10D;
-				case("trim_aileron"): return aircraft.aileronTrim/10D;
-				case("trim_elevator"): return aircraft.elevatorTrim/10D;
-				case("trim_rudder"): return aircraft.rudderTrim/10D;
-				case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
-				case("lift_reserve"): return aircraft.trackAngle*3 + 20;
-				case("slip"): return 75*aircraft.sideVector.dotProduct(vehicle.velocityVector);
-				case("gear_setpoint"): return aircraft.gearUpCommand ? 1 : 0;
-				case("gear_actual"): return aircraft.gearMovementTime/((double) aircraft.definition.motorized.gearSequenceDuration);
 			}
 		}
 		

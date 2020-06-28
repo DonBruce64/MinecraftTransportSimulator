@@ -41,10 +41,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartBrewingStand;
@@ -55,13 +52,13 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
 import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -302,6 +299,13 @@ public final class PackParserSystem{
     		}
     	}else if(definition instanceof JSONVehicle){
     		JSONVehicle vehicleDef = (JSONVehicle) definition;
+    		//If we still have the old type parameter and are an aircraft, set the flag to true.
+    		if(vehicleDef.general.type != null){
+    			if(vehicleDef.general.type.equals("plane") || vehicleDef.general.type.equals("blimp") || vehicleDef.general.type.equals("helicopter")){
+    				vehicleDef.general.isAircraft = true;
+    			}
+    		}
+    		
     		if(((JSONVehicle) definition).plane != null){
     			JSONVehicle planeDef = (JSONVehicle) definition;
     			//If aileronArea is 0, we're a legacy plane and need to adjust.
@@ -337,19 +341,7 @@ public final class PackParserSystem{
     	}
     }
     
-    public static EntityVehicleE_Powered createVehicle(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition, String subName){
-    	switch(definition.general.type){
-			case "plane": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
-			case "car": return new EntityVehicleG_Car(world, posX, posY, posZ, playerRotation, definition);
-			case "blimp": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
-			case "boat": return new EntityVehicleG_Boat(world, posX, posY, posZ, playerRotation, definition);
-			case "helicopter": return new EntityVehicleF_Air(world, posX, posY, posZ, playerRotation, definition);
-			
-			default: throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a vehicle.");
-		}
-    }    
-    
-    public static APart createPart(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+    public static APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
     	if(definition.general.type.startsWith("engine_")){
     		return new PartEngine(vehicle, packVehicleDef, definition, dataTag);
     	}else if(definition.general.type.startsWith("gun_")){
@@ -366,6 +358,7 @@ public final class PackParserSystem{
 				case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, dataTag);
 				case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, dataTag);
 				case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, dataTag);
+				case "harvester": return new PartGroundEffectorHarvester(vehicle, packVehicleDef, definition, dataTag);
 				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, dataTag);
 				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, dataTag);
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.

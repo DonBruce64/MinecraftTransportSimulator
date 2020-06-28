@@ -10,7 +10,7 @@ import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -46,7 +46,7 @@ public class PartGun extends APart implements FXPart{
 	
 	private final double anglePerTickSpeed;
 		
-	public PartGun(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.shotsFired = dataTag.getInteger("shotsFired");
 		this.bulletsLeft = dataTag.getInteger("bulletsLeft");

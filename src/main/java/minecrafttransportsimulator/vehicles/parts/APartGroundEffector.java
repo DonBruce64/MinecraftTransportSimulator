@@ -4,7 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.RotationSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 
@@ -12,7 +12,7 @@ public abstract class APartGroundEffector extends APart{
 	protected final BlockPos[] lastBlocksModified;
 	protected final BlockPos[] affectedBlocks;
 	
-	public APartGroundEffector(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		lastBlocksModified = new BlockPos[definition.effector.blocksWide];
 		affectedBlocks = new BlockPos[definition.effector.blocksWide];

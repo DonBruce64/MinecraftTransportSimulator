@@ -51,6 +51,12 @@ abstract class EntityVehicleA_Base extends Entity{
 	public float rotationRoll;
 	public float prevRotationRoll;
 	
+	//Delta variables, as MC doesn't have these for rotations, only movement.
+	public float motionRoll;
+	public float motionPitch;
+	public float motionYaw;
+	
+	
 	public EntityVehicleA_Base(World world){
 		super(world);
 	}
@@ -74,7 +80,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			if(world.isRemote){
 				if(clientPackPacketCooldown == 0){
 					clientPackPacketCooldown = 40;
-					MTS.MTSNet.sendToServer(new PacketVehicleClientInit((EntityVehicleE_Powered) this));
+					MTS.MTSNet.sendToServer(new PacketVehicleClientInit((EntityVehicleF_Physics) this));
 				}else{
 					--clientPackPacketCooldown;
 				}
@@ -114,8 +120,8 @@ abstract class EntityVehicleA_Base extends Entity{
 				//Check to make sure the part is in parameter ranges.
 				if(partItem.isPartValidForPackDef(packPart)){
 					//Part is valid.  Create it and add it.
-					addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
-					MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleE_Powered) this, xPos, yPos, zPos, partItem, partTag));
+					addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleF_Physics) this, xPos, yPos, zPos, partItem, partTag));
 					return true;
 				}
 			}
@@ -146,7 +152,7 @@ abstract class EntityVehicleA_Base extends Entity{
 			if(part.isValid()){
 				part.removePart();
 				if(!world.isRemote){
-					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval((EntityVehicleE_Powered) this, part.placementOffset.x, part.placementOffset.y, part.placementOffset.z));
+					MTS.MTSNet.sendToAll(new PacketVehicleClientPartRemoval((EntityVehicleF_Physics) this, part.placementOffset.x, part.placementOffset.y, part.placementOffset.z));
 				}
 			}
 			if(!world.isRemote){
@@ -344,10 +350,10 @@ abstract class EntityVehicleA_Base extends Entity{
 						String parsedPackID = oldPartName.substring(0, oldPartName.indexOf(':'));
 						String parsedSystemName =  oldPartName.substring(oldPartName.indexOf(':') + 1);
 						JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(parsedPackID).get(parsedSystemName).definition;
-						addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partDefinition, partTag), true);
+						addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partTag), true);
 					}else{
 						JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
-						addPart(PackParserSystem.createPart((EntityVehicleE_Powered) this, packPart, partDefinition, partTag), true);
+						addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partTag), true);
 					}
 					
 				}catch(Exception e){

@@ -19,7 +19,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -93,7 +93,7 @@ public class WrapperNetwork{
 	 *  vehicles that don't actually exist on clients due to them
 	 *  being far away.
 	 */
-	public static void sendToClientsTracking(APacketBase packet, EntityVehicleE_Powered trackingEntity){
+	public static void sendToClientsTracking(APacketBase packet, EntityVehicleF_Physics trackingEntity){
 		network.sendToAllTracking(new WrapperPacket(packet), trackingEntity);
 	}
 	

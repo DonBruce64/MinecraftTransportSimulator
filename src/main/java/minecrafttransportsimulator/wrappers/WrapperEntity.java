@@ -3,7 +3,7 @@ package minecrafttransportsimulator.wrappers;
 import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.entity.Entity;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
@@ -43,14 +43,14 @@ public class WrapperEntity{
 	 *  Returns the vehicle this entity is riding, or null if
 	 *  the entity is not riding a vehicle.
 	 */
-	public EntityVehicleE_Powered getVehicleRiding(){
-		return entity.getRidingEntity() instanceof EntityVehicleE_Powered ? (EntityVehicleE_Powered) entity.getRidingEntity() : null;
+	public EntityVehicleF_Physics getVehicleRiding(){
+		return entity.getRidingEntity() instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entity.getRidingEntity() : null;
 	}
 	
 	/**
 	 *  Tells the entity to start riding the passed-in vehicle.
 	 */
-	public void setRiding(EntityVehicleE_Powered vehicle){
+	public void setRiding(EntityVehicleF_Physics vehicle){
 		entity.startRiding(vehicle);
 	}
 	

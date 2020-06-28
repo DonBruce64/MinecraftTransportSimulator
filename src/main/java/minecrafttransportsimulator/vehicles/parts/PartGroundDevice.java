@@ -12,8 +12,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -50,7 +49,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleE_Powered vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
 		super(vehicle, packVehicleDef, definition, dataTag);
 		this.isFlat = dataTag.getBoolean("isFlat");
 		
@@ -143,7 +142,7 @@ public class PartGroundDevice extends APart implements FXPart{
 					}
 				}
 			}
-		}else if(!(vehicle instanceof EntityVehicleG_Car)){
+		}else if(vehicle.definition.car == null){
 			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){

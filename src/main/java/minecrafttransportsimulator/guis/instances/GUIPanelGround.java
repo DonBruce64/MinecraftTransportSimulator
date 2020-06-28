@@ -12,9 +12,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered.LightType;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Ground;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
 import minecrafttransportsimulator.wrappers.WrapperNetwork;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.wrappers.WrapperNetwork;
  * 
  * @author don_bruce
  */
-public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
+public class GUIPanelGround extends AGUIPanel{
 	private static final int LIGHT_TEXTURE_WIDTH_OFFSET = 0;
 	private static final int LIGHT_TEXTURE_HEIGHT_OFFSET = 196;
 	private static final int TURNSIGNAL_TEXTURE_WIDTH_OFFSET = LIGHT_TEXTURE_WIDTH_OFFSET + 20;
@@ -52,7 +52,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
 	
-	public GUIPanelGround(EntityVehicleF_Ground groundVehicle){
+	public GUIPanelGround(EntityVehicleF_Physics groundVehicle){
 		super(groundVehicle);
 	}
 	
@@ -251,7 +251,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 				@Override
 				public void onClicked(boolean leftSide){
 					int trailerNumber = trailerSelectors.indexOf(this);
-					EntityVehicleF_Ground currentVehicle = vehicle;
+					EntityVehicleF_Physics currentVehicle = vehicle;
 					for(int i=0; i<trailerNumber; ++ i){
 						currentVehicle = currentVehicle.towedVehicle;
 					}
@@ -318,7 +318,7 @@ public class GUIPanelGround extends AGUIPanel<EntityVehicleF_Ground>{
 		}
 		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.
-		EntityVehicleF_Ground currentVehicle = vehicle;
+		EntityVehicleF_Physics currentVehicle = vehicle;
 		for(int i=0; i<trailerSelectors.size(); ++i){
 			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 				trailerSelectors.get(i).visible = true;

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleE_Powered;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import minecrafttransportsimulator.wrappers.WrapperWorld;
 
@@ -33,7 +33,7 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFuelPump pump){
 		if(vehicleID != -1){
-			EntityVehicleE_Powered vehicle = world.getVehicle(vehicleID); 
+			EntityVehicleF_Physics vehicle = world.getVehicle(vehicleID); 
 			if(vehicle != null && vehicle.definition != null){
 				pump.connectedVehicle = vehicle;
 				pump.totalTransfered = 0;

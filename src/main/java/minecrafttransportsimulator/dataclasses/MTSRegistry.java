@@ -44,9 +44,7 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Air;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Boat;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleG_Car;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.wrappers.WrapperBlock;
 import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.item.Item;
@@ -211,10 +209,11 @@ public final class MTSRegistry{
 	 */
 	private static void initEntities(){
 		int entityNumber = 0;
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Car.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Car.class, "vehiclecar", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, EntityVehicleG_Boat.class.getSimpleName().substring(6).toLowerCase()), EntityVehicleG_Boat.class, "vehicleboat", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_plane"), EntityVehicleF_Air.class, "vehicleplane", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_blimp"), EntityVehicleF_Air.class, "vehicleblimp", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "mts_vehicle"), EntityVehicleF_Physics.class, "mts_vehicle", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_car"), EntityVehicleF_Physics.class, "vehiclecar", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_boat"), EntityVehicleF_Physics.class, "vehicleboat", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_plane"), EntityVehicleF_Physics.class, "vehicleplane", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_blimp"), EntityVehicleF_Physics.class, "vehicleblimp", entityNumber++, MTS.MODID, 32*16, 5, false);
 	}
 	
 	private static void initPackets(){
