@@ -118,7 +118,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//Instead, we get called to update from the vehicle we are being towed by.
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
 		if(towedByVehicle != null && !updateThisCycle){
-			return;
+			//TODO make this un-commented when trailers have proper physics.
+			//return;
 		}else{
 			updateThisCycle = false;
 		}
@@ -369,6 +370,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			motionPitch = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
 			motionYaw = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
 		}else{
+			///START OF NEW CODE.
+			/*
 			//Get the vector from this trailer's center position to the hitch of the towing vehicle.
 			Point3d tractorHitchOffset = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2]);
 			tractorHitchOffset = RotationSystem.getRotatedPoint(tractorHitchOffset, rotationPitch, rotationYaw, rotationRoll).add(towedByVehicle.positionVector).subtract(positionVector);
@@ -405,10 +408,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			
 			//Try to match our parent's roll.
 			motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;			
+			*/
 			
+			///START OF OLD CODE.
 			
-			///START OF OLD CODE.  COMMENT OUT TO USE NEW CODE.
-			/*
 			//We use a second hitchPos here to allow us to calculate the yaw angle we need to apply.
 			//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
 			//This is because when the hitch and the hookup are at the same point, the dot product returns floating-point errors.
@@ -437,8 +440,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			motionX = hitchPos.x - hookupPos.x;
 			motionY = hitchPos.y - hookupPos.y;
 			motionZ = hitchPos.z - hookupPos.z;
-			*/
-			
 		}
 	}
 	
