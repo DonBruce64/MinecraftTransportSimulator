@@ -122,6 +122,14 @@ abstract class EntityVehicleA_Base extends Entity{
 					//Part is valid.  Create it and add it.
 					addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partItem.definition, partTag != null ? partTag : new NBTTagCompound()), false);
 					MTS.MTSNet.sendToAll(new PacketVehicleClientPartAddition((EntityVehicleF_Physics) this, xPos, yPos, zPos, partItem, partTag));
+					
+					//If the part doesn't have NBT, it must be new and we need to add default parts.
+					//Only do this if we actually have subParts for this part.
+					if(partTag != null && partItem.definition.subParts != null){
+						addDefaultParts(partItem.definition.subParts, this);
+					}
+					
+					//Done adding the part, return true.
 					return true;
 				}
 			}
@@ -320,6 +328,50 @@ abstract class EntityVehicleA_Base extends Entity{
         correctPack.treadAngles = subPack.treadAngles;
         correctPack.defaultPart = subPack.defaultPart;
 		return correctPack;
+	}
+	
+	/**
+	 * Helper method to allow for recursion when adding default parts.
+	 * This method adds all default parts for the passed-in list of parts.
+	 * The part list should consist of a "parts" JSON definition.
+	 * This method should only be called when the vehicle or part with the
+	 * passed-in definition is first placed, not when it's being loaded from saved data.
+	 */
+	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle){
+		for(VehiclePart packDef : partsToAdd){
+			if(packDef.defaultPart != null){
+				try{
+					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
+					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
+					try{
+						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new NBTTagCompound());
+						vehicle.addPart(newPart, true);
+						
+						//Check if we have an additional part.
+						//If so, we need to check that for default parts.
+						if(packDef.additionalPart != null){
+							List<VehiclePart> additionalPart = new ArrayList<VehiclePart>();
+							additionalPart.add(packDef.additionalPart);
+							addDefaultParts(additionalPart, vehicle);
+						}
+						
+						//Check all sub-parts, if we have any.
+						//We need to make sure to convert them to the right type as they're offset.
+						if(newPart.definition.subParts != null){
+							List<VehiclePart> subPartsToAdd = new ArrayList<VehiclePart>();
+							for(VehiclePart subPartPack : newPart.definition.subParts){
+								subPartsToAdd.add(vehicle.getPackForSubPart(packDef, subPartPack));
+							}
+							addDefaultParts(subPartsToAdd, vehicle);
+						}
+					}catch(NullPointerException e){
+						throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.genericName + " but that part doesn't exist in the pack item registry.");
+					}
+				}catch(IndexOutOfBoundsException e){
+					throw new IllegalArgumentException("ERROR: Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
+				}
+			}
+		}
 	}
 			
     @Override
