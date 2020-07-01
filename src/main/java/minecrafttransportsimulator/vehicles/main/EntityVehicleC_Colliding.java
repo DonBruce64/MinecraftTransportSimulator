@@ -196,6 +196,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			collisionBoxes.clear();
 			double furthestWidth = 0;
 			double furthestHeight = 0;
+			
+			//First get collision from the vehicle.
 			for(VehicleCollisionBox box : definition.collision){
 				Point3d boxOffset = new Point3d(box.pos[0], box.pos[1], box.pos[2]);
 				Point3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
@@ -205,6 +207,23 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 				furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
 				furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.z) + box.width/2F);
 			}
+			
+			//Now get any part collision.
+			for(APart part : getVehicleParts()){
+				if(part.definition.collision != null){
+					for(VehicleCollisionBox box : part.definition.collision){
+						Point3d boxOffset = new Point3d(box.pos[0], box.pos[1], box.pos[2]).add(part.totalOffset);
+						Point3d offset = RotationSystem.getRotatedPoint(boxOffset, rotationPitch, rotationYaw, rotationRoll);
+						VehicleAxisAlignedBB newBox = new VehicleAxisAlignedBB(offset.add(positionVector), boxOffset, box.width, box.height, box.isInterior, box.collidesWithLiquids);
+						collisionBoxes.add(newBox);
+						furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.x) + box.width/2F);
+						furthestHeight = (float) Math.max(furthestHeight, Math.abs(newBox.rel.y) + box.height/2F);
+						furthestWidth = (float) Math.max(furthestWidth, Math.abs(newBox.rel.z) + box.width/2F);
+					}
+				}
+			}
+			
+			//Finally, set the collision frame.
 			this.collisionFrame = new VehicleAxisAlignedBBCollective((EntityVehicleF_Physics) this, (float) furthestWidth*2F+0.5F, (float) furthestHeight*2F+0.5F, collisionBoxes);
 			
 			//Add all part boxes to the part box list.

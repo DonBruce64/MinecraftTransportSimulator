@@ -3,6 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
@@ -22,6 +23,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartEffector effector;
     public PartCustom custom;
     public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
+    public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
     public PartRendering rendering;
 
     public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
