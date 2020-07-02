@@ -186,7 +186,7 @@ public class GUIConfig extends AGUIBase{
 					addLabel(new GUIComponentLabel(box.x - 70, box.y + 2, Color.BLACK, keyboardControl.translatedName + ":").setBox(box));
 					
 					verticalOffset += 11;
-					if(verticalOffset > 20 + 11*8){
+					if(verticalOffset > 20 + 11*9){
 						verticalOffset = 20;
 						horizontalOffset += 120;
 					}
@@ -199,7 +199,7 @@ public class GUIConfig extends AGUIBase{
 			Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<GUIComponentLabel, ControlsKeyboardDynamic>();
 			for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
 				if(dynamicControl.name().toLowerCase().contains(vehicleType)){
-					GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 125 + offset, Color.BLACK, ""); 
+					GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 135 + offset, Color.BLACK, ""); 
 					dynamicLabels.put(label, dynamicControl);
 					addLabel(label);
 					offset+=11;
@@ -272,14 +272,14 @@ public class GUIConfig extends AGUIBase{
 		analogAssignButtons.clear();
 		for(String vehicleType : vehicleTypes){
 			short leftOffsetDigital = 0;
-			byte topOffsetDigital = 0;
-			byte topOffsetAnalog = 0;
+			short topOffsetDigital = 0;
+			short topOffsetAnalog = 0;
 			Map<GUIComponentButton, ControlsJoystick> digitalControlButtons = new HashMap<GUIComponentButton, ControlsJoystick>();
 			Map<GUIComponentButton, ControlsJoystick> analogControlButtons = new HashMap<GUIComponentButton, ControlsJoystick>();
 			for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 				if(joystickControl.systemName.startsWith(vehicleType)){
 					if(!joystickControl.isAxis){
-						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 30 + topOffsetDigital, 80, joystickControl.translatedName, 15, true){
+						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, joystickControl.translatedName, 15, true){
 							public void onClicked(){
 								digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystick, joystickComponentId);
 								joystickComponentId = -1;
@@ -302,7 +302,7 @@ public class GUIConfig extends AGUIBase{
 						topOffsetAnalog += button.height;
 					}
 				}
-				if(topOffsetDigital >= 120){
+				if(topOffsetDigital >= 135){
 					topOffsetDigital = 0;
 					leftOffsetDigital += 80;
 				}

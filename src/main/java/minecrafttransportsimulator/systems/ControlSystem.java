@@ -24,6 +24,7 @@ import net.minecraft.client.Minecraft;
  */
 public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;	
+	private static boolean joysticksInhibited = false;
 	
 	/**
 	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
@@ -179,11 +180,20 @@ public final class ControlSystem{
 		}
 	}
 	
+	private static void controlJoystick(EntityVehicleF_Physics vehicle, ControlsKeyboard joystickInhibit){
+		if(joystickInhibit.isPressed()){
+			joysticksInhibited = !joysticksInhibited;
+			WrapperInput.inhibitJoysticks(joysticksInhibited);
+		}
+	}
+	
 	private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
-		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
 		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
+		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
+		controlJoystick(aircraft, ControlsKeyboard.AIRCRAFT_JS_INHIBIT);
+		
 		if(!isPlayerController){
 			return;
 		}
@@ -293,8 +303,10 @@ public final class ControlSystem{
 	private static void controlGroundVehicle(EntityVehicleF_Physics powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
-		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlGun(powered, ControlsKeyboard.CAR_GUN);
+		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
+		controlJoystick(powered, ControlsKeyboard.CAR_JS_INHIBIT);
+		
 		if(!isPlayerController){
 			return;
 		}
@@ -389,6 +401,7 @@ public final class ControlSystem{
 		AIRCRAFT_GUN(ControlsJoystick.AIRCRAFT_GUN, false),
 		AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true),
 		AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true),
+		AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true),
 		
 		CAR_MOD(ControlsJoystick.CAR_MOD, false),
 		CAR_CAMLOCK(ControlsJoystick.CAR_CAMLOCK, true),
@@ -403,7 +416,8 @@ public final class ControlSystem{
 		CAR_RADIO(ControlsJoystick.CAR_RADIO, true),
 		CAR_GUN(ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true),
-		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true);
+		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true),
+		CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true);
 		
 		
 		public final boolean isMomentary;
@@ -483,6 +497,7 @@ public final class ControlSystem{
 		AIRCRAFT_TRIM_ROLL_R(false, false),
 		AIRCRAFT_TRIM_ROLL_L(false, false),
 		AIRCRAFT_REVERSE(false, true),
+		AIRCRAFT_JS_INHIBIT(false, true),
 		
 		
 		CAR_MOD(false, false),
@@ -505,7 +520,8 @@ public final class ControlSystem{
 		CAR_LOOK_R(false, false),
 		CAR_LOOK_U(false, false),
 		CAR_LOOK_D(false, false),
-		CAR_LOOK_A(false, false);
+		CAR_LOOK_A(false, false),
+		CAR_JS_INHIBIT(false, true);
 		
 		
 		public final boolean isAxis;

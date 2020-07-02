@@ -36,6 +36,7 @@ public class WrapperInput{
 	
 	//Joystick variables.
 	private static boolean joystickEnabled = false;
+	private static boolean joystickInhibited = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
@@ -101,10 +102,11 @@ public class WrapperInput{
 	/**
 	 *  Returns true if the passed-in joystick is present.
 	 *  Can be used to check if a joystick is plugged-in before polling, and if it isn't
-	 *  fallback logic for keyboard controls can be used.
+	 *  fallback logic for keyboard controls can be used.  Note that if joysticks are inhibited,
+	 *  this call will always return false, even if the passed-in joystick exists.
 	 */
 	public static boolean isJoystickPresent(String joystickName){
-		return joystickMap.containsKey(joystickName);
+		return !joystickInhibited && joystickMap.containsKey(joystickName);
 	}
 	
 	/**
@@ -155,6 +157,15 @@ public class WrapperInput{
 		}else{
 			return 0;
 		}
+	}
+	
+	/**
+	 *  Inhibits or enables the joysticks.  Inhibiting the joysticks
+	 *  will cause {@link #isJoystickPresent(String)} to always return false.
+	 *  Useful for when you don't want the joystick to interfere with controls.
+	 */
+	public static void inhibitJoysticks(boolean inhibited){
+		joystickInhibited = inhibited;
 	}
 	
 	/**
@@ -231,7 +242,8 @@ public class WrapperInput{
 			case AIRCRAFT_RADIO: return Keyboard.KEY_MINUS;
 			case AIRCRAFT_GUN: return Keyboard.KEY_SPACE;
 			case AIRCRAFT_ZOOM_I: return Keyboard.KEY_PRIOR;
-			case AIRCRAFT_ZOOM_O: return Keyboard.KEY_NEXT;		
+			case AIRCRAFT_ZOOM_O: return Keyboard.KEY_NEXT;
+			case AIRCRAFT_JS_INHIBIT: return Keyboard.KEY_SCROLL;
 				
 			case CAR_MOD: return Keyboard.KEY_RSHIFT;
 			case CAR_CAMLOCK: return Keyboard.KEY_RCONTROL;
@@ -247,6 +259,7 @@ public class WrapperInput{
 			case CAR_GUN: return Keyboard.KEY_SPACE;
 			case CAR_ZOOM_I: return Keyboard.KEY_PRIOR;
 			case CAR_ZOOM_O: return Keyboard.KEY_NEXT;
+			case CAR_JS_INHIBIT: return Keyboard.KEY_SCROLL;
 			
 			default: throw new EnumConstantNotPresentException(ControlsKeyboard.class, kbEnum.name());
 		}

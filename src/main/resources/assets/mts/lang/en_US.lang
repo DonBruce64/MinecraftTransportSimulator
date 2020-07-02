@@ -111,6 +111,7 @@ input.aircraft.trim_pitch_d=TrimPitchDown
 input.aircraft.trim_roll_r=TrimRollRight
 input.aircraft.trim_roll_l=TrimRollLeft
 input.aircraft.reverse=Reverse
+input.aircraft.js_inhibit=DisableJoystick
 
 input.car.mod=Mod
 input.car.camlock=CamLock
@@ -137,6 +138,7 @@ input.car.look_u=LookUp
 input.car.look_d=LookDown
 input.car.look_a=LookDirectional
 input.car.slow=Slow
+input.car.js_inhibit=DisableJoystick
 
 gui.trafficsignalcontroller.scan=Scan For Signals & Components
 gui.trafficsignalcontroller.scandistance=Scan Distance: 
