@@ -830,15 +830,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private void performGroundOperations(){
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			motionX -= 20F*brakingFactor/currentMass*Math.signum(motionX);
-			motionZ -= 20F*brakingFactor/currentMass*Math.signum(motionZ);
-			if(Math.abs(motionX) < 0.1){
+			double motionXBraking = 20F*brakingFactor/currentMass*Math.signum(motionX);
+			double motionZBraking = 20F*brakingFactor/currentMass*Math.signum(motionZ);
+			motionX -= motionXBraking;
+			motionZ -= motionZBraking;
+			
+			//If we changed sign, just set our velocity to 0.
+			if(motionX*motionXBraking < 0 || motionZ*motionZBraking < 0){
 				motionX = 0;
-			}
-			if(Math.abs(motionZ) < 0.1){
 				motionZ = 0;
-			}
-			if(motionX == 0 && motionY == 0){
 				motionYaw = 0;
 			}
 		}
