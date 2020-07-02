@@ -25,8 +25,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**This is the next class level above the base vehicle.
@@ -199,10 +197,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 			}else{
 				dismountPosition = RotationSystem.getRotatedPoint(seat.placementOffset.copy().add(seat.placementOffset.x > 0 ? 2D : -2D, 0D, 0D), rotationPitch, rotationYaw, rotationRoll).add(positionVector);	
 			}
-			AxisAlignedBB collisionDetectionBox = new AxisAlignedBB(new BlockPos(dismountPosition.x, dismountPosition.y, dismountPosition.z));
-			if(!world.collidesWithAnyBlock(collisionDetectionBox)){
-				rider.setPositionAndRotation(dismountPosition.x, collisionDetectionBox.minY, dismountPosition.z, rider.rotationYaw, rider.rotationPitch);
-			}
+			rider.setPositionAndRotation(dismountPosition.x, dismountPosition.y, dismountPosition.z, rider.rotationYaw, rider.rotationPitch);
 			MTS.MTSNet.sendToAll(new PacketPartSeatRiderChange(seat, rider, false));
 		}
 	}
