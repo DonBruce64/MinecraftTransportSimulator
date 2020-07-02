@@ -16,6 +16,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import minecrafttransportsimulator.wrappers.WrapperAudio;
 import minecrafttransportsimulator.wrappers.WrapperGUI;
+import minecrafttransportsimulator.wrappers.WrapperGame;
 import minecrafttransportsimulator.wrappers.WrapperInput;
 import minecrafttransportsimulator.wrappers.WrapperRender;
 import minecrafttransportsimulator.wrappers.WrapperTileEntity;
@@ -194,7 +195,7 @@ public final class ClientEventSystem{
                 	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
                     //We also need to make sure the player in this event is the actual client player.  If we are on a server,
                     //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-                	if(vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
+                	if(!WrapperGame.isChatOpen() && vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
                 		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
                 		if(playeSeat != null){
                 			ControlSystem.controlVehicle(vehicle, playeSeat.vehicleDefinition.isController);

@@ -45,6 +45,13 @@ public class WrapperGame{
 	}
 	
 	/**
+	 *  Returns true if the chat window is open.
+	 */
+	public static boolean isChatOpen(){
+		return Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
+	} 
+	
+	/**
 	 *  Returns true if the game is in first-person mode.
 	 */
 	public static boolean inFirstPerson(){
