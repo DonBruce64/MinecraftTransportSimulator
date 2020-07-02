@@ -190,7 +190,7 @@ public class TransformLight extends ARenderableTransform{
 	 */
 	public void setLightupTextureState(boolean lightOn, float electricFactor){
 		if(WrapperRender.getRenderPass() != 1 && isLightupTexture){
-			WrapperRender.setLightingState(lightOn && isFlashingLightOn() && electricFactor > 0);
+			WrapperRender.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
 		}
 	}
 	
