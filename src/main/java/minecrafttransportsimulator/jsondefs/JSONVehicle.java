@@ -86,6 +86,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float minValue;
         public float maxValue;
         public VehiclePart additionalPart;
+        public List<VehiclePart> additionalParts;
         public String defaultPart;
         
         //Animation variables.

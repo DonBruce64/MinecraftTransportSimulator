@@ -315,7 +315,12 @@ public final class PackParserSystem{
     		}
     		
     		//Check all part slots for ground device names and update them.
+    		//Also check if we define an additional part, and make it a list instead.
     		for(VehiclePart part : vehicleDef.parts){
+    			if(part.additionalPart != null){
+    				part.additionalParts = new ArrayList<VehiclePart>();
+    				part.additionalParts.add(part.additionalPart);
+    			}
     			for(byte i=0; i<part.types.size(); ++i){
     				String partName = part.types.get(i);
     				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
@@ -325,16 +330,18 @@ public final class PackParserSystem{
     					part.types.set(i, "ground_" + partName);
     				}
     				//If we have additional parts, check those too.
-    				if(part.additionalPart != null){
-    					for(byte j=0; j<part.additionalPart.types.size(); ++j){
-    	    				partName = part.additionalPart.types.get(j);
-    	    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
-    	    					if(partName.equals("tread")){
-    	    						part.additionalPart.turnsWithSteer = true;
-    	    					}
-    	    					part.additionalPart.types.set(j, "ground_" + partName);
-    	    				}
-    	    			}
+    				if(part.additionalParts != null){
+    					for(VehiclePart additionalPart : part.additionalParts){
+	    					for(byte j=0; j<additionalPart.types.size(); ++j){
+	    	    				partName = additionalPart.types.get(j);
+	    	    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
+	    	    					if(partName.equals("tread")){
+	    	    						additionalPart.turnsWithSteer = true;
+	    	    					}
+	    	    					additionalPart.types.set(j, "ground_" + partName);
+	    	    				}
+	    	    			}
+    					}
     				}
     			}
     		}

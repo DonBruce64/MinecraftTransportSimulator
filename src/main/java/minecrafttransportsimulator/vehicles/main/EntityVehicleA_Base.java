@@ -205,21 +205,17 @@ abstract class EntityVehicleA_Base extends Entity{
 			Point3d partPos = new Point3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
 			packParts.put(partPos, packPart);
 			
-			//Check to see if we can put an additional part in this location.
-			//If a part is present at a location that can have an additional part, we allow it to be placed.
-			while(packPart.additionalPart != null){
-				boolean foundPart = false;
+			//Check to see if we can put a additional parts in this location.
+			//If a part is present at a location that can have an additional parts, we allow them to be placed.
+			if(packPart.additionalParts != null){
 				for(APart part : this.parts){
 					if(part.placementOffset.equals(partPos)){
-						partPos = new Point3d(packPart.additionalPart.pos[0], packPart.additionalPart.pos[1], packPart.additionalPart.pos[2]);
-						packPart = packPart.additionalPart;
-						packParts.put(partPos, packPart);
-						foundPart = true;
+						for(VehiclePart additionalPart : packPart.additionalParts){
+							partPos = new Point3d(additionalPart.pos[0], additionalPart.pos[1], additionalPart.pos[2]);
+							packParts.put(partPos, additionalPart);
+						}
 						break;
 					}
-				}
-				if(!foundPart){
-					break;
 				}
 			}
 		}
@@ -249,11 +245,11 @@ abstract class EntityVehicleA_Base extends Entity{
 			}
 			
 			//Not a main part.  Check if this is an additional part.
-			while(packPart.additionalPart != null){
-				if(isPackAtPosition(packPart.additionalPart, offsetX, offsetY, offsetZ)){
-					return packPart.additionalPart;
-				}else{
-					packPart = packPart.additionalPart;
+			if(packPart.additionalParts != null){
+				for(VehiclePart additionalPart : packPart.additionalParts){
+					if(isPackAtPosition(additionalPart, offsetX, offsetY, offsetZ)){
+						return additionalPart;
+					}
 				}
 			}
 		}
@@ -322,7 +318,7 @@ abstract class EntityVehicleA_Base extends Entity{
 		correctPack.exhaustPos = subPack.exhaustPos;
         correctPack.exhaustVelocity = subPack.exhaustVelocity;
         correctPack.intakeOffset = subPack.intakeOffset;
-        correctPack.additionalPart = subPack.additionalPart;
+        correctPack.additionalParts = subPack.additionalParts;
         correctPack.treadYPoints = subPack.treadYPoints;
         correctPack.treadZPoints = subPack.treadZPoints;
         correctPack.treadAngles = subPack.treadAngles;
@@ -347,12 +343,10 @@ abstract class EntityVehicleA_Base extends Entity{
 						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new NBTTagCompound());
 						vehicle.addPart(newPart, true);
 						
-						//Check if we have an additional part.
+						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
-						if(packDef.additionalPart != null){
-							List<VehiclePart> additionalPart = new ArrayList<VehiclePart>();
-							additionalPart.add(packDef.additionalPart);
-							addDefaultParts(additionalPart, vehicle);
+						if(packDef.additionalParts != null){
+							addDefaultParts(packDef.additionalParts, vehicle);
 						}
 						
 						//Check all sub-parts, if we have any.

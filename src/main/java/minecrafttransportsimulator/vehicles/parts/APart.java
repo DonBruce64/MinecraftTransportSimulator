@@ -72,11 +72,15 @@ public abstract class APart implements ISoundProvider{
 		//If we are not valid due to us being fake, don't add ourselves.
 		if(this.isValid()){
 			for(VehiclePart parentPackPart : vehicle.definition.parts){
-				if(packVehicleDef.equals(parentPackPart.additionalPart)){
-					parentPart = vehicle.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
-					parentPart.childParts.add(this);
-					this.disableMirroring = definition.general.disableMirroring;
-					return;
+				if(parentPackPart.additionalParts != null){
+					for(VehiclePart partAdditionalPartPack : parentPackPart.additionalParts){
+						if(packVehicleDef.equals(partAdditionalPartPack)){
+							parentPart = vehicle.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
+							parentPart.childParts.add(this);
+							this.disableMirroring = definition.general.disableMirroring;
+							return;
+						}
+					}
 				}
 			}
 			
