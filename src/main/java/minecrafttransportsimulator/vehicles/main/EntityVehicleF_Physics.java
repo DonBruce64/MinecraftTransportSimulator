@@ -5,6 +5,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -369,6 +370,12 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			motionRoll = (float) totalTorque.z/momentRoll;
 			motionPitch = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
 			motionYaw = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
+			
+			if(world.isRemote && ConfigSystem.configObject.client.devMode.value){
+				System.out.format("States: Mass:%f TrackAngle:%f WingArea:%f\n", currentMass, trackAngle, currentWingArea);
+				System.out.format("Forces: Engine:%f Drag:%f Wing/Elevator:%f Ballast:%f Gravity:%f\n", thrustForce.length(), dragForce, wingForce + elevatorForce, ballastForce, gravitationalForce);
+				System.out.format("Torques: Engine:%f Elevator:%f Rudder:%f Aileron:%f\n", thrustTorque.length(), elevatorTorque, rudderTorque, aileronTorque);
+			}
 		}else{
 			///START OF NEW CODE.
 			/*
