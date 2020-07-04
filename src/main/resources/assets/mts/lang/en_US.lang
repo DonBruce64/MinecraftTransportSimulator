@@ -138,6 +138,9 @@ input.car.look_u=LookUp
 input.car.look_d=LookDown
 input.car.look_a=LookDirectional
 input.car.slow=Slow
+input.car.lights=Lights
+input.car.turnsignal_r=RightSignal
+input.car.turnsignal_l=LeftSignal
 input.car.js_inhibit=DisableJoystick
 
 gui.trafficsignalcontroller.scan=Scan For Signals & Components

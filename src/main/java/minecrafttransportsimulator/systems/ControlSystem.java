@@ -8,7 +8,9 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -337,8 +339,7 @@ public final class ControlSystem{
 			}
 		}
 		
-		//Check steering, turn signals, and lights.
-		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
+		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
 			if(ClientEventSystem.lockedView && WrapperGUI.isGUIActive(null)){
 				long mousePosition = WrapperInput.getTrackedMouseInfo();
@@ -373,6 +374,18 @@ public final class ControlSystem{
 			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, true));
 		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.hornOn){
 			WrapperNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, false));
+		}
+		
+		//Check for lights.
+		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
+			WrapperNetwork.sendToServer(new PacketVehicleLightToggle(powered, LightType.RUNNINGLIGHT));
+			WrapperNetwork.sendToServer(new PacketVehicleLightToggle(powered, LightType.HEADLIGHT));
+		}
+		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
+			WrapperNetwork.sendToServer(new PacketVehicleLightToggle(powered, LightType.LEFTTURNLIGHT));
+		}
+		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
+			WrapperNetwork.sendToServer(new PacketVehicleLightToggle(powered, LightType.RIGHTTURNLIGHT));
 		}
 	}
 
@@ -417,6 +430,9 @@ public final class ControlSystem{
 		CAR_GUN(ControlsJoystick.CAR_GUN, false),
 		CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true),
 		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true),
+		CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true),
+		CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true),
+		CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true),
 		CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true);
 		
 		
@@ -521,6 +537,9 @@ public final class ControlSystem{
 		CAR_LOOK_U(false, false),
 		CAR_LOOK_D(false, false),
 		CAR_LOOK_A(false, false),
+		CAR_LIGHTS(false, true),
+		CAR_TURNSIGNAL_L(false, true),
+		CAR_TURNSIGNAL_R(false, true),
 		CAR_JS_INHIBIT(false, true);
 		
 		

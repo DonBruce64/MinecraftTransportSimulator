@@ -259,6 +259,9 @@ public class WrapperInput{
 			case CAR_GUN: return Keyboard.KEY_SPACE;
 			case CAR_ZOOM_I: return Keyboard.KEY_PRIOR;
 			case CAR_ZOOM_O: return Keyboard.KEY_NEXT;
+			case CAR_LIGHTS: return Keyboard.KEY_NUMPAD5;
+			case CAR_TURNSIGNAL_L: return Keyboard.KEY_NUMPAD4;
+			case CAR_TURNSIGNAL_R: return Keyboard.KEY_NUMPAD6;
 			case CAR_JS_INHIBIT: return Keyboard.KEY_SCROLL;
 			
 			default: throw new EnumConstantNotPresentException(ControlsKeyboard.class, kbEnum.name());
