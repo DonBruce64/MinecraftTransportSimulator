@@ -68,9 +68,15 @@ public final class RenderableModelObject{
 	 *  Renders this object, applying any transforms that need to happen.
 	 */
 	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		//Push matrix and Apply transforms.
+		//Push matrix and apply transforms.
 		GL11.glPushMatrix();
 		for(ARenderableTransform transform : transforms){
+			if(!transform.shouldRender()){
+				//Found a transform that told us not to render.
+				//Pop matrix and skip rendering.
+				GL11.glPopMatrix();
+				return;
+			}
 			transform.applyTransforms(vehicle, optionalPart, partialTicks);
 		}
 		

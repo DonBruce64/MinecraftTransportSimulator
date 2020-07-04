@@ -10,6 +10,15 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 public abstract class ARenderableTransform{
 	
 	/**
+	 *  This method should return true if this transform should be rendered.
+	 *  By default, all transforms are rendered, but this may be overridden should
+	 *  the object this transform is on need to be made invisible.
+	 */
+	public boolean shouldRender(){
+		return true;
+	}
+	
+	/**
 	 *  This method applies any transforms this object has prior to rendering.
 	 *  Vehicle and part (if this model is on a part) is passed-in for state-based transform logic.
 	 */

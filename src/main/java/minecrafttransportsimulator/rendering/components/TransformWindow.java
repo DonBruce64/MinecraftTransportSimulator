@@ -18,6 +18,11 @@ public class TransformWindow extends ARenderableTransform{
 	public TransformWindow(Float[][] vertices){
 		this.vertices = vertices;
 	}
+	
+	@Override
+	public boolean shouldRender(){
+		return ConfigSystem.configObject.client.renderWindows.value;
+	}
 
 	@Override
 	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
