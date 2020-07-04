@@ -805,7 +805,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	public double getEngineRotation(float partialTicks){
-		return engineRotation + (engineRotation = prevEngineRotation)*partialTicks;
+		return engineRotation + (engineRotation - prevEngineRotation)*partialTicks;
 	}
 	
 	public double getDriveshaftRotation(float partialTicks){
