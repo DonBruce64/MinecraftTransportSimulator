@@ -348,8 +348,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 						elevatorTorque += 100;
 					}
 				}
-			}else{
-				dragForce = 0.5F*airDensity*velocity*velocity*100F*dragCoeff;
 			}
 			
 			//Add all forces to the main force matrix and apply them.
