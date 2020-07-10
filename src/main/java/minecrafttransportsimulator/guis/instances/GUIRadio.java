@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -11,7 +12,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.Radio.RadioSources;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
 
 /**GUI for interfacing with radios.  Radios are stored on classes that
  * extend {@link IRadioProvider} and are obtained via {@link IRadioProvider#getRadio()}.
@@ -266,14 +266,14 @@ public class GUIRadio extends AGUIBase{
 				
 				//Render a black rectangle between the buttons.
 				int middlePoint = x + width/2;
-				WrapperGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
+				BuilderGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
 				
 				//Now render a red square where the equalizer value is.
 				///Level is between -1.0 and 1.0, so we need to normalize it.
 				int squareSize = 8;
 				float level = (1.0F + radio.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
 				int bandCenter = lowerBounds - squareSize + (int)(level*((upperBounds+squareSize/2) - (lowerBounds-squareSize/2)));
-				WrapperGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
+				BuilderGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
 			}
 		}
 	}

@@ -3,12 +3,12 @@ package minecrafttransportsimulator.packets.components;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperWorld;
 
 /**Base packet class.  All packets must extend this class to be used with the
- * {@link WrapperNetwork}.  This allows for standard packet handling across
+ * {@link InterfaceNetwork}.  This allows for standard packet handling across
  * all MC versions.
  *
  * @author don_bruce
@@ -32,7 +32,7 @@ public abstract class APacketBase{
 	 *  the buffer so the network knows what packet class this packet goes to!
 	 */
 	public void writeToBuffer(ByteBuf buf){
-		buf.writeByte(WrapperNetwork.getPacketIndex(this));
+		buf.writeByte(InterfaceNetwork.getPacketIndex(this));
 	}
 	
 	/**
@@ -41,7 +41,7 @@ public abstract class APacketBase{
 	 *  an instance of the player that sent the packet if on a server,
 	 *  or the current player if on a client.
 	 */
-	public abstract void handle(WrapperWorld world, WrapperPlayer player);
+	public abstract void handle(WrapperWorld world, WrapperEntityPlayer player);
 	
 	/**
 	 *  Helper method to write a string to the buffer.

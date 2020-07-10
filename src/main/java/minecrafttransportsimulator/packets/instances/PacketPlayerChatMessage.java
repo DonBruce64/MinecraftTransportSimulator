@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet used for sending the player chat messages from the server.  Mainly for informing them
  * about things they did to a vehicle they interacted with.  Do NOT send this packet to the server
@@ -31,7 +31,7 @@ public class PacketPlayerChatMessage extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperEntityPlayer player){
 		player.displayChatMessage(chatMessage);
 	}
 }

@@ -134,19 +134,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			throttleTime = 0;
 		}
 		
-        if(throttleTime > 10 && !parkingBrakeOn && groundVelocity >= 3){
+        if(throttleTime > 10 && !parkingBrakeOn && normalizedGroundVelocity >= 3){
         	
-        	bodyAcceleration = (groundVelocity/throttleTime);
+        	bodyAcceleration = (normalizedGroundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((normalizedGroundVelocity/forceOfInertia)*-0.01)); 
         	
         	return bodyAcclAngle;
         	
-        }else if(throttleTime > 10 && !parkingBrakeOn && groundVelocity <= -3){
+        }else if(throttleTime > 10 && !parkingBrakeOn && normalizedGroundVelocity <= -3){
         	
-        	bodyAcceleration = (groundVelocity/throttleTime);
+        	bodyAcceleration = (normalizedGroundVelocity/throttleTime);
         	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01)); 
+        	bodyAcclAngle = Math.toDegrees(Math.atan((normalizedGroundVelocity/forceOfInertia)*0.01)); 
         	
         	return bodyAcclAngle;
         	
@@ -166,15 +166,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
 	    	
-	    	bodyAcceleration = (groundVelocity/brakingTime);
+	    	bodyAcceleration = (normalizedGroundVelocity/brakingTime);
 	    	
-	        if(groundVelocity < -3) {
+	        if(normalizedGroundVelocity < -3) {
 	        	
-	        	bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01));
+	        	bodyBrakeAngle = Math.toDegrees(Math.atan((normalizedGroundVelocity/forceOfInertia)*-0.01));
 	        	
 	        }else {
 	        	
-		        bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01));
+		        bodyBrakeAngle = Math.toDegrees(Math.atan((normalizedGroundVelocity/forceOfInertia)*0.01));
 		        
 	        }
 	        
@@ -968,11 +968,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				steeringAngle /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(groundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
+				if(normalizedGroundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
+					steeringAngle *= Math.pow(0.25F, (normalizedGroundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = -(float) (steeringAngle*groundVelocity/2F);
+				turningForce = -(float) (steeringAngle*normalizedGroundVelocity/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.

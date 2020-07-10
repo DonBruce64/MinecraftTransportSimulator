@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.util.List;
 
@@ -10,20 +10,20 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-/**Wrapper for MC GUI classes.  Constructor takes a type of {@link AItemBase}, but
+/**Builder for MC GUI classes.  Constructor takes a type of {@link AItemBase}, but
  * is only visible when calling {@link #createItem(AItemBase)}.  This will automatically
- * construct the wrapper and will return the created instance of the item (not wrapper)
- * for use in the code.  The wrapper instance is cached and saved to be registered
+ * construct the item and will return the created instance of the item (not builder)
+ * for use in the code.  The builder instance is cached and saved to be registered
  * in the MC systems.  When interfacing with MC systems use this class, but when
- * doing code in MTS use the item, NOT the wrapper!
+ * doing code in MTS use the item, NOT the builder!
  *
  * @author don_bruce
  */
-public class WrapperItem extends Item{	
+public class BuilderItem extends Item{	
 	
 	private final AItemBase item;
 	
-	private WrapperItem(AItemBase item, boolean isStackable){
+	private BuilderItem(AItemBase item, boolean isStackable){
 		super();
 		this.item = item;
 		setFull3D();

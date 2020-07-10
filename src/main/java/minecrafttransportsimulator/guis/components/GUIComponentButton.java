@@ -2,7 +2,7 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.wrappers.WrapperGUI;
+import mcinterface.BuilderGUI;
 
 /**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
@@ -104,8 +104,8 @@ public abstract class GUIComponentButton{
 			}else{
 				textureUStart = buttonSectionHeightOffset;//Disabled
 			}
-    		WrapperGUI.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
-    		WrapperGUI.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		BuilderGUI.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		BuilderGUI.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
 		}
     }
     
@@ -116,18 +116,18 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(){
     	if(visible){
-    		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, 0);
+    		BuilderGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, 0);
     	}
     }
     
     /**
 	 *  Renders the tooltip for this button.  This needs to be done after the main buttons
 	 *  render as otherwise it will render behind other buttons.  This method needs an
-	 *  instance of {@link WrapperGUI} due to the MC GUI system hard-linking the
+	 *  instance of {@link BuilderGUI} due to the MC GUI system hard-linking the
 	 *  tooltip rendering sequence to the GUI instance.  Most buttons don't have tooltips,
 	 *  but buttons that have complex functionality may need them to help explain what they do.
 	 */
-    public void renderTooltip(WrapperGUI wrapper, int mouseX, int mouseY){
+    public void renderTooltip(BuilderGUI wrapper, int mouseX, int mouseY){
     	//Do nothing.
     }
 }

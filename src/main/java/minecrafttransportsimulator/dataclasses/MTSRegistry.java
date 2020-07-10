@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import mcinterface.BuilderBlock;
+import mcinterface.BuilderEntity;
+import mcinterface.WrapperEntityPlayer;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
@@ -36,17 +39,12 @@ import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartAddition;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientPartRemoval;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -97,16 +95,16 @@ public final class MTSRegistry{
 	public static final Item ticket = new ItemTicket();
 	
 	//Crafting benches.
-	public static final WrapperBlock vehicleBench = new WrapperBlock(new BlockPartsBench(JSONVehicle.class));
-	public static final WrapperBlock propellerBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "propeller"));
-	public static final WrapperBlock engineBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "engine_"));
-	public static final WrapperBlock wheelBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "ground_"));
-	public static final WrapperBlock seatBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand"));
-	public static final WrapperBlock gunBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "gun_", "bullet"));
-	public static final WrapperBlock customBench = new WrapperBlock(new BlockPartsBench(JSONPart.class, "custom"));
-	public static final WrapperBlock instrumentBench = new WrapperBlock(new BlockPartsBench(JSONInstrument.class));
-	public static final WrapperBlock componentBench = new WrapperBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
-	public static final WrapperBlock decorBench = new WrapperBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
+	public static final BuilderBlock vehicleBench = new BuilderBlock(new BlockPartsBench(JSONVehicle.class));
+	public static final BuilderBlock propellerBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "propeller"));
+	public static final BuilderBlock engineBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "engine_"));
+	public static final BuilderBlock wheelBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "ground_"));
+	public static final BuilderBlock seatBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "seat", "crate", "barrel", "crafting_table", "furnace", "brewing_stand"));
+	public static final BuilderBlock gunBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "gun_", "bullet"));
+	public static final BuilderBlock customBench = new BuilderBlock(new BlockPartsBench(JSONPart.class, "custom"));
+	public static final BuilderBlock instrumentBench = new BuilderBlock(new BlockPartsBench(JSONInstrument.class));
+	public static final BuilderBlock componentBench = new BuilderBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
+	public static final BuilderBlock decorBench = new BuilderBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
 	
 	//Counter for packets.
 	private static int packetNumber = 0;
@@ -134,7 +132,7 @@ public final class MTSRegistry{
 	/**
 	 * This method returns a list of ItemStacks that are required
 	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
-	 * amd {@link WrapperPlayer#hasMaterials(AItemPack)} as well as any other systems that 
+	 * amd {@link WrapperEntityPlayer#hasMaterials(AItemPack)} as well as any other systems that 
 	 * need to know what materials make up pack items.
 	 */
     public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
@@ -177,11 +175,11 @@ public final class MTSRegistry{
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-			}else if(field.getType().equals(WrapperBlock.class)){
+			}else if(field.getType().equals(BuilderBlock.class)){
 				//Also need to make itemblocks for all blocks.
 				//This doesn't include packs, which have their own items.
 				try{
-					WrapperBlock block = (WrapperBlock) field.get(null);
+					BuilderBlock block = (BuilderBlock) field.get(null);
 					block.setCreativeTab(coreTab);
 					ItemBlock itemBlock = new ItemBlock(block);
 					itemBlock.setCreativeTab(coreTab);
@@ -209,11 +207,7 @@ public final class MTSRegistry{
 	 */
 	private static void initEntities(){
 		int entityNumber = 0;
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "mts_vehicle"), EntityVehicleF_Physics.class, "mts_vehicle", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_car"), EntityVehicleF_Physics.class, "vehiclecar", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_boat"), EntityVehicleF_Physics.class, "vehicleboat", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_plane"), EntityVehicleF_Physics.class, "vehicleplane", entityNumber++, MTS.MODID, 32*16, 5, false);
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "vehicleg_blimp"), EntityVehicleF_Physics.class, "vehicleblimp", entityNumber++, MTS.MODID, 32*16, 5, false);
+		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "mts_vehicle"), BuilderEntity.class, "mts_vehicle", entityNumber++, MTS.MODID, 32*16, 5, false);
 	}
 	
 	private static void initPackets(){
@@ -225,8 +219,6 @@ public final class MTSRegistry{
 		//Packets in packets.vehicles.
 		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
 		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
-		registerPacket(PacketVehicleClientPartAddition.class, PacketVehicleClientPartAddition.Handler.class, true, false);
-		registerPacket(PacketVehicleClientPartRemoval.class, PacketVehicleClientPartRemoval.Handler.class, true, false);
 		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInteract.class, PacketVehicleInteract.Handler.class, false, true);
 		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);

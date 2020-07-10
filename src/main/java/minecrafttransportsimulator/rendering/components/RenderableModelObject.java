@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.wrappers.WrapperRender;
 
 /**This class represents an object that can be rendered from an OBJ model.  This object is a set of
  * faces that are rendered during the main rendering routine.  These faces may be part of the vehicle
@@ -82,7 +82,7 @@ public final class RenderableModelObject{
 		
 		//Render, caching the displayList if needed.
 		//Don't render on pass 1, as that's for transparency.
-		if(WrapperRender.getRenderPass() != 1){
+		if(InterfaceRender.getRenderPass() != 1){
 			if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
 				int displayListIndex = GL11.glGenLists(1);
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);

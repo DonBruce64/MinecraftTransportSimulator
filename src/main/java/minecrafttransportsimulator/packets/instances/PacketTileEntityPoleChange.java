@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -12,10 +16,6 @@ import minecrafttransportsimulator.guis.instances.GUISign;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.item.ItemStack;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the client.
@@ -80,7 +80,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
+	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, TileEntityPole pole){
 		//Check if we can do editing.
 		if(world.isClient() || !ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
 			if(removal){
@@ -101,7 +101,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			}else if(packID.isEmpty() && textLines == null){
 				if(pole.components.get(axis).getTextLines() != null){
 					if(world.isClient()){
-						WrapperGUI.openGUI(new GUISign(pole, axis));
+						BuilderGUI.openGUI(new GUISign(pole, axis));
 					}else{
 						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
 						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));

@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 public class BlockPartsBench extends ABlockBase{
 	private final List<Class<? extends AJSONItem<?>>> validJsonClasses = new ArrayList<Class<? extends AJSONItem<?>>>();
@@ -24,9 +24,9 @@ public class BlockPartsBench extends ABlockBase{
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer playerClicking){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperEntityPlayer playerClicking){
 		if(world.isClient()){
-			WrapperGUI.openGUI(new GUIPartBench(this, playerClicking));
+			BuilderGUI.openGUI(new GUIPartBench(this, playerClicking));
 		}
 		return true;
 	}

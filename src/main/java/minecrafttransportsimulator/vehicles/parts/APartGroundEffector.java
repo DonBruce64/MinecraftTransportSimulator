@@ -41,7 +41,7 @@ public abstract class APartGroundEffector extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return new NBTTagCompound(); 
 	}
 	

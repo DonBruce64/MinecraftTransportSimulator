@@ -3,6 +3,9 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.WrapperNBT;
+import mcinterface.BuilderTileEntity;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
@@ -10,11 +13,8 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
-/**Base Tile Entity class.  This type is used in the constructor of {@link WrapperTileEntity} to allow us to use
+/**Base Tile Entity class.  This type is used in the constructor of {@link BuilderTileEntity} to allow us to use
  * completely custom code that is not associated with MC's standard Tile Entity code.  Allows us to only
  * update the wrapper rather than the whole Tile Entity. In essence, this class holds the data and state of the
  * Tile Entity, while the wrapper ensures that the state gets saved to disk and the appropriate render gets

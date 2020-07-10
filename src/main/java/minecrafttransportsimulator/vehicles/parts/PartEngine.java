@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.List;
 
+import mcinterface.InterfaceAudio;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceJet;
@@ -18,7 +19,6 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -144,11 +144,11 @@ public class PartEngine extends APart implements FXPart{
 		if(startSounds && state.running && vehicle.world.isRemote){
 			if(definition.engine.customSoundset != null){
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					WrapperAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
 			}else{
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 			startSounds = false;
 		}
@@ -406,7 +406,7 @@ public class PartEngine extends APart implements FXPart{
 				PartPropeller propeller = (PartPropeller) part;
 				havePropeller = true;
 				Point3d propellerThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), propeller.totalRotation.x + vehicle.rotationPitch, propeller.totalRotation.y + vehicle.rotationYaw, propeller.totalRotation.z + vehicle.rotationRoll);
-				propellerAxialVelocity = vehicle.velocityVector.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
+				propellerAxialVelocity = vehicle.normalizedVelocity.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
@@ -455,7 +455,7 @@ public class PartEngine extends APart implements FXPart{
 		///Update variables used for jet thrust.
 		if(definition.engine.jetPowerFactor > 0){
 			Point3d engineThrustAxis = RotationSystem.getRotatedPoint(new Point3d(0D, 0D, 1D), totalRotation.x + vehicle.rotationPitch, totalRotation.y + vehicle.rotationYaw, totalRotation.z + vehicle.rotationRoll);
-			engineAxialVelocity = vehicle.velocityVector.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
+			engineAxialVelocity = vehicle.normalizedVelocity.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
 			
 			//Check for entities forward and aft of the engine and damage them.
 			if(vehicle.world.isRemote && rpm >= 5000){
@@ -506,7 +506,7 @@ public class PartEngine extends APart implements FXPart{
 					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
 				}
 			}
-			driveshaftRotation += vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D;
+			driveshaftRotation += vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.normalizedGroundVelocity)*360D;
 		}else{
 			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + reverseGears];
 		}
@@ -525,7 +525,7 @@ public class PartEngine extends APart implements FXPart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound partData = new NBTTagCompound();
 		partData.setBoolean("isCreative", this.isCreative);
 		partData.setBoolean("oilLeak", this.oilLeak);
@@ -574,7 +574,7 @@ public class PartEngine extends APart implements FXPart{
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
 				if(vehicle.world.isRemote){
-					WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+					InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 				}
 			}
 		}
@@ -588,12 +588,12 @@ public class PartEngine extends APart implements FXPart{
 				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 					state = EngineStates.MAGNETO_ON_ES_ON;
 					if(vehicle.world.isRemote){
-						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 					}
 				}else if(state.equals(EngineStates.RUNNING)){
 					state =  EngineStates.RUNNING_ES_ON;
 					if(vehicle.world.isRemote){
-						WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 					}
 				}
 			}else{
@@ -629,14 +629,14 @@ public class PartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.START));
 		}else{
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			if(definition.engine.customSoundset != null){
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					WrapperAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
 			}else{
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 		}
 	}
@@ -655,7 +655,7 @@ public class PartEngine extends APart implements FXPart{
 		//Add a small amount to the starter level from the player's hand, and play cranking sound.
 		starterLevel += 4;
 		if(vehicle.world.isRemote){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
 	}
 	
@@ -679,7 +679,7 @@ public class PartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, packetType));
 		}else{
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
 	}
 	
@@ -690,7 +690,7 @@ public class PartEngine extends APart implements FXPart{
 		if(!vehicle.world.isRemote){
 			MTS.MTSNet.sendToAll(new PacketPartEngineSignal(this, PacketEngineTypes.BACKFIRE));
 		}else{
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
 		}
 	}
@@ -745,7 +745,7 @@ public class PartEngine extends APart implements FXPart{
 			if(vehicle.velocity < 0.25 || wheelFriction == 0){
 				currentGear = 1;
 			}else if(vehicle.world.isRemote){
-				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
 		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){
 			if(definition.engine.isAutomatic && packet){
@@ -770,10 +770,10 @@ public class PartEngine extends APart implements FXPart{
 				currentGear = -1;
 				//If the engine is running, and we are a big truck, turn on the backup beeper.
 				if(state.running && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isRemote){
-					WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+					InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 				}
 			}else if(vehicle.world.isRemote){
-				WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
 			}
 		}else if(currentGear + reverseGears > 0){
 			--currentGear;
@@ -1021,13 +1021,13 @@ public class PartEngine extends APart implements FXPart{
 		if(definition.engine.customSoundset != null){
 			for(EngineSound soundDefinition : definition.engine.customSoundset){
 				if(sound.soundName.equals(soundDefinition.soundName)){
-					WrapperAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
 				}
 			}
 		}else if(sound.soundName.endsWith("_cranking") || sound.soundName.endsWith("_running") || sound.soundName.endsWith("_supercharger")){
-			WrapperAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
 		}else if(sound.soundName.endsWith("backup_beeper")){
-			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 		}
 	}
 
@@ -1081,7 +1081,7 @@ public class PartEngine extends APart implements FXPart{
 							Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, exhaustOffset.x, exhaustOffset.y, exhaustOffset.z, velocityOffset.x/10D + 0.02 - Math.random()*0.04, velocityOffset.y/10D, velocityOffset.z/10D + 0.02 - Math.random()*0.04, particleColor, particleColor, particleColor, 1.0F, (float) Math.min((50 + hours)/500, 1)));
 							//Also play steam chuff sound if we are a steam engine.
 							if(definition.engine.isSteamPowered){
-								WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
+								InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
 							}
 						}
 						if(definition.engine.flamesOnStartup && state.esOn){

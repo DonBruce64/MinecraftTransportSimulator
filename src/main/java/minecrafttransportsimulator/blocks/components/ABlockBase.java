@@ -2,13 +2,13 @@ package minecrafttransportsimulator.blocks.components;
 
 import java.util.List;
 
+import mcinterface.BuilderBlock;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
-/**Base Block class.  This type is used in the constructor of {@link WrapperBlock} to allow us to use
+/**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
  * Seriously guys, you make a game about blocks.  How many times you gonna re-invent them?
  * Anyways... This code contains methods for the block's hardness, blast resistance, and rotation.
@@ -31,7 +31,7 @@ public abstract class ABlockBase{
 	 *  after NBT is loaded into the TE from saved state, or after its definition is
 	 *  set from the item definition if no NBT data was present on the item.
 	 */
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){}
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperEntityPlayer player){}
 	
 	/**
 	 *  Called when this block is clicked.  Return true if this block does
@@ -39,7 +39,7 @@ public abstract class ABlockBase{
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperEntityPlayer player){
 		return false;
 	}
 
@@ -50,7 +50,7 @@ public abstract class ABlockBase{
 	 *  not modifiable by any block-based code.
 	 */
 	public float getRotation(WrapperWorld world, Point3i location){
-		return WrapperBlock.getRotation(world, location);
+		return BuilderBlock.getRotation(world, location);
 	}
 	
 	/**

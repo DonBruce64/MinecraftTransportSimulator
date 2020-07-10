@@ -34,6 +34,14 @@ public class Point3i extends APoint3<Integer, Point3i>{
 	}
 	
 	@Override
+	public Point3i setTo(Point3i point){
+		this.x = point.x;
+		this.y = point.y;
+		this.z = point.z;
+		return this;
+	}
+	
+	@Override
 	public Point3i add(Integer x, Integer y, Integer z){
 		this.x += x;
 		this.y += y;

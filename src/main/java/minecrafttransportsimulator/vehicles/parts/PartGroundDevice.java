@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.List;
 
+import mcinterface.InterfaceAudio;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
@@ -13,7 +14,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -96,7 +96,7 @@ public class PartGroundDevice extends APart implements FXPart{
 			
 			//Set contact for wheel skidding effects.
 			if(definition.ground.isWheel){
-				if(prevAngularVelocity/((vehicle.groundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
+				if(prevAngularVelocity/((vehicle.normalizedGroundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					BlockPos blockBelow = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
 					if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
 						contactThisTick = true;
@@ -172,7 +172,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound dataTag = new NBTTagCompound();
 		dataTag.setBoolean("isFlat", isFlat);
 		return dataTag;
@@ -213,7 +213,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	public void setFlat(){
 		isFlat = true;
 		if(vehicle.world.isRemote){
-			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
 		}
 	}
 	
@@ -224,7 +224,7 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	public double getDesiredAngularVelocity(){
-		return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
+		return getLongPartOffset() == 0 ? vehicle.normalizedGroundVelocity/(getHeight()*Math.PI) : vehicle.normalizedGroundVelocity;
 	}
 	
 	public boolean isOnGround(){
@@ -250,7 +250,7 @@ public class PartGroundDevice extends APart implements FXPart{
 			for(byte i=0; i<4; ++i){
 				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y, worldPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			WrapperAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){

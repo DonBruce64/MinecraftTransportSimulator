@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,23 +12,24 @@ import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 
-/**Wrapper for MC TESR classes. This should NOT be used directly for any rendering as it's a wrapper.
- * Instead, use {@link ARenderTileEntityBase}, and return an instance of that class when
+/**Builder for MC TESR classes. This should NOT be used directly for any rendering as it's a builder
+ * to create an interface that MC will accept that we can forward calls from to our own code.
+ * For actual rendering, create a class {@link ARenderTileEntityBase}, and return an instance of that class when
  * {@link ATileEntityBase#getRenderer()}} is called.  This will be cached and used as needed.
  *
  * @author don_bruce
  */
 @SuppressWarnings("rawtypes")
-public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTileEntity>{
+public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTileEntity>{
 	private static final Map<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>> renders = new HashMap<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>>();
 	//RENDER DATA MAPS.  Keyed by each instance of each Tile Entity loaded.
 	private static final Map<ATileEntityBase, RenderTickData> renderData = new HashMap<ATileEntityBase, RenderTickData>();
 	
-	public WrapperTileEntityRender(){}
+	public BuilderTileEntityRender(){}
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public void render(WrapperTileEntity wrapper, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+	public void render(BuilderTileEntity wrapper, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 		if(!renders.containsKey(wrapper.tileEntity)){
 			ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> render = wrapper.tileEntity.getRenderer();
 			if(render == null){
@@ -50,7 +51,7 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 			}
 			
 			//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-			int renderPass = WrapperRender.getRenderPass();
+			int renderPass = InterfaceRender.getRenderPass();
 			if(renderPass == -1){
 				renderPass = 2;
 			}
@@ -73,12 +74,12 @@ public class WrapperTileEntityRender extends TileEntitySpecialRenderer<WrapperTi
 				}
 				
 				//Set lighting and Render the TE.
-				WrapperRender.setLightingToBlock(wrapper.tileEntity.position);
+				InterfaceRender.setLightingToBlock(wrapper.tileEntity.position);
 				render.render(wrapper.tileEntity, (IBlockTileEntity) wrapper.tileEntity.getBlock(), partialTicks);
 				
 				//End render matrix and reset states.
 				GL11.glPopMatrix();
-				WrapperRender.resetStates();
+				InterfaceRender.resetStates();
 			}
 		}
 	}

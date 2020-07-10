@@ -3,12 +3,12 @@ package minecrafttransportsimulator.guis.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
 
-/**Base GUI class.  This type is used in the constructor of {@link WrapperGUI} to allow us to use
+/**Base GUI class.  This type is used in the constructor of {@link BuilderGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
  * update the wrapper rather than the whole GUI. In essence, this class holds the data and state of the
  * GUI, while the wrapper chooses how to interpret and render said state.

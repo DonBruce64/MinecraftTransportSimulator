@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -85,9 +85,11 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 						
 						//Now we have min-max, check for any vehicles in the area.
 						//We need to check along the non-primary axis, but we don't care about Y.
-						BoundingBox bounds = new BoundingBox(minX + (maxX - minX)/2, 0, minZ + (maxZ - minZ)/2, (maxX - minX)/2, Double.MAX_VALUE, (maxZ - minZ)/2);
-						if(!world.getVehiclesWithin(bounds).isEmpty()){
-							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+						for(AEntityBase entity : AEntityBase.createdEntities.values()){
+							if(entity.position.x > minX && entity.position.x < maxX && entity.position.z > minZ && entity.position.z < maxZ){
+								updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+								break;
+							}
 						}
 					}
 				}else{

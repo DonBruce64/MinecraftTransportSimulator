@@ -1,11 +1,15 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 
 /**Wrapper for interfacing with NBT data.  This pares down a few of the method to ones
  * more suited to what we use normally.  Of special importance is the ability to save
@@ -14,7 +18,11 @@ import net.minecraft.nbt.NBTTagCompound;
  * @author don_bruce
  */
 public class WrapperNBT{
-	protected final NBTTagCompound tag;
+	final NBTTagCompound tag;
+	
+	public WrapperNBT(){
+		this.tag = new NBTTagCompound();
+	}
 	
 	public WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
@@ -28,6 +36,18 @@ public class WrapperNBT{
 			stack.setTagCompound(tag);
 		}
 	}
+	
+	public WrapperNBT(ByteBuf buf){
+        PacketBuffer pb = new PacketBuffer(buf);
+        try{
+        	this.tag = pb.readCompoundTag();
+        }catch (IOException e){
+            // Unpossible? --- Says Forge comments, so who knows?
+            throw new RuntimeException(e);
+        }
+    }
+	
+	
 	
 	//Booleans
 	public boolean getBoolean(String name){
@@ -65,7 +85,6 @@ public class WrapperNBT{
 		tag.setString(name, value);
 	}
 	
-	
 	//String array.
 	public List<String> getStrings(String name, int qty){
 		List<String> values = new ArrayList<String>();
@@ -81,15 +100,25 @@ public class WrapperNBT{
 		}
 	}
 	
-	//Point.
-	public Point3i getPoint(String name){
+	//Points.
+	public Point3i getPoint3i(String name){
 		return new Point3i(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
 	}
 	
-	public void setPoint(String name, Point3i value){
+	public void setPoint3i(String name, Point3i value){
 		setInteger(name + "x", value.x);
 		setInteger(name + "y", value.y);
 		setInteger(name + "z", value.z);
+	}
+	
+	public Point3d getPoint3d(String name){
+		return new Point3d(getDouble(name + "x"), getDouble(name + "y"), getDouble(name + "z"));
+	}
+	
+	public void setPoint3d(String name, Point3d value){
+		setDouble(name + "x", value.x);
+		setDouble(name + "y", value.y);
+		setDouble(name + "z", value.z);
 	}
 	
 	//Point array.
@@ -113,4 +142,19 @@ public class WrapperNBT{
 			setInteger(name + i + "z", values.get(i).z);
 		}
 	}
+	
+	//NBT.
+	public WrapperNBT getData(String name){
+		return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : null;
+	}
+	
+	public void setData(String name, WrapperNBT value){
+		tag.setTag(name, value.tag);
+	}
+
+	//Packet handling.
+	public void writeToBufferTag(ByteBuf to){
+        PacketBuffer pb = new PacketBuffer(to);
+        pb.writeCompoundTag(tag);
+    }
 }

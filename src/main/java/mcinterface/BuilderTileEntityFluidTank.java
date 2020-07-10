@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import javax.annotation.Nullable;
 
@@ -17,18 +17,18 @@ import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-/**Wrapper for tile entities that contain fluids.  This wrapper does not tick.
- * If you need a tickable instance, use {@link WrapperTileEntityFluidTank.Tickable} instead.
+/**Builder for tile entities that contain fluids.  This builder does not tick.
+ * If you need a tickable instance, use {@link BuilderTileEntityFluidTank.Tickable} instead.
  *
  * @author don_bruce
  */
-public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityFluidTank<?>> extends WrapperTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityFluidTank<?>> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
     
-    public WrapperTileEntityFluidTank(){
+    public BuilderTileEntityFluidTank(){
 		//Blank constructor for MC.  We set the TE variable in NBT instead.
 	}
     
-	WrapperTileEntityFluidTank(FluidTankTileEntity tileEntity){
+	BuilderTileEntityFluidTank(FluidTankTileEntity tileEntity){
 		super(tileEntity);
 	}
 
@@ -109,11 +109,11 @@ public class WrapperTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
     }
     
     
-    /**Tickable wrapper for {@link WrapperTileEntityFluidTank}.
+    /**Tickable builder for {@link BuilderTileEntityFluidTank}.
      *
      * @author don_bruce
      */
-	public static class Tickable<TickableTileEntity extends ATileEntityFluidTank<?>> extends WrapperTileEntityFluidTank<TickableTileEntity> implements ITickable{
+	public static class Tickable<TickableTileEntity extends ATileEntityFluidTank<?>> extends BuilderTileEntityFluidTank<TickableTileEntity> implements ITickable{
 	    
 		public Tickable(){
 			//Blank constructor for MC.  We set the TE variable in NBT instead.

@@ -5,10 +5,10 @@ import java.io.InputStreamReader;
 
 import org.apache.logging.log4j.Logger;
 
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -59,6 +59,6 @@ public class MTS {
 	@EventHandler
 	public void init(FMLInitializationEvent event){
 		MTSRegistry.init();
-		WrapperNetwork.init();
+		InterfaceNetwork.init();
 	}
 }

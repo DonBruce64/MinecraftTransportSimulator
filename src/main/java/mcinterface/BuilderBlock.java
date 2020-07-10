@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-/**Wrapper for the MC Block class.  This class assumes the block will not be a solid
+/**Builder for a basic MC Block class.  This builder assumes the block will not be a solid
  * block (so no culling) and may have alpha channels in the texture (like glass).
  * It also assumes the block can be rotated, and saves the rotation with whatever
  * version-specific rotation scheme the current MC version uses.
@@ -61,16 +61,16 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
  * @author don_bruce
  */
 @EventBusSubscriber
-public class WrapperBlock extends Block{
+public class BuilderBlock extends Block{
 	protected static final PropertyDirection FACING = BlockHorizontal.FACING;
 	final ABlockBase block;
 	
-	static final Map<ABlockBase, WrapperBlock> blockWrapperMap = new HashMap<ABlockBase, WrapperBlock>();
+	static final Map<ABlockBase, BuilderBlock> blockWrapperMap = new HashMap<ABlockBase, BuilderBlock>();
 	static final Map<String, IBlockTileEntity<?>> tileEntityMap = new HashMap<String, IBlockTileEntity<?>>();
 	
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
 	
-    public WrapperBlock(ABlockBase block){
+    public BuilderBlock(ABlockBase block){
 		super(Material.ROCK);
 		this.block = block;
 		fullBlock = false;
@@ -98,7 +98,7 @@ public class WrapperBlock extends Block{
     	//Need to return a wrapper class here, not the actual TE.
 		ATileEntityBase<?> tile = ((IBlockTileEntity<?>) block).createTileEntity();
 		if(tile instanceof TileEntitySignalController){
-			return new WrapperTileEntitySignalController((TileEntitySignalController) tile);
+			return new BuilderTileEntitySignalController((TileEntitySignalController) tile);
 		}else{
 			return getTileEntityGenericWrapper(tile);
 		}
@@ -108,18 +108,18 @@ public class WrapperBlock extends Block{
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	private static <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> WrapperTileEntity<? extends ATileEntityBase<JSONDefinition>> getTileEntityGenericWrapper(ATileEntityBase<JSONDefinition> tile){
+	private static <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> BuilderTileEntity<? extends ATileEntityBase<JSONDefinition>> getTileEntityGenericWrapper(ATileEntityBase<JSONDefinition> tile){
 		if(tile instanceof ATileEntityFluidTank){
 		   	if(tile instanceof ITileEntityTickable){
-		   		return new WrapperTileEntityFluidTank.Tickable<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);	
+		   		return new BuilderTileEntityFluidTank.Tickable<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);	
 		   	}else{
-		   		return new WrapperTileEntityFluidTank<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);
+		   		return new BuilderTileEntityFluidTank<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);
 		   	}
 		}else{
 	       	if(tile instanceof ITileEntityTickable){
-	       		return new WrapperTileEntity.Tickable<ATileEntityBase<JSONDefinition>>(tile);	
+	       		return new BuilderTileEntity.Tickable<ATileEntityBase<JSONDefinition>>(tile);	
 	       	}else{
-	       		return new WrapperTileEntity<ATileEntityBase<JSONDefinition>>(tile);
+	       		return new BuilderTileEntity<ATileEntityBase<JSONDefinition>>(tile);
 	       	}
 		}
 	}
@@ -127,7 +127,7 @@ public class WrapperBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		return block.onClicked(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), new WrapperPlayer(player));
+		return block.onClicked(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), new WrapperEntityPlayer(player));
 	}
     
     @Override
@@ -142,13 +142,13 @@ public class WrapperBlock extends Block{
     	if(block instanceof IBlockTileEntity<?>){
     		//TODO move this into the interface when we have a wrapper itemstack.
     		TileEntity tile = world.getTileEntity(pos);
-    		if(tile instanceof WrapperTileEntity){
-    			if(((WrapperTileEntity<?>) tile).tileEntity != null){
-    				AJSONItem<? extends AJSONItem<?>.General> definition = ((WrapperTileEntity<?>) tile).tileEntity.getDefinition();
+    		if(tile instanceof BuilderTileEntity){
+    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
+    				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.getDefinition();
     				if(definition != null){
     					ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-    	        		((WrapperTileEntity<?>) tile).tileEntity.save(data);
+    	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
     	            	return stack;
     				}
@@ -178,10 +178,10 @@ public class WrapperBlock extends Block{
     	//spawned during the getDrops method.
     	if(block instanceof IBlockTileEntity<?>){
     		TileEntity tile = world.getTileEntity(pos);
-    		if(tile instanceof WrapperTileEntity){
-    			if(((WrapperTileEntity<?>) tile).tileEntity != null){
+    		if(tile instanceof BuilderTileEntity){
+    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
-        			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((WrapperTileEntity<?>) tile).tileEntity.getDrops()){
+        			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
         				drops.add(new ItemStack(item));
         			}
         			dropsAtPositions.put(pos, drops);
@@ -282,8 +282,8 @@ public class WrapperBlock extends Block{
   		//Gets the light level.  We need to override this as light level can change.
   		if(block instanceof IBlockTileEntity){
   			TileEntity tile = world.getTileEntity(pos);
-  			if(tile instanceof WrapperTileEntity){
-  				return (int) (((WrapperTileEntity<?>) tile).tileEntity.lightLevel*15F);
+  			if(tile instanceof BuilderTileEntity){
+  				return (int) (((BuilderTileEntity<?>) tile).tileEntity.lightLevel*15F);
   			}
   		}
         return super.getLightValue(state, world, pos);
@@ -298,10 +298,10 @@ public class WrapperBlock extends Block{
 		//Create the crafting bench wrappers and register them.
 		//None of these will be TEs, so we don't have to check for that.
 		for(Field field : MTSRegistry.class.getFields()){
-			if(field.getType().equals(WrapperBlock.class)){
+			if(field.getType().equals(BuilderBlock.class)){
 				try{
 					//Get the name of the wrapper and register it.
-					WrapperBlock block = (WrapperBlock) field.get(null);
+					BuilderBlock block = (BuilderBlock) field.get(null);
 					String name = field.getName().toLowerCase();
 					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
 				}catch(Exception e){
@@ -311,11 +311,11 @@ public class WrapperBlock extends Block{
 		}
 		
 		//Register the TE wrappers.
-		GameRegistry.registerTileEntity(WrapperTileEntity.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName()));
-		GameRegistry.registerTileEntity(WrapperTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName() + WrapperTileEntity.Tickable.class.getSimpleName()));
-		GameRegistry.registerTileEntity(WrapperTileEntitySignalController.class, new ResourceLocation(MTS.MODID, WrapperTileEntity.class.getSimpleName() + WrapperTileEntitySignalController.class.getSimpleName()));
-		GameRegistry.registerTileEntity(WrapperTileEntityFluidTank.class, new ResourceLocation(MTS.MODID, WrapperTileEntityFluidTank.class.getSimpleName()));
-		GameRegistry.registerTileEntity(WrapperTileEntityFluidTank.Tickable.class, new ResourceLocation(MTS.MODID, WrapperTileEntityFluidTank.class.getSimpleName() + WrapperTileEntityFluidTank.Tickable.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntitySignalController.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntitySignalController.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName() + BuilderTileEntityFluidTank.Tickable.class.getSimpleName()));
 		
 		//Register the pack-based blocks.  We cheat here and
 		//iterate over all pack items and get the blocks they spawn.
@@ -328,7 +328,7 @@ public class WrapperBlock extends Block{
 					ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
 					if(!blocksRegistred.contains(itemBlockBlock)){
 						//New block class detected.  Register it and its instance.
-						WrapperBlock wrapper = new WrapperBlock(itemBlockBlock);
+						BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
 						String name = itemBlockBlock.getClass().getSimpleName();
 						name = MTS.MODID + ":" + name.substring("Block".length());
 						event.getRegistry().register(wrapper.setRegistryName(name).setUnlocalizedName(name));
@@ -344,6 +344,6 @@ public class WrapperBlock extends Block{
 		}
 		
 		//Finally, register the fake light block.
-		event.getRegistry().register(WrapperBlockFakeLight.instance.setRegistryName(MTS.MODID + ":fake_light"));
+		event.getRegistry().register(BuilderBlockFakeLight.instance.setRegistryName(MTS.MODID + ":fake_light"));
 	}
 }

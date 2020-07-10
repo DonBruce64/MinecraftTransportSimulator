@@ -1,10 +1,5 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -12,13 +7,11 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -76,39 +69,25 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns the max build height for the world.  Note that entities may move and be saved
+	 *  above this height, and moving above this height will result in rendering oddities.
+	 */
+	public long getMaxHeight(){
+		return world.getHeight();
+	}
+	
+	/**
 	 *  Returns the entity that has the passed-in ID.
 	 */
-	public Entity getEntity(int id){
-		return world.getEntityByID(id);
+	public WrapperEntity getEntity(int id){
+		return new WrapperEntity(world.getEntityByID(id));
 	}
 	
 	/**
 	 *  Returns the player with the passed-in ID.
 	 */
-	public WrapperPlayer getPlayer(int id){
-		return new WrapperPlayer((EntityPlayer) world.getEntityByID(id));
-	}
-	
-	/**
-	 *  Returns the vehicle that has the passed-in ID.
-	 */
-	public EntityVehicleF_Physics getVehicle(int id){
-		return (EntityVehicleF_Physics) world.getEntityByID(id);
-	}
-	
-	/**
-	 *  Returns a list of all vehicles within specified bounds.
-	 */
-	public List<EntityVehicleF_Physics> getVehiclesWithin(BoundingBox bounds){
-		List<EntityVehicleF_Physics> vehicles = new ArrayList<EntityVehicleF_Physics>();
-		for(Entity entity : world.loadedEntityList){
-			if(entity instanceof EntityVehicleF_Physics){
-				if(bounds.isPointInside(new Point3d(entity.posX, entity.posY, entity.posZ))){
-					vehicles.add((EntityVehicleF_Physics) entity);
-				}
-			}
-		}
-		return vehicles;
+	public WrapperEntityPlayer getPlayer(int id){
+		return new WrapperEntityPlayer((EntityPlayer) world.getEntityByID(id));
 	}
 	
 	/**
@@ -150,7 +129,7 @@ public class WrapperWorld{
 	 */
 	public ABlockBase getBlock(Point3i point){
 		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
-		return block instanceof WrapperBlock ? ((WrapperBlock) block).block : null;
+		return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
 	}
 	
 	/**
@@ -165,9 +144,9 @@ public class WrapperWorld{
 	 *  Returns true if the block was placed, false if not.
 	 */
     @SuppressWarnings("unchecked")
-	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer player, Axis axis){
+	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperEntityPlayer player, Axis axis){
     	if(!world.isRemote){
-	    	WrapperBlock wrapper = WrapperBlock.blockWrapperMap.get(block);
+	    	BuilderBlock wrapper = BuilderBlock.blockWrapperMap.get(block);
 	    	ItemStack stack = player.getHeldStack();
 	    	BlockPos pos = new BlockPos(location.x, location.y, location.z);
 	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
@@ -203,7 +182,7 @@ public class WrapperWorld{
 	 */
 	public ATileEntityBase<?> getTileEntity(Point3i point){
 		TileEntity tile = world.getTileEntity(new BlockPos(point.x, point.y, point.z));
-		return tile instanceof WrapperTileEntity ? ((WrapperTileEntity<?>) tile).tileEntity : null;
+		return tile instanceof BuilderTileEntity ? ((BuilderTileEntity<?>) tile).tileEntity : null;
 	}
 	
 	/**
@@ -247,7 +226,7 @@ public class WrapperWorld{
 	public void setFakeLight(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		if(world.isAirBlock(pos)){
-			world.setBlockState(pos, WrapperBlockFakeLight.instance.getDefaultState());
+			world.setBlockState(pos, BuilderBlockFakeLight.instance.getDefaultState());
 		}
 	}
 	

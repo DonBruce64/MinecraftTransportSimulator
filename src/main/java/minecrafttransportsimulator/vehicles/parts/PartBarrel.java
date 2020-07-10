@@ -64,7 +64,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
     }
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound dataTag = new NBTTagCompound();
         if(tankInfo.fluid != null){
         	tankInfo.fluid.writeToNBT(dataTag);

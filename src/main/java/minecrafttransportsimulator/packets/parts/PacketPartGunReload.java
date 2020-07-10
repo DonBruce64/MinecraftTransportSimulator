@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.parts;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.InterfaceAudio;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -49,7 +49,7 @@ public class PacketPartGunReload extends APacketPart{
 						gun.bulletsLeft += gun.loadedBullet.definition.bullet.quantity;
 						gun.reloadTimeRemaining = gun.definition.gun.reloadTime;
 						gun.reloading = true;
-						WrapperAudio.playQuickSound(new SoundInstance(gun, gun.definition.packID + ":" + gun.definition.systemName + "_reloading"));
+						InterfaceAudio.playQuickSound(new SoundInstance(gun, gun.definition.packID + ":" + gun.definition.systemName + "_reloading"));
 					}
 				}
 			});

@@ -722,7 +722,7 @@ public class GUIVehicleEditor extends AGUIBase{
 
 		@Override
 		public boolean setIndex(int index){
-			if(index < vehicle.getVehicleParts().size()){
+			if(index < vehicle.parts.size()){
 				currentIndex = index;
 				return true;
 			}else{
@@ -758,7 +758,7 @@ public class GUIVehicleEditor extends AGUIBase{
 				dataEntryBoxes.get(dataEntryBoxIndex++).setText("N/A");
 			}else{
 				//Render part
-				APart partToRender = vehicle.getVehicleParts().get(currentIndex);
+				APart partToRender = vehicle.parts.get(currentIndex);
 				componentItemModel.modelDomain = partToRender.definition.packID;
 				componentItemModel.modelLocation = "objmodels/parts/" + (partToRender.definition.general.modelName != null ? partToRender.definition.general.modelName : partToRender.definition.systemName) + ".obj";
 				componentItemModel.textureDomain = partToRender.definition.packID;

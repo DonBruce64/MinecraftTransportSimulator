@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import mcinterface.InterfaceAudio;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -11,7 +12,6 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -250,7 +250,7 @@ public class PartGun extends APart implements FXPart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound dataTag = new NBTTagCompound();
 		dataTag.setInteger("shotsFired", this.shotsFired);
 		dataTag.setInteger("bulletsLeft", this.bulletsLeft);
@@ -309,7 +309,7 @@ public class PartGun extends APart implements FXPart{
 			
 			//Now add the bullet as a particle.
 			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, worldPos.x + bulletOrientation.x*definition.gun.length, worldPos.y + bulletOrientation.y*definition.gun.length, worldPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 		}
 	}

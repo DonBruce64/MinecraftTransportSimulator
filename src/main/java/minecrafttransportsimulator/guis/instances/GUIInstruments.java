@@ -7,6 +7,10 @@ import java.util.TreeMap;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -20,10 +24,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does
@@ -59,7 +59,7 @@ public class GUIInstruments extends AGUIBase{
 	private final List<TexturelessButton> vehicleInstrumentSlots = new ArrayList<TexturelessButton>();
 	private final List<GUIComponentInstrument> vehicleInstruments = new ArrayList<GUIComponentInstrument>();
 	
-	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player){
+	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperEntityPlayer player){
 		this.vehicle = vehicle;
 		this.hudGUI = new GUIHUD(vehicle);
 		this.panelGUI = vehicle.definition.general.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);
@@ -110,7 +110,7 @@ public class GUIInstruments extends AGUIBase{
 				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
-						WrapperNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
+						InterfaceNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
 						selectedInstrumentOnVehicle = null;
 					}
 					
@@ -134,16 +134,16 @@ public class GUIInstruments extends AGUIBase{
 		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, "", 1.0F, false, false, 0));
 
 		//Create the clear button.
-		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, WrapperGUI.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
+		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, BuilderGUI.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
-				WrapperNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
+				InterfaceNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
 				selectedInstrumentOnVehicle = null;
 			}
 		});
 		
 		//Create the HUD selection button.
-		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, WrapperGUI.translate("gui.instruments.main")){
+		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, BuilderGUI.translate("gui.instruments.main")){
 			@Override
 			public void onClicked(){
 				hudSelected = true;
@@ -154,7 +154,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, WrapperGUI.translate("gui.instruments.control")){
+		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, BuilderGUI.translate("gui.instruments.control")){
 			@Override
 			public void onClicked(){
 				hudSelected = false;
@@ -191,10 +191,10 @@ public class GUIInstruments extends AGUIBase{
 						//This happens even if there's an instrument rendered as we need to highlight it.
 						if(packInstrument.equals(selectedInstrumentOnVehicle)){
 							int instrumentRadius = (int) (64F*packInstrument.hudScale);
-							if(WrapperGUI.inClockPeriod(40, 20)){
+							if(BuilderGUI.inClockPeriod(40, 20)){
 								GL11.glPushMatrix();
 								GL11.glTranslatef(0, 0, 1.0F);
-								WrapperGUI.renderRectangle(this.x, this.y, 2*instrumentRadius, 2*instrumentRadius, Color.WHITE);
+								BuilderGUI.renderRectangle(this.x, this.y, 2*instrumentRadius, 2*instrumentRadius, Color.WHITE);
 								GL11.glPopMatrix();
 							}
 						}
@@ -251,7 +251,7 @@ public class GUIInstruments extends AGUIBase{
 					instrumentSlotIcons.get(i).itemName = null;
 				}
 			}
-			packName.text = WrapperGame.getModName(currentPack);
+			packName.text = InterfaceGame.getModName(currentPack);
 		}
 		
 		//Set buttons depending on which vehicle section is selected.
@@ -259,7 +259,7 @@ public class GUIInstruments extends AGUIBase{
 		panelButton.enabled = hudSelected;
 		
 		//Set info and clear state based on if we've clicked an instrument.
-		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + WrapperGUI.translate("gui.instruments.idle") + "  \\/" : "/\\  " + WrapperGUI.translate("gui.instruments.decide") + "  /\\";
+		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + BuilderGUI.translate("gui.instruments.idle") + "  \\/" : "/\\  " + BuilderGUI.translate("gui.instruments.decide") + "  /\\";
 		clearButton.enabled = selectedInstrumentOnVehicle != null && vehicle.instruments.containsKey((byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle));
 	}
 	
@@ -311,12 +311,12 @@ public class GUIInstruments extends AGUIBase{
 			if(visible){
 				if(enabled){
 					if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-						WrapperGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.LIGHT_GRAY);
+						BuilderGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.LIGHT_GRAY);
 					}else{
-						WrapperGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.GRAY);
+						BuilderGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.GRAY);
 					}
 				}else{
-					WrapperGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.BLACK);
+					BuilderGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.BLACK);
 				}
 			}
 		}

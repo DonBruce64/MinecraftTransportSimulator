@@ -2,13 +2,13 @@ package minecrafttransportsimulator.blocks.instances;
 
 import java.util.List;
 
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor>{
 	

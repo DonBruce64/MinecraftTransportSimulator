@@ -2,10 +2,10 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.wrappers.WrapperRender;
 
 /**This class represents a window object of a model.  The only transform this applies is binding
  * the glass texture prior to rendering, and rendering the window inner parts if set in the config.
@@ -26,7 +26,7 @@ public class TransformWindow extends ARenderableTransform{
 
 	@Override
 	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
+		InterfaceRender.bindTexture("minecraft", "textures/blocks/glass.png");
 	}
 	
 	@Override
@@ -43,6 +43,6 @@ public class TransformWindow extends ARenderableTransform{
 		}
 		
 		//Un-bind the glass texture.
-		WrapperRender.recallTexture();
+		InterfaceRender.recallTexture();
 	}
 }

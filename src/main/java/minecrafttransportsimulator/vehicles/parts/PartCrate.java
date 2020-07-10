@@ -37,7 +37,7 @@ public final class PartCrate extends APart{
     }
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound dataTag = new NBTTagCompound();
 		NBTTagList stackTagList = new NBTTagList();
 		for(byte i = 0; i < crateInventory.getSizeInventory(); ++i){

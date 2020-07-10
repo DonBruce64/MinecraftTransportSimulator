@@ -32,7 +32,7 @@ public abstract class AGUIPanel extends AGUIBase{
 		if(vehicle.definition.blimp != null){
 			haveReverseThrustOption = true;
 		}else{
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.parts){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;

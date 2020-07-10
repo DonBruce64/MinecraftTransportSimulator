@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,14 +17,14 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
-/**Wrapper for MC input classes.  Constructor does not exist, as this is simply a
+/**Interface for MC input classes.  Constructor does not exist, as this is simply a
  * collection of static methods that can be called in placed of calling
  * the lwjgl Keyboard classes as these change in newer versions.  This
  * allows the {@link ControlSystem} to be version-independent.
  *
  * @author don_bruce
  */
-public class WrapperInput{
+public class InterfaceInput{
 	//Common variables.
 	private static KeyBinding configKey;
 	

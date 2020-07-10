@@ -9,6 +9,11 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceRender;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
@@ -29,11 +34,6 @@ import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.item.ItemStack;
@@ -102,7 +102,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			}
 			
 			//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-			int renderPass = WrapperRender.getRenderPass();
+			int renderPass = InterfaceRender.getRenderPass();
 			if(renderPass == -1){
 				renderPass = 2;
 			}
@@ -154,7 +154,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 */
 	private static void render(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Set render camera position.
-		Point3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
+		Point3d renderPosition = InterfaceGame.getRenderViewEntity().getRenderedPosition(partialTicks);
 		
 		//Get vehicle position and rotation.
         double vehicleX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
@@ -165,7 +165,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
         double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
        
         //Set up lighting.
-        WrapperRender.setLightingToVehicle(vehicle);
+        InterfaceRender.setLightingToEntity(vehicle);
         
         //Use smooth shading for main model rendering.
 		GL11.glShadeModel(GL11.GL_SMOOTH);
@@ -217,21 +217,21 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		
 		//Check to see if we need to manually render riders.
 		//This happens if we force-render this vehicle in pass -1.
-		if(WrapperRender.getRenderPass() == -1){
-			WrapperRender.renderVehicleRiders(vehicle, partialTicks);
+		if(InterfaceRender.getRenderPass() == -1){
+			InterfaceRender.renderEntityRiders(vehicle, partialTicks);
 		}
 		
 		//Render bounding boxes for parts and collision points.
-		if(WrapperRender.shouldRenderBoundingBoxes()){
+		if(InterfaceRender.shouldRenderBoundingBoxes()){
 			renderBoundingBoxes(vehicle);
 		}
 		
 		//Pop vehicle translation matrix and reset all states.
 		GL11.glPopMatrix();
-		WrapperRender.resetStates();
+		InterfaceRender.resetStates();
 		
 		//Spawn particles, but only once per render cycle.
-		if(WrapperRender.getRenderPass() != 1 && !WrapperGame.isGamePaused()){
+		if(InterfaceRender.getRenderPass() != 1 && !InterfaceGame.isGamePaused()){
 			for(APart part : vehicle.getVehicleParts()){
 				if(part instanceof FXPart){
 					((FXPart) part).spawnParticles();
@@ -290,8 +290,8 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		WrapperRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
-		if(WrapperRender.getRenderPass() != 1){
+		InterfaceRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
+		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
 		}
 		
@@ -343,9 +343,9 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
 		if(!part.definition.general.useVehicleTexture){
-			WrapperRender.setTexture(part.definition.packID, part.getTextureLocation());
+			InterfaceRender.setTexture(part.definition.packID, part.getTextureLocation());
 		}else{
-			WrapperRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
+			InterfaceRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
 		}
 		
 		//Rotate the part prior to rendering the displayList.
@@ -363,7 +363,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		
 		//If we are a tread, do the tread-specific render rather than the display list.
 		//Don't do this for pass 1 though as treads don't have transparency.
-		if(part.definition.ground != null && part.definition.ground.isTread && WrapperRender.getRenderPass() != 1){
+		if(part.definition.ground != null && part.definition.ground.isTread && InterfaceRender.getRenderPass() != 1){
 			if(part.vehicleDefinition.treadZPoints != null){
 				doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
@@ -371,7 +371,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			}
 		}else{
     		//Render the part DisplayList, but only if we aren't in the transparent pass.
-			if(WrapperRender.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
 			}
 			
@@ -836,13 +836,13 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 *  in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderTextMarkings(EntityVehicleF_Physics vehicle){
-		if(WrapperRender.getRenderPass() != 1){
+		if(InterfaceRender.getRenderPass() != 1){
 			//Disable system lighting as we have issues with it in 3D rendering.
-			WrapperRender.setSystemLightingState(false);
+			InterfaceRender.setSystemLightingState(false);
 			
 			//If we have light-up text, disable lightmap too.
 			if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
-				WrapperRender.setInternalLightingState(false);
+				InterfaceRender.setInternalLightingState(false);
 			}
 			
 			//Render all text strings.
@@ -866,7 +866,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 				}
 				
 				//Finally, render the text.
-				WrapperGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
+				BuilderGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
 				GL11.glPopMatrix();
 			}
 		}
@@ -877,18 +877,18 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 *  needs to be rendered in pass 1 to do alpha blending.
 	 */
 	private static void renderPartBoxes(EntityVehicleF_Physics vehicle){
-		if(WrapperRender.getRenderPass() != 0){
+		if(InterfaceRender.getRenderPass() != 0){
 			//Disable lighting and texture rendering, and enable blending.
-			WrapperRender.setLightingState(false);
-			WrapperRender.setBlendState(true, false);
+			InterfaceRender.setLightingState(false);
+			InterfaceRender.setBlendState(true, false);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			
 			//Enable blending if on pass -1 for transparency.
-			if(WrapperRender.getRenderPass() == -1){
-				WrapperRender.setBlendState(true, false);
+			if(InterfaceRender.getRenderPass() == -1){
+				InterfaceRender.setBlendState(true, false);
 			}
 			
-			WrapperPlayer player = WrapperGame.getClientPlayer();
+			WrapperEntityPlayer player = InterfaceGame.getClientPlayer();
 			ItemStack heldStack = player.getHeldStack();
 			if(heldStack != null){
 				if(heldStack.getItem() instanceof AItemPart){
@@ -920,9 +920,9 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 							}
 							
 							if(isPartValid){
-								WrapperRender.setColorState(0, 1, 0, 0.5F);
+								InterfaceRender.setColorState(0, 1, 0, 0.5F);
 							}else{
-								WrapperRender.setColorState(1, 0, 0, 0.5F);
+								InterfaceRender.setColorState(1, 0, 0, 0.5F);
 							}
 							GL11.glBegin(GL11.GL_QUADS);
 							
@@ -969,9 +969,9 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 */
 	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
 		//Set states for box render.
-		WrapperRender.setLightingState(false);
+		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		WrapperRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 		GL11.glLineWidth(3.0F);
 		
 		//Draw collision boxes for the vehicle.
@@ -1011,7 +1011,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		}
 		
 		//Draw part center points.
-		WrapperRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.getVehicleParts()){
 			GL11.glVertex3d(part.worldPos.x - vehicle.posX, part.worldPos.y - vehicle.posY - part.getHeight(), part.worldPos.z - vehicle.posZ);

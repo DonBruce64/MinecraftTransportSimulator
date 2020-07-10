@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import mcinterface.InterfaceRender;
+import mcinterface.BuilderTileEntityRender;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperTileEntityRender;
 
-/**Base Tile Entity rendering class (TESR).  This type is used in the constructor of {@link WrapperTileEntityRender} 
+/**Base Tile Entity rendering class (TESR).  This type is used in the constructor of {@link BuilderTileEntityRender} 
  * to allow us to use completely custom render code that is not associated with MC's standard render code.  This should
  * be used with all blocks that need fancy rendering that can't be done with JSON.
  *
@@ -15,7 +15,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	
 	/**
 	 *  Called to render this tile entity.  The currently-bound texture is undefined, so you will need
-	 *  to bind whichever texture you see fit to do so.  This can be done via {@link WrapperRender#bindTexture(String, String)}
+	 *  to bind whichever texture you see fit to do so.  This can be done via {@link InterfaceRender#bindTexture(String, String)}
 	 */
 	public abstract void render(RenderedTileEntity tileEntity, RenderedBlock block, float partialTicks);
 	

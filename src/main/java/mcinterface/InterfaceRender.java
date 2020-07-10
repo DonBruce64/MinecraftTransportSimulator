@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -21,7 +21,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -49,14 +49,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-/**Wrapper for the various MC rendering engines.  This class has functions for
+/**Interface for the various MC rendering engines.  This class has functions for
  * binding textures, changing lightmap statuses, and registering rendering systems
  * for TESRs, items, and entities.
  *
  * @author don_bruce
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
-public class WrapperRender{
+public class InterfaceRender{
 	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>();
 	private static String pushedTextureDomain;
 	private static String pushedTextureLocation;
@@ -162,15 +162,15 @@ public class WrapperRender{
 	
 	/**
 	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in vehicle's location.  This will also enable lighting should
+	 *  passed-in entitie's location.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToVehicle(EntityVehicleF_Physics vehicle){
+	public static void setLightingToEntity(AEntityBase entity){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = vehicle.getBrightnessForRender();
+		int lightVar = entity.builder.getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
@@ -183,7 +183,7 @@ public class WrapperRender{
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
-	        int lightVar = WrapperGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
+	        int lightVar = InterfaceGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
 	        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
         }
 	}
@@ -240,16 +240,16 @@ public class WrapperRender{
 	}
 	
 	/**
-	 *  This method manually renders all riders on a vehicle.  Useful if you're rendering the vehicle manually
-	 *  and the vehicle and its riders have been culled from rendering.
+	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
+	 *  and the entity and its riders have been culled from rendering.
 	 */
-	public static void renderVehicleRiders(EntityVehicleF_Physics vehicle, float partialTicks){
-		for(Entity passenger : vehicle.getPassengers()){
-			if(!(WrapperGame.getClientPlayer().equals(passenger) && WrapperGame.inFirstPerson()) && passenger.posY > passenger.world.getHeight()){
-				PartSeat seat = vehicle.getSeatForRider(passenger);
+	public static void renderEntityRiders(AEntityBase entity, float partialTicks){
+		for(Entity passenger : entity.getPassengers()){
+			if(!(InterfaceGame.getClientPlayer().equals(passenger) && InterfaceGame.inFirstPerson()) && passenger.posY > passenger.world.getHeight()){
+				PartSeat seat = entity.getSeatForRider(passenger);
 				if(seat != null){
 					GL11.glPushMatrix();
-					Point3d offset = vehicle.positionVector.copy().add(seat.worldPos);
+					Point3d offset = entity.position.copy().add(seat.worldPos);
 					GL11.glTranslated(offset.x, offset.y - seat.getHeight()/2F + passenger.getYOffset(), offset.z);
 					Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
 					GL11.glPopMatrix();
@@ -285,14 +285,14 @@ public class WrapperRender{
 		}
 		
 		//Register the vehicle rendering class.
-		RenderingRegistry.registerEntityRenderingHandler(EntityVehicleF_Physics.class, new IRenderFactory<EntityVehicleF_Physics>(){
+		RenderingRegistry.registerEntityRenderingHandler(BuilderEntity.class, new IRenderFactory<BuilderEntity>(){
 			@Override
-			public Render<? super EntityVehicleF_Physics> createRenderFor(RenderManager manager){
+			public Render<? super BuilderEntity> createRenderFor(RenderManager manager){
 				return new RenderVehicle(manager);
 			}});
 				
 		//Register the TESR wrapper.
-		ClientRegistry.bindTileEntitySpecialRenderer(WrapperTileEntity.class, new WrapperTileEntityRender());
+		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new BuilderTileEntityRender());
 		
 		//Register the item models.
 		//First register the core items.
@@ -304,10 +304,10 @@ public class WrapperRender{
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-			}else if(field.getType().equals(WrapperBlock.class)){
+			}else if(field.getType().equals(BuilderBlock.class)){
 				//Wrapper block item, get item from it to register.
 				try{
-					WrapperBlock wrapper = (WrapperBlock) field.get(null);
+					BuilderBlock wrapper = (BuilderBlock) field.get(null);
 					registerCoreItemRender(Item.getItemFromBlock(wrapper));
 				}catch(Exception e){
 					e.printStackTrace();

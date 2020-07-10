@@ -2,6 +2,12 @@ package minecrafttransportsimulator.systems;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.BuilderGUI;
+import mcinterface.InterfaceAudio;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceInput;
+import mcinterface.InterfaceRender;
+import mcinterface.BuilderTileEntity;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -14,12 +20,6 @@ import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperInput;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperTileEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -170,7 +170,7 @@ public final class ClientEventSystem{
         		//Update the sounds in the audio system.
         		//We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
         		try{
-        			WrapperAudio.update();
+        			InterfaceAudio.update();
         		}catch(Exception e){
         			//Do nothing.  We only get exceptions here if OpenAL isn't ready.
         		}
@@ -195,11 +195,11 @@ public final class ClientEventSystem{
                 	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
                     //We also need to make sure the player in this event is the actual client player.  If we are on a server,
                     //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-                	if(!WrapperGame.isChatOpen() && vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
+                	if(!InterfaceGame.isChatOpen() && vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
                 		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
                 		if(playeSeat != null){
                 			ControlSystem.controlVehicle(vehicle, playeSeat.vehicleDefinition.isController);
-                			WrapperInput.setMouseEnabled(!(playeSeat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
+                			InterfaceInput.setMouseEnabled(!(playeSeat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
                 			return;
                 		}
             		}
@@ -208,7 +208,7 @@ public final class ClientEventSystem{
         		//If we got down here, we must not be riding and controlling a vehicle via mouseYoke.
         		//Re-enable the mouse to ensure we don't keep it locked.
     			if(ConfigSystem.configObject.client.mouseYoke.value){
-            		WrapperInput.setMouseEnabled(true);
+            		InterfaceInput.setMouseEnabled(true);
             	}
         	}
         }
@@ -264,7 +264,7 @@ public final class ClientEventSystem{
 		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
         for(TileEntity tile : minecraft.world.loadedTileEntityList){
-        	if(tile instanceof WrapperTileEntity){
+        	if(tile instanceof BuilderTileEntity){
         		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
         		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
         	}
@@ -351,15 +351,15 @@ public final class ClientEventSystem{
                 		//This makes the GUI the same brightness as the vehicle.
                 		//We need to disable the OpenGL lighting, however.
                 		//This causes the HUD to change lighting based on the vehicle orientation, which we don't want. 
-                		WrapperRender.setLightingToVehicle(vehicle);
-                		WrapperRender.setSystemLightingState(false);
+                		InterfaceRender.setLightingToEntity(vehicle);
+                		InterfaceRender.setSystemLightingState(false);
         				GL11.glEnable(GL11.GL_ALPHA_TEST);
                 		
                 		//Bind the HUD texture and render it if set in the config.
                 		if(inFirstPerson ? !ConfigSystem.configObject.client.transpHUD_1P.value : !ConfigSystem.configObject.client.transpHUD_3P.value){
                 			//Set the render height depending on the config.
 	                		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(vehicle.definition.rendering.hudTexture != null ? vehicle.definition.rendering.hudTexture : "mts:textures/guis/hud.png"));
-	                		WrapperGUI.renderSheetTexture(guiLeft, guiTop, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 0, 0, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 512, 256);
+	                		BuilderGUI.renderSheetTexture(guiLeft, guiTop, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 0, 0, GUIHUD.HUD_WIDTH, GUIHUD.HUD_HEIGHT, 512, 256);
                 		}
                 		
                 		//Iterate though all the instruments the vehicle has and render them. 
@@ -377,7 +377,7 @@ public final class ClientEventSystem{
                 		
                 		//Disable the translating, lightmap, alpha to put it back to its old state.
                 		GL11.glTranslated(0, 0, -250);
-                		WrapperRender.setInternalLightingState(false);
+                		InterfaceRender.setInternalLightingState(false);
                 		GL11.glDisable(GL11.GL_ALPHA_TEST);
                 	}
             	}
@@ -394,7 +394,7 @@ public final class ClientEventSystem{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()].equals(MTSRegistry.coreTab)){
-	    			WrapperGUI.openGUI(new GUIPackMissing());
+	    			BuilderGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}
@@ -405,8 +405,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(InputEvent.KeyInputEvent event){
-        if(WrapperInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
-            WrapperGUI.openGUI(new GUIConfig());
+        if(InterfaceInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
+            BuilderGUI.openGUI(new GUIConfig());
         }
     }
     
@@ -416,7 +416,7 @@ public final class ClientEventSystem{
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
     	if(event.getWorld().isRemote){
-    		WrapperAudio.haltSoundsIn(event.getWorld().provider.getDimension());
+    		InterfaceAudio.haltSoundsIn(event.getWorld().provider.getDimension());
     	}
     }
 }

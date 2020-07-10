@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -10,18 +10,18 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySigna
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerControlled;
 import net.minecraftforge.fml.common.Optional;
 
-/**Wrapper Tile Entity for {@link TileEntitySignalController}.  Allows for interfacing with OpenComputers.
+/**Builder Tile Entity for {@link TileEntitySignalController}.  Allows for interfacing with OpenComputers.
  *
  * @author don_bruce
  */
 @Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")
-public class WrapperTileEntitySignalController extends WrapperTileEntity.Tickable<TileEntitySignalController> implements SimpleComponent{
+public class BuilderTileEntitySignalController extends BuilderTileEntity.Tickable<TileEntitySignalController> implements SimpleComponent{
 	
-	public WrapperTileEntitySignalController(){
+	public BuilderTileEntitySignalController(){
 		//Blank constructor for MC.  We set the TE variable in NBT instead.
 	}
 	
-	WrapperTileEntitySignalController(TileEntitySignalController tileEntity){
+	BuilderTileEntitySignalController(TileEntitySignalController tileEntity){
 		super(tileEntity);
 	}
 	
@@ -41,7 +41,7 @@ public class WrapperTileEntitySignalController extends WrapperTileEntity.Tickabl
 	public Object[] mode(Context context, Arguments args){
 		if(args.count() != 0 && args.isInteger(0)){
 			tileEntity.currentOpMode = OpMode.values()[args.checkInteger(0)];
-			WrapperNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
+			InterfaceNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
 		}
 		return new Object[]{tileEntity.currentOpMode.ordinal()};
 	}
@@ -51,7 +51,7 @@ public class WrapperTileEntitySignalController extends WrapperTileEntity.Tickabl
 	public Object[] signalState(Context context, Arguments args){
 		if(args.count() != 0 && args.isInteger(0)){
 			tileEntity.updateState(OpState.values()[args.checkInteger(0)], false);
-			WrapperNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
+			InterfaceNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
 		}
 		return new Object[]{tileEntity.currentOpState.ordinal()};
 	}
@@ -62,7 +62,7 @@ public class WrapperTileEntitySignalController extends WrapperTileEntity.Tickabl
 		if(args.count() != 0 && args.isBoolean(0)){
 			tileEntity.lightsOn = args.checkBoolean(0);
 			tileEntity.updateState(tileEntity.currentOpState, false);
-			WrapperNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
+			InterfaceNetwork.sendToAllClients(new PacketTileEntitySignalControllerControlled(tileEntity));
 		}
 		return new Object[]{tileEntity.lightsOn};
 	}

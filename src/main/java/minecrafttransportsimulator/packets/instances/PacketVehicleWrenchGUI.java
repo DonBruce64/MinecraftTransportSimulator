@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUIVehicleEditor;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet used to open GUIs when a vehicle is clicked by a wrench.
  * This is sent by the server to the client who clicked the vehicle
@@ -28,11 +28,11 @@ public class PacketVehicleWrenchGUI extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle){
 		if(vehicle.equals(player.getVehicleRiding()) && ConfigSystem.configObject.client.devMode.value){
-			WrapperGUI.openGUI(new GUIVehicleEditor(vehicle));
+			BuilderGUI.openGUI(new GUIVehicleEditor(vehicle));
 		}else{
-			WrapperGUI.openGUI(new GUIInstruments(vehicle, player));
+			BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
 		}
 		return true;
 	}

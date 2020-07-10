@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -34,16 +34,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-/**Wrapper for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
+/**Builder for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
  * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
- * construct the wrapper and open the GUI, all without exposing MC-specific code.
+ * construct and open the GUI, all without exposing MC-specific code.
  * On that note, this is where all MC-specific code should be located.  Preferably
  * in static methods that can be accessed by anything that needs GUI
  * functionality, even if it doesn't extend the {@link AGUIBase} class.
  *
  * @author don_bruce
  */
-public class WrapperGUI extends GuiScreen{
+public class BuilderGUI extends GuiScreen{
 	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
 	
@@ -53,7 +53,7 @@ public class WrapperGUI extends GuiScreen{
 	
 	private final AGUIBase gui;
 	
-	private WrapperGUI(AGUIBase gui){
+	private BuilderGUI(AGUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -410,7 +410,7 @@ public class WrapperGUI extends GuiScreen{
 		if(guiClass == null){
 			return Minecraft.getMinecraft().currentScreen == null;
 		}else{
-			return Minecraft.getMinecraft().currentScreen == null ? false : (Minecraft.getMinecraft().currentScreen instanceof WrapperGUI ? ((WrapperGUI) Minecraft.getMinecraft().currentScreen).gui.getClass().equals(guiClass) : false);
+			return Minecraft.getMinecraft().currentScreen == null ? false : (Minecraft.getMinecraft().currentScreen instanceof BuilderGUI ? ((BuilderGUI) Minecraft.getMinecraft().currentScreen).gui.getClass().equals(guiClass) : false);
 		}
 	}
 	
@@ -428,6 +428,6 @@ public class WrapperGUI extends GuiScreen{
 	 *  This makes it compatible with all MC-specific systems.
 	 */
 	public static void openGUI(AGUIBase gui){
-		FMLCommonHandler.instance().showGuiScreen(new WrapperGUI(gui));
+		FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
 	}
 }

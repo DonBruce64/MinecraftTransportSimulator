@@ -4,12 +4,12 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.core.IItemBlock;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -56,7 +56,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		//If we are a type of pack item that can place blocks, try to do so now.
 		if(this instanceof IItemBlock){
-			return ((IItemBlock) this).placeBlock(new WrapperWorld(world), new WrapperPlayer(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+			return ((IItemBlock) this).placeBlock(new WrapperWorld(world), new WrapperEntityPlayer(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
 		}else{
 			return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
 		}

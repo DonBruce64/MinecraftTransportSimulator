@@ -5,11 +5,11 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
@@ -44,7 +44,7 @@ public final class RenderInstrument{
 			Component section = instrument.definition.components.get(i);
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if((!section.lightOverlay && WrapperRender.getRenderPass() != 1) || (section.lightOverlay && WrapperRender.getRenderPass() != 0)){
+			if((!section.lightOverlay && InterfaceRender.getRenderPass() != 1) || (section.lightOverlay && InterfaceRender.getRenderPass() != 0)){
 				GL11.glPushMatrix();
 				//Translate to the component, but slightly away from the instrument location to prevent clipping.
 				GL11.glTranslatef(section.xCenter, section.yCenter, i*0.1F);
@@ -140,7 +140,7 @@ public final class RenderInstrument{
 			
 			//Reset blend state.
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			if(WrapperRender.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glDisable(GL11.GL_BLEND);
 			}
 		}

@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet used to craft items from crafting benches.  This goes to the server which verifies the
  * player has the appropriate materials.  If so, the item is crafted on the server and materials
@@ -36,7 +36,7 @@ public class PacketPlayerCraftItem extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperEntityPlayer player){
 		if(player.hasMaterials(itemToCraft)){
 			player.craftItem(itemToCraft);
 		}

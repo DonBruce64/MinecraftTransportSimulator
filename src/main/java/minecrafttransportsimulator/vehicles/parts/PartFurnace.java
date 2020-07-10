@@ -42,7 +42,7 @@ public final class PartFurnace extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return fakeFurnace.writeToNBT(new NBTTagCompound()); 
 	}
 	

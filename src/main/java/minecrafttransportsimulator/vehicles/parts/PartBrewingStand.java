@@ -42,7 +42,7 @@ public final class PartBrewingStand extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return fakeBrewingStand.writeToNBT(new NBTTagCompound()); 
 	}
 	

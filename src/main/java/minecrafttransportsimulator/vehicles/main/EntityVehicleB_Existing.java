@@ -7,10 +7,12 @@ import java.util.List;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
+import mcinterface.BuilderEntity;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -25,7 +27,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 
 /**This is the next class level above the base vehicle.
  * At this level we add methods for the vehicle's existence in the world.
@@ -41,8 +42,8 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
 	public boolean locked;
-	public String ownerName="";
-	public String displayText="";
+	public String ownerName = "";
+	public String displayText = "";
 	
 	//Internal states.
 	public byte prevParkingBrakeAngle;
@@ -51,10 +52,9 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	public double currentMass;
 	public double velocity;
 	public double prevVelocity;
-	public double groundVelocity;
-	public Point3d positionVector = new Point3d(0, 0, 0);
+	public double normalizedGroundVelocity;
 	public Point3d headingVector = new Point3d(0, 0, 0);
-	public Point3d velocityVector = new Point3d(0, 0, 0);
+	public Point3d normalizedVelocity = new Point3d(0, 0, 0);
 	public Point3d verticalVector = new Point3d(0, 0, 0);
 	public Point3d sideVector = new Point3d(0, 0, 0);
 
@@ -65,34 +65,35 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	/**List for storage of rider linkages to seats.  Populated during NBT load and used to populate the riderSeats map after riders load.*/
 	private List<Double[]> riderSeatPositions = new ArrayList<Double[]>();
 			
-	public EntityVehicleB_Existing(World world){
-		super(world);
-	}
-	
-	public EntityVehicleB_Existing(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, posX, posY, posZ, playerRotation, definition);
-		//This only gets done at the beginning when the entity is first spawned.
-		this.displayText = definition.rendering.defaultDisplayText;
+	public EntityVehicleB_Existing(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
+		super(builder, world, data);
+		this.locked = data.getBoolean("locked");
+		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
+		this.brakeOn = data.getBoolean("brakeOn");
+		this.ownerName = data.getString("ownerName");
+		this.displayText = data.getString("displayText");
+		if(displayText.isEmpty()){
+			displayText = definition.rendering.defaultDisplayText;
+		}
 	}
 	
 	@Override
-	public void onEntityUpdate(){
-		super.onEntityUpdate();
-		//Set vectors to current position and orientation.
-		positionVector.set(posX, posY, posZ);
-		velocityVector.set(motionX, 0D, motionZ);
-		groundVelocity = velocityVector.dotProduct(headingVector);
-		velocityVector.y = motionY;
+	public void update(){
+		super.update();
+		//Set vectors to current velocity and orientation.
+		normalizedVelocity.set(motion.x, 0D, motion.z);
+		normalizedGroundVelocity = normalizedVelocity.dotProduct(headingVector);
+		normalizedVelocity.y = motion.y;
 		prevVelocity = velocity;
-		velocity = Math.abs(velocityVector.dotProduct(headingVector));
-		velocityVector.normalize();
-		verticalVector = RotationSystem.getRotatedY(rotationPitch, rotationYaw, rotationRoll);
+		velocity = Math.abs(normalizedVelocity.dotProduct(headingVector));
+		normalizedVelocity.normalize();
+		verticalVector = new Point3d(0D, 1D, 0D).rotateFine(rotation);
 		sideVector = headingVector.crossProduct(verticalVector);
 		
 		//Update mass.
 		if(definition != null){
 			currentMass = getCurrentMass();
-			airDensity = 1.225*Math.pow(2, -posY/(500D*world.getHeight()/256D));
+			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 		}
 		
 		//Update parking brake angle.
@@ -222,7 +223,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 		for(APart part : getVehicleParts()){
 			if(part.getItemForPart() != null){
 				ItemStack partStack = new ItemStack(part.getItemForPart());
-				NBTTagCompound stackTag = part.getPartNBTTag();
+				NBTTagCompound stackTag = part.getData();
 				if(stackTag != null){
 					partStack.setTagCompound(stackTag);
 				}
@@ -246,7 +247,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	 */
 	protected float getCurrentMass(){
 		int currentMass = definition.general.emptyMass;
-		for(APart part : this.getVehicleParts()){
+		for(APart part : parts){
 			if(part instanceof PartCrate){
 				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
 			}else if(part instanceof PartBarrel){
@@ -297,11 +298,7 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
     @Override
 	public void readFromNBT(NBTTagCompound tagCompound){
 		super.readFromNBT(tagCompound);
-		this.locked=tagCompound.getBoolean("locked");
-		this.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
-		this.brakeOn=tagCompound.getBoolean("brakeOn");
-		this.ownerName=tagCompound.getString("ownerName");
-		this.displayText=tagCompound.getString("displayText");
+		
 		
 		this.riderSeatPositions.clear();
 		while(tagCompound.hasKey("Seat" + String.valueOf(riderSeatPositions.size()) + "0")){
@@ -314,13 +311,13 @@ abstract class EntityVehicleB_Existing extends EntityVehicleA_Base{
 	}
     
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setBoolean("locked", this.locked);
-		tagCompound.setBoolean("brakeOn", this.brakeOn);
-		tagCompound.setBoolean("parkingBrakeOn", this.parkingBrakeOn);
-		tagCompound.setString("ownerName", this.ownerName);
-		tagCompound.setString("displayText", this.displayText);
+	public void save(WrapperNBT data){
+		super.save(data);
+		data.setBoolean("locked", locked);
+		data.setBoolean("brakeOn", brakeOn);
+		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
+		data.setString("ownerName", ownerName);
+		data.setString("displayText", displayText);
 		
 		//Correlate the order of passengers in the rider list with their location to save it to NBT.
 		//That way riders don't get moved to other seats on world save/load.

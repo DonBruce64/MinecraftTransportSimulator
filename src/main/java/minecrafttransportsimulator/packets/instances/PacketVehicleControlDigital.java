@@ -1,17 +1,16 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.InterfaceAudio;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.systems.RotationSystem;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.entity.Entity;
 
 /**Packet used for controlling vehicles.  Responsible for handing singular button presses.
  * 
@@ -41,27 +40,27 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.car != null && vehicle.definition.car.isBigTruck){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
 			case HORN : {
 				if(world.isClient() && !vehicle.hornOn && controlState){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
 				}
 				vehicle.hornOn = controlState;
 				break;
 			}
 			case SIREN : {
 				if(world.isClient() && !vehicle.sirenOn && controlState){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
 				}
 				vehicle.sirenOn = controlState;
 				break;
@@ -75,15 +74,13 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 						return true;
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
-					for(Entity entity : vehicle.world.loadedEntityList){
+					for(AEntityBase entity : AEntityBase.createdEntities.values()){
 						if(entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){
 								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-								Point3d hitchOffset = new Point3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]);
-								Point3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.positionVector);
-								Point3d hookupOffset = new Point3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]);
-								Point3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.positionVector);
+								Point3d hitchPos = new Point3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]).rotateCoarse(vehicle.rotation).add(vehicle.position);
+								Point3d hookupPos = new Point3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]).rotateCoarse(testVehicle.rotation).add(testVehicle.position);
 								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){

@@ -7,6 +7,9 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.BuilderGUI;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
@@ -14,9 +17,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelP
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.TextLine;
 import minecrafttransportsimulator.rendering.components.OBJParser;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperRender;
 
 public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>, IBlockTileEntity<JSONDecor>>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
@@ -45,14 +45,14 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 		}
 		
 		//Don't do solid model rendering on the blend pass.
-		if(WrapperRender.getRenderPass() != 1){
+		if(InterfaceRender.getRenderPass() != 1){
 			//Bind the texture and render.
-			WrapperRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
+			InterfaceRender.bindTexture(definition.packID, "textures/decors/" + definition.systemName + ".png");
 			GL11.glCallList(displayListMap.get(definition));
 			//If we are a fluid tank render text.
 			if(definition.general.textLines != null && tile instanceof ATileEntityFluidTank){
 				ATileEntityFluidTank<JSONDecor> tank = (ATileEntityFluidTank<JSONDecor>) tile;
-				WrapperRender.setLightingState(false);
+				InterfaceRender.setLightingState(false);
 				for(byte i=0; i<definition.general.textLines.length; ++i){
 					TextLine text = definition.general.textLines[i];
 					GL11.glPushMatrix();
@@ -65,17 +65,17 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 					}
 					switch(i%3){
 						case(0) :{//Render fuel name.
-							WrapperGUI.drawText(tank.getFluidLevel() > 0 ? WrapperGame.getFluidName(tank.getFluid()).toUpperCase() : "", 0, 0, Color.decode(text.color), true, false, 0);
+							BuilderGUI.drawText(tank.getFluidLevel() > 0 ? InterfaceGame.getFluidName(tank.getFluid()).toUpperCase() : "", 0, 0, Color.decode(text.color), true, false, 0);
 							break;
 						}
 						case(1) :{//Render fuel level.
 							String fluidLevel = String.format("%04.1f", tank.getFluidLevel()/1000F);
-							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.level") + fluidLevel + "b", 0,  0, Color.decode(text.color), true, false, 0);
+							BuilderGUI.drawText(BuilderGUI.translate("tile.fuelpump.level") + fluidLevel + "b", 0,  0, Color.decode(text.color), true, false, 0);
 							break;
 						}
 						case(2) :{//Render fuel dispensed.
 							String fluidDispensed = String.format("%04.1f", ((TileEntityFuelPump) tank).totalTransfered/1000F);
-							WrapperGUI.drawText(WrapperGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "b", 0, 0, Color.decode(text.color), true, false, 0);
+							BuilderGUI.drawText(BuilderGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "b", 0, 0, Color.decode(text.color), true, false, 0);
 							break;
 						}
 					}

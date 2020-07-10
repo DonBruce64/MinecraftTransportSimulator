@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -12,17 +12,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentString;
 
-/**Wrapper for the main player class.  This class wraps the player into a more
+/**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
  * has an item, checking if they are OP, etc.  Also prevents the need to interact
  * with the class directly, which allows for abstraction in the code.
  *
  * @author don_bruce
  */
-public class WrapperPlayer extends WrapperEntity{
+public class WrapperEntityPlayer extends WrapperEntity{
 	final EntityPlayer player;
 	
-	public WrapperPlayer(EntityPlayer player){
+	public WrapperEntityPlayer(EntityPlayer player){
 		super(player);
 		this.player = player;
 	}
@@ -49,7 +49,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  raw message will be displayed.
 	 */
 	public void displayChatMessage(String message){
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(WrapperGUI.translate(message)));
+		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(BuilderGUI.translate(message)));
 	}
 	
 	/**
@@ -172,9 +172,9 @@ public class WrapperPlayer extends WrapperEntity{
 	/**
 	 *  Sends a packet to this player over the network.
 	 *  Convenience method so we don't need to call the
-	 *  {@link WrapperNetwork} for player-specific packets.
+	 *  {@link InterfaceNetwork} for player-specific packets.
 	 */
 	public void sendPacket(APacketBase packet){
-		WrapperNetwork.sendToPlayer(packet, (EntityPlayerMP) player);
+		InterfaceNetwork.sendToPlayer(packet, (EntityPlayerMP) player);
 	}
 }

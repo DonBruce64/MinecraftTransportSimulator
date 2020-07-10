@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.item.ItemStack;
 
 /**Packet used to change instruments on vehicles.  Sent to the server
@@ -52,7 +52,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){

@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
@@ -10,12 +12,10 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -29,7 +29,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperEntityPlayer player){
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
@@ -71,13 +71,15 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     		if(pump.connectedVehicle == null){
     			//Get the closest vehicle within a 16-block radius.
     			EntityVehicleF_Physics nearestVehicle = null;
-    			float lowestDistance = 16;
-    			for(EntityVehicleF_Physics vehicle : world.getVehiclesWithin(new BoundingBox(point.x, point.y, point.z, lowestDistance, lowestDistance, lowestDistance))){
-    				float distance = (float) vehicle.getDistance(point.x, point.y, point.z);
-					if(distance < lowestDistance){
-						lowestDistance = distance;
-						nearestVehicle = vehicle;
-					}
+    			double lowestDistance = 16D;
+    			for(AEntityBase entity : AEntityBase.createdEntities.values()){
+    				if(entity instanceof EntityVehicleF_Physics){
+    					double entityDistance = entity.position.distanceTo(point);
+    					if(entityDistance < lowestDistance){
+    						lowestDistance = entityDistance;
+    						nearestVehicle = (EntityVehicleF_Physics) entity;
+    					}
+    				}
     			}
     			
     			//Have a vehicle, try to connect to it.
@@ -95,12 +97,12 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     					}
     					
     					//Fuel type can be taken by vehicle, check to make sure engines can take it.
-    					for(APart part : nearestVehicle.getVehicleParts()){
+    					for(APart part : nearestVehicle.parts){
     						if(part instanceof PartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(pump.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
     								pump.totalTransfered = 0;
-    								WrapperNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
+    								InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -114,7 +116,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     		}else{
     			//Connected vehicle exists, disconnect it.
     			pump.connectedVehicle = null;
-    			WrapperNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
+    			InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
     			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
     		}
 		}

@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import mcinterface.WrapperNBT;
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidTankChange;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 /**Base Tile Entity class with the ability to store fluids.
  *
@@ -59,7 +59,7 @@ public abstract class ATileEntityFluidTank<JSONDefinition extends AJSONItem<? ex
 				}
 				//Send off packet now that we know what fluid we will have on this tank.
 				if(!world.isClient()){
-					WrapperNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, maxAmount));
+					InterfaceNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, maxAmount));
 				}
 			}
 			return maxAmount;
@@ -83,7 +83,7 @@ public abstract class ATileEntityFluidTank<JSONDefinition extends AJSONItem<? ex
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
 				if(!world.isClient()){
-					WrapperNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, -maxAmount));
+					InterfaceNetwork.sendToAllClients(new PacketTileEntityFluidTankChange(this, -maxAmount));
 				}
 				currentFluidLevel -= maxAmount;
 				if(currentFluidLevel == 0){

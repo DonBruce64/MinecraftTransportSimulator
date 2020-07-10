@@ -110,7 +110,7 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		NBTTagCompound dataTag = new NBTTagCompound();		
 		dataTag.setFloat("damage", this.damage);
 		return dataTag;

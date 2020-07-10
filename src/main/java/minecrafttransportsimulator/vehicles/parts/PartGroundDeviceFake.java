@@ -30,7 +30,7 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return new NBTTagCompound();
 	}
 	

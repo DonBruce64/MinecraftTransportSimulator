@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -10,9 +11,7 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 
 /**This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
@@ -105,12 +104,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 
 			
-	public EntityVehicleF_Physics(World world){
+	public EntityVehicleF_Physics(WrapperWorld world){
 		super(world);
-	}
-	
-	public EntityVehicleF_Physics(World world, float posX, float posY, float posZ, float rotation, JSONVehicle definition){
-		super(world, posX, posY, posZ, rotation, definition);
 	}
 	
 	@Override
@@ -243,7 +238,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			gravitationalForce = currentMass*(9.8/400);
 			if(definition.blimp != null || definition.plane != null){
 				//We are an aircraft.  We need to set our trackAngle here for forces, as well as the drag coefficient.
-				trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(velocityVector)));
+				trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocity)));
 				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 			}else{
 				//Not an aircraft.  We're either a car, or something else entirely.
@@ -265,7 +260,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				
 				//Set coefficients.
 				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(velocityVector))), 2);
+				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocity))), 2);
 				
 				//Get forces.  Set gravity to 0 as blimps aren't affected by that.
 				dragForce = 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
@@ -326,7 +321,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
 				aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(velocityVector))), 2);
+				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocity))), 2);
 				currentWingArea = definition.plane.wingArea + definition.plane.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
 				
 				//Get forces.
@@ -353,7 +348,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Add all forces to the main force matrix and apply them.
 			totalAxialForce.set(0D, wingForce + elevatorForce, 0D).add(thrustForce);
 			totalAxialForce = RotationSystem.getRotatedPoint(totalAxialForce, rotationPitch, rotationYaw, rotationRoll);
-			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(velocityVector);
+			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocity);
 			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 			totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
 			
@@ -453,12 +448,12 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(cruiseControl){
 			if(velocity < cruiseControlSpeed){
 				if(throttle < 100){
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0), this);
 					++throttle;
 				}
 			}else if(velocity > cruiseControlSpeed){
 				if(throttle > 0){
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0), this);
 					--throttle;
 				}
 			}
@@ -466,18 +461,18 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		
 		if(autopilot){
 			if(-rotationRoll > aileronTrim + 1){
-				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
 				++aileronTrim;
 			}else if(-rotationRoll < aileronTrim - 1){
-				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
 				--aileronTrim;
 			}
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motionY*100 > elevatorTrim + 1){
-				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
 				++elevatorTrim;
 			}else if(-motionY*100 < elevatorTrim - 1){
-				WrapperNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
 				--elevatorTrim;
 			}
 		}
@@ -485,10 +480,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
 					aileronAngle = 0;
 				}else{
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0), this);
 					aileronAngle += aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE;
 				}
 			}
@@ -499,10 +494,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(elevatorCooldown==0){
 			if(elevatorAngle != 0){
 				if(elevatorAngle < ELEVATOR_DAMPEN_RATE && elevatorAngle > -ELEVATOR_DAMPEN_RATE){
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0), this);
 					elevatorAngle = 0;
 				}else{
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0), this);
 					elevatorAngle += elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE;
 				}
 			}
@@ -513,10 +508,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(rudderCooldown==0){
 			if(rudderAngle != 0){
 				if(rudderAngle < RUDDER_DAMPEN_RATE && rudderAngle > -RUDDER_DAMPEN_RATE){
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0), this);
 					rudderAngle = 0;
 				}else{
-					WrapperNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0), this);
 					rudderAngle += rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE;
 				}
 			}

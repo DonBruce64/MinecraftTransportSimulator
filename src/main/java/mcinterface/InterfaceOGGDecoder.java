@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,14 +14,14 @@ import paulscode.sound.SoundBuffer;
 import paulscode.sound.SoundSystemConfig;
 import paulscode.sound.codecs.CodecJOrbis;
 
-/**Wrapper for loading OGG files.  While open-source libraries exist for loading OGG files,
+/**Interface for loading OGG files.  While open-source libraries exist for loading OGG files,
  * they all are horridly complex and painful to use.  Since MC at least knows how to load
  * OGG files, we piggyback off of that code.  Uses PaulsCode codecs in 1.12, and OpenAL
  * libraries in later versions.
  *
  * @author don_bruce
  */
-public class WrapperOGGDecoder implements IStreamDecoder{
+public class InterfaceOGGDecoder implements IStreamDecoder{
     /**Decoder that decodes the file.**/
     private final CodecJOrbis decoder;
 	/**Thread to decode the file.**/
@@ -35,7 +35,7 @@ public class WrapperOGGDecoder implements IStreamDecoder{
     /**Sample rate.  Required for correct playback speed.**/
     private final int sampleRate;
     
-    public WrapperOGGDecoder(URL soundURL){
+    public InterfaceOGGDecoder(URL soundURL){
     	//Create a new decoder.
 		decoder = new CodecJOrbis();
 		decoder.initialize(soundURL);
@@ -157,7 +157,7 @@ public class WrapperOGGDecoder implements IStreamDecoder{
                 	String soundName = connection.getFile();
                 	String soundDomain = soundName.substring(0, soundName.indexOf(':'));
                 	soundName = soundName.substring(soundDomain.length() + 1);
-                	return WrapperOGGDecoder.class.getResourceAsStream("/assets/" +  soundDomain + "/sounds/" + soundName);
+                	return InterfaceOGGDecoder.class.getResourceAsStream("/assets/" +  soundDomain + "/sounds/" + soundName);
                 }
             };
         }

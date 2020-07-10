@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceInput;
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -20,11 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperInput;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
@@ -43,7 +43,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Init variables.
 	private final BlockPartsBench bench;
-	private final WrapperPlayer player;
+	private final WrapperEntityPlayer player;
 	
 	//Buttons and labels.
 	private GUIComponentButton prevPackButton;
@@ -84,7 +84,7 @@ public class GUIPartBench extends AGUIBase{
 	boolean displayVehicleInfo = false;
 	
 
-	public GUIPartBench(BlockPartsBench bench, WrapperPlayer player){
+	public GUIPartBench(BlockPartsBench bench, WrapperEntityPlayer player){
 		this.bench = bench;
 		this.player = player;
 		if(lastOpenedItem.containsKey(bench)){
@@ -164,7 +164,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, WrapperGUI.translate("gui.vehicle_bench.color"), 1.0F, true, false, 0).setButton(nextColorButton));
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, BuilderGUI.translate("gui.vehicle_bench.color"), 1.0F, true, false, 0).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
@@ -195,7 +195,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				WrapperNetwork.sendToServer(new PacketPlayerCraftItem(currentItem));
+				InterfaceNetwork.sendToServer(new PacketPlayerCraftItem(currentItem));
 			}
 		});
 		
@@ -223,7 +223,7 @@ public class GUIPartBench extends AGUIBase{
 		confirmButton.enabled = currentItem != null && player.hasMaterials(currentItem);
 		
 		//Check the mouse to see if it updated and we need to change items.
-		int wheelMovement = WrapperInput.getTrackedMouseWheel();
+		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement > 0 && nextPartButton.enabled){
 			nextPartButton.onClicked();
 		}else if(wheelMovement < 0 && prevPartButton.enabled){
@@ -372,7 +372,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
-		packName.text = WrapperGame.getModName(currentPack);
+		packName.text = InterfaceGame.getModName(currentPack);
 		partName.text = currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName;
 		
 		//TODO this needs to go away when we get a wrapper itemstack.
@@ -478,18 +478,18 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
 		if(minFuelConsumption != 99){
-			totalInformation += WrapperGUI.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
+			totalInformation += BuilderGUI.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
 		}
 		if(minWheelSize != 99){
-			totalInformation += WrapperGUI.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
+			totalInformation += BuilderGUI.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
 		}
 		return totalInformation;
 	}

@@ -32,7 +32,7 @@ public final class PartCraftingTable extends APart{
     }
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return new NBTTagCompound();
 	}
 	

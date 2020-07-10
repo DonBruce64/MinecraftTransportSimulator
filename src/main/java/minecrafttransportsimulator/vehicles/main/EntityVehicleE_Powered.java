@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import mcinterface.BuilderBlockFakeLight;
+import mcinterface.InterfaceAudio;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceCrash;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.IRadioProvider;
@@ -25,14 +27,11 @@ import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
-import minecrafttransportsimulator.wrappers.WrapperBlockFakeLight;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -80,12 +79,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	
-	public EntityVehicleE_Powered(World world){
+	public EntityVehicleE_Powered(WrapperWorld world){
 		super(world);
-	}
-	
-	public EntityVehicleE_Powered(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, posX, posY, posZ, playerRotation, definition);
 	}
 	
 	@Override
@@ -144,7 +139,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 							}
 							//Set block in world and update pos.  Only do this if the block is air.
 							if(world.isAirBlock(newPos)){
-								world.setBlockState(newPos, WrapperBlockFakeLight.instance.getDefaultState());
+								world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
 								world.checkLight(newPos);
 								fakeLightPosition = newPos;
 							}
@@ -347,9 +342,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void restartSound(SoundInstance sound){
 		if(sound.soundName.equals(definition.motorized.hornSound)){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
 		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
-			WrapperAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
 		}
 	}
     

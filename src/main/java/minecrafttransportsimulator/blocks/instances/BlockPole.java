@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperNBT;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -15,10 +19,6 @@ import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
  * placement of components on poles via the Tile Entity.
@@ -43,7 +43,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperEntityPlayer player){
 		//If there's no NBT data, this is a new pole and needs to have its initial component added.
 		if(!player.getHeldStack().hasTagCompound()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
@@ -52,7 +52,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperEntityPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
@@ -63,16 +63,16 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(isPlayerHoldingComponent){
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
 					if(player.getHeldStack().hasTagCompound()){							
 						textLines = new WrapperNBT(player.getHeldStack().getTagCompound()).getStrings("textLines", component.definition.general.textLines.length);
 					}
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
 					return false;
 				}

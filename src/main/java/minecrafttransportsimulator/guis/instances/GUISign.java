@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
@@ -14,8 +16,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 public class GUISign extends AGUIBase{
 	//Buttons.
@@ -64,7 +64,7 @@ public class GUISign extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, WrapperGUI.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, BuilderGUI.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				//Set sign text.
@@ -72,8 +72,8 @@ public class GUISign extends AGUIBase{
 				for(GUIComponentTextBox box : signTextBoxes){
 					textLines.add(box.getText());
 				}
-				WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
-				WrapperGUI.closeGUI();
+				InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
+				BuilderGUI.closeGUI();
 			}
 		});
 	}

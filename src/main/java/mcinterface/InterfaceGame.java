@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -7,15 +7,14 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 
-/**Wrapper for the core MC game.  This class has methods used for determining
- * which mods are loaded, running main init code during boot, and
- * ensuring all other wrappers are running and ready for calls.  This wrapper
- * interfaces with both Forge and MC code, so if it's something that's core to
- * the game and doesn't need an instance of an object to access, it's likely here.
+/**Interface for the core MC game.  This class has methods used for determining
+ * which mods are loaded, getting the game status, and a few other things.
+ * This interface interfaces with both Forge and MC code, so if it's something 
+ * that's core to the game and doesn't need an instance of an object to access, it's likely here.
  *
  * @author don_bruce
  */
-public class WrapperGame{	
+public class InterfaceGame{	
 	/**
 	 *  Returns true if the mod with the passed-in modID is present.
 	 */
@@ -86,13 +85,13 @@ public class WrapperGame{
 	 *  Returns the player.  Only valid on CLIENTs as on servers
 	 *  there are multiple players.
 	 */
-	public static WrapperPlayer getClientPlayer(){
+	public static WrapperEntityPlayer getClientPlayer(){
 		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
-			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
+			cachedClientPlayer = new WrapperEntityPlayer(Minecraft.getMinecraft().player);
 		}
 		return cachedClientPlayer;
 	}
-	private static WrapperPlayer cachedClientPlayer;
+	private static WrapperEntityPlayer cachedClientPlayer;
 	
 	/**
 	 *  Returns the entity that is used to set up the render camera.

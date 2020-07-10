@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet used for controlling vehicles.  Responsible for handing inputs for control points that
  * have a wide span of values, such as throttles and steering angles.  If cooldown is equal to the
@@ -43,7 +43,7 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case THROTTLE : {
 				vehicle.throttle = (byte) clampAngle(0, 100, cooldown == Byte.MAX_VALUE ? value : vehicle.throttle + value);

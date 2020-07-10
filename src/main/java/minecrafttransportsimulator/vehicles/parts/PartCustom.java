@@ -12,7 +12,7 @@ public final class PartCustom extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return new NBTTagCompound();
 	}
 	

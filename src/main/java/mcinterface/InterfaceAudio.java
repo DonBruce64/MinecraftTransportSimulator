@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -17,13 +17,13 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 
-/**Wrapper for the audio system.  This is responsible for playing sound from vehicles/interactions.
+/**Interface for the audio system.  This is responsible for playing sound from vehicles/interactions.
  * As well as from the internal radio.  Note that this is mostly the same between versions, with
  * the exception of some of the internal OpenAL calls having different names.
  *
  * @author don_bruce
  */
-public class WrapperAudio{
+public class InterfaceAudio{
 	/**Flag for game paused state.  Gets set when the game is paused.**/
 	private static boolean isSystemPaused;
 	
@@ -77,7 +77,7 @@ public class WrapperAudio{
 		}
 		
 		//Handle pause state logic.
-		if(WrapperGame.isGamePaused()){
+		if(InterfaceGame.isGamePaused()){
 			if(!isSystemPaused){
 				for(SoundInstance sound : playingSounds){
 					AL10.alSourcePause(sound.sourceIndex);
@@ -99,15 +99,15 @@ public class WrapperAudio{
 		//Note that players riding vehicles use the vehicle's velocity.
 		//player.putPosition(playerPosition);
 		//AL10.alListener(AL10.AL_POSITION, playerPosition);
-		if(WrapperGame.getClientPlayer().getVehicleRiding() != null){
+		if(InterfaceGame.getClientPlayer().getVehicleRiding() != null){
 			playerVelocity.clear();
-			FloatBuffer vehicleVelocity = WrapperGame.getClientPlayer().getVehicleRiding().getProviderVelocity();
+			FloatBuffer vehicleVelocity = InterfaceGame.getClientPlayer().getVehicleRiding().getProviderVelocity();
 			playerVelocity.put(vehicleVelocity);
 			//need to flip this back to normal as it's assumed this won't be used except during an update call.
 			vehicleVelocity.flip();
 			playerVelocity.flip();
 		}else{
-			WrapperGame.getClientPlayer().putVelocity(playerVelocity);
+			InterfaceGame.getClientPlayer().putVelocity(playerVelocity);
 		}
 		AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
 		//player.putOrientation(playerOrientation);
@@ -165,7 +165,7 @@ public class WrapperAudio{
 					}
 					
 					//If the player is inside an enclosed vehicle, half the sound volume.
-					if(WrapperGame.shouldSoundBeDampened(sound)){
+					if(InterfaceGame.shouldSoundBeDampened(sound)){
 						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume/2F);
 					}else{
 						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
@@ -240,7 +240,7 @@ public class WrapperAudio{
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
 					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the sound slots.  Probabaly Immersive Railroading.  Sound will not play."));
+					InterfaceNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the sound slots.  Probabaly Immersive Railroading.  Sound will not play."));
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -259,7 +259,7 @@ public class WrapperAudio{
 	}
 
 	/**
-	 *  Loads an OGG file in its entirety using the {@link WrapperOGGDecoder}. 
+	 *  Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}. 
 	 *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
 	 *  The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
 	 *  If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
@@ -271,7 +271,7 @@ public class WrapperAudio{
 			return dataSourceBuffers.get(soundName);
 		}else{
 			//Need to parse the data.  Do so now.
-			OGGDecoderOutput decoderOutput = WrapperOGGDecoder.parseWholeOGGFile(soundName);
+			OGGDecoderOutput decoderOutput = InterfaceOGGDecoder.parseWholeOGGFile(soundName);
 			if(decoderOutput != null){
 				//Generate an IntBuffer to store a pointer to the data buffer.
 				IntBuffer dataBufferPointers = BufferUtils.createIntBuffer(1);
@@ -323,7 +323,7 @@ public class WrapperAudio{
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
 				++sourceGetFailures;
 				AL10.alDeleteBuffers(dataBuffers);
-				WrapperNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+				InterfaceNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);

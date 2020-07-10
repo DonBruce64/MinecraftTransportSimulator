@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -23,8 +24,8 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
- * Use {@link EntityVehicleA_Base#addPart(APart, boolean)} to add parts 
- * and {@link EntityVehicleA_Base#removePart(APart, boolean)} to remove them.
+ * Use {@link BuilderEntity#addPart(APart, boolean)} to add parts 
+ * and {@link BuilderEntity#removePart(APart, boolean)} to remove them.
  * You may extend {@link EntityVehicleE_Powered} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -294,7 +295,7 @@ public abstract class APart implements ISoundProvider{
 	 * This does not include the part offsets, as those are re-calculated every time the part is attached
 	 * and are saved separately from the item NBT data in the vehicle.
 	 */
-	public abstract NBTTagCompound getPartNBTTag();
+	public abstract WrapperNBT getData();
 	
 	public abstract float getWidth();
 	

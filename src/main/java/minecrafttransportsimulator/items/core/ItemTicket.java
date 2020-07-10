@@ -4,12 +4,12 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -87,9 +87,9 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 				tag.setInteger("entityID", target.getEntityId());
 				//Don't use the passed-in stack here.  It's a copy.  Cause Mojang is dumb like that.
 				player.getHeldItemMainhand().setTagCompound(tag);
-				WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.linked"), (EntityPlayerMP) player);
+				InterfaceNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.linked"), (EntityPlayerMP) player);
 			}else{
-				WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.notnpc"), (EntityPlayerMP) player);
+				InterfaceNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.notnpc"), (EntityPlayerMP) player);
 			}
 		}
 		return true;
@@ -101,7 +101,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 			PartSeat seat = (PartSeat) part;
 			if(stack.hasTagCompound()){
 				if(vehicle.getRiderForSeat(seat) != null){
-					WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.seattaken"), player);
+					InterfaceNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.seattaken"), player);
 				}else{
 					//We are an assigned ticket, load the entity.
 					EntityLiving entityLiving = (EntityLiving) vehicle.world.getEntityByID(stack.getTagCompound().getInteger("entityID"));
@@ -109,7 +109,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 						vehicle.setRiderInSeat(entityLiving, seat);
 						stack.setTagCompound(null);
 					}else{
-						WrapperNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.toofar"), player);
+						InterfaceNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.ticket.toofar"), player);
 					}
 				}
 			}else{

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -14,7 +15,6 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled

@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 
+import mcinterface.BuilderGUI;
+import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -18,8 +20,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
 
 public class GUISignalController extends AGUIBase{
 	
@@ -81,7 +81,7 @@ public class GUISignalController extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
-		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, WrapperGUI.translate("gui.trafficsignalcontroller.scan")){
+		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, BuilderGUI.translate("gui.trafficsignalcontroller.scan")){
 			public void onClicked(){
 				trafficSignals = 0;
 				streetLights = 0;
@@ -111,8 +111,8 @@ public class GUISignalController extends AGUIBase{
 			}
 		});
 		addTextBox(scanDistanceText = new GUIComponentTextBox(guiLeft + 120, guiTop + 40, 40, "25", 10, Color.WHITE, Color.BLACK, 2));
-		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
-		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.scanfound")));
+		addLabel(new GUIComponentLabel(guiLeft + 30, scanDistanceText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.scandistance")).setBox(scanDistanceText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.scanfound")));
 		
 		//Traffic signal scan results.
 		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemNameTemp, 1, -1));
@@ -135,38 +135,38 @@ public class GUISignalController extends AGUIBase{
 				}
 			}
 		});
-		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
+		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, WrapperGUI.translate("gui.trafficsignalcontroller." + (controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER) ? "modetrigger" : (controller.currentOpMode.equals(OpMode.TIMED_CYCLE) ? "modetime" : "moderemote"))), 15, true){
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, BuilderGUI.translate("gui.trafficsignalcontroller." + (controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER) ? "modetrigger" : (controller.currentOpMode.equals(OpMode.TIMED_CYCLE) ? "modetime" : "moderemote"))), 15, true){
 			@Override
 			public void onClicked(){
 				if(controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
 					controller.currentOpMode = OpMode.TIMED_CYCLE;
-					this.text = WrapperGUI.translate("gui.trafficsignalcontroller.modetime");
+					this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetime");
 				}else{
 					controller.currentOpMode = OpMode.VEHICLE_TRIGGER;
-					this.text = WrapperGUI.translate("gui.trafficsignalcontroller.modetrigger");
+					this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetrigger");
 				}
 			}
 		});
-		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
+		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
 		
 		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 105, 40, String.valueOf(controller.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
-		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
 		
 		addTextBox(greenCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 115, 40, String.valueOf(controller.greenCrossTime), 10, Color.WHITE, Color.BLACK, 3));
-		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, greenCrossTimeText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.greencrosstime")).setBox(greenCrossTimeText));
 		
 		addTextBox(yellowMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 125, 40, String.valueOf(controller.yellowMainTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, yellowMainTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowmaintime")).setBox(yellowMainTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowMainTimeText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.yellowmaintime")).setBox(yellowMainTimeText));
 		
 		addTextBox(yellowCrossTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 135, 40, String.valueOf(controller.yellowCrossTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, yellowCrossTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.yellowcrosstime")).setBox(yellowMainTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, yellowCrossTimeText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.yellowcrosstime")).setBox(yellowMainTimeText));
 		
 		addTextBox(allRedTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 145, 40, String.valueOf(controller.allRedTime), 10, Color.WHITE, Color.BLACK, 1));
-		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, WrapperGUI.translate("gui.trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
+		addLabel(new GUIComponentLabel(guiLeft + 30, allRedTimeText.y, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.allredtime")).setBox(allRedTimeText));
 		
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, WrapperGUI.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, BuilderGUI.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				//Convert strings to ints and send update packet to server.
@@ -182,8 +182,8 @@ public class GUISignalController extends AGUIBase{
 				}catch(Exception e){
 					return;
 				}
-				WrapperNetwork.sendToServer(new PacketTileEntitySignalControllerChange(controller));
-				WrapperGUI.closeGUI();
+				InterfaceNetwork.sendToServer(new PacketTileEntitySignalControllerChange(controller));
+				BuilderGUI.closeGUI();
 			}
 		});
 	}

@@ -2,10 +2,10 @@ package minecrafttransportsimulator.sound;
 
 import java.nio.ByteBuffer;
 
-import minecrafttransportsimulator.wrappers.WrapperOGGDecoder;
+import mcinterface.InterfaceOGGDecoder;
 
 /**Class to hold output format for OGG files.  This isn't an actual decoder, as
- * the decoder we use changes depending on the MC version.  See {@link WrapperOGGDecoder}.
+ * the decoder we use changes depending on the MC version.  See {@link InterfaceOGGDecoder}.
  * Note that this class is only used with wholly-parsed files.  Streaming is handled
  * by the wrapper directly like the MP3Decoder class.
  *

@@ -15,10 +15,16 @@ public abstract class APoint3<DataType extends Number, PointType extends APoint3
 	}
 	
 	/**
-	 * Sets the value of the point to the passed-in value.
+	 * Sets the value of the point to the passed-in values.
 	 * Returns the called object for nested operations.
 	 */
 	public abstract APoint3<DataType, PointType> set(DataType x, DataType y, DataType z);
+	
+	/**
+	 * Sets the value of the point to the values of the passed-in point.
+	 * Returns the called object for nested operations.
+	 */
+	public abstract APoint3<DataType, PointType> setTo(PointType point);
 	
 	/**
 	 * Adds the passed-in values to the point.

@@ -80,7 +80,7 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
+	public NBTTagCompound getData(){
 		return new NBTTagCompound();
 	}
 

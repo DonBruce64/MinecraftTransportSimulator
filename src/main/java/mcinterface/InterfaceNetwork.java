@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.wrappers;
+package mcinterface;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -18,8 +18,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -30,13 +31,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
-/**Wrapper for the MC networking system.  This wrapper allows us to send packets
+/**Interface for the MC networking system.  This interface allows us to send packets
  * around without actually creating packet classes.  Instead, we simply pass-in an
  * object to send over, which contains a handler for how to handle said object.
+ * Forge packets do something similar, but Forge can't be bothered to keep networking
+ * code the same, so we roll our own here. 
  *
  * @author don_bruce
  */
-public class WrapperNetwork{
+public class InterfaceNetwork{
 	private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MTS.MODID);
 	private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 	
@@ -63,6 +66,7 @@ public class WrapperNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
+		packetMappings.put(packetIndex++, PacketVehiclePartChange.class);
 		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	
@@ -93,8 +97,8 @@ public class WrapperNetwork{
 	 *  vehicles that don't actually exist on clients due to them
 	 *  being far away.
 	 */
-	public static void sendToClientsTracking(APacketBase packet, EntityVehicleF_Physics trackingEntity){
-		network.sendToAllTracking(new WrapperPacket(packet), trackingEntity);
+	public static void sendToClientsTracking(APacketBase packet, AEntityBase trackingEntity){
+		network.sendToAllTracking(new WrapperPacket(packet), trackingEntity.builder);
 	}
 	
 	/**
@@ -109,7 +113,7 @@ public class WrapperNetwork{
 	 *  Sends the passed-in packet to the specified player.
 	 *  Note that this may ONLY be called on the server, as
 	 *  clients don't know about other player's network pipelines.
-	 *  This is package-private as this gets fired from {@link WrapperPlayer},
+	 *  This is package-private as this gets fired from {@link WrapperEntityPlayer},
 	 *  since we need an actual player instance here rather than a wrapper, so we
 	 *  shouldn't be able to call this from non-wrapper code.
 	 */
@@ -130,8 +134,8 @@ public class WrapperNetwork{
 	 *  Gets the player this packet was sent by based on its context.
 	 *  Used for handling packets arriving on the server.
 	 */
-	private static WrapperPlayer getServerPlayer(MessageContext ctx){
-		return new WrapperPlayer(ctx.getServerHandler().player);
+	private static WrapperEntityPlayer getServerPlayer(MessageContext ctx){
+		return new WrapperEntityPlayer(ctx.getServerHandler().player);
 	}
 	
 	
@@ -185,7 +189,7 @@ public class WrapperNetwork{
 					if(ctx.side.isServer()){
 						message.packet.handle(getServerWorld(ctx), getServerPlayer(ctx));
 					}else{
-						message.packet.handle(WrapperGame.getClientWorld(), WrapperGame.getClientPlayer());
+						message.packet.handle(InterfaceGame.getClientWorld(), InterfaceGame.getClientPlayer());
 					}
 				}
 			});
