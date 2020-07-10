@@ -1,9 +1,8 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
@@ -198,8 +197,8 @@ abstract class EntityVehicleA_Base extends Entity{
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public Map<Point3d, VehiclePart> getAllPossiblePackParts(){
-		Map<Point3d, VehiclePart> packParts = new HashMap<Point3d, VehiclePart>();
+	public LinkedHashMap<Point3d, VehiclePart> getAllPossiblePackParts(){
+		LinkedHashMap<Point3d, VehiclePart> packParts = new LinkedHashMap<Point3d, VehiclePart>();
 		//First get all the regular part spots.
 		for(VehiclePart packPart : definition.parts){
 			Point3d partPos = new Point3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
