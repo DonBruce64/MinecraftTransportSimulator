@@ -354,8 +354,9 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		rotatePart(part, partialTicks);
 		
 		//Mirror the model if we need to do so.
+		//If we are a sub-part, don't mirror as we'll already be mirrored.
 		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x > 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
-		if(mirrored){
+		if(mirrored && !part.vehicleDefinition.isSubPart){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			GL11.glCullFace(GL11.GL_FRONT);
 		}
