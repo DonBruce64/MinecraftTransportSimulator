@@ -832,14 +832,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(brakingFactor > 0){
 			double motionXBraking = 20F*brakingFactor/currentMass*Math.signum(motionX);
 			double motionZBraking = 20F*brakingFactor/currentMass*Math.signum(motionZ);
-			motionX -= motionXBraking;
-			motionZ -= motionZBraking;
-			
-			//If we changed sign, just set our velocity to 0.
-			if(motionX*motionXBraking < 0 || motionZ*motionZBraking < 0){
+			//If we have more braking than motions, just set our velocity to 0.
+			if(motionX*motionX + motionZ*motionZ < motionXBraking*motionXBraking + motionZBraking*motionZBraking){
 				motionX = 0;
 				motionZ = 0;
 				motionYaw = 0;
+			}else{
+				motionX -= motionXBraking;
+				motionZ -= motionZBraking;
 			}
 		}
 		
