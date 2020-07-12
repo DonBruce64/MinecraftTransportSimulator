@@ -24,10 +24,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGeneric;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevicePontoon;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceSkid;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceTread;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDeviceWheel;
+import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevice;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGun;
 import minecrafttransportsimulator.items.packs.parts.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.AJSONCraftable;
@@ -113,6 +110,7 @@ public final class PackParserSystem{
     			mainDefinitionCopy.collision = mainDefinition.collision;
     			mainDefinitionCopy.rendering = mainDefinition.rendering;
     			
+    			performLegacyCompats(mainDefinitionCopy);
     			ItemVehicle vehicle = new ItemVehicle(mainDefinitionCopy, subDefinition.subName);
     			setupItem(vehicle, jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
     			List<String> materials = new ArrayList<String>();
@@ -135,7 +133,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(createPartItem(new Gson().fromJson(jsonReader, JSONPart.class)), jsonFileName, packID, ItemClassification.PART);
+    		JSONPart definition = new Gson().fromJson(jsonReader, JSONPart.class);
+    		performLegacyCompats(definition);
+    		setupItem(createPartItem(definition), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -224,12 +224,13 @@ public final class PackParserSystem{
 			}
 			item.setCreativeTab(MTSRegistry.packTabs.get(packID));
 		}
-    	
-    	//Perform legacy compats.  This is used to allow older packs to remain compatible.
-    	//Legacy compats may be removed ONLY when older packs have updated!
-    	performLegacyCompats(item.definition);
     }
     
+    /**
+     * Perform legacy compats.  This is used to allow older packs to remain compatible.
+     * Legacy compats may be removed ONLY when older packs have updated!
+     * 
+     */
     private static <JSONDefinition extends AJSONItem<?>> void performLegacyCompats(JSONDefinition definition){
     	if(definition instanceof JSONPart){
     		JSONPart partDef = (JSONPart) definition;
@@ -382,6 +383,8 @@ public final class PackParserSystem{
     		return new ItemPartEngine(definition);
     	}else if(definition.general.type.startsWith("gun_")){
     		return new ItemPartGun(definition);
+    	}else if(definition.general.type.startsWith("ground_")){
+    		return new ItemPartGroundDevice(definition);
     	}else{
 	    	switch(definition.general.type){
 		    	case "crate": return new ItemPartCrate(definition);
@@ -393,10 +396,6 @@ public final class PackParserSystem{
 				case "planter": return new ItemPartGeneric(definition);
 				case "fertilizer": return new ItemPartGeneric(definition);
 				case "harvester": return new ItemPartGeneric(definition);
-				case "wheel": return new ItemPartGroundDeviceWheel(definition);
-				case "skid": return new ItemPartGroundDeviceSkid(definition);
-				case "pontoon": return new ItemPartGroundDevicePontoon(definition);
-				case "tread": return new ItemPartGroundDeviceTread(definition);
 				case "propeller": return new ItemPartPropeller(definition);
 				case "seat": return new ItemPartGeneric(definition);
 				case "bullet": return new ItemPartBullet(definition);
