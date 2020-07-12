@@ -323,11 +323,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				}
 				
 				//Set coefficients and areas.
-				wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/350F);
+				wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
 				aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(velocityVector))), 2);
-				currentWingArea = definition.plane.wingArea + definition.plane.wingArea*flapCurrentAngle/250F;
+				currentWingArea = definition.plane.wingArea + definition.plane.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
 				
 				//Get forces.
 				dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.plane.wingSpan*definition.plane.wingSpan/currentWingArea*0.8));
