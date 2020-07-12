@@ -325,7 +325,11 @@ public final class ControlSystem{
 		
 		//Change gas to on or off.
 		if(WrapperInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
-			WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+			//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
+			short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+			if(!powered.cruiseControl || powered.throttle < throttleLevel){
+				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+			}
 		}else{
 			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 				WrapperNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
