@@ -28,6 +28,7 @@ public class TransformLight extends ARenderableTransform{
 	private final boolean renderFlare;
 	private final boolean renderColor;
 	private final boolean renderCover;
+	private final boolean renderBeam;
 	
 	private final Float[][] vertices;
 	private final Point3d[] centerPoints;
@@ -35,23 +36,26 @@ public class TransformLight extends ARenderableTransform{
 	
 	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
 		this.type = getTypeFromName(objectName);
-		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZ"
+		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZZ"
 		//Where NAME is what switch it goes to.
 		//XXXXXX is the color.
 		//YYYYY is the blink rate.
-		//ZZZ is the light type.  The first bit renders the flare, the second the color, and the third the cover.
+		//ZZZZ is the light type.  The first bit renders the flare, the second the color, the third the cover, and the fourth a beam.
+		//Beam digit 4 may be omitted to use defaults, but if included will override the default.
 		try{
 			this.color = Color.decode("0x" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
 			this.flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
-			this.renderFlare = Integer.valueOf(objectName.substring(objectName.length() - 3, objectName.length() - 2)) > 0;
-			this.renderColor = Integer.valueOf(objectName.substring(objectName.length() - 2, objectName.length() - 1)) > 0;
-			this.renderCover = Integer.valueOf(objectName.substring(objectName.length() - 1)) > 0;
+			String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
+			this.renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
+			this.renderColor = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
+			this.renderCover = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
+			this.renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : type.hasBeam;
 		}catch(Exception e){
 			throw new NumberFormatException("ERROR: Attempted to parse light information from " + modelName + ":" + objectName + " but faulted.  This is likely due to a naming convention error.");
 		}
 		
 		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
-		if(renderFlare || renderCover || type.hasBeam){
+		if(renderFlare || renderCover || renderBeam){
 			this.vertices = new Float[masterVertices.length][];
 			this.centerPoints = new Point3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
@@ -100,7 +104,7 @@ public class TransformLight extends ARenderableTransform{
 		}
 		
 		//Set the light-up texture status.
-		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !type.hasBeam;
+		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !renderBeam;
 	}
 
 	@Override
@@ -164,7 +168,7 @@ public class TransformLight extends ARenderableTransform{
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
-		if(type.hasBeam && lightOn && doBlendRenders){
+		if(renderBeam && lightOn && doBlendRenders){
 			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
