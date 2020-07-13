@@ -184,7 +184,7 @@ public class PartEngine extends APart implements FXPart{
 		//Check to see if electric or hand starter can keep running.
 		if(state.esOn){
 			if(starterLevel == 0){
-				if(vehicle.electricPower > 2){
+				if(vehicle.electricPower > 1){
 					starterLevel += 4;
 				}else{
 					setElectricStarterStatus(false);
@@ -958,7 +958,7 @@ public class PartEngine extends APart implements FXPart{
 				sound.stop();
 			}else{
 				if(definition.engine.isCrankingNotPitched){
-					sound.pitch = (float) Math.min(1.0F, vehicle.electricPower/10);
+					sound.pitch = (float) Math.min(1.0F, (vehicle.electricPower + 3.0F)/10);
 				}else{
 					sound.pitch = (float) (rpm/startRPM);
 				}
