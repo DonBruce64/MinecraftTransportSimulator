@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidTankChange;
@@ -55,6 +56,7 @@ public class InterfaceNetwork{
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
 		//Generic packets.
+		packetMappings.put(packetIndex++, PacketEntityRiderChange.class);
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
 		packetMappings.put(packetIndex++, PacketPlayerCraftItem.class);
 		packetMappings.put(packetIndex++, PacketTileEntityFluidTankChange.class);
@@ -117,8 +119,7 @@ public class InterfaceNetwork{
 	 *  since we need an actual player instance here rather than a wrapper, so we
 	 *  shouldn't be able to call this from non-wrapper code.
 	 */
-	//TODO make this private when vehicle interaction gets wrapper interaction.
-	public static void sendToPlayer(APacketBase packet, EntityPlayerMP player){
+	static void sendToPlayer(APacketBase packet, EntityPlayerMP player){
 		network.sendTo(new WrapperPacket(packet), player);
 	}
 	

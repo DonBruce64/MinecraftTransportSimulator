@@ -49,6 +49,21 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the entity's y-offset.
+	 *  This is how far above the mount position this entity sits when riding things.
+	 */
+	public double getYOffset(){
+		return entity.getYOffset();
+	}
+	
+	/**
+	 *  Returns the entity's height.
+	 */
+	public double getHeight(){
+		return entity.height;
+	}
+	
+	/**
 	 *  Tells the entity to start riding the passed-in entity.
 	 */
 	public void setRiding(AEntityBase entityToRide){
@@ -56,10 +71,24 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Sets the entity's position to the passed-in values.
+	 *  Sets the entity's position to the passed-in point.
 	 */
-	public void setPosition(double x, double y, double z){
-		entity.setPosition(x, y, z);
+	public void setPosition(Point3d position){
+		entity.setPosition(position.x, position.y, position.z);
+	}
+	
+	/**
+	 *  Sets the entity's yaw to the passed-in yaw.
+	 */
+	public void setYaw(double yaw){
+		entity.rotationYaw = (float)yaw;
+	}
+	
+	/**
+	 *  Sets the entity's yaw to the passed-in yaw.
+	 */
+	public void setPitch(double pitch){
+		entity.rotationPitch = (float)pitch;
 	}
 	
 	/**

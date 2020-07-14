@@ -852,6 +852,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(vectorDelta > 0.001){
 				vectorDelta = Math.min(skiddingFactor, vectorDelta);
 				//TODO this sounds like some place we might get stuck due to unchecked movement...
+				//FIXME headingvec can no longer be updated.  This HAS to be force-based now.
 				float yawTemp = rotationYaw;
 				rotationYaw += vectorDelta;
 				updateHeadingVec();

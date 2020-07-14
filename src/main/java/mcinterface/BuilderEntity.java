@@ -1,5 +1,7 @@
 package mcinterface;
 
+import java.util.Iterator;
+
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -24,7 +26,6 @@ public class BuilderEntity extends Entity{
 	
 	public BuilderEntity(World world){
 		super(world);
-		//FIXME need to get ent created here from the start of things.
 	}
 	
     @Override
@@ -49,6 +50,18 @@ public class BuilderEntity extends Entity{
     		posX = entity.position.x;
     		posY = entity.position.y;
     		posZ = entity.position.z;
+    		
+    		//Check that riders are still present prior to updating them.
+    		//This handles dismounting of riders from entities in a non-event-driven way.
+    		//We do this because other mods and Sponge like to screw up the events...
+    		Iterator<WrapperEntity> riderIterator = entity.ridersToLocations.keySet().iterator();
+    		while(riderIterator.hasNext()){
+    			WrapperEntity rider = riderIterator.next();
+    			if(!this.equals(rider.entity.getRidingEntity())){
+    				entity.removeRider(rider, riderIterator);
+    			}
+    		}
+    		entity.updateRiders();
     		//FIXME update hitboxes here.
     	}else{
     		//No entity.  Wait for NBT to be loaded to create it.
@@ -57,7 +70,7 @@ public class BuilderEntity extends Entity{
     		//entity IDs after spawning and that fouls things up.
     		//To accommodate this, we request a packet whenever the entityID changes.
     		if(requestDataFromServer){
-    			MTS.MTSNet.sendToServer(new PacketVehicleClientInit((EntityVehicleF_Physics) this));
+    			MTS.MTSNet.sendToServer(new PacketVehicleClientInit(null);
     			requestDataFromServer = false;
     		}
     	}
@@ -70,9 +83,21 @@ public class BuilderEntity extends Entity{
     	//We do this on our next update tick, as we may not yet be spawned at this point.
     	requestDataFromServer = world.isRemote;
     }
+    
+    @Override
+    public boolean startRiding(Entity mcEntity, boolean force){
+    	//Forward this call to the entity if this is a force riding.
+    	//In this case, we're re-loading riders and need to put them
+    	//in their proper locations.
+    	if(force){
+    		entity.addRider(new WrapperEntity(mcEntity), null);
+    	}
+    	return super.startRiding(mcEntity, force);
+    }
 			
     @Override
 	public void readFromNBT(NBTTagCompound tag){
+    	//FIXME make this be called once on the server once this entity is spawned to kick-off the loading process.
 		super.readFromNBT(tag);
 		//Build this entity from NBT.  But only do so if the NBT has all the data we need.
 		//We can tell this if we have a special bit set that only gets set if we've saved before.

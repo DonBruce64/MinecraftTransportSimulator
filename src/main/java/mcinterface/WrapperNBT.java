@@ -153,7 +153,7 @@ public class WrapperNBT{
 	}
 
 	//Packet handling.
-	public void writeToBufferTag(ByteBuf to){
+	public void writeToBuffer(ByteBuf to){
         PacketBuffer pb = new PacketBuffer(to);
         pb.writeCompoundTag(tag);
     }

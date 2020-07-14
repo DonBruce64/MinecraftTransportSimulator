@@ -3,9 +3,10 @@ package minecrafttransportsimulator.packets.components;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperEntityPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.Point3d;
 
 /**Base packet class.  All packets must extend this class to be used with the
  * {@link InterfaceNetwork}.  This allows for standard packet handling across
@@ -65,5 +66,21 @@ public abstract class APacketBase{
 		//Need to increment the index as the read doesn't do that automatically.
 		buf.readerIndex(buf.readerIndex() + stringLength);
 		return returnString;
+	}
+	
+	/**
+	 *  Helper method to write a Point3d to the buffer.
+	 */
+	protected static void writePoint3DToBuffer(Point3d point, ByteBuf buf){
+		buf.writeDouble(point.x);
+		buf.writeDouble(point.y);
+		buf.writeDouble(point.z);
+	}
+	
+	/**
+	 *  Helper method to read a Point3d from the buffer.
+	 */
+	protected static Point3d readPoint3DFromBuffer(ByteBuf buf){
+		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
 	}
 }

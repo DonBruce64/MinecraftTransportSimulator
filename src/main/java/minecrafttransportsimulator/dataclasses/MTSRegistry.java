@@ -36,7 +36,6 @@ import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
 import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
 import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
 import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartSeatRiderChange;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
@@ -231,7 +230,6 @@ public final class MTSRegistry{
 		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
 		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
 		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
-		registerPacket(PacketPartSeatRiderChange.class, PacketPartSeatRiderChange.Handler.class, true, false);
 	}
 
 	/**

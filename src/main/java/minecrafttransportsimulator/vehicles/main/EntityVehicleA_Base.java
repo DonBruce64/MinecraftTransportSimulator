@@ -20,8 +20,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Base vehicle class.  All vehicle entities should extend this class.
- * It is primarily responsible for the adding and removal of parts,
- * as well as dealing with what happens when this part is killed.
+ * It is primarily responsible for the adding and removal of parts.
  * It is NOT responsible for custom data sets, sounds, or movement.
  * That should be done in sub-classes to keep methods segregated.
  * 

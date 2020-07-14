@@ -6,9 +6,13 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import mcinterface.BuilderEntity;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBBCollective;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
@@ -18,6 +22,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartBarrel;
+import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
@@ -32,19 +38,17 @@ import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/**Now that we have an existing vehicle its time to add the ability to collide with it.
- * This is where we add collision functions and collision AABB methods to allow
- * players to collide with this part.  Note that this does NOT handle interaction as that
- * was done in level B.  Also note that we have still not defined the motions and forces
- * as those are based on the collision properties defined here and will come in level D.
- * We DO take into account the global speed variable for movement, as that's needed for
- * correct collision detection and is not state-dependent.
+/**Now that we have an existing vehicle its time to add the ability to collide with it,
+ * and for it to do collision with other entities in the world.  This is where collision
+ * bounds are added, as well as the mass of the entity is calculated, as that's required
+ * for collision physics forces.  We also add vectors here for the vehicle's orientation,
+ * as those are required for us to know how the vehicle collided in the first place.
  * 
  * @author don_bruce
  */
 
 @Mod.EventBusSubscriber
-abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
+abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	//Internal collision frames.
 	private VehicleAxisAlignedBBCollective collisionFrame;
 	private VehicleAxisAlignedBBCollective interactionFrame;
@@ -55,20 +59,85 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 	public final List<VehicleAxisAlignedBB> openPartSpotBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	public final List<VehicleAxisAlignedBB> interactionBoxes = new ArrayList<VehicleAxisAlignedBB>();
 	
+	
+	
 	//Last saved explosion position (used for damage calcs).
 	private static Vec3d lastExplosionPosition;
 
 	/**Cached config value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
+
+	//External state control.
+	public boolean brakeOn;
+	public boolean parkingBrakeOn;
+	public boolean locked;
+	public String ownerName = "";
+	public String displayText = "";
+	
+	
+	//Internal states.
+	public byte prevParkingBrakeAngle;
+	public byte parkingBrakeAngle;
+	public double airDensity;
+	public double currentMass;
+	public double velocity;
+	public double prevVelocity;
+	public double normalizedGroundVelocity;
+	public Point3d headingVector = new Point3d(0, 0, 0);
+	public Point3d normalizedVelocity = new Point3d(0, 0, 0);
+	public Point3d verticalVector = new Point3d(0, 0, 0);
+	public Point3d sideVector = new Point3d(0, 0, 0);
+	
+	
 	private float hardnessHitThisTick = 0;
-			
-	public EntityVehicleC_Colliding(World world){
-		super(world);
+	
+	public EntityVehicleC_Colliding(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
+		super(builder, world, data);
+		this.locked = data.getBoolean("locked");
+		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
+		this.brakeOn = data.getBoolean("brakeOn");
+		this.ownerName = data.getString("ownerName");
+		this.displayText = data.getString("displayText");
+		if(displayText.isEmpty()){
+			displayText = definition.rendering.defaultDisplayText;
+		}
 	}
 	
-	public EntityVehicleC_Colliding(World world, float posX, float posY, float posZ, float playerRotation, JSONVehicle definition){
-		super(world, posX, posY, posZ, playerRotation, definition);
+	@Override
+	public void update(){
+		super.update();
+		//Set vectors to current velocity and orientation.
+		headingVector.set(0D, 0D, 1D).rotateFine(angles);
+		normalizedVelocity.set(motion.x, 0D, motion.z);
+		normalizedGroundVelocity = normalizedVelocity.dotProduct(headingVector);
+		normalizedVelocity.y = motion.y;
+		prevVelocity = velocity;
+		velocity = Math.abs(normalizedVelocity.dotProduct(headingVector));
+		normalizedVelocity.normalize();
+		verticalVector = new Point3d(0D, 1D, 0D).rotateFine(rotation);
+		sideVector = headingVector.crossProduct(verticalVector);
+		
+		//Update mass.
+		if(definition != null){
+			currentMass = getCurrentMass();
+			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+		}
+		
+		//Update parking brake angle.
+		//FIXME remove this with the duration/delay code.
+		prevParkingBrakeAngle = parkingBrakeAngle;
+		if(parkingBrakeOn && !locked && velocity < 0.25){
+			if(parkingBrakeAngle < 30){
+				prevParkingBrakeAngle = parkingBrakeAngle;
+				++parkingBrakeAngle;
+			}
+		}else{
+			if(parkingBrakeAngle > 0){
+				prevParkingBrakeAngle = parkingBrakeAngle;
+				--parkingBrakeAngle;
+			}
+		}
 	}
 	
 	@Override
@@ -381,5 +450,91 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Existing{
 			}
 		}
 		return collisionDepth;
+	}
+	
+	/**
+	 * Call this to remove this vehicle.  This should be called when the vehicle has crashed, as it
+	 * ejects all parts and damages all players.  Explosions may not occur in crashes depending on config 
+	 * settings or a lack of fuel or explodable cargo.  Call only on the SERVER as this is for item-spawning 
+	 * code and player damage code.
+	 */
+	public void destroyAtPosition(double x, double y, double z){
+		this.setDead();
+		//Remove all parts from the vehicle and place them as items.
+		for(APart part : getVehicleParts()){
+			if(part.getItemForPart() != null){
+				ItemStack partStack = new ItemStack(part.getItemForPart());
+				NBTTagCompound stackTag = part.getData();
+				if(stackTag != null){
+					partStack.setTagCompound(stackTag);
+				}
+				world.spawnEntity(new EntityItem(world, part.worldPos.x, part.worldPos.y, part.worldPos.z, partStack));
+			}
+		}
+		
+		//Also drop some crafting ingredients as items.
+		for(ItemStack craftingStack : MTSRegistry.getMaterials(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName))){
+			for(int i=0; i<craftingStack.getCount(); ++i){
+				if(this.rand.nextDouble() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
+					world.spawnEntity(new EntityItem(world, this.posX, this.posY, this.posZ, new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())));
+				}
+			}
+		}
+	}	
+	
+	/**
+	 * Calculates the current mass of the vehicle.
+	 * Includes core mass, player weight and inventory, and cargo.
+	 */
+	protected float getCurrentMass(){
+		int currentMass = definition.general.emptyMass;
+		for(APart part : parts){
+			if(part instanceof PartCrate){
+				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
+			}else if(part instanceof PartBarrel){
+				currentMass += ((PartBarrel) part).getFluidAmount()/50;
+			}
+		}
+		
+		//Add passenger inventory mass as well.
+		for(Entity passenger : this.getPassengers()){
+			if(passenger instanceof EntityPlayer){
+				currentMass += 100 + calculateInventoryWeight(((EntityPlayer) passenger).inventory);
+			}else{
+				currentMass += 100;
+			}
+		}
+		return currentMass;
+	}
+	
+	/**
+	 * Calculates the weight of the inventory passed in.
+	 */
+	private static float calculateInventoryWeight(IInventory inventory){
+		float weight = 0;
+		for(int i=0; i<inventory.getSizeInventory(); ++i){
+			ItemStack stack = inventory.getStackInSlot(i);
+			if(stack != null){
+				double weightMultiplier = 1.0;
+				for(String heavyItemName : ConfigSystem.configObject.general.itemWeights.weights.keySet()){
+					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
+						weightMultiplier = ConfigSystem.configObject.general.itemWeights.weights.get(heavyItemName);
+						break;
+					}
+				}
+				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
+			}
+		}
+		return weight;
+	}
+	
+	@Override
+	public void save(WrapperNBT data){
+		super.save(data);
+		data.setBoolean("locked", locked);
+		data.setBoolean("brakeOn", brakeOn);
+		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
+		data.setString("ownerName", ownerName);
+		data.setString("displayText", displayText);
 	}
 }
