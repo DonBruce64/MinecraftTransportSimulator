@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import mcinterface.BuilderEntity;
@@ -10,6 +12,8 @@ import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 
@@ -51,6 +55,15 @@ public abstract class AEntityBase{
 	
 	/**True as long as this entity is part of the world and being ticked.**/
 	public boolean isValid = true;
+	
+	/**Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of updates.**/
+	public long ticksExisted;
+	
+	/**List of bounding boxes that should be used for collision of other entities with this entity.**/
+	public List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
+	
+	/**List of bounding boxes that should be used for interaction of other entities with this entity.**/
+	public List<BoundingBox> interactionBoxes = new ArrayList<BoundingBox>();
 	
 	/**Maps relative position locations to riders riding at those positions.  Only one rider
 	 * may be present per position.  Positions should be modified via mutable modification to
@@ -97,7 +110,7 @@ public abstract class AEntityBase{
 	 * extra functionality can and should be added in sub-classes.
 	 */
 	public void update(){
-		//Update positions.
+		++ticksExisted;
 		prevPosition.setTo(position);
 		prevMotion.setTo(motion);
 		prevAngles.setTo(angles);
@@ -184,6 +197,27 @@ public abstract class AEntityBase{
 			}
 		}
 	}
+	
+	/**
+	 *  Called when the entity is attacked.
+	 *  This should ONLY be called on the server; clients will sync via packets.
+	 */
+	public void attack(Damage damage){}
+	
+	/**
+	 *  This method returns true if this entity is lit up.  Used to send lighting status to various
+	 *  systems for rendering.  Note that this does NOT imply that this entity is bright enough to make
+	 *  its surroundings lit up.  Rather, this simply means there is a light on this entity somewhere.
+	 */
+	public abstract boolean isLitUp();
+	
+	/**
+	 *  Called to render this entity.  No actual rendering should be done in this method, as doing so
+	 *  could result in classed being imported during object instantiation on the server for graphics
+	 *  libraries that do not exist.  Instead, all render calls should be forwarded to self-contained
+	 *  classes that do rendering.
+	 */
+	public abstract void render(float partialTicks);
 	
 	/**
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper

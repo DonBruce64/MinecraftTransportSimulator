@@ -7,10 +7,6 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 /**This class is a wrapper for vehicle ground device collision points.  It's used to get a point
  * to reference for ground collisions, and contains helper methods for doing calculations of those
@@ -31,7 +27,7 @@ public class VehicleGroundDeviceBox{
 	public boolean isGrounded;
 	public boolean isGroundedLiquid;
 	public double collisionDepth;
-	public VehicleAxisAlignedBB currentBox;
+	public BoundingBox currentBox;
 	public double xCoord;
 	public double yCoord;
 	public double zCoord;
@@ -39,7 +35,7 @@ public class VehicleGroundDeviceBox{
 	//The following variables are only used for intermediary calculations.
 	private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
 	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
-	private final List<VehicleAxisAlignedBB> liquidCollisionBoxes = new ArrayList<VehicleAxisAlignedBB>();
+	private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<BoundingBox>();
 	
 	
 	public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft){
@@ -49,18 +45,18 @@ public class VehicleGroundDeviceBox{
 		
 		//Get all liquid collision boxes during construction.
 		//While their actual position may change, their relative position is static.
-		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
+		for(BoundingBox box : vehicle.collisionBoxes){
 			if(box.collidesWithLiquids){
-				if(isFront && box.rel.z > 0){
-					if(isLeft && box.rel.x >= 0){
+				if(isFront && box.localCenter.z > 0){
+					if(isLeft && box.localCenter.x >= 0){
 						liquidCollisionBoxes.add(box);
-					}else if(!isLeft && box.rel.x <= 0){
+					}else if(!isLeft && box.localCenter.x <= 0){
 						liquidCollisionBoxes.add(box);
 					}
-				}else if(!isFront && box.rel.z <= 0){
-					if(isLeft && box.rel.x >= 0){
+				}else if(!isFront && box.localCenter.z <= 0){
+					if(isLeft && box.localCenter.x >= 0){
 						liquidCollisionBoxes.add(box);
-					}else if(!isLeft && box.rel.x <= 0){
+					}else if(!isLeft && box.localCenter.x <= 0){
 						liquidCollisionBoxes.add(box);
 					}
 				}
@@ -76,7 +72,7 @@ public class VehicleGroundDeviceBox{
 	public void updateGroundDevices(){
 		groundDevices.clear();
 		liquidDevices.clear();
-		for(APart part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
 				//X-offsets of 0 are both left and right as they are center points.
 				//This ensures we don't roll to try and align a center point.
@@ -121,13 +117,13 @@ public class VehicleGroundDeviceBox{
 			isCollided = !groundCollidingBoxes.isEmpty();
 			isGrounded = isCollided ? false : !currentBox.offset(0, PartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
 			collisionDepth = isCollided ? getCollisionDepthForCollisions(currentBox, groundCollidingBoxes) : 0;
-			xCoord = currentBox.rel.x;
-			yCoord = currentBox.rel.y - currentBox.height/2D;
-			zCoord = currentBox.rel.z;
+			xCoord = currentbox.localCenter.x;
+			yCoord = currentbox.localCenter.y - currentBox.height/2D;
+			zCoord = currentbox.localCenter.z;
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
-			final VehicleAxisAlignedBB liquidCollisionBox = getLiquidPoint();
+			final BoundingBox liquidCollisionBox = getLiquidPoint();
 			final List<AxisAlignedBB> liquidCollidingBoxes = getLiquidCollisions(liquidCollisionBox, vehicle.world);
 			//Liquids are checked a bit differently as we already checked solids.
 			isCollidedLiquid = !liquidCollidingBoxes.isEmpty();
@@ -140,15 +136,15 @@ public class VehicleGroundDeviceBox{
 				isCollided = isCollidedLiquid;
 				isGrounded = isGroundedLiquid;
 				collisionDepth = liquidCollisionDepth;
-				xCoord = liquidCollisionBox.rel.x;
-				yCoord = liquidCollisionBox.rel.y - liquidCollisionBox.height/2D;
-				zCoord = liquidCollisionBox.rel.z;
+				xCoord = liquidCollisionbox.localCenter.x;
+				yCoord = liquidCollisionbox.localCenter.y - liquidCollisionBox.height/2D;
+				zCoord = liquidCollisionbox.localCenter.z;
 			}
 		}
 	}
 	
 	/**Gets the solid collision point based on position of ground devices.**/
-	private VehicleAxisAlignedBB getSolidPoint(){
+	private BoundingBox getSolidPoint(){
 		float heights = 0;
 		float widths = 0;
 		double xCoords = 0;
@@ -175,7 +171,7 @@ public class VehicleGroundDeviceBox{
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
-	private VehicleAxisAlignedBB getLiquidPoint(){
+	private BoundingBox getLiquidPoint(){
 		float heights = 0;
 		float widths = 0;
 		double xCoords = 0;
@@ -190,12 +186,12 @@ public class VehicleGroundDeviceBox{
 			zCoords += groundDevice.totalOffset.z;
 		}
 		
-		for(VehicleAxisAlignedBB box : liquidCollisionBoxes){
-			heights += box.height;
-			widths += box.width;
-			xCoords += box.rel.x;
-			yCoords += box.rel.y;
-			zCoords += box.rel.z;
+		for(BoundingBox box : liquidCollisionBoxes){
+			heights += box.heightRadius*2D;
+			widths += box.widthRadius*2D;
+			xCoords += box.localCenter.x;
+			yCoords += box.localCenter.y;
+			zCoords += box.localCenter.z;
 		}
 		
 		heights /= (liquidDevices.size() + liquidCollisionBoxes.size());

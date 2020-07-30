@@ -1,42 +1,37 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import mcinterface.InterfaceAudio;
-import minecrafttransportsimulator.MTS;
+import mcinterface.InterfaceNetwork;
+import mcinterface.InterfaceRender;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
+import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class PartGun extends APart implements FXPart{	
+public class PartGun extends APart implements IVehiclePartFXProvider{	
 	//Stored variables used to determine bullet firing behavior.
 	public int shotsFired;
 	public int bulletsLeft;
-	public float currentPitch;
-	public float currentYaw;
-	public float prevPitch;
-	public float prevYaw;
+	public double currentPitch;
+	public double currentYaw;
+	public double prevPitch;
+	public double prevYaw;
 	public ItemPartBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on entity loading.
 	public boolean firing;
 	public boolean reloading;
-	public int playerControllerID = -1;
 	public int temp;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
@@ -46,20 +41,22 @@ public class PartGun extends APart implements FXPart{
 	
 	private final double anglePerTickSpeed;
 		
-	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
-		this.shotsFired = dataTag.getInteger("shotsFired");
-		this.bulletsLeft = dataTag.getInteger("bulletsLeft");
-		this.currentPitch = dataTag.getFloat("currentPitch");
-		this.currentYaw = dataTag.getFloat("currentYaw");
-		if(dataTag.hasKey("loadedBulletPack")){
-			this.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(dataTag.getString("loadedBulletPack")).get(dataTag.getString("loadedBulletName"));
+	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
+		super(vehicle, packVehicleDef, definition, data);
+		this.shotsFired = data.getInteger("shotsFired");
+		this.bulletsLeft = data.getInteger("bulletsLeft");
+		this.currentPitch = data.getDouble("currentPitch");
+		this.currentYaw = data.getDouble("currentYaw");
+		String loadedBulletsPack = data.getString("loadedBulletsPack");
+		String loadedBulletName = data.getString("loadedBulletName");
+		if(!loadedBulletsPack.isEmpty()){
+			this.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(loadedBulletsPack).get(loadedBulletName);
 		}
 		this.anglePerTickSpeed = (50/definition.gun.diameter + 1/definition.gun.length);
 		
 		//Get the gun number based on how many guns the vehicle has.
 		gunNumber = 1;
-		for(APart part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				++gunNumber;
 			}
@@ -67,26 +64,24 @@ public class PartGun extends APart implements FXPart{
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(WrapperPlayer player){
 		//Only reload bullets if we aren't currently reloading.
 		if(!reloading){
 			//Check to see if we have any bullets in our hands.
 			//If so, and they go to this gun, reload the gun and send a packet to update other guns.
-			ItemStack heldStack = player.getHeldItemMainhand();
+			ItemStack heldStack = player.getHeldStack();
 			if(heldStack != null && heldStack.getItem() instanceof ItemPartBullet){
 				ItemPartBullet bulletItem = (ItemPartBullet) heldStack.getItem();
 				//Only fill bullets if we match the bullet already in the gun, or if our diameter matches.
-				if((loadedBullet == null && bulletItem.definition.bullet.diameter == this.definition.gun.diameter) || loadedBullet.equals(bulletItem)){
+				if((loadedBullet == null && bulletItem.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(bulletItem)){
 					//Make sure we don't over-fill the gun.
-					if(bulletItem.definition.bullet.quantity <= this.definition.gun.capacity + this.bulletsLeft){
-						if(!player.capabilities.isCreativeMode){
-							player.inventory.clearMatchingItems(bulletItem, -1, 1, null);
-						}
-						this.loadedBullet = bulletItem;
-						this.bulletsLeft += bulletItem.definition.bullet.quantity;
+					if(bulletItem.definition.bullet.quantity <= definition.gun.capacity + bulletsLeft){
+						player.removeItem(new ItemStack(bulletItem));
+						loadedBullet = bulletItem;
+						bulletsLeft += bulletItem.definition.bullet.quantity;
 						reloadTimeRemaining = definition.gun.reloadTime;
 						reloading = true;
-						MTS.MTSNet.sendToAll(new PacketPartGunReload(this, bulletItem));
+						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, bulletItem.definition.packID, bulletItem.definition.systemName), this.vehicle);
 					}
 				}
 			}
@@ -95,24 +90,24 @@ public class PartGun extends APart implements FXPart{
     }
 	
 	@Override
-	public void attackPart(DamageSource source, float damage){
+	public void attack(Damage damage){
 		//Add shots fired when damaged.  If the damage is explosive, add more damage and jam the gun.
-		if(!source.isExplosion()){
-			shotsFired += (int) (damage*2F);
+		if(!damage.isExplosion){
+			shotsFired += (int) (damage.amount*2F);
 			//If the source is flammable, add temp to the gun.
-			if(source.isFireDamage()){
-				temp += damage;
+			if(damage.isFire){
+				temp += damage.amount;
 			}
 		}else{
-			shotsFired += (int) (damage*10F);
+			shotsFired += (int) (damage.amount*10F);
 			reloadTimeRemaining = definition.gun.reloadTime;
 			reloading = true;
 		}
 	}
 	
 	@Override
-	public void updatePart(){
-		super.updatePart();
+	public void update(){
+		super.update();
 		prevPitch = currentPitch;
 		prevYaw = currentYaw;
 		
@@ -121,17 +116,16 @@ public class PartGun extends APart implements FXPart{
 			--cooldownTimeRemaining;
 		} 
 		
-		//Before we do any logic, check to make sure the player is still seated in the gunner seat.
-		//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
-		//Otherwise, guns could be set to fire and the player could just run away...
-		if(playerControllerID != -1){
-			Entity playerController = vehicle.world.getEntityByID(playerControllerID);
-			PartSeat seat = playerController != null ? vehicle.getSeatForRider(playerController) : null;
-			if(seat != null){
+		if(firing){
+			//Before we do any logic, check to make sure the player is still seated in the gunner seat.
+			//It it quite possible they could dismount with their hands on the trigger, so we need to be sure we check.
+			//Otherwise, guns could be set to fire and the player could just run away...
+			WrapperPlayer playerController = (WrapperPlayer) vehicle.locationsToRiders.get(placementOffset);
+			if(playerController != null){
 				//If we are out of bullets, and we can automatically reload, and are not doing so, start the reload sequence.
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
-					for(APart part : vehicle.getVehicleParts()){
+					for(APart part : vehicle.parts){
 						if(part instanceof PartCrate){
 							InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
 							for(byte i=0; i<crateInventory.getSizeInventory(); ++i){
@@ -147,9 +141,9 @@ public class PartGun extends APart implements FXPart{
 											reloadTimeRemaining = definition.gun.reloadTime;
 											reloading = true;
 											crateInventory.decrStackSize(i, 1);
-											this.loadedBullet = bullet;
-											this.bulletsLeft = bullet.definition.bullet.quantity;
-											MTS.MTSNet.sendToAll(new PacketPartGunReload(this, bullet));
+											loadedBullet = bullet;
+											bulletsLeft = bullet.definition.bullet.quantity;
+											InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, definition.packID, definition.systemName), this.vehicle);
 											return;
 										}
 									}
@@ -190,8 +184,8 @@ public class PartGun extends APart implements FXPart{
 				//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
 				//Pitch and yaw are relative to the vehicle, so use those.
 				//When we do yaw, make sure to normalize the player's yaw from -180/180.
-				double deltaPitch = playerController.rotationPitch - vehicle.rotationPitch;
-				double playerYaw = ((playerController.rotationYaw - vehicle.rotationYaw)%360 + 360)%360;
+				double deltaPitch = playerController.getPitch() - vehicle.angles.x;
+				double playerYaw = ((playerController.getYaw() - vehicle.angles.y)%360 + 360)%360;
 				if(playerYaw >= 180){
 					playerYaw = -(360 - playerYaw);
 				}
@@ -244,23 +238,23 @@ public class PartGun extends APart implements FXPart{
 					}
 				}
 			}else{
-				playerControllerID = -1;
+				firing = false;
 			}
 		}
 	}
 	
 	@Override
-	public NBTTagCompound getData(){
-		NBTTagCompound dataTag = new NBTTagCompound();
-		dataTag.setInteger("shotsFired", this.shotsFired);
-		dataTag.setInteger("bulletsLeft", this.bulletsLeft);
-		dataTag.setFloat("currentPitch", this.currentPitch);
-		dataTag.setFloat("currentYaw", this.currentYaw);
+	public WrapperNBT getData(){
+		WrapperNBT data = new WrapperNBT();
+		data.setInteger("shotsFired", this.shotsFired);
+		data.setInteger("bulletsLeft", this.bulletsLeft);
+		data.setDouble("currentPitch", this.currentPitch);
+		data.setDouble("currentYaw", this.currentYaw);
 		if(loadedBullet != null){
-			dataTag.setString("loadedBulletPack", this.loadedBullet.definition.packID);
-			dataTag.setString("loadedBulletName", this.loadedBullet.definition.systemName);
+			data.setString("loadedBulletPack", this.loadedBullet.definition.packID);
+			data.setString("loadedBulletName", this.loadedBullet.definition.systemName);
 		}
-		return dataTag;
+		return data;
 	}
 	
 	@Override
@@ -284,31 +278,25 @@ public class PartGun extends APart implements FXPart{
 	}
 		
 	@Override
-	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
 		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire){
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on rotation of the vehicle, gun, and gun mount.
 			//Set the trajectory of the bullet.
 			//Add a slight fudge-factor to the bullet's trajectory depending on the barrel length and shell size.
-			float bulletYaw = (float) (vehicle.rotationYaw - placementRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
-			float bulletPitch = (float) (vehicle.rotationPitch + placementRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			Point3d gunAngle = new Point3d(0D, 0D, 0D);
+			gunAngle.y = (float) (vehicle.angles.y + placementRotation.y + currentYaw + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			gunAngle.x = (float) (vehicle.angles.x + placementRotation.x + currentPitch + (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)));
+			Point3d bulletOrientation = new Point3d(0D, 0D, 1D).rotateFine(gunAngle);
 			
-			//Set initial velocity to the gun muzzle velocity times the speedFactor.
-			//We bring in the code for vectors here to make the velocity calculations easier.
-			//Copied from Entity.getVectorForRotation()
-			float f = MathHelper.cos(-bulletYaw * 0.017453292F - (float)Math.PI);
-	        float f1 = MathHelper.sin(-bulletYaw * 0.017453292F - (float)Math.PI);
-	        float f2 = -MathHelper.cos(-bulletPitch * 0.017453292F);
-	        float f3 = MathHelper.sin(-bulletPitch * 0.017453292F);
-	        Point3d bulletOrientation = new Point3d(f1 * f2, f3, f * f2);
+			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
+			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(bulletOrientation.copy().multiply(definition.gun.muzzleVelocity/20D/10D));
 			
-			double bulletMotionX = bulletOrientation.x*definition.gun.muzzleVelocity/20D/10D + vehicle.motionX*ConfigSystem.configObject.general.speedFactor.value;
-			double bulletMotionY = bulletOrientation.y*definition.gun.muzzleVelocity/20D/10D + vehicle.motionY*ConfigSystem.configObject.general.speedFactor.value;
-			double bulletMotionZ = bulletOrientation.z*definition.gun.muzzleVelocity/20D/10D + vehicle.motionZ*ConfigSystem.configObject.general.speedFactor.value;
-			
-			//Now add the bullet as a particle.
-			Minecraft.getMinecraft().effectRenderer.addEffect(new PartBullet(vehicle.world, worldPos.x + bulletOrientation.x*definition.gun.length, worldPos.y + bulletOrientation.y*definition.gun.length, worldPos.z + bulletOrientation.z*definition.gun.length, bulletMotionX, bulletMotionY, bulletMotionZ, loadedBullet, playerControllerID, this.vehicle));
+			//Get the bullet's initial position.  This is based off the gun orientation and barrel length.
+			bulletOrientation.multiply((double) definition.gun.length).add(worldPos);
+	        
+			//Add the bullet as a particle.
+			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletOrientation, bulletVelocity, loadedBullet, (WrapperPlayer) vehicle.locationsToRiders.get(placementOffset), vehicle));
 			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 		}

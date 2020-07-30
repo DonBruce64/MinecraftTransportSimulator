@@ -1,28 +1,23 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import java.util.List;
-
 import mcinterface.InterfaceAudio;
+import mcinterface.InterfaceNetwork;
+import mcinterface.InterfaceRender;
+import mcinterface.WrapperBlock;
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourceWheel;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
+import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
+import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**A ground device is simply a part of a vehicle that touches the ground.
  * This class is used to perform ground physics, which include steering, 
@@ -34,7 +29,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * 
  * @author don_bruce
  */
-public class PartGroundDevice extends APart implements FXPart{
+public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	public static final Point3d groundDetectionOffset = new Point3d(0, -0.05F, 0);
 	
 	//External states for animations.
@@ -49,23 +44,20 @@ public class PartGroundDevice extends APart implements FXPart{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
-		this.isFlat = dataTag.getBoolean("isFlat");
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
+		super(vehicle, packVehicleDef, definition, data);
+		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
 		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
-		if(isValid() && getLongPartOffset() != 0){
+		if(getLongPartOffset() != 0 && !isFake()){
 			packVehicleDef.pos[2] += getLongPartOffset();
-			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, dataTag);
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data);
 			//Only check collision if we are not adding this part from saved NBT data.
-			//If we check all the time, clients get wonky.
-			//To do this, we only check if the vehicle has existed for over 40 ticks.
-			//At this point we shouldn't be loading an NBT, so this part will have been
-			//added by the player and should do collision checks.
-			vehicle.addPart(fakePart, vehicle.ticksExisted < 40);
+			//If we are adding from NBT, then we should have a tag saying that.
+			vehicle.addPart(fakePart, data.getBoolean("isExisting"));
 			packVehicleDef.pos[2] -= getLongPartOffset();
 		}else{
 			fakePart = null;
@@ -73,21 +65,21 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
-	public void attackPart(DamageSource source, float damage){
+	public void attack(Damage damage){
 		if(definition.ground.isWheel && !isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
-			if(source.isExplosion() || Math.random() < 0.1){
-				if(!vehicle.world.isRemote){
-					this.setFlat();
-					MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
+			if(damage.isExplosion || Math.random() < 0.1){
+				if(!vehicle.world.isClient()){
+					setFlat();
+					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
 				}
 			}
 		}
 	}
 	
 	@Override
-	public void updatePart(){
-		super.updatePart();
-		if(this.isOnGround()){
+	public void update(){
+		super.update();
+		if(isOnGround()){
 			//If we aren't skipping angular calcs, change our velocity accordingly.
 			if(!skipAngularCalcs){
 				prevAngularVelocity = angularVelocity;
@@ -96,9 +88,10 @@ public class PartGroundDevice extends APart implements FXPart{
 			
 			//Set contact for wheel skidding effects.
 			if(definition.ground.isWheel){
-				if(prevAngularVelocity/((vehicle.normalizedGroundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
-					BlockPos blockBelow = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
-					if(vehicle.world.getBlockState(blockBelow).getBlockHardness(vehicle.world, blockBelow) >= 1.25){
+				if(prevAngularVelocity/((vehicle.groundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
+					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
+					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
+					if(blockBelow.getHardness() >= 1.25){
 						contactThisTick = true;
 					}
 				}
@@ -111,36 +104,28 @@ public class PartGroundDevice extends APart implements FXPart{
 				}else if(!isFlat){
 					++ticksCalcsSkipped;
 					if(Math.random()*50000 < ticksCalcsSkipped && ConfigSystem.configObject.damage.wheelBreakage.value){
-						if(!vehicle.world.isRemote){
-							this.setFlat();
-							MTS.MTSNet.sendToAll(new PacketPartGroundDeviceWheelFlat(this));
+						if(!vehicle.world.isClient()){
+							setFlat();
+							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
 						}
 					}
 				}
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.world.isRemote && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
-				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox.expand(0.25F, 0, 0.25F));
-				if(!collidedEntites.isEmpty()){
-					Entity attacker = null;
-					for(Entity passenger : vehicle.getPassengers()){
-						PartSeat seat = vehicle.getSeatForRider(passenger);
-						if(seat.vehicleDefinition.isController){
-							attacker = passenger;
-							break;
-						}
-					}
-					for(int i=0; i < collidedEntites.size(); ++i){
-						if(!this.vehicle.isPassenger(collidedEntites.get(i))){
-							if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
-								collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.velocity*vehicle.currentMass/1000F));
-							}else{
-								collidedEntites.get(i).attackEntityFrom(new DamageSourceWheel(attacker), (float) (ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F));
-							}
-						}
-					}
+			if(!vehicle.world.isClient() && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
+				boundingBox.widthRadius += 0.25;
+				boundingBox.depthRadius += 0.25;
+				final double wheelDamageAmount;
+				if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
+					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.velocity*vehicle.currentMass/1000F;
+				}else{
+					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F;
 				}
+				Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, vehicle.getController());
+				vehicle.world.attackEntities(wheelDamage, vehicle);
+				boundingBox.widthRadius -= 0.25;
+				boundingBox.depthRadius -= 0.25;
 			}
 		}else if(vehicle.definition.car == null){
 			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
@@ -153,34 +138,24 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
-	public boolean wouldPartCollide(Point3d collisionOffset){
-		if(super.wouldPartCollide(collisionOffset)){
-			return true;
-    	}else if(definition.ground.canFloat){
-    		return isPartCollidingWithLiquids(collisionOffset);
-    	}else{
-    		return false;
-    	}
-    }
-	
-	@Override
-	public void removePart(){
-		super.removePart();
+	public void remove(){
+		super.remove();
 		if(fakePart != null){
-			vehicle.removePart(fakePart, false);
+			fakePart.isValid = false;
 		}
 	}
 	
 	@Override
-	public NBTTagCompound getData(){
-		NBTTagCompound dataTag = new NBTTagCompound();
-		dataTag.setBoolean("isFlat", isFlat);
-		return dataTag;
+	public WrapperNBT getData(){
+		WrapperNBT data = new WrapperNBT();
+		data.setBoolean("isExisting", true);
+		data.setBoolean("isFlat", isFlat);
+		return data;
 	}
 	
 	@Override
-	public Item getItemForPart(){
-		return isFlat ? null : super.getItemForPart();
+	public Item getItem(){
+		return isFlat ? null : super.getItem();
 	}
 	
 	@Override
@@ -212,23 +187,28 @@ public class PartGroundDevice extends APart implements FXPart{
 	
 	public void setFlat(){
 		isFlat = true;
-		if(vehicle.world.isRemote){
+		if(vehicle.world.isClient()){
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
 		}
 	}
 	
 	public float getFrictionLoss(){
-		//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-		BlockPos pos = new BlockPos(worldPos.x, worldPos.y - 1, worldPos.z);
-		return 0.6F - vehicle.world.getBlockState(pos).getBlock().getSlipperiness(vehicle.world.getBlockState(pos), vehicle.world, pos, null) + (vehicle.world.isRainingAt(pos.up()) ? 0.25F : 0);
+		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
+		WrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
+		if(groundBlock != null){
+			//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
+			return 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
+		}else{
+			return 0;
+		}
 	}
 	
 	public double getDesiredAngularVelocity(){
-		return getLongPartOffset() == 0 ? vehicle.normalizedGroundVelocity/(getHeight()*Math.PI) : vehicle.normalizedGroundVelocity;
+		return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
 	}
 	
 	public boolean isOnGround(){
-		return wouldPartCollide(groundDetectionOffset);
+		return boundingBox.updateCollidingBlocks(vehicle.world, groundDetectionOffset);
 	}
 	
 	public float getMotiveFriction(){
@@ -244,18 +224,17 @@ public class PartGroundDevice extends APart implements FXPart{
 	}
 	
 	@Override
-	@SideOnly(Side.CLIENT)
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y, worldPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && this.isOnGround()){
 			for(byte i=0; i<4; ++i){
-				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleEffectsSystem.ColoredSmokeFX(vehicle.world, worldPos.x, worldPos.y, worldPos.z, Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 		}
 	}

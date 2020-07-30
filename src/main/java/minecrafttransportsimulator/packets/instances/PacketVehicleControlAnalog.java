@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -43,7 +43,7 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case THROTTLE : {
 				vehicle.throttle = (byte) clampAngle(0, 100, cooldown == Byte.MAX_VALUE ? value : vehicle.throttle + value);

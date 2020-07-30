@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -24,7 +24,7 @@ public class BlockPartsBench extends ABlockBase{
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperEntityPlayer playerClicking){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer playerClicking){
 		if(world.isClient()){
 			BuilderGUI.openGUI(new GUIPartBench(this, playerClicking));
 		}

@@ -1,5 +1,14 @@
 package mcinterface;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -7,17 +16,21 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
@@ -67,7 +80,7 @@ public class WrapperWorld{
 	public long getTime(){
 		return world.getTotalWorldTime();
 	}
-	
+		
 	/**
 	 *  Returns the max build height for the world.  Note that entities may move and be saved
 	 *  above this height, and moving above this height will result in rendering oddities.
@@ -86,8 +99,93 @@ public class WrapperWorld{
 	/**
 	 *  Returns the player with the passed-in ID.
 	 */
-	public WrapperEntityPlayer getPlayer(int id){
-		return new WrapperEntityPlayer((EntityPlayer) world.getEntityByID(id));
+	public WrapperPlayer getPlayer(int id){
+		return new WrapperPlayer((EntityPlayer) world.getEntityByID(id));
+	}
+	
+	/**
+	 *  Attacks all entities that are in the passed-in damage range.  If the
+	 *  passed-in entity is not null, then any entity riding the passed-in
+	 *  entity that is inside the bounding box will not be attacked, nor will
+	 *  the passed-in entity be attacked.  Useful for vehicles, where you don't 
+	 *  want players firing weapons to hit themselves or the vehicle.
+	 *  Note that if this is called on clients, then this method will not attack
+	 *  any entities. Instead, it will return a map of all entities that could have
+	 *  been attacked with the bounding box attacked if they are of type 
+	 *  {@link BuilderEntity} as the value to the entity key.
+	 *  This is because attacking cannot be done on clients, but it may be useful to 
+	 *  know what entities could have been attacked should the call have been made on a server.
+	 */
+	public Map<WrapperEntity, BoundingBox> attackEntities(Damage damage, AEntityBase damageSource){
+		AxisAlignedBB mcBox = new AxisAlignedBB(
+				damage.box.globalCenter.x - damage.box.widthRadius,
+				damage.box.globalCenter.y - damage.box.heightRadius,
+				damage.box.globalCenter.z - damage.box.depthRadius,
+				damage.box.globalCenter.x + damage.box.widthRadius,
+				damage.box.globalCenter.y + damage.box.heightRadius,
+				damage.box.globalCenter.z + damage.box.depthRadius
+			);
+		List<Entity> collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+		if(!collidedEntities.isEmpty()){
+			if(damageSource != null){
+				//Iterate over all entities.  If the entity is the passed-in source, or riding the source, remove it.
+				Iterator<Entity> iterator = collidedEntities.iterator();
+				while(iterator.hasNext()){
+					Entity entity = iterator.next();
+					if(entity instanceof BuilderEntity){
+						AEntityBase testSource = ((BuilderEntity) entity).entity;
+						if(damageSource.equals(testSource)){
+							iterator.remove();
+						}
+					}else if(entity.getRidingEntity() instanceof BuilderEntity){
+						AEntityBase testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
+						if(damageSource.equals(testSource)){
+							iterator.remove();
+						}
+					}
+				}
+			}
+			
+			//Now that all entities have been filtered out, attack all the ones that are left.
+			//If we are a client, don't attack.  Simply return the entities.
+			if(isClient()){
+				Map<WrapperEntity, BoundingBox> entities = new HashMap<WrapperEntity, BoundingBox>();
+				for(Entity entity : collidedEntities){
+					if(entity instanceof BuilderEntity){
+						//Need to check which box we hit for this entity.
+						for(BoundingBox box : ((BuilderEntity) entity).entity.collisionBoxes){
+							if(box.intersects(damage.box)){
+								entities.put(new WrapperEntity(entity), box);
+								break;
+							}
+						}
+					}else{
+						entities.put(new WrapperEntity(entity), null);
+					}
+				}
+				return entities;
+			}
+			for(Entity entity : collidedEntities){
+				WrapperEntity.attack(entity, damage);
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 *  Returns the block wrapper at the passed-in location, or null if the block is air.
+	 */
+	public WrapperBlock getWrapperBlock(Point3i point){
+		return isAir(point) ? null : new WrapperBlock(world, new BlockPos(point.x, point.y, point.z));
+	}
+	
+	/**
+	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
+	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
+	 */
+	public ABlockBase getBlock(Point3i point){
+		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
+		return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
 	}
 	
 	/**
@@ -99,6 +197,14 @@ public class WrapperWorld{
 		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
 		Block offsetMCBlock = offsetMCState.getBlock();
         return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
+	}
+	
+	/**
+	 *  Returns true if the block is liquid.
+	 */
+	public boolean isBlockLiquid(Point3i point){
+		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+        return offsetMCState.getMaterial().isLiquid();
 	}
 	
 	/**
@@ -124,12 +230,76 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
-	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
+	 * Updates the blocks and depths of collisions for the passed-in BoundingBox to the box's internal variables.
+	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
+	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
+	 * This prevents excess calculations when trying to do movement calculations for a single axis.
 	 */
-	public ABlockBase getBlock(Point3i point){
-		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
-		return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
+	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion){
+		AxisAlignedBB mcBox = new AxisAlignedBB(
+			box.globalCenter.x - box.widthRadius,
+			box.globalCenter.y - box.heightRadius,
+			box.globalCenter.z - box.depthRadius,
+			box.globalCenter.x + box.widthRadius,
+			box.globalCenter.y + box.heightRadius,
+			box.globalCenter.z + box.depthRadius
+		);
+		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
+		box.currentCollisionDepth.set(0D, 0D, 0D);
+		for(int i = (int) Math.floor(mcBox.minX); i < Math.floor(mcBox.maxX + 1); ++i){
+    		for(int j = (int) Math.floor(mcBox.minY); j < Math.floor(mcBox.maxY + 1); ++j){
+    			for(int k = (int) Math.floor(mcBox.minZ); k < Math.floor(mcBox.maxZ + 1); ++k){
+    				BlockPos pos = new BlockPos(i, j, k);
+    				if(world.isBlockLoaded(pos)){
+	    				IBlockState state = world.getBlockState(pos);
+	    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
+	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
+	    					box.collidingBlocks.add(new WrapperBlock(world, pos));
+	    				}
+						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
+							collidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
+							box.collidingBlocks.add(new WrapperBlock(world, pos));
+						}
+    				}
+    			}
+    		}
+    	}
+		
+		for(AxisAlignedBB colBox : collidingAABBs){
+			if(collisionMotion.x > 0){
+				double testDepthX = mcBox.maxX - colBox.minX;
+				if(testDepthX < Math.abs(collisionMotion.x)){
+					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, testDepthX);
+				}
+			}else if(collisionMotion.x < 0){
+				double testDepthX = colBox.maxX - mcBox.minX;
+				if(testDepthX < Math.abs(collisionMotion.x)){
+					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, testDepthX);
+				}
+			}
+			if(collisionMotion.y > 0){
+				double testDepthY = mcBox.maxY - colBox.minY;
+				if(testDepthY < Math.abs(collisionMotion.y)){
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, testDepthY);
+				}
+			}else if(collisionMotion.y < 0){
+				double testDepthY = colBox.maxY - mcBox.minY;
+				if(testDepthY < Math.abs(collisionMotion.y)){
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, testDepthY);
+				}
+			}
+			if(collisionMotion.z > 0){
+				double testDepthZ = colBox.maxZ - mcBox.minZ;
+				if(testDepthZ < Math.abs(collisionMotion.z)){
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, testDepthZ);
+				}
+			}else if(collisionMotion.z < 0){
+				double testDepthZ = colBox.maxZ - mcBox.minZ;
+				if(testDepthZ < Math.abs(collisionMotion.z)){
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, testDepthZ);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -138,13 +308,30 @@ public class WrapperWorld{
 	public int getRedstonePower(Point3i point){
 		return world.getStrongPower(new BlockPos(point.x, point.y, point.z));
 	}
-    
+
+	/**
+	 *  Returns the rain strength at the passed-in position.
+	 *  0 is no rain, 1 is rain, and 2 is a thunderstorm.
+	 */
+	public float getRainStrength(Point3i point){
+		return world.isRainingAt(new BlockPos(point.x, point.y, point.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
+	}
+	
+	/**
+	 *  Returns the current temperature at the passed-in position.
+	 *  Dependent on biome, and likely modified by mods that add new boimes.
+	 */
+	public float getTemperature(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		return world.getBiome(pos).getTemperature(pos);
+	}
+
     /**
 	 *  Has the player place the passed-in block at the point specified.
 	 *  Returns true if the block was placed, false if not.
 	 */
     @SuppressWarnings("unchecked")
-	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperEntityPlayer player, Axis axis){
+	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer player, Axis axis){
     	if(!world.isRemote){
 	    	BuilderBlock wrapper = BuilderBlock.blockWrapperMap.get(block);
 	    	ItemStack stack = player.getHeldStack();
@@ -231,11 +418,77 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Destroys the block at the position, dropping it as whatever drop it drops as.
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
+	public void destroyBlock(Point3i point){
+		world.destroyBlock(new BlockPos(point.x, point.y, point.z), true);
+	}
+	
+	/**
+	 *  Returns true if the block at this point is air.
+	 */
+	public boolean isAir(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState state = world.getBlockState(pos); 
+		Block block = state.getBlock();
+		return block.isAir(state, world, pos);
+	}
+	
+	/**
 	 *  Sets the block at the passed-in position to air. 
 	 *  This does no sanity checks, so make sure you're
 	 *  actually allowed to do such a thing before calling.
 	 */
 	public void setToAir(Point3i point){
 		world.setBlockToAir(new BlockPos(point.x, point.y, point.z));
+	}
+	
+	/**
+	 *  Returns true if the block at this point is fire.
+	 *  Note: this will return true on vanilla fire, as well as
+	 *  any other blocks made of fire from other mods.
+	 */
+	public boolean isFire(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState state = world.getBlockState(pos); 
+		return state.getMaterial().equals(Material.FIRE);
+	}
+	
+	/**
+	 *  Sets the block at the passed-in position to fire. 
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
+	public void setToFire(Point3i point){
+		world.setBlockState(new BlockPos(point.x, point.y, point.z), Blocks.FIRE.getDefaultState());
+	}
+	
+	/**
+	 *  Spawns the passed-in ItemStack as an item entity at the passed-in point.
+	 *  This should be called only on servers, as spawning items on clients
+	 *  leads to phantom items that can't be picked up. 
+	 */
+	public void spawnItemStack(ItemStack stack, WrapperNBT data, Point3d point){
+		//TODO this goes away when we get wrapper ItemStacks.
+		stack.setTagCompound(data.tag);
+		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
+	}
+	
+	/**
+	 *  Spawns an explosion of the specified strength at the passed-in point.
+	 *  Explosion in this case is from an entity.
+	 */
+	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
+		world.newExplosion(source.builder, location.x, location.y, location.z, (float) strength, flames, true);
+	}
+	
+	/**
+	 *  Spawns an explosion of the specified strength at the passed-in point.
+	 *  Explosion in this case is from the player.
+	 */
+	public void spawnExplosion(WrapperPlayer player, Point3d location, double strength, boolean flames){
+		world.newExplosion(player.player, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 }

@@ -2,11 +2,10 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.BuilderEntity;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet used to request NBT data for entities from the server, and to send that data back to clients.
  * Used when an entity is first created on a client, as MC is too dumb to let us simply set a flag to
@@ -18,16 +17,18 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
  * @author don_bruce
  */
 public class PacketEntityCSHandshake extends APacketBase{
-	private final int ID;
+	private final int builderID;
 	private final WrapperNBT data;
 	
-	public PacketEntityCSHandshake(int id, WrapperNBT data){
+	public PacketEntityCSHandshake(int builderID, WrapperNBT data){
 		super(null);
+		this.builderID = builderID;
 		this.data = data;
 	}
 	
 	public PacketEntityCSHandshake(ByteBuf buf){
 		super(buf);
+		this.builderID = buf.readInt();
 		if(buf.readBoolean()){
 			this.data = new WrapperNBT(buf);
 		}else{
@@ -38,6 +39,7 @@ public class PacketEntityCSHandshake extends APacketBase{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
+		buf.writeInt(builderID);
 		if(data != null){
 			buf.writeBoolean(true);
 			data.writeToBuffer(buf);
@@ -47,13 +49,13 @@ public class PacketEntityCSHandshake extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperEntityPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
 			//Load the data into the entity.
-			
+			world.getEntity(builderID).setNBT(data);
 		}else{
 			//Send back a packet to the player who requested it.
-			player.sendPacket(new PacketEntityCSHandshake(entity));
+			player.sendPacket(new PacketEntityCSHandshake(builderID, world.getEntity(builderID).getNBT()));
 		}
 	}
 }

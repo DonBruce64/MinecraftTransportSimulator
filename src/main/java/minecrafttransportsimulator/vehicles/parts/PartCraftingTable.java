@@ -22,7 +22,7 @@ public final class PartCraftingTable extends APart{
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(EntityPlayer player){
 		if(!vehicle.locked){
 			player.displayGui(new CraftingTableInterfaceVehicle(vehicle.world, vehicle.getPosition()));
 		}else{

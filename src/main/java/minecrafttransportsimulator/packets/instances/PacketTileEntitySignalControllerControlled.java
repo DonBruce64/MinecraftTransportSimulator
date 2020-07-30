@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
@@ -32,7 +32,7 @@ public class PacketTileEntitySignalControllerControlled extends APacketTileEntit
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, TileEntitySignalController controller){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntitySignalController controller){
 		controller.currentOpMode = OpMode.REMOTE_CONTROL;
 		controller.lightsOn = lightsOn;
 		controller.updateState(currentOpState, false);

@@ -127,7 +127,7 @@ public class BuilderBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		return block.onClicked(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), new WrapperEntityPlayer(player));
+		return block.onClicked(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), new WrapperPlayer(player));
 	}
     
     @Override
@@ -199,12 +199,12 @@ public class BuilderBlock extends Block{
     	block.addCollisionBoxes(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
     	for(BoundingBox box : collisionBoxes){
     		AxisAlignedBB mcBox = new AxisAlignedBB(
-				pos.getX() + 0.5D + box.x - box.widthRadius, 
-				pos.getY() + 0.5D + box.y - box.heightRadius, 
-				pos.getZ() + 0.5D + box.z - box.depthRadius, 
-				pos.getX() + 0.5D + box.x + box.widthRadius, 
-				pos.getY() + 0.5D + box.y + box.heightRadius, 
-				pos.getZ() + 0.5D + box.z + box.depthRadius);
+				pos.getX() + 0.5D + box.globalCenter.x - box.widthRadius, 
+				pos.getY() + 0.5D + box.globalCenter.y - box.heightRadius, 
+				pos.getZ() + 0.5D + box.globalCenter.z - box.depthRadius, 
+				pos.getX() + 0.5D + box.globalCenter.x + box.widthRadius, 
+				pos.getY() + 0.5D + box.globalCenter.y + box.heightRadius, 
+				pos.getZ() + 0.5D + box.globalCenter.z + box.depthRadius);
 			if(mcBox.intersects(entityBox)){
 				collidingBoxes.add(mcBox);
 			}

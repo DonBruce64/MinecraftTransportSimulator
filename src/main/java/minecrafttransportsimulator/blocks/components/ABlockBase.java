@@ -3,9 +3,10 @@ package minecrafttransportsimulator.blocks.components;
 import java.util.List;
 
 import mcinterface.BuilderBlock;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 
 /**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
@@ -19,7 +20,7 @@ public abstract class ABlockBase{
 	public final float hardness;
 	public final float blastResistance;
 	
-	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(0, 0, 0, 0.5D, 0.5D, 0.5D);
+	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(new Point3d(0, 0, 0), 0.5D, 0.5D, 0.5D);
 	
 	public ABlockBase(float hardness, float blastResistance){
 		this.hardness = hardness;
@@ -31,7 +32,7 @@ public abstract class ABlockBase{
 	 *  after NBT is loaded into the TE from saved state, or after its definition is
 	 *  set from the item definition if no NBT data was present on the item.
 	 */
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperEntityPlayer player){}
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){}
 	
 	/**
 	 *  Called when this block is clicked.  Return true if this block does
@@ -39,7 +40,7 @@ public abstract class ABlockBase{
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperEntityPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
 		return false;
 	}
 

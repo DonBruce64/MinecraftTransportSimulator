@@ -27,7 +27,7 @@ public final class PartCrate extends APart{
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(EntityPlayer player){
 		if(!vehicle.locked){
 			player.displayGUIChest(this.crateInventory);
 		}else{

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
@@ -31,7 +31,7 @@ public class PacketPlayerChatMessage extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperEntityPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		player.displayChatMessage(chatMessage);
 	}
 }

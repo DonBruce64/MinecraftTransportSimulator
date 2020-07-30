@@ -36,7 +36,7 @@ public final class PartBarrel extends APart implements IFluidTank, IFluidHandler
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(EntityPlayer player){
 		if(!vehicle.locked){
 			ItemStack stack = player.getHeldItemMainhand();
 			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){

@@ -1,17 +1,18 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import net.minecraft.nbt.NBTTagCompound;
 
 /**This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
@@ -103,13 +104,21 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d thrustTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 
-			
-	public EntityVehicleF_Physics(WrapperWorld world){
-		super(world);
+	public EntityVehicleF_Physics(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
+		super(builder, world, data);
+		
+		this.aileronAngle = (short) data.getInteger("aileronAngle");
+		this.elevatorAngle = (short) data.getInteger("elevatorAngle");
+		this.rudderAngle = (short) data.getInteger("rudderAngle");
+		this.flapDesiredAngle = (short) data.getInteger("flapDesiredAngle");
+		this.flapCurrentAngle = (short) data.getInteger("flapCurrentAngle");
+		this.aileronTrim = (short) data.getInteger("aileronTrim");
+		this.elevatorTrim = (short) data.getInteger("elevatorTrim");
+		this.rudderTrim = (short) data.getInteger("rudderTrim");
 	}
 	
 	@Override
-	public void onEntityUpdate(){
+	public void update(){
 		//If we are a towed trailer, and we aren't scheduled for an update, skip this cycle.
 		//Instead, we get called to update from the vehicle we are being towed by.
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
@@ -120,7 +129,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			updateThisCycle = false;
 		}
 		
-		super.onEntityUpdate();
+		super.update();
 		if(definition != null){
 			//Change turn signal status depending on turning status.
 			//Keep signals on until we have been moving without turning in the
@@ -189,7 +198,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//If we are towing a vehicle, update it now.
 		if(towedVehicle != null){
 			towedVehicle.updateThisCycle = true;
-			towedVehicle.onEntityUpdate();
+			towedVehicle.update();
 		}
 	}
 	
@@ -225,8 +234,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					if(part instanceof PartPropeller){
 						if(part.definition.propeller.isRotor){
 							double engineTotalForce = 5D*engineForce.length();
-							double rollTorque = aileronAngle != 0 ? engineTotalForce*aileronAngle/MAX_AILERON_ANGLE - rotationRoll : (rotationRoll > 0 ? -Math.min(rotationRoll, 5) : Math.min(-rotationRoll, 5));
-							double pitchTorque = elevatorAngle != 0 ? engineTotalForce*-elevatorAngle/MAX_ELEVATOR_ANGLE - rotationPitch : (rotationPitch > 0 ? -Math.min(rotationPitch, 5) : Math.min(-rotationPitch, 5));
+							double rollTorque = aileronAngle != 0 ? engineTotalForce*aileronAngle/MAX_AILERON_ANGLE - angles.z : (angles.z > 0 ? -Math.min(angles.z, 5) : Math.min(-angles.z, 5));
+							double pitchTorque = elevatorAngle != 0 ? engineTotalForce*-elevatorAngle/MAX_ELEVATOR_ANGLE - angles.x : (angles.x > 0 ? -Math.min(angles.x, 5) : Math.min(-angles.x, 5));
 							double yawTorque =  engineTotalForce*rudderAngle/MAX_RUDDER_ANGLE;
 							thrustTorque.add(pitchTorque, yawTorque, rollTorque);
 						}
@@ -238,7 +247,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			gravitationalForce = currentMass*(9.8/400);
 			if(definition.blimp != null || definition.plane != null){
 				//We are an aircraft.  We need to set our trackAngle here for forces, as well as the drag coefficient.
-				trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocity)));
+				trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));
 				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
 			}else{
 				//Not an aircraft.  We're either a car, or something else entirely.
@@ -260,7 +269,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				
 				//Set coefficients.
 				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocity))), 2);
+				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
 				
 				//Get forces.  Set gravity to 0 as blimps aren't affected by that.
 				dragForce = 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
@@ -278,34 +287,34 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				}else if(elevatorAngle > 0){
 					ballastForce = 1.225*definition.blimp.ballastVolume*-elevatorAngle/100D;
 				}else{
-					ballastForce = 1.225*definition.blimp.ballastVolume*10D*-motionY;
+					ballastForce = 1.225*definition.blimp.ballastVolume*10D*-motion.y;
 				}
-				if(motionY*ballastForce != 0){
-					ballastForce /= Math.pow(1 + Math.abs(motionY), 2);
+				if(motion.y*ballastForce != 0){
+					ballastForce /= Math.pow(1 + Math.abs(motion.y), 2);
 				}
 				
 				//If the throttle is idle, and we have the brake pressed at a slow speed, stop the blimp.
 				//This is needed to prevent runaway blimps.
 				if(throttle == 0 && Math.abs(velocity) < 0.15 && (brakeOn || parkingBrakeOn)){
-					motionX = 0;
-					motionZ = 0;
+					motion.x = 0;
+					motion.z = 0;
 					thrustForce.set(0D, 0D, 0D);
 					thrustTorque.set(0D, 0D, 0D);
 				}
 				
 				//Roll and pitch are applied only if we aren't level.
 				//This only happens if we fall out of the sky and land on the ground and tilt.
-				if(rotationRoll > 0){
-					aileronTorque = -Math.min(0.5F, rotationRoll)*currentMass;
-				}else if(rotationRoll < 0){
-					aileronTorque = -Math.max(-0.5F, rotationRoll)*currentMass;
+				if(angles.z > 0){
+					aileronTorque = -Math.min(0.5F, angles.z)*currentMass;
+				}else if(angles.z < 0){
+					aileronTorque = -Math.max(-0.5F, angles.z)*currentMass;
 				}else{
 					aileronTorque = 0;
 				}
-				if(rotationPitch > 0){
-					elevatorTorque = -Math.min(0.5F, rotationPitch)*currentMass;
-				}else if(rotationPitch < 0){
-					elevatorTorque = -Math.max(-0.5F, rotationPitch)*currentMass;
+				if(angles.x > 0){
+					elevatorTorque = -Math.min(0.5F, angles.x)*currentMass;
+				}else if(angles.x < 0){
+					elevatorTorque = -Math.max(-0.5F, angles.x)*currentMass;
 				}else{
 					elevatorTorque = 0;
 				}
@@ -321,7 +330,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
 				aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocity))), 2);
+				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F + Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
 				currentWingArea = definition.plane.wingArea + definition.plane.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
 				
 				//Get forces.
@@ -339,32 +348,28 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
 				//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
 				if(velocity < 0.25 && groundedGroundDevices.isEmpty()){
-					if(rotationPitch < -45){
+					if(angles.x < -45){
 						elevatorTorque += 100;
 					}
 				}
 			}
 			
 			//Add all forces to the main force matrix and apply them.
-			totalAxialForce.set(0D, wingForce + elevatorForce, 0D).add(thrustForce);
-			totalAxialForce = RotationSystem.getRotatedPoint(totalAxialForce, rotationPitch, rotationYaw, rotationRoll);
-			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocity);
+			totalAxialForce.set(0D, wingForce + elevatorForce, 0D).add(thrustForce).rotateFine(angles);
+			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocityVector);
 			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 			totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
-			
-			motionX += totalForce.x;
-			motionY += totalForce.y;
-			motionZ += totalForce.z;
+			motion.add(totalForce);
 			
 			//Add all torques to the main torque matrix and apply them.
-			pitchDirectionFactor = Math.abs(rotationRoll%360);
+			pitchDirectionFactor = Math.abs(angles.z%360);
 			pitchDirectionFactor = pitchDirectionFactor < 90 || pitchDirectionFactor > 270 ? 1.0D : -1.0D;
 			totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).multiply(180D/Math.PI);
-			motionRoll = (float) totalTorque.z/momentRoll;
-			motionPitch = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
-			motionYaw = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
+			angles.x = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
+			angles.y = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
+			angles.z = (float) totalTorque.z/momentRoll;
 			
-			if(world.isRemote && ConfigSystem.configObject.client.devMode.value){
+			if(world.isClient() && ConfigSystem.configObject.client.devMode.value){
 				System.out.format("States: Mass:%f TrackAngle:%f WingArea:%f\n", currentMass, trackAngle, currentWingArea);
 				System.out.format("Forces: Engine:%f Drag:%f Wing/Elevator:%f Ballast:%f Gravity:%f\n", thrustForce.length(), dragForce, wingForce + elevatorForce, ballastForce, gravitationalForce);
 				System.out.format("Torques: Engine:%f Elevator:%f Rudder:%f Aileron:%f\n", thrustTorque.length(), elevatorTorque, rudderTorque, aileronTorque);
@@ -415,12 +420,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//We use a second hitchPos here to allow us to calculate the yaw angle we need to apply.
 			//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
 			//This is because when the hitch and the hookup are at the same point, the dot product returns floating-point errors.
-			Point3d hookupOffset = new Point3d(definition.motorized.hookupPos[0], definition.motorized.hookupPos[1], definition.motorized.hookupPos[2]);
-			Point3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, rotationPitch, rotationYaw, rotationRoll).add(positionVector);
-			Point3d hitchOffset = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2]);
-			Point3d hitchOffset2 = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2] + 0.5);
-			Point3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.positionVector);
-			Point3d hitchPos2 = RotationSystem.getRotatedPoint(hitchOffset2, towedByVehicle.rotationPitch, towedByVehicle.rotationYaw, towedByVehicle.rotationRoll).add(towedByVehicle.positionVector);
+			Point3d hookupPos = new Point3d(definition.motorized.hookupPos[0], definition.motorized.hookupPos[1], definition.motorized.hookupPos[2]).rotateCoarse(angles).add(position);
+			Point3d hitchPos = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2]).rotateCoarse(towedByVehicle.angles).add(towedByVehicle.position);
+			Point3d hitchPos2 = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2] + 0.5).rotateCoarse(towedByVehicle.angles).add(towedByVehicle.position);
 			
 			Point3d xzPlaneDelta = new Point3d(hitchPos2.x - hookupPos.x, 0, hitchPos2.z - hookupPos.z).normalize();
 			Point3d xzPlaneHeading = new Point3d(headingVector.x, 0, headingVector.z).normalize();
@@ -429,17 +431,17 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				towingDeltaYaw *= -1;
 			}
 			
-			//Don't apply yaw if we aren't moving. Apply Yaw in proportion to trailer length
-			motionYaw = velocity > 0 ? (float) (towingDeltaYaw/(2*Math.abs(definition.motorized.hookupPos[2]))) : 0;
 			//If we are in the air, pitch up to get our devices on the ground. Pitching speed is determined by elevation difference of rear wheels.
-			motionPitch = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.currentBox.minY + towedByVehicle.rearRightGroundDeviceBox.currentBox.minY)/2) - ((rearLeftGroundDeviceBox.currentBox.minY + rearRightGroundDeviceBox.currentBox.minY)/2)) * 2),0.1),1.0)) : 0;
+			motion.x = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.currentBox.globalCenter.y - towedByVehicle.rearLeftGroundDeviceBox.currentBox.heightRadius + towedByVehicle.rearRightGroundDeviceBox.currentBox.globalCenter.y - towedByVehicle.rearRightGroundDeviceBox.currentBox.heightRadius)/2) - ((rearLeftGroundDeviceBox.currentBox.globalCenter.y - rearLeftGroundDeviceBox.currentBox.heightRadius + rearRightGroundDeviceBox.currentBox.globalCenter.y - rearRightGroundDeviceBox.currentBox.heightRadius)/2)) * 2),0.1),1.0)) : 0;
+			//Don't apply yaw if we aren't moving. Apply Yaw in proportion to trailer length
+			motion.y = velocity > 0 ? (float) (towingDeltaYaw/(2*Math.abs(definition.motorized.hookupPos[2]))) : 0;
 			//Match our tower's roll.
-			motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;
+			motion.z = (towedByVehicle.angles.z - angles.z)/10;
 			
 			//Now set the motions.
-			motionX = hitchPos.x - hookupPos.x;
-			motionY = hitchPos.y - hookupPos.y;
-			motionZ = hitchPos.z - hookupPos.z;
+			motion.x = hitchPos.x - hookupPos.x;
+			motion.y = hitchPos.y - hookupPos.y;
+			motion.z = hitchPos.z - hookupPos.z;
 		}
 	}
 	
@@ -460,18 +462,18 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}
 		
 		if(autopilot){
-			if(-rotationRoll > aileronTrim + 1){
+			if(-angles.z > aileronTrim + 1){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
 				++aileronTrim;
-			}else if(-rotationRoll < aileronTrim - 1){
+			}else if(-angles.z < aileronTrim - 1){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
 				--aileronTrim;
 			}
 			//If we are not flying at a steady elevation, angle the elevator to compensate
-			if(-motionY*100 > elevatorTrim + 1){
+			if(-motion.z*100 > elevatorTrim + 1){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
 				++elevatorTrim;
-			}else if(-motionY*100 < elevatorTrim - 1){
+			}else if(-motion.y*100 < elevatorTrim - 1){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
 				--elevatorTrim;
 			}
@@ -525,6 +527,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		return -rudderAngle/10F;
 	}
 	
+	@Override
+	public void render(float partialTicks){
+		RenderVehicle.render(this, partialTicks);
+	}
+	
 	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(Math.abs(angleOfAttack) <= 15*1.25){
 			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
@@ -538,31 +545,17 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
 		}
 	}
-
-    @Override
-	public void readFromNBT(NBTTagCompound tagCompound){
-		super.readFromNBT(tagCompound);
-		this.aileronAngle=tagCompound.getShort("aileronAngle");
-		this.elevatorAngle=tagCompound.getShort("elevatorAngle");
-		this.rudderAngle=tagCompound.getShort("rudderAngle");
-		this.flapDesiredAngle=tagCompound.getShort("flapDesiredAngle");
-		this.flapCurrentAngle=tagCompound.getShort("flapCurrentAngle");
-		this.aileronTrim=tagCompound.getShort("aileronTrim");
-		this.elevatorTrim=tagCompound.getShort("elevatorTrim");
-		this.rudderTrim=tagCompound.getShort("rudderTrim");
-	}
     
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound){
-		super.writeToNBT(tagCompound);
-		tagCompound.setShort("aileronAngle", this.aileronAngle);
-		tagCompound.setShort("elevatorAngle", this.elevatorAngle);
-		tagCompound.setShort("rudderAngle", this.rudderAngle);
-		tagCompound.setShort("flapDesiredAngle", this.flapDesiredAngle);
-		tagCompound.setShort("flapCurrentAngle", this.flapCurrentAngle);
-		tagCompound.setShort("aileronTrim", this.aileronTrim);
-		tagCompound.setShort("elevatorTrim", this.elevatorTrim);
-		tagCompound.setShort("rudderTrim", this.rudderTrim);
-		return tagCompound;
+	public void save(WrapperNBT data){
+		super.save(data);
+		data.setInteger("aileronAngle", aileronAngle);
+		data.setInteger("elevatorAngle", elevatorAngle);
+		data.setInteger("rudderAngle", rudderAngle);
+		data.setInteger("flapDesiredAngle", flapDesiredAngle);
+		data.setInteger("flapCurrentAngle", flapCurrentAngle);
+		data.setInteger("aileronTrim", aileronTrim);
+		data.setInteger("elevatorTrim", elevatorTrim);
+		data.setInteger("rudderTrim", rudderTrim);
 	}
 }

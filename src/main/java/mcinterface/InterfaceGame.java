@@ -1,6 +1,7 @@
 package mcinterface;
 
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -58,14 +59,21 @@ public class InterfaceGame{
 	}
 	
 	/**
+	 *  Toggle first-person mode.  Does not toggle to the inverted third-person mode.
+	 */
+	public static void toggleFirstPerston(){
+		Minecraft.getMinecraft().gameSettings.thirdPersonView = inFirstPerson() ? 1 : 0;
+	}
+	
+	/**
 	 *  Returns true if the player's sound should be dampened.
 	 *  Used if we are in an enclosed vehicle and in first-person mode.
 	 *  If the sound is streaming, and the vehicle is the provider, it is
 	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
 	public static boolean shouldSoundBeDampened(SoundInstance sound){
-		EntityVehicleF_Physics vehicleRiding = getClientPlayer().getVehicleRiding();
-		return vehicleRiding != null && vehicleRiding.definition != null && !vehicleRiding.definition.general.openTop && inFirstPerson() && (sound.radio == null || !vehicleRiding.equals(sound.provider));
+		AEntityBase entityRiding = getClientPlayer().getEntityRiding();
+		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && inFirstPerson() && (sound.radio == null || !entityRiding.equals(sound.provider));
 	}
 	
 	/**
@@ -85,13 +93,13 @@ public class InterfaceGame{
 	 *  Returns the player.  Only valid on CLIENTs as on servers
 	 *  there are multiple players.
 	 */
-	public static WrapperEntityPlayer getClientPlayer(){
+	public static WrapperPlayer getClientPlayer(){
 		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
-			cachedClientPlayer = new WrapperEntityPlayer(Minecraft.getMinecraft().player);
+			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
 		}
 		return cachedClientPlayer;
 	}
-	private static WrapperEntityPlayer cachedClientPlayer;
+	private static WrapperPlayer cachedClientPlayer;
 	
 	/**
 	 *  Returns the entity that is used to set up the render camera.

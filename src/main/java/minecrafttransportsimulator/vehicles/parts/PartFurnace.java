@@ -26,7 +26,7 @@ public final class PartFurnace extends APart{
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(EntityPlayer player){
 		if(!vehicle.locked){
 			player.displayGUIChest(fakeFurnace);
 		}else{
@@ -36,8 +36,8 @@ public final class PartFurnace extends APart{
     }
 	
 	@Override
-	public void updatePart(){
-		super.updatePart();
+	public void update(){
+		super.update();
 		fakeFurnace.update();
 	}
 	

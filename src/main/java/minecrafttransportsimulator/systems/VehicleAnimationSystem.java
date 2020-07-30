@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -60,7 +62,7 @@ public final class VehicleAnimationSystem{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							APart foundPart = vehicle.getPartAtLocation(new Point3d(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]));
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
@@ -126,13 +128,13 @@ public final class VehicleAnimationSystem{
 		//Try vehicle variables now.
 		switch(variable){
 			//Vehicle world position cases.	
-			case("yaw"): return -vehicle.rotationYaw;
-			case("pitch"): return vehicle.rotationPitch;
-			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY;
+			case("yaw"): return vehicle.angles.y;
+			case("pitch"): return vehicle.angles.x;
+			case("roll"): return vehicle.angles.z;
+			case("altitude"): return vehicle.position.y;
 			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
-			case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
-			case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
+			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
+			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 			
 			//Inertia from accelerating and braking.
             case("acceleration"): return vehicle.acclInertia();
@@ -150,7 +152,7 @@ public final class VehicleAnimationSystem{
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
-			case("rain"): return vehicle.world.isRainingAt(vehicle.getPosition()) && vehicle.world.getRainStrength(1.0F) == 1.0F ? (1.0D + Math.sin(((int)(vehicle.world.getRainStrength(1.0F) + vehicle.world.getThunderStrength(1.0F))*Math.toRadians(360*System.currentTimeMillis()/1000))))/2D : 0;
+			case("rain"): return 1.0D + Math.sin(vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)/2D;
 			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
 			case("trailer"): return vehicle.towingAngle/30D;
 			case("hookup"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.towingAngle/30D : 0;
@@ -164,9 +166,9 @@ public final class VehicleAnimationSystem{
 			case("trim_aileron"): return vehicle.aileronTrim/10D;
 			case("trim_elevator"): return vehicle.elevatorTrim/10D;
 			case("trim_rudder"): return vehicle.rudderTrim/10D;
-			case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
+			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
 			case("lift_reserve"): return vehicle.trackAngle*3 + 20;
-			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocity);
+			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 		}

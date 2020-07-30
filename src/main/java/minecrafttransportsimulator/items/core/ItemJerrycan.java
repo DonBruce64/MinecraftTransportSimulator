@@ -4,14 +4,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -30,34 +30,38 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		tooltipLines.add(I18n.format("info.item.jerrycan.fill"));
-		tooltipLines.add(I18n.format("info.item.jerrycan.drain"));
+		tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.fill"));
+		tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.drain"));
 		if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
-			tooltipLines.add(I18n.format("info.item.jerrycan.contains") + new FluidStack(FluidRegistry.getFluid(stack.getTagCompound().getString("fluidName")), 1000).getLocalizedName());
+			tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.contains") + new FluidStack(FluidRegistry.getFluid(stack.getTagCompound().getString("fluidName")), 1000).getLocalizedName());
 		}else{
-			tooltipLines.add(I18n.format("info.item.jerrycan.empty"));
+			tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.empty"));
 		}
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
 				if(vehicle.fluidName.isEmpty() || vehicle.fluidName.equals(stack.getTagCompound().getString("fluidName"))){
 					if(vehicle.fuel + 1000 > vehicle.definition.motorized.fuelCapacity){
-						MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.toofull"), player);
+						player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.toofull"));
 					}else{
 						vehicle.fluidName = stack.getTagCompound().getString("fluidName");
 						vehicle.fuel += 1000;
-						stack.setTagCompound(null);
-						MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.success"), player);
-						MTS.MTSNet.sendToAll(new PacketVehicleJerrycan(vehicle, vehicle.fluidName));
+						if(!vehicle.world.isClient()){
+							stack.setTagCompound(null);
+							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.success"));
+							player.sendPacket(new PacketVehicleInteract("interact.jerrycan.success"));
+						}
+						
+						MT.MTSNet.sendToAll(new PacketVehicleJerrycan(vehicle, vehicle.fluidName));
 					}
 				}else{
-					MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.wrongtype"), player);
+					player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.wrongtype"));
 				}
 			}else{
-				MTS.MTSNet.sendTo(new PacketChat("interact.jerrycan.empty"), player);
+				player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.empty"));
 			}
 		}
 	}

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperEntity;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -27,7 +27,7 @@ public class PacketEntityRiderChange extends APacketEntity{
 	public PacketEntityRiderChange(ByteBuf buf){
 		super(buf);
 		this.riderID = buf.readInt();
-		position = buf.readBoolean() ? readPoint3DFromBuffer(buf) : null;
+		position = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
 	}
 	
 	@Override
@@ -36,12 +36,12 @@ public class PacketEntityRiderChange extends APacketEntity{
 		buf.writeInt(riderID);
 		buf.writeBoolean(position != null);
 		if(position != null){
-			writePoint3DToBuffer(position, buf);
+			writePoint3dToBuffer(position, buf);
 		}
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, AEntityBase entity){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity){
 		if(position != null){
 			entity.addRider(world.getEntity(riderID), position);
 		}else{

@@ -6,22 +6,21 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderEntity;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
  * Use {@link BuilderEntity#addPart(APart, boolean)} to add parts 
@@ -51,32 +50,32 @@ public abstract class APart implements ISoundProvider{
 	
 	//Runtime variables.
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
-	public Point3d totalOffset;
-	public Point3d totalRotation;
-	public Point3d worldPos;
-	public VehicleAxisAlignedBB boundingBox;
-	private boolean isValid;
+	public final Point3d totalOffset;
+	public final Point3d totalRotation;
+	public final Point3d worldPos;
+	public final BoundingBox boundingBox;
+	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
 		this.vehicle = vehicle;
 		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.totalOffset = placementOffset;
 		this.definition = definition;;
 		this.vehicleDefinition = packVehicleDef;
-		this.worldPos = RotationSystem.getRotatedPoint(placementOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
-		this.boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
+		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
+		this.boundingBox = new BoundingBox(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), getWidth(), definition.ground != null ? definition.ground.canFloat : false, false);
 		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation;
 		this.isValid = true;
 		
 		//Check to see if we are an additional part to a part on our parent.
-		//If we are not valid due to us being fake, don't add ourselves.
-		if(this.isValid()){
+		//If we are a fake part, don't add ourselves.
+		if(!isFake()){
 			for(VehiclePart parentPackPart : vehicle.definition.parts){
 				if(parentPackPart.additionalParts != null){
 					for(VehiclePart partAdditionalPartPack : parentPackPart.additionalParts){
 						if(packVehicleDef.equals(partAdditionalPartPack)){
-							parentPart = vehicle.getPartAtLocation(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]);
+							parentPart = vehicle.getPartAtLocation(new Point3d(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]));
 							parentPart.childParts.add(this);
 							this.disableMirroring = definition.general.disableMirroring;
 							return;
@@ -86,11 +85,11 @@ public abstract class APart implements ISoundProvider{
 			}
 			
 			//If we aren't an additional part, see if we are a sub-part.
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.parts){
 				if(part.definition.subParts != null){
 					for(VehiclePart partSubPartPack : part.definition.subParts){
 						VehiclePart correctedPack = vehicle.getPackForSubPart(part.vehicleDefinition, partSubPartPack);
-						if(EntityVehicleF_Physics.isPackAtPosition(correctedPack, placementOffset.x, placementOffset.y, placementOffset.z)){
+						if(EntityVehicleF_Physics.isPackAtPosition(correctedPack, placementOffset)){
 							parentPart = part;
 							parentPart.childParts.add(this);
 							this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
@@ -104,54 +103,68 @@ public abstract class APart implements ISoundProvider{
 		parentPart = null;
 	}
 	
-	/**Called right before this part is added to the vehicle.
-	 * Should this be false, the part will not be added.
-	 * This is also called during save operations to see if the part
-	 * is still valid and should be saved.
+	/**
+	 * This is called during part save/load calls.  Fakes parts are
+	 * added to vehicles, but they aren't saved with the NBT.  Rather, 
+	 * they should be re-created in the constructor of the part that added
+	 * them in the first place.
 	 */
-	public boolean isValid(){
-		return this.isValid;
+	public boolean isFake(){
+		return false;
 	}
 
-	/**Called when checking if this part can be interacted with.
+	/**
+	 * Called when checking if this part can be interacted with.
 	 * If a part does interactions it should do so and then return true.
 	 * Call this ONLY from the server-side!  The server will handle the
 	 * interaction by notifying the client via packet if appropriate.
 	 */
-	public boolean interactPart(EntityPlayer player){
+	public boolean interact(WrapperPlayer player){
 		return false;
 	}
 	
-	/**Called when the vehicle sees this part being attacked.
+	/**
+	 * Called when the vehicle sees this part being attacked.
 	 */
-	public void attackPart(DamageSource source, float damage){}
+	public void attack(Damage damage){}
 	
-	/**This gets called every tick by the vehicle after it finishes its update loop.
+	/**
+	 * This gets called every tick by the vehicle after it finishes its update loop.
 	 * Use this for reactions that this part can take based on its surroundings if need be.
+	 * Do NOT remove the part from the vehicle in this loop.  Instead, set it to invalid.
+	 * Removing the part during this loop will earn you a CME.
 	 */
-	public void updatePart(){
+	public void update(){
 		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
 		if(parentPart != null && vehicleDefinition.isSubPart){
-			//Get the relative distance between our offset and our parent's offset.
-			Point3d relativeOffset = getPositionOffset(0).add(placementOffset).subtract(parentPart.placementOffset);
+			//First, get the relative distance between our offset and our parent's offset.
+			totalOffset.setTo(getPositionOffset(0)).add(placementOffset).subtract(parentPart.placementOffset);
 			
-			//Rotate by the parent's rotation to match orientation.
-			totalRotation = parentPart.getPositionRotation(0).add(parentPart.placementRotation);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, totalRotation.x, totalRotation.y, totalRotation.z);
+			//Now get our parent's rotation contribution.
+			totalRotation.setTo(parentPart.getPositionRotation(0)).add(parentPart.placementRotation);
 			
-			//Rotate again to take the action rotation into account.
+			//Rotate our current relative offset by the rotation of the parent to get the correct
+			//offset between us and our paren't position in our parent's coordinate system.
+			totalOffset.rotateFine(totalRotation);
+			
+			//Now, get the parent's action rotation, and rotate again to take that rotation into account.
 			Point3d parentActionRotation = parentPart.getActionRotation(0);
-			totalRotation.add(parentActionRotation);
-			relativeOffset = RotationSystem.getRotatedPoint(relativeOffset, parentActionRotation.x, parentActionRotation.y, parentActionRotation.z);
+			totalOffset.rotateFine(parentActionRotation);
 			
-			//Add parent offset to our offset to get actual point.
-			totalOffset = relativeOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
+			//Now that we have the proper relative offset, add our placement and position offsets.
+			//This is our final offset point.
+			totalOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
+			
+			//Now that we have our offset, add the parent's rotations with our rotations to get the total rotation. 
+			//FIXME this may be wrong, but it may also be right?
+			totalRotation.add(parentActionRotation);
+			//totalRotation.add(parentActionRotation).add(getPositionRotation(0)).add(placementRotation);
 		}else{
-			totalOffset = getPositionOffset(0).add(placementOffset);
-			totalRotation = getPositionRotation(0).add(placementRotation);
+			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
+			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
 		}
-		worldPos = RotationSystem.getRotatedPoint(totalOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.posX, vehicle.posY, vehicle.posZ);
-		boundingBox = new VehicleAxisAlignedBB(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
+		worldPos.setTo(totalOffset).rotateFine(vehicle.angles).add(vehicle.position);
+		boundingBox.globalCenter.setTo(totalOffset);
 
 		//Update sound variables.
 		soundPosition.rewind();
@@ -161,17 +174,20 @@ public abstract class APart implements ISoundProvider{
 		soundPosition.flip();
 	}
 	
-	/**Gets the movement position offset for the part as a vector.
+	/**
+	 * Gets the movement position offset for the part as a vector.
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
 	public final Point3d getPositionOffset(float partialTicks){
-		Point3d positionOffset = new Point3d(0, 0, 0);
+		Point3d positionOffset;
 		
 		//First rotate about the rotation point and angles.
 		Point3d rotationAngles = getPositionRotation(partialTicks);
 		if(!rotationAngles.isZero()){
-			positionOffset = RotationSystem.getRotatedPoint(new Point3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]), rotationAngles.x, rotationAngles.y, rotationAngles.z);
+			positionOffset = new Point3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]).rotateFine(rotationAngles);
 			positionOffset.add(vehicleDefinition.rotationPosition[0], vehicleDefinition.rotationPosition[1], vehicleDefinition.rotationPosition[2]);
+		}else{
+			positionOffset = new Point3d(0D, 0D, 0D);
 		}
 		
 		//Now translate.  This may incorporate rotation angles.
@@ -179,7 +195,7 @@ public abstract class APart implements ISoundProvider{
 			double translationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.translationVariable, 1, 0, vehicleDefinition.translationClampMin, vehicleDefinition.translationClampMax, vehicleDefinition.translationAbsolute, partialTicks, vehicle, this);
 			Point3d translationOffset = new Point3d(translationValue*vehicleDefinition.translationPosition[0], translationValue*vehicleDefinition.translationPosition[1], translationValue*vehicleDefinition.translationPosition[2]); 
 			if(!rotationAngles.isZero()){
-				translationOffset = RotationSystem.getRotatedPoint(translationOffset, (float) rotationAngles.x, (float) rotationAngles.y, (float) rotationAngles.z);
+				translationOffset.rotateFine(rotationAngles);
 			}
 			positionOffset.add(translationOffset);
 		}
@@ -188,7 +204,8 @@ public abstract class APart implements ISoundProvider{
 		return positionOffset;
 	}
 	
-	/**Gets the rotation angles for the part as a vector.
+	/**
+	 * Gets the rotation angles for the part as a vector.
 	 * This rotation is used to rotate the part prior to translation.
 	 * It may be used for stacked rotations, and should return the final
 	 * rotation vector for all operations.
@@ -203,92 +220,50 @@ public abstract class APart implements ISoundProvider{
 		return new Point3d(0, 0, 0);
 	}
 	
-	/**Gets the rotation angles for the part as a vector.
+	/**
+	 * Gets the rotation angles for the part as a vector.
 	 * This rotation is based on the internal part state, and cannot be modified via JSON.
 	 */
 	public Point3d getActionRotation(float partialTicks){
 		return ZERO_POINT;
 	}
 	
-	
-	
-	
-	//--------------------START OF COLLISION BOX CODE--------------------
-
 	/**
-	 * Checks to see if this part is currently colliding with blocks.
+	 * Returns true if this part is in liquid.
 	 */
-	public boolean isPartColliding(){
-		return !vehicle.world.getCollisionBoxes(null, boundingBox).isEmpty();
-    }
-	
-	/**Checks to see if this part would collide with any blocks, should it be offset
-	 * by the passed-in offset.  Uses a regular Vanilla check: liquid checks may be 
-	 * done by overriding this method.  Can be given an offset vector to check for potential 
-	 * collisions. 
-	 */
-	public boolean wouldPartCollide(Point3d collisionOffset){
-		return !vehicle.world.getCollisionBoxes(null, getAABBWithOffset(collisionOffset)).isEmpty();
-    }
-	
-	/**Returns the bounding box for this part, offset by the passed-in point.
-	 * Offset is done with this part's coordinate system. 
-	 */
-	public final VehicleAxisAlignedBB getAABBWithOffset(Point3d boxOffset){
-		return new VehicleAxisAlignedBB(worldPos.copy().add(boxOffset), getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), false, false);
+	public boolean isInLiquid(){
+		return vehicle.world.isBlockLiquid(new Point3i(worldPos));
 	}
 	
-	/**Checks to see if this part is collided with any liquid blocks.
-	 * Can be given an offset vector to check for potential collisions.
-	 * Passing in null will use the part's current collision box.
-	 */
-	public boolean isPartCollidingWithLiquids(Point3d collisionOffset){
-		VehicleAxisAlignedBB collisionBox = collisionOffset == null ? boundingBox : getAABBWithOffset(collisionOffset);
-		int minX = (int) Math.floor(collisionBox.minX);
-    	int maxX = (int) Math.floor(collisionBox.maxX + 1.0D);
-    	int minY = (int) Math.floor(collisionBox.minY);
-    	int maxY = (int) Math.floor(collisionBox.maxY + 1.0D);
-    	int minZ = (int) Math.floor(collisionBox.minZ);
-    	int maxZ = (int) Math.floor(collisionBox.maxZ + 1.0D);
-    	
-    	for(int i = minX; i < maxX; ++i){
-    		for(int j = minY; j < maxY; ++j){
-    			for(int k = minZ; k < maxZ; ++k){
-    				BlockPos checkPos = new BlockPos(i, j, k);
-    				if(vehicle.world.isBlockLoaded(checkPos)){
-	    				if(vehicle.world.getBlockState(checkPos).getMaterial().isLiquid()){
-	    					return true;
-	    				}
-    				}
-    			}
-    		}
-    	}
-		return false;
-    }
-	
-	/**Called when the vehicle removes this part.
+	/**
+	 * Called when the vehicle removes this part.
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 * Note that hitboxes are configured to not allow this part to be
 	 * wrenched if it has children, so it may be assumed that no child
 	 * parts are present when this action occurs.  Do note that it's possible
 	 * this part is a child to another part, so you will need to remove this
-	 * part as the child from its parent if is has one.
+	 * part as the child from its parent if is has one.  Also note that you may
+	 * NOT remove any other parts in this method.  Doing so will get you a CME.
+	 * If you need to remove another part, set it to invalid instead.  This will
+	 * have it be removed at the end of the update loop.
 	 */
-	public void removePart(){
-		this.isValid = false;
-		if(this.parentPart != null){
-			this.parentPart.childParts.remove(this);
+	public void remove(){
+		isValid = false;
+		if(parentPart != null){
+			parentPart.childParts.remove(this);
 		}
 	}
 	
-	/**Gets the item for this part.  If the part should not return an item 
+	/**
+	 * Gets the item for this part.  If the part should not return an item 
 	 * (either due to damage or other reasons) make this method return null.
 	 */
-	public Item getItemForPart(){
+	public Item getItem(){
 		return MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
 	}
 	
-	/**Return the part data in NBT form.
+	/**
+	 * Return the part data in NBT form.
 	 * This is called when removing the part from a vehicle to return an item.
 	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
 	 * part back into an part again is packed into the NBT tag that is returned.
@@ -311,7 +286,8 @@ public abstract class APart implements ISoundProvider{
 		return "objmodels/parts/" + (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + ".obj";
 	}
 	
-	/**Gets the location of the texture for this part.
+	/**
+	 * Gets the location of the texture for this part.
 	 * This can be changed for data-dependent part texture. 
 	 */
 	public String getTextureLocation(){
@@ -320,7 +296,7 @@ public abstract class APart implements ISoundProvider{
 	
 	@Override
 	public void updateProviderSound(SoundInstance sound){
-		if(!this.isValid || vehicle.isDead){
+		if(!this.isValid || !vehicle.isValid){
 			sound.stop();
 		}
 	}

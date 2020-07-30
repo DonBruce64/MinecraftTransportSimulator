@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.items.packs;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -132,7 +133,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 					//If we have a default fuel, add it now as we SHOULD have an engine to tell
 					//us what fuel type we will need to add.
 					if(newVehicle.definition.motorized.defaultFuelQty > 0){
-						for(APart part : newVehicle.getVehicleParts()){
+						for(APart part : newVehicle.parts){
 							if(part instanceof PartEngine){
 								//Get the most potent fuel for the vehicle from the fuel configs.
 								String mostPotentFluid = "";
@@ -160,14 +161,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				}
 				
 				//Next, boost based on parts.
-				for(APart part : newVehicle.getVehicleParts()){
+				for(APart part : newVehicle.parts){
 					minHeight = Math.min(part.placementOffset.y - part.getHeight()/2F, minHeight);
 				}
 				
 				//Apply the boost, and check collisions.
 				//If the core collisions are colliding, set the vehicle as dead and abort.
-				newVehicle.posY += -minHeight;
-				for(VehicleAxisAlignedBB coreBox : newVehicle.collisionBoxes){
+				newVehicle.position.y += -minHeight;
+				for(BoundingBox coreBox : newVehicle.collisionBoxes){
 					if(world.collidesWithAnyBlock(coreBox)){
 						newVehicle.setDead();
 						return EnumActionResult.FAIL;

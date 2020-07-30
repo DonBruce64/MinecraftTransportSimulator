@@ -6,12 +6,11 @@ import java.util.Map.Entry;
 
 import mcinterface.BuilderGUI;
 import mcinterface.InterfaceNetwork;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -109,7 +108,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.magneto"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? PacketEngineTypes.MAGNETO_OFF : PacketEngineTypes.MAGNETO_ON));
+					InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
 				}
 				
 				@Override
@@ -122,13 +121,13 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(vehicle.engines.get(engineNumber).state.magnetoOn){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? PacketEngineTypes.ES_OFF : PacketEngineTypes.ES_ON));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
 					}
 				}
 				
 				@Override
 				public void onReleased(){
-					MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.ES_OFF));
+					InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 				}
 			};
 			starterSelectors.put(engineNumber, starterSwitch);

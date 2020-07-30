@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
@@ -71,7 +71,7 @@ public class PacketTileEntitySignalControllerChange extends APacketTileEntity<Ti
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, TileEntitySignalController controller){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntitySignalController controller){
 		controller.currentOpMode = currentOpMode;
 		controller.mainDirectionXAxis = mainDirectionXAxis;
 		controller.greenMainTime = greenMainTime;

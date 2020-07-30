@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.systems;
 
 import mcinterface.BuilderGUI;
+import mcinterface.InterfaceGame;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
-import minecrafttransportsimulator.MTS;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -12,13 +14,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
-import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.client.Minecraft;
 
 /**Class that handles all control operations.
  * 
@@ -27,6 +28,7 @@ import net.minecraft.client.Minecraft;
 public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;	
 	private static boolean joysticksInhibited = false;
+	private static WrapperPlayer clientPlayer;
 	
 	/**
 	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
@@ -55,6 +57,7 @@ public final class ControlSystem{
 
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
+		clientPlayer = InterfaceGame.getClientPlayer();
 		if(vehicle.definition.general.isAircraft){
 			controlAircraft(vehicle, isPlayerController);
 		}else{
@@ -75,41 +78,37 @@ public final class ControlSystem{
 		}
 		
 		if(changeView.isPressed()){
-			if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 2){
-				Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-			}else{
-				++Minecraft.getMinecraft().gameSettings.thirdPersonView;
-			}
+			InterfaceGame.toggleFirstPerston();
 		}
 	}
 	
 	private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA){
 		if(lookR.isPressed()){
-			Minecraft.getMinecraft().player.rotationYaw+=3;
+			clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() - 3);
 		}
 		if(lookL.isPressed()){
-			Minecraft.getMinecraft().player.rotationYaw-=3;
+			clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() + 3);
 		}
 		if(lookU.isPressed()){
-			Minecraft.getMinecraft().player.rotationPitch-=3;
+			clientPlayer.setRotations(clientPlayer.getPitch() - 3, clientPlayer.getYaw());
 		}
 		if(lookD.isPressed()){
-			Minecraft.getMinecraft().player.rotationPitch+=3;
+			clientPlayer.setRotations(clientPlayer.getPitch() + 3, clientPlayer.getYaw());
 		}
 		
 		float pollData = lookA.getMultistateValue();
 		if(pollData != 0){
 			if(pollData >= 0.125F && pollData <= 0.375F){
-				Minecraft.getMinecraft().player.rotationPitch+=3;
+				clientPlayer.setRotations(clientPlayer.getPitch() + 3, clientPlayer.getYaw());
 			}
 			if(pollData >= 0.375F && pollData <= 0.625F){
-				Minecraft.getMinecraft().player.rotationYaw+=3;
+				clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() - 3);
 			}
 			if(pollData >= 0.625F && pollData <= 0.875F){
-				Minecraft.getMinecraft().player.rotationPitch-=3;
+				clientPlayer.setRotations(clientPlayer.getPitch() - 3, clientPlayer.getYaw());
 			}
 			if(pollData >= 0.875F || pollData <= 0.125F){
-				Minecraft.getMinecraft().player.rotationYaw-=3;
+				clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() + 3);
 			}
 		}
 	}
@@ -137,23 +136,24 @@ public final class ControlSystem{
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gun){
-		PartSeat seat = vehicle.getSeatForRider(Minecraft.getMinecraft().player);
-		if(seat != null){
+		Point3d seatPos = vehicle.ridersToLocations.get(InterfaceGame.getClientPlayer());
+		if(seatPos != null){
+			PartSeat seat = (PartSeat) vehicle.getPartAtLocation(seatPos);
 			//If we are seated, attempt to control guns.
 			//Only control guns our seat is a part of, or guns with no seats part of them.
 			//First check our parent part.
 			if(seat.parentPart instanceof PartGun){
-				MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) seat.parentPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+				InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
 			}
 			//Now check subParts of our seat.
 			for(APart subPart : seat.childParts){
 				if(subPart instanceof PartGun){
-					MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) subPart, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+					InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 
 			if(seat.vehicleDefinition.isController){
-				for(APart part : vehicle.getVehicleParts()){
+				for(APart part : vehicle.parts){
 					if(part instanceof PartGun){
 						if(!(part.parentPart instanceof PartSeat)){
 							boolean hasControllingSeats = false;
@@ -163,7 +163,7 @@ public final class ControlSystem{
 								}
 							}
 							if(!hasControllingSeats){
-								MTS.MTSNet.sendToServer(new PacketPartGunSignal((PartGun) part, Minecraft.getMinecraft().player.getEntityId(), gun.isPressed()));
+								InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
 							}
 						}
 					}

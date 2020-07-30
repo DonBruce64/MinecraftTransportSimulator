@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -59,7 +59,7 @@ public class GUIInstruments extends AGUIBase{
 	private final List<TexturelessButton> vehicleInstrumentSlots = new ArrayList<TexturelessButton>();
 	private final List<GUIComponentInstrument> vehicleInstruments = new ArrayList<GUIComponentInstrument>();
 	
-	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperEntityPlayer player){
+	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
 		this.hudGUI = new GUIHUD(vehicle);
 		this.panelGUI = vehicle.definition.general.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);

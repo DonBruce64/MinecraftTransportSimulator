@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -36,7 +36,7 @@ public class PacketPlayerCraftItem extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperEntityPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(player.hasMaterials(itemToCraft)){
 			player.craftItem(itemToCraft);
 		}

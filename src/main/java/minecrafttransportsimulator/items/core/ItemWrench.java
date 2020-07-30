@@ -52,7 +52,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
 					vehicle.removePart(part, false);
-					Item droppedItem = part.getItemForPart();
+					Item droppedItem = part.getItem();
 					if(droppedItem != null){
 						ItemStack droppedStack = new ItemStack(droppedItem);
 						droppedStack.setTagCompound(part.getData());

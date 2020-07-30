@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -80,7 +80,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, TileEntityPole pole){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
 		//Check if we can do editing.
 		if(world.isClient() || !ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
 			if(removal){

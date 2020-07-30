@@ -2,9 +2,17 @@ package mcinterface;
 
 import java.nio.FloatBuffer;
 
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemLead;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentTranslation;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
  * and motion variables for entities, as well as setting their riding statuses.  Note that 
@@ -18,6 +26,11 @@ public class WrapperEntity{
 	
 	public WrapperEntity(Entity entity){
 		this.entity = entity;
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		return entity.equals(obj);
 	}
 	
 	/**
@@ -44,7 +57,7 @@ public class WrapperEntity{
 	 *  the entity is not riding any MTS entity (rider may will be riding
 	 *  a vanilla entity).
 	 */
-	public AEntityBase getVehicleRiding(){
+	public AEntityBase getEntityRiding(){
 		return entity.getRidingEntity() instanceof BuilderEntity ? ((BuilderEntity) entity.getRidingEntity()).entity : null;
 	}
 	
@@ -64,10 +77,73 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the entity's pitch (x-axis rotation).
+	 */
+	public float getPitch(){
+		return entity.rotationPitch;
+	}
+	
+	/**
+	 *  Returns the entity's yaw (y-axis rotation).
+	 *  NOTE: the return value from this function is inverted
+	 *  from the normal MC standard to have it follow the RHR
+	 *  for rotations.  This is OpenGL convention, and MC doesn't
+	 *  follow it, which is why rendering is such a PITA with yaw.
+	 */
+	public float getYaw(){
+		return -entity.rotationYaw;
+	}
+	
+	/**
+	 *  Sets the entities pitch and yaw.
+	 *  NOTE: the yaw value from this function is inverted
+	 *  from the normal MC standard to have it follow the RHR
+	 *  for rotations.  This is OpenGL convention, and MC doesn't
+	 *  follow it, which is why rendering is such a PITA with yaw.
+	 */
+	public void setRotations(double pitch, double yaw){
+		entity.rotationPitch = (float) pitch;
+		entity.rotationYaw = (float) -yaw;
+	}
+	
+	/**
+	 *  Returns the entity's NBT data.
+	 */
+	public WrapperNBT getNBT(){
+		return new WrapperNBT(entity);
+	}
+	
+	/**
+	 *  Loads the entity data from the passed-in NBT.
+	 */
+	public void setNBT(WrapperNBT data){
+		entity.readFromNBT(data.tag);
+	}
+	
+	/**
 	 *  Tells the entity to start riding the passed-in entity.
 	 */
 	public void setRiding(AEntityBase entityToRide){
 		entity.startRiding(entityToRide.builder);
+	}
+	
+	/**
+	 *  Tries to leash up the entity to the passed-in player.
+	 *  False may be returned if the entity cannot be leashed,
+	 *  or if the player isn't holding a leash.
+	 */
+	public boolean leashTo(WrapperPlayer player){
+		if(entity instanceof EntityLiving){
+			ItemStack heldStack = player.player.getHeldItemMainhand();
+			if(((EntityLiving) entity).canBeLeashedTo(player.player) && heldStack.getItem() instanceof ItemLead){
+				((EntityLiving)entity).setLeashHolder(player.player, true);
+				if(!player.isCreative()){
+					heldStack.shrink(1);
+				}
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -96,6 +172,65 @@ public class WrapperEntity{
 	 */
 	public void addToPosition(double x, double y, double z){
 		entity.setPosition(entity.posX + x, entity.posY + y, entity.posZ + z);
+	}
+	
+	/**
+	 *  Attacks the entity.  The string passed-in should be the damage type.
+	 */
+	public void attack(Damage damage){
+		attack(entity, damage);
+	}
+	
+	/**
+	 *  Package-private method for attacking.  Allows for direct reference
+	 *  to the entity variable through the interfaces without the need to
+	 *  create a wrapper instance.
+	 */
+	static void attack(Entity attackedEntity, Damage damage){
+		//If this entity is one of ours, just forward the damage and exit.
+		if(attackedEntity instanceof BuilderEntity){
+			((BuilderEntity) attackedEntity).entity.attack(damage);
+			return;
+		}
+		DamageSource newSource = new DamageSource(damage.name){
+			@Override
+			public ITextComponent getDeathMessage(EntityLivingBase player){
+				EntityLivingBase recentEntity = player.getAttackingEntity();
+				if(recentEntity != null){//Player engaged with another player...
+					if(damage.attacker != null){//and then was killed by another player.
+						return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 
+								new Object[] {player.getDisplayName(), damage.attacker.player.getDisplayName(), recentEntity.getDisplayName()});
+					}else{//and then was killed by something.
+						return new TextComponentTranslation("death.attack." + this.damageType + ".null.player", 
+								new Object[] {player.getDisplayName(), recentEntity.getDisplayName()});
+					}
+				}else{//Player was minding their own business...
+					if(damage.attacker != null){//and was killed by another player.
+						return new TextComponentTranslation("death.attack." + this.damageType + ".player.null", 
+								new Object[] {player.getDisplayName(), damage.attacker.player.getDisplayName()});
+					}else{//and then was killed by something.
+						return new TextComponentTranslation("death.attack." + this.damageType + ".null.null", 
+								new Object[] {player.getDisplayName()});
+					}
+				}
+			}
+		};
+		if(damage.isFire){
+			newSource.setFireDamage();
+			attackedEntity.setFire(5);
+		}
+		if(damage.isWater){
+			attackedEntity.extinguish();
+			//Don't attack this entity with water.
+			return;
+		}
+		if(damage.isExplosion){
+			newSource.setExplosion();
+		}
+		if(damage.ignoreArmor){
+			newSource.setDamageBypassesArmor();
+		}
+		attackedEntity.attackEntityFrom(newSource, (float) damage.amount);
 	}
 	
 	/**

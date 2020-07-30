@@ -153,7 +153,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	protected boolean updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
 		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
 		if(rotationAxis.x == 0){
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.parts){
 				if(part instanceof PartGroundDevice && part.definition.ground.isTread){
 					//360 degrees is 1 block, so if we have a roller of circumference of 1,
 					//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.

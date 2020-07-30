@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -29,7 +29,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperEntityPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);

@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 
@@ -42,7 +42,7 @@ public abstract class APacketBase{
 	 *  an instance of the player that sent the packet if on a server,
 	 *  or the current player if on a client.
 	 */
-	public abstract void handle(WrapperWorld world, WrapperEntityPlayer player);
+	public abstract void handle(WrapperWorld world, WrapperPlayer player);
 	
 	/**
 	 *  Helper method to write a string to the buffer.
@@ -71,7 +71,7 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to write a Point3d to the buffer.
 	 */
-	protected static void writePoint3DToBuffer(Point3d point, ByteBuf buf){
+	protected static void writePoint3dToBuffer(Point3d point, ByteBuf buf){
 		buf.writeDouble(point.x);
 		buf.writeDouble(point.y);
 		buf.writeDouble(point.z);
@@ -80,7 +80,7 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to read a Point3d from the buffer.
 	 */
-	protected static Point3d readPoint3DFromBuffer(ByteBuf buf){
+	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
 		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
 	}
 }

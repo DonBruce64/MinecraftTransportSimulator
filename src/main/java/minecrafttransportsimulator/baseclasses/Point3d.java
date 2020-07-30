@@ -15,6 +15,10 @@ public class Point3d extends APoint3<Double, Point3d>{
 		super(x, y, z);
 	}
 	
+	public Point3d(Point3i point){
+		this(point.x, point.y, point.z);
+	}
+	
 	@Override
 	public boolean equals(Object object){
 		if(object instanceof Point3d){

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
@@ -43,7 +43,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Init variables.
 	private final BlockPartsBench bench;
-	private final WrapperEntityPlayer player;
+	private final WrapperPlayer player;
 	
 	//Buttons and labels.
 	private GUIComponentButton prevPackButton;
@@ -84,7 +84,7 @@ public class GUIPartBench extends AGUIBase{
 	boolean displayVehicleInfo = false;
 	
 
-	public GUIPartBench(BlockPartsBench bench, WrapperEntityPlayer player){
+	public GUIPartBench(BlockPartsBench bench, WrapperPlayer player){
 		this.bench = bench;
 		this.player = player;
 		if(lastOpenedItem.containsKey(bench)){

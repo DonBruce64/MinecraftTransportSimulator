@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -20,6 +21,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -55,7 +59,7 @@ public class InterfaceNetwork{
 		//Now register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
-		//Generic packets.
+		packetMappings.put(packetIndex++, PacketEntityCSHandshake.class);
 		packetMappings.put(packetIndex++, PacketEntityRiderChange.class);
 		packetMappings.put(packetIndex++, PacketPlayerChatMessage.class);
 		packetMappings.put(packetIndex++, PacketPlayerCraftItem.class);
@@ -69,6 +73,9 @@ public class InterfaceNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartChange.class);
+		packetMappings.put(packetIndex++, PacketVehiclePartGroundDevice.class);
+		packetMappings.put(packetIndex++, PacketVehiclePartGun.class);
+		packetMappings.put(packetIndex++, PacketVehicleServerMovement.class);
 		packetMappings.put(packetIndex++, PacketVehicleWrenchGUI.class);
 	}
 	
@@ -115,7 +122,7 @@ public class InterfaceNetwork{
 	 *  Sends the passed-in packet to the specified player.
 	 *  Note that this may ONLY be called on the server, as
 	 *  clients don't know about other player's network pipelines.
-	 *  This is package-private as this gets fired from {@link WrapperEntityPlayer},
+	 *  This is package-private as this gets fired from {@link WrapperPlayer},
 	 *  since we need an actual player instance here rather than a wrapper, so we
 	 *  shouldn't be able to call this from non-wrapper code.
 	 */
@@ -135,8 +142,8 @@ public class InterfaceNetwork{
 	 *  Gets the player this packet was sent by based on its context.
 	 *  Used for handling packets arriving on the server.
 	 */
-	private static WrapperEntityPlayer getServerPlayer(MessageContext ctx){
-		return new WrapperEntityPlayer(ctx.getServerHandler().player);
+	private static WrapperPlayer getServerPlayer(MessageContext ctx){
+		return new WrapperPlayer(ctx.getServerHandler().player);
 	}
 	
 	

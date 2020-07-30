@@ -5,11 +5,14 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
@@ -19,10 +22,10 @@ import net.minecraft.util.text.TextComponentString;
  *
  * @author don_bruce
  */
-public class WrapperEntityPlayer extends WrapperEntity{
+public class WrapperPlayer extends WrapperEntity{
 	final EntityPlayer player;
 	
-	public WrapperEntityPlayer(EntityPlayer player){
+	public WrapperPlayer(EntityPlayer player){
 		super(player);
 		this.player = player;
 	}
@@ -71,6 +74,7 @@ public class WrapperEntityPlayer extends WrapperEntity{
 	 *  passed-in class.  Assumes main-hand for all cases.
 	 */
 	public boolean isHoldingItem(Class<?> itemClass){
+		//TODO this needs to get removed when we add wrapper itemstacks.
 		return itemClass.isInstance(player.getHeldItemMainhand().getItem());
 	}
 	
@@ -95,6 +99,19 @@ public class WrapperEntityPlayer extends WrapperEntity{
 	 */
 	public void setHeldStack(ItemStack stack){
 		player.setHeldItem(EnumHand.MAIN_HAND, stack);
+	}
+	
+	/**
+	 *  Gets the currently-leashed entity for this player, or null if it doesn't exist.
+	 */
+	public WrapperEntity getLeashedEntity(){
+		for(EntityLiving entityLiving : player.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
+			if(entityLiving.getLeashed() && player.equals(entityLiving.getLeashHolder())){
+				entityLiving.clearLeashed(true, !player.capabilities.isCreativeMode);
+				return new WrapperEntity(entityLiving);
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -167,6 +184,14 @@ public class WrapperEntityPlayer extends WrapperEntity{
 		}else{
 			return stackToRemove.getCount() == player.inventory.clearMatchingItems(stackToRemove.getItem(), stackToRemove.getMetadata(), stackToRemove.getCount(), stackToRemove.getTagCompound());
 		}
+	}
+	
+	/**
+	 *  Gets the inventory of the player.
+	 */
+	public IInventory getInventory(){
+		//TODO this gets removed, along with the item methods, when we go to wrapper ItemStacks.
+		return player.inventory;
 	}
 	
 	/**

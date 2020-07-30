@@ -20,9 +20,12 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
+import minecrafttransportsimulator.rendering.components.AParticle;
+import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -33,9 +36,10 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -58,6 +62,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class InterfaceRender{
 	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>();
+	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureDomain;
 	private static String pushedTextureLocation;
 	
@@ -183,9 +188,9 @@ public class InterfaceRender{
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
-	        int lightVar = InterfaceGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
-	        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
         }
+		int lightVar = InterfaceGame.getClientWorld().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
 	/**
@@ -244,17 +249,45 @@ public class InterfaceRender{
 	 *  and the entity and its riders have been culled from rendering.
 	 */
 	public static void renderEntityRiders(AEntityBase entity, float partialTicks){
-		for(Entity passenger : entity.getPassengers()){
-			if(!(InterfaceGame.getClientPlayer().equals(passenger) && InterfaceGame.inFirstPerson()) && passenger.posY > passenger.world.getHeight()){
-				PartSeat seat = entity.getSeatForRider(passenger);
-				if(seat != null){
-					GL11.glPushMatrix();
-					Point3d offset = entity.position.copy().add(seat.worldPos);
-					GL11.glTranslated(offset.x, offset.y - seat.getHeight()/2F + passenger.getYOffset(), offset.z);
-					Minecraft.getMinecraft().getRenderManager().renderEntityStatic(passenger, partialTicks, false);
-					GL11.glPopMatrix();
+		for(WrapperEntity rider : entity.ridersToLocations.keySet()){
+			if(!(InterfaceGame.getClientPlayer().equals(rider.entity) && InterfaceGame.inFirstPerson()) && rider.entity.posY > rider.entity.world.getHeight()){
+				GL11.glPushMatrix();
+				Point3d offset = entity.position.copy();
+				if(entity instanceof EntityVehicleF_Physics){
+					PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) entity).getPartAtLocation(entity.ridersToLocations.get(rider));
+					if(seat != null){
+						offset.add(seat.worldPos).add(0D, -seat.getHeight()/2D, 0D);
+					}
 				}
+				GL11.glTranslated(offset.x, offset.y + rider.getYOffset(), offset.z);
+				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(rider.entity, partialTicks, false);
+				GL11.glPopMatrix();
 			}
+		}
+	}
+	
+	/**
+	 *  Spawns a particle into the world.  Particles are simply entities that are client-side only.
+	 *  This is handy if you have a lot of them flying around but could care less where they are and
+	 *  don't want to hamper the server with tons of ticking entities.
+	 */
+	public static void spawnParticle(AParticle particle){
+		if(Minecraft.getMinecraft().effectRenderer != null){
+			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
+		}
+	}
+	
+	/**
+	 *  Spawns the particles for the block at the passed-in position.
+	 *  This also plays the block breaking sound.  It does not actually break
+	 *  the block.  Such breakage must be done on the server.
+	 */
+	public static void spawnBlockBreakParticles(Point3i point){
+		if(Minecraft.getMinecraft().effectRenderer != null){
+			BlockPos pos = new BlockPos(point.x, point.y, point.z);
+			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
+			Minecraft.getMinecraft().world.playSound(null, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+			Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
 		}
 	}
 	
@@ -288,7 +321,33 @@ public class InterfaceRender{
 		RenderingRegistry.registerEntityRenderingHandler(BuilderEntity.class, new IRenderFactory<BuilderEntity>(){
 			@Override
 			public Render<? super BuilderEntity> createRenderFor(RenderManager manager){
-				return new RenderVehicle(manager);
+				return new Render<BuilderEntity>(manager){
+					@Override
+					protected ResourceLocation getEntityTexture(BuilderEntity builder){
+						return null;
+					}
+					
+					@Override
+					public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
+						if(builder.entity != null){
+							//If we don't have render data yet, create one now.
+							if(!renderData.containsKey(builder)){
+								renderData.put(builder, new RenderTickData(builder.entity.world));
+							}
+							
+							//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
+							int renderPass = InterfaceRender.getRenderPass();
+							if(renderPass == -1){
+								renderPass = 2;
+							}
+							
+							//If we need to render, do so now.
+							if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
+								builder.entity.render(partialTicks);
+							}
+						}
+					}
+				};
 			}});
 				
 		//Register the TESR wrapper.

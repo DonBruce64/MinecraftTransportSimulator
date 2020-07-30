@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mcinterface.WrapperEntityPlayer;
-import mcinterface.WrapperNBT;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
@@ -33,17 +34,17 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 		double connectorRadius = 0.125D;
 		double axialRadius = (0.5D - connectorRadius)/2D;
 		double axialCenterPoint = 0.5D - axialRadius;
-		axisBounds.put(Axis.NONE, new BoundingBox(0, 0, 0, connectorRadius, connectorRadius, connectorRadius));
-		axisBounds.put(Axis.UP, new BoundingBox(0, axialCenterPoint, 0, connectorRadius, axialRadius, connectorRadius));
-		axisBounds.put(Axis.DOWN, new BoundingBox(0, -axialCenterPoint, 0, connectorRadius, axialRadius, connectorRadius));
-		axisBounds.put(Axis.NORTH, new BoundingBox(0, 0, -axialCenterPoint, connectorRadius, connectorRadius, axialRadius));
-		axisBounds.put(Axis.SOUTH, new BoundingBox(0, 0, axialCenterPoint, connectorRadius, connectorRadius, axialRadius));
-		axisBounds.put(Axis.EAST, new BoundingBox(axialCenterPoint, 0, 0, axialRadius, connectorRadius, connectorRadius));
-		axisBounds.put(Axis.WEST, new BoundingBox(-axialCenterPoint, 0, 0, axialRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.NONE, new BoundingBox(new Point3d(0, 0, 0), connectorRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.UP, new BoundingBox(new Point3d(0, axialCenterPoint, 0), connectorRadius, axialRadius, connectorRadius));
+		axisBounds.put(Axis.DOWN, new BoundingBox(new Point3d(0, -axialCenterPoint, 0), connectorRadius, axialRadius, connectorRadius));
+		axisBounds.put(Axis.NORTH, new BoundingBox(new Point3d(0, 0, -axialCenterPoint), connectorRadius, connectorRadius, axialRadius));
+		axisBounds.put(Axis.SOUTH, new BoundingBox(new Point3d(0, 0, axialCenterPoint), connectorRadius, connectorRadius, axialRadius));
+		axisBounds.put(Axis.EAST, new BoundingBox(new Point3d(axialCenterPoint, 0, 0), axialRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.WEST, new BoundingBox(new Point3d(-axialCenterPoint, 0, 0), axialRadius, connectorRadius, connectorRadius));
 	}
 	
 	@Override
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperEntityPlayer player){
+	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
 		//If there's no NBT data, this is a new pole and needs to have its initial component added.
 		if(!player.getHeldStack().hasTagCompound()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
@@ -52,7 +53,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperEntityPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
@@ -70,7 +71,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
 					if(player.getHeldStack().hasTagCompound()){							
-						textLines = new WrapperNBT(player.getHeldStack().getTagCompound()).getStrings("textLines", component.definition.general.textLines.length);
+						textLines = new WrapperNBT(player.getHeldStack()).getStrings("textLines", component.definition.general.textLines.length);
 					}
 					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{

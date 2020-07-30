@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.items.core;
 
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 
 /**Interface that performs an action on vehicles.  The methods in here will be called 
@@ -19,7 +19,7 @@ public interface IItemVehicleInteractable{
 	 *  Is a combination of owner name and if the player is OP.  This is only called on the SERVER.
 	 *  Note that the part passed in MAY be null if the box clicked was a collision box or part slot.
 	 */
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick);
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
 	
 	public static enum PlayerOwnerState{
 		USER,

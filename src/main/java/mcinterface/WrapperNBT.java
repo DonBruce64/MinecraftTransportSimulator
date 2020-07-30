@@ -7,13 +7,16 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
 /**Wrapper for interfacing with NBT data.  This pares down a few of the method to ones
  * more suited to what we use normally.  Of special importance is the ability to save
- * lists of data, which isn't normally allowed with NBT without loops.
+ * lists of data, which isn't normally allowed with NBT without loops.  Note that the
+ * constructors that take MC classes are package-private.  This is to avoid accidental
+ * use in other code sections.
  *
  * @author don_bruce
  */
@@ -22,19 +25,6 @@ public class WrapperNBT{
 	
 	public WrapperNBT(){
 		this.tag = new NBTTagCompound();
-	}
-	
-	public WrapperNBT(NBTTagCompound tag){
-		this.tag = tag;
-	}
-	
-	public WrapperNBT(ItemStack stack){
-		if(stack.hasTagCompound()){
-			this.tag = stack.getTagCompound();
-		}else{
-			this.tag = new NBTTagCompound();
-			stack.setTagCompound(tag);
-		}
 	}
 	
 	public WrapperNBT(ByteBuf buf){
@@ -46,7 +36,25 @@ public class WrapperNBT{
             throw new RuntimeException(e);
         }
     }
+
+	WrapperNBT(NBTTagCompound tag){
+		this.tag = tag;
+	}
 	
+	//TODO make this package-private when we get wrappd itemstacks.
+	public WrapperNBT(ItemStack stack){
+		if(stack.hasTagCompound()){
+			this.tag = stack.getTagCompound();
+		}else{
+			this.tag = new NBTTagCompound();
+			stack.setTagCompound(tag);
+		}
+	}
+	
+	public WrapperNBT(Entity entity){
+		this.tag = new NBTTagCompound();
+		entity.writeToNBT(tag);
+	}
 	
 	
 	//Booleans

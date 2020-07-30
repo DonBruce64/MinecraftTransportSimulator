@@ -8,12 +8,11 @@ import java.util.Map.Entry;
 
 import mcinterface.BuilderGUI;
 import mcinterface.InterfaceNetwork;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -150,20 +149,20 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(selectorState == 0 && !leftSide){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.MAGNETO_ON));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
 					}else if(selectorState == 1 && !leftSide){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.ES_ON));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
 					}else if(selectorState == 1 && leftSide){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.MAGNETO_OFF));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
 					}else if(selectorState == 2 && leftSide){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.ES_OFF));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 				
 				@Override
 				public void onReleased(){
 					if(selectorState == 2){
-						MTS.MTSNet.sendToServer(new PacketPartEngineSignal(vehicle.engines.get(engineNumber), PacketEngineTypes.ES_OFF));
+						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 			};

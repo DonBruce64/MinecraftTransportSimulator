@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
@@ -34,7 +34,7 @@ public class PacketTileEntityFluidTankChange extends APacketTileEntity<ATileEnti
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, ATileEntityFluidTank<?> tank){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, ATileEntityFluidTank<?> tank){
 		if(fluidDelta < 0){
 			tank.drain(fluidName, -fluidDelta, true);
 		}else{

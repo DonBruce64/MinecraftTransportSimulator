@@ -5,6 +5,7 @@ import java.util.Iterator;
 import mcinterface.BuilderEntity;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -24,13 +25,11 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		super(builder, world, data);
 	}
 	
-	/**
-	 *  We override the default rider update behavior here as the riders can move depending
-	 *  on how the part they are riding moves.  If we modified the rider position, then we'd
-	 *  allow for multiple riders at the same position.  That's Bad Stuff.
-	 */
 	@Override
 	public void updateRiders(){
+		//We override the default rider update behavior here as the riders can move depending
+		//on how the part they are riding moves.  If we modified the rider position, then we'd
+		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
 		Iterator<WrapperEntity> riderIterator = ridersToLocations.keySet().iterator();
 		while(riderIterator.hasNext()){
@@ -50,12 +49,10 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 	}
 	
-	/**
-	 *  We override the default rider addition behavior here as we need to rotate
-	 *  riders to face forwards in seats that they start riding in.
-	 */
 	@Override
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+		//We override the default rider addition behavior here as we need to rotate
+		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
 		boolean riderAlreadyInSeat = ridersToLocations.containsKey(rider);
 		boolean success = super.addRider(rider, riderLocation);
@@ -71,12 +68,10 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		return success;
 	}
 	
-	/**
-	 *  We override the default rider removal behavior here as the dismount position
-	 *  of riders can be modified via JSON or via part placement location.
-	 */
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+		//We override the default rider removal behavior here as the dismount position
+		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
 		Point3d riderLocation = ridersToLocations.get(rider);
 		super.removeRider(rider, iterator);
@@ -94,5 +89,18 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 			rider.setPosition(dismountPosition);
 		}
+	}
+	
+	/**
+	 *  Helper method used to get the controlling player for this vehicle.
+	 */
+	public WrapperPlayer getController(){
+		for(WrapperEntity rider : ridersToLocations.keySet()){
+			PartSeat seat = (PartSeat) getPartAtLocation(ridersToLocations.get(rider));
+			if(seat != null && seat.vehicleDefinition.isController && rider instanceof WrapperPlayer){
+				return (WrapperPlayer) rider;
+			}
+		}
+		return null;
 	}
 }

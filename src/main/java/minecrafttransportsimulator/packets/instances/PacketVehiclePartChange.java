@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -58,9 +58,9 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		if(partPackID.isEmpty()){
-			vehicle.removePart(vehicle.getPartAtLocation(offset), false);
+			vehicle.removePart(vehicle.getPartAtLocation(offset), null, false);
 		}else{
 			VehiclePart packPart = vehicle.getPackDefForLocation(offset);
 			vehicle.addPart(PackParserSystem.createPart(vehicle, packPart, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, partData), false);

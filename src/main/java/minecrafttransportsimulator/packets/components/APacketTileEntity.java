@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
@@ -35,7 +35,7 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public void handle(WrapperWorld world, WrapperEntityPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		TileEntityType tile = (TileEntityType) world.getTileEntity(position); 
 		if(tile != null && tile.world != null){
 			if(handle(world, player, tile) && !world.isClient()){
@@ -53,5 +53,5 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 	 *  if the action failed due to an issue) return false.  Otherwise, return true to 
 	 *  send this packet on to all clients.  Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperEntityPlayer player, TileEntityType tile);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityType tile);
 }

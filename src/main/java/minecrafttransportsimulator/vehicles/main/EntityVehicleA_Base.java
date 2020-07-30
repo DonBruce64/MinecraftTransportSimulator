@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -33,8 +35,12 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**This list contains all parts this vehicle has.  Do NOT directly modify this list.  Instead,
 	 * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
 	 * operations are performed.  Note that if you are iterating over this list when you call one of those
-	 * methods, you will get a CME!  This includes removing a part from it's {@link APart#updatePart} method.*/
+	 * methods, and you don't pass the method an iterator instance, you will get a CME!.
+	 */
 	public final List<APart> parts = new ArrayList<APart>();	
+	
+	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
+	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
 	public EntityVehicleA_Base(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
 		super(builder, world, data);
@@ -56,6 +62,20 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 				e.printStackTrace();
+			}
+		}
+	}
+	
+	@Override
+	public void update(){
+		//Send update call down to all parts.
+		//They need to get processed first to handle hitbox logic, or removal based on damage.
+		Iterator<APart> iterator = parts.iterator();
+		while(iterator.hasNext()){
+			APart part = iterator.next();
+			part.update();
+			if(!part.isValid){
+				removePart(part, iterator, true);
 			}
 		}
 	}
@@ -95,28 +115,41 @@ abstract class EntityVehicleA_Base extends AEntityBase{
     	return false;
     }
 	
+    /**
+   	 * Adds the passed-in part to the vehicle.  May move the vehicle to prevent the part from
+   	 * spawning underground, but this may be disabled if ignoreCollision is true.
+   	 */
 	public void addPart(APart part, boolean ignoreCollision){
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
-			if(part.isPartColliding()){
+			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, 0D, 0D))){
 				//Adjust roll first, as otherwise we could end up with a sunk vehicle.
 				angles.z = 0;
 				position.y += part.getHeight();
 			}
 			
 			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.wouldPartCollide(new Point3d(0, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0))){
+			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0D))){
 				position.y += part.getHeight();
 			}
 		}
 	}
 	
-	public void removePart(APart part, boolean playBreakSound){
+	/**
+   	 * Removes the passed-in part to the vehicle.  Calls the part's {@link APart#remove()} method to
+   	 * let the part handle removal code.  Iterator is optional, but if you're in any code block that
+   	 * is iterating over the parts list, and you don't pass that iterator in, you'll get a CME.
+   	 */
+	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
 		if(parts.contains(part)){
-			parts.remove(part);
-			if(part.isValid()){
-				part.removePart();
+			if(iterator != null){
+				iterator.remove();
+			}else{
+				parts.remove(part);
+			}
+			if(part.isValid){
+				part.remove();
 				if(!world.isClient()){
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
 				}
@@ -328,7 +361,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		int totalParts = 0;
 		for(APart part : parts){
 			//Don't save the part if it's not valid.
-			if(part.isValid()){
+			if(part.isValid){
 				++totalParts;
 				WrapperNBT partData = part.getData();
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.

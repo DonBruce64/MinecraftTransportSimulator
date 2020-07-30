@@ -14,6 +14,7 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -96,15 +97,16 @@ public class InterfaceAudio{
 		//Update player position velocity, and orientation.
 		//PaulsCode does this for us in 1.12.2, so we don't need to do that.
 		//However, it fouls up velocity, so we need to re-do that one.
-		//Note that players riding vehicles use the vehicle's velocity.
+		//Note that players riding entities use the entitie's velocity.
 		//player.putPosition(playerPosition);
 		//AL10.alListener(AL10.AL_POSITION, playerPosition);
-		if(InterfaceGame.getClientPlayer().getVehicleRiding() != null){
+		Object entityRiding = InterfaceGame.getClientPlayer().getEntityRiding(); 
+		if(entityRiding instanceof ISoundProvider){
 			playerVelocity.clear();
-			FloatBuffer vehicleVelocity = InterfaceGame.getClientPlayer().getVehicleRiding().getProviderVelocity();
-			playerVelocity.put(vehicleVelocity);
+			FloatBuffer entityVelocity = ((ISoundProvider) entityRiding).getProviderVelocity();
+			playerVelocity.put(entityVelocity);
 			//need to flip this back to normal as it's assumed this won't be used except during an update call.
-			vehicleVelocity.flip();
+			entityVelocity.flip();
 			playerVelocity.flip();
 		}else{
 			InterfaceGame.getClientPlayer().putVelocity(playerVelocity);

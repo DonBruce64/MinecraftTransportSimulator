@@ -1,87 +1,66 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import minecrafttransportsimulator.MTS;
+import mcinterface.WrapperEntity;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.packets.general.PacketChat;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemLead;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.AxisAlignedBB;
 
 public final class PartSeat extends APart{
 	
-	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
+	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
+		super(vehicle, packVehicleDef, definition, data);
 	}
 	
 	@Override
-	public boolean interactPart(EntityPlayer player){
-		//let's get the Item player is holding, in case it is a lead.
-		ItemStack heldStack = player.getHeldItemMainhand();
+	public boolean interact(WrapperPlayer player){
 		//See if we can interact with the seats of this vehicle.
-		//This can happen if the vehicle isn't locked, or we're already inside.
-		if(!vehicle.locked || vehicle.equals(player.getRidingEntity())){
-			Entity seatRider = vehicle.getRiderForSeat(this);
-			if(seatRider != null){
-				//We already have a rider for this seat.  If it's not us, return failure.
+		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
+		if(!vehicle.locked || vehicle.equals(player.getEntityRiding())){
+			WrapperEntity riderForSeat = vehicle.locationsToRiders.get(placementOffset);
+			if(riderForSeat != null){
+				//We already have a rider for this seat.  If it's not us, mark the seat as taken.
 				//If it's an entity that can be leashed, dismount the entity and leash it.
-				if(seatRider instanceof EntityPlayer){
-					if(!player.equals(seatRider)){
-						MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
+				if(riderForSeat instanceof WrapperPlayer){
+					if(!player.equals(riderForSeat)){
+						player.sendPacket(new PacketPlayerChatMessage("interact.failure.seattaken"));
 					}
-				}else if(seatRider instanceof EntityLiving){
-					if(((EntityLiving) seatRider).canBeLeashedTo(player) && player.getHeldItemMainhand().getItem() instanceof ItemLead){
-						((EntityLiving)seatRider).setLeashHolder(player, true);
-						if(!player.isCreative()){
-							heldStack.shrink(1);
-						}
-					}else{
-						//Can't leash up this animal, so mark the seat as taken.
-						MTS.MTSNet.sendTo(new PacketChat("interact.failure.seattaken"), (EntityPlayerMP) player);
-					}
-				}else{
-					//Don't know WHAT this entity is.  But it don't belong here!
-					seatRider.dismountRidingEntity();
+				}else if(!riderForSeat.leashTo(player)){
+					//Can't leash up this entity, so mark the seat as taken.
+					player.sendPacket(new PacketPlayerChatMessage("interact.failure.seattaken"));
 				}
 			}else{
-				//If we got here we must have the seat number and it must be free.
-				//Either mount this seat, or if we have a leashed animal, set it in that seat.
-				for(EntityLiving entityliving : vehicle.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
-					if(entityliving.getLeashed() && player.equals(entityliving.getLeashHolder())){
-						entityliving.clearLeashed(true, !player.capabilities.isCreativeMode);
-						vehicle.setRiderInSeat(entityliving, this);
-						return true;
+				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
+				WrapperEntity entity = player.getLeashedEntity();
+				if(entity != null){
+					vehicle.addRider(entity, placementOffset);
+				}else{
+					//Didn't find an animal.  Just mount the player.
+					//Don't mount them if they are sneaking, however.  This will confuse MC.
+					if(!player.isSneaking()){
+						vehicle.addRider(player, placementOffset);
 					}
-				}
-				//Didn't find an animal.  Just mount the player.
-				//Don't mount them if they are sneaking, however.  This will confuse MC.
-				if(!player.isSneaking()){
-					vehicle.setRiderInSeat(player, this);
 				}
 			}
 		}else{
-			MTS.MTSNet.sendTo(new PacketChat("interact.failure.vehiclelocked"), (EntityPlayerMP) player);
+			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 		}
 		return true;
     }
 	
 	@Override
-	public void removePart(){
-		super.removePart();
-		if(vehicle.getRiderForSeat(this) != null){
-			vehicle.getRiderForSeat(this).dismountRidingEntity();
+	public void remove(){
+		super.remove();
+		if(vehicle.locationsToRiders.containsKey(placementOffset)){
+			vehicle.removeRider(vehicle.locationsToRiders.get(placementOffset), null);
 		}
 	}
 	
 	@Override
-	public NBTTagCompound getData(){
-		return new NBTTagCompound();
+	public WrapperNBT getData(){
+		return new WrapperNBT();
 	}
 
 	@Override

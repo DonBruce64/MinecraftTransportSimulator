@@ -79,9 +79,9 @@ public class PacketVehicleInteract extends APacketVehicle{
 						}else{
 							//Not holding an item that can interact with a vehicle.  Try to interact with parts or slots.
 							if(message.type.equals(PacketVehicleInteractType.PART_RIGHTCLICK)){
-								part.interactPart(player);
+								part.interact(player);
 							}else if(message.type.equals(PacketVehicleInteractType.PART_LEFTCLICK)){
-								part.attackPart(DamageSource.causePlayerDamage(player), 1.0F);
+								part.attack(DamageSource.causePlayerDamage(player), 1.0F);
 							}else if(message.type.equals(PacketVehicleInteractType.PART_SLOT_RIGHTCLICK)){
 								//Only owners can add vehicle parts.
 								if(!canPlayerEditVehicle){

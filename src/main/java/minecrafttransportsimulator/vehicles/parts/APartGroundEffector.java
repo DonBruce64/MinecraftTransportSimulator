@@ -1,34 +1,32 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.BlockPos;
 
 public abstract class APartGroundEffector extends APart{
-	protected final BlockPos[] lastBlocksModified;
-	protected final BlockPos[] affectedBlocks;
+	protected final Point3i[] lastBlocksModified;
+	protected final Point3i[] affectedBlocks;
 	
-	public APartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
-		lastBlocksModified = new BlockPos[definition.effector.blocksWide];
-		affectedBlocks = new BlockPos[definition.effector.blocksWide];
+	public APartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
+		super(vehicle, packVehicleDef, definition, data);
+		lastBlocksModified = new Point3i[definition.effector.blocksWide];
+		affectedBlocks = new Point3i[definition.effector.blocksWide];
 	}
 	
 	@Override
-	public void updatePart(){
-		super.updatePart();
+	public void update(){
+		super.update();
 		int startingIndex = -definition.effector.blocksWide/2;
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
-			Point3d partAffectorPosition = RotationSystem.getRotatedPoint(new Point3d(xOffset, 0, 0), vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(worldPos);
+			Point3d partAffectorPosition = new Point3d(xOffset, 0, 0).rotateFine(totalRotation).add(worldPos);
+			affectedBlocks[i] = new Point3i(partAffectorPosition);
 			if(effectIsBelowPart()){
-				affectedBlocks[i] = new BlockPos(partAffectorPosition.x, partAffectorPosition.y - 1, partAffectorPosition.z);
-			}else{
-				affectedBlocks[i] = new BlockPos(partAffectorPosition.x, partAffectorPosition.y, partAffectorPosition.z);
+				affectedBlocks[i].add(0, -1, 0);
 			}
 		}
 		
@@ -41,8 +39,8 @@ public abstract class APartGroundEffector extends APart{
 	}
 	
 	@Override
-	public NBTTagCompound getData(){
-		return new NBTTagCompound(); 
+	public WrapperNBT getData(){
+		return new WrapperNBT(); 
 	}
 	
 	@Override
@@ -55,7 +53,7 @@ public abstract class APartGroundEffector extends APart{
 		return 1.0F;
 	}
 	
-	protected abstract void performEffectsAt(BlockPos pos);
+	protected abstract void performEffectsAt(Point3i position);
 	
 	protected abstract boolean effectIsBelowPart();
 }

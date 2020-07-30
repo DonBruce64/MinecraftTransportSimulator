@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -22,7 +22,7 @@ public abstract class APacketVehicle extends APacketEntity{
 	};
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperEntityPlayer player, AEntityBase entity){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity){
 		return handle(world, player, (EntityVehicleF_Physics) entity);
 	}
 	
@@ -38,9 +38,5 @@ public abstract class APacketVehicle extends APacketEntity{
 	/**
 	 *  Fall-down handler implementation of {@link #handle(WrapperWorld, WrapperEntityPlayer, AEntityBase)}
 	 */
-	/**
-	 *  Handler method with a vehicle instance as a parameter rather than the entity.
-	 *  Supplements {@link #handle(WrapperWorld, WrapperEntityPlayer, AEntityBase)}
-	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperEntityPlayer player, EntityVehicleF_Physics vehicle);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle);
 }

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
@@ -31,7 +31,7 @@ public abstract class APacketEntity extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperEntityPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		AEntityBase entity = AEntityBase.createdEntities.get(entityID);
 		if(entity != null){
 			if(handle(world, player, entity) && !world.isClient()){
@@ -48,5 +48,5 @@ public abstract class APacketEntity extends APacketBase{
 	 *   to an issue) return false.  Otherwise, return true to send this packet on to all clients.  
 	 *   Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperEntityPlayer player, AEntityBase entity);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity);
 }

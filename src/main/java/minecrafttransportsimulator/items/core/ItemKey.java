@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
@@ -38,7 +39,7 @@ public class ItemKey extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(player.isSneaking()){
 				//Try to change ownership of the vehicle.
@@ -80,7 +81,7 @@ public class ItemKey extends Item implements IItemVehicleInteractable{
 						MTS.MTSNet.sendTo(new PacketChat("interact.key.info.unlock"), player);
 						//If we aren't in this vehicle, and we clicked a seat, start riding the vehicle.
 						if(part instanceof PartSeat && player.getRidingEntity() == null){
-							part.interactPart(player);
+							part.interact(player);
 						}
 					}else{
 						vehicle.locked = true;

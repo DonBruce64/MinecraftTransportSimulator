@@ -12,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.world.EnumSkyBlock;
 
 /**This class represents a light object of a model.  Inputs are the name of the name model
 * and the name of the light.
@@ -121,7 +120,7 @@ public class TransformLight extends ARenderableTransform{
 		//we'll have rendered the object so we can safely change textures.
 		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
 		boolean lightActuallyOn = vehicle.lightsOn.contains(type) && isFlashingLightOn();
-		float sunLight = vehicle.world.getSunBrightness(0)*(vehicle.world.getLightFor(EnumSkyBlock.SKY, vehicle.getPosition()) - vehicle.world.getSkylightSubtracted())/15F;
+		float sunLight = vehicle.world.getLightBrightness(new Point3i(vehicle.position), false);
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.

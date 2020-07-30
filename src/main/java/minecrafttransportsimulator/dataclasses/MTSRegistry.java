@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 import mcinterface.BuilderBlock;
 import mcinterface.BuilderEntity;
-import mcinterface.WrapperEntityPlayer;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
@@ -28,17 +28,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.general.PacketBulletHit;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineDamage;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineLinked;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartGroundDeviceWheelFlat;
-import minecrafttransportsimulator.packets.parts.PacketPartGunReload;
-import minecrafttransportsimulator.packets.parts.PacketPartGunSignal;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInit;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleClientInitResponse;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleDeltas;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
@@ -131,7 +121,7 @@ public final class MTSRegistry{
 	/**
 	 * This method returns a list of ItemStacks that are required
 	 * to craft the passed-in pack item.  Used by {@link GUIPartBench}
-	 * amd {@link WrapperEntityPlayer#hasMaterials(AItemPack)} as well as any other systems that 
+	 * amd {@link WrapperPlayer#hasMaterials(AItemPack)} as well as any other systems that 
 	 * need to know what materials make up pack items.
 	 */
     public static List<ItemStack> getMaterials(AItemPack<? extends AJSONItem<?>> item){
@@ -211,25 +201,13 @@ public final class MTSRegistry{
 	
 	private static void initPackets(){
 		//Packets in packets.general
-		registerPacket(PacketBulletHit.class, PacketBulletHit.Handler.class, true, true);
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
-		registerPacket(PacketPartGunReload.class, PacketPartGunReload.Handler.class, true, false);
 		
 		//Packets in packets.vehicles.
-		registerPacket(PacketVehicleClientInit.class, PacketVehicleClientInit.Handler.class, false, true);
-		registerPacket(PacketVehicleClientInitResponse.class, PacketVehicleClientInitResponse.Handler.class, true, false);
-		registerPacket(PacketVehicleDeltas.class, PacketVehicleDeltas.Handler.class, true, false);
 		registerPacket(PacketVehicleInteract.class, PacketVehicleInteract.Handler.class, false, true);
 		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
 		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
 		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
-		
-		//Packets in packets.parts
-		registerPacket(PacketPartEngineDamage.class, PacketPartEngineDamage.Handler.class, true, false);
-		registerPacket(PacketPartEngineLinked.class, PacketPartEngineLinked.Handler.class, true, false);
-		registerPacket(PacketPartEngineSignal.class, PacketPartEngineSignal.Handler.class, true, true);
-		registerPacket(PacketPartGroundDeviceWheelFlat.class, PacketPartGroundDeviceWheelFlat.Handler.class, true, false);
-		registerPacket(PacketPartGunSignal.class, PacketPartGunSignal.Handler.class, true, true);
 	}
 
 	/**
