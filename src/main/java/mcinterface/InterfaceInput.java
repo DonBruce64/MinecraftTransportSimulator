@@ -8,6 +8,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import net.java.games.input.Controller;
@@ -16,6 +17,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for MC input classes.  Constructor does not exist, as this is simply a
  * collection of static methods that can be called in placed of calling
@@ -24,6 +29,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
  *
  * @author don_bruce
  */
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class InterfaceInput{
 	//Common variables.
 	private static KeyBinding configKey;
@@ -67,14 +73,6 @@ public class InterfaceInput{
 				}
 			}
 		}
-	}
-	
-	/**
-	 *  Returns true if the master config keybinding is pressed.  Actual key that corresponds to this
-	 *  binding may change if it is re-bound by the player in the MC keybinding settings.  
-	 */
-	public static boolean isMasterControlButttonPressed(){
-		return configKey.isPressed();
 	}
 	
 	/**
@@ -267,6 +265,16 @@ public class InterfaceInput{
 			default: throw new EnumConstantNotPresentException(ControlsKeyboard.class, kbEnum.name());
 		}
 	}
+	
+	/**
+     * Opens the config screen when the config key is pressed.
+     */
+    @SubscribeEvent
+    public static void on(InputEvent.KeyInputEvent event){
+        if(configKey.isPressed() && BuilderGUI.isGUIActive(null)){
+            BuilderGUI.openGUI(new GUIConfig());
+        }
+    }
 	
 	/**
 	 *  Custom MouseHelper class that can have movement checks inhibited based on

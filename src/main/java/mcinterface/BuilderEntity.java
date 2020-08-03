@@ -8,20 +8,22 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
-import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -70,8 +72,8 @@ public class BuilderEntity extends Entity{
     			furthestWidthRadius = (float) Math.max(furthestWidthRadius, box.localCenter.z + box.depthRadius);
     		}
     		this.setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
-    		interactionBoxes = new WrapperAABBCollective(entity, entity.interactionBoxes);
-    		collisionBoxes = new WrapperAABBCollective(entity, entity.collisionBoxes);
+    		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
+    		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
     		
     		//Make sure the collision bounds for MC are big enough to collide with this entity.
 			if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
@@ -291,6 +293,66 @@ public class BuilderEntity extends Entity{
 			lastExplosionPosition = new Point3d(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
 		}
 	}
+	
+    /**
+     * If a player swings and misses a large entity they may still have hit it.
+     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
+     * This works on the client where we can see the entity bounding boxes,
+     * but on the server the internal distance check nulls this out.
+     * If we click an entity, cancel the "interaction" and instead send a packet 
+     * to the server to make dang sure we register the interaction!
+     * Note that unlike the attack code, we don't want to cancel all interactions.
+     * This can lead to blocking of interactions from offhands.
+     */
+    @SubscribeEvent
+    public static void on(PlayerInteractEvent.EntityInteract event){
+    	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
+    		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
+        		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
+	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
+	    		if(vehicle.collisionBoxes.contains(boxClicked)){
+	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_RIGHTCLICK));
+	    		}else if(vehicle.partInteractionBoxes.contains(boxClicked)){
+	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_RIGHTCLICK));
+	    		}else if(vehicle.partSlotBoxes.containsKey(boxClicked)){
+	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
+	    		}else{
+	    			MTS.MTSLog.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	    		}
+	    		event.setCanceled(true);
+				event.setCancellationResult(EnumActionResult.SUCCESS);
+    		}
+    	}
+    }
+	
+    /**
+     * If a player swings and misses a large entity they may still have hit it.
+     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
+     * This works on the client where we can see the entity bounding boxes,
+     * but on the server the internal distance check nulls this out.
+     * If we click an entity, cancel the "attack" and instead send a packet 
+     * to the server to make dang sure we register the attack!
+     */
+    @SubscribeEvent
+    public static void on(AttackEntityEvent event){
+    	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
+    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
+    		if(event.getEntityPlayer().world.isRemote){
+	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
+	    		if(!vehicle.partSlotBoxes.containsKey(boxClicked)){
+	    			if(vehicle.collisionBoxes.contains(boxClicked)){
+	        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_LEFTCLICK));
+	        		}else if(vehicle.partInteractionBoxes.contains(boxClicked)){
+	        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_LEFTCLICK));
+	        		}else{
+	        			MTS.MTSLog.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	        		}
+	    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
+	    		}
+    		}
+	    	event.setCanceled(true);
+    	}
+    }
 	
 	//Junk methods, forced to pull in.
 	protected void entityInit(){}

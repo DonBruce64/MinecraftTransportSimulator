@@ -5,10 +5,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import mcinterface.BuilderGUI;
-import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -36,33 +33,53 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(part instanceof PartEngine){
 				PartEngine engine = (PartEngine) part;
 				if(engine.linkedEngine == null){
 					if(lastEngineClicked == null){
 						lastEngineClicked = engine;
-						player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.firstlink"));
+						if(vehicle.world.isClient()){
+							player.displayChatMessage("interact.jumpercable.firstlink");
+						}else{
+							return CallbackType.ALL;
+						}
 					}else if(!lastEngineClicked.equals(engine)){
 						if(lastEngineClicked.vehicle.equals(engine.vehicle)){
-							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.samevehicle"));
 							lastEngineClicked = null;
+							if(vehicle.world.isClient()){
+								player.displayChatMessage("interact.jumpercable.samevehicle");
+							}else{
+								return CallbackType.ALL;
+							}
 						}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
 							engine.linkedEngine = lastEngineClicked;
 							lastEngineClicked.linkedEngine = engine;
 							lastEngineClicked = null;
-							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, engine.linkedEngine.vehicle.uniqueID, engine.linkedEngine.placementOffset), engine.vehicle);
-							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
+							if(vehicle.world.isClient()){
+								player.displayChatMessage("interact.jumpercable.secondlink");
+							}else{
+								return CallbackType.ALL;
+							}
 						}else{
-							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.toofar"));
 							lastEngineClicked = null;
+							if(vehicle.world.isClient()){
+								player.displayChatMessage("interact.jumpercable.toofar");
+							}else{
+								return CallbackType.ALL;
+							}
 						}
 					}
 				}else{
-					player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.alreadylinked"));
+					if(vehicle.world.isClient()){
+						player.displayChatMessage("interact.jumpercable.alreadylinked");
+					}else{
+						return CallbackType.ALL;
+					}
 				}
 			}
 		}
+		return CallbackType.NONE;
 	}
 }

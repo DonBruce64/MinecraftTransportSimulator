@@ -42,7 +42,7 @@ public abstract class AEntityBase{
 	public static Map<Integer, AEntityBase> createdEntities = new HashMap<Integer, AEntityBase>();
 	
 	public final BuilderEntity builder;
-	public final int uniqueID;
+	public final int lookupID;
 	public final WrapperWorld world;
 	public final Point3d position;
 	public final Point3d prevPosition;
@@ -58,6 +58,9 @@ public abstract class AEntityBase{
 	
 	/**Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of updates.**/
 	public long ticksExisted;
+	
+	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.**/
+	public String uniqueUUID;
 	
 	/**List of bounding boxes that should be used for collision of other entities with this entity.**/
 	public List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
@@ -84,7 +87,8 @@ public abstract class AEntityBase{
 	
 	public AEntityBase(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
 		this.builder = builder;
-		this.uniqueID = world.isClient() ? data.getInteger("uniqueID") : idCounter++;
+		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
+		this.uniqueUUID = data.getString("uniqueUUID");
 		this.world = world;
 		this.position = data.getPoint3d("position");
 		this.prevPosition = position.copy();
@@ -102,7 +106,7 @@ public abstract class AEntityBase{
 		}
 		
 		//FIXME remove dead entities from this list.
-		createdEntities.put(uniqueID, this);
+		createdEntities.put(lookupID, this);
 	}
 	
 	 /**
@@ -224,7 +228,8 @@ public abstract class AEntityBase{
 	 *  should be written to at this point with any data needing to be saved.
 	 */
 	public void save(WrapperNBT data){
-		data.setInteger("uniqueID", uniqueID);
+		data.setInteger("lookupID", lookupID);
+		data.setString("uniqueUUID", uniqueUUID);
 		data.setPoint3d("position", position);
 		data.setPoint3d("motion", motion);
 		data.setPoint3d("angles", angles);

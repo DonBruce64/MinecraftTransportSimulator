@@ -73,7 +73,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 					
 					//B-level
 					newVehicle.locked=tagCompound.getBoolean("locked");
-					newVehicle.ownerName=tagCompound.getString("ownerName");
+					newVehicle.ownerUUID=tagCompound.getString("ownerName");
 					newVehicle.displayText=tagCompound.getString("displayText");
 					
 					//C-level

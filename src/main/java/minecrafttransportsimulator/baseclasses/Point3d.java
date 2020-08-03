@@ -136,11 +136,67 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this.equals(ZERO);
 	}
 	
+	/**
+     * Returns a new point with the x value equal to the second parameter, provided the X value
+     * is between this point and the passed-in point, and the passed-in point's x-value is not
+     * equal to this point's x-value.  If such conditions are not satisfied, null is returned.
+     */
+    public Point3d getIntermediateWithXValue(Point3d endPoint, double targetX){
+    	Point3d delta = endPoint.copy().subtract(this);
+        if(delta.x*delta.x < 1.0E-7D){
+        	//Point delta is 0, so there's no difference here.
+            return null;
+        }else{
+        	//Return point as a factored-percentage of total length.
+        	double factor = (targetX - this.x)/delta.x;
+            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+        }
+    }
+
+    /**
+     * Returns a new point with the y value equal to the second parameter, provided the Y value
+     * is between this point and the passed-in point, and the passed-in point's y-value is not
+     * equal to this point's y-value.  If such conditions are not satisfied, null is returned.
+     */
+    public Point3d getIntermediateWithYValue(Point3d endPoint, double targetY){
+    	Point3d delta = endPoint.copy().subtract(this);
+        if(delta.y*delta.y < 1.0E-7D){
+        	//Point delta is 0, so there's no difference here.
+            return null;
+        }else{
+        	//Return point as a factored-percentage of total length.
+        	double factor = (targetY - this.y)/delta.y;
+            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+        }
+    }
+    
+    /**
+     * Returns a new point with the z value equal to the second parameter, provided the Z value
+     * is between this point and the passed-in point, and the passed-in point's z-value is not
+     * equal to this point's z-value.  If such conditions are not satisfied, null is returned.
+     */
+    public Point3d getIntermediateWithZValue(Point3d endPoint, double targetZ){
+    	Point3d delta = endPoint.copy().subtract(this);
+        if(delta.z*delta.z < 1.0E-7D){
+        	//Point delta is 0, so there's no difference here.
+            return null;
+        }else{
+        	//Return point as a factored-percentage of total length.
+        	double factor = (targetZ - this.z)/delta.z;
+            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+        }
+    }
+	
 	private static final Double[] sinTable = new Double[361];
 	private static final Double[] cosTable = new Double[361];
 	private static double xRot;
 	private static double yRot;
 	private static double zRot;
+	/**
+     * Rotates this point about the passed-in angles.  Rotation is done using a 360-degree
+     * static lookup table, so rotation is done to the nearest degree.  This is faster than
+     * {@link #rotateFine(Point3d)} as actual sin and cos calculations are not performed.
+     */
 	public Point3d rotateCoarse(Point3d angles){
 		//Init sin and cos tables, if they aren't ready.
 		if(sinTable[0] == null){
@@ -174,6 +230,11 @@ public class Point3d extends APoint3<Double, Point3d>{
 	private static double d4;
 	private static double d5;
 	private static double d6;
+	/**
+     * Rotates this point about the passed-in angles.  Rotation is done using actual sin
+     * and cos calls via a rotation matrix, so only use this when precision is required (say
+     * in rendering operations).  If only a rough approximation is required, use {@link #rotateCoarse(Point3d)}
+     */
 	public Point3d rotateFine(Point3d angles){
 		d1 = Math.cos(Math.toRadians(angles.x));//A
 		d2 = Math.sin(Math.toRadians(angles.x));//B

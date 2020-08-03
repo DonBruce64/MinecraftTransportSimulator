@@ -32,8 +32,11 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	/**
 	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
-	 *  It does not change, ever.  Useful for assigning ownership where the entity ID of a player might
-	 *  change between sessions.
+	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.
+	 *  <br><br>
+	 *  NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
+	 *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
+	 *  when combined with their changing of entity IDs, makes server-client lookup impossible.
 	 */
 	public String getUUID(){
 		return EntityPlayer.getUUID(player.getGameProfile()).toString();
@@ -160,7 +163,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public void craftItem(AItemPack<? extends AJSONItem<?>> item){
 		for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
-			removeItem(materialStack);
+			removeItem(materialStack, materialStack.getCount());
 		}
 		addItem(new ItemStack(item));
 	}
@@ -178,11 +181,11 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  Returns true if removal was successful.  Note that if the player
 	 *  is in creative mode, then removal will not actually occur.
 	 */
-	public boolean removeItem(ItemStack stackToRemove){
+	public boolean removeItem(ItemStack stackToRemove, int qty){
 		if(isCreative()){
 			return true;
 		}else{
-			return stackToRemove.getCount() == player.inventory.clearMatchingItems(stackToRemove.getItem(), stackToRemove.getMetadata(), stackToRemove.getCount(), stackToRemove.getTagCompound());
+			return stackToRemove.getCount() == player.inventory.clearMatchingItems(stackToRemove.getItem(), stackToRemove.getMetadata(), qty, stackToRemove.getTagCompound());
 		}
 	}
 	

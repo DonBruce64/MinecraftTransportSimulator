@@ -31,7 +31,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean brakeOn;
 	public boolean parkingBrakeOn;
 	public boolean locked;
-	public String ownerName = "";
+	public String ownerUUID = "";
 	public String displayText = "";
 	
 	//Internal states.
@@ -69,7 +69,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brakeOn = data.getBoolean("brakeOn");
-		this.ownerName = data.getString("ownerName");
+		this.ownerUUID = data.getString("ownerUUID");
 		this.displayText = data.getString("displayText");
 		if(displayText.isEmpty()){
 			displayText = definition.rendering.defaultDisplayText;
@@ -1012,7 +1012,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("locked", locked);
 		data.setBoolean("brakeOn", brakeOn);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
-		data.setString("ownerName", ownerName);
+		data.setString("ownerUUID", ownerUUID);
 		data.setString("displayText", displayText);
 		data.setPoint3d("serverDeltaM", serverDeltaA);
 		data.setPoint3d("serverDeltaM", serverDeltaM);

@@ -76,7 +76,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				if((loadedBullet == null && bulletItem.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(bulletItem)){
 					//Make sure we don't over-fill the gun.
 					if(bulletItem.definition.bullet.quantity <= definition.gun.capacity + bulletsLeft){
-						player.removeItem(new ItemStack(bulletItem));
+						player.removeItem(heldStack, 1);
 						loadedBullet = bulletItem;
 						bulletsLeft += bulletItem.definition.bullet.quantity;
 						reloadTimeRemaining = definition.gun.reloadTime;

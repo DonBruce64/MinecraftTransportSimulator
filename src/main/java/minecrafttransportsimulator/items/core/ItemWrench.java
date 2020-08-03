@@ -5,19 +5,18 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import mcinterface.BuilderGUI;
-import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.guis.instances.GUIInstruments;
+import minecrafttransportsimulator.guis.instances.GUIVehicleEditor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehicleWrenchGUI;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -41,37 +40,43 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		//If the player isn't the owner of the vehicle, they can't interact with it.
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
-				InterfaceNetwork.sendToPlayer(new PacketVehicleWrenchGUI(vehicle), player);
-			}else{
+				if(vehicle.world.isClient()){
+					if(vehicle.equals(player.getEntityRiding()) && ConfigSystem.configObject.client.devMode.value){
+						BuilderGUI.openGUI(new GUIVehicleEditor(vehicle));
+					}else{
+						BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
+					}
+				}
+				return CallbackType.PLAYER;
+			}else if(!vehicle.world.isClient()){
 				if(part != null && !player.isSneaking()){
 					//Player can remove part.  Spawn item in the world and remove part.
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
-					vehicle.removePart(part, false);
+					vehicle.removePart(part, null, false);
 					Item droppedItem = part.getItem();
 					if(droppedItem != null){
-						ItemStack droppedStack = new ItemStack(droppedItem);
-						droppedStack.setTagCompound(part.getData());
-						vehicle.world.spawnEntity(new EntityItem(vehicle.world, part.worldPos.x, part.worldPos.y, part.worldPos.z, droppedStack));
+						vehicle.world.spawnItemStack(new ItemStack(droppedItem), part.getData(), part.worldPos);
 					}
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
-					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.capabilities.isCreativeMode)){
+					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
 						ItemStack vehicleStack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
-						NBTTagCompound stackTag = vehicle.writeToNBT(new NBTTagCompound());
-						vehicleStack.setTagCompound(stackTag);
-						vehicle.world.spawnEntity(new EntityItem(vehicle.world, vehicle.posX, vehicle.posY, vehicle.posZ, vehicleStack));
-						vehicle.setDead();
+						WrapperNBT vehicleData = new WrapperNBT();
+						vehicle.save(vehicleData);
+						vehicle.world.spawnItemStack(vehicleStack, vehicleData, vehicle.position);
+						vehicle.isValid = false;
 					}
 				}
 			}
 		}else{
-			InterfaceNetwork.sendToPlayer(new PacketPlayerChatMessage("interact.failure.vehicleowned"), player);
+			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
 		}
+		return CallbackType.NONE;
 	}
 }

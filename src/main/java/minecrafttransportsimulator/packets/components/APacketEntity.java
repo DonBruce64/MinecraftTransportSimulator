@@ -16,7 +16,7 @@ public abstract class APacketEntity extends APacketBase{
 	
 	public APacketEntity(AEntityBase entity){
 		super(null);
-		this.entityID = entity.uniqueID;
+		this.entityID = entity.lookupID;
 	}
 	
 	public APacketEntity(ByteBuf buf){
@@ -35,6 +35,8 @@ public abstract class APacketEntity extends APacketBase{
 		AEntityBase entity = AEntityBase.createdEntities.get(entityID);
 		if(entity != null){
 			if(handle(world, player, entity) && !world.isClient()){
+				//FIXME we need to make sure when we send this back to clients the WrapperPlayer is the player
+				//that sent the packet initially, not the player who is getting the packet.
 				InterfaceNetwork.sendToClientsTracking(this, entity);
 			}
 		}

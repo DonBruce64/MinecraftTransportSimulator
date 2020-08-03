@@ -17,7 +17,7 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 	
 	public PacketTileEntityPumpConnection(TileEntityFuelPump pump){
 		super(pump);
-		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.uniqueID : -1;
+		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.lookupID : -1;
 	}
 	
 	public PacketTileEntityPumpConnection(ByteBuf buf){

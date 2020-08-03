@@ -3,20 +3,16 @@ package minecrafttransportsimulator.systems;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
+import mcinterface.BuilderTileEntity;
 import mcinterface.InterfaceAudio;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceRender;
-import mcinterface.BuilderTileEntity;
-import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -26,10 +22,7 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
@@ -38,8 +31,6 @@ import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -58,75 +49,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
-    
-    /**
-     * Fired when the player right-clicks an entity.  Check to see if the entity clicked is a vehicle.  If so,
-     * fire off an interaction packet to the server and end interaction.  This is called when the player
-     * clicks a hitbox of the vehicle, the hitbox of a part, or an interaction area of where a part could
-     * be placed.
-     */
-    @SubscribeEvent
-    public static void on(PlayerInteractEvent.EntityInteract event){
-    	if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && event.getTarget() instanceof EntityVehicleF_Physics){
-    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getTarget();
-    		
-    		//Check to see what we clicked, and fire the appropriate packet.
-    		VehicleAxisAlignedBB boxClicked = vehicle.getEntityBoundingBox().lastBoxRayTraced;
-    		if(vehicle.collisionBoxes.contains(boxClicked)){
-    			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_RIGHTCLICK));
-    		}else if(vehicle.partBoxes.contains(boxClicked)){
-    			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_RIGHTCLICK));
-    		}else if(vehicle.openPartSpotBoxes.contains(boxClicked)){
-    			//If the player is not holding a custom part, then we need to offset the box as it's in the wrong spot.
-    			if(event.getEntityPlayer().getHeldItemMainhand().getItem() instanceof ItemPartCustom){
-    				MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
-    			}else{
-    				MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y - 0.5D, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
-    			}
-    		}else{
-    			MTS.MTSLog.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
-    		}
-    		event.setCanceled(true);
-			event.setCancellationResult(EnumActionResult.SUCCESS);
-    	}
-    }    
-    
-    /**
-     * If a player swings and misses a vehicle they may still have hit it.
-     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
-     * This works on the client where we can see the part, but on the server
-     * the internal distance check nulls this out.
-     * If we click a vehicle with an item that can interact with it here,
-     * cancel the "attack" and instead send a packet to the server
-     * to make dang sure we get it to the vehicle!
-     */
-    @SubscribeEvent
-    public static void on(AttackEntityEvent event){
-    	if(event.getTarget() instanceof EntityVehicleF_Physics){
-    		//We clicked the vehicle with an item that can interact with it.
-    		//Cancel the attack and check if we need to interact with the vehicle.
-    		//Only do checks if we are on the client, as the server does bad hitscanning.
-    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getTarget();
-    		event.setCanceled(true);
-    		
-    		if(event.getEntityPlayer().world.isRemote){
-	    		//Check to see what we clicked, and fire the appropriate packet.
-    			//Don't do anything if we left-clicked a part placement box.
-	    		VehicleAxisAlignedBB boxClicked = vehicle.getEntityBoundingBox().lastBoxRayTraced;
-	    		if(!vehicle.openPartSpotBoxes.contains(boxClicked)){
-	    			if(vehicle.collisionBoxes.contains(boxClicked)){
-	        			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_LEFTCLICK));
-	        		}else if(vehicle.partBoxes.contains(boxClicked)){
-	        			MTS.MTSNet.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.rel.x, boxClicked.rel.y, boxClicked.rel.z, PacketVehicleInteract.PacketVehicleInteractType.PART_LEFTCLICK));
-	        		}else{
-	        			MTS.MTSLog.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
-	        		}
-	    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
-	    		}
-    		}
-    	}
-    }
-    
     public static boolean lockedView = true;
     private static int defaultRenderDistance;
 	private static int currentRenderDistance;
@@ -397,26 +319,6 @@ public final class ClientEventSystem{
 	    			BuilderGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
-    	}
-    }
-
-    /**
-     * Opens the config screen when the config key is pressed.
-     */
-    @SubscribeEvent
-    public static void on(InputEvent.KeyInputEvent event){
-        if(InterfaceInput.isMasterControlButttonPressed() && minecraft.currentScreen == null){
-            BuilderGUI.openGUI(new GUIConfig());
-        }
-    }
-    
-	/**
-     * Stop all sounds when the world is unloaded.
-     */
-    @SubscribeEvent
-    public static void on(WorldEvent.Unload event){
-    	if(event.getWorld().isRemote){
-    		InterfaceAudio.haltSoundsIn(event.getWorld().provider.getDimension());
     	}
     }
 }

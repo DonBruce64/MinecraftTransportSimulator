@@ -71,7 +71,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 			ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
 				if(player.hasItem(instrument, 1, 0)){
-					player.removeItem(new ItemStack(instrument));
+					player.removeItem(new ItemStack(instrument), 1);
 				}else{
 					return false;
 				}

@@ -4,7 +4,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import mcinterface.BuilderGUI;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -40,7 +42,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		for(byte i=1; i<=4; ++i){
-			tooltipLines.add(I18n.format("info.item.ticket.line" + String.valueOf(i)));
+			tooltipLines.add(BuilderGUI.translate("info.item.ticket.line" + String.valueOf(i)));
 		}
 	}
 	
@@ -96,7 +98,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, EntityPlayerMP player, PlayerOwnerState ownerState, boolean rightClick){
+	public boolean doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick && part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
 			if(stack.hasTagCompound()){

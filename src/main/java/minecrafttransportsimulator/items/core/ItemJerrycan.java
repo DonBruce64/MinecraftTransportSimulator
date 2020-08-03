@@ -6,9 +6,7 @@ import javax.annotation.Nullable;
 
 import mcinterface.BuilderGUI;
 import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.client.util.ITooltipFlag;
@@ -40,29 +38,32 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public void doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
-		if(rightClick){
-			if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
-				if(vehicle.fluidName.isEmpty() || vehicle.fluidName.equals(stack.getTagCompound().getString("fluidName"))){
-					if(vehicle.fuel + 1000 > vehicle.definition.motorized.fuelCapacity){
-						player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.toofull"));
-					}else{
-						vehicle.fluidName = stack.getTagCompound().getString("fluidName");
-						vehicle.fuel += 1000;
-						if(!vehicle.world.isClient()){
+	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+		if(!vehicle.world.isClient()){
+			if(rightClick){
+				if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
+					if(vehicle.fluidName.isEmpty() || vehicle.fluidName.equals(stack.getTagCompound().getString("fluidName"))){
+						if(vehicle.fuel + 1000 > vehicle.definition.motorized.fuelCapacity){
+							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.toofull"));
+						}else{
+							vehicle.fluidName = stack.getTagCompound().getString("fluidName");
+							vehicle.fuel += 1000;
 							stack.setTagCompound(null);
 							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.success"));
-							player.sendPacket(new PacketVehicleInteract("interact.jerrycan.success"));
+							//FIXME this will be the wrong player type here.  Should be a generic fuel packet instead?
+							return CallbackType.ALL;
 						}
-						
-						MT.MTSNet.sendToAll(new PacketVehicleJerrycan(vehicle, vehicle.fluidName));
+					}else{
+						player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.wrongtype"));
 					}
 				}else{
-					player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.wrongtype"));
+					player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.empty"));
 				}
-			}else{
-				player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.empty"));
 			}
+		}else{
+			vehicle.fluidName = stack.getTagCompound().getString("fluidName");
+			vehicle.fuel += 1000;
 		}
+		return CallbackType.NONE;
 	}
 }

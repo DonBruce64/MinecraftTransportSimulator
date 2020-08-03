@@ -29,10 +29,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packets.general.PacketChat;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleJerrycan;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleKey;
-import minecrafttransportsimulator.packets.vehicles.PacketVehicleNameTag;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -202,12 +198,6 @@ public final class MTSRegistry{
 	private static void initPackets(){
 		//Packets in packets.general
 		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
-		
-		//Packets in packets.vehicles.
-		registerPacket(PacketVehicleInteract.class, PacketVehicleInteract.Handler.class, false, true);
-		registerPacket(PacketVehicleJerrycan.class, PacketVehicleJerrycan.Handler.class, true, false);
-		registerPacket(PacketVehicleKey.class, PacketVehicleKey.Handler.class, true, false);
-		registerPacket(PacketVehicleNameTag.class, PacketVehicleNameTag.Handler.class, true, false);
 	}
 
 	/**

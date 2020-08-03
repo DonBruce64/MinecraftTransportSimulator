@@ -99,4 +99,94 @@ public class BoundingBox{
 				globalCenter.z - depthRadius < box.globalCenter.z + box.depthRadius &&
 				globalCenter.z + depthRadius > box.globalCenter.z - box.depthRadius;
 	}
+	
+	/**
+	 *  Returns true if the passed-in point intersects this box in the YZ-plane.
+	 */
+	public boolean intersectsWithYZ(Point3d point){
+        return point.y >= globalCenter.y - heightRadius/2D && point.y <= globalCenter.y + heightRadius/2D && point.z >= globalCenter.z - depthRadius/2D && point.z <= globalCenter.z + depthRadius/2D;
+    }
+	
+	/**
+	 *  Returns true if the passed-in point intersects this box in the XZ-plane.
+	 */
+	public boolean intersectsWithXZ(Point3d point){
+        return point.x >= globalCenter.x - widthRadius/2D && point.x <= globalCenter.x + widthRadius/2D && point.z >= globalCenter.z - depthRadius/2D && point.z <= globalCenter.z + depthRadius/2D;
+    }
+	
+	/**
+	 *  Returns true if the passed-in point intersects this box in the XY-plane.
+	 */
+	public boolean intersectsWithXY(Point3d point){
+        return point.x >= globalCenter.x - widthRadius/2D && point.x <= globalCenter.x + widthRadius/2D && point.y >= globalCenter.y - heightRadius/2D && point.y <= globalCenter.y + heightRadius/2D;
+    }
+	
+	/**
+	 *  Returns the point between the start and end points that collides with this box,
+	 *  or null if such a point does not exist.
+	 */
+	public Point3d getXPPlaneCollision(Point3d start, Point3d end, double xPoint){
+        Point3d collisionPoint = start.getIntermediateWithXValue(end, xPoint);
+        return collisionPoint != null && this.intersectsWithYZ(collisionPoint) ? collisionPoint : null;
+    }
+
+	/**
+	 *  Returns the point between the start and end points that collides with this box,
+	 *  or null if such a point does not exist.
+	 */
+    public Point3d getYPlaneCollision(Point3d start, Point3d end, double yPoint){
+    	Point3d collisionPoint = start.getIntermediateWithYValue(end, yPoint);
+        return collisionPoint != null && this.intersectsWithXZ(collisionPoint) ? collisionPoint : null;
+    }
+    
+    /**
+	 *  Returns the point between the start and end points that collides with this box,
+	 *  or null if such a point does not exist.
+	 */
+    public Point3d getZPlaneCollision(Point3d start, Point3d end, double zPoint){
+    	Point3d collisionPoint = start.getIntermediateWithZValue(end, zPoint);
+        return collisionPoint != null && this.intersectsWithXY(collisionPoint) ? collisionPoint : null;
+    }
+	
+	/**
+	 *  Checks to see if the line defined by the passed-in start and end points intersects this box.
+	 *  If so, then a new point is returned on the first point of intersection (outer bounds).  If the
+	 *  line created by the two points does not intersect this box, null is returned.
+	 */
+	public Point3d getIntersectionPoint(Point3d start, Point3d end){
+		//First check minX.
+		Point3d intersection = getXPPlaneCollision(start, end, globalCenter.x - widthRadius);
+		
+		//Now get maxX.
+		Point3d secondIntersection = getXPPlaneCollision(start, end, globalCenter.x + widthRadius);
+		
+		//If minX is null, or if maxX is not null, and is closer to the start point than minX, it's our new intersection.
+		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){
+			intersection = secondIntersection;
+		}
+		
+		//Now check minY.
+		secondIntersection = getYPlaneCollision(start, end, globalCenter.y - heightRadius);
+		
+		//If we don't have a valid intersection, or minY is closer than the current intersection, it's our new intersection.
+		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){
+			intersection = secondIntersection;
+		}
+		
+		//You should be able to see what we're doing here now, yes?
+		//All we need to do is test maxY, minZ, and maxZ and we'll know where we hit.
+		secondIntersection = getYPlaneCollision(start, end, globalCenter.y + heightRadius);
+		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){
+			intersection = secondIntersection;
+		}
+		secondIntersection = getZPlaneCollision(start, end, globalCenter.z - depthRadius);
+		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){
+			intersection = secondIntersection;
+		}
+		secondIntersection = getZPlaneCollision(start, end, globalCenter.z + depthRadius);
+		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){
+			intersection = secondIntersection;
+		}
+		return intersection;
+    }
 }

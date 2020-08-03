@@ -5,8 +5,8 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperPlayer;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -123,14 +123,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					newComponent.setTextLines(textLines);
 				}
 				pole.updateLightState();
-				//if player is not in creative mod, try to subtract the component.
-				if(!player.isCreative()){
-					ItemStack componentStack = player.getHeldStack();
-					componentStack.shrink(1);
-					if(componentStack.isEmpty()){
-						player.removeItem(componentStack);
-					}
-				}
+				player.removeItem(player.getHeldStack(), 1);
 				return true;
 			} 
 		}

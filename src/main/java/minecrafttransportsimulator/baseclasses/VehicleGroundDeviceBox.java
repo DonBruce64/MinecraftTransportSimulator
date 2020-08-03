@@ -7,6 +7,10 @@ import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**This class is a wrapper for vehicle ground device collision points.  It's used to get a point
  * to reference for ground collisions, and contains helper methods for doing calculations of those
@@ -147,27 +151,20 @@ public class VehicleGroundDeviceBox{
 	private BoundingBox getSolidPoint(){
 		float heights = 0;
 		float widths = 0;
-		double xCoords = 0;
-		double yCoords = 0;
-		double zCoords = 0;
+		Point3d boxRelativePosition = new Point3d(0D, 0D, 0D);
 		
 		for(APart groundDevice : groundDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.totalOffset.x;
-			yCoords += groundDevice.totalOffset.y;
-			zCoords += groundDevice.totalOffset.z;
+			boxRelativePosition.add(groundDevice.totalOffset);
 		}
 		
 		heights /= groundDevices.size();
 		widths /= groundDevices.size();
-		xCoords /= groundDevices.size();
-		yCoords /= groundDevices.size();
-		zCoords /= groundDevices.size();
+		boxRelativePosition.multiply(1D/groundDevices.size());
 		
-		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
 		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
+		return new BoundingBox(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -202,7 +199,7 @@ public class VehicleGroundDeviceBox{
 		
 		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
 		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new VehicleAxisAlignedBB(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
+		return new BoundingBox(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
 	}
 	
 	/**
@@ -210,7 +207,7 @@ public class VehicleGroundDeviceBox{
 	 * This function is used for ground device collisions only, and makes some assumptions that are incorrect
 	 * for a general-purpose function.
 	 */
-	private static double getCollisionDepthForCollisions(VehicleAxisAlignedBB groundDeviceBox, List<AxisAlignedBB> boxList){
+	private static double getCollisionDepthForCollisions(BoundingBox groundDeviceBox, List<AxisAlignedBB> boxList){
 		double collisionDepth = 0;
 		for(AxisAlignedBB box : boxList){
 			if(groundDeviceBox.minY < box.maxY){
@@ -230,7 +227,7 @@ public class VehicleGroundDeviceBox{
 	 * Returns the collisions with liquids for a given box, and not the collisions with solid blocks.
 	 * Used for doing liquid collisions with liquid ground device parts.
 	 */
-	private static List<AxisAlignedBB> getLiquidCollisions(VehicleAxisAlignedBB box, World world){
+	private static List<AxisAlignedBB> getLiquidCollisions(BoundingBox box, World world){
 		int minTestX = (int) Math.floor(box.minX);
     	int maxTestX = (int) Math.floor(box.maxX + 1.0D);
     	int minTestY = (int) Math.floor(box.minY);
@@ -247,6 +244,33 @@ public class VehicleGroundDeviceBox{
 					if(state.getMaterial().isLiquid()){
 						collidingAABBList.add(state.getBoundingBox(world, pos).offset(pos));
 					}
+    			}
+    		}
+    	}
+		return collidingAABBList;
+	}
+	
+	/**Handy collision check with extra features the default one doesn't have.*/
+	public List<AxisAlignedBB> getAABBCollisions(World world, List<BlockPos> collidedBlockPos){
+		int minTestX = (int) Math.floor(minX);
+    	int maxTestX = (int) Math.floor(maxX + 1.0D);
+    	int minTestY = (int) Math.floor(minY);
+    	int maxTestY = (int) Math.floor(maxY + 1.0D);
+    	int minTestZ = (int) Math.floor(minZ);
+    	int maxTestZ = (int) Math.floor(maxZ + 1.0D);
+    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
+    	
+    	for(int i = minTestX; i < maxTestX; ++i){
+    		for(int j = minTestY; j < maxTestY; ++j){
+    			for(int k = minTestZ; k < maxTestZ; ++k){
+    				BlockPos pos = new BlockPos(i, j, k);
+    				IBlockState state = world.getBlockState(pos);
+    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
+    					state.addCollisionBoxToList(world, pos, this, collidingAABBList, null, false);
+        				if(collidedBlockPos != null){
+        					collidedBlockPos.add(pos);
+        				}
+    				}
     			}
     		}
     	}

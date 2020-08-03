@@ -66,6 +66,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	//Boxes used for collision and interaction with this vehicle.
 	public final List<BoundingBox> vehicleCollisionBoxes = new ArrayList<BoundingBox>();
 	public final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
+	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
 	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	
@@ -122,6 +123,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Clear out interaction boxes, as some boxes may not be added this tick depending on various factors.
 		interactionBoxes.clear();
+		partInteractionBoxes.clear();
 		
 		//Part interaction boxes are linked to the part's bounding box, so we don't need to update those.
 		//Rather, the part will update them on it's own update call.
@@ -154,6 +156,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			
 			//Conditions to add have been met, do so.
 			interactionBoxes.add(part.boundingBox);
+			partInteractionBoxes.add(part.boundingBox);
 		}
 		
 		//Update part slot box positions.

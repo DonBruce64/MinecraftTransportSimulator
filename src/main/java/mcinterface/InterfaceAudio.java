@@ -17,6 +17,10 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for the audio system.  This is responsible for playing sound from vehicles/interactions.
  * As well as from the internal radio.  Note that this is mostly the same between versions, with
@@ -24,6 +28,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
  *
  * @author don_bruce
  */
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class InterfaceAudio{
 	/**Flag for game paused state.  Gets set when the game is paused.**/
 	private static boolean isSystemPaused;
@@ -45,27 +50,6 @@ public class InterfaceAudio{
 	//private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
 	private static final FloatBuffer playerVelocity = BufferUtils.createFloatBuffer(3);
 	//private static final FloatBuffer playerOrientation = BufferUtils.createFloatBuffer(6);
-	
-	/**
-	 *  Stops all sounds from playing in the passed-in dimension.
-	 *  Should be called when a dimension is un-loaded to prevent orphaned sounds.
-	 */
-	public static void haltSoundsIn(int dimension){
-		Iterator<SoundInstance> iterator = queuedSounds.iterator();
-		while(iterator.hasNext()){
-			if(iterator.next().provider.getProviderDimension() == dimension){
-				iterator.remove();
-			}
-		}
-		
-		for(SoundInstance playingSound : playingSounds){
-			if(playingSound.provider.getProviderDimension() == dimension){
-				playingSound.stop();
-			}
-		}
-        isSystemPaused = false;
-        update();
-	}
 	
 	/**
 	 *  Main update loop.  Call every tick to update playing sounds,
@@ -354,4 +338,28 @@ public class InterfaceAudio{
 		}
 		return (ByteBuffer) monoBuffer.flip();
 	}
+	
+	/**
+     * Stop all sounds when the world is unloaded.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	if(event.getWorld().isRemote){
+    		Iterator<SoundInstance> iterator = queuedSounds.iterator();
+    		while(iterator.hasNext()){
+    			if(iterator.next().provider.getProviderDimension() == event.getWorld().provider.getDimension()){
+    				iterator.remove();
+    			}
+    		}
+    		for(SoundInstance playingSound : playingSounds){
+    			if(playingSound.provider.getProviderDimension() == event.getWorld().provider.getDimension()){
+    				playingSound.stop();
+    			}
+    		}
+    		
+    		//Mark world as un-paused and update sounds to stop the ones that were just removed.
+            isSystemPaused = false;
+            update();
+    	}
+    }
 }
