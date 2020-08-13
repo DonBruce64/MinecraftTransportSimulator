@@ -3,14 +3,9 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 /**This class is a wrapper for vehicle ground device collision points.  It's used to get a point
  * to reference for ground collisions, and contains helper methods for doing calculations of those
@@ -31,24 +26,30 @@ public class VehicleGroundDeviceBox{
 	public boolean isGrounded;
 	public boolean isGroundedLiquid;
 	public double collisionDepth;
-	public BoundingBox currentBox;
-	public double xCoord;
-	public double yCoord;
-	public double zCoord;
+	public final Point3d contactPoint = new Point3d(0D, 0D, 0D);
 	
 	//The following variables are only used for intermediary calculations.
+	private BoundingBox currentBox;
+	private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<BoundingBox>();
 	private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
 	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
-	private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<BoundingBox>();
-	
 	
 	public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft){
 		this.vehicle = vehicle;
 		this.isFront = isFront;
 		this.isLeft = isLeft;
 		
-		//Get all liquid collision boxes during construction.
-		//While their actual position may change, their relative position is static.
+		//Do an initial update once constructed.
+		updateBoundingBoxes();
+		updateCollisionStatuses();
+	}
+	
+	/**
+	 * Updates what bounding boxes make up this GDB.  These can change as parts are added and removed.
+	 */
+	public void updateBoundingBoxes(){
+		//Get all liquid collision boxes.  Parts can add these via their collision boxes.
+		liquidCollisionBoxes.clear();
 		for(BoundingBox box : vehicle.collisionBoxes){
 			if(box.collidesWithLiquids){
 				if(isFront && box.localCenter.z > 0){
@@ -67,13 +68,6 @@ public class VehicleGroundDeviceBox{
 			}
 		}
 		
-		//Do an initial update once constructed.
-		updateGroundDevices();
-		update();
-	}
-	
-	/**Updates ground devices for this box.  This may be done independently of updating the box itself to save calculations.*/
-	public void updateGroundDevices(){
 		groundDevices.clear();
 		liquidDevices.clear();
 		for(APart part : vehicle.parts){
@@ -109,30 +103,35 @@ public class VehicleGroundDeviceBox{
 		}
 	}
 	
-	/**Updates this box, taking into account all ground devices and collision boxes.*/
-	public void update(){
+	/**
+	 * Updates this boxes' collision properties to take into account its new position.
+	 */
+	public void updateCollisionStatuses(){
 		//Initialize all values.
 		isCollided = false;
 		isGrounded = false;
 		collisionDepth = 0;
 		if(!groundDevices.isEmpty()){
 			currentBox = getSolidPoint();
-			final List<AxisAlignedBB> groundCollidingBoxes = currentBox.getAABBCollisions(vehicle.world, null);
-			isCollided = !groundCollidingBoxes.isEmpty();
-			isGrounded = isCollided ? false : !currentBox.offset(0, PartGroundDevice.groundDetectionOffset.y, 0).getAABBCollisions(vehicle.world, null).isEmpty();
-			collisionDepth = isCollided ? getCollisionDepthForCollisions(currentBox, groundCollidingBoxes) : 0;
-			xCoord = currentbox.localCenter.x;
-			yCoord = currentbox.localCenter.y - currentBox.height/2D;
-			zCoord = currentbox.localCenter.z;
+			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR));
+			isCollided = !currentBox.collidingBlocks.isEmpty();
+			
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(PartGroundDevice.groundDetectionOffset));
+			isGrounded = isCollided ? false : !currentBox.collidingBlocks.isEmpty();
+			collisionDepth = currentBox.currentCollisionDepth.y;
+			contactPoint.setTo(currentBox.localCenter).add(0D, -currentBox.heightRadius, 0D);
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
-			final BoundingBox liquidCollisionBox = getLiquidPoint();
-			final List<AxisAlignedBB> liquidCollidingBoxes = getLiquidCollisions(liquidCollisionBox, vehicle.world);
-			//Liquids are checked a bit differently as we already checked solids.
-			isCollidedLiquid = !liquidCollidingBoxes.isEmpty();
-			isGroundedLiquid = isCollidedLiquid ? false : !getLiquidCollisions(liquidCollisionBox.offset(0, PartGroundDevice.groundDetectionOffset.y, 0), vehicle.world).isEmpty(); 
-			double liquidCollisionDepth = isCollidedLiquid ? getCollisionDepthForCollisions(liquidCollisionBox, liquidCollidingBoxes) : 0;
+			currentBox = getLiquidPoint();
+			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR));
+			isCollidedLiquid = currentBox.collidingBlocks.isEmpty();
+			
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(PartGroundDevice.groundDetectionOffset));
+			isGroundedLiquid = isCollidedLiquid ? false : !currentBox.collidingBlocks.isEmpty();
+			double liquidCollisionDepth = currentBox.currentCollisionDepth.y;
 			
 			//If the liquid boxes are more collided, set collisions to those.
 			//Otherwise, use the solid values.
@@ -140,14 +139,14 @@ public class VehicleGroundDeviceBox{
 				isCollided = isCollidedLiquid;
 				isGrounded = isGroundedLiquid;
 				collisionDepth = liquidCollisionDepth;
-				xCoord = liquidCollisionbox.localCenter.x;
-				yCoord = liquidCollisionbox.localCenter.y - liquidCollisionBox.height/2D;
-				zCoord = liquidCollisionbox.localCenter.z;
+				contactPoint.setTo(currentBox.localCenter).add(0D, -currentBox.heightRadius, 0D);
 			}
 		}
 	}
 	
-	/**Gets the solid collision point based on position of ground devices.**/
+	/**
+	 * Gets the solid collision point based on position of ground devices.
+	 **/
 	private BoundingBox getSolidPoint(){
 		float heights = 0;
 		float widths = 0;
@@ -162,118 +161,30 @@ public class VehicleGroundDeviceBox{
 		heights /= groundDevices.size();
 		widths /= groundDevices.size();
 		boxRelativePosition.multiply(1D/groundDevices.size());
-		
-		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new BoundingBox(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, false);
+		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths, heights, widths, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
 	private BoundingBox getLiquidPoint(){
 		float heights = 0;
 		float widths = 0;
-		double xCoords = 0;
-		double yCoords = 0;
-		double zCoords = 0;
+		Point3d boxRelativePosition = new Point3d(0D, 0D, 0D);
 		
 		for(APart groundDevice : liquidDevices){
 			heights += groundDevice.getHeight();
 			widths += groundDevice.getWidth();
-			xCoords += groundDevice.totalOffset.x;
-			yCoords += groundDevice.totalOffset.y;
-			zCoords += groundDevice.totalOffset.z;
+			boxRelativePosition.add(groundDevice.totalOffset);
 		}
 		
 		for(BoundingBox box : liquidCollisionBoxes){
 			heights += box.heightRadius*2D;
 			widths += box.widthRadius*2D;
-			xCoords += box.localCenter.x;
-			yCoords += box.localCenter.y;
-			zCoords += box.localCenter.z;
+			boxRelativePosition.add(box.localCenter);
 		}
 		
 		heights /= (liquidDevices.size() + liquidCollisionBoxes.size());
 		widths /= (liquidDevices.size() + liquidCollisionBoxes.size());
-		xCoords /= (liquidDevices.size() + liquidCollisionBoxes.size());
-		yCoords /= (liquidDevices.size() + liquidCollisionBoxes.size());
-		zCoords /= (liquidDevices.size() + liquidCollisionBoxes.size());
-		
-		Point3d boxRelativePosition = new Point3d(xCoords, yCoords, zCoords);
-		Point3d offset = RotationSystem.getRotatedPoint(boxRelativePosition, vehicle.rotationPitch + vehicle.motionPitch, vehicle.rotationYaw + vehicle.motionYaw, vehicle.rotationRoll + vehicle.motionRoll);
-		return new BoundingBox(offset.add(vehicle.positionVector).add(vehicle.motionX*vehicle.SPEED_FACTOR, vehicle.motionY*vehicle.SPEED_FACTOR, vehicle.motionZ*vehicle.SPEED_FACTOR), boxRelativePosition, widths, heights, false, true);
-	}
-	
-	/**
-	 * Helper function for calculating the collision depth between a box and the boxes that collide with it.
-	 * This function is used for ground device collisions only, and makes some assumptions that are incorrect
-	 * for a general-purpose function.
-	 */
-	private static double getCollisionDepthForCollisions(BoundingBox groundDeviceBox, List<AxisAlignedBB> boxList){
-		double collisionDepth = 0;
-		for(AxisAlignedBB box : boxList){
-			if(groundDeviceBox.minY < box.maxY){
-				collisionDepth = Math.max(collisionDepth, box.maxY - groundDeviceBox.minY);
-			}
-		}
-		//Don't return small collisions.  These can be due to floating-point errors in calculations.		
-		if(Math.abs(collisionDepth) < 0.0001){
-			return 0;
-		}else{
-			return collisionDepth;
-		}
-	}
-	
-	
-	/**
-	 * Returns the collisions with liquids for a given box, and not the collisions with solid blocks.
-	 * Used for doing liquid collisions with liquid ground device parts.
-	 */
-	private static List<AxisAlignedBB> getLiquidCollisions(BoundingBox box, World world){
-		int minTestX = (int) Math.floor(box.minX);
-    	int maxTestX = (int) Math.floor(box.maxX + 1.0D);
-    	int minTestY = (int) Math.floor(box.minY);
-    	int maxTestY = (int) Math.floor(box.maxY + 1.0D);
-    	int minTestZ = (int) Math.floor(box.minZ);
-    	int maxTestZ = (int) Math.floor(box.maxZ + 1.0D);
-    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-    	
-    	for(int i = minTestX; i < maxTestX; ++i){
-    		for(int j = minTestY; j < maxTestY; ++j){
-    			for(int k = minTestZ; k < maxTestZ; ++k){
-    				BlockPos pos = new BlockPos(i, j, k);
-    				IBlockState state = world.getBlockState(pos);
-					if(state.getMaterial().isLiquid()){
-						collidingAABBList.add(state.getBoundingBox(world, pos).offset(pos));
-					}
-    			}
-    		}
-    	}
-		return collidingAABBList;
-	}
-	
-	/**Handy collision check with extra features the default one doesn't have.*/
-	public List<AxisAlignedBB> getAABBCollisions(World world, List<BlockPos> collidedBlockPos){
-		int minTestX = (int) Math.floor(minX);
-    	int maxTestX = (int) Math.floor(maxX + 1.0D);
-    	int minTestY = (int) Math.floor(minY);
-    	int maxTestY = (int) Math.floor(maxY + 1.0D);
-    	int minTestZ = (int) Math.floor(minZ);
-    	int maxTestZ = (int) Math.floor(maxZ + 1.0D);
-    	List<AxisAlignedBB> collidingAABBList = new ArrayList<AxisAlignedBB>();
-    	
-    	for(int i = minTestX; i < maxTestX; ++i){
-    		for(int j = minTestY; j < maxTestY; ++j){
-    			for(int k = minTestZ; k < maxTestZ; ++k){
-    				BlockPos pos = new BlockPos(i, j, k);
-    				IBlockState state = world.getBlockState(pos);
-    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
-    					state.addCollisionBoxToList(world, pos, this, collidingAABBList, null, false);
-        				if(collidedBlockPos != null){
-        					collidedBlockPos.add(pos);
-        				}
-    				}
-    			}
-    		}
-    	}
-		return collidingAABBList;
+		boxRelativePosition.multiply(1D/(liquidDevices.size() + liquidCollisionBoxes.size()));
+		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths, heights, widths, true, false);
 	}
 }

@@ -1,43 +1,16 @@
 package minecrafttransportsimulator.items.core;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import mcinterface.BuilderGUI;
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.INpc;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemTicket extends Item implements IItemVehicleInteractable{
+public class ItemTicket extends Item{
 	public ItemTicket(){
 		super();
 		setFull3D();
 		setMaxStackSize(1);
 	}
 	
+	//TODO make tickets into a block that can load things.
+	/*
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
@@ -98,7 +71,7 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public boolean doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick && part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
 			if(stack.hasTagCompound()){
@@ -121,5 +94,5 @@ public class ItemTicket extends Item implements IItemVehicleInteractable{
 				}
 			}
 		}
-	}
+	}*/
 }

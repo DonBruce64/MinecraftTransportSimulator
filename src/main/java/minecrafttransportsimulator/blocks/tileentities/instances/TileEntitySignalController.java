@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -38,6 +39,23 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	
 	//Locations of blocks.
 	public final List<Point3i> componentLocations = new ArrayList<Point3i>();
+	
+	public TileEntitySignalController(WrapperWorld world, Point3i position, WrapperNBT data){
+		super(world, position, data);
+		//Load state data.
+		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
+		currentOpState = OpState.values()[data.getInteger("currentOpState")];
+		timeOperationStarted = data.getInteger("timeOperationStarted");
+		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
+        greenMainTime = data.getInteger("greenMainTime");
+        greenCrossTime = data.getInteger("greenCrossTime");
+        yellowMainTime = data.getInteger("yellowMainTime");
+        yellowCrossTime = data.getInteger("yellowCrossTime");
+        allRedTime = data.getInteger("allRedTime");
+        
+        componentLocations.clear();
+        componentLocations.addAll(data.getPoints("componentLocations"));
+	}
 	
 	@Override
 	public void update(){
@@ -166,27 +184,11 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public RenderDecor getRenderer(){
 		return new RenderDecor();
 	}
-	
-	@Override
-    public void load(WrapperNBT data){
-		super.load(data);
-		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
-		currentOpState = OpState.values()[data.getInteger("currentOpState")];
-		timeOperationStarted = data.getInteger("timeOperationStarted");
-		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
-        greenMainTime = data.getInteger("greenMainTime");
-        greenCrossTime = data.getInteger("greenCrossTime");
-        yellowMainTime = data.getInteger("yellowMainTime");
-        yellowCrossTime = data.getInteger("yellowCrossTime");
-        allRedTime = data.getInteger("allRedTime");
-        
-        componentLocations.clear();
-        componentLocations.addAll(data.getPoints("componentLocations"));
-    }
     
 	@Override
     public void save(WrapperNBT data){

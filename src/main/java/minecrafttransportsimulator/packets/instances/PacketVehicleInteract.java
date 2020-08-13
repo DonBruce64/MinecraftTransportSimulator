@@ -57,7 +57,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
 		//Otherwise, try to do part-based interaction.
 		if(heldStack.getItem() instanceof IItemVehicleInteractable){
-			CallbackType callback = ((IItemVehicleInteractable) heldStack.getItem()).doVehicleInteraction(heldStack, vehicle, part, player, ownerState, type.rightClick);
+			CallbackType callback = ((IItemVehicleInteractable) heldStack.getItem()).doVehicleInteraction(vehicle, part, player, ownerState, type.rightClick);
 			if(callback.equals(CallbackType.ALL)){
 				return true;
 			}else if(callback.equals(CallbackType.PLAYER)){

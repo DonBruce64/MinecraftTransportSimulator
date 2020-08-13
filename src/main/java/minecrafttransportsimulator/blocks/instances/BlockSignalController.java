@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import mcinterface.BuilderGUI;
+import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
@@ -8,9 +9,8 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 
-public class BlockSignalController extends ABlockBase implements IBlockTileEntity<JSONDecor>{
+public class BlockSignalController extends ABlockBase implements IBlockTileEntity<TileEntitySignalController>{
 	
 	public BlockSignalController(){
 		super(10.0F, 5.0F);
@@ -23,9 +23,14 @@ public class BlockSignalController extends ABlockBase implements IBlockTileEntit
 		}
 		return true;
 	}
-	
+
 	@Override
-	public TileEntitySignalController createTileEntity(){
-		return new TileEntitySignalController();
+	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+		return new TileEntitySignalController(world, position, data);
+	}
+
+	@Override
+	public Class<TileEntitySignalController> getTileEntityClass(){
+		return TileEntitySignalController.class;
 	}
 }

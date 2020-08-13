@@ -3,8 +3,8 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.WrapperNBT;
 import mcinterface.BuilderTileEntity;
+import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -19,39 +19,37 @@ import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
  * update the wrapper rather than the whole Tile Entity. In essence, this class holds the data and state of the
  * Tile Entity, while the wrapper ensures that the state gets saved to disk and the appropriate render gets
  * called.  Note that all TileEntities are used for making pack-based blocks, so they have JSON parameters
- * attached to them.
+ * attached to them.  
+ * <br><br>
+ * Note that this constructor is called on the server when first creating the TE or loading it from disk,
+ * but on the client this is called after the server sends over the saved data, not when the player first clicks.
+ * Because of this, there there may be a slight delay in the TE showing up from when the block is first clicked.
  *
  * @author don_bruce
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>>{
-	/**Current world for this TileEntity.  May be null in some cases right after construction.**/
-	public WrapperWorld world;
-	/**Current position of this TileEntity.  Set both manually and during loading from world.**/
-	public Point3i position;
+	/**Current world for this TileEntity.**/
+	public final WrapperWorld world;
+	/**Current position of this TileEntity.**/
+	public final Point3i position;
+	/**JSON definition for this tileEntity.**/
+	public final JSONDefinition definition;
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
-	/**JSON definition for this tileEntity.  Private to allow getter/setter post-definition assignment logic.**/
-	private JSONDefinition definition;
+	
+	@SuppressWarnings("unchecked")
+	public ATileEntityBase(WrapperWorld world, Point3i position, WrapperNBT data){
+		this.world = world;
+		this.position = position;
+		this.definition = (JSONDefinition) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
+		this.lightLevel = (float) data.getDouble("lightLevel");
+	}
 	
 	/**
 	 *  Gets the block that's associated with this TileEntity.
 	 */
 	public ABlockBase getBlock(){
 		return world.getBlock(position);
-	}
-	
-	/**
-	 *  Returns the definition for this TileEntity.
-	 */
-	public JSONDefinition getDefinition(){
-		return definition;
-	}
-	
-	/**
-	 *  Sets the definition for this TileEntity.
-	 */
-	public void setDefinition(JSONDefinition definition){
-		this.definition = definition;
 	}
 	
 	/**
@@ -66,38 +64,18 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 		}
 		return drops;
 	}
-
-	/**
-	 *  Called when the TileEntity is loaded from saved data.  This method is called
-	 *  on the server when loading from disk, but it's not called on the client until
-	 *  the client gets the supplemental data packet with the rest of the data.
-	 *  Because of this, things may be null on client-sided construction time!
-	 */
-	@SuppressWarnings("unchecked")
-	public void load(WrapperNBT data){
-		String packID = data.getString("packID");
-		String systemName = data.getString("systemName");
-		if(!packID.isEmpty()){
-			setDefinition((JSONDefinition) MTSRegistry.packItemMap.get(packID).get(systemName).definition);
-			lightLevel = (float) data.getDouble("lightLevel");
-		}
-	}
 	
 	/**
 	 *  Called when the TileEntity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
 	public void save(WrapperNBT data){
-		if(definition != null){
-			data.setString("packID", definition.packID);
-			data.setString("systemName", definition.systemName);
-			data.setDouble("lightLevel", lightLevel);
-		}
+		data.setDouble("lightLevel", lightLevel);
 	}
 
 	
 	/**
 	 *  Called to get a render for this TE.  Only called on the client.
 	 */
-	public abstract ARenderTileEntityBase<? extends ATileEntityBase<JSONDefinition>, ? extends IBlockTileEntity<JSONDefinition>> getRenderer();
+	public abstract <TileEntityType extends ATileEntityBase<JSONDefinition>> ARenderTileEntityBase<TileEntityType, ? extends IBlockTileEntity<TileEntityType>> getRenderer();
 }

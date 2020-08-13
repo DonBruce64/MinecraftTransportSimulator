@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
@@ -42,8 +43,10 @@ public abstract class AEntityBase{
 	public static Map<Integer, AEntityBase> createdEntities = new HashMap<Integer, AEntityBase>();
 	
 	public final BuilderEntity builder;
+	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
-	public final WrapperWorld world;
+	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.**/
+	public final String uniqueUUID;
 	public final Point3d position;
 	public final Point3d prevPosition;
 	public final Point3d motion;
@@ -52,6 +55,7 @@ public abstract class AEntityBase{
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
+	public final WrapperWorld world;
 	
 	/**True as long as this entity is part of the world and being ticked.**/
 	public boolean isValid = true;
@@ -59,8 +63,6 @@ public abstract class AEntityBase{
 	/**Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of updates.**/
 	public long ticksExisted;
 	
-	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.**/
-	public String uniqueUUID;
 	
 	/**List of bounding boxes that should be used for collision of other entities with this entity.**/
 	public List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
@@ -88,7 +90,7 @@ public abstract class AEntityBase{
 	public AEntityBase(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
 		this.builder = builder;
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
-		this.uniqueUUID = data.getString("uniqueUUID");
+		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
 		this.position = data.getPoint3d("position");
 		this.prevPosition = position.copy();

@@ -5,52 +5,39 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 /**Builder for the MC Tile Entity class (called BlockEntity in later MC versions cause
  * the people who maintain the mappings like to make life difficult through constant
  * re-naming of things).  This class interfaces with all the MC-specific code, and is 
- * constructed by feeding it an instance of {@link ATileEntityBase}.  This constructor
- * is package-private, as it should only be used by {@link BuilderBlock} to return
- * a Tile Entity for Minecraft to use.  Note that MC re-constructs this class with an
- * empty constructor, so the TE variable may be null for a bit after construction.
- * 
+ * constructed on the server automatically by MC.  After construction, a tile entity
+ * class that extends {@link ATileEntityBase} should be assigned to it.  This is either
+ * done manually on the first placement, or automatically via loading from NBT.
+ * <br><br>
+ * Of course, one might ask, "why not just construct the TE class when we construct this one?".
+ * That's a good point, but MC doesn't work like that.  MC waits to assign the world and position
+ * to TEs, so if we construct our TE right away, we'll end up with TONS of NPES.  To avoid this,
+ * we only construct our TE after the world and position get assigned.  At that point, we make the
+ * TE if we're on the server.  If we're on the client, we always way for NBT, as we need to
+ * sync with the server's data.
+ * <br><br>
  * If ticking functionality is needed, have the tile entity implement {@link ITileEntityTickable}.
  * This will make the built TE call the {@link ITileEntityTickable#update()} method
  * each tick.
  *
  * @author don_bruce
  */
-public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
+public class BuilderTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>>> extends TileEntity{
 	protected TileEntityType tileEntity;
 	
 	public BuilderTileEntity(){
-		//Blank constructor for MC.  We set the TE variable in NBT instead.
-	}
-	
-	BuilderTileEntity(TileEntityType tileEntity){
-		this.tileEntity = tileEntity;
-	}
-	
-	@Override
-	public void setWorld(World world){
-        super.setWorld(world);
-        //Need to set the world wrapper here of the actual TE.
-        tileEntity.world = new WrapperWorld(world);
-    }
-	
-	@Override
-	public void setPos(BlockPos pos){
-		super.setPos(pos);
-		//Need to set the position here of the actual TE.
-		tileEntity.position = new Point3i(pos.getX(), pos.getY(), pos.getZ());
+		//Blank constructor for MC.
 	}
 	
 	@Override
@@ -64,17 +51,21 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	@Nullable
     public SPacketUpdateTileEntity getUpdatePacket(){
 		//Gets called when we do a blockstate update for this TE.
-		//Done during initial placedown so we need to get the full data for inital state. 
+		//Done during initial placedown so we need to get the full data for initial state. 
 		NBTTagCompound tag = new NBTTagCompound();
 		tileEntity.save(new WrapperNBT(tag));
 	    return new SPacketUpdateTileEntity(getPos(), -1, tag);
     }
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
 		//Called when the client gets a TE update packet.
-		//We load the server-sent data here.
-		tileEntity.load(new WrapperNBT(pkt.getNbtCompound()));
+		//Create our client-side TE here if required.
+		if(tileEntity == null){
+			//Get the block that makes this TE and restore it from saved state.
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
+		}
 	}
 	
 	@Override
@@ -89,23 +80,21 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		return new AxisAlignedBB(pos).grow(8);
 	}
 	
-	@Override
 	@SuppressWarnings("unchecked")
+	@Override
     public void readFromNBT(NBTTagCompound tag){
 		super.readFromNBT(tag);
 		if(tileEntity == null){
-			//Get the block that makes this TE and restore it from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity();
+			//Restore the TE from saved state.
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
 		}
-		tileEntity.position = new Point3i(pos.getX(), pos.getY(), pos.getZ());
-        tileEntity.load(new WrapperNBT(tag));
     }
     
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
 		tileEntity.save(new WrapperNBT(tag));
-		//Also save the class ID so we know what to construct when we load from the world.
+		//Also save the class ID so we know what to construct when MC loads this TE back up.
 		tag.setString("teid", tileEntity.getClass().getSimpleName());
         return tag;
     }
@@ -114,14 +103,10 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     *
     * @author don_bruce
     */
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<?>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
 	    
 		public Tickable(){
-			//Blank constructor for MC.  We set the TE variable in NBT instead.
-		}
-	    
-		Tickable(TickableTileEntity tileEntity){
-			super(tileEntity);
+			super();
 		}
 		
 		@Override

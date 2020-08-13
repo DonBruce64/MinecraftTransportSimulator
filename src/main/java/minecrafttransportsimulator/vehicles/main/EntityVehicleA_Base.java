@@ -48,6 +48,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		//Set position to the spot that was clicked by the player.
 		//Add a -90 rotation offset so the vehicle is facing perpendicular.
 		//Makes placement easier and is less likely for players to get stuck.
+		//FIXME set inital definition in NBT data.
 		this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
 		
 		//Add parts.

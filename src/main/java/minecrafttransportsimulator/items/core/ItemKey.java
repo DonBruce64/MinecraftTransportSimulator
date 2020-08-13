@@ -35,7 +35,7 @@ public class ItemKey extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				if(player.isSneaking()){
@@ -54,6 +54,7 @@ public class ItemKey extends Item implements IItemVehicleInteractable{
 				}else{
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
+					ItemStack stack = player.getHeldStack();
 					String keyVehicleUUID = stack.hasTagCompound() ? stack.getTagCompound().getString("vehicle") : "";
 					if(keyVehicleUUID.isEmpty()){
 						//Check if we are the owner before making this a valid key.

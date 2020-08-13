@@ -16,8 +16,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class BuilderBlockFakeLight extends BlockAir{
-	//TODO make this package-private when vehicles get wrapped.
-	public static BuilderBlockFakeLight instance = new BuilderBlockFakeLight();
+	static BuilderBlockFakeLight instance = new BuilderBlockFakeLight();
 	
     BuilderBlockFakeLight(){
 		super();

@@ -37,7 +37,7 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdEntities.get(vehicleID); 
 			if(vehicle != null){
 				pump.connectedVehicle = vehicle;
-				pump.totalTransfered = 0;
+				pump.getTank().resetAmountDispensed();
 			}
 		}else{
 			pump.connectedVehicle = null;

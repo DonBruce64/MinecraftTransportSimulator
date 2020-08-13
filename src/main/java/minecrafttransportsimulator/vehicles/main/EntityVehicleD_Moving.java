@@ -98,17 +98,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 		
 		//Create boxes if we haven't yet.
-		//Update ground devices for them if we have.
+		//Update the BoundingBoxes that make them up if we have.
 		if(frontLeftGroundDeviceBox == null){
 			frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, true);
 			frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, false);
 			rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, true);
 			rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, false);
 		}else{
-			frontLeftGroundDeviceBox.updateGroundDevices();
-			frontRightGroundDeviceBox.updateGroundDevices();
-			rearLeftGroundDeviceBox.updateGroundDevices();
-			rearRightGroundDeviceBox.updateGroundDevices();
+			frontLeftGroundDeviceBox.updateBoundingBoxes();
+			frontRightGroundDeviceBox.updateBoundingBoxes();
+			rearLeftGroundDeviceBox.updateBoundingBoxes();
+			rearRightGroundDeviceBox.updateBoundingBoxes();
 		}
 		
 		//Now do update calculations and logic.
@@ -238,10 +238,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 						motion.y = 0;
 					}
 					
-					frontLeftGroundDeviceBox.update();
-					frontRightGroundDeviceBox.update();
-					rearLeftGroundDeviceBox.update();
-					rearRightGroundDeviceBox.update();
+					frontLeftGroundDeviceBox.updateCollisionStatuses();
+					frontRightGroundDeviceBox.updateCollisionStatuses();
+					rearLeftGroundDeviceBox.updateCollisionStatuses();
+					rearRightGroundDeviceBox.updateCollisionStatuses();
 					return motion.y > 0 ? motion.y : 0;
 				}
 			}else{
@@ -249,10 +249,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					double collisionDepth = Math.max(rearLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth);
 					double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 					motion.y += motionToNotCollide;
-					frontLeftGroundDeviceBox.update();
-					frontRightGroundDeviceBox.update();
-					rearLeftGroundDeviceBox.update();
-					rearRightGroundDeviceBox.update();
+					frontLeftGroundDeviceBox.updateCollisionStatuses();
+					frontRightGroundDeviceBox.updateCollisionStatuses();
+					rearLeftGroundDeviceBox.updateCollisionStatuses();
+					rearRightGroundDeviceBox.updateCollisionStatuses();
 					return motion.y;
 				}
 			}
@@ -261,19 +261,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double collisionDepth = Math.max(frontLeftGroundDeviceBox.collisionDepth, frontRightGroundDeviceBox.collisionDepth);
 				double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 				motion.y += motionToNotCollide;
-				frontLeftGroundDeviceBox.update();
-				frontRightGroundDeviceBox.update();
-				rearLeftGroundDeviceBox.update();
-				rearRightGroundDeviceBox.update();
+				frontLeftGroundDeviceBox.updateCollisionStatuses();
+				frontRightGroundDeviceBox.updateCollisionStatuses();
+				rearLeftGroundDeviceBox.updateCollisionStatuses();
+				rearRightGroundDeviceBox.updateCollisionStatuses();
 				return motion.y;
 			}else if(rotation.x < 0 && (rearLeftGroundDeviceBox.isCollided || rearRightGroundDeviceBox.isCollided)){
 				double collisionDepth = Math.max(rearLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth);
 				double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 				motion.y += motionToNotCollide;
-				frontLeftGroundDeviceBox.update();
-				frontRightGroundDeviceBox.update();
-				rearLeftGroundDeviceBox.update();
-				rearRightGroundDeviceBox.update();
+				frontLeftGroundDeviceBox.updateCollisionStatuses();
+				frontRightGroundDeviceBox.updateCollisionStatuses();
+				rearLeftGroundDeviceBox.updateCollisionStatuses();
+				rearRightGroundDeviceBox.updateCollisionStatuses();
 				return motion.y;
 			}
 		}
@@ -438,12 +438,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double frontZ;
 			double collisionDepth;
 			if(frontLeftGroundDeviceBox.collisionDepth > frontRightGroundDeviceBox.collisionDepth){
-				frontY = frontLeftGroundDeviceBox.yCoord;
-				frontZ = frontLeftGroundDeviceBox.zCoord;
+				frontY = frontLeftGroundDeviceBox.contactPoint.y;
+				frontZ = frontLeftGroundDeviceBox.contactPoint.z;
 				collisionDepth = frontLeftGroundDeviceBox.collisionDepth;
 			}else{
-				frontY = frontRightGroundDeviceBox.yCoord;
-				frontZ = frontRightGroundDeviceBox.zCoord;
+				frontY = frontRightGroundDeviceBox.contactPoint.y;
+				frontZ = frontRightGroundDeviceBox.contactPoint.z;
 				collisionDepth = frontRightGroundDeviceBox.collisionDepth;
 			}
 			
@@ -452,19 +452,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double rearY;
 				double rearZ;
 				if(rearLeftGroundDeviceBox.isGrounded && rearRightGroundDeviceBox.isGrounded){
-					if(rearLeftGroundDeviceBox.zCoord < rearRightGroundDeviceBox.zCoord){
-						rearY = rearLeftGroundDeviceBox.yCoord;
-						rearZ = rearLeftGroundDeviceBox.zCoord;
+					if(rearLeftGroundDeviceBox.contactPoint.z < rearRightGroundDeviceBox.contactPoint.z){
+						rearY = rearLeftGroundDeviceBox.contactPoint.y;
+						rearZ = rearLeftGroundDeviceBox.contactPoint.z;
 					}else{
-						rearY = rearRightGroundDeviceBox.yCoord;
-						rearZ = rearRightGroundDeviceBox.zCoord;
+						rearY = rearRightGroundDeviceBox.contactPoint.y;
+						rearZ = rearRightGroundDeviceBox.contactPoint.z;
 					}
 				}else if(rearLeftGroundDeviceBox.isGrounded){
-					rearY = rearLeftGroundDeviceBox.yCoord;
-					rearZ = rearLeftGroundDeviceBox.zCoord;
+					rearY = rearLeftGroundDeviceBox.contactPoint.y;
+					rearZ = rearLeftGroundDeviceBox.contactPoint.z;
 				}else{
-					rearY = rearRightGroundDeviceBox.yCoord;
-					rearZ = rearRightGroundDeviceBox.zCoord;
+					rearY = rearRightGroundDeviceBox.contactPoint.y;
+					rearZ = rearRightGroundDeviceBox.contactPoint.z;
 				}
 
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
@@ -497,12 +497,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double rearZ;
 			double collisionDepth;
 			if(rearLeftGroundDeviceBox.collisionDepth > rearRightGroundDeviceBox.collisionDepth){
-				rearY = rearLeftGroundDeviceBox.yCoord;
-				rearZ = rearLeftGroundDeviceBox.zCoord;
+				rearY = rearLeftGroundDeviceBox.contactPoint.y;
+				rearZ = rearLeftGroundDeviceBox.contactPoint.z;
 				collisionDepth = rearLeftGroundDeviceBox.collisionDepth;
 			}else{
-				rearY = rearRightGroundDeviceBox.yCoord;
-				rearZ = rearRightGroundDeviceBox.zCoord;
+				rearY = rearRightGroundDeviceBox.contactPoint.y;
+				rearZ = rearRightGroundDeviceBox.contactPoint.z;
 				collisionDepth = rearRightGroundDeviceBox.collisionDepth;
 			}
 			
@@ -511,19 +511,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double frontY;
 				double frontZ;
 				if(frontLeftGroundDeviceBox.isGrounded && frontRightGroundDeviceBox.isGrounded){
-					if(frontLeftGroundDeviceBox.zCoord > frontRightGroundDeviceBox.zCoord){
-						frontY = frontLeftGroundDeviceBox.yCoord;
-						frontZ = frontLeftGroundDeviceBox.zCoord;
+					if(frontLeftGroundDeviceBox.contactPoint.z > frontRightGroundDeviceBox.contactPoint.z){
+						frontY = frontLeftGroundDeviceBox.contactPoint.y;
+						frontZ = frontLeftGroundDeviceBox.contactPoint.z;
 					}else{
-						frontY = frontRightGroundDeviceBox.yCoord;
-						frontZ = frontRightGroundDeviceBox.zCoord;
+						frontY = frontRightGroundDeviceBox.contactPoint.y;
+						frontZ = frontRightGroundDeviceBox.contactPoint.z;
 					}
 				}else if(frontLeftGroundDeviceBox.isGrounded){
-					frontY = frontLeftGroundDeviceBox.yCoord;
-					frontZ = frontLeftGroundDeviceBox.zCoord;
+					frontY = frontLeftGroundDeviceBox.contactPoint.y;
+					frontZ = frontLeftGroundDeviceBox.contactPoint.z;
 				}else{
-					frontY = frontRightGroundDeviceBox.yCoord;
-					frontZ = frontRightGroundDeviceBox.zCoord;
+					frontY = frontRightGroundDeviceBox.contactPoint.y;
+					frontZ = frontRightGroundDeviceBox.contactPoint.z;
 				}
 
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
@@ -574,12 +574,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double rightX;
 			double collisionDepth;
 			if(frontRightGroundDeviceBox.collisionDepth > rearRightGroundDeviceBox.collisionDepth){
-				rightY = frontRightGroundDeviceBox.yCoord;
-				rightX = frontRightGroundDeviceBox.xCoord;
+				rightY = frontRightGroundDeviceBox.contactPoint.y;
+				rightX = frontRightGroundDeviceBox.contactPoint.x;
 				collisionDepth = frontRightGroundDeviceBox.collisionDepth;
 			}else{
-				rightY = rearRightGroundDeviceBox.yCoord;
-				rightX = rearRightGroundDeviceBox.xCoord;
+				rightY = rearRightGroundDeviceBox.contactPoint.y;
+				rightX = rearRightGroundDeviceBox.contactPoint.x;
 				collisionDepth = rearRightGroundDeviceBox.collisionDepth;
 			}
 			
@@ -588,19 +588,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double leftY;
 				double leftX;
 				if(frontLeftGroundDeviceBox.isGrounded && rearLeftGroundDeviceBox.isGrounded){
-					if(frontLeftGroundDeviceBox.xCoord < rearLeftGroundDeviceBox.xCoord){
-						leftY = frontLeftGroundDeviceBox.yCoord;
-						leftX = frontLeftGroundDeviceBox.xCoord;
+					if(frontLeftGroundDeviceBox.contactPoint.x < rearLeftGroundDeviceBox.contactPoint.x){
+						leftY = frontLeftGroundDeviceBox.contactPoint.y;
+						leftX = frontLeftGroundDeviceBox.contactPoint.x;
 					}else{
-						leftY = rearLeftGroundDeviceBox.yCoord;
-						leftX = rearLeftGroundDeviceBox.xCoord;
+						leftY = rearLeftGroundDeviceBox.contactPoint.y;
+						leftX = rearLeftGroundDeviceBox.contactPoint.x;
 					}
 				}else if(frontLeftGroundDeviceBox.isGrounded){
-					leftY = frontLeftGroundDeviceBox.yCoord;
-					leftX = frontLeftGroundDeviceBox.xCoord;
+					leftY = frontLeftGroundDeviceBox.contactPoint.y;
+					leftX = frontLeftGroundDeviceBox.contactPoint.x;
 				}else{
-					leftY = rearLeftGroundDeviceBox.yCoord;
-					leftX = rearLeftGroundDeviceBox.xCoord;
+					leftY = rearLeftGroundDeviceBox.contactPoint.y;
+					leftX = rearLeftGroundDeviceBox.contactPoint.x;
 				}
 
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
@@ -633,12 +633,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double leftX;
 			double collisionDepth;
 			if(frontLeftGroundDeviceBox.collisionDepth > rearLeftGroundDeviceBox.collisionDepth){
-				leftY = frontLeftGroundDeviceBox.yCoord;
-				leftX = frontLeftGroundDeviceBox.xCoord;
+				leftY = frontLeftGroundDeviceBox.contactPoint.y;
+				leftX = frontLeftGroundDeviceBox.contactPoint.x;
 				collisionDepth = frontLeftGroundDeviceBox.collisionDepth;
 			}else{
-				leftY = rearLeftGroundDeviceBox.yCoord;
-				leftX = rearLeftGroundDeviceBox.xCoord;
+				leftY = rearLeftGroundDeviceBox.contactPoint.y;
+				leftX = rearLeftGroundDeviceBox.contactPoint.x;
 				collisionDepth = rearLeftGroundDeviceBox.collisionDepth;
 			}
 			
@@ -647,19 +647,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double rightY;
 				double rightX;
 				if(frontRightGroundDeviceBox.isGrounded && rearRightGroundDeviceBox.isGrounded){
-					if(frontRightGroundDeviceBox.xCoord > rearRightGroundDeviceBox.xCoord){
-						rightY = frontRightGroundDeviceBox.yCoord;
-						rightX = frontRightGroundDeviceBox.xCoord;
+					if(frontRightGroundDeviceBox.contactPoint.x > rearRightGroundDeviceBox.contactPoint.x){
+						rightY = frontRightGroundDeviceBox.contactPoint.y;
+						rightX = frontRightGroundDeviceBox.contactPoint.x;
 					}else{
-						rightY = rearRightGroundDeviceBox.yCoord;
-						rightX = rearRightGroundDeviceBox.xCoord;
+						rightY = rearRightGroundDeviceBox.contactPoint.y;
+						rightX = rearRightGroundDeviceBox.contactPoint.x;
 					}
 				}else if(frontRightGroundDeviceBox.isGrounded){
-					rightY = frontRightGroundDeviceBox.yCoord;
-					rightX = frontRightGroundDeviceBox.xCoord;
+					rightY = frontRightGroundDeviceBox.contactPoint.y;
+					rightX = frontRightGroundDeviceBox.contactPoint.x;
 				}else{
-					rightY = rearRightGroundDeviceBox.yCoord;
-					rightX = rearRightGroundDeviceBox.xCoord;
+					rightY = rearRightGroundDeviceBox.contactPoint.y;
+					rightX = rearRightGroundDeviceBox.contactPoint.x;
 				}
 
 				//Finally, get the distance between the two points and the angle needed to get out of the collision.
@@ -696,10 +696,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	private void moveVehicle(){
 		//First, populate the variables for ground and collided states for the groundDevices.
-		frontLeftGroundDeviceBox.update();
-		frontRightGroundDeviceBox.update();
-		rearLeftGroundDeviceBox.update();
-		rearRightGroundDeviceBox.update();
+		frontLeftGroundDeviceBox.updateCollisionStatuses();
+		frontRightGroundDeviceBox.updateCollisionStatuses();
+		rearLeftGroundDeviceBox.updateCollisionStatuses();
+		rearRightGroundDeviceBox.updateCollisionStatuses();
 		
 		//Now check to make sure our ground devices are in the right spot relative to the ground.
 		double groundCollisionBoost = correctMotionYMovement();

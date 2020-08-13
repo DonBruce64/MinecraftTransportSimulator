@@ -2,8 +2,10 @@ package mcinterface;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
+import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
@@ -19,17 +21,14 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 /**Builder for tile entities that contain fluids.  This builder does not tick.
  * If you need a tickable instance, use {@link BuilderTileEntityFluidTank.Tickable} instead.
+ * Rather that implementing things directly, this builder just re-routes all calls the the tank-based builder.
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityFluidTank<?>> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
-    
-    public BuilderTileEntityFluidTank(){
-		//Blank constructor for MC.  We set the TE variable in NBT instead.
-	}
-    
-	BuilderTileEntityFluidTank(FluidTankTileEntity tileEntity){
-		super(tileEntity);
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
+	
+	public BuilderTileEntityFluidTank(){
+		super();
 	}
 
 	@Override
@@ -39,17 +38,17 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 
 	@Override
 	public FluidStack getFluid(){
-		return tileEntity != null && !tileEntity.getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getFluid()), tileEntity.getFluidLevel()) : null;
+		return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getTank().getFluid()), tileEntity.getTank().getFluidLevel()) : null;
 	}
 
 	@Override
 	public int getFluidAmount(){
-		return tileEntity != null ? tileEntity.getFluidLevel() : 0;
+		return tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0;
 	}
 
 	@Override
 	public int getCapacity(){
-		return tileEntity != null ? tileEntity.getFluidLevel() : 0;
+		return tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0;
 	}
 
 	@Override
@@ -60,7 +59,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
 		if(tileEntity != null){
-			int fillAmount = tileEntity.fill(stack.getFluid().getName(), stack.amount, doFill);
+			int fillAmount = tileEntity.getTank().fill(stack.getFluid().getName(), stack.amount, doFill);
 			if(fillAmount > 0 && doFill){
 				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(stack.getFluid(), fillAmount), world, getPos(), this, fillAmount));
 			}
@@ -80,7 +79,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		int drainAmount = tileEntity != null ? tileEntity.drain(stack.getFluid().getName(), stack.amount, doDrain) : 0;
+		int drainAmount = tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), stack.amount, doDrain) : 0;
 		if(drainAmount > 0 && doDrain){
 			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(stack.getFluid(), drainAmount), world, getPos(), this, drainAmount));
 		}
@@ -113,14 +112,10 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityF
      *
      * @author don_bruce
      */
-	public static class Tickable<TickableTileEntity extends ATileEntityFluidTank<?>> extends BuilderTileEntityFluidTank<TickableTileEntity> implements ITickable{
-	    
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> extends BuilderTileEntityFluidTank<TickableTileEntity> implements ITickable{
+		
 		public Tickable(){
-			//Blank constructor for MC.  We set the TE variable in NBT instead.
-		}
-	    
-		Tickable(TickableTileEntity tileEntity){
-			super(tileEntity);
+			super();
 		}
 		
 		@Override

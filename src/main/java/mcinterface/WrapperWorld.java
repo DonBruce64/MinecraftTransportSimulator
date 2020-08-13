@@ -18,7 +18,11 @@ import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockSlab;
+import net.minecraft.block.IGrowable;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -26,14 +30,20 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraftforge.common.IPlantable;
 
 /**Wrapper for the world class.  This wrapper contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -244,8 +254,8 @@ public class WrapperWorld{
 			box.globalCenter.y + box.heightRadius,
 			box.globalCenter.z + box.depthRadius
 		);
+		
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
-		box.currentCollisionDepth.set(0D, 0D, 0D);
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.floor(mcBox.maxX + 1); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.floor(mcBox.maxY + 1); ++j){
     			for(int k = (int) Math.floor(mcBox.minZ); k < Math.floor(mcBox.maxZ + 1); ++k){
@@ -265,6 +275,7 @@ public class WrapperWorld{
     		}
     	}
 		
+		box.currentCollisionDepth.set(0D, 0D, 0D);
 		for(AxisAlignedBB colBox : collidingAABBs){
 			if(collisionMotion.x > 0){
 				double testDepthX = mcBox.maxX - colBox.minX;
@@ -331,7 +342,7 @@ public class WrapperWorld{
 	 *  Returns true if the block was placed, false if not.
 	 */
     @SuppressWarnings("unchecked")
-	public <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer player, Axis axis){
+	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer player, Axis axis){
     	if(!world.isRemote){
 	    	BuilderBlock wrapper = BuilderBlock.blockWrapperMap.get(block);
 	    	ItemStack stack = player.getHeldStack();
@@ -346,12 +357,13 @@ public class WrapperWorld{
 	            if(world.setBlockState(pos, newState, 11)){
 	            	//Block is set.  See if we need to set TE data.
 	            	if(block instanceof IBlockTileEntity){
-	            		ATileEntityBase<JSONDefinition> tile = (ATileEntityBase<JSONDefinition>) getTileEntity(location);
-	            		if(stack.hasTagCompound()){
-	            			tile.load(new WrapperNBT(stack.getTagCompound()));
-	            		}else{
-	            			tile.setDefinition(((AItemPack<JSONDefinition>) stack.getItem()).definition);
+	            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
+	            		WrapperNBT data = new WrapperNBT(stack);
+	            		if(stack.getItem() instanceof AItemPack){
+		            		data.setString("packID", ((AItemPack<JSONDefinition>) stack.getItem()).definition.packID);
+		            		data.setString("systemName", ((AItemPack<JSONDefinition>) stack.getItem()).definition.systemName);
 	            		}
+	            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
 	            	}
 	            	//Send place event to block class, and also send initial update cheeck.
 	            	block.onPlaced(this, location, player);
@@ -362,6 +374,14 @@ public class WrapperWorld{
     	}
     	return false;
     }
+    
+    /**
+	 *  Gets the wrapper TE at the specified position.
+	 */
+	public WrapperTileEntity getWrapperTileEntity(Point3i position){
+		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
+		return tile != null ? new WrapperTileEntity(tile) : null;
+	}
 	
 	/**
 	 *  Returns the tile entity at the passed-in location, or null if it doesn't exist in the world.
@@ -402,18 +422,6 @@ public class WrapperWorld{
 			//This needs to get fired manually as even if we update the blockstate the light value won't change
 			//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
 			world.checkLight(pos);
-		}
-	}
-	
-	/**
-	 *  Sets a fake light block at the passed-in position.
-	 *  Only sets the fake light if the block at the passed-in position is air.
-	 *  Make sure you track this position and remove the light when it's not in-use! 
-	 */
-	public void setFakeLight(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
-		if(world.isAirBlock(pos)){
-			world.setBlockState(pos, BuilderBlockFakeLight.instance.getDefaultState());
 		}
 	}
 	
@@ -466,13 +474,126 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Tries to fertilize the block with the passed-in item.
+	 *  Returns true if the block was fertilized.
+	 */
+	public boolean fertilizeBlock(Point3i point, ItemStack stack){
+		//Check if the item can fertilize things and we are on the server.
+		if(stack.getItem().equals(Items.DYE) && !world.isRemote){
+			//Check if we are in crops.
+			BlockPos cropPos = new BlockPos(point.x, point.y, point.z);
+			IBlockState cropState = world.getBlockState(cropPos);
+			Block cropBlock = cropState.getBlock();
+			if(cropBlock instanceof IGrowable){
+	            IGrowable growable = (IGrowable)cropState.getBlock();
+	            if(growable.canGrow(world, cropPos, cropState, world.isRemote)){
+	            	ItemDye.applyBonemeal(stack.copy(), world, cropPos);
+					return true;
+	            }
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 *  Tries to harvest the block at the passed-in location.  If the harvest was
+	 *  successful, and the block harvested was crops, the result returned is a list
+	 *  of the drops from the crops.  If the crops couldn't be harvested, null is returned.
+	 *  If the block was harvested, but not crops, then the resulting drops
+	 *  are dropped on the ground and an empty list is returned.
+	 */
+	public List<ItemStack> harvestBlock(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState state = world.getBlockState(pos);
+		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
+			Block harvestedBlock = state.getBlock();
+			NonNullList<ItemStack> drops = NonNullList.create();
+			List<ItemStack> cropDrops = new ArrayList<ItemStack>();
+			world.playSound(pos.getX(), pos.getY(), pos.getZ(), harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+			
+			//Only return drops on servers.  Clients don't do items.
+			if(!world.isRemote){
+				harvestedBlock.getDrops(drops, world, pos, state, 0);
+				world.setBlockToAir(pos);
+				if(harvestedBlock instanceof BlockCrops){
+					cropDrops.addAll(drops);
+				}else{
+					for(ItemStack stack : drops){
+						if(stack.getCount() > 0){
+							spawnItemStack(stack, null, new Point3d(point));
+						}
+					}
+				}
+			}
+			return cropDrops;
+		}
+		return null;
+	}
+	
+	/**
+	 *  Tries to plant the item as a block.  Only works if the land conditions are correct
+	 *  and the item is actually seeds that can be planted.
+	 */
+	public boolean plantBlock(Point3i point, ItemStack stack){
+		//Check for valid seeds.
+		if(stack.getItem() instanceof IPlantable){
+			//Check if we have farmland below and air above.
+			BlockPos farmlandPos = new BlockPos(point.x, point.y, point.z);
+			IBlockState farmlandState = world.getBlockState(farmlandPos);
+			Block farmlandBlock = farmlandState.getBlock();
+			if(farmlandBlock.equals(Blocks.FARMLAND)){
+				BlockPos cropPos = farmlandPos.up();
+				if(world.isAirBlock(cropPos)){
+					//Check to make sure the block can sustain the plant we want to plant.
+					IPlantable plantable = (IPlantable) stack.getItem();
+					IBlockState plantState = plantable.getPlant(world, cropPos);
+					if(farmlandBlock.canSustainPlant(plantState, world, farmlandPos, EnumFacing.UP, plantable)){
+						world.setBlockState(cropPos, plantState, 11);
+						world.playSound(farmlandPos.getX(), farmlandPos.getY(), farmlandPos.getZ(), plantState.getBlock().getSoundType(plantState, world, farmlandPos, null).getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 *  Tries to plow the block.  Essentially, this turns grass and dirt into farmland.
+	 */
+	public boolean plowBlock(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState oldState = world.getBlockState(pos);
+		IBlockState newState = null;
+		Block block = oldState.getBlock();
+		if(block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)){
+			newState = Blocks.FARMLAND.getDefaultState();
+		 }else if(block.equals(Blocks.DIRT)){
+			 switch(oldState.getValue(BlockDirt.VARIANT)){
+			 	case DIRT: newState = Blocks.FARMLAND.getDefaultState(); break;
+			 	case COARSE_DIRT: newState = Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT); break;
+			 	default: return false;
+             }
+		}
+		
+		if(!oldState.equals(newState)){
+			world.setBlockState(pos, newState);
+			world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+			return true;
+		}
+		return false;
+	}
+	
+	/**
 	 *  Spawns the passed-in ItemStack as an item entity at the passed-in point.
 	 *  This should be called only on servers, as spawning items on clients
 	 *  leads to phantom items that can't be picked up. 
 	 */
 	public void spawnItemStack(ItemStack stack, WrapperNBT data, Point3d point){
 		//TODO this goes away when we get wrapper ItemStacks.
-		stack.setTagCompound(data.tag);
+		if(data != null){
+			stack.setTagCompound(data.tag);
+		}
 		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
 	}
 	

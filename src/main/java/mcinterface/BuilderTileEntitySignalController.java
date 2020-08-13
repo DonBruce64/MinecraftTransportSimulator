@@ -18,11 +18,7 @@ import net.minecraftforge.fml.common.Optional;
 public class BuilderTileEntitySignalController extends BuilderTileEntity.Tickable<TileEntitySignalController> implements SimpleComponent{
 	
 	public BuilderTileEntitySignalController(){
-		//Blank constructor for MC.  We set the TE variable in NBT instead.
-	}
-	
-	BuilderTileEntitySignalController(TileEntitySignalController tileEntity){
-		super(tileEntity);
+		super();
 	}
 	
 	@Override

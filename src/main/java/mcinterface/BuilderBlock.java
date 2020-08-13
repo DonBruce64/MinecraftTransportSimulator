@@ -10,12 +10,12 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityFluidTank;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -66,6 +66,7 @@ public class BuilderBlock extends Block{
 	final ABlockBase block;
 	
 	static final Map<ABlockBase, BuilderBlock> blockWrapperMap = new HashMap<ABlockBase, BuilderBlock>();
+	/**Maps TE class names to instances of the IBlockTileEntity class that creates them.**/
 	static final Map<String, IBlockTileEntity<?>> tileEntityMap = new HashMap<String, IBlockTileEntity<?>>();
 	
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
@@ -96,11 +97,13 @@ public class BuilderBlock extends Block{
 	@Nullable
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
-		ATileEntityBase<?> tile = ((IBlockTileEntity<?>) block).createTileEntity();
-		if(tile instanceof TileEntitySignalController){
-			return new BuilderTileEntitySignalController((TileEntitySignalController) tile);
+		Class<? extends ATileEntityBase<?>> teClass = ((IBlockTileEntity<?>) block).getTileEntityClass();
+		if(TileEntitySignalController.class.isInstance(teClass)){
+			return new BuilderTileEntitySignalController();
+		}else if(IFluidTankProvider.class.isInstance(teClass)){
+			return getTileEntityTankWrapper(block);
 		}else{
-			return getTileEntityGenericWrapper(tile);
+			return getTileEntityGenericWrapper(block);
 		}
     }
 	
@@ -108,20 +111,28 @@ public class BuilderBlock extends Block{
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	private static <JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> BuilderTileEntity<? extends ATileEntityBase<JSONDefinition>> getTileEntityGenericWrapper(ATileEntityBase<JSONDefinition> tile){
-		if(tile instanceof ATileEntityFluidTank){
-		   	if(tile instanceof ITileEntityTickable){
-		   		return new BuilderTileEntityFluidTank.Tickable<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);	
-		   	}else{
-		   		return new BuilderTileEntityFluidTank<ATileEntityFluidTank<JSONDefinition>>((ATileEntityFluidTank<JSONDefinition>) tile);
-		   	}
-		}else{
-	       	if(tile instanceof ITileEntityTickable){
-	       		return new BuilderTileEntity.Tickable<ATileEntityBase<JSONDefinition>>(tile);	
-	       	}else{
-	       		return new BuilderTileEntity<ATileEntityBase<JSONDefinition>>(tile);
-	       	}
-		}
+	@SuppressWarnings("unchecked")
+	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
+		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
+		if(ITileEntityTickable.class.isInstance(teClass)){
+       		return new BuilderTileEntity.Tickable<TileEntityType>();	
+       	}else{
+       		return new BuilderTileEntity<TileEntityType>();
+       	}
+	}
+	
+	 /**
+	 *  Helper method for creating new Wrapper TEs for this block.
+	 *  Far better than ? all over for generics in the createTileEntity method.
+	 */
+	@SuppressWarnings("unchecked")
+	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
+		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
+		if(ITileEntityTickable.class.isInstance(teClass)){
+	   		return new BuilderTileEntityFluidTank.Tickable<TileEntityType>();	
+	   	}else{
+	   		return new BuilderTileEntityFluidTank<TileEntityType>();
+	   	}
 	}
 	
 	@Override
@@ -144,7 +155,7 @@ public class BuilderBlock extends Block{
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
-    				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.getDefinition();
+    				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.definition;
     				if(definition != null){
     					ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
@@ -310,12 +321,13 @@ public class BuilderBlock extends Block{
 			}
 		}
 		
-		//Register the TE wrappers.
+		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntitySignalController.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntitySignalController.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName() + BuilderTileEntityFluidTank.Tickable.class.getSimpleName()));
+		
 		
 		//Register the pack-based blocks.  We cheat here and
 		//iterate over all pack items and get the blocks they spawn.
@@ -336,7 +348,7 @@ public class BuilderBlock extends Block{
 						blocksRegistred.add(itemBlockBlock);
 						if(itemBlockBlock instanceof IBlockTileEntity<?>){
 							//Block makes a Tile Entity.  We need to link it to a wrapper.
-							tileEntityMap.put(((IBlockTileEntity<?>) itemBlockBlock).createTileEntity().getClass().getSimpleName(), (IBlockTileEntity<?>) itemBlockBlock);
+							tileEntityMap.put(((IBlockTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (IBlockTileEntity<?>) itemBlockBlock);
 						}
 					}
 				}

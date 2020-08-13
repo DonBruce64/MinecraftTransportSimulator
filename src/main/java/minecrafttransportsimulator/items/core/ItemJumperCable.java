@@ -33,7 +33,7 @@ public class ItemJumperCable extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(rightClick){
 			if(part instanceof PartEngine){
 				PartEngine engine = (PartEngine) part;

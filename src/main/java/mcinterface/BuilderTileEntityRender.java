@@ -30,18 +30,16 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 	@Override
 	@SuppressWarnings("unchecked")
 	public void render(BuilderTileEntity wrapper, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
-		if(!renders.containsKey(wrapper.tileEntity)){
-			ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> render = wrapper.tileEntity.getRenderer();
-			if(render == null){
-				//Don't render, as we don't have a TESR.
-				return;
+		if(wrapper.tileEntity != null){
+			if(!renders.containsKey(wrapper.tileEntity)){
+				ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> render = wrapper.tileEntity.getRenderer();
+				if(render == null){
+					//Don't render, as we don't have a TESR.
+					return;
+				}
+				renders.put(wrapper.tileEntity, render);
 			}
-			renders.put(wrapper.tileEntity, render);
-		}
-		
-		//If the TE exists and has its definition, render it.
-		//Definition may take a bit to get to clients due to network lag.
-		if(wrapper.tileEntity.world != null && wrapper.tileEntity.position != null && wrapper.tileEntity.getDefinition() != null){
+			
 			//Get the render wrapper.
 			ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>> render = (ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>>) renders.get(wrapper.tileEntity);
 			

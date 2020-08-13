@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.parts;
 import mcinterface.InterfaceAudio;
 import mcinterface.InterfaceNetwork;
 import mcinterface.InterfaceRender;
+import mcinterface.WrapperInventory;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -16,7 +17,6 @@ import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 
 public class PartGun extends APart implements IVehiclePartFXProvider{	
@@ -126,25 +126,27 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				if(bulletsLeft == 0 && definition.gun.autoReload && !reloading){
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
 					for(APart part : vehicle.parts){
-						if(part instanceof PartCrate){
-							InventoryBasic crateInventory = ((PartCrate) part).crateInventory;
-							for(byte i=0; i<crateInventory.getSizeInventory(); ++i){
-								ItemStack stack = crateInventory.getStackInSlot(i);
-								if(stack != null && stack.getItem() instanceof ItemPartBullet){
-									ItemPartBullet bullet = (ItemPartBullet) stack.getItem();
-									//Only reload the same bulletType to ensure we don't mis-match ammo.
-									if(loadedBullet == null || loadedBullet.equals(bullet)){
-										//Also check to see if we have enough space for this bullet.
-										if(bullet.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
-											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-											reloadTimeRemaining = definition.gun.reloadTime;
-											reloading = true;
-											crateInventory.decrStackSize(i, 1);
-											loadedBullet = bullet;
-											bulletsLeft = bullet.definition.bullet.quantity;
-											InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, definition.packID, definition.systemName), this.vehicle);
-											return;
+						if(part instanceof PartInteractable){
+							WrapperInventory inventory = ((PartInteractable) part).inventory;
+							if(inventory != null && part.definition.interactable.feedsVehicles){
+								for(byte i=0; i<inventory.getSize(); ++i){
+									ItemStack stack = inventory.getStackInSlot(i);
+									if(stack != null && stack.getItem() instanceof ItemPartBullet){
+										ItemPartBullet bullet = (ItemPartBullet) stack.getItem();
+										//Only reload the same bulletType to ensure we don't mis-match ammo.
+										if(loadedBullet == null || loadedBullet.equals(bullet)){
+											//Also check to see if we have enough space for this bullet.
+											if(bullet.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
+												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+												reloadTimeRemaining = definition.gun.reloadTime;
+												reloading = true;
+												inventory.decrement(i);
+												loadedBullet = bullet;
+												bulletsLeft = bullet.definition.bullet.quantity;
+												InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, definition.packID, definition.systemName), this.vehicle);
+												return;
+											}
 										}
 									}
 								}

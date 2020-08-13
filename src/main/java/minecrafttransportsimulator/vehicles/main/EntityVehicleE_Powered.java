@@ -28,10 +28,10 @@ import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartBarrel;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import net.minecraft.item.ItemStack;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
@@ -233,12 +233,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		if(ConfigSystem.configObject.damage.explosions.value){
 			double fuelPresent = this.fuel;
 			for(APart part : parts){
-				if(part instanceof PartBarrel){
-					PartBarrel barrel = (PartBarrel) part;
-					if(barrel.getFluid() != null){
+				if(part instanceof PartInteractable){
+					PartInteractable interactable = (PartInteractable) part;
+					if(interactable.tank != null){
 						for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
-							if(fuelEntry.containsKey(barrel.getFluid().getFluid())){
-								fuelPresent += barrel.getFluidAmount()*fuelEntry.get(barrel.getFluid().getFluid());
+							if(fuelEntry.containsKey(interactable.tank.getFluid())){
+								fuelPresent += interactable.tank.getFluidLevel()*fuelEntry.get(interactable.tank.getFluid());
 								break;
 							}
 						}

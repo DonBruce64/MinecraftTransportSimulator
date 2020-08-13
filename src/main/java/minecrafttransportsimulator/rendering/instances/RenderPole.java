@@ -37,12 +37,11 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 	public void render(TileEntityPole tile, BlockPole block, float partialTicks){
 		//First render all connections.
 		//These are based on the pole itself, so we first need to get the pole.
-		JSONPoleComponent definition = tile.getDefinition();
 		TileEntityPole_Core coreComponent = (TileEntityPole_Core) tile.components.get(Axis.NONE);
 		if(coreComponent != null){
 			//If we don't have the model parsed, do so now.
-			if(!connectorDisplayListMap.containsKey(definition)){
-				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, "objmodels/poles/" + definition.systemName + ".obj");
+			if(!connectorDisplayListMap.containsKey(tile.definition)){
+				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.packID, "objmodels/poles/" + tile.definition.systemName + ".obj");
 				
 				Map<Axis, Integer> connectorDisplayLists = new HashMap<Axis, Integer>();
 				Map<Axis, Integer> solidConncectorDisplayLists = new HashMap<Axis, Integer>();
@@ -54,49 +53,49 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 						solidConncectorDisplayLists.put(axis, cacheAxisVertices(parsedModel.get(axis.name().toLowerCase() + "_solid")));
 					}
 				}
-				connectorDisplayListMap.put(definition, connectorDisplayLists);
-				solidConnectorDisplayListMap.put(definition, solidConncectorDisplayLists);
+				connectorDisplayListMap.put(tile.definition, connectorDisplayLists);
+				solidConnectorDisplayListMap.put(tile.definition, solidConncectorDisplayLists);
 			}
 			
 			//Render the connectors.  Don't do this on the blending pass 1.
 			if(InterfaceRender.getRenderPass() != 1){
-				InterfaceRender.bindTexture(definition.packID, "textures/poles/" + definition.systemName + ".png");
+				InterfaceRender.bindTexture(tile.definition.packID, "textures/poles/" + tile.definition.systemName + ".png");
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
-						GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
+						GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(axis));
 					}else{
 						Point3i offset = axis.getOffsetPoint(tile.position);
 						boolean adjacentPole = tile.world.getBlock(offset) instanceof BlockPole;
 						boolean solidBlock = tile.world.isBlockSolid(offset);
 						boolean slabBlock = (axis.equals(Axis.DOWN) && tile.world.isBlockBottomSlab(offset)) || (axis.equals(Axis.UP) && tile.world.isBlockTopSlab(offset));
 						if(adjacentPole || solidBlock){
-							if(connectorDisplayListMap.get(definition).containsKey(axis)){
-								GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
+							if(connectorDisplayListMap.get(tile.definition).containsKey(axis)){
+								GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(axis));
 							}
 						}
 						if(solidBlock){
-							if(solidConnectorDisplayListMap.get(definition).containsKey(axis)){
-								GL11.glCallList(solidConnectorDisplayListMap.get(definition).get(axis));
+							if(solidConnectorDisplayListMap.get(tile.definition).containsKey(axis)){
+								GL11.glCallList(solidConnectorDisplayListMap.get(tile.definition).get(axis));
 							}
 						}else if(slabBlock){
 							//Slab.  Render the center and proper portion and center again to render at slab height.
 							//Also render solid portion as it's a solid block.
 							Axis oppositeAxis = axis.getOpposite();
-							if(connectorDisplayListMap.get(definition).containsKey(axis)){
-								GL11.glCallList(connectorDisplayListMap.get(definition).get(axis));
+							if(connectorDisplayListMap.get(tile.definition).containsKey(axis)){
+								GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(axis));
 								//Offset to slab block.
 								GL11.glTranslatef(0.0F, axis.yOffset, 0.0F);
 								
 								//Render upper and center section.  Upper joins lower above slab.
-								if(connectorDisplayListMap.get(definition).containsKey(oppositeAxis)){
-									GL11.glCallList(connectorDisplayListMap.get(definition).get(oppositeAxis));
+								if(connectorDisplayListMap.get(tile.definition).containsKey(oppositeAxis)){
+									GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(oppositeAxis));
 								}
-								GL11.glCallList(connectorDisplayListMap.get(definition).get(Axis.NONE));
+								GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(Axis.NONE));
 								
 								//Offset to top of slab and render solid lower connector, if we have one.
 								GL11.glTranslatef(0.0F, -axis.yOffset/2F, 0.0F);
-								if(solidConnectorDisplayListMap.get(definition).containsKey(axis)){
-									GL11.glCallList(solidConnectorDisplayListMap.get(definition).get(axis));
+								if(solidConnectorDisplayListMap.get(tile.definition).containsKey(axis)){
+									GL11.glCallList(solidConnectorDisplayListMap.get(tile.definition).get(axis));
 								}
 								
 								//Translate back to the normal position.
@@ -152,7 +151,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>
 					//Rotate to component axis and render.
 					GL11.glPushMatrix();
 					GL11.glRotatef(axis.yRotation, 0, 1, 0);
-					GL11.glTranslatef(0, 0, tile.getDefinition().general.radius + 0.001F);
+					GL11.glTranslatef(0, 0, tile.definition.general.radius + 0.001F);
 					
 					//Don't do solid model rendering on the blend pass.
 					if(InterfaceRender.getRenderPass() != 1){

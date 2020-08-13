@@ -10,21 +10,22 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModel
 
 public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartEngine engine;
-    public PartWheel wheel;
-    public PartPontoonConfig pontoon;
-    public PartSkid skid;
-    public PartTread tread;
     public PartGroundDevice ground;
     public PartPropeller propeller;
-    public PartCrate crate;
-    public PartBarrel barrel;
     public PartGun gun;
     public PartBullet bullet;
+    public PartInteractable interactable;
     public PartEffector effector;
     public PartCustom custom;
     public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
     public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
     public PartRendering rendering;
+    
+    //Depreciated blocks.  Used only for legacy compat.
+    public PartWheel wheel;
+    public PartPontoon pontoon;
+    public PartSkid skid;
+    public PartTread tread;
 
     public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
     	public String type;
@@ -62,31 +63,6 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
 		}
     }
     
-    public class PartWheel{
-    	public float diameter;
-        public float motiveFriction;
-        public float lateralFriction;
-    }
-    
-    public class PartSkid{
-    	public float width;
-    	public float lateralFriction;
-    }
-    
-    public class PartPontoonConfig{
-    	public float width;
-    	public float lateralFriction;
-        public float extraCollisionBoxOffset;
-    }
-    
-    public class PartTread{
-    	public float width;
-    	public float motiveFriction;
-        public float lateralFriction;
-        public float extraCollisionBoxOffset;
-        public float spacing;
-    }
-    
     public class PartGroundDevice{
     	public boolean isWheel;
     	public boolean isTread;
@@ -106,14 +82,6 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
-    }
-    
-    public class PartCrate{
-    	public byte rows;
-    }
-    
-    public class PartBarrel{
-    	public int capacity;
     }
     
     public class PartGun{
@@ -137,7 +105,14 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public float diameter;
     }
     
+    public class PartInteractable{
+    	public String type;
+    	public boolean feedsVehicles;
+    	public byte inventoryUnits;
+    }
+    
     public class PartEffector{
+    	public String type;
     	public int blocksWide;
     }
     
@@ -149,5 +124,30 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public class PartRendering{
         public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
         public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    }
+    
+    public class PartWheel{
+    	public float diameter;
+        public float motiveFriction;
+        public float lateralFriction;
+    }
+    
+    public class PartSkid{
+    	public float width;
+    	public float lateralFriction;
+    }
+    
+    public class PartPontoon{
+    	public float width;
+    	public float lateralFriction;
+        public float extraCollisionBoxOffset;
+    }
+    
+    public class PartTread{
+    	public float width;
+    	public float motiveFriction;
+        public float lateralFriction;
+        public float extraCollisionBoxOffset;
+        public float spacing;
     }
 }

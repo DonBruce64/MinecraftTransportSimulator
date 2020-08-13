@@ -25,11 +25,9 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartBarrel;
-import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -346,43 +344,24 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	protected float getCurrentMass(){
 		int currentMass = definition.general.emptyMass;
 		for(APart part : parts){
-			if(part instanceof PartCrate){
-				currentMass += calculateInventoryWeight(((PartCrate) part).crateInventory);
-			}else if(part instanceof PartBarrel){
-				currentMass += ((PartBarrel) part).getFluidAmount()/50;
+			if(part instanceof PartInteractable){
+				if(((PartInteractable) part).inventory != null){
+					currentMass += ((PartInteractable) part).inventory.getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
+				}
+				if(((PartInteractable) part).tank != null){
+					currentMass += ((PartInteractable) part).tank.getFluidLevel()/50;
+				}
 			}
 		}
 		
 		//Add passenger inventory mass as well.
 		for(WrapperEntity rider : ridersToLocations.keySet()){
 			if(rider instanceof WrapperPlayer){
-				currentMass += 100 + calculateInventoryWeight(((WrapperPlayer) rider).getInventory());
+				currentMass += 100 + ((WrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
 			}else{
 				currentMass += 100;
 			}
 		}
 		return currentMass;
-	}
-	
-	/**
-	 * Calculates the weight of the inventory passed in.
-	 */
-	private static float calculateInventoryWeight(IInventory inventory){
-		//TODO this goes into an interface when we get wrapper itemstacks.
-		float weight = 0;
-		for(int i=0; i<inventory.getSizeInventory(); ++i){
-			ItemStack stack = inventory.getStackInSlot(i);
-			if(stack != null){
-				double weightMultiplier = 1.0;
-				for(String heavyItemName : ConfigSystem.configObject.general.itemWeights.weights.keySet()){
-					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
-						weightMultiplier = ConfigSystem.configObject.general.itemWeights.weights.get(heavyItemName);
-						break;
-					}
-				}
-				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
-			}
-		}
-		return weight;
 	}
 }

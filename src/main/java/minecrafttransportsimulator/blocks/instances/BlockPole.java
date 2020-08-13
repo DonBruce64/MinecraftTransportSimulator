@@ -18,7 +18,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
@@ -26,7 +25,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
  *
  * @author don_bruce
  */
-public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleComponent>{
+public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntityPole>{
 	private final Map<Axis, BoundingBox> axisBounds = new HashMap<Axis, BoundingBox>();
 	
 	public BlockPole(){
@@ -99,7 +98,12 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(){
-		return new TileEntityPole();
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+		return new TileEntityPole(world, position, data);
+	}
+
+	@Override
+	public Class<TileEntityPole> getTileEntityClass(){
+		return TileEntityPole.class;
 	}
 }

@@ -38,9 +38,10 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(ItemStack stack, EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
+				ItemStack stack = player.getHeldStack();
 				if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
 					if(vehicle.fluidName.isEmpty() || vehicle.fluidName.equals(stack.getTagCompound().getString("fluidName"))){
 						if(vehicle.fuel + 1000 > vehicle.definition.motorized.fuelCapacity){
@@ -50,8 +51,6 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 							vehicle.fuel += 1000;
 							stack.setTagCompound(null);
 							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.success"));
-							//FIXME this will be the wrong player type here.  Should be a generic fuel packet instead?
-							return CallbackType.ALL;
 						}
 					}else{
 						player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.wrongtype"));
@@ -60,9 +59,6 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 					player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.empty"));
 				}
 			}
-		}else{
-			vehicle.fluidName = stack.getTagCompound().getString("fluidName");
-			vehicle.fuel += 1000;
 		}
 		return CallbackType.NONE;
 	}

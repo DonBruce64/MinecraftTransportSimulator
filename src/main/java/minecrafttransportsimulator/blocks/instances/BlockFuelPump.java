@@ -1,14 +1,15 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -22,7 +23,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDecor>{
+public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEntityFuelPump>{
 	
 	public BlockFuelPump(){
 		super(10.0F, 5.0F);
@@ -33,6 +34,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
+			FluidTank tank = pump.getTank();
 			
 			//If we are holding an item, try to add it to the fuel pump.
 			ItemStack stack = player.getHeldStack();
@@ -43,11 +45,11 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
 					if(drainedStack != null){
 						//Able to take fuel from item, attempt to do so.
-						int amountToDrain = pump.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
+						int amountToDrain = tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
 						drainedStack = handler.drain(amountToDrain, !player.isCreative());
 						if(drainedStack != null){
 							//Was able to provide fuel from item.  Fill the pump.
-							pump.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
+							tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
 							player.setHeldStack(handler.getContainer());
 						}
 					}
@@ -55,12 +57,12 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 				}else if(stack.getItem().equals(MTSRegistry.jerrycan)){
 					//Have a jerrycan.  Attempt to fill it up.
 					if(!stack.hasTagCompound() || !stack.getTagCompound().getBoolean("isFull")){
-						if(pump.getFluidLevel() >= 1000){
+						if(tank.getFluidLevel() >= 1000){
 							NBTTagCompound stackTag = new NBTTagCompound();
 							stackTag.setBoolean("isFull", true);
-							stackTag.setString("fluidName", pump.getFluid());
+							stackTag.setString("fluidName", tank.getFluid());
 							stack.setTagCompound(stackTag);
-							pump.drain(pump.getFluid(), 1000, true);
+							tank.drain(tank.getFluid(), 1000, true);
 						}
 					}
 					return true;
@@ -84,13 +86,13 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     			
     			//Have a vehicle, try to connect to it.
     			if(nearestVehicle != null){
-    				if(pump.getFluidLevel() == 0){
+    				if(tank.getFluidLevel() == 0){
     					//No fuel in the pump.
     					player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.nofuel"));
     				}else{
         				//Check to make sure this vehicle can take this fuel pump's fuel type.
     					if(!nearestVehicle.fluidName.isEmpty()){
-    						if(!pump.getFluid().equals(nearestVehicle.fluidName)){
+    						if(!tank.getFluid().equals(nearestVehicle.fluidName)){
     							player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.wrongtype"));
     							return true;
     						}
@@ -99,9 +101,9 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
     					//Fuel type can be taken by vehicle, check to make sure engines can take it.
     					for(APart part : nearestVehicle.parts){
     						if(part instanceof PartEngine){
-    							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(pump.getFluid())){
+    							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
-    								pump.totalTransfered = 0;
+    								tank.resetAmountDispensed();;
     								InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
@@ -124,7 +126,12 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<JSONDe
 	}
 	
     @Override
-	public TileEntityFuelPump createTileEntity(){
-		return new TileEntityFuelPump();
+	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+		return new TileEntityFuelPump(world, position, data);
+	}
+
+	@Override
+	public Class<TileEntityFuelPump> getTileEntityClass(){
+		return TileEntityFuelPump.class;
 	}
 }

@@ -17,7 +17,6 @@ import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.items.core.ItemJerrycan;
 import minecrafttransportsimulator.items.core.ItemJumperCable;
 import minecrafttransportsimulator.items.core.ItemKey;
-import minecrafttransportsimulator.items.core.ItemTicket;
 import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -77,7 +76,6 @@ public final class MTSRegistry{
 	public static final Item key = new ItemKey();
 	public static final Item jumperCable = new ItemJumperCable();
 	public static final Item jerrycan = new ItemJerrycan();
-	public static final Item ticket = new ItemTicket();
 	
 	//Crafting benches.
 	public static final BuilderBlock vehicleBench = new BuilderBlock(new BlockPartsBench(JSONVehicle.class));

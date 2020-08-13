@@ -278,8 +278,7 @@ info.item.bullet.type.incendiary=Incendiary Bullet
 info.item.bullet.type.armor_piercing=Armor Piercing Bullet
 info.item.bullet.diameter=Diameter (mm): 
 info.item.bullet.quantity=Quantity: 
-info.item.barrel.capacity=Capacity: 
-info.item.crate.capacity=Capacity: 
+info.item.interactable.capacity=Capacity:
 
 info.item.wrench.use=Use on vehicle to change instruments.
 info.item.wrench.useblock=Use on pole components to remove them.

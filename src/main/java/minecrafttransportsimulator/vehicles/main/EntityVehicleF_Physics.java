@@ -432,7 +432,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//If we are in the air, pitch up to get our devices on the ground. Pitching speed is determined by elevation difference of rear wheels.
-			motion.x = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.currentBox.globalCenter.y - towedByVehicle.rearLeftGroundDeviceBox.currentBox.heightRadius + towedByVehicle.rearRightGroundDeviceBox.currentBox.globalCenter.y - towedByVehicle.rearRightGroundDeviceBox.currentBox.heightRadius)/2) - ((rearLeftGroundDeviceBox.currentBox.globalCenter.y - rearLeftGroundDeviceBox.currentBox.heightRadius + rearRightGroundDeviceBox.currentBox.globalCenter.y - rearRightGroundDeviceBox.currentBox.heightRadius)/2)) * 2),0.1),1.0)) : 0;
+			motion.x = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.contactPoint.y + towedByVehicle.rearRightGroundDeviceBox.contactPoint.y)/2) - ((rearLeftGroundDeviceBox.contactPoint.y + rearRightGroundDeviceBox.contactPoint.y)/2)) * 2),0.1),1.0)) : 0;
 			//Don't apply yaw if we aren't moving. Apply Yaw in proportion to trailer length
 			motion.y = velocity > 0 ? (float) (towingDeltaYaw/(2*Math.abs(definition.motorized.hookupPos[2]))) : 0;
 			//Match our tower's roll.

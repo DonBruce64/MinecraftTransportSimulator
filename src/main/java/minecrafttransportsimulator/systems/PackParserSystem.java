@@ -19,14 +19,13 @@ import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.items.packs.ItemVehicle;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
-import minecrafttransportsimulator.items.packs.parts.ItemPartBarrel;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
-import minecrafttransportsimulator.items.packs.parts.ItemPartCrate;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGeneric;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevice;
 import minecrafttransportsimulator.items.packs.parts.ItemPartGun;
+import minecrafttransportsimulator.items.packs.parts.ItemPartInteractable;
 import minecrafttransportsimulator.items.packs.parts.ItemPartPropeller;
 import minecrafttransportsimulator.jsondefs.AJSONCraftable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -41,19 +40,12 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartBarrel;
-import minecrafttransportsimulator.vehicles.parts.PartBrewingStand;
-import minecrafttransportsimulator.vehicles.parts.PartCraftingTable;
-import minecrafttransportsimulator.vehicles.parts.PartCrate;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartFurnace;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorFertilizer;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorHarvester;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlanter;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffectorPlow;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffector;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
@@ -258,7 +250,7 @@ public final class PackParserSystem{
     				partDef.gun.isTurret = true;
     			}
     		}else{
-    			//Check for old ground devices.
+    			//Check for old ground devices, crates, barrels, and effectors.
     			switch(partDef.general.type){
     				case("wheel"):{
     					partDef.general.type = "ground_" + partDef.general.type;
@@ -295,6 +287,25 @@ public final class PackParserSystem{
     					partDef.ground.motiveFriction = partDef.tread.motiveFriction;
     					partDef.ground.extraCollisionBoxOffset = partDef.tread.extraCollisionBoxOffset;
     					partDef.ground.spacing = partDef.tread.spacing;
+    				}case("crate"):{
+    					partDef.interactable.type = "crate";
+    					partDef.interactable.inventoryUnits = 3;
+    					partDef.interactable.feedsVehicles = true;
+    				}case("barrel"):{
+    					partDef.interactable.type = "barrel";
+    					partDef.interactable.inventoryUnits = 5;
+    				}case("fertilizer"):{
+    					partDef.effector.type = "fertilizer";
+    					partDef.effector.blocksWide = 1;
+    				}case("harvester"):{
+    					partDef.interactable.type = "harvester";
+    					partDef.effector.blocksWide = 1;
+    				}case("planter"):{
+    					partDef.interactable.type = "planter";
+    					partDef.effector.blocksWide = 1;
+    				}case("plow"):{
+    					partDef.interactable.type = "plow";
+    					partDef.effector.blocksWide = 1;
     				}
     			}
     		}
@@ -358,20 +369,13 @@ public final class PackParserSystem{
     		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData);
     	}else{
 	    	switch(definition.general.type){
-				case "crate": return new PartCrate(vehicle, packVehicleDef, definition, partData);
-				case "barrel": return new PartBarrel(vehicle, packVehicleDef, definition, partData);
-				case "crafting_table": return new PartCraftingTable(vehicle, packVehicleDef, definition, partData);
-				case "furnace": return new PartFurnace(vehicle, packVehicleDef, definition, partData);
-				case "brewing_stand": return new PartBrewingStand(vehicle, packVehicleDef, definition, partData);
-				case "plow": return new PartGroundEffectorPlow(vehicle, packVehicleDef, definition, partData);
-				case "planter": return new PartGroundEffectorPlanter(vehicle, packVehicleDef, definition, partData);
-				case "fertilizer": return new PartGroundEffectorFertilizer(vehicle, packVehicleDef, definition, partData);
-				case "harvester": return new PartGroundEffectorHarvester(vehicle, packVehicleDef, definition, partData);
 				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData);
 				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData);
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 				//case "bullet": return PartBullet.class;
+	    		case "interactable": return new PartInteractable(vehicle, packVehicleDef, definition, partData);
+	    		case "effector": return new PartGroundEffector(vehicle, packVehicleDef, definition, partData);
 				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData);
 			}
     	}
@@ -387,18 +391,11 @@ public final class PackParserSystem{
     		return new ItemPartGroundDevice(definition);
     	}else{
 	    	switch(definition.general.type){
-		    	case "crate": return new ItemPartCrate(definition);
-				case "barrel": return new ItemPartBarrel(definition);
-				case "crafting_table": return new ItemPartGeneric(definition);
-				case "furnace": return new ItemPartGeneric(definition);
-				case "brewing_stand": return new ItemPartGeneric(definition);
-				case "plow": return new ItemPartGeneric(definition);
-				case "planter": return new ItemPartGeneric(definition);
-				case "fertilizer": return new ItemPartGeneric(definition);
-				case "harvester": return new ItemPartGeneric(definition);
 				case "propeller": return new ItemPartPropeller(definition);
 				case "seat": return new ItemPartGeneric(definition);
 				case "bullet": return new ItemPartBullet(definition);
+				case "interactable": return new ItemPartInteractable(definition);
+				case "effector": return new ItemPartGeneric(definition);
 				case "custom": return new ItemPartCustom(definition);
 	    	}
     	}

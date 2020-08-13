@@ -4,16 +4,24 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -170,10 +178,12 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	/**
 	 *  Attempts to add the passed-in stack to the player's inventory.
-	 *  Returns true if addition was successful.
+	 *  Returns true if addition was successful.  If the player is
+	 *  in creative, this will return true, even if the stack
+	 *  wasn't added.
 	 */
 	public boolean addItem(ItemStack stackToAdd){
-		return player.inventory.addItemStackToInventory(stackToAdd);
+		return getInventory().addStack(stackToAdd, -1) || player.isCreative();
 	}
 	
 	/**
@@ -192,9 +202,8 @@ public class WrapperPlayer extends WrapperEntity{
 	/**
 	 *  Gets the inventory of the player.
 	 */
-	public IInventory getInventory(){
-		//TODO this gets removed, along with the item methods, when we go to wrapper ItemStacks.
-		return player.inventory;
+	public WrapperInventory getInventory(){
+		return new WrapperInventory(this);
 	}
 	
 	/**
@@ -204,5 +213,59 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public void sendPacket(APacketBase packet){
 		InterfaceNetwork.sendToPlayer(packet, (EntityPlayerMP) player);
+	}
+	
+	/**
+	 *  Opens the crafting table GUI.  This overrides the normal GUI opened
+	 *  when a block is clicked, which allows players to open a GUI by clicking
+	 *  an entity instead.  Required as normally MC checks if there is a block
+	 *  present in the internal code, which automatically closes the GUI.
+	 */
+	public void openCraftingGUI(){
+		player.displayGui(new BlockWorkbench.InterfaceCraftingTable(player.world, null){
+			@Override
+			public Container createContainer(InventoryPlayer playerInventory, EntityPlayer player){
+	            return new ContainerWorkbench(playerInventory, player.world, player.getPosition()){
+	            	@Override
+	                public boolean canInteractWith(EntityPlayer playerIn){
+	            		return true;
+	                }
+	            };
+	        }
+		});
+	}
+	
+	/**
+	 *  Opens the GUI for the passed-in TE, or fails to open any GUI if the TE doesn't have one.
+	 *  Actual validity of the GUI being open is left to the TE implementation.
+	 *  Note: This method is for any TE that has inventory.  This includes, but is not limited to,
+	 *  chests, furnaces, and brewing stands.  Also of note: if this TE holds liquids, and the player
+	 *  is clicking this TE with liquids, then the liquids will be stored or retrieved from this TE.
+	 */
+	public void openTileEntityGUI(WrapperTileEntity tile){
+		if(tile instanceof IInventory){
+			player.displayGUIChest((IInventory) tile);
+		}else if(tile.tile instanceof IFluidTank){
+			IFluidTank tileTank = (IFluidTank) tile;
+			ItemStack stack = player.getHeldItemMainhand();
+			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+				IFluidHandlerItem itemHandler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+				//If we are empty or sneaking, drain the tile, otherwise fill.
+				//We use 1000 here for the test as buckets will only drain that amount.
+				FluidStack drainedTestStack = itemHandler.drain(1000, false);
+				if(player.isSneaking() || drainedTestStack == null || drainedTestStack.amount == 0){
+					if(tileTank.getFluid() != null){
+						tileTank.drain(itemHandler.fill(tileTank.getFluid(), true), true);
+					}							
+				}else{
+					if(tileTank.getFluid() != null){
+						tileTank.fill(itemHandler.drain(new FluidStack(tileTank.getFluid().getFluid(), tileTank.getCapacity() - tileTank.getFluidAmount()), true), true);
+					}else{
+						tileTank.fill(itemHandler.drain(tileTank.getCapacity() - tileTank.getFluidAmount(), true), true);
+					}
+				}
+				player.setHeldItem(EnumHand.MAIN_HAND, itemHandler.getContainer());
+			}
+		}
 	}
 }
