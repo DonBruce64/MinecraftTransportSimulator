@@ -66,7 +66,6 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 		return tank;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public RenderDecor getRenderer(){
 		return new RenderDecor();

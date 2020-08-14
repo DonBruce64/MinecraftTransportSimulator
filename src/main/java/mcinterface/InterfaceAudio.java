@@ -20,6 +20,8 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for the audio system.  This is responsible for playing sound from vehicles/interactions.
@@ -338,6 +340,22 @@ public class InterfaceAudio{
 		}
 		return (ByteBuffer) monoBuffer.flip();
 	}
+	
+	/**
+     * Update all sounds every client tick.
+     */
+    @SubscribeEvent
+    public static void on(TickEvent.ClientTickEvent event){
+    	//Only do updates at the end of a phase to prevent double-updates.
+        if(event.phase.equals(Phase.END)){
+			//We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
+			try{
+				InterfaceAudio.update();
+			}catch(Exception e){
+				//Do nothing.  We only get exceptions here if OpenAL isn't ready.
+			}
+        }
+    }
 	
 	/**
      * Stop all sounds when the world is unloaded.

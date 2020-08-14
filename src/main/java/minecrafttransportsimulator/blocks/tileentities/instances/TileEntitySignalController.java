@@ -184,7 +184,6 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public RenderDecor getRenderer(){
 		return new RenderDecor();

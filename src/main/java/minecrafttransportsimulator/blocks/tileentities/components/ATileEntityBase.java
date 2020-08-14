@@ -8,7 +8,6 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -70,6 +69,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 *  should be written to at this point with any data needing to be saved.
 	 */
 	public void save(WrapperNBT data){
+		data.setString("packID", definition.packID);
+		data.setString("systemName", definition.systemName);
 		data.setDouble("lightLevel", lightLevel);
 	}
 
@@ -77,5 +78,5 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	/**
 	 *  Called to get a render for this TE.  Only called on the client.
 	 */
-	public abstract <TileEntityType extends ATileEntityBase<JSONDefinition>> ARenderTileEntityBase<TileEntityType, ? extends IBlockTileEntity<TileEntityType>> getRenderer();
+	public abstract ARenderTileEntityBase<? extends ATileEntityBase<JSONDefinition>> getRenderer();
 }

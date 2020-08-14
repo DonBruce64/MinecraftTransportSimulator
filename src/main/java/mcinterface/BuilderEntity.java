@@ -1,6 +1,8 @@
 package mcinterface;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -8,6 +10,9 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.core.IItemEntityProvider;
+import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -19,14 +24,18 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
 /**Builder for a basic MC Entity class.  This builder allows us to create a new entity
  * class that we can control that doesn't have the wonky systems the MC entities have, such
@@ -39,8 +48,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
  */
 @Mod.EventBusSubscriber
 public class BuilderEntity extends Entity{
-	AEntityBase entity;
-	
+	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
@@ -49,6 +57,13 @@ public class BuilderEntity extends Entity{
 	
 	private WrapperAABBCollective interactionBoxes;
 	private WrapperAABBCollective collisionBoxes;
+	
+	/**Current entity we are built around.**/
+	AEntityBase entity;
+	/**Map of created entities linked to their builder instances.  Used for interface operations.**/
+	static final Map<AEntityBase, BuilderEntity> entitiesToBuilders = new HashMap<AEntityBase, BuilderEntity>();
+	/**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
+	static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	public BuilderEntity(World world){
 		super(world);
@@ -125,6 +140,11 @@ public class BuilderEntity extends Entity{
     				fakeLightPosition = null;
     			}
     		}
+    		
+    		//Check if we are still valid, or need to be set dead.
+    		if(!entity.isValid){
+    			setDead();
+    		}
     	}else{
     		//No entity.  Wait for NBT to be loaded to create it.
     		//If we are on a client, ensure we sent a packet to the server to request it.
@@ -141,7 +161,7 @@ public class BuilderEntity extends Entity{
 	@Override
 	public void setDead(){
 		super.setDead();
-		//Get rid of the fake light before we kill ourselves.
+		//Get rid of the fake light (if we have one) before we kill ourselves.
 		if(fakeLightPosition != null){
 			world.setBlockToAir(fakeLightPosition);
 		}
@@ -255,29 +275,18 @@ public class BuilderEntity extends Entity{
 			
     @Override
 	public void readFromNBT(NBTTagCompound tag){
-    	//FIXME make this be called once on the server once this entity is spawned to kick-off the loading process.
-		super.readFromNBT(tag);
-		//Build this entity from NBT.  But only do so if the NBT has all the data we need.
-		//We can tell this if we have a special bit set that only gets set if we've saved before.
-		if(tag.getBoolean("previouslySaved")){
-			if(entity != null){
-				//FIXME see if this occurs frequently.
-				MTS.MTSLog.error("ERROR: Loading vehicle after it has already been loaded once.  Things may go badly!");
-			}
-			entity = new EntityVehicleF_Physics(new WrapperWorld(world));
+		if(entity == null && tag.hasKey("entityid")){
+			//Restore the Entity from saved state.
+			entity = entityMap.get(tag.getString("entityid")).createEntity(new WrapperWorld(world), new WrapperNBT(tag));
 		}
 	}
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
-		//Write in a special bit to tell us we are loading saved NBT in future calls.
-		tag.setBoolean("previouslySaved", true);
-		
-		//Forward on saving call to entity, if it exists.
-		if(entity != null){
-			entity.save(new WrapperNBT(tag));
-		}
+		entity.save(new WrapperNBT(tag));
+		//Also save the class ID so we know what to construct when MC loads this Entity back up.
+		tag.setString("entityid", entity.getClass().getSimpleName());
 		return tag;
 	}
 	
@@ -358,4 +367,23 @@ public class BuilderEntity extends Entity{
 	protected void entityInit(){}
 	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
 	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
+	
+	/**
+	 * Registers all builder instances that build our own entities into the game.
+	 */
+	@SubscribeEvent
+	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
+		//Iterate over all pack items and find those that spawn entities.
+		for(String packID : MTSRegistry.packItemMap.keySet()){
+			for(AItemPack<?> item : MTSRegistry.packItemMap.get(packID).values()){
+				if(item instanceof IItemEntityProvider<?>){
+					entityMap.put(((IItemEntityProvider<?>) item).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) item);
+				}
+			}
+		}
+		
+		//Now register our own classes.
+		int entityNumber = 0;
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntity.class).id(new ResourceLocation(MTS.MODID, "mts_entity"), entityNumber++).name("mts_entity").tracker(32*16, 5, false).build());
+	}
 }

@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
@@ -42,13 +41,9 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleA_Base(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
-		//FIXME set initial position in the item JSON, not here.
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the vehicle is facing perpendicular.
-		//Makes placement easier and is less likely for players to get stuck.
-		//FIXME set inital definition in NBT data.
+	public EntityVehicleA_Base(WrapperWorld world, WrapperNBT data){
+		super(world, data);
+		//Set definition.
 		this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
 		
 		//Add parts.

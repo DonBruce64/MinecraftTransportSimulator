@@ -26,7 +26,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		boundingBoxes[3] = boundingBoxes[1];
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public RenderDecor getRenderer(){
 		return new RenderDecor();

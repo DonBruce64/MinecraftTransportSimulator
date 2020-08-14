@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import mcinterface.InterfaceRender;
 import mcinterface.BuilderTileEntityRender;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 
 /**Base Tile Entity rendering class (TESR).  This type is used in the constructor of {@link BuilderTileEntityRender} 
@@ -11,13 +10,13 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
  *
  * @author don_bruce
  */
-public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>, RenderedBlock extends IBlockTileEntity<RenderedTileEntity>>{
+public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>>{
 	
 	/**
 	 *  Called to render this tile entity.  The currently-bound texture is undefined, so you will need
 	 *  to bind whichever texture you see fit to do so.  This can be done via {@link InterfaceRender#bindTexture(String, String)}
 	 */
-	public abstract void render(RenderedTileEntity tileEntity, RenderedBlock block, float partialTicks);
+	public abstract void render(RenderedTileEntity tileEntity, float partialTicks);
 	
 	/**
 	 *  Returns true if this TE should be rotated to the rotation of the block.

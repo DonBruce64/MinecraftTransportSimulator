@@ -292,9 +292,9 @@ public class BuilderBlock extends Block{
   	public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos){
   		//Gets the light level.  We need to override this as light level can change.
   		if(block instanceof IBlockTileEntity){
-  			TileEntity tile = world.getTileEntity(pos);
-  			if(tile instanceof BuilderTileEntity){
-  				return (int) (((BuilderTileEntity<?>) tile).tileEntity.lightLevel*15F);
+  			BuilderTileEntity<?> builder = (BuilderTileEntity<?>) world.getTileEntity(pos);
+  			if(builder != null && builder.tileEntity != null){
+  				return (int) (builder.tileEntity.lightLevel*15F);
   			}
   		}
         return super.getLightValue(state, world, pos);

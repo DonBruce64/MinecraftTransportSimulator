@@ -94,7 +94,7 @@ public class InterfaceGame{
 	 *  there are multiple players.
 	 */
 	public static WrapperPlayer getClientPlayer(){
-		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
+		if(cachedClientPlayer == null || cachedClientPlayer.entity == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
 			cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
 		}
 		return cachedClientPlayer;

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceAudio;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
@@ -78,8 +77,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
-	public EntityVehicleE_Powered(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
+	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		//Load simple variables.
 		this.throttle = (byte) data.getInteger("throttle");

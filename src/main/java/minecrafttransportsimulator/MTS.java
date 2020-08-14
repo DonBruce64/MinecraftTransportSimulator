@@ -15,8 +15,6 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 @Mod(modid = MTS.MODID, name = MTS.MODNAME, version = MTS.MODVER)
 public class MTS {
@@ -28,7 +26,6 @@ public class MTS {
 	public static MTS instance;
 	public static Logger MTSLog;
 	public static File minecraftDir;
-	public static final SimpleNetworkWrapper MTSNet = NetworkRegistry.INSTANCE.newSimpleChannel("MTSNet");
 	
 	static{
 		//Enable universal bucket so we can use buckets on fuel pumps.
@@ -48,17 +45,19 @@ public class MTS {
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event){
+		//Set logger and add log items from pre-boot operations.
 		MTSLog = event.getModLog();
 		for(String logEntry : PackParserSystem.logEntries){
 			MTSLog.error(logEntry);
 		}
+		
+		//Load config file an set minecraft directory.
 		ConfigSystem.loadFromDisk(new File(event.getSuggestedConfigurationFile().getParent(), "mtsconfig.json"));
 		minecraftDir = new File(event.getModConfigurationDirectory().getParent());
 	}
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event){
-		MTSRegistry.init();
 		InterfaceNetwork.init();
 	}
 }

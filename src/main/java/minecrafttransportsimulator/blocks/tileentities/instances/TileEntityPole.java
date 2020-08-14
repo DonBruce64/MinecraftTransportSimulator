@@ -70,7 +70,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		return drops;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public RenderPole getRenderer(){
 		return new RenderPole();

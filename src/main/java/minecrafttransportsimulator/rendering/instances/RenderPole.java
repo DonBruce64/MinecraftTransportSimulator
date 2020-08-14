@@ -27,14 +27,14 @@ import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 
-public class RenderPole extends ARenderTileEntityBase<TileEntityPole, BlockPole>{
+public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> connectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> solidConnectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
 	private static final Map<JSONPoleComponent, Integer> componentDisplayListMap = new HashMap<JSONPoleComponent, Integer>();
 	private static final Map<JSONPoleComponent, List<TransformLight>> componentLightMap = new HashMap<JSONPoleComponent, List<TransformLight>>();
 	
 	@Override
-	public void render(TileEntityPole tile, BlockPole block, float partialTicks){
+	public void render(TileEntityPole tile, float partialTicks){
 		//First render all connections.
 		//These are based on the pole itself, so we first need to get the pole.
 		TileEntityPole_Core coreComponent = (TileEntityPole_Core) tile.components.get(Axis.NONE);

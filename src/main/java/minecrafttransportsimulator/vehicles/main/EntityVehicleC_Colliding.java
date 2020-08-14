@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceGame;
 import mcinterface.WrapperBlock;
 import mcinterface.WrapperEntity;
@@ -69,8 +68,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	
 	
-	public EntityVehicleC_Colliding(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
+	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		//Create the initial part slots.
 		recalculatePartSlots();

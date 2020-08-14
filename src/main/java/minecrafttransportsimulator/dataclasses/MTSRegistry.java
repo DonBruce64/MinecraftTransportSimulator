@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import mcinterface.BuilderBlock;
-import mcinterface.BuilderEntity;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
@@ -27,19 +26,13 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.packets.general.PacketChat;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.relauncher.Side;
 
 /**Main registry class.  This class should be referenced by any class looking for
  * MTS items or blocks.  Adding new items and blocks is a simple as adding them
@@ -89,15 +82,6 @@ public final class MTSRegistry{
 	public static final BuilderBlock componentBench = new BuilderBlock(new BlockPartsBench(JSONItem.class).addValidClass(JSONBooklet.class));
 	public static final BuilderBlock decorBench = new BuilderBlock(new BlockPartsBench(JSONDecor.class).addValidClass(JSONPoleComponent.class));
 	
-	//Counter for packets.
-	private static int packetNumber = 0;
-	
-	/**All run-time things go here.**/
-	public static void init(){
-		initEntities();
-		initPackets();
-	}
-	
 	/**
 	 * This is called by packs to query what items they have registered.
 	 * Used to allow packs to register their own items after core mod processing.
@@ -134,6 +118,8 @@ public final class MTSRegistry{
 		}
     	return materialList;
     }
+    
+   
 	
 	/**
 	 * Registers all items (and itemblocks) present in this class.
@@ -181,32 +167,5 @@ public final class MTSRegistry{
 			event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
 			coreItems.add(item);
 		}
-	}
-
-	/**
-	 * Registers all entities with the entity registry.
-	 * For vehicles we only register the main classes as
-	 * the pack data stored in NBT is what makes for different vehicles.
-	 */
-	private static void initEntities(){
-		int entityNumber = 0;
-		EntityRegistry.registerModEntity(new ResourceLocation(MTS.MODID, "mts_vehicle"), BuilderEntity.class, "mts_vehicle", entityNumber++, MTS.MODID, 32*16, 5, false);
-	}
-	
-	private static void initPackets(){
-		//Packets in packets.general
-		registerPacket(PacketChat.class, PacketChat.Handler.class, true, false);
-	}
-
-	/**
-	 * Registers a packet and its handler on the client and/or the server.
-	 * @param packetClass
-	 * @param handlerClass
-	 * @param client
-	 * @param server
-	 */
-	private static <REQ extends IMessage, REPLY extends IMessage> void registerPacket(Class<REQ> packetClass, Class<? extends IMessageHandler<REQ, REPLY>> handlerClass, boolean client, boolean server){
-		if(client)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.CLIENT);
-		if(server)MTS.MTSNet.registerMessage(handlerClass, packetClass, ++packetNumber, Side.SERVER);
 	}
 }

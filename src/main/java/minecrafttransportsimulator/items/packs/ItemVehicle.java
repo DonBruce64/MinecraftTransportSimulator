@@ -1,30 +1,27 @@
 package minecrafttransportsimulator.items.packs;
 
-import minecrafttransportsimulator.MTS;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.core.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class ItemVehicle extends AItemPack<JSONVehicle>{
+public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
 	public final String subName;
 	
 	public ItemVehicle(JSONVehicle definition, String subName){
@@ -33,87 +30,38 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
-		if(!world.isRemote && player.getHeldItem(hand) != null){
+	public EnumActionResult onItemUse(EntityPlayer player, World mcWorld, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
+		WrapperWorld world = new WrapperWorld(mcWorld);
+		if(!world.isClient() && player.getHeldItem(hand) != null){
 			ItemStack heldStack = player.getHeldItem(hand);
 			if(heldStack.getItem() != null){
 				//We want to spawn above this block.
 				pos = pos.up();
 				
-				//First construct the class.
-				EntityVehicleF_Physics newVehicle = new EntityVehicleF_Physics(world, pos.getX(), pos.getY(), pos.getZ(), player.rotationYaw, definition);
+				//Make sure the definition is set in the NBT we will be giving to our new entity.
+				WrapperNBT data = new WrapperNBT(heldStack);
+				data.setString("packID", definition.packID);
+				data.setString("systemName", definition.systemName);
 				
-				//Now that the class exists, use the NTB data from this item to add back components.
-				//We use a try-catch for parts in case they've changed since this vehicle was last placed.
-				//Don't want crashes due to pack updates.
-				if(heldStack.hasTagCompound()){
-					NBTTagCompound tagCompound = heldStack.getTagCompound();
-					//A-level
-					NBTTagList partTagList = tagCompound.getTagList("Parts", 10);
-					for(byte i=0; i<partTagList.tagCount(); ++i){
-						try{
-							NBTTagCompound partTag = partTagList.getCompoundTagAt(i);
-							VehiclePart packPart = newVehicle.getPackDefForLocation(partTag.getDouble("offsetX"), partTag.getDouble("offsetY"), partTag.getDouble("offsetZ"));
-							//If we are using the old naming system for this vehicle, use it to load parts too.
-							if(tagCompound.hasKey("vehicleName")){
-								String oldPartName = partTag.getString("partName");
-								String parsedPackID = oldPartName.substring(0, oldPartName.indexOf(':'));
-								String parsedSystemName =  oldPartName.substring(oldPartName.indexOf(':') + 1);
-								JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(parsedPackID).get(parsedSystemName).definition;
-								newVehicle.addPart(PackParserSystem.createPart(newVehicle, packPart, partDefinition, partTag), true);
-							}else{
-								JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partTag.getString("packID")).get(partTag.getString("systemName")).definition;
-								newVehicle.addPart(PackParserSystem.createPart(newVehicle, packPart, partDefinition, partTag), true);
-							}
-						}catch(Exception e){
-							MTS.MTSLog.error("ERROR: Could not load stored part from NBT.  This part will NOT be present on the vehicle.");
-							e.printStackTrace();
-						}
-					}
-					
-					//B-level
-					newVehicle.locked=tagCompound.getBoolean("locked");
-					newVehicle.ownerUUID=tagCompound.getString("ownerName");
-					newVehicle.displayText=tagCompound.getString("displayText");
-					
-					//C-level
-					
-					//D-level
-					newVehicle.parkingBrakeOn=tagCompound.getBoolean("parkingBrakeOn");
-					
-					//E-level
-					newVehicle.fuel=tagCompound.getDouble("fuel");
-					newVehicle.fluidName=tagCompound.getString("fluidName");
-					newVehicle.electricPower=tagCompound.getDouble("electricPower");
-					for(byte i = 0; i<definition.motorized.instruments.size(); ++i){
-						String instrumentPackID;
-						String instrumentSystemName;
-						//Check to see if we were an old or new vehicle.  If we are old, load using the old naming convention.
-						if(tagCompound.hasKey("vehicleName")){
-							String instrumentInSlot = tagCompound.getString("instrumentInSlot" + i);
-							if(!instrumentInSlot.isEmpty()){
-								instrumentPackID = instrumentInSlot.substring(0, instrumentInSlot.indexOf(':'));
-								instrumentSystemName =  instrumentInSlot.substring(instrumentInSlot.indexOf(':') + 1);
-							}else{
-								continue;
-							}
-						}else{
-							instrumentPackID = tagCompound.getString("instrument" + i + "_packID");
-							instrumentSystemName = tagCompound.getString("instrument" + i + "_systemName");
-						}
-						if(!instrumentPackID.isEmpty()){
-							ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
-							//Check to prevent loading of faulty instruments due to updates.
-							if(instrument != null){
-								newVehicle.instruments.put(i, instrument);
-							}
-						}
-					}
-				}else{
-					//Since we don't have NBT data, we must be a new vehicle.
-					//If we have any default parts or instruments, we should add them now.
+				//First construct the class.
+				//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
+				//as if it has been saved in the world rather than into an item.  If there's no data,
+				//then we just make a blank, new instance.
+				EntityVehicleF_Physics newVehicle = this.createEntity(world, data);
+				
+				//Set position to the spot that was clicked by the player.
+				//Add a -90 rotation offset so the vehicle is facing perpendicular.
+				//Makes placement easier and is less likely for players to get stuck.
+				newVehicle.position.set((double)hitX, (double)hitY, (double)hitZ);
+				newVehicle.angles.y = -player.rotationYaw + 90; 
+				
+				//If the held stack doesn't have NBT, then we must be spawning a new vehicle.
+				//In this case, add default parts and fuel, if required.
+				if(!heldStack.hasTagCompound()){
+					//First add default parts via the vehicle's recusion.
 					EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle);
 					
+					//Next, add default instruments.
 					for(PackInstrument packInstrument : newVehicle.definition.motorized.instruments){
 						if(packInstrument.defaultInstrument != null){
 							try{
@@ -169,8 +117,8 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 				//If the core collisions are colliding, set the vehicle as dead and abort.
 				newVehicle.position.y += -minHeight;
 				for(BoundingBox coreBox : newVehicle.collisionBoxes){
-					if(world.collidesWithAnyBlock(coreBox)){
-						newVehicle.setDead();
+					if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -minHeight, 0D))){
+						//New vehicle shouldn't be spawned.  Bail out.
 						return EnumActionResult.FAIL;
 					}
 				}
@@ -193,5 +141,15 @@ public class ItemVehicle extends AItemPack<JSONVehicle>{
 	@Override
 	public String getTextureLocation(){
 		return "textures/vehicles/" + definition.systemName + ".png";
+	}
+
+	@Override
+	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperNBT data){
+		return new EntityVehicleF_Physics(world, data);
+	}
+
+	@Override
+	public Class<EntityVehicleF_Physics> getEntityClass(){
+		return EntityVehicleF_Physics.class;
 	}
 }

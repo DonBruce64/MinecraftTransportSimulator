@@ -3,7 +3,6 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperBlock;
 import mcinterface.WrapperNBT;
@@ -64,8 +63,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
 	
 	
-	public EntityVehicleD_Moving(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
+	public EntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brakeOn = data.getBoolean("brakeOn");

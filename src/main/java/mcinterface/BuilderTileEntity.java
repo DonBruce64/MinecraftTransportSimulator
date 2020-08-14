@@ -33,7 +33,7 @@ import net.minecraft.util.math.AxisAlignedBB;
  *
  * @author don_bruce
  */
-public class BuilderTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>>> extends TileEntity{
+public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
 	protected TileEntityType tileEntity;
 	
 	public BuilderTileEntity(){
@@ -54,6 +54,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<? extends 
 		//Done during initial placedown so we need to get the full data for initial state. 
 		NBTTagCompound tag = new NBTTagCompound();
 		tileEntity.save(new WrapperNBT(tag));
+		tag.setString("teid", tileEntity.getClass().getSimpleName());
 	    return new SPacketUpdateTileEntity(getPos(), -1, tag);
     }
 	
@@ -84,7 +85,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<? extends 
 	@Override
     public void readFromNBT(NBTTagCompound tag){
 		super.readFromNBT(tag);
-		if(tileEntity == null){
+		if(tileEntity == null && tag.hasKey("teid")){
 			//Restore the TE from saved state.
 			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
 		}

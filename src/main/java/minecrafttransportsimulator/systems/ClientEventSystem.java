@@ -1,57 +1,31 @@
 package minecrafttransportsimulator.systems;
 
-import org.lwjgl.opengl.GL11;
-
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderTileEntity;
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceGame;
-import mcinterface.InterfaceInput;
-import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.instances.GUIConfig;
-import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**This class handles rendering/camera edits that need to happen when riding vehicles,
  * as well as clicking of vehicles and their parts, as well as some other misc things.
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
-@SideOnly(Side.CLIENT)
+//@Mod.EventBusSubscriber(Side.CLIENT)
+//@SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
     private static final Minecraft minecraft = Minecraft.getMinecraft();
     public static boolean lockedView = true;
     private static int defaultRenderDistance;
 	private static int currentRenderDistance;
+	//FIXME fix all client events.
     /**
      * Performs updates to the player related to vehicle functions.  These include: <br>
      * 1) Sending the player to the {@link ControlSystem} for controls checks when seated in a vehicle.<br>
@@ -61,6 +35,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(TickEvent.PlayerTickEvent event){
+    	/*
     	//Only do updates at the end of a phase to prevent double-updates.
         if(event.phase.equals(Phase.END)){
     		//If we are on the integrated server, and riding a vehicle, reduce render height.
@@ -89,16 +64,9 @@ public final class ClientEventSystem{
     			}
         	}else{
         		//We are on the client.  Do update logic.
-        		//Update the sounds in the audio system.
-        		//We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
-        		try{
-        			InterfaceAudio.update();
-        		}catch(Exception e){
-        			//Do nothing.  We only get exceptions here if OpenAL isn't ready.
-        		}
-        		
-        		//If we are riding a vehicle, do rotation and control operation.
-        		if(event.player.getRidingEntity() instanceof EntityVehicleF_Physics){
+        		//If we are riding a entity, do rotation and possibly control operation.
+        		if(event.player.getRidingEntity() instanceof BuilderEntity){
+        			AEntityBase entity = ((BuilderEntity) event.player.getRidingEntity()).entity;
         			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.player.getRidingEntity();
 
                     //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
@@ -111,29 +79,9 @@ public final class ClientEventSystem{
                 			event.player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
                 		}
                      }
-                	
-                	//If the player is seated, and the seat is a controller, check their controls.
-        			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
-                	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
-                    //We also need to make sure the player in this event is the actual client player.  If we are on a server,
-                    //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-                	if(!InterfaceGame.isChatOpen() && vehicle.getSeatForRider(event.player) != null && event.player.equals(Minecraft.getMinecraft().player)){
-                		PartSeat playeSeat = vehicle.getSeatForRider(event.player);
-                		if(playeSeat != null){
-                			ControlSystem.controlVehicle(vehicle, playeSeat.vehicleDefinition.isController);
-                			InterfaceInput.setMouseEnabled(!(playeSeat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockedView));
-                			return;
-                		}
-            		}
         		}
-        		
-        		//If we got down here, we must not be riding and controlling a vehicle via mouseYoke.
-        		//Re-enable the mouse to ensure we don't keep it locked.
-    			if(ConfigSystem.configObject.client.mouseYoke.value){
-            		InterfaceInput.setMouseEnabled(true);
-            	}
         	}
-        }
+        }*/
     }
 
     
@@ -146,6 +94,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
+    	/*
     	if(event.getEntity().getRidingEntity() instanceof EntityVehicleF_Physics){
     		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){            	
     			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getEntity().getRidingEntity();
@@ -165,32 +114,7 @@ public final class ClientEventSystem{
             }else{
                 GL11.glTranslatef(0, 0F, zoomLevel);
         	}
-        }
-    }
-
-    /**
-     * Used to force rendering of aircraft above the world height limit, as
-     * newer versions suppress this as part of the chunk visibility
-     * feature.  Also causes lights to render, as rendering them during regular calls
-     * results in water being invisible.
-     */
-    @SubscribeEvent
-    public static void on(RenderWorldLastEvent event){
-        for(Entity entity : minecraft.world.loadedEntityList){
-            if(entity instanceof EntityVehicleF_Physics){
-            	minecraft.getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
-            }
-        }
-        Entity renderViewEntity = minecraft.getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
-        for(TileEntity tile : minecraft.world.loadedTileEntityList){
-        	if(tile instanceof BuilderTileEntity){
-        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
-        		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
-        	}
-        }
+        }*/
     }
 
     /**
@@ -198,7 +122,8 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
+       /*
+    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
         	EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getEntityPlayer().getRidingEntity();
         	GL11.glPushMatrix();
         	if(vehicle.definition != null){
@@ -240,14 +165,15 @@ public final class ClientEventSystem{
 		            }
 	        	}
         	}
-        }
+        }*/
     }
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
+    	/*
     	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
     		GL11.glPopMatrix();
-        }
+        }*/
     }
 
     /**
@@ -255,6 +181,7 @@ public final class ClientEventSystem{
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Post event){
+    	/*
     	boolean inFirstPerson = minecraft.gameSettings.thirdPersonView == 0;
         if(minecraft.player.getRidingEntity() instanceof EntityVehicleF_Physics && (inFirstPerson ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value)){
             if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
@@ -304,7 +231,7 @@ public final class ClientEventSystem{
                 	}
             	}
             }
-        }
+        }*/
     }
     
     /**

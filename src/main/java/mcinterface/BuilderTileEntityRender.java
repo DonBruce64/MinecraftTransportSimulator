@@ -6,7 +6,6 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
@@ -21,18 +20,19 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
  */
 @SuppressWarnings("rawtypes")
 public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTileEntity>{
-	private static final Map<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>> renders = new HashMap<ATileEntityBase, ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity>>();
-	//RENDER DATA MAPS.  Keyed by each instance of each Tile Entity loaded.
+	/**Map of renders that maps base TEs to the renders that render them.  Cached to prevent the need to create renders each cycle.**/
+	private static final Map<ATileEntityBase, ARenderTileEntityBase< ATileEntityBase<?>>> renders = new HashMap<ATileEntityBase, ARenderTileEntityBase<ATileEntityBase<?>>>();
+	/**Render data map. Keyed by each instance of each Tile Entity loaded.**/
 	private static final Map<ATileEntityBase, RenderTickData> renderData = new HashMap<ATileEntityBase, RenderTickData>();
 	
 	public BuilderTileEntityRender(){}
 	
-	@Override
 	@SuppressWarnings("unchecked")
+	@Override
 	public void render(BuilderTileEntity wrapper, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 		if(wrapper.tileEntity != null){
 			if(!renders.containsKey(wrapper.tileEntity)){
-				ARenderTileEntityBase<? extends ATileEntityBase, ? extends IBlockTileEntity> render = wrapper.tileEntity.getRenderer();
+				ARenderTileEntityBase<ATileEntityBase<?>> render = wrapper.tileEntity.getRenderer();
 				if(render == null){
 					//Don't render, as we don't have a TESR.
 					return;
@@ -41,7 +41,7 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 			}
 			
 			//Get the render wrapper.
-			ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>> render = (ARenderTileEntityBase<ATileEntityBase<?>, IBlockTileEntity<?>>) renders.get(wrapper.tileEntity);
+			ARenderTileEntityBase<ATileEntityBase<?>> render = renders.get(wrapper.tileEntity);
 			
 			//If we don't have render data yet, create one now.
 			if(!renderData.containsKey(wrapper.tileEntity)){
@@ -73,7 +73,7 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 				
 				//Set lighting and Render the TE.
 				InterfaceRender.setLightingToBlock(wrapper.tileEntity.position);
-				render.render(wrapper.tileEntity, (IBlockTileEntity) wrapper.tileEntity.getBlock(), partialTicks);
+				render.render(wrapper.tileEntity, partialTicks);
 				
 				//End render matrix and reset states.
 				GL11.glPopMatrix();

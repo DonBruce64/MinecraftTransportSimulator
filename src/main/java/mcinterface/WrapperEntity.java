@@ -124,7 +124,7 @@ public class WrapperEntity{
 	 *  Tells the entity to start riding the passed-in entity.
 	 */
 	public void setRiding(AEntityBase entityToRide){
-		entity.startRiding(entityToRide.builder);
+		entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide));
 	}
 	
 	/**

@@ -9,9 +9,9 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
+import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
@@ -105,7 +105,7 @@ public class InterfaceNetwork{
 	 *  being far away.
 	 */
 	public static void sendToClientsTracking(APacketBase packet, AEntityBase trackingEntity){
-		network.sendToAllTracking(new WrapperPacket(packet), trackingEntity.builder);
+		network.sendToAllTracking(new WrapperPacket(packet), BuilderEntity.entitiesToBuilders.get(trackingEntity));
 	}
 	
 	/**

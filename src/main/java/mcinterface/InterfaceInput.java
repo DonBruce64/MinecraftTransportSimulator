@@ -9,8 +9,13 @@ import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -20,6 +25,8 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for MC input classes.  Constructor does not exist, as this is simply a
@@ -265,6 +272,43 @@ public class InterfaceInput{
 			default: throw new EnumConstantNotPresentException(ControlsKeyboard.class, kbEnum.name());
 		}
 	}
+	
+	/**
+     * Forwards controls to the {@link ControlSystem} for processing if the
+     * player that is part of this game is riding a vehicle.
+     */
+    @SubscribeEvent
+    public static void on(TickEvent.PlayerTickEvent event){
+    	//Only do updates at the end of a phase to prevent double-updates.
+        if(event.phase.equals(Phase.END)){
+        	if(event.player.getRidingEntity() instanceof BuilderEntity){
+    			//If the player is seated, and the seat is a controller, check their controls.
+    			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
+            	//We need to check here for the seat because the link could be broken for a bit due to syncing errors.
+    			//This happens when the entitie's NBT loads before the player's and the player isn't put into the seat.
+                //We also need to make sure the player in this event is the actual client player.  If we are on a server,
+                //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
+        		AEntityBase entity = ((BuilderEntity) event.player.getRidingEntity()).entity;
+        		if(entity instanceof EntityVehicleF_Physics){
+        			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+        			//Sneaky time: the map may be keyed by WrapperEntity, but since WrapperEntity just checks the passed-in
+        			//object against the stored entity in the wrapper, we are essentially comparing Entity to Entity here.
+        			PartSeat seat = (PartSeat) vehicle.getPartAtLocation(vehicle.ridersToLocations.get(event.player));
+                	if(!InterfaceGame.isChatOpen() && seat != null && event.player.equals(Minecraft.getMinecraft().player)){
+            			ControlSystem.controlVehicle((EntityVehicleF_Physics) entity, seat.vehicleDefinition.isController);
+            			setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && ClientEventSystem.lockedView));
+            			return;
+            		}
+        		}
+        	}
+        	
+        	//If we got down here, we must not be riding and controlling a vehicle via mouseYoke.
+    		//Re-enable the mouse to ensure we don't keep it locked.
+			if(ConfigSystem.configObject.client.mouseYoke.value){
+        		setMouseEnabled(true);
+        	}
+        }
+    }
 	
 	/**
      * Opens the config screen when the config key is pressed.

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
@@ -39,14 +38,13 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 public abstract class AEntityBase{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
 	private static int idCounter = 0;
-	/**Map of created entities.  Keyed by their ID.  All entities in this map are currently in the world.**/
+	/**Map of created entities.  Keyed by their ID.  Note: invalid entities are NOT removed from this map as IDs don't get re-used.**/
 	public static Map<Integer, AEntityBase> createdEntities = new HashMap<Integer, AEntityBase>();
-	
-	public final BuilderEntity builder;
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
 	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.**/
 	public final String uniqueUUID;
+	
 	public final Point3d position;
 	public final Point3d prevPosition;
 	public final Point3d motion;
@@ -87,8 +85,7 @@ public abstract class AEntityBase{
 	 **/
 	public LinkedHashMap<WrapperEntity, Point3d> ridersToLocations = new LinkedHashMap<WrapperEntity, Point3d>();
 	
-	public AEntityBase(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		this.builder = builder;
+	public AEntityBase(WrapperWorld world, WrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
@@ -107,7 +104,6 @@ public abstract class AEntityBase{
 			locationsToRiders.put(data.getPoint3d("riderLocation" + riderIndex), null);
 		}
 		
-		//FIXME remove dead entities from this list.
 		createdEntities.put(lookupID, this);
 	}
 	

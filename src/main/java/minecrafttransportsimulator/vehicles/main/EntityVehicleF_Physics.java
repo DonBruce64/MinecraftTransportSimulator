@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.vehicles.main;
 
-import mcinterface.BuilderEntity;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
@@ -104,8 +103,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d thrustTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 
-	public EntityVehicleF_Physics(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");

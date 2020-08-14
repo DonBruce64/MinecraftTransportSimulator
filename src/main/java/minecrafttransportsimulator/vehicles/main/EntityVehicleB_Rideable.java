@@ -2,7 +2,6 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
 
-import mcinterface.BuilderEntity;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
@@ -21,8 +20,8 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  */
 abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{		
 	
-	public EntityVehicleB_Rideable(BuilderEntity builder, WrapperWorld world, WrapperNBT data){
-		super(builder, world, data);
+	public EntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 	}
 	
 	@Override

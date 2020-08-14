@@ -33,16 +33,21 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -175,7 +180,7 @@ public class InterfaceRender{
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = entity.builder.getBrightnessForRender();
+		int lightVar = BuilderEntity.entitiesToBuilders.get(entity).getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
@@ -290,6 +295,30 @@ public class InterfaceRender{
 			Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
 		}
 	}
+	
+	/**
+     * Used to force rendering of entities above the world height limit, as
+     * newer versions suppress this as part of the chunk visibility
+     * feature.
+     */
+    @SubscribeEvent
+    public static void on(RenderWorldLastEvent event){
+        for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
+            if(entity instanceof BuilderEntity){
+            	Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
+            }
+        }
+        Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();
+		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
+		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
+		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
+        for(TileEntity tile : Minecraft.getMinecraft().world.loadedTileEntityList){
+        	if(tile instanceof BuilderTileEntity){
+        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
+        		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
+        	}
+        }
+    }
 	
 	/**
 	 *  Event that's called to register models.  We register our render wrapper

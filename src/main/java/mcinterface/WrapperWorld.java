@@ -114,6 +114,17 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Spawns the passed-in entity into the world.
+	 *  Position and rotation is set initially to match the entity.
+	 */
+	public void spawnEntity(AEntityBase entity){
+    	BuilderEntity builder = new BuilderEntity(world);
+    	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) entity.angles.y, (float) entity.angles.x);
+    	builder.entity = entity;
+    	world.spawnEntity(builder);
+    }
+	
+	/**
 	 *  Attacks all entities that are in the passed-in damage range.  If the
 	 *  passed-in entity is not null, then any entity riding the passed-in
 	 *  entity that is inside the bounding box will not be attacked, nor will
@@ -338,7 +349,7 @@ public class WrapperWorld{
 	}
 
     /**
-	 *  Has the player place the passed-in block at the point specified.
+	 *  Places the passed-in block at the point specified.
 	 *  Returns true if the block was placed, false if not.
 	 */
     @SuppressWarnings("unchecked")
@@ -602,7 +613,7 @@ public class WrapperWorld{
 	 *  Explosion in this case is from an entity.
 	 */
 	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
-		world.newExplosion(source.builder, location.x, location.y, location.z, (float) strength, flames, true);
+		world.newExplosion(BuilderEntity.entitiesToBuilders.get(source), location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**
