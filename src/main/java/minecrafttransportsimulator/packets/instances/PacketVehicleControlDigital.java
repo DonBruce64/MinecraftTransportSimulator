@@ -74,7 +74,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 						return true;
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
-					for(AEntityBase entity : AEntityBase.createdEntities.values()){
+					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){
 						if(entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){

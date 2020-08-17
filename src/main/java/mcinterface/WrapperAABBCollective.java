@@ -24,10 +24,10 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	
 	public WrapperAABBCollective(BuilderEntity entity, List<BoundingBox> boxes){
 		super(	entity.posX - entity.width/2D,
-				entity.posX + entity.width/2D,
 				entity.posY - entity.height/2D,
-				entity.posY + entity.height/2D,
 				entity.posZ - entity.width/2D,
+				entity.posX + entity.width/2D,
+				entity.posY + entity.height/2D,
 				entity.posZ + entity.width/2D
 			);
 		this.boxes = boxes;
@@ -41,16 +41,16 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	@Override
 	public double calculateXOffset(AxisAlignedBB box, double offset){
 		for(BoundingBox testBox : boxes){
-			if(box.maxY > testBox.globalCenter.y - testBox.heightRadius/2D && box.minY < testBox.globalCenter.y + testBox.heightRadius/2D && box.maxZ > testBox.globalCenter.z - testBox.depthRadius/2D && box.minZ < testBox.globalCenter.z + testBox.depthRadius/2D){
+			if(box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius){
 				if(offset > 0.0D){
 					//Positive offset, box.maxX <= this.minX.
-	                double collisionDepth = testBox.globalCenter.x - testBox.widthRadius/2D - box.maxX;
+	                double collisionDepth = testBox.globalCenter.x - testBox.widthRadius - box.maxX;
 	                if(collisionDepth >= 0 && collisionDepth < offset){
 	                    offset = collisionDepth;
 	                }
 	            }else if(offset < 0.0D){
 	            	//Negative offset, box.minX >= this.maxX.
-	                double collisionDepth = testBox.globalCenter.x + testBox.widthRadius/2D - box.minX;
+	                double collisionDepth = testBox.globalCenter.x + testBox.widthRadius - box.minX;
 	                if(collisionDepth <= 0 && collisionDepth > offset){
 	                    offset = collisionDepth;
 	                }
@@ -63,16 +63,16 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	@Override
 	public double calculateYOffset(AxisAlignedBB box, double offset){
 		for(BoundingBox testBox : boxes){
-			if(box.maxX > testBox.globalCenter.x - testBox.widthRadius/2D && box.minX < testBox.globalCenter.x + testBox.widthRadius/2D && box.maxZ > testBox.globalCenter.z - testBox.depthRadius/2D && box.minZ < testBox.globalCenter.z + testBox.depthRadius/2D){
+			if(box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius){
 				if(offset > 0.0D){
 					//Positive offset, box.maxX <= this.minX.
-	                double collisionDepth = testBox.globalCenter.y - testBox.heightRadius/2D - box.maxY;
+	                double collisionDepth = testBox.globalCenter.y - testBox.heightRadius - box.maxY;
 	                if(collisionDepth >= 0 && collisionDepth < offset){
 	                    offset = collisionDepth;
 	                }
 	            }else if(offset < 0.0D){
 	            	//Negative offset, box.minX >= this.maxX.
-	                double collisionDepth = testBox.globalCenter.y + testBox.heightRadius/2D - box.minY;
+	                double collisionDepth = testBox.globalCenter.y + testBox.heightRadius - box.minY;
 	                if(collisionDepth <= 0 && collisionDepth > offset){
 	                    offset = collisionDepth;
 	                }
@@ -85,16 +85,16 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	@Override
 	public double calculateZOffset(AxisAlignedBB box, double offset){
 		for(BoundingBox testBox : boxes){
-			if(box.maxX > testBox.globalCenter.x - testBox.widthRadius/2D && box.minX < testBox.globalCenter.x + testBox.widthRadius/2D && box.maxY > testBox.globalCenter.y - testBox.heightRadius/2D && box.minY < testBox.globalCenter.y + testBox.heightRadius/2D){
+			if(box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius){
 				if(offset > 0.0D){
 					//Positive offset, box.maxX <= this.minX.
-	                double collisionDepth = testBox.globalCenter.z - testBox.depthRadius/2D - box.maxZ;
+	                double collisionDepth = testBox.globalCenter.z - testBox.depthRadius - box.maxZ;
 	                if(collisionDepth >= 0 && collisionDepth < offset){
 	                    offset = collisionDepth;
 	                }
 	            }else if(offset < 0.0D){
 	            	//Negative offset, box.minX >= this.maxX.
-	                double collisionDepth = testBox.globalCenter.z + testBox.depthRadius/2D - box.minZ;
+	                double collisionDepth = testBox.globalCenter.z + testBox.depthRadius - box.minZ;
 	                if(collisionDepth <= 0 && collisionDepth > offset){
 	                    offset = collisionDepth;
 	                }
@@ -107,14 +107,14 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	@Override
     public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ){
 		for(BoundingBox testBox : boxes){
-			if(
-				maxX > testBox.globalCenter.x - testBox.widthRadius/2D && 
-				minX < testBox.globalCenter.x + testBox.widthRadius/2D && 
-				maxY > testBox.globalCenter.y - testBox.heightRadius/2D && 
-				minY < testBox.globalCenter.y + testBox.heightRadius/2D &&
-				minZ < testBox.globalCenter.z - testBox.depthRadius/2D &&
-				maxZ < testBox.globalCenter.z + testBox.depthRadius/2D)
-			{
+				if(
+					maxX > testBox.globalCenter.x - testBox.widthRadius && 
+					minX < testBox.globalCenter.x + testBox.widthRadius && 
+					maxY > testBox.globalCenter.y - testBox.heightRadius && 
+					minY < testBox.globalCenter.y + testBox.heightRadius &&
+					maxZ > testBox.globalCenter.z - testBox.depthRadius &&
+					minZ < testBox.globalCenter.z + testBox.depthRadius)
+				{
 				return true;
 			}
 		}

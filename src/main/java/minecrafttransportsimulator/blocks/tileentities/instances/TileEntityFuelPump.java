@@ -21,7 +21,7 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 
     public TileEntityFuelPump(WrapperWorld world, Point3i position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new FluidTank(data, 15000, !world.isClient());
+    	this.tank = new FluidTank(data, 15000, world.isClient());
     }
 	
 	@Override

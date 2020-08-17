@@ -28,7 +28,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	
 	//Timers and controls for automatic control modes.
 	public boolean lightsOn = true;
-	public boolean mainDirectionXAxis = false;
+	public boolean mainDirectionXAxis;
 	public OpState currentOpState = OpState.GREEN_MAIN_RED_CROSS;
 	public int timeOperationStarted;
 	public int greenMainTime = 20;
@@ -47,12 +47,13 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		currentOpState = OpState.values()[data.getInteger("currentOpState")];
 		timeOperationStarted = data.getInteger("timeOperationStarted");
 		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
-        greenMainTime = data.getInteger("greenMainTime");
-        greenCrossTime = data.getInteger("greenCrossTime");
-        yellowMainTime = data.getInteger("yellowMainTime");
-        yellowCrossTime = data.getInteger("yellowCrossTime");
-        allRedTime = data.getInteger("allRedTime");
-        
+		if(data.getBoolean("hasCustomTimes")){
+			greenMainTime = data.getInteger("greenMainTime");
+	        greenCrossTime = data.getInteger("greenCrossTime");
+	        yellowMainTime = data.getInteger("yellowMainTime");
+	        yellowCrossTime = data.getInteger("yellowCrossTime");
+	        allRedTime = data.getInteger("allRedTime");
+		}
         componentLocations.clear();
         componentLocations.addAll(data.getPoints("componentLocations"));
 	}
@@ -103,7 +104,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 						
 						//Now we have min-max, check for any vehicles in the area.
 						//We need to check along the non-primary axis, but we don't care about Y.
-						for(AEntityBase entity : AEntityBase.createdEntities.values()){
+						for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities).values()){
 							if(entity.position.x > minX && entity.position.x < maxX && entity.position.z > minZ && entity.position.z < maxZ){
 								updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
 								break;
@@ -196,6 +197,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		data.setInteger("currentOpState", currentOpState.ordinal());
 		data.setInteger("timeOperationStarted", timeOperationStarted);
 		data.setBoolean("mainDirectionXAxis", mainDirectionXAxis);
+		data.setBoolean("hasCustomTimes", true);
         data.setInteger("greenMainTime", greenMainTime);
         data.setInteger("greenCrossTime", greenCrossTime);
         data.setInteger("yellowMainTime", yellowMainTime);

@@ -27,6 +27,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -38,6 +39,7 @@ import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -47,6 +49,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
@@ -257,14 +260,16 @@ public class InterfaceRender{
 		for(WrapperEntity rider : entity.ridersToLocations.keySet()){
 			if(!(InterfaceGame.getClientPlayer().equals(rider.entity) && InterfaceGame.inFirstPerson()) && rider.entity.posY > rider.entity.world.getHeight()){
 				GL11.glPushMatrix();
+				//FIXME we may need to add an offset here.
+				/*
 				Point3d offset = entity.position.copy();
 				if(entity instanceof EntityVehicleF_Physics){
-					PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) entity).getPartAtLocation(entity.ridersToLocations.get(rider));
+					PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) entity).getPartAtLocation(entity.ridersToLocations.get(rider)); 
 					if(seat != null){
 						offset.add(seat.worldPos).add(0D, -seat.getHeight()/2D, 0D);
 					}
-				}
-				GL11.glTranslated(offset.x, offset.y + rider.getYOffset(), offset.z);
+				}*/
+				GL11.glTranslated(entity.position.x, entity.position.y, entity.position.z);
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(rider.entity, partialTicks, false);
 				GL11.glPopMatrix();
 			}
@@ -296,6 +301,74 @@ public class InterfaceRender{
 		}
 	}
 	
+	 /**
+     * Pre-post methods for adjusting player pitch while seated.
+     */
+    @SubscribeEvent
+    public static void on(RenderPlayerEvent.Pre event){
+    	EntityPlayer renderedPlayer = event.getEntityPlayer();
+    	if(renderedPlayer.getRidingEntity() instanceof BuilderEntity){
+        	AEntityBase ridingEntity = ((BuilderEntity) renderedPlayer.getRidingEntity()).entity;
+        	GL11.glPushMatrix();
+        	if(ridingEntity != null){
+        		//Get total angles for the entity the player is riding.
+        		Point3d totalAngles = ridingEntity.angles.copy();
+	            if(ridingEntity instanceof EntityVehicleF_Physics){
+	            	//Note: while ridingEntity is an Entity, and the ridersToLocations is a WrapperEntity, they both
+	            	//fall-down and perform the Entity.equals() method, so this is still valid.  Prevents the need to create a wrapper.
+	            	PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(ridingEntity));
+	            	if(seat != null){
+	            		totalAngles = ridingEntity.angles.copy().add(seat.placementRotation).add(seat.getPositionRotation(event.getPartialRenderTick()).add(seat.getActionRotation(event.getPartialRenderTick())));
+	            		if(seat.parentPart != null){
+	            			totalAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()).add(seat.parentPart.getActionRotation(event.getPartialRenderTick())));
+	            		}
+	            	}
+	            }
+	            
+        		//Set the player yaw offset to 0.  This is needed as we are rotating the player manually.
+	            renderedPlayer.renderYawOffset = 0;
+	            
+	            //Set the player's head yaw to the delta between their yaw and their angled yaw.
+	            renderedPlayer.rotationYawHead = (float) (renderedPlayer.rotationYaw + totalAngles.y); 
+	            
+	            //Now add the rotations.
+	            //We have to do this via OpenGL, as changing the player's pitch doesn't make them tilt in the seat, and roll doesn't exist for them.
+	            //In this case, the player's eyes are their center point for rotation, but these aren't the same as 
+	            //their actual position.  Means we have to do funky math.
+	            //We also need to check if we are the client player or another player, as other players require a
+	            //different pre-render offset to be performed to get them into the right place. 
+	            if(!renderedPlayer.equals(Minecraft.getMinecraft().player)){
+	            	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
+	            	double playerDistanceX = renderedPlayer.posX - masterPlayer.posX;
+	                double playerDistanceY = renderedPlayer.posY - masterPlayer.posY;
+	                double playerDistanceZ = renderedPlayer.posZ - masterPlayer.posZ;
+	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
+	                
+	                GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
+	                GL11.glRotated(totalAngles.y, 0, 1, 0);
+	                GL11.glRotated(totalAngles.x, 1, 0, 0);
+	                GL11.glRotated(totalAngles.z, 0, 0, 1);
+	                GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
+	                
+	                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+	            }else{
+	            	GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
+	            	GL11.glRotated(totalAngles.y, 0, 1, 0);
+	            	GL11.glRotated(totalAngles.x, 1, 0, 0);
+	            	GL11.glRotated(totalAngles.z, 0, 0, 1);
+	            	GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
+	            }
+        	}
+        }
+    }
+
+    @SubscribeEvent
+    public static void on(RenderPlayerEvent.Post event){
+    	if(event.getEntityPlayer().getRidingEntity() instanceof BuilderEntity){
+    		GL11.glPopMatrix();
+        }
+    }
+	
 	/**
      * Used to force rendering of entities above the world height limit, as
      * newer versions suppress this as part of the chunk visibility
@@ -303,6 +376,7 @@ public class InterfaceRender{
      */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
+    	Minecraft.getMinecraft().world.profiler.startSection("iv_render_pass_-1");
         for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
             if(entity instanceof BuilderEntity){
             	Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
@@ -318,6 +392,7 @@ public class InterfaceRender{
         		TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
         	}
         }
+        Minecraft.getMinecraft().world.profiler.endSection();
     }
 	
 	/**
@@ -359,6 +434,7 @@ public class InterfaceRender{
 					@Override
 					public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
 						if(builder.entity != null){
+							Minecraft.getMinecraft().world.profiler.startSection("iv_render_entity_" + builder.entity.lookupID);
 							//If we don't have render data yet, create one now.
 							if(!renderData.containsKey(builder)){
 								renderData.put(builder, new RenderTickData(builder.entity.world));
@@ -374,6 +450,7 @@ public class InterfaceRender{
 							if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
 								builder.entity.render(partialTicks);
 							}
+							Minecraft.getMinecraft().world.profiler.endSection();
 						}
 					}
 				};

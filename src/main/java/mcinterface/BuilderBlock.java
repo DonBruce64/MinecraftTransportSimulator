@@ -98,9 +98,9 @@ public class BuilderBlock extends Block{
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
 		Class<? extends ATileEntityBase<?>> teClass = ((IBlockTileEntity<?>) block).getTileEntityClass();
-		if(TileEntitySignalController.class.isInstance(teClass)){
+		if(TileEntitySignalController.class.isAssignableFrom(teClass)){
 			return new BuilderTileEntitySignalController();
-		}else if(IFluidTankProvider.class.isInstance(teClass)){
+		}else if(IFluidTankProvider.class.isAssignableFrom(teClass)){
 			return getTileEntityTankWrapper(block);
 		}else{
 			return getTileEntityGenericWrapper(block);
@@ -114,7 +114,7 @@ public class BuilderBlock extends Block{
 	@SuppressWarnings("unchecked")
 	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
 		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
-		if(ITileEntityTickable.class.isInstance(teClass)){
+		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
        		return new BuilderTileEntity.Tickable<TileEntityType>();	
        	}else{
        		return new BuilderTileEntity<TileEntityType>();
@@ -128,7 +128,7 @@ public class BuilderBlock extends Block{
 	@SuppressWarnings("unchecked")
 	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
 		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
-		if(ITileEntityTickable.class.isInstance(teClass)){
+		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
 	   		return new BuilderTileEntityFluidTank.Tickable<TileEntityType>();	
 	   	}else{
 	   		return new BuilderTileEntityFluidTank<TileEntityType>();

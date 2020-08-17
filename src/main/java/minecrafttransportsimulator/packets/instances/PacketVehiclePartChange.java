@@ -54,6 +54,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		writeStringToBuffer(partPackID, buf);
 		if(!partPackID.isEmpty()){
 			writeStringToBuffer(partSystemName, buf);
+			partData.writeToBuffer(buf);
 		}
 	}
 	

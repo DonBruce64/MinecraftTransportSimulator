@@ -73,6 +73,15 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Create the initial part slots.
 		recalculatePartSlots();
+		
+		//Create initial collision boxes.  Needed to test spawn logic.
+		for(int i=0; i<definition.collision.size(); ++i){
+			VehicleCollisionBox boxDefinition = definition.collision.get(i);
+			Point3d boxLocalOffset = new Point3d(boxDefinition.pos[0], boxDefinition.pos[1], boxDefinition.pos[2]);
+			BoundingBox newBox = new BoundingBox(boxLocalOffset, boxLocalOffset.copy().rotateCoarse(angles).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+			vehicleCollisionBoxes.add(newBox);
+			collisionBoxes.add(newBox);
+		}
 	}
 	
 	@Override
@@ -96,19 +105,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Update the collision boxes.
-		//First get collision from the vehicle.
-		boolean createNewBoxes = vehicleCollisionBoxes.isEmpty();
+		//First update the vehicle collision boxes.
 		for(int i=0; i<definition.collision.size(); ++i){
-			//If we already have created these we can use mutable modification to speed up processing.
-			if(!createNewBoxes){
-				vehicleCollisionBoxes.get(i).updateToEntity(this);
-			}else{
-				VehicleCollisionBox boxDefinition = definition.collision.get(i);
-				Point3d boxLocalOffset = new Point3d(boxDefinition.pos[0], boxDefinition.pos[1], boxDefinition.pos[2]);
-				BoundingBox newBox = new BoundingBox(boxLocalOffset, boxLocalOffset.copy().rotateCoarse(angles).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
-				vehicleCollisionBoxes.add(newBox);
-				collisionBoxes.add(newBox);
-			}
+			vehicleCollisionBoxes.get(i).updateToEntity(this);
 		}
 		
 		//Update part collision boxes.
@@ -255,7 +254,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		partSlotBoxes.clear();
 		for(Entry<Point3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().rotateCoarse(angles).add(position), 0, 0, 0, false, false); 
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false); 
 				partSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 				if(!world.isClient()){
 					activePartSlotBoxes.put(newSlotBox, packPartEntry.getValue());

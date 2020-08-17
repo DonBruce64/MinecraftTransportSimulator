@@ -59,11 +59,11 @@ public abstract class APart implements ISoundProvider{
 	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
 		this.vehicle = vehicle;
 		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
-		this.totalOffset = placementOffset;
+		this.totalOffset = placementOffset.copy();
 		this.definition = definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
-		this.boundingBox = new BoundingBox(worldPos, getPositionOffset(0).add(placementOffset), getWidth(), getHeight(), getWidth(), definition.ground != null ? definition.ground.canFloat : false, false);
+		this.boundingBox = new BoundingBox(getPositionOffset(0).add(placementOffset), worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false);
 		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation;
 		this.isValid = true;
@@ -164,7 +164,6 @@ public abstract class APart implements ISoundProvider{
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
 		}
 		worldPos.setTo(totalOffset).rotateFine(vehicle.angles).add(vehicle.position);
-		boundingBox.globalCenter.setTo(totalOffset);
 
 		//Update sound variables.
 		soundPosition.rewind();

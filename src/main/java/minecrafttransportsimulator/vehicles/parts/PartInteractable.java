@@ -29,7 +29,7 @@ public final class PartInteractable extends APart{
 			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.type + " is not a valid type of interactable part.");
 		}
 		this.inventory = WrapperInventory.getTileEntityInventory(interactable);
-		this.tank = definition.interactable.type.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*1000, !vehicle.world.isClient()) : null;
+		this.tank = definition.interactable.type.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*1000, vehicle.world.isClient()) : null;
 	}
 	
 	@Override

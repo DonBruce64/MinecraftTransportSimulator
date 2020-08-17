@@ -364,9 +364,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			pitchDirectionFactor = Math.abs(angles.z%360);
 			pitchDirectionFactor = pitchDirectionFactor < 90 || pitchDirectionFactor > 270 ? 1.0D : -1.0D;
 			totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).multiply(180D/Math.PI);
-			angles.x = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
-			angles.y = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
-			angles.z = (float) totalTorque.z/momentRoll;
+			rotation.x = (float) (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x - sideVector.y*totalTorque.y)/momentPitch;
+			rotation.y = (float) (sideVector.y*totalTorque.x - verticalVector.y*-totalTorque.y)/momentYaw;
+			rotation.z = (float) totalTorque.z/momentRoll;
 			
 			if(world.isClient() && ConfigSystem.configObject.client.devMode.value){
 				System.out.format("States: Mass:%f TrackAngle:%f WingArea:%f\n", currentMass, trackAngle, currentWingArea);

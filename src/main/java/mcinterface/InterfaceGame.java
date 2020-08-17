@@ -82,7 +82,7 @@ public class InterfaceGame{
 	 *  isn't possible. 
 	 */
 	public static WrapperWorld getClientWorld(){
-		if(cachedClientWorld == null || !cachedClientWorld.world.equals(Minecraft.getMinecraft().world)){
+		if(cachedClientWorld == null || cachedClientWorld.world == null || !cachedClientWorld.world.equals(Minecraft.getMinecraft().world)){
 			cachedClientWorld = new WrapperWorld(Minecraft.getMinecraft().world);
 		}
 		return cachedClientWorld;

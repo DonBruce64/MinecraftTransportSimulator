@@ -47,13 +47,13 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 				//as if it has been saved in the world rather than into an item.  If there's no data,
 				//then we just make a blank, new instance.
-				EntityVehicleF_Physics newVehicle = this.createEntity(world, data);
+				EntityVehicleF_Physics newVehicle = createEntity(world, data);
 				
 				//Set position to the spot that was clicked by the player.
 				//Add a -90 rotation offset so the vehicle is facing perpendicular.
 				//Makes placement easier and is less likely for players to get stuck.
-				newVehicle.position.set((double)hitX, (double)hitY, (double)hitZ);
-				newVehicle.angles.y = -player.rotationYaw + 90; 
+				newVehicle.position.set((double) pos.getX(), (double) pos.getY(), (double) pos.getZ());
+				newVehicle.angles.y = -player.rotationYaw + 90;
 				
 				//If the held stack doesn't have NBT, then we must be spawning a new vehicle.
 				//In this case, add default parts and fuel, if required.
@@ -145,7 +145,11 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 
 	@Override
 	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperNBT data){
-		return new EntityVehicleF_Physics(world, data);
+		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, data);
+		for(APart part : vehicle.partsFromNBT){
+			vehicle.addPart(part, true);
+		}
+		return vehicle;
 	}
 
 	@Override

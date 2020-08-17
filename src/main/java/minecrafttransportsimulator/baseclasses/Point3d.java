@@ -189,9 +189,16 @@ public class Point3d extends APoint3<Double, Point3d>{
 	
 	private static final Double[] sinTable = new Double[361];
 	private static final Double[] cosTable = new Double[361];
+	private static double cosX;
+	private static double sinX;
+	private static double cosY;
+	private static double sinY;
+	private static double cosZ;
+	private static double sinZ;
 	private static double xRot;
 	private static double yRot;
 	private static double zRot;
+	
 	/**
      * Rotates this point about the passed-in angles.  Rotation is done using a 360-degree
      * static lookup table, so rotation is done to the nearest degree.  This is faster than
@@ -212,39 +219,35 @@ public class Point3d extends APoint3<Double, Point3d>{
 		zRot = (angles.z%360 + 360)%360;
 		
 		//Rotate based on tabled values.
-		d1 = cosTable[(int) xRot];//A
-		d2 = sinTable[(int) xRot];//B
-		d3 = cosTable[(int) yRot];//C
-		d4 = sinTable[(int) yRot];//D
-		d5 = cosTable[(int) zRot];//E
-		d6 = sinTable[(int) zRot];//F
-		x = x*(d3*d5-d2*-d4*d6) + y*(-d2*-d4*d5-d3*d6) + z*(-d1*-d4);
-		y = x*(d1*d6)           + y*(d1*d5)            + z*(-d2);
-		z = x*(-d4*d5+d2*d3*d6) + y*(d2*d3*d5+d4*-d6)  + z*(d1*d3);
+		cosX = cosTable[(int) xRot];//A
+		sinX = sinTable[(int) xRot];//B
+		cosY = cosTable[(int) yRot];//C
+		sinY = sinTable[(int) yRot];//D
+		cosZ = cosTable[(int) zRot];//E
+		sinZ = sinTable[(int) zRot];//F
+		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
+				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
+				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
+		);
 		return this;
 	}
-	
-	private static double d1;
-	private static double d2;
-	private static double d3;
-	private static double d4;
-	private static double d5;
-	private static double d6;
+		
 	/**
      * Rotates this point about the passed-in angles.  Rotation is done using actual sin
      * and cos calls via a rotation matrix, so only use this when precision is required (say
      * in rendering operations).  If only a rough approximation is required, use {@link #rotateCoarse(Point3d)}
      */
 	public Point3d rotateFine(Point3d angles){
-		d1 = Math.cos(Math.toRadians(angles.x));//A
-		d2 = Math.sin(Math.toRadians(angles.x));//B
-		d3 = Math.cos(Math.toRadians(angles.y));//C
-		d4 = Math.sin(Math.toRadians(angles.y));//D
-		d5 = Math.cos(Math.toRadians(angles.z));//E
-		d6 = Math.sin(Math.toRadians(angles.z));//F
-		x = x*(d3*d5-d2*-d4*d6) + y*(-d2*-d4*d5-d3*d6) + z*(-d1*-d4);
-		y = x*(d1*d6)           + y*(d1*d5)            + z*(-d2);
-		z = x*(-d4*d5+d2*d3*d6) + y*(d2*d3*d5+d4*-d6)  + z*(d1*d3);
+		cosX = Math.cos(Math.toRadians(angles.x));//A
+		sinX = Math.sin(Math.toRadians(angles.x));//B
+		cosY = Math.cos(Math.toRadians(angles.y));//C
+		sinY = Math.sin(Math.toRadians(angles.y));//D
+		cosZ = Math.cos(Math.toRadians(angles.z));//E
+		sinZ = Math.sin(Math.toRadians(angles.z));//F
+		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
+				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
+				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
+		);
 		return this;
 	}
 	

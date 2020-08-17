@@ -40,7 +40,7 @@ public class PacketFluidTankChange extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		FluidTank tank = FluidTank.createdTanks.get(tankID);
+		FluidTank tank = FluidTank.createdClientTanks.get(tankID);
 		if(fluidDelta < 0){
 			tank.drain(fluidName, -fluidDelta, true);
 		}else{

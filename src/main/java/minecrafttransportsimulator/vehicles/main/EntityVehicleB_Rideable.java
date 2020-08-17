@@ -2,12 +2,17 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
 
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceInput;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 
@@ -25,26 +30,47 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void updateRiders(){
+	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//We override the default rider update behavior here as the riders can move depending
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
-		Iterator<WrapperEntity> riderIterator = ridersToLocations.keySet().iterator();
-		while(riderIterator.hasNext()){
-			WrapperEntity rider = riderIterator.next();
-			Point3d riderPositionOffset = ridersToLocations.get(rider);
-			if(rider.isValid()){
-				//Get the part (seat) this rider is riding.
-				PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
+		Point3d riderPositionOffset = ridersToLocations.get(rider);
+		if(rider.isValid()){
+			//Get the part (seat) this rider is riding.
+			PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
 
-				//Now set the actual position for the seat.  Taking into account height as it's required for pitch offsets.
-				Point3d seatOffset = new Point3d(0D, -seat.getHeight()/2D + rider.getYOffset() + rider.getHeight(), 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).add(0D, -rider.getHeight(), 0D);
-				rider.setPosition(seatOffset);
-			}else{
-				//Remove invalid rider.
-				removeRider(rider, riderIterator);
-			}
+			//Now set the actual position for the seat.
+			Point3d seatLocationOffset = new Point3d(0D, rider.getEyeHeight() + rider.getSeatOffset(), 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
+			rider.setPosition(seatLocationOffset);
+			
+			//If we are on the client, and the game isn't paused, and the player has lockedView selected, rotate them with the vehicle.
+			//If we aren't paused, and we have a lockedView, rotate us with the vehicle.
+            if(world.isClient() && !InterfaceGame.isGamePaused() && ClientEventSystem.lockedView){
+    			rider.setRotations(rider.getPitch(), rider.getYaw() + angles.y - prevAngles.y);
+    			//If the pitch of the vehicle crossed the 90-degree bounds, adjust yaw to correct this.
+    			if((angles.x > 90 || angles.x < -90) ^ (prevAngles.x > 90 || prevAngles.x < -90)){
+    				//rider.setRotations(rider.getPitch(), rider.getYaw() + 180);
+    			}
+    			
+    			//FIXME adjust inverted TP here.
+    			/*
+        		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
+        			event.player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
+        		}*/
+             }
+			
+			//If we are on the client, and the rider is the main client player, check controls.
+			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.            	
+            //We also need to make sure the player in this event is the actual client player.  If we are on a server,
+            //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
+			if(world.isClient() && !InterfaceGame.isChatOpen() && rider.equals(InterfaceGame.getClientPlayer())){
+    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
+    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && ClientEventSystem.lockedView));
+    		}
+		}else{
+			//Remove invalid rider.
+			removeRider(rider, iterator);
 		}
 	}
 	
@@ -75,7 +101,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		Point3d riderLocation = ridersToLocations.get(rider);
 		super.removeRider(rider, iterator);
 		
-		//Set the rider dismount position if we are on the server
+		//Set the rider dismount position if we are on the server.
+		//If we are on the client, disable mouse-yoke blocking.
 		if(!world.isClient()){
 			VehiclePart packPart = getPackDefForLocation(riderLocation);
 			Point3d dismountPosition;
@@ -87,6 +114,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);	
 			}
 			rider.setPosition(dismountPosition);
+		}else{
+        	InterfaceInput.setMouseEnabled(true);
 		}
 	}
 	

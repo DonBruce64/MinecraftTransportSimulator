@@ -39,7 +39,10 @@ public abstract class AEntityBase{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
 	private static int idCounter = 0;
 	/**Map of created entities.  Keyed by their ID.  Note: invalid entities are NOT removed from this map as IDs don't get re-used.**/
-	public static Map<Integer, AEntityBase> createdEntities = new HashMap<Integer, AEntityBase>();
+	public static Map<Integer, AEntityBase> createdClientEntities = new HashMap<Integer, AEntityBase>();
+	/**Like {@link #createdClientEntities}, but on the server.  Used to keep collisions away on integrated systems.**/
+	public static Map<Integer, AEntityBase> createdServerEntities = new HashMap<Integer, AEntityBase>();
+	
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
 	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.**/
@@ -104,7 +107,11 @@ public abstract class AEntityBase{
 			locationsToRiders.put(data.getPoint3d("riderLocation" + riderIndex), null);
 		}
 		
-		createdEntities.put(lookupID, this);
+		if(world.isClient()){
+			createdClientEntities.put(lookupID, this);
+		}else{
+			createdServerEntities.put(lookupID, this);
+		}
 	}
 	
 	 /**
@@ -120,22 +127,17 @@ public abstract class AEntityBase{
 	}
 	
 	/**
-	 *  Called to update the passed-in rider position.  This gets called after the update loop,
+	 *  Called to update the passed-in rider.  This gets called after the update loop,
 	 *  as the entity needs to move to its new position before we can know where the
 	 *  riders of said entity will be.
 	 */
-	public void updateRiders(){
-		//Update riding entities.
-		Iterator<WrapperEntity> riderIterator = ridersToLocations.keySet().iterator();
-		while(riderIterator.hasNext()){
-			WrapperEntity rider = riderIterator.next();
-			Point3d riderPosition = ridersToLocations.get(rider);
-			if(rider.isValid()){
-				rider.setPosition(riderPosition);
-			}else{
-				//Remove invalid rider.
-				removeRider(rider, riderIterator);
-			}
+	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+		//Update entity position.
+		if(rider.isValid()){
+			rider.setPosition(ridersToLocations.get(rider));
+		}else{
+			//Remove invalid rider.
+			removeRider(rider, iterator);
 		}
 	}
 	
@@ -153,14 +155,16 @@ public abstract class AEntityBase{
 				//We already have a rider in this location.
 				return false;
 			}else{
-				//Update maps.  First check if the rider is already riding and change their location if so.
-				if(ridersToLocations.containsKey(rider)){
-					ridersToLocations.put(rider, riderLocation);
-				}else{
-					//This rider wasn't riding this entity before now.  Update their yaw to match
-					//the yaw of this entity to prevent 360+ rotation offsets.
+				//If this rider wasn't riding this vehicle before, adjust their yaw.
+				//This prevents bad math due to 360+ degree rotations.
+				if(!ridersToLocations.containsKey(rider)){
 					rider.setYaw(angles.y);
 				}
+				
+				//Add rider to map, and send out packet if required.
+				ridersToLocations.put(rider, riderLocation);
+				locationsToRiders.put(riderLocation, rider);
+				rider.setRiding(this);
 				if(!world.isClient()){
 					InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, riderLocation), this);
 				}

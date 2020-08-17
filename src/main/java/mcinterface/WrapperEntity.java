@@ -30,7 +30,7 @@ public class WrapperEntity{
 	
 	@Override
 	public boolean equals(Object obj){
-		return entity.equals(obj);
+		return entity.equals(obj instanceof WrapperEntity ? ((WrapperEntity) obj).entity : obj);
 	}
 	
 	/**
@@ -62,18 +62,31 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Returns the entity's y-offset.
-	 *  This is how far above the mount position this entity sits when riding things.
+	 *  Tells the entity to start riding the passed-in entity.
 	 */
-	public double getYOffset(){
-		return entity.getYOffset();
+	public void setRiding(AEntityBase entityToRide){
+		entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide), true);
 	}
 	
 	/**
-	 *  Returns the entity's height.
+	 *  Returns a Y-offset for where this entity should sit in a seat.
+	 *  This is based on how far down the axis drawn on the seat's y-axis
+	 *  the position for the entity should be set.  Required as entities
+	 *  sit where the bottoms of their bounding boxes are, even if this isn't
+	 *  where the bottoms of their models are.  Players, for example, rotate
+	 *  their legs upwards when sitting, despite their bounds being lower.
 	 */
-	public double getHeight(){
-		return entity.height;
+	public double getSeatOffset(){
+		return 0D;
+	}
+	
+	/**
+	 *  Returns how high the eyes of the entity are from its base.
+	 *  This does not take into account the base of the model.  If you need
+	 *  the distance for that, use {@link #getSeatOffset()}
+	 */
+	public double getEyeHeight(){
+		return entity.getEyeHeight();
 	}
 	
 	/**
@@ -121,13 +134,6 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Tells the entity to start riding the passed-in entity.
-	 */
-	public void setRiding(AEntityBase entityToRide){
-		entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide));
-	}
-	
-	/**
 	 *  Tries to leash up the entity to the passed-in player.
 	 *  False may be returned if the entity cannot be leashed,
 	 *  or if the player isn't holding a leash.
@@ -157,7 +163,7 @@ public class WrapperEntity{
 	 *  Sets the entity's yaw to the passed-in yaw.
 	 */
 	public void setYaw(double yaw){
-		entity.rotationYaw = (float)yaw;
+		entity.rotationYaw = (float)-yaw;
 	}
 	
 	/**

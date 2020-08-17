@@ -104,21 +104,21 @@ public class BoundingBox{
 	 *  Returns true if the passed-in point intersects this box in the YZ-plane.
 	 */
 	public boolean intersectsWithYZ(Point3d point){
-        return point.y >= globalCenter.y - heightRadius/2D && point.y <= globalCenter.y + heightRadius/2D && point.z >= globalCenter.z - depthRadius/2D && point.z <= globalCenter.z + depthRadius/2D;
+        return point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XZ-plane.
 	 */
 	public boolean intersectsWithXZ(Point3d point){
-        return point.x >= globalCenter.x - widthRadius/2D && point.x <= globalCenter.x + widthRadius/2D && point.z >= globalCenter.z - depthRadius/2D && point.z <= globalCenter.z + depthRadius/2D;
+        return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XY-plane.
 	 */
 	public boolean intersectsWithXY(Point3d point){
-        return point.x >= globalCenter.x - widthRadius/2D && point.x <= globalCenter.x + widthRadius/2D && point.y >= globalCenter.y - heightRadius/2D && point.y <= globalCenter.y + heightRadius/2D;
+        return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius;
     }
 	
 	/**

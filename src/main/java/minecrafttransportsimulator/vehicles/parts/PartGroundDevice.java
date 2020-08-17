@@ -187,6 +187,8 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	
 	public void setFlat(){
 		isFlat = true;
+		//Update box height to new height.
+		boundingBox.heightRadius = getHeight()/2D;
 		if(vehicle.world.isClient()){
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
 		}

@@ -101,16 +101,12 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns the entity that has the passed-in ID.
+	 *  If the entity is a player, an instance of {@link WrapperPlayer}
+	 *  is returned instead.
 	 */
 	public WrapperEntity getEntity(int id){
-		return new WrapperEntity(world.getEntityByID(id));
-	}
-	
-	/**
-	 *  Returns the player with the passed-in ID.
-	 */
-	public WrapperPlayer getPlayer(int id){
-		return new WrapperPlayer((EntityPlayer) world.getEntityByID(id));
+		Entity entity = world.getEntityByID(id);
+		return entity instanceof EntityPlayer ? new WrapperPlayer((EntityPlayer) entity) : new WrapperEntity(entity);
 	}
 	
 	/**
@@ -119,8 +115,9 @@ public class WrapperWorld{
 	 */
 	public void spawnEntity(AEntityBase entity){
     	BuilderEntity builder = new BuilderEntity(world);
-    	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) entity.angles.y, (float) entity.angles.x);
+    	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
     	builder.entity = entity;
+    	BuilderEntity.entitiesToBuilders.put(entity, builder);
     	world.spawnEntity(builder);
     }
 	
@@ -369,9 +366,12 @@ public class WrapperWorld{
 	            	//Block is set.  See if we need to set TE data.
 	            	if(block instanceof IBlockTileEntity){
 	            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-	            		WrapperNBT data = new WrapperNBT(stack);
-	            		if(stack.getItem() instanceof AItemPack){
-		            		data.setString("packID", ((AItemPack<JSONDefinition>) stack.getItem()).definition.packID);
+	            		WrapperNBT data = null;
+	            		if(stack.hasTagCompound()){
+	            			data = new WrapperNBT(stack);
+	            		}else if(stack.getItem() instanceof AItemPack){
+	            			data = new WrapperNBT();
+	            			data.setString("packID", ((AItemPack<JSONDefinition>) stack.getItem()).definition.packID);
 		            		data.setString("systemName", ((AItemPack<JSONDefinition>) stack.getItem()).definition.systemName);
 	            		}
 	            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);

@@ -90,6 +90,11 @@ public class BuilderEntity extends Entity{
     		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
     		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
     		
+    		//FIXME remove this vhen ground physics get working.
+    		if(posY < -50){
+    			this.setDead();
+    		}
+    		
     		//Make sure the collision bounds for MC are big enough to collide with this entity.
 			if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
 				World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
@@ -110,9 +115,6 @@ public class BuilderEntity extends Entity{
     				entity.removeRider(rider, riderIterator);
     			}
     		}
-    		
-    		//Update riders once we have updated the main entity and ensured all the riders are still present.
-    		entity.updateRiders();
     		
     		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
     		if(world.isRemote){
@@ -214,6 +216,21 @@ public class BuilderEntity extends Entity{
     }
     
     @Override
+    public void updatePassenger(Entity passenger){
+    	//Forward passenger updates to the entity, if it exists.
+    	if(entity != null){
+    		Iterator<WrapperEntity> iterator = entity.ridersToLocations.keySet().iterator();
+    		while(iterator.hasNext()){
+    			WrapperEntity rider = iterator.next();
+    			if(rider.equals(passenger)){
+    				entity.updateRider(rider, iterator);
+    				return;
+    			}
+    		}
+    	}
+    }
+    
+    @Override
 	public AxisAlignedBB getEntityBoundingBox(){
 		//Override this to make interaction checks work with the multiple collision points.
 		//We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
@@ -275,9 +292,11 @@ public class BuilderEntity extends Entity{
 			
     @Override
 	public void readFromNBT(NBTTagCompound tag){
+    	super.readFromNBT(tag);
 		if(entity == null && tag.hasKey("entityid")){
 			//Restore the Entity from saved state.
 			entity = entityMap.get(tag.getString("entityid")).createEntity(new WrapperWorld(world), new WrapperNBT(tag));
+			entitiesToBuilders.put(entity, this);
 		}
 	}
     

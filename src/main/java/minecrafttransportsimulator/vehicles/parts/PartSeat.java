@@ -33,9 +33,9 @@ public final class PartSeat extends APart{
 				}
 			}else{
 				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
-				WrapperEntity entity = player.getLeashedEntity();
-				if(entity != null){
-					vehicle.addRider(entity, placementOffset);
+				WrapperEntity leashedEntity = player.getLeashedEntity();
+				if(leashedEntity != null){
+					vehicle.addRider(leashedEntity, placementOffset);
 				}else{
 					//Didn't find an animal.  Just mount the player.
 					//Don't mount them if they are sneaking, however.  This will confuse MC.

@@ -38,6 +38,12 @@ public class WrapperPlayer extends WrapperEntity{
 		this.player = player;
 	}
 	
+	@Override
+	public double getSeatOffset(){
+		//Player legs are 12 pixels.
+		return -12D/16D;
+	}
+	
 	/**
 	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
 	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.

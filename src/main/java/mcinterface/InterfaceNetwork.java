@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
@@ -19,6 +20,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
@@ -58,6 +60,7 @@ public class InterfaceNetwork{
 		//Now register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
+		packetMappings.put(packetIndex++, PacketBulletHit.class);
 		packetMappings.put(packetIndex++, PacketEntityCSHandshake.class);
 		packetMappings.put(packetIndex++, PacketEntityRiderChange.class);
 		packetMappings.put(packetIndex++, PacketFluidTankChange.class);
@@ -70,6 +73,7 @@ public class InterfaceNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);
+		packetMappings.put(packetIndex++, PacketVehicleInteract.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartChange.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartGroundDevice.class);

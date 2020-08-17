@@ -9,7 +9,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
@@ -62,24 +61,6 @@ public final class ClientEventSystem{
         	    		}
         	    	}
     			}
-        	}else{
-        		//We are on the client.  Do update logic.
-        		//If we are riding a entity, do rotation and possibly control operation.
-        		if(event.player.getRidingEntity() instanceof BuilderEntity){
-        			AEntityBase entity = ((BuilderEntity) event.player.getRidingEntity()).entity;
-        			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.player.getRidingEntity();
-
-                    //If we aren't paused, and we have a lockedView, rotate us with the vehicle.
-                    if(!minecraft.isGamePaused() && lockedView){
-            			event.player.rotationYaw += vehicle.rotationYaw - vehicle.prevRotationYaw;
-            			if((vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90) ^ (vehicle.prevRotationPitch > 90 || vehicle.prevRotationPitch < -90)){
-            				event.player.rotationYaw+=180;
-            			}
-                		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
-                			event.player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
-                		}
-                     }
-        		}
         	}
         }*/
     }
@@ -114,65 +95,6 @@ public final class ClientEventSystem{
             }else{
                 GL11.glTranslatef(0, 0F, zoomLevel);
         	}
-        }*/
-    }
-
-    /**
-     * Pre-post methods for adjusting player pitch while seated.
-     */
-    @SubscribeEvent
-    public static void on(RenderPlayerEvent.Pre event){
-       /*
-    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
-        	EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) event.getEntityPlayer().getRidingEntity();
-        	GL11.glPushMatrix();
-        	if(vehicle.definition != null){
-	        	PartSeat seat = vehicle.getSeatForRider(event.getEntityPlayer());
-	        	if(seat != null){
-		            //First restrict the player's yaw to prevent them from being able to rotate their body in a seat.
-		            event.getEntityPlayer().renderYawOffset = vehicle.rotationYaw + (float)((seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0) - seat.placementRotation.y);
-		            if(vehicle.rotationPitch > 90 || vehicle.rotationPitch < -90){
-		            	event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw*-1F;
-		            }else{
-			            event.getEntityPlayer().rotationYawHead = event.getEntityPlayer().rotationYaw;
-		            }
-		            
-		            
-		            //Now add the pitch rotation.
-		            double vehicleRotationRad = Math.toRadians(vehicle.rotationYaw);
-		            double parentRotationRad = Math.toRadians(seat.parentPart != null ? seat.parentPart.getActionRotation(event.getPartialRenderTick()).y : 0);
-		            if(!event.getEntityPlayer().equals(minecraft.player)){
-		                EntityPlayer masterPlayer = Minecraft.getMinecraft().player;
-		                EntityPlayer renderedPlayer = event.getEntityPlayer();
-		                float playerDistanceX = (float) (renderedPlayer.posX - masterPlayer.posX);
-		                float playerDistanceY = (float) (renderedPlayer.posY - masterPlayer.posY);
-		                float playerDistanceZ = (float) (renderedPlayer.posZ - masterPlayer.posZ);
-		                GL11.glTranslatef(playerDistanceX, playerDistanceY, playerDistanceZ);
-		                GL11.glTranslated(0, masterPlayer.getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
-		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
-		                GL11.glRotated(seat.placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
-		                GL11.glRotated(seat.placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
-		                GL11.glTranslated(0, -masterPlayer.getEyeHeight(), 0);
-		                GL11.glTranslatef(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
-		            }else{
-		                GL11.glTranslated(0, event.getEntityPlayer().getEyeHeight(), 0);
-		                GL11.glRotated(vehicle.rotationPitch, Math.cos(vehicleRotationRad), 0, Math.sin(vehicleRotationRad));
-		                GL11.glRotated(vehicle.rotationRoll, -Math.sin(vehicleRotationRad), 0, Math.cos(vehicleRotationRad));
-		                GL11.glRotated(seat.placementRotation.x, Math.cos(vehicleRotationRad + parentRotationRad), 0, Math.sin(vehicleRotationRad + parentRotationRad));
-		                GL11.glRotated(seat.placementRotation.z, -Math.sin(vehicleRotationRad + parentRotationRad), 0, Math.cos(vehicleRotationRad + parentRotationRad));
-		                GL11.glTranslated(0, -event.getEntityPlayer().getEyeHeight(), 0);
-		            }
-	        	}
-        	}
-        }*/
-    }
-
-    @SubscribeEvent
-    public static void on(RenderPlayerEvent.Post event){
-    	/*
-    	if(event.getEntityPlayer().getRidingEntity() instanceof EntityVehicleF_Physics){
-    		GL11.glPopMatrix();
         }*/
     }
 

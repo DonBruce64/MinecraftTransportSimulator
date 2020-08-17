@@ -34,7 +34,7 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFuelPump pump){
 		if(vehicleID != -1){
-			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdEntities.get(vehicleID); 
+			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(vehicleID); 
 			if(vehicle != null){
 				pump.connectedVehicle = vehicle;
 				pump.getTank().resetAmountDispensed();

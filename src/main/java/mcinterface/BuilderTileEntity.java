@@ -12,6 +12,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.World;
 
 /**Builder for the MC Tile Entity class (called BlockEntity in later MC versions cause
  * the people who maintain the mappings like to make life difficult through constant
@@ -39,6 +40,13 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	public BuilderTileEntity(){
 		//Blank constructor for MC.
 	}
+	
+	@Override
+	protected void setWorldCreate(World world){
+		//MC is stupid and doesn't actually do anything here.
+		//This means the world isn't set when we create this TE, leading to NPEs.
+        this.setWorld(world);
+    }
 	
 	@Override
 	public NBTTagCompound getUpdateTag(){

@@ -36,7 +36,13 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * operations are performed.  Note that if you are iterating over this list when you call one of those
 	 * methods, and you don't pass the method an iterator instance, you will get a CME!.
 	 */
-	public final List<APart> parts = new ArrayList<APart>();	
+	public final List<APart> parts = new ArrayList<APart>();
+	
+	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
+	 * due to the various sub-classed variables not being ready yet.  To compensate, we add the parts we
+	 * wish to add to this list.  At the end of construction, these will be added to this vehicle, preventing NPEs.
+	 */
+	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
@@ -54,7 +60,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				WrapperNBT partData = data.getData("part_" + i);
 				VehiclePart packPart = getPackDefForLocation(partData.getPoint3d("offset"));
 				JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partData.getString("packID")).get(partData.getString("systemName")).definition;
-				addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partData), true);
+				partsFromNBT.add(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partData));
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 				e.printStackTrace();
@@ -64,6 +70,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	
 	@Override
 	public void update(){
+		super.update();
 		//Send update call down to all parts.
 		//They need to get processed first to handle hitbox logic, or removal based on damage.
 		Iterator<APart> iterator = parts.iterator();
@@ -358,7 +365,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		for(APart part : parts){
 			//Don't save the part if it's not valid.
 			if(part.isValid){
-				++totalParts;
 				WrapperNBT partData = part.getData();
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
@@ -366,6 +372,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				partData.setString("systemName", part.definition.systemName);
 				partData.setPoint3d("offset", part.placementOffset);
 				data.setData("part_" + totalParts, partData);
+				++totalParts;
 			}
 		}
 		data.setInteger("totalParts", totalParts);

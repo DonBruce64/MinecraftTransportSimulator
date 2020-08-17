@@ -74,7 +74,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     			//Get the closest vehicle within a 16-block radius.
     			EntityVehicleF_Physics nearestVehicle = null;
     			double lowestDistance = 16D;
-    			for(AEntityBase entity : AEntityBase.createdEntities.values()){
+    			for(AEntityBase entity : AEntityBase.createdServerEntities.values()){
     				if(entity instanceof EntityVehicleF_Physics){
     					double entityDistance = entity.position.distanceTo(point);
     					if(entityDistance < lowestDistance){
