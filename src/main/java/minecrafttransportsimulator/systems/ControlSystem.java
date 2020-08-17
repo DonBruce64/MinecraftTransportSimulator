@@ -4,6 +4,7 @@ import mcinterface.BuilderGUI;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
+import mcinterface.InterfaceRender;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
@@ -67,14 +68,14 @@ public final class ControlSystem{
 	
 	private static void controlCamera(ControlsKeyboard camLock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
 		if(camLock.isPressed()){
-			ClientEventSystem.lockedView = !ClientEventSystem.lockedView; 
+			EntityVehicleF_Physics.lockCameraToMovement = !EntityVehicleF_Physics.lockCameraToMovement; 
 		}
 		
-		if(zoomIn.isPressed() && ClientEventSystem.zoomLevel > 0){
-			ClientEventSystem.zoomLevel -= 2;
+		if(zoomIn.isPressed()){
+			InterfaceRender.changeCameraZoom(true);
 		}
 		if(zoomOut.isPressed()){
-			ClientEventSystem.zoomLevel += 2;
+			InterfaceRender.changeCameraZoom(false);
 		}
 		
 		if(changeView.isPressed()){
@@ -257,7 +258,7 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(ClientEventSystem.lockedView && BuilderGUI.isGUIActive(null)){
+			if(EntityVehicleF_Physics.lockCameraToMovement&& BuilderGUI.isGUIActive(null)){
 				long mousePosition = InterfaceInput.getTrackedMouseInfo();
 				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
@@ -345,7 +346,7 @@ public final class ControlSystem{
 		
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(ClientEventSystem.lockedView && BuilderGUI.isGUIActive(null)){
+			if(EntityVehicleF_Physics.lockCameraToMovement && BuilderGUI.isGUIActive(null)){
 				long mousePosition = InterfaceInput.getTrackedMouseInfo();
 				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}

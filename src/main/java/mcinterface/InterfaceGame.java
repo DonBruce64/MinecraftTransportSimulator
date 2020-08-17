@@ -59,6 +59,13 @@ public class InterfaceGame{
 	}
 	
 	/**
+	 *  Returns true if the game is in standard third-person mode.
+	 */
+	public static boolean inThirdPerson(){
+		return Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+	}
+	
+	/**
 	 *  Toggle first-person mode.  Does not toggle to the inverted third-person mode.
 	 */
 	public static void toggleFirstPerston(){

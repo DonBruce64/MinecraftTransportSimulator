@@ -43,6 +43,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				data.setString("packID", definition.packID);
 				data.setString("systemName", definition.systemName);
 				
+				//Make sure we don't restore any wold-based entity properties.
+				data.setInteger("lookupID", 0);
+				data.setPoint3d("position", new Point3d(0D, 0D, 0D));
+				data.setPoint3d("motion", new Point3d(0D, 0D, 0D));
+				data.setPoint3d("angles", new Point3d(0D, 0D, 0D));
+				data.setPoint3d("rotation", new Point3d(0D, 0D, 0D));
+				
+				
 				//First construct the class.
 				//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 				//as if it has been saved in the world rather than into an item.  If there's no data,

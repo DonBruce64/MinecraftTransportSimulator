@@ -50,8 +50,9 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 					}else{
 						BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
 					}
+				}else{
+					return CallbackType.PLAYER;
 				}
-				return CallbackType.PLAYER;
 			}else if(!vehicle.world.isClient()){
 				if(part != null && !player.isSneaking()){
 					//Player can remove part.  Spawn item in the world and remove part.

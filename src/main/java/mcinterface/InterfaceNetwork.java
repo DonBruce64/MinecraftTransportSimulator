@@ -23,6 +23,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
@@ -76,6 +77,7 @@ public class InterfaceNetwork{
 		packetMappings.put(packetIndex++, PacketVehicleInteract.class);
 		packetMappings.put(packetIndex++, PacketVehicleLightToggle.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartChange.class);
+		packetMappings.put(packetIndex++, PacketVehiclePartEngine.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartGroundDevice.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartGun.class);
 		packetMappings.put(packetIndex++, PacketVehicleServerMovement.class);

@@ -14,8 +14,8 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public class GUIHUD extends AGUIBase{
-	public static final int HUD_WIDTH = 400;
-	public static final int HUD_HEIGHT = 140;
+	private static final int HUD_WIDTH = 400;
+	private static final int HUD_HEIGHT = 140;
 	private final EntityVehicleF_Physics vehicle;
 
 	public GUIHUD(EntityVehicleF_Physics vehicle){

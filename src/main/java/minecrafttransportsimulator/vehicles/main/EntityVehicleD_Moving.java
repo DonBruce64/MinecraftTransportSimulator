@@ -113,15 +113,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now do update calculations and logic.
 		getForcesAndMotions();
 		performGroundOperations();
-		//FIXME add coolisions when we fix boxes.
-		//angles.y=0;
-		//angles.x++;
-		angles.y += 1;
-		//angles.x+=1;
-		angles.z += 2;//+= 2;
-		angles.x += 4;//+= 2;
+		//FIXME remove hancks when ground collision works.
 		position.y = 10;
-		//moveVehicle();
+		motion.y = 0;
+		motion.x = 0.25;
+		
+		moveVehicle();
 		if(!world.isClient()){
 			dampenControlSurfaces();
 		}

@@ -311,7 +311,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	//-----START OF SOUND CODE-----
 	@Override
 	public void updateProviderSound(SoundInstance sound){
-		if(isValid){
+		if(!isValid){
 			sound.stop();
 		}else if(sound.soundName.equals(definition.motorized.hornSound)){
 			if(!hornOn){

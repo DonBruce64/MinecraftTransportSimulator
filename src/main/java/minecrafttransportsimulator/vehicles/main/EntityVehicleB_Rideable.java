@@ -10,7 +10,6 @@ import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -23,7 +22,8 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{		
+abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
+	public static boolean lockCameraToMovement = true;
 	
 	public EntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -46,18 +46,13 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			
 			//If we are on the client, and the game isn't paused, and the player has lockedView selected, rotate them with the vehicle.
 			//If we aren't paused, and we have a lockedView, rotate us with the vehicle.
-            if(world.isClient() && !InterfaceGame.isGamePaused() && ClientEventSystem.lockedView){
-    			rider.setRotations(rider.getPitch(), rider.getYaw() + angles.y - prevAngles.y);
-    			//If the pitch of the vehicle crossed the 90-degree bounds, adjust yaw to correct this.
-    			if((angles.x > 90 || angles.x < -90) ^ (prevAngles.x > 90 || prevAngles.x < -90)){
-    				//rider.setRotations(rider.getPitch(), rider.getYaw() + 180);
-    			}
-    			
-    			//FIXME adjust inverted TP here.
-    			/*
-        		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0){
-        			event.player.rotationPitch += vehicle.rotationPitch - vehicle.prevRotationPitch;
-        		}*/
+            if(world.isClient() && !InterfaceGame.isGamePaused() && lockCameraToMovement){
+    			//Only change pitch in third-person.  First-person pitch changes will result in the player looking the wrong way.
+        		if(!InterfaceGame.inFirstPerson()){
+        			rider.setRotations(rider.getPitch() + angles.x - prevAngles.x, rider.getYaw() + angles.y - prevAngles.y);
+        		}else{
+        			rider.setRotations(rider.getPitch(), rider.getYaw() + angles.y - prevAngles.y);
+        		}
              }
 			
 			//If we are on the client, and the rider is the main client player, check controls.
@@ -66,7 +61,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceGame.isChatOpen() && rider.equals(InterfaceGame.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && ClientEventSystem.lockedView));
+    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.

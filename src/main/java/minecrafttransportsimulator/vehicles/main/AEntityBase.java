@@ -198,6 +198,7 @@ public abstract class AEntityBase{
 			}else{
 				ridersToLocations.remove(rider);
 			}
+			rider.setRiding(null);
 			if(!world.isClient()){
 				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, null), this);
 			}

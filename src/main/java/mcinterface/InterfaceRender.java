@@ -18,10 +18,12 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -48,7 +50,9 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -73,6 +77,7 @@ public class InterfaceRender{
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureDomain;
 	private static String pushedTextureLocation;
+	private static int zoomLevel = 0;
 	
 	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
@@ -253,6 +258,17 @@ public class InterfaceRender{
 	}
 	
 	/**
+	 *  Adjusts the camera zoom, zooming in or out depending on the flag.
+	 */
+	public static void changeCameraZoom(boolean zoomIn){
+		if(zoomIn && zoomLevel > 0){
+			zoomLevel -= 2;
+		}else if(!zoomIn){
+			zoomLevel += 2;
+		}
+	}
+	
+	/**
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
@@ -260,16 +276,8 @@ public class InterfaceRender{
 		for(WrapperEntity rider : entity.ridersToLocations.keySet()){
 			if(!(InterfaceGame.getClientPlayer().equals(rider.entity) && InterfaceGame.inFirstPerson()) && rider.entity.posY > rider.entity.world.getHeight()){
 				GL11.glPushMatrix();
-				//FIXME we may need to add an offset here.
-				/*
-				Point3d offset = entity.position.copy();
-				if(entity instanceof EntityVehicleF_Physics){
-					PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) entity).getPartAtLocation(entity.ridersToLocations.get(rider)); 
-					if(seat != null){
-						offset.add(seat.worldPos).add(0D, -seat.getHeight()/2D, 0D);
-					}
-				}*/
-				GL11.glTranslated(entity.position.x, entity.position.y, entity.position.z);
+				Point3d riderPosition = rider.getRenderedPosition(partialTicks);
+				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(rider.entity, partialTicks, false);
 				GL11.glPopMatrix();
 			}
@@ -302,7 +310,7 @@ public class InterfaceRender{
 	}
 	
 	 /**
-     * Pre-post methods for adjusting player pitch while seated.
+     * Pre-post methods for adjusting player angles while seated.
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
@@ -314,14 +322,14 @@ public class InterfaceRender{
         		//Get total angles for the entity the player is riding.
         		Point3d totalAngles = ridingEntity.angles.copy();
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
-	            	//Note: while ridingEntity is an Entity, and the ridersToLocations is a WrapperEntity, they both
-	            	//fall-down and perform the Entity.equals() method, so this is still valid.  Prevents the need to create a wrapper.
-	            	PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(ridingEntity));
-	            	if(seat != null){
-	            		totalAngles = ridingEntity.angles.copy().add(seat.placementRotation).add(seat.getPositionRotation(event.getPartialRenderTick()).add(seat.getActionRotation(event.getPartialRenderTick())));
-	            		if(seat.parentPart != null){
-	            			totalAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()).add(seat.parentPart.getActionRotation(event.getPartialRenderTick())));
-	            		}
+	            	for(WrapperEntity rider : ridingEntity.ridersToLocations.keySet()){
+						if(Minecraft.getMinecraft().player.equals(rider.entity)){
+							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(rider));
+		            		totalAngles = ridingEntity.angles.copy().add(seat.placementRotation).add(seat.getPositionRotation(event.getPartialRenderTick()).add(seat.getActionRotation(event.getPartialRenderTick())));
+		            		if(seat.parentPart != null){
+		            			totalAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()).add(seat.parentPart.getActionRotation(event.getPartialRenderTick())));
+			            	}
+						}
 	            	}
 	            }
 	            
@@ -339,9 +347,9 @@ public class InterfaceRender{
 	            //different pre-render offset to be performed to get them into the right place. 
 	            if(!renderedPlayer.equals(Minecraft.getMinecraft().player)){
 	            	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
-	            	double playerDistanceX = renderedPlayer.posX - masterPlayer.posX;
-	                double playerDistanceY = renderedPlayer.posY - masterPlayer.posY;
-	                double playerDistanceZ = renderedPlayer.posZ - masterPlayer.posZ;
+	            	double playerDistanceX = renderedPlayer.lastTickPosX + - masterPlayer.lastTickPosX + (renderedPlayer.posX - renderedPlayer.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
+	            	double playerDistanceY = renderedPlayer.lastTickPosY + - masterPlayer.lastTickPosY + (renderedPlayer.posY - renderedPlayer.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
+	            	double playerDistanceZ = renderedPlayer.lastTickPosZ + - masterPlayer.lastTickPosZ + (renderedPlayer.posZ - renderedPlayer.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
 	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
 	                
 	                GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
@@ -367,6 +375,103 @@ public class InterfaceRender{
     	if(event.getEntityPlayer().getRidingEntity() instanceof BuilderEntity){
     		GL11.glPopMatrix();
         }
+    }
+    
+    /**
+     * Adjusts roll, pitch, and zoom for camera.
+     * Roll and pitch only gets updated when in first-person as we use OpenGL transforms.
+     * For external rotations, we just let the entity adjust the player's pitch and yaw.
+     * This is because first-person view is for direct control, while third-person is for passive control.
+     */
+    @SubscribeEvent
+    public static void on(CameraSetup event){
+    	if(event.getEntity().getRidingEntity() instanceof BuilderEntity){
+    		if(InterfaceGame.inFirstPerson()){            	
+    			AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
+            	//FIXME this probably should be some sort of vector calculation.
+    			
+    			//Need to check if the riding entity exists.  Player may be loading the entity on the client but it hasn't
+    			//gotten the supplemental data from the server yet.
+    			if(ridingEntity != null){
+	            	//Get yaw delta between entity and player from-180 to 180.
+	            	double playerYawDelta = (360 + (ridingEntity.angles.y - -event.getEntity().rotationYaw)%360)%360;
+	            	if(playerYawDelta > 180){
+	            		playerYawDelta-=360;
+	            	}
+	            	
+	            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
+	            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
+	            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
+	            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
+	            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
+	            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
+	            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
+	            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
+	            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
+    			}
+        	}else if(InterfaceGame.inThirdPerson()){
+        		GL11.glTranslatef(0, 0F, -zoomLevel);
+        		GL11.glTranslated(-1D, 1D, -2D);
+            }else{
+                GL11.glTranslatef(0, 0F, zoomLevel);
+        	}
+        }
+    }
+    
+
+    private static BuilderGUI currentHUD = null;
+    /**
+     * Renders the HUD on vehicles.
+     */
+    @SubscribeEvent
+    public static void on(RenderGameOverlayEvent.Post event){
+    	if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
+    		if(InterfaceGame.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
+				if(Minecraft.getMinecraft().player.getRidingEntity() instanceof BuilderEntity){
+					AEntityBase ridingEntity = ((BuilderEntity) Minecraft.getMinecraft().player.getRidingEntity()).entity;
+					if(ridingEntity instanceof EntityVehicleF_Physics){
+						for(WrapperEntity rider : ridingEntity.ridersToLocations.keySet()){
+							if(Minecraft.getMinecraft().player.equals(rider.entity)){
+								PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(rider));
+								if(seat.vehicleDefinition.isController){
+									//Make a new HUD if we need to.
+									if(currentHUD == null){
+										currentHUD = new BuilderGUI(new GUIHUD((EntityVehicleF_Physics) ridingEntity));
+										currentHUD.initGui();
+										currentHUD.setWorldAndResolution(Minecraft.getMinecraft(), event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
+									}
+									
+									//Translate far enough to not render behind the items.
+									//Also translate down if we are a helf-HUD.
+									GL11.glPushMatrix();
+			                		GL11.glTranslated(0, 0, 250);
+			                		if(InterfaceGame.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value){
+			                			GL11.glTranslated(0, currentHUD.gui.getHeight()/2D, 0);
+			                		}
+			                		
+			                		//Enable alpha testing.
+			                		GL11.glEnable(GL11.GL_ALPHA_TEST);
+			                		
+			                		//Draw the HUD.
+			                		currentHUD.drawScreen(0, 0, event.getPartialTicks());
+			                		
+			                		//Disable the translating, lightmap, alpha to put it back to its old state.
+			                		GL11.glPopMatrix();
+			                		InterfaceRender.setInternalLightingState(false);
+			                		GL11.glDisable(GL11.GL_ALPHA_TEST);
+			                		
+			                		//Return to prevent saved HUD from being wiped.
+			                		return;
+								}
+							}
+						}
+					}
+				}
+			}
+    	}
+    	
+    	//No HUD rendered, set it to null.
+    	currentHUD = null;
     }
 	
 	/**

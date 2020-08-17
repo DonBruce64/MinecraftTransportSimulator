@@ -151,6 +151,9 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}else{
 				parts.remove(part);
 			}
+			if(locationsToRiders.containsKey(part.placementOffset)){
+				removeRider(locationsToRiders.get(part.placementOffset), null);
+			}
 			if(part.isValid){
 				part.remove();
 				if(!world.isClient()){

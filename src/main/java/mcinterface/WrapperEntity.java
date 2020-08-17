@@ -63,9 +63,15 @@ public class WrapperEntity{
 	
 	/**
 	 *  Tells the entity to start riding the passed-in entity.
+	 *  If null is passed-in, then this rider will stop riding whatever entity it
+	 *  is riding, if it was riding any entity.
 	 */
 	public void setRiding(AEntityBase entityToRide){
-		entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide), true);
+		if(entityToRide != null){
+			entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide), true);
+		}else{
+			entity.dismountRidingEntity();
+		}
 	}
 	
 	/**

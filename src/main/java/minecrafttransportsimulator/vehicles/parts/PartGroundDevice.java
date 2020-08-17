@@ -91,7 +91,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				if(prevAngularVelocity/((vehicle.groundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
 					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
-					if(blockBelow.getHardness() >= 1.25){
+					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
 						contactThisTick = true;
 					}
 				}

@@ -35,7 +35,8 @@ import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /**Builder for MC GUI classes.  Constructor takes a type of {@link AGUIBase}, but
- * is only visible when calling {@link #openGUI(AGUIBase)}.  This will automatically
+ * is only visible when calling {@link #openGUI(AGUIBase)} or through mcinterface
+ * methods in this package.  Calling the static method will automatically
  * construct and open the GUI, all without exposing MC-specific code.
  * On that note, this is where all MC-specific code should be located.  Preferably
  * in static methods that can be accessed by anything that needs GUI
@@ -51,9 +52,9 @@ public class BuilderGUI extends GuiScreen{
 	private int guiTop;
 	private GUIComponentSelector lastSelectorClicked;
 	
-	private final AGUIBase gui;
+	final AGUIBase gui;
 	
-	private BuilderGUI(AGUIBase gui){
+	BuilderGUI(AGUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -108,6 +109,7 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
+		//FIXME need to have a config for the HUD GUI to make this transparent.
 		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
 		renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 		
