@@ -90,11 +90,6 @@ public class BuilderEntity extends Entity{
     		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
     		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
     		
-    		//FIXME remove this vhen ground physics get working.
-    		if(posY < -50){
-    			this.setDead();
-    		}
-    		
     		//Make sure the collision bounds for MC are big enough to collide with this entity.
 			if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
 				World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);

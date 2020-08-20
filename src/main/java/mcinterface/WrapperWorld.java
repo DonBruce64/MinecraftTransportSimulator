@@ -191,6 +191,56 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Moves all entities that collide with the passed-in bounding box by the passed-in offset.
+	 *  Offset is determined by the passed-in vector, and the passed-in angle of said vector.
+	 *  This allows for angular movement as well as linear.
+	 */
+	public void moveEntities(List<BoundingBox> boxesToCheck, Point3d intialPosition, Point3d initalRotation, Point3d linearMovement, Point3d angularMovement){
+		for(Entity entity : world.loadedEntityList){
+			//Don't move riding entities or our own builders.
+			if(!(entity instanceof BuilderEntity) && entity.getRidingEntity() == null){
+				for(BoundingBox box : boxesToCheck){
+					//Make sure this box can support moving entities.
+					if(!box.movesEntities){
+						//Check if we collide with the entity.
+						//Add a slight yOffset to every box to "grab" entities standing on collision points.
+						AxisAlignedBB entityBox = entity.getEntityBoundingBox();
+						if(
+							entityBox.maxX > box.globalCenter.x - box.widthRadius - 0.25D && 
+							entityBox.minX < box.globalCenter.x + box.widthRadius + 0.25D && 
+							entityBox.maxY > box.globalCenter.y - box.heightRadius - 0.5D && 
+							entityBox.minY < box.globalCenter.y + box.heightRadius + 0.5D &&
+							entityBox.maxZ > box.globalCenter.z - box.depthRadius - 0.25D &&
+							entityBox.minZ < box.globalCenter.z + box.depthRadius + 0.25D)
+						{
+							//Entity has collided with this box.  Adjust movement to allow them to ride on it.
+							Point3d entityDeltaOffset = new Point3d(entity.posX - intialPosition.x, entity.posY - intialPosition.y, entity.posZ - intialPosition.z);
+							Point3d finalOffset = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset);
+							//System.out.format("Offset X:%f Y:%f Z:%f\n", finalOffset.x, finalOffset.y, finalOffset.z);
+							
+							//If the entity is within 0.5 units of the top of the box, make them be on top of it.
+							//This also keeps the entity from falling into the box due to MC's stupid collision code that doesn't
+							//handle moving hitboxes well.
+							double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY + finalOffset.y;
+							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (entity.motionY < 0 || entity.motionY < entityBottomDelta)){
+								System.out.println(entityBottomDelta);
+								finalOffset.y = entityBottomDelta;
+								if(entity.motionY < 0){
+									entity.motionY = 0;
+								}
+							}
+							
+							//Set entity position.
+							entity.setPosition(entity.posX + finalOffset.x, entity.posY + finalOffset.y, entity.posZ + finalOffset.z);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	 *  Returns the block wrapper at the passed-in location, or null if the block is air.
 	 */
 	public WrapperBlock getWrapperBlock(Point3i point){
@@ -453,15 +503,6 @@ public class WrapperWorld{
 		IBlockState state = world.getBlockState(pos); 
 		Block block = state.getBlock();
 		return block.isAir(state, world, pos);
-	}
-	
-	/**
-	 *  Sets the block at the passed-in position to air. 
-	 *  This does no sanity checks, so make sure you're
-	 *  actually allowed to do such a thing before calling.
-	 */
-	public void setToAir(Point3i point){
-		world.setBlockToAir(new BlockPos(point.x, point.y, point.z));
 	}
 	
 	/**

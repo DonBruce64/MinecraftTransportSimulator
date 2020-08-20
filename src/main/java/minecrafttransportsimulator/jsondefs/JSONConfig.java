@@ -25,13 +25,13 @@ public class JSONConfig{
 	public ConfigControls controls = new ConfigControls();
 	
 	public static class ConfigGeneral{
+		public ConfigBoolean dumpCraftingConfig = new ConfigBoolean(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
 		public ConfigBoolean opSignEditingOnly = new ConfigBoolean(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
 		public ConfigBoolean opPickupVehiclesOnly = new ConfigBoolean(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
 		public ConfigBoolean creativePickupVehiclesOnly = new ConfigBoolean(false, "If true, vehicles can only be picked up in creative mode.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
-		public ConfigDouble clingSpeed = new ConfigDouble(0.25D, "Speed (in BLK/S) at which players start to slide off vehicles due to wind.  Does not affect collision boxes set as interior in the vehicle JSON.");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
 		
 		public static class ConfigItemWeights{

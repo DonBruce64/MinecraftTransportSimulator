@@ -279,8 +279,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
 					if(ConfigSystem.configObject.damage.blockBreakage.value){
 						hardnessHitThisTick += block.getHardness();
-						//FIXME do we need this?
-						//world.setToAir(block.getPosition());
 						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							world.destroyBlock(block.getPosition());

@@ -109,9 +109,10 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
-		//FIXME need to have a config for the HUD GUI to make this transparent.
-		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
-		renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+		if(gui.renderBackground()){
+			mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
+			renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+		}
 		
 		//Render buttons and selectors.  These choose if they render or not depending on visibility.
 		for(GUIComponentButton button : gui.buttons){

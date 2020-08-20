@@ -63,17 +63,18 @@ public class BoundingBox{
 		globalCenter.add(offset);
 		collidingBlocks.clear();
 		world.updateBoundingBoxCollisions(this, offset);
-		globalCenter.setTo(globalCenter);
+		globalCenter.setTo(tempGlobalCenter);
 		return !collidingBlocks.isEmpty();
 	}
 	
 	/**
 	 *  Sets the global center of this box to the position of the passed-in entity, rotated by the
 	 *  entity's rotation and offset by the local center.  Mostly used for updating hitboxes that
-	 *  rotate with the entity.  Rotation is done using the coarse Point3d rotation.
+	 *  rotate with the entity.  Rotation is done using the fine Point3d rotation to allow for
+	 *  better interaction while standing on entities.
 	 */
 	public void updateToEntity(AEntityBase entity){
-		globalCenter.setTo(localCenter).rotateCoarse(entity.angles).add(entity.position);
+		globalCenter.setTo(localCenter).rotateFine(entity.angles).add(entity.position);
 	}
 	
 	/**

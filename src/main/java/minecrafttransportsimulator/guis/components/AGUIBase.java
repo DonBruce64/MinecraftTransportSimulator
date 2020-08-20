@@ -44,6 +44,13 @@ public abstract class AGUIBase{
 	public abstract void setStates();
 	
 	/**
+	 *  If this is false, then no background texture will be rendered.
+	 */
+	public boolean renderBackground(){
+		return true;
+	}
+	
+	/**
 	 *  If this is true, then the dark background gradient will be rendered behind the GUI.
 	 */
 	public boolean renderDarkBackground(){

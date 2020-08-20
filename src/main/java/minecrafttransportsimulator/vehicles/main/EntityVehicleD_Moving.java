@@ -35,11 +35,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	//Internal states.
 	private final Point3d serverDeltaM;
-	private final Point3d serverDeltaA;
+	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
-	private final Point3d clientDeltaA;
-	private final Point3d clientMApplied = new Point3d(0D, 0D, 0D);
-	private final Point3d clientAApplied = new Point3d(0D, 0D, 0D);
+	private final Point3d clientDeltaR;
+	private final Point3d motionApplied = new Point3d(0D, 0D, 0D);
+	private final Point3d rotationApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D);
 	
@@ -75,9 +75,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
-		this.serverDeltaA = data.getPoint3d("serverDeltaA");
+		this.serverDeltaR = data.getPoint3d("serverDeltaA");
 		this.clientDeltaM = serverDeltaM.copy();
-		this.clientDeltaA = serverDeltaA.copy();
+		this.clientDeltaR = serverDeltaR.copy();
 	}
 	
 	@Override
@@ -113,10 +113,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now do update calculations and logic.
 		getForcesAndMotions();
 		performGroundOperations();
-		//FIXME remove hancks when ground collision works.
+		//FIXME remove hacks when ground collision works.
 		position.y = 10;
-		motion.y = 0;
-		motion.x = 0.25;
+		motion.y = 0.25;
+		
+		rotation.y = 0;
+				
+		rotation.x = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
+		rotation.z = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
 		
 		moveVehicle();
 		if(!world.isClient()){
@@ -743,13 +747,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
-		Point3d factoredMotion = motion.copy().multiply(SPEED_FACTOR);
+		motionApplied.setTo(motion).multiply(SPEED_FACTOR);
+		rotationApplied.setTo(rotation);
 		if(!world.isClient()){
-			if(!motion.isZero() || !rotation.isZero()){
-				position.add(factoredMotion);
-				angles.add(rotation);
-				addToServerDeltas(factoredMotion, rotation);
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, factoredMotion, rotation), this);
+			if(!motionApplied.isZero() || !rotationApplied.isZero()){
+				addToServerDeltas(motionApplied, rotationApplied);
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied), this);
 			}
 		}else{
 			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
@@ -758,71 +761,53 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Saves a bit of CPU power due to division and multiplication operations, and prevents constant
 				//movement due to floating-point errors.
 				if(serverDeltaM.x - clientDeltaM.x != 0){
-					clientMApplied.x = factoredMotion.x + (serverDeltaM.x - clientDeltaM.x)/25D*Math.abs(serverDeltaM.x - clientDeltaM.x);
+					motionApplied.x += (serverDeltaM.x - clientDeltaM.x)/25D*Math.abs(serverDeltaM.x - clientDeltaM.x);
 				}else{
-					clientMApplied.x = 0;
+					motionApplied.x = 0;
 				}
 				if(serverDeltaM.y - clientDeltaM.y != 0){
-					clientMApplied.y = factoredMotion.y + (serverDeltaM.y - clientDeltaM.y)/25D*Math.abs(serverDeltaM.y - clientDeltaM.y);
+					motionApplied.y += (serverDeltaM.y - clientDeltaM.y)/25D*Math.abs(serverDeltaM.y - clientDeltaM.y);
 				}else{
-					clientMApplied.y = 0;
+					motionApplied.y = 0;
 				}
 				if(serverDeltaM.z - clientDeltaM.z != 0){
-					clientMApplied.z = factoredMotion.z + (serverDeltaM.z - clientDeltaM.z)/25D*Math.abs(serverDeltaM.z - clientDeltaM.z);
+					motionApplied.z += (serverDeltaM.z - clientDeltaM.z)/25D*Math.abs(serverDeltaM.z - clientDeltaM.z);
 				}else{
-					clientMApplied.z = 0;
+					motionApplied.z = 0;
 				}
 				
-				if(serverDeltaA.x - clientDeltaA.x != 0){
-					clientAApplied.x = rotation.x + (serverDeltaA.x - clientDeltaA.x)/25D*Math.abs(serverDeltaA.x - clientDeltaA.x);
+				if(serverDeltaR.x - clientDeltaR.x != 0){
+					rotationApplied.x += (serverDeltaR.x - clientDeltaR.x)/25D*Math.abs(serverDeltaR.x - clientDeltaR.x);
 				}else{
-					clientAApplied.x = 0;
+					rotationApplied.x = 0;
 				}
-				if(serverDeltaA.y - clientDeltaA.y != 0){
-					clientAApplied.y = rotation.y + (serverDeltaA.y - clientDeltaA.y)/25D*Math.abs(serverDeltaA.y - clientDeltaA.y);
+				if(serverDeltaR.y - clientDeltaR.y != 0){
+					rotationApplied.y += (serverDeltaR.y - clientDeltaR.y)/25D*Math.abs(serverDeltaR.y - clientDeltaR.y);
 				}else{
-					clientAApplied.y = 0;
+					rotationApplied.y = 0;
 				}
-				if(serverDeltaA.z - clientDeltaA.z != 0){
-					clientAApplied.z = rotation.z + (serverDeltaA.z - clientDeltaA.z)/25D*Math.abs(serverDeltaA.z - clientDeltaA.z);
+				if(serverDeltaR.z - clientDeltaR.z != 0){
+					rotationApplied.z += (serverDeltaR.z - clientDeltaR.z)/25D*Math.abs(serverDeltaR.z - clientDeltaR.z);
 				}else{
-					clientAApplied.z = 0;
+					rotationApplied.z = 0;
 				}
 				
-				position.add(clientMApplied);
-				angles.add(clientAApplied);
-				clientDeltaM.add(clientMApplied);
-				clientDeltaA.add(clientAApplied);
-			}else{
-				position.add(factoredMotion);
-				angles.add(rotation);
+				//Add actual movement to client deltas.
+				clientDeltaM.add(motionApplied);
+				clientDeltaR.add(rotationApplied);
 			}
 		}
 		
-		//After all movement is done, try and move players on hitboxes.
+		//After all movement is calculated, try and move players on hitboxes.
 		//Note that we need to interpolate the delta here based on actual movement, so don't use the vehicle motion!
-		if(velocity != 0){
-			//FIXME disabled for now.
-			/*
-			for(EntityPlayer player : world.playerEntities){
-				if(!this.equals(player.getRidingEntity())){
-					for(BoundingBox box : collisionBoxes){
-						//Add a slight yOffset to every box to "grab" players standing on collision points.
-						if(box.offset(posX - prevPosX, posY - prevPosY + 0.1F, posZ - prevPosZ).intersects(player.getEntityBoundingBox())){
-							//Player has collided with this vehicle.  Adjust movement to allow them to ride on it.
-							//If we are going too fast, the player should slip off the collision box if it's not an interior box.
-							if(velocity <= ConfigSystem.configObject.general.clingSpeed.value || box.isInterior){
-								player.setPosition(player.posX + (posX - prevPosX), player.posY + (posY - prevPosY), player.posZ + (posZ - prevPosZ));
-							}else if(velocity < 2F*ConfigSystem.configObject.general.clingSpeed.value){
-								double slip = (2F*ConfigSystem.configObject.general.clingSpeed.value - velocity)*4D;
-								player.setPosition(player.posX + (posX - prevPosX)*slip, player.posY + (posY - prevPosY)*slip, player.posZ + (posZ - prevPosZ)*slip);
-							}
-							break;
-						}
-					}
-				}
-			}*/
+		if(!motionApplied.isZero() || !rotationApplied.isZero()){
+			world.moveEntities(collisionBoxes, position, angles, motionApplied, rotationApplied);
 		}
+		
+		//Now add actual position and angles.  Needs to be done before moving entities to tell the
+		//system the initial angle and delta angle for movement calculations.
+		position.add(motionApplied);
+		angles.add(rotationApplied);
 		
 		//Before we end this tick we need to remove any motions added for ground devices.  These motions are required 
 		//only for the updating of the vehicle position due to rotation operations and should not be considered forces.
@@ -990,7 +975,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	public void addToServerDeltas(Point3d motion, Point3d rotation){
 		serverDeltaM.add(motion);
-		serverDeltaA.add(rotation);
+		serverDeltaR.add(rotation);
 	}
 	
 	/**
@@ -1018,7 +1003,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setString("ownerUUID", ownerUUID);
 		data.setString("displayText", displayText);
-		data.setPoint3d("serverDeltaM", serverDeltaA);
+		data.setPoint3d("serverDeltaM", serverDeltaR);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 	}
 }

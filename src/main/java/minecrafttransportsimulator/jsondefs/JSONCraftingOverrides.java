@@ -3,6 +3,10 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.systems.ConfigSystem;
+
 /**Custom class designed to hold crafting overrides.  Split from the main config file
  * to prevent nuking the file if the config loading fails.  We can do without crafting
  * overrides just fine.  Not so for configs.
@@ -18,14 +22,23 @@ public class JSONCraftingOverrides{
 	
 	private static Map<String, Map<String, String[]>> populateDefaultOverrides(){
 		Map<String, Map<String, String[]>> sampleOverrides = new HashMap<String, Map<String, String[]>>();
-		Map<String, String[]> packSampleOverride = new HashMap<String, String[]>();
-		packSampleOverride.put("wheellarge", new String[]{"minecraft:dye:0:3", "minecraft:iron_ingot:0:3", "minecraft:wool:15:3"});
-		packSampleOverride.put("engineamci4", new String[]{"minecraft:piston:0:4", "minecraft:obsidian:0:3", "minecraft:iron_ingot:0:1"});
-		sampleOverrides.put("mtsofficialpack", packSampleOverride);
-		
-		packSampleOverride = new HashMap<String, String[]>();
-		packSampleOverride.put("unuparts_decor_unu_cutout_derrick", new String[]{"minecraft:heavy_weighted_pressure_plate:0:1", "minecraft:dye:6:2"});
-		sampleOverrides.put("unuparts", packSampleOverride);
+		if(ConfigSystem.configObject.general.dumpCraftingConfig.value){
+			for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packCraftingMap.keySet()){
+				if(!sampleOverrides.containsKey(item.definition.packID)){
+					sampleOverrides.put(item.definition.packID, new HashMap<String, String[]>());
+				}
+				sampleOverrides.get(item.definition.packID).put(item.definition.systemName, MTSRegistry.packCraftingMap.get(item));
+			}
+		}else{
+			Map<String, String[]> packSampleOverride = new HashMap<String, String[]>();
+			packSampleOverride.put("wheellarge", new String[]{"minecraft:dye:0:3", "minecraft:iron_ingot:0:3", "minecraft:wool:15:3"});
+			packSampleOverride.put("engineamci4", new String[]{"minecraft:piston:0:4", "minecraft:obsidian:0:3", "minecraft:iron_ingot:0:1"});
+			sampleOverrides.put("mtsofficialpack", packSampleOverride);
+			
+			packSampleOverride = new HashMap<String, String[]>();
+			packSampleOverride.put("unuparts_decor_unu_cutout_derrick", new String[]{"minecraft:heavy_weighted_pressure_plate:0:1", "minecraft:dye:6:2"});
+			sampleOverrides.put("unuparts", packSampleOverride);
+		}
 		return sampleOverrides;
 	}
 }

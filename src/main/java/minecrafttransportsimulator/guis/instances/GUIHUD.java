@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.guis.instances;
 
+import mcinterface.InterfaceGame;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
@@ -35,6 +37,11 @@ public class GUIHUD extends AGUIBase{
 
 	@Override
 	public void setStates(){}
+	
+	@Override
+	public boolean renderBackground(){
+		return InterfaceGame.inFirstPerson() ? !ConfigSystem.configObject.client.transpHUD_1P.value : !ConfigSystem.configObject.client.transpHUD_3P.value;
+	}
 	
 	@Override
 	public GUILightingMode getGUILightMode(){

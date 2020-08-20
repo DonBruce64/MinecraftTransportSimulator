@@ -189,16 +189,6 @@ public class Point3d extends APoint3<Double, Point3d>{
 	
 	private static final Double[] sinTable = new Double[361];
 	private static final Double[] cosTable = new Double[361];
-	private static double cosX;
-	private static double sinX;
-	private static double cosY;
-	private static double sinY;
-	private static double cosZ;
-	private static double sinZ;
-	private static double xRot;
-	private static double yRot;
-	private static double zRot;
-	
 	/**
      * Rotates this point about the passed-in angles.  Rotation is done using a 360-degree
      * static lookup table, so rotation is done to the nearest degree.  This is faster than
@@ -214,17 +204,17 @@ public class Point3d extends APoint3<Double, Point3d>{
 		}
 		
 		//Clamp values to 0-360;
-		xRot = (angles.x%360 + 360)%360;
-		yRot = (angles.y%360 + 360)%360;
-		zRot = (angles.z%360 + 360)%360;
+		double xRot = (angles.x%360 + 360)%360;
+		double yRot = (angles.y%360 + 360)%360;
+		double zRot = (angles.z%360 + 360)%360;
 		
 		//Rotate based on tabled values.
-		cosX = cosTable[(int) xRot];//A
-		sinX = sinTable[(int) xRot];//B
-		cosY = cosTable[(int) yRot];//C
-		sinY = sinTable[(int) yRot];//D
-		cosZ = cosTable[(int) zRot];//E
-		sinZ = sinTable[(int) zRot];//F
+		double cosX = cosTable[(int) xRot];//A
+		double sinX = sinTable[(int) xRot];//B
+		double cosY = cosTable[(int) yRot];//C
+		double sinY = sinTable[(int) yRot];//D
+		double cosZ = cosTable[(int) zRot];//E
+		double sinZ = sinTable[(int) zRot];//F
 		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
 				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
 				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
@@ -238,12 +228,12 @@ public class Point3d extends APoint3<Double, Point3d>{
      * in rendering operations).  If only a rough approximation is required, use {@link #rotateCoarse(Point3d)}
      */
 	public Point3d rotateFine(Point3d angles){
-		cosX = Math.cos(Math.toRadians(angles.x));//A
-		sinX = Math.sin(Math.toRadians(angles.x));//B
-		cosY = Math.cos(Math.toRadians(angles.y));//C
-		sinY = Math.sin(Math.toRadians(angles.y));//D
-		cosZ = Math.cos(Math.toRadians(angles.z));//E
-		sinZ = Math.sin(Math.toRadians(angles.z));//F
+		double cosX = Math.cos(Math.toRadians(angles.x));//A
+		double sinX = Math.sin(Math.toRadians(angles.x));//B
+		double cosY = Math.cos(Math.toRadians(angles.y));//C
+		double sinY = Math.sin(Math.toRadians(angles.y));//D
+		double cosZ = Math.cos(Math.toRadians(angles.z));//E
+		double sinZ = Math.sin(Math.toRadians(angles.z));//F
 		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
 				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
 				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)

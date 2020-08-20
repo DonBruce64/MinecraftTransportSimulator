@@ -100,13 +100,13 @@ public class PacketBulletHit extends APacketBase{
 					if(bulletDefinition.bullet.type.equals("water")){
 						hitPosition.add(0, 1, 0);
 						if(world.isFire(hitPosition)){
-							world.setToAir(hitPosition);
+							world.destroyBlock(hitPosition);
 						}
 					}else{
 						//If we can break the block we hit, do so now.
 						WrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
 						if(hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
-							world.setToAir(hitPosition);
+							world.destroyBlock(hitPosition);
 						}else if(bulletDefinition.bullet.type.equals("incendiary")){
 							//Couldn't break block, but we might be able to set it on fire.
 							hitPosition.add(0, 1, 0);

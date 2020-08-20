@@ -927,7 +927,7 @@ public final class RenderVehicle{
 		GL11.glBegin(GL11.GL_LINES);
 		//FIXME revert after testing.
 		for(BoundingBox box : vehicle.interactionBoxes){
-			Point3d boxRotatedCenter = box.localCenter.copy().rotateCoarse(vehicle.angles);
+			Point3d boxRotatedCenter = box.localCenter.copy().rotateFine(vehicle.angles);
 			
 			//Bottom
 			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
