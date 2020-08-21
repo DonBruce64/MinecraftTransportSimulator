@@ -8,6 +8,8 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.InterfaceRender;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -23,61 +25,68 @@ public final class RenderableModelObject{
 	private final String modelName;
 	private final String objectName;
 	private final Float[][] vertices;
-	public final List<ARenderableTransform> transforms = new ArrayList<ARenderableTransform>();
+	public final String applyAfter;
+	public final List<ATransformRenderable> transforms = new ArrayList<ATransformRenderable>();
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
+	public RenderableModelObject(String modelName, String objectName, VehicleAnimatedObject definition, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
 		this.modelName = modelName;
 		this.objectName = objectName;
 		this.vertices = vertices;
 		
-		boolean isPart = optionalPart != null;
-		if(objectName.contains("%")){
-			if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.translatableModelObjects != null) : vehicle.definition.rendering.translatableModelObjects != null){
-				transforms.add(new TransformTranslatable(modelName, objectName, isPart ? optionalPart.definition.rendering.translatableModelObjects : vehicle.definition.rendering.translatableModelObjects));
-			}else{
-				throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a translatable object:" + objectName + ", but no translatableModelObjects are present in the JSON!");
+		if(definition != null){
+			this.applyAfter = definition.applyAfter;
+			for(VehicleAnimationDefinition animation : definition.animations){
+				switch(animation.animationType){
+					case("translation") :{
+						transforms.add(new TransformTranslatable(animation));
+						break;
+					}
+					case("rotation") :{
+						if(objectName.toLowerCase().contains("roller")){
+							transforms.add(TransformTreadRoller.create(objectName, animation, vehicle, vertices));
+						}else{
+							transforms.add(new TransformRotatable(animation));
+						}
+						break;
+					}
+				}
 			}
-		}
-		if(objectName.contains("$")){
+		}else{
+			this.applyAfter = null;
+			if(objectName.contains("&")){
+				transforms.add(new TransformLight(modelName, objectName, vertices));
+			}
 			if(objectName.toLowerCase().contains("roller")){
-				if(vehicle.definition.rendering.rotatableModelObjects != null){
-					transforms.add(TransformTreadRoller.create(modelName, objectName, vehicle, vertices));
-				}else{
-					throw new NullPointerException("ERROR: " + vehicle.definition.packID + ":" + vehicle.definition.genericName + " has a rotatable object:" + objectName + ", but no rotatableModelObjects are present in the JSON!");
-				}
-			}else{
-				if(isPart ? (optionalPart.definition.rendering != null && optionalPart.definition.rendering.rotatableModelObjects != null) : vehicle.definition.rendering.rotatableModelObjects != null){
-					transforms.add(new TransformRotatable(modelName, objectName, isPart ? optionalPart.definition.rendering.rotatableModelObjects : vehicle.definition.rendering.rotatableModelObjects));
-				}else{
-					throw new NullPointerException("ERROR: " + (isPart ? optionalPart.definition.packID : vehicle.definition.packID) + ":" + (isPart ? optionalPart.definition.systemName : vehicle.definition.genericName) + " has a rotatable object:" + objectName + ", but no rotatableModelObjects are present in the JSON!");
-				}
+				transforms.add(TransformTreadRoller.create(objectName, null, vehicle, vertices));
 			}
-		}
-		if(objectName.contains("&")){
-			transforms.add(new TransformLight(modelName, objectName, vertices));
-		}
-		if(objectName.toLowerCase().contains("window")){
-			//Window
-			transforms.add(new TransformWindow(vertices));
+			if(objectName.toLowerCase().contains("window")){
+				transforms.add(new TransformWindow(vertices));
+			}
 		}
 	}
 	
 	/**
-	 *  Renders this object, applying any transforms that need to happen.
+	 *  Renders this object, applying any transforms that need to happen.  This method also
+	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		//Push matrix and apply transforms.
+	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, List<RenderableModelObject> allObjects){
 		GL11.glPushMatrix();
-		for(ARenderableTransform transform : transforms){
+		double priorOffset = 0;
+		for(ATransformRenderable transform : transforms){
 			if(!transform.shouldRender()){
 				//Found a transform that told us not to render.
-				//Pop matrix and skip rendering.
+				//Return to prevent rendering.
 				GL11.glPopMatrix();
 				return;
 			}
-			transform.applyTransforms(vehicle, optionalPart, partialTicks);
+			//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
+			if(transform.definition != null && transform.definition.addPriorOffset){
+				priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, priorOffset);
+			}else{
+				priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, 0);
+			}
 		}
 		
 		//Render, caching the displayList if needed.
@@ -102,10 +111,20 @@ public final class RenderableModelObject{
 			GL11.glCallList(displayLists.get(modelName).get(objectName));
 		}
 		
-		//Do post-render logic and pop matrix.
-		for(ARenderableTransform transform : transforms){
+		//Do post-render logic.
+		for(ATransformRenderable transform : transforms){
 			transform.doPostRenderLogic(vehicle, optionalPart, partialTicks);
 		}
+		
+		//Render any parts that depend on us before we pop our state.
+		//if(!objectName.contains("&"))System.out.println(objectName);
+		for(RenderableModelObject modelObject : allObjects){
+			if(objectName.equals(modelObject.applyAfter)){
+				modelObject.render(vehicle, optionalPart, partialTicks, allObjects);
+			}
+		}
+		
+		//Pop state.
 		GL11.glPopMatrix();
 	}
 	

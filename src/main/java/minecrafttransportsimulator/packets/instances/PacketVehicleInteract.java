@@ -65,8 +65,9 @@ public class PacketVehicleInteract extends APacketVehicle{
 			}
 		}else if(heldStack.getItem().equals(Items.NAME_TAG) && type.rightClick){
 			//Special case as this is a MC item.
-			vehicle.displayText = heldStack.getDisplayName().length() > vehicle.definition.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.definition.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
-			return true;
+			//FIXME make something else open the text GUI.
+			//vehicle.displayText = heldStack.getDisplayName().length() > vehicle.definition.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.definition.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
+			return false;
 		}else{
 			//Not holding an item that can interact with a vehicle.  Try to interact with parts or slots.
 			if(type.equals(PacketVehicleInteractType.PART_RIGHTCLICK)){

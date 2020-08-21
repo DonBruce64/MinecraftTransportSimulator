@@ -54,7 +54,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public double fuel;
 	
 	//Internal states.
-	public byte totalGuns = 0;
+	public byte totalGuns;
 	public short reversePercent;
 	public int gearMovementTime;
 	public double electricPower = 12;

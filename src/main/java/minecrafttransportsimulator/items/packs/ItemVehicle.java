@@ -63,6 +63,9 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				newVehicle.position.set((double) pos.getX(), (double) pos.getY(), (double) pos.getZ());
 				newVehicle.angles.y = -player.rotationYaw + 90;
 				
+				//Set inital electrical power.
+				newVehicle.electricPower = 12;
+				
 				//If the held stack doesn't have NBT, then we must be spawning a new vehicle.
 				//In this case, add default parts and fuel, if required.
 				if(!heldStack.hasTagCompound()){

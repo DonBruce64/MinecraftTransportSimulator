@@ -17,14 +17,15 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
  * @author don_bruce
  */
 public final class VehicleAnimationSystem{
+	
 	/**
-	 *  Returns the current value for the passed-in variable on the passed-in vehicle.  A part may or
+	 *  Returns the clamped value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
-	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
-	 *  This is in both the positive and negative direction.
+	 *  If a clamp value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 */
-	public static double getVariableValue(String variable, double scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
-		double value = offset + scaling*(absolute ? Math.abs(getVariableValue(variable, partialTicks, vehicle, optionalPart)) : getVariableValue(variable, partialTicks, vehicle, optionalPart));
+	public static double getVariableValue(String variable, double scaling, double offset, double minClamp, double maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
+		double value = offset + getVariableValue(variable, partialTicks, vehicle, optionalPart);
+		value = scaling*(absolute ? Math.abs(value) : value);
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
 		}else if(maxClamp != 0 && value > maxClamp){
@@ -34,7 +35,11 @@ public final class VehicleAnimationSystem{
 		}
 	}
 	
-	private static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
+	/**
+	 *  Returns the raw value for the passed-in variable on the passed-in vehicle.  A part may or
+	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
+	 */
+	public static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){

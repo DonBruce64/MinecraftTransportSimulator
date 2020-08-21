@@ -1,14 +1,12 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
-/**A specific class of {@link TransformRotatable}, designed
+/**A specific class of {@link TransformRotatable2}, designed
  * for tread rollers.  Contains an extra method for calculating things.
  * Also auto-creates rotatableModelObject definitions in the relevant JSON.
  *
@@ -28,8 +26,8 @@ public class TransformTreadRoller extends TransformRotatable{
 	public double endZ;
 	public double endAngle;
 	
-	private TransformTreadRoller(String modelName, String objectName, List<VehicleRotatableModelObject> rotatableModelObjects, double yPos, double zPos, double radius, double circumference){
-		super(modelName, objectName, rotatableModelObjects);
+	private TransformTreadRoller(String objectName, VehicleAnimationDefinition definition, double yPos, double zPos, double radius, double circumference){
+		super(definition);
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		this.zPos = zPos;
 		this.yPos = yPos;
@@ -40,7 +38,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	/**
 	 * Helper function to create a tread roller.
 	 */
-	public static TransformTreadRoller create(String modelName, String objectName, EntityVehicleF_Physics vehicle, Float[][] vertices){
+	public static TransformTreadRoller create(String objectName, VehicleAnimationDefinition definition, EntityVehicleF_Physics vehicle, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;
@@ -57,27 +55,17 @@ public class TransformTreadRoller extends TransformRotatable{
 		double radius = (maxZ - minZ)/2D;
 		double circumference = 2*Math.PI*radius;
 		
-		//Add this roller as a rotatable if it doesn't exist.
-		boolean existsInJSON = false;
-		for(VehicleRotatableModelObject rotatable : vehicle.definition.rendering.rotatableModelObjects){
-			if(rotatable.partName.endsWith(objectName)){
-				existsInJSON = true;
-				break;
-			}
+		if(definition == null){
+			//We don't have a definition for this, auto-create one and return the roller with it.
+			definition = vehicle.definition.new VehicleAnimationDefinition();
+			definition.animationType = "rotation";
+			definition.variable = "engine_driveshaft_rotation_1";
+			definition.centerPoint = new double[]{0, yPos, zPos};
+			definition.axis = new double[]{0, 0, 0};
 		}
 		
-		if(!existsInJSON){
-			//We don't have this definition.  Add it.
-			VehicleRotatableModelObject rotatable = vehicle.definition.new VehicleRotatableModelObject();
-			rotatable.partName = objectName;
-			rotatable.rotationVariable = "engine_driveshaft_rotation_1";
-			rotatable.rotationPoint = new double[]{0, yPos, zPos};
-			rotatable.rotationAxis = new double[]{0, 0, 0};
-			vehicle.definition.rendering.rotatableModelObjects.add(rotatable);
-		}
-		
-		//Create and return the roller.
-		return new TransformTreadRoller(modelName, objectName, vehicle.definition.rendering.rotatableModelObjects, yPos, zPos, radius, circumference);
+		//Return the created roller.
+		return new TransformTreadRoller(objectName, definition, yPos, zPos, radius, circumference);
 	}
 	
 	/**

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,16 +17,16 @@ import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.rendering.components.ARenderableTransform;
+import minecrafttransportsimulator.rendering.components.ATransformRenderable;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.TransformLight;
-import minecrafttransportsimulator.rendering.components.TransformRotatable;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
 import minecrafttransportsimulator.systems.ClientEventSystem;
@@ -78,7 +79,7 @@ public final class RenderVehicle{
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
 		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
-			for(ARenderableTransform transform : modelObject.transforms){
+			for(ATransformRenderable transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
 					if(((TransformLight) transform).type.equals(light)){
 						return true;
@@ -89,7 +90,7 @@ public final class RenderVehicle{
 		for(APart part : vehicle.parts){
 			if(partObjectLists.containsKey(part.getModelLocation())){
 				for(RenderableModelObject modelObject : partObjectLists.get(part.getModelLocation())){
-					for(ARenderableTransform transform : modelObject.transforms){
+					for(ATransformRenderable transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
 							if(((TransformLight) transform).type.equals(light)){
 								return true;
@@ -205,7 +206,7 @@ public final class RenderVehicle{
 	 *  Renders the main vehicle model.  The model file is determined from the general name of the JSON, which is really
 	 *  just the JSON's file name.  Vehicle model is first translated to the position of the vehicle in the world,
 	 *  rotated to the roll, pitch, and yaw, of the vehicle, and then all static portions are rendered.  Dynamic
-	 *  animated portions like {@link TransformRotatable}s, {@link TransformTranslatable}s, and
+	 *  animated portions like {@link TransformRotatable2}s, {@link TransformTranslatable}s, and
 	 *  {@link WindowPart}s are rendered after this with their respective transformations applied.  All renders are
 	 *  cached in DisplayLists, as we only need to translate and rotate them, not apply any transforms or splits.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
@@ -222,30 +223,31 @@ public final class RenderVehicle{
 				parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
 			}
 			
-			//Set up the Gl operations and lists.
+			//For anything that has a definition as an animation, add it to an animated list.
+			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
 			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
-			int displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				//Create model objects for all components of the model.
-				//If we have any objects that don't have transforms, ignore them.
-				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.genericName, entry.getKey(), entry.getValue(), vehicle, null);
-				if(modelObject.transforms.isEmpty()){
-					for(Float[] vertex : entry.getValue()){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			if(vehicle.definition.rendering.animatedObjects != null){
+				for(VehicleAnimatedObject definition : vehicle.definition.rendering.animatedObjects){
+					if(parsedModel.containsKey(definition.objectName)){
+						modelObjects.add(new RenderableModelObject(vehicle.definition.genericName, definition.objectName, definition, parsedModel.get(definition.objectName), vehicle, null));
+						parsedModel.remove(definition.objectName);
 					}
-				}else{
-					modelObjects.add(modelObject);
 				}
 			}
-			GL11.glEnd();
-			GL11.glEndList();
+			
+			//Now check for any non-animated model objects.
+			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
+			while(iterator.hasNext()){
+				Entry<String, Float[][]> entry = iterator.next();
+				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.genericName, entry.getKey(), null, entry.getValue(), vehicle, null);
+				if(!modelObject.transforms.isEmpty()){
+					modelObjects.add(modelObject);
+					iterator.remove();
+				}
+			}
 			
 			//Now finalize the maps.
-			vehicleDisplayLists.put(vehicle.definition.genericName, displayListIndex);
+			vehicleDisplayLists.put(vehicle.definition.genericName, OBJParser.generateDisplayList(parsedModel));
 			vehicleObjectLists.put(vehicle.definition.genericName, modelObjects);
 		}
 		
@@ -257,15 +259,18 @@ public final class RenderVehicle{
 		}
 		
 		//The display list only renders static objects.  We need to render dynamic ones manually.
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
-			modelObject.render(vehicle, null, partialTicks);
+		List<RenderableModelObject> modelObjects = vehicleObjectLists.get(vehicle.definition.genericName);
+		for(RenderableModelObject modelObject : modelObjects){
+			if(modelObject.applyAfter == null){
+				modelObject.render(vehicle, null, partialTicks, modelObjects);
+			}
 		}
 	}
 	
 	/**
 	 *  Renders all parts on the vehicle.  Parts are first translated to their actual position, which they keep track of.
 	 *  After this they are rotated via {@link #rotatePart(APart, float)}.  Finally, any parts of the part
-	 *  model that are {@link TransformRotatable}s or {@link TransformTranslatable}s are rendered with
+	 *  model that are {@link TransformRotatable2}s or {@link TransformTranslatable}s are rendered with
 	 *  their rotations applied.  This makes rendering a split process.  Translate to position, rotate at position,
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
@@ -273,31 +278,33 @@ public final class RenderVehicle{
 	private static void renderPart(APart part, float partialTicks){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
-			//Create the part display list and modelObjects.
-			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(part.definition.packID, partModelLocation);
-			int displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				//Create model objects for all components of the model.
-				//If we have any objects that don't have transforms, ignore them.
-				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), entry.getValue(), part.vehicle, part);
-				if(modelObject.transforms.isEmpty()){
-					for(Float[] vertex : entry.getValue()){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			
+			//For anything that has a definition as an animation, add it to an animated list.
+			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
+			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
+			if(part.definition.rendering != null && part.definition.rendering.animatedObjects != null){
+				for(VehicleAnimatedObject definition : part.definition.rendering.animatedObjects){
+					if(parsedModel.containsKey(definition.objectName)){
+						modelObjects.add(new RenderableModelObject(partModelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), part.vehicle, part));
+						parsedModel.remove(definition.objectName);
 					}
-				}else{
-					modelObjects.add(modelObject);
 				}
 			}
-			GL11.glEnd();
-			GL11.glEndList();
 			
-			//Now finalize the maps
-			partDisplayLists.put(partModelLocation, displayListIndex);
+			//Now check for any non-animated model objects.
+			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
+			while(iterator.hasNext()){
+				Entry<String, Float[][]> entry = iterator.next();
+				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), null, entry.getValue(), part.vehicle, part);
+				if(!modelObject.transforms.isEmpty()){
+					modelObjects.add(modelObject);
+					iterator.remove();
+				}
+			}
+			
+			//Now finalize the maps.
+			partDisplayLists.put(partModelLocation, OBJParser.generateDisplayList(parsedModel));
 			partObjectLists.put(partModelLocation, modelObjects);
 		}
 		
@@ -337,8 +344,11 @@ public final class RenderVehicle{
 			}
 			
 			//The display list only renders static object.  We need to render dynamic ones manually.
-			for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
-				modelObject.render(part.vehicle, part, partialTicks);
+			List<RenderableModelObject> modelObjects = partObjectLists.get(partModelLocation);
+			for(RenderableModelObject modelObject : modelObjects){
+				if(modelObject.applyAfter == null){
+					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
+				}
 			}
 			
 			//Now that we have rendered this part, render any sub-part children.
@@ -547,7 +557,7 @@ public final class RenderVehicle{
 			//Search through rotatable parts on the vehicle and grab the rollers.
 			Map<Integer, TransformTreadRoller> parsedRollers = new HashMap<Integer, TransformTreadRoller>();
 			for(RenderableModelObject modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.genericName)){
-				for(ARenderableTransform transform : modelObject.transforms){
+				for(ATransformRenderable transform : modelObject.transforms){
 					if(transform instanceof TransformTreadRoller){
 						TransformTreadRoller treadTransform = (TransformTreadRoller) transform;
 						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
@@ -801,35 +811,45 @@ public final class RenderVehicle{
 			//Disable system lighting as we have issues with it in 3D rendering.
 			InterfaceRender.setSystemLightingState(false);
 			
-			//If we have light-up text, disable lightmap too.
-			if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
-				InterfaceRender.setInternalLightingState(false);
-			}
-			
 			//Render all text strings.
-			for(VehicleDisplayText text : vehicle.definition.rendering.textMarkings){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				//First rotate 180 along the X-axis to get us rendering right-side up.
-				GL11.glRotatef(180F, 1, 0, 0);
-				
-				//Next, apply rotations.  Only doing so if they exist.
-				//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
-				if(text.rot[1] != 0){
-					GL11.glRotatef(-text.rot[1], 0, 1, 0);
+			boolean lightingEnabled = true;
+			if(vehicle.definition.rendering.textLines != null){
+				for(JSONText text : vehicle.definition.rendering.textLines){
+					//If we have light-up text, disable lightmap.
+					if(text.lightsUp && isVehicleIlluminated(vehicle)){
+						if(lightingEnabled){
+							lightingEnabled = false;
+							InterfaceRender.setInternalLightingState(lightingEnabled);
+						}
+					}else if(!lightingEnabled){
+						lightingEnabled = true;
+						InterfaceRender.setInternalLightingState(lightingEnabled);
+					}
+					
+					GL11.glPushMatrix();
+					GL11.glTranslated(text.pos[0], text.pos[1], text.pos[2]);
+					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+					//First rotate 180 along the X-axis to get us rendering right-side up.
+					GL11.glRotatef(180F, 1, 0, 0);
+					
+					//Next, apply rotations.  Only doing so if they exist.
+					//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
+					if(text.rot[1] != 0){
+						GL11.glRotated(-text.rot[1], 0, 1, 0);
+					}
+					if(text.rot[0] != 0){
+						GL11.glRotated(text.rot[0], 1, 0, 0);
+					}
+					if(text.rot[2] != 0){
+						GL11.glRotated(text.rot[2], 0, 0, 1);
+					}
+					
+					//Finally, render the text.
+					BuilderGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
+					GL11.glPopMatrix();
 				}
-				if(text.rot[0] != 0){
-					GL11.glRotatef(text.rot[0], 1, 0, 0);
-				}
-				if(text.rot[2] != 0){
-					GL11.glRotatef(text.rot[2], 0, 0, 1);
-				}
-				
-				//Finally, render the text.
-				BuilderGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
-				GL11.glPopMatrix();
 			}
+			//FIXME add part text.
 		}
 	}
 	

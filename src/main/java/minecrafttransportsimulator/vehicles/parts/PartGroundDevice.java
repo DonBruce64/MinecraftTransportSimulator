@@ -52,13 +52,13 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
 		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
-		if(getLongPartOffset() != 0 && !isFake()){
+		if(!isFake() && getLongPartOffset() != 0){
 			packVehicleDef.pos[2] += getLongPartOffset();
 			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data);
+			packVehicleDef.pos[2] -= getLongPartOffset();
 			//Only check collision if we are not adding this part from saved NBT data.
 			//If we are adding from NBT, then we should have a tag saying that.
 			vehicle.addPart(fakePart, data.getBoolean("isExisting"));
-			packVehicleDef.pos[2] -= getLongPartOffset();
 		}else{
 			fakePart = null;
 		}

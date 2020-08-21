@@ -12,10 +12,11 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public class TransformWindow extends ARenderableTransform{
+public class TransformWindow extends ATransformRenderable{
 	private final Float[][] vertices;
 	
 	public TransformWindow(Float[][] vertices){
+		super(null);
 		this.vertices = vertices;
 	}
 	
@@ -25,8 +26,10 @@ public class TransformWindow extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
+		//FIXME add window textur ehere.
 		InterfaceRender.bindTexture("minecraft", "textures/blocks/glass.png");
+		return 0;
 	}
 	
 	@Override

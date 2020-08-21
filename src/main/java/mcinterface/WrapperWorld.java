@@ -216,14 +216,12 @@ public class WrapperWorld{
 							//Entity has collided with this box.  Adjust movement to allow them to ride on it.
 							Point3d entityDeltaOffset = new Point3d(entity.posX - intialPosition.x, entity.posY - intialPosition.y, entity.posZ - intialPosition.z);
 							Point3d finalOffset = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset);
-							//System.out.format("Offset X:%f Y:%f Z:%f\n", finalOffset.x, finalOffset.y, finalOffset.z);
 							
 							//If the entity is within 0.5 units of the top of the box, make them be on top of it.
 							//This also keeps the entity from falling into the box due to MC's stupid collision code that doesn't
 							//handle moving hitboxes well.
 							double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY + finalOffset.y;
 							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (entity.motionY < 0 || entity.motionY < entityBottomDelta)){
-								System.out.println(entityBottomDelta);
 								finalOffset.y = entityBottomDelta;
 								if(entity.motionY < 0){
 									entity.motionY = 0;

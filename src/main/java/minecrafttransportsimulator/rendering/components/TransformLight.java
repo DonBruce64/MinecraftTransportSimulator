@@ -18,7 +18,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 *
 * @author don_bruce
 */
-public class TransformLight extends ARenderableTransform{
+public class TransformLight extends ATransformRenderable{
 	public final LightType type;
 	public final boolean isLightupTexture;
 	
@@ -34,6 +34,7 @@ public class TransformLight extends ARenderableTransform{
 	private final Float[] size;
 	
 	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
+		super(null);
 		this.type = getTypeFromName(objectName);
 		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZZ"
 		//Where NAME is what switch it goes to.
@@ -107,10 +108,11 @@ public class TransformLight extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 8V.
 		setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+		return 0;
 	}
 	
 	@Override

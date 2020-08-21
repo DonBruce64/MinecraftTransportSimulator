@@ -287,49 +287,59 @@ public final class PackParserSystem{
     					partDef.ground.motiveFriction = partDef.tread.motiveFriction;
     					partDef.ground.extraCollisionBoxOffset = partDef.tread.extraCollisionBoxOffset;
     					partDef.ground.spacing = partDef.tread.spacing;
+    					break;
     				}case("crate"):{
     					partDef.general.type = "interactable";
     					partDef.interactable = partDef.new PartInteractable();
     					partDef.interactable.type = "crate";
     					partDef.interactable.inventoryUnits = 3;
     					partDef.interactable.feedsVehicles = true;
+    					break;
     				}case("barrel"):{
     					partDef.general.type = "interactable";
     					partDef.interactable = partDef.new PartInteractable();
     					partDef.interactable.type = "barrel";
     					partDef.interactable.inventoryUnits = 5;
+    					break;
     				}case("crafting_table"):{
     					partDef.general.type = "interactable";
     					partDef.interactable = partDef.new PartInteractable();
     					partDef.interactable.type = "crafting_table";
+    					break;
     				}case("furnace"):{
     					partDef.general.type = "interactable";
     					partDef.interactable = partDef.new PartInteractable();
     					partDef.interactable.type = "furnace";
+    					break;
     				}case("brewing_stand"):{
     					partDef.general.type = "interactable";
     					partDef.interactable = partDef.new PartInteractable();
     					partDef.interactable.type = "brewing_stand";
+    					break;
     				}case("fertilizer"):{
     					partDef.general.type = "effector";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "fertilizer";
     					partDef.effector.blocksWide = 1;
+    					break;
     				}case("harvester"):{
     					partDef.general.type = "effector";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "harvester";
     					partDef.effector.blocksWide = 1;
+    					break;
     				}case("planter"):{
     					partDef.general.type = "effector";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "planter";
     					partDef.effector.blocksWide = 1;
+    					break;
     				}case("plow"):{
     					partDef.general.type = "effector";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "plow";
     					partDef.effector.blocksWide = 1;
+    					break;
     				}
     			}
     		}

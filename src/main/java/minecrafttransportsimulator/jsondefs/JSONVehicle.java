@@ -141,41 +141,34 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class VehicleRendering{
-    	public int displayTextMaxLength;
-        public boolean textLighted;
-        public String defaultDisplayText;
         public String hudTexture;
         public String panelTexture;
         public String panelTextColor;
         public String panelLitTextColor;
-        public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
-        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
-        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+        public List<JSONText> textLines = new ArrayList<JSONText>();
+        public List<VehicleAnimatedObject> animatedObjects = new ArrayList<VehicleAnimatedObject>();
     }
     
-    public class VehicleDisplayText{
-    	public float[] pos;
-        public float[] rot;
-        public float scale;
-        public String color;
+    public class VehicleAnimatedObject{
+    	public String objectName;
+    	public String applyAfter;
+    	public List<VehicleAnimationDefinition> animations = new ArrayList<VehicleAnimationDefinition>();
     }
     
-    public class VehicleRotatableModelObject{
-    	public String partName;
-    	public double[] rotationPoint;
-    	public double[] rotationAxis;
-    	public String rotationVariable;
-    	public float rotationClampMin;
-    	public float rotationClampMax;
-    	public boolean absoluteValue;
-    }
-    
-    public class VehicleTranslatableModelObject{
-    	public String partName;
-    	public double[] translationAxis;
-    	public String translationVariable;
-    	public float translationClampMin;
-    	public float translationClampMax;
-    	public boolean absoluteValue;
+    public class VehicleAnimationDefinition{
+    	public String animationType;
+    	public String sound;
+    	
+    	public boolean addPriorOffset;
+    	public double[] centerPoint;
+    	public double[] axis;
+    	public String variable;
+    	public double offset;
+    	public int duration;
+    	public int forwardsDelay;
+    	public int reverseDelay;
+    	public double clampMin;
+    	public double clampMax;
+    	public boolean absolute;
     }
 }

@@ -71,7 +71,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.ownerUUID = data.getString("ownerUUID");
 		this.displayText = data.getString("displayText");
 		if(displayText.isEmpty()){
-			displayText = definition.rendering.defaultDisplayText;
+			//FIXME fix text.
+			//displayText = definition.rendering.defaultDisplayText;
 		}
 		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -115,12 +116,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		performGroundOperations();
 		//FIXME remove hacks when ground collision works.
 		position.y = 10;
-		motion.y = 0.25;
+		motion.y = 0;
 		
 		rotation.y = 0;
 				
-		rotation.x = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
-		rotation.z = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
+		//rotation.x = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
+		//rotation.z = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
 		
 		moveVehicle();
 		if(!world.isClient()){
