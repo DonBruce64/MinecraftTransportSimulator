@@ -57,11 +57,6 @@ public final class PartSeat extends APart{
 			vehicle.removeRider(vehicle.locationsToRiders.get(placementOffset), null);
 		}
 	}
-	
-	@Override
-	public WrapperNBT getData(){
-		return new WrapperNBT();
-	}
 
 	@Override
 	public float getWidth(){

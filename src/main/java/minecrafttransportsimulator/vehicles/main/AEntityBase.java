@@ -37,7 +37,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
  */
 public abstract class AEntityBase{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
-	private static int idCounter = 0;
+	private static int idCounter = 1;
 	/**Map of created entities.  Keyed by their ID.  Note: invalid entities are NOT removed from this map as IDs don't get re-used.**/
 	public static Map<Integer, AEntityBase> createdClientEntities = new HashMap<Integer, AEntityBase>();
 	/**Like {@link #createdClientEntities}, but on the server.  Used to keep collisions away on integrated systems.**/

@@ -6,6 +6,7 @@ import java.util.Map;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Basic fluid tanks class.  Class contains methods for filling and draining, as well as automatic
  * syncing of fluid levels across clients and servers.  This allows the tank to be put on any object
@@ -137,6 +138,20 @@ public class FluidTank{
 		}else{
 			return 0;
 		}
+	}
+	
+	/**
+	 *  Gets the explosive power of this fluid.  Used when this tank is blown up.
+	 *  In general, 10000 units is one level of explosion.  Explosion is multiplied
+	 *  by the fuel potency, so water won't blow up, but high-octane avgas will do nicely.
+	 */
+	public double getExplosiveness(){
+		for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
+			if(fuelEntry.containsKey(currentFluid)){
+				return fluidLevel*fuelEntry.get(currentFluid)/10000D;
+			}
+		}
+		return 0;
 	}
 	
 	/**

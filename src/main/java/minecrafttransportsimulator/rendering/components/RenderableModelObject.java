@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -23,7 +24,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public final class RenderableModelObject{
 	private final String modelName;
-	private final String objectName;
+	public final String objectName;
 	private final Float[][] vertices;
 	public final String applyAfter;
 	public final List<ATransformRenderable> transforms = new ArrayList<ATransformRenderable>();
@@ -116,8 +117,18 @@ public final class RenderableModelObject{
 			transform.doPostRenderLogic(vehicle, optionalPart, partialTicks);
 		}
 		
+		//Check if we need to render text on this object.
+		if(optionalPart != null){
+			if(RenderVehicle.renderTextMarkings(optionalPart.vehicle, optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textObjects, objectName)){
+				InterfaceRender.recallTexture();
+			}
+		}else{
+			if(RenderVehicle.renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, objectName)){
+				InterfaceRender.recallTexture();
+			}
+		}
+		
 		//Render any parts that depend on us before we pop our state.
-		//if(!objectName.contains("&"))System.out.println(objectName);
 		for(RenderableModelObject modelObject : allObjects){
 			if(objectName.equals(modelObject.applyAfter)){
 				modelObject.render(vehicle, optionalPart, partialTicks, allObjects);

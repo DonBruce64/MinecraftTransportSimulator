@@ -8,6 +8,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**This class contains static methods for vehicle animations.  These are used to animate
@@ -49,9 +50,11 @@ public final class VehicleAnimationSystem{
 			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
 			switch(partType){
+				case("interactable"): partClass = PartInteractable.class; break;	
 				case("engine"): partClass = PartEngine.class; break;
-				case("propeller"): partClass = PartPropeller.class; break;
 				case("gun"): partClass = PartGun.class; break;
+				case("propeller"): partClass = PartPropeller.class; break;
+				
 				default: if(ConfigSystem.configObject.client.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
 				}else{
@@ -105,19 +108,27 @@ public final class VehicleAnimationSystem{
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}
+			}else if(optionalPart instanceof PartGun){
+				PartGun gun = (PartGun) optionalPart;
+				switch(variable){
+					case("gun_pitch"): return gun.currentPitch;
+					case("gun_yaw"): return gun.currentYaw;
+					case("gun_ammo_count"): return gun.bulletsLeft;
+					case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
+				}
+			}else if(optionalPart instanceof PartInteractable){
+				PartInteractable interactable = (PartInteractable) optionalPart;
+				switch(variable){
+					case("interactable_count"): return interactable.getInventoryCount();
+					case("interactable_percent"): return interactable.getInventoryPercent();
+					case("interactable_capacity"): return interactable.getInventoryCapacity();
+				}
 			}else if(optionalPart instanceof PartPropeller){
 				PartPropeller propeller = (PartPropeller) optionalPart;
 				switch(variable){
 					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 					case("propeller_pitch_in"): return propeller.currentPitch;
 					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
-				}
-			}else if(optionalPart instanceof PartGun){
-				PartGun gun = (PartGun) optionalPart;
-				switch(variable){
-					case("gun_pitch"): return gun.currentPitch;
-					case("gun_yaw"): return gun.currentYaw;
-					case("gun_ammo"): return gun.bulletsLeft;
 				}
 			}
 			
@@ -152,15 +163,14 @@ public final class VehicleAnimationSystem{
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
-			case("reverser"): return vehicle.reversePercent/20D;
-			case("steering_wheel"): return vehicle.getSteerAngle();
+			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
 			case("rain"): return 1.0D + Math.sin(vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)/2D;
-			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
-			case("trailer"): return vehicle.towingAngle/30D;
-			case("hookup"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.towingAngle/30D : 0;
+			case("door"): return vehicle.parkingBrakeOn && Math.abs(vehicle.velocity) < 0.25 ? 1 : 0;
+			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
+			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
 			
 			//State cases generally used on aircraft.
 			case("aileron"): return vehicle.aileronAngle/10D;

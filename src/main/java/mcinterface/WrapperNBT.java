@@ -42,6 +42,7 @@ public class WrapperNBT{
 	}
 	
 	//TODO make this package-private when we get wrappd itemstacks.
+	//TODO check to see if we should apply the tag we create to the stack ever.
 	public WrapperNBT(ItemStack stack){
 		if(stack.hasTagCompound()){
 			this.tag = stack.getTagCompound();

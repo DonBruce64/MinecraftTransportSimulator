@@ -81,7 +81,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 				}else{
 					//Attempt to add the part.  Vehicle is responsible for callback packet here.
 					if(heldStack.getItem() instanceof AItemPart){
-						if(vehicle.addPartFromItem((AItemPart) heldStack.getItem(), new WrapperNBT(heldStack), hitPosition)){				
+						if(vehicle.addPartFromItem((AItemPart) heldStack.getItem(), heldStack.hasTagCompound() ? new WrapperNBT(heldStack) : null, hitPosition)){				
 							player.removeItem(heldStack, 1);
 						}
 					}

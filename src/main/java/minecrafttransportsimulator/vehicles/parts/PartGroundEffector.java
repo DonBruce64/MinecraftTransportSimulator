@@ -104,11 +104,6 @@ public class PartGroundEffector extends APart{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		return new WrapperNBT(); 
-	}
-	
-	@Override
 	public float getWidth(){
 		return 1.0F;
 	}

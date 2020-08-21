@@ -106,7 +106,7 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();		
+		WrapperNBT data = super.getData();		
 		data.setDouble("damage", damage);
 		return data;
 	}

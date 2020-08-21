@@ -101,14 +101,27 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				//Check to make sure the part is in parameter ranges.
 				if(partItem.isPartValidForPackDef(packPart)){
 					//Part is valid.  Create it and add it.
-					addPart(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partItem.definition, partData != null ? partData : new WrapperNBT()), false);
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem.definition.packID, partItem.definition.systemName, partData), this);
+					APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partItem.definition, partData != null ? partData : new WrapperNBT()); 
+					addPart(newPart, false);
 					
 					//If the part doesn't have NBT, it must be new and we need to add default parts.
 					//Only do this if we actually have subParts for this part.
-					if(partData != null && partItem.definition.subParts != null){
+					if(partData == null && partItem.definition.subParts != null){
 						addDefaultParts(partItem.definition.subParts, this);
 					}
+					
+					//If part data is null, we need to add default text too.
+					if(partData == null){
+						if(newPart.definition.rendering != null){
+							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
+								newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+							}
+						}
+						partData = newPart.getData();
+					}
+					
+					//Send packet to client with part data.
+					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem.definition.packID, partItem.definition.systemName, partData), this);
 					
 					//Done adding the part, return true.
 					return true;
@@ -332,6 +345,13 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					try{
 						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new WrapperNBT());
 						vehicle.addPart(newPart, true);
+						
+						//Set default text for the new part, if we have any.
+						if(newPart.definition.rendering != null){
+							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
+								newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+							}
+						}
 						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.

@@ -35,6 +35,7 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -148,6 +149,7 @@ public final class PackParserSystem{
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONPoleComponent definition = new Gson().fromJson(jsonReader, JSONPoleComponent.class);
+    		performLegacyCompats(definition);
 	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), jsonFileName, packID, ItemClassification.POLE);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -389,6 +391,31 @@ public final class PackParserSystem{
 	    	    			}
     					}
     				}
+    			}
+    		}
+    	}else if(definition instanceof JSONPoleComponent){
+    		JSONPoleComponent pole = (JSONPoleComponent) definition;
+    		//If we are a sign using the old textlines, update them.
+    		if(pole.general.textLines != null){
+    			pole.general.textObjects = new ArrayList<JSONText>();
+    			for(minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine line : pole.general.textLines){
+    				JSONText object = new JSONText();
+    				object.color = line.color;
+    				object.scale = line.scale;
+    				object.maxLength = line.characters;
+    				object.pos = new double[]{line.xPos, line.yPos, line.zPos};
+    			}
+    		}
+    	}else if(definition instanceof JSONDecor){
+    		JSONDecor decor = (JSONDecor) definition;
+    		//If we are a decor using the old textlines, update them.
+    		if(decor.general.textLines != null){
+    			decor.general.textObjects = new ArrayList<JSONText>();
+    			for(minecrafttransportsimulator.jsondefs.JSONDecor.TextLine line : decor.general.textLines){
+    				JSONText object = new JSONText();
+    				object.color = line.color;
+    				object.scale = line.scale;
+    				object.pos = new double[]{line.xPos, line.yPos, line.zPos};
     			}
     		}
     	}

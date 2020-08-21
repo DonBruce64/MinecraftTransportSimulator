@@ -31,9 +31,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean parkingBrakeOn;
 	public boolean locked;
 	public String ownerUUID = "";
-	public String displayText = "";
 	
 	//Internal states.
+	protected float steeringAngle;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -69,12 +69,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brakeOn = data.getBoolean("brakeOn");
 		this.ownerUUID = data.getString("ownerUUID");
-		this.displayText = data.getString("displayText");
-		if(displayText.isEmpty()){
-			//FIXME fix text.
-			//displayText = definition.rendering.defaultDisplayText;
-		}
-		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaA");
 		this.clientDeltaM = serverDeltaM.copy();
@@ -126,21 +120,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		moveVehicle();
 		if(!world.isClient()){
 			dampenControlSurfaces();
-		}
-		
-		//Update parking brake angle.
-		//FIXME remove this with the duration/delay code.
-		prevParkingBrakeAngle = parkingBrakeAngle;
-		if(parkingBrakeOn && !locked && velocity < 0.25){
-			if(parkingBrakeAngle < 30){
-				prevParkingBrakeAngle = parkingBrakeAngle;
-				++parkingBrakeAngle;
-			}
-		}else{
-			if(parkingBrakeAngle > 0){
-				prevParkingBrakeAngle = parkingBrakeAngle;
-				--parkingBrakeAngle;
-			}
 		}
 	}
 	
@@ -928,12 +907,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	protected float getTurningFactor(){
 		float turningForce = 0;
-		float steeringAngle = this.getSteerAngle();
-		if(steeringAngle != 0){
+		float steeringAngleTemp = steeringAngle;
+		if(steeringAngleTemp != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
 			//Check grounded wheels for turn contributions.
-			for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+			for(PartGroundDevice groundDevice : groundedGroundDevices){
 				float frictionLoss = groundDevice.getFrictionLoss();
 				//Do we have enough friction to change yaw?
 				if(groundDevice.vehicleDefinition.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
@@ -952,23 +931,23 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			if(turningFactor > 0){
 				//Now that we know we can turn, we can attempt to change the track.
-				steeringAngle = Math.abs(steeringAngle);
+				steeringAngleTemp = Math.abs(steeringAngleTemp);
 				if(turningFactor < 1){
-					steeringAngle *= turningFactor;
+					steeringAngleTemp *= turningFactor;
 				}
 				//Adjust steering angle to be aligned with distance of the turning part from the center of the vehicle.
-				steeringAngle /= turningDistance;
+				steeringAngleTemp /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
 				if(groundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
-					steeringAngle *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
+					steeringAngleTemp *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = -(float) (steeringAngle*groundVelocity/2F);
+				turningForce = -(float) (steeringAngleTemp*groundVelocity/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force.
-				turningForce *= Math.signum(this.getSteerAngle());
+				turningForce *= Math.signum(steeringAngle);
 			}
 		}
 		return turningForce;
@@ -985,12 +964,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected abstract void getForcesAndMotions();
 	
 	/**
-	 * Returns whatever the steering angle is.
-	 * Used for rendering and turning force calculations.
-	 */
-	public abstract float getSteerAngle();
-	
-	/**
 	 * Method block for dampening control surfaces.
 	 * Used to move control surfaces back to neutral position.
 	 */
@@ -1003,7 +976,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("brakeOn", brakeOn);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setString("ownerUUID", ownerUUID);
-		data.setString("displayText", displayText);
 		data.setPoint3d("serverDeltaM", serverDeltaR);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 	}

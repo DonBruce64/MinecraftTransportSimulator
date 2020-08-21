@@ -3,9 +3,9 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
 public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartEngine engine;
@@ -18,7 +18,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartCustom custom;
     public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
     public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
-    public PartRendering rendering;
+    public VehicleRendering rendering;
     
     //Depreciated blocks.  Used only for legacy compat.
     public PartWheel wheel;
@@ -118,11 +118,6 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public class PartCustom{
     	public float width;
     	public float height;
-    }
-    
-    public class PartRendering{
-        public List<JSONText> textLines = new ArrayList<JSONText>();
-        public List<VehicleAnimatedObject> animatedObjects = new ArrayList<VehicleAnimatedObject>();
     }
     
     public class PartWheel{

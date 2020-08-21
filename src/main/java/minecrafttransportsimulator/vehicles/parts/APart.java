@@ -47,6 +47,8 @@ public abstract class APart implements ISoundProvider{
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
+	/**List containing text lines for saved text.**/
+	public final List<String> textObjects = new ArrayList<String>();
 	
 	//Runtime variables.
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -67,6 +69,13 @@ public abstract class APart implements ISoundProvider{
 		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation;
 		this.isValid = true;
+		
+		//Load text.
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
+				textObjects.add(data.getString("textObject" + i));
+			}
+		}
 		
 		//Check to see if we are an additional part to a part on our parent.
 		//If we are a fake part, don't add ourselves.
@@ -269,7 +278,15 @@ public abstract class APart implements ISoundProvider{
 	 * This does not include the part offsets, as those are re-calculated every time the part is attached
 	 * and are saved separately from the item NBT data in the vehicle.
 	 */
-	public abstract WrapperNBT getData();
+	public WrapperNBT getData(){
+		WrapperNBT data = new WrapperNBT();
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
+				data.setString("textObject" + i, textObjects.get(i));
+			}
+		}
+		return data;
+	}
 	
 	public abstract float getWidth();
 	

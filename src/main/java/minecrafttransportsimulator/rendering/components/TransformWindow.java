@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.InterfaceRender;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -27,8 +28,7 @@ public class TransformWindow extends ATransformRenderable{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		//FIXME add window textur ehere.
-		InterfaceRender.bindTexture("minecraft", "textures/blocks/glass.png");
+		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/glass.png");
 		return 0;
 	}
 	

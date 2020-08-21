@@ -335,6 +335,13 @@ public class BuilderGUI extends GuiScreen{
 	}
 	
 	/**
+	 *  Returns the width of the passed-in text string.
+	 */
+	public static int getStringWidth(String text){
+		return fontRenderer.getStringWidth(text);
+	}
+	
+	/**
 	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
 	 *  renders all items from their top-left corner, so take this into account when
 	 *  choosing where to put this component in your GUI.

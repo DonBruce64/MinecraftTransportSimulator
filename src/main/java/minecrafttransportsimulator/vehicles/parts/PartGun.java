@@ -247,7 +247,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
+		WrapperNBT data = super.getData();
 		data.setInteger("shotsFired", this.shotsFired);
 		data.setInteger("bulletsLeft", this.bulletsLeft);
 		data.setDouble("currentPitch", this.currentPitch);

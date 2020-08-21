@@ -499,17 +499,17 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
-		data.setBoolean("isCreative", this.isCreative);
-		data.setBoolean("oilLeak", this.oilLeak);
-		data.setBoolean("fuelLeak", this.fuelLeak);
-		data.setBoolean("brokenStarter", this.brokenStarter);
-		data.setInteger("currentGear", this.currentGear);
+		WrapperNBT data = super.getData();
+		data.setBoolean("isCreative", isCreative);
+		data.setBoolean("oilLeak", oilLeak);
+		data.setBoolean("fuelLeak", fuelLeak);
+		data.setBoolean("brokenStarter", brokenStarter);
+		data.setInteger("currentGear", currentGear);
 		data.setDouble("hours", hours);
-		data.setDouble("rpm", this.rpm);
-		data.setDouble("temp", this.temp);
-		data.setDouble("pressure", this.pressure);
-		data.setInteger("state", (byte) this.state.ordinal());
+		data.setDouble("rpm", rpm);
+		data.setDouble("temp", temp);
+		data.setDouble("pressure", pressure);
+		data.setInteger("state", (byte) state.ordinal());
 		return data;
 	}
 	

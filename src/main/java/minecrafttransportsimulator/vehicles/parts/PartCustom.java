@@ -12,11 +12,6 @@ public final class PartCustom extends APart{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		return new WrapperNBT();
-	}
-	
-	@Override
 	public float getWidth(){
 		return definition.custom.width;
 	}

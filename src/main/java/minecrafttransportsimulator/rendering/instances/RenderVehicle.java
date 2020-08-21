@@ -168,9 +168,6 @@ public final class RenderVehicle{
 		//Render all instruments on the vehicle.
 		renderInstruments(vehicle);
 		
-		//Render text markings.
-		renderTextMarkings(vehicle);
-		
 		//Pop vehicle rotation matrix as the following calls use world coords.
 		GL11.glPopMatrix();
 		
@@ -258,11 +255,19 @@ public final class RenderVehicle{
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
 		}
 		
+		//Render any static text.
+		if(renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, null)){
+			InterfaceRender.recallTexture();
+		}
+		
 		//The display list only renders static objects.  We need to render dynamic ones manually.
 		List<RenderableModelObject> modelObjects = vehicleObjectLists.get(vehicle.definition.genericName);
 		for(RenderableModelObject modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, null, partialTicks, modelObjects);
+				if(renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, modelObject.objectName)){
+					InterfaceRender.recallTexture();
+				}
 			}
 		}
 	}
@@ -343,11 +348,19 @@ public final class RenderVehicle{
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
 			}
 			
+			//Render any static text.
+			if(renderTextMarkings(part.vehicle, part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, null)){
+				InterfaceRender.recallTexture();
+			}
+			
 			//The display list only renders static object.  We need to render dynamic ones manually.
 			List<RenderableModelObject> modelObjects = partObjectLists.get(partModelLocation);
 			for(RenderableModelObject modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
 					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
+					if(renderTextMarkings(part.vehicle, part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, modelObject.objectName)){
+						InterfaceRender.recallTexture();
+					}
 				}
 			}
 			
@@ -802,54 +815,77 @@ public final class RenderVehicle{
 	}
 	
 	/**
-	 *  Renders all text markings for this vehicle.  Text is changed via the player,
+	 *  Renders all text markings given the passed-in parameters.  Text is changed via the player,
 	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
 	 *  in pass 0, as we don't do any alpha blending in this routine.
+	 *  Return true if we rendered anything.  This lets any rendering systems reset.
+	 *  Public, as sub-objects may need to render text on this vehicle.
 	 */
-	private static void renderTextMarkings(EntityVehicleF_Physics vehicle){
+	public static boolean renderTextMarkings(EntityVehicleF_Physics vehicle, List<JSONText> textDefinitions, List<String> textLines, String objectRendering){
 		if(InterfaceRender.getRenderPass() != 1){
-			//Disable system lighting as we have issues with it in 3D rendering.
-			InterfaceRender.setSystemLightingState(false);
-			
-			//Render all text strings.
-			boolean lightingEnabled = true;
-			if(vehicle.definition.rendering.textLines != null){
-				for(JSONText text : vehicle.definition.rendering.textLines){
-					//If we have light-up text, disable lightmap.
-					if(text.lightsUp && isVehicleIlluminated(vehicle)){
-						if(lightingEnabled){
-							lightingEnabled = false;
-							InterfaceRender.setInternalLightingState(lightingEnabled);
+			boolean systemLightingEnabled = true;
+			boolean internalLightingEnabled = true;
+			if(textDefinitions != null){
+				for(byte i=0; i<textDefinitions.size(); ++i){
+					JSONText textDefinition = textDefinitions.get(i);
+					String text = textLines.get(i);
+					
+					//Render if our attached object and the object we are rendering on match.
+					if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
+						//Disable system lighting if we haven't already.
+						//System lighting doesn't work well with text.
+						if(systemLightingEnabled){
+							InterfaceRender.setSystemLightingState(false);
+							systemLightingEnabled = false;
 						}
-					}else if(!lightingEnabled){
-						lightingEnabled = true;
-						InterfaceRender.setInternalLightingState(lightingEnabled);
+						
+						//If we have light-up text, disable lightmap.
+						if(textDefinition.lightsUp && isVehicleIlluminated(vehicle)){
+							if(internalLightingEnabled){
+								internalLightingEnabled = false;
+								InterfaceRender.setInternalLightingState(internalLightingEnabled);
+							}
+						}else if(!internalLightingEnabled){
+							internalLightingEnabled = true;
+							InterfaceRender.setInternalLightingState(internalLightingEnabled);
+						}
+						//System.out.println(text);
+						GL11.glPushMatrix();
+						//Offset by 1/2 a block to account for text centering.
+						GL11.glTranslated(textDefinition.pos[0], textDefinition.pos[1] + 0.5D/16D, textDefinition.pos[2]);
+						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+						//First rotate 180 along the X-axis to get us rendering right-side up.
+						GL11.glRotatef(180F, 1, 0, 0);
+						//Next, apply rotations.  Y is inverted due to the inverted X axis.
+						GL11.glRotated(-textDefinition.rot[1], 0, 1, 0);
+						GL11.glRotated(textDefinition.rot[0], 1, 0, 0);
+						GL11.glRotated(textDefinition.rot[2], 0, 0, 1);
+						
+						//Finally, render the text.
+						if(textDefinition.alignLeft){
+							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
+						}else if(textDefinition.alignRight){
+							BuilderGUI.drawScaledText(text, -BuilderGUI.getStringWidth(text), 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
+						}else{
+							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), true, false, 0, textDefinition.scale);
+						}
+						GL11.glPopMatrix();
 					}
-					
-					GL11.glPushMatrix();
-					GL11.glTranslated(text.pos[0], text.pos[1], text.pos[2]);
-					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-					//First rotate 180 along the X-axis to get us rendering right-side up.
-					GL11.glRotatef(180F, 1, 0, 0);
-					
-					//Next, apply rotations.  Only doing so if they exist.
-					//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
-					if(text.rot[1] != 0){
-						GL11.glRotated(-text.rot[1], 0, 1, 0);
-					}
-					if(text.rot[0] != 0){
-						GL11.glRotated(text.rot[0], 1, 0, 0);
-					}
-					if(text.rot[2] != 0){
-						GL11.glRotated(text.rot[2], 0, 0, 1);
-					}
-					
-					//Finally, render the text.
-					BuilderGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
-					GL11.glPopMatrix();
 				}
 			}
-			//FIXME add part text.
+			
+			//Reset lighting.
+			if(!internalLightingEnabled){
+				InterfaceRender.setInternalLightingState(true);
+			}
+			if(!systemLightingEnabled){
+				InterfaceRender.setSystemLightingState(true);
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
 		}
 	}
 	

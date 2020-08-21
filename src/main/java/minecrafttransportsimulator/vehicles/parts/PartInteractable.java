@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartInteractable extends APart{
@@ -21,7 +22,7 @@ public final class PartInteractable extends APart{
 	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
 		super(vehicle, packVehicleDef, definition, data);
 		switch(definition.interactable.type){
-			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits*9); break;
+			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits); break;
 			case("barrel"): this.interactable = null; break;
 			case("crafting_table"): this.interactable = null; break;
 			case("furnace"): this.interactable = new WrapperEntityFurnace(vehicle.world, data); break;
@@ -56,9 +57,11 @@ public final class PartInteractable extends APart{
 	
 	@Override
 	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
+		WrapperNBT data = super.getData();
 		if(interactable != null){
 			interactable.save(data);
+		}else if(tank != null){
+			tank.save(data);
 		}
 		return data;
 	}
@@ -71,5 +74,64 @@ public final class PartInteractable extends APart{
 	@Override
 	public float getHeight(){
 		return 1.0F;
+	}
+	
+	public int getInventoryCount(){
+		int count = 0;
+		if(inventory != null){
+			for(int i=0; i<inventory.getSize(); ++i){
+				if(inventory.getStackInSlot(i) != null){
+					++count;
+				}
+			}
+		}
+		return count;
+	}
+	
+	public double getInventoryPercent(){
+		if(inventory != null){
+			int count = 0;
+			for(int i=0; i<inventory.getSize(); ++i){
+				if(inventory.getStackInSlot(i) != null){
+					++count;
+				}
+			}
+			return count/(double)inventory.getSize();
+		}else if(tank != null){
+			return tank.getFluidLevel()/(double)tank.getMaxLevel();
+		}else{
+			return 0;
+		}
+	}
+	
+	public int getInventoryCapacity(){
+		if(inventory != null){
+			return inventory.getSize();
+		}else if(tank != null){
+			return tank.getMaxLevel()/1000;
+		}else{
+			return 0;
+		}
+	}
+	
+	public double getInventoryWeight(){
+		if(inventory != null){
+			return inventory.getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
+		}else if(tank != null){
+			return tank.getFluidLevel()/50;
+		}else{
+			return 0;
+		}
+	}
+	
+	public double getExplosiveContribution(){
+		if(inventory != null){
+			//TODO check for ammo.
+			return 0;
+		}else if(tank != null){
+			return tank.getExplosiveness();
+		}else{
+			return 0;
+		}
 	}
 }

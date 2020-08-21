@@ -55,16 +55,17 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	//Internal states.
 	public byte totalGuns;
-	public short reversePercent;
 	public int gearMovementTime;
-	public double electricPower = 12;
+	public double electricPower;
 	public double electricUsage;
 	public double electricFlow;
-	public String fluidName = "";
+	public String fluidName;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
+	/**List containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
+	public final List<String> textObjects = new ArrayList<String>();
 	
 	//Collision maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
@@ -98,6 +99,13 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				}
 			}
 			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
+		}
+		
+		//Load text.
+		if(definition.rendering.textObjects != null){
+			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
+				textObjects.add(data.getString("textObject" + i));
+			}
 		}
 		
 		//Load instruments.
@@ -152,7 +160,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			}
 		}
 		
-		
 		//Set electric usage based on light status.
 		if(electricPower > 2){
 			for(LightType light : lightsOn){
@@ -164,13 +171,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 		electricFlow = electricUsage;
 		electricUsage = 0;
-		
-		//Adjust reverse thrust variables.
-		if(reverseThrust && reversePercent < 20){
-			++reversePercent;
-		}else if(!reverseThrust && reversePercent > 0){
-			--reversePercent;
-		}
 		
 		//Adjust gear variables.
 		if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
@@ -230,21 +230,13 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		//Note that this is done after spawning all parts here and in the super call,
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
 		if(ConfigSystem.configObject.damage.explosions.value){
-			double fuelPresent = this.fuel;
+			double explosivePower = 0;
 			for(APart part : parts){
 				if(part instanceof PartInteractable){
-					PartInteractable interactable = (PartInteractable) part;
-					if(interactable.tank != null){
-						for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
-							if(fuelEntry.containsKey(interactable.tank.getFluid())){
-								fuelPresent += interactable.tank.getFluidLevel()*fuelEntry.get(interactable.tank.getFluid());
-								break;
-							}
-						}
-					}
+					explosivePower += ((PartInteractable) part).getExplosiveContribution();
 				}
 			}
-			world.spawnExplosion(this, position, fuelPresent/10000D + 1D, true);
+			world.spawnExplosion(this, position, explosivePower + fuel/10000D + 1D, true);
 		}
 		
 		//Finally, if we are being towed, unhook us from our tower.
@@ -366,6 +358,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			lightsOnString += light.name() + ",";
 		}
 		data.setString("lightsOn", lightsOnString);
+		
+		if(definition.rendering.textObjects != null){
+			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
+				data.setString("textObject" + i, textObjects.get(i));
+			}
+		}
 		
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){

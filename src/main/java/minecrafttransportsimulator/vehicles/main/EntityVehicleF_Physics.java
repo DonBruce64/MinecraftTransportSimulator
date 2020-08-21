@@ -58,7 +58,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private boolean turningLeft;
 	private boolean turningRight;
 	private byte turningCooldown;
-	public byte towingAngle;
 	//private double towingDeltaYaw;
 	private double pitchDirectionFactor;
 	public double trackAngle;
@@ -118,6 +117,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	public void update(){
+		//Copy the rudder angle to the steering angle before calling super.
+		steeringAngle = -rudderAngle/10F;
+		
 		//If we are a towed trailer, and we aren't scheduled for an update, skip this cycle.
 		//Instead, we get called to update from the vehicle we are being towed by.
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
@@ -129,68 +131,56 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}
 		
 		super.update();
-		if(definition != null){
-			//Change turn signal status depending on turning status.
-			//Keep signals on until we have been moving without turning in the
-			//pressed direction for 2 seconds, or if we turn in the other direction.
-			if(rudderAngle < -200){
-				turningLeft = true;
-				turningCooldown = 40;
-				lightsOn.add(LightType.LEFTTURNLIGHT);
-			}else if(rudderAngle > 200){
-				turningRight = true;
-				turningCooldown = 40;
-				lightsOn.add(LightType.RIGHTTURNLIGHT);
-			}
-			if(turningLeft && (rudderAngle > 0 || turningCooldown == 0)){
-				turningLeft = false;
-				lightsOn.remove(LightType.LEFTTURNLIGHT);
-			}
-			if(turningRight && (rudderAngle < 0 || turningCooldown == 0)){
-				turningRight = false;
-				lightsOn.remove(LightType.RIGHTTURNLIGHT);
-			}
-			if(velocity != 0 && turningCooldown > 0 && rudderAngle == 0){
-				--turningCooldown;
-			}
-			
-			//Turn on brake lights and indicator lights.
-			if(brakeOn){
-				lightsOn.add(LightType.BRAKELIGHT);
-				if(lightsOn.contains(LightType.LEFTTURNLIGHT)){
-					lightsOn.remove(LightType.LEFTINDICATORLIGHT);
-				}else{
-					lightsOn.add(LightType.LEFTINDICATORLIGHT);
-				}
-				if(lightsOn.contains(LightType.RIGHTTURNLIGHT)){
-					lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
-				}else{
-					lightsOn.add(LightType.RIGHTINDICATORLIGHT);
-				}
-			}else{
-				lightsOn.remove(LightType.BRAKELIGHT);
-				lightsOn.remove(LightType.LEFTINDICATORLIGHT);
-				lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
-			}
-			
-			//Set backup light state.
-			lightsOn.remove(LightType.BACKUPLIGHT);
-			for(PartEngine engine : engines.values()){
-				if(engine.currentGear < 0){
-					lightsOn.add(LightType.BACKUPLIGHT);
-					break;
-				}
-			}
+		
+		//Change turn signal status depending on turning status.
+		//Keep signals on until we have been moving without turning in the
+		//pressed direction for 2 seconds, or if we turn in the other direction.
+		if(rudderAngle < -200){
+			turningLeft = true;
+			turningCooldown = 40;
+			lightsOn.add(LightType.LEFTTURNLIGHT);
+		}else if(rudderAngle > 200){
+			turningRight = true;
+			turningCooldown = 40;
+			lightsOn.add(LightType.RIGHTTURNLIGHT);
+		}
+		if(turningLeft && (rudderAngle > 0 || turningCooldown == 0)){
+			turningLeft = false;
+			lightsOn.remove(LightType.LEFTTURNLIGHT);
+		}
+		if(turningRight && (rudderAngle < 0 || turningCooldown == 0)){
+			turningRight = false;
+			lightsOn.remove(LightType.RIGHTTURNLIGHT);
+		}
+		if(velocity != 0 && turningCooldown > 0 && rudderAngle == 0){
+			--turningCooldown;
 		}
 		
-		//Update towing angle.
-		if(towedByVehicle != null){
-			if(towingAngle < 30){
-				++towingAngle;
+		//Turn on brake lights and indicator lights.
+		if(brakeOn){
+			lightsOn.add(LightType.BRAKELIGHT);
+			if(lightsOn.contains(LightType.LEFTTURNLIGHT)){
+				lightsOn.remove(LightType.LEFTINDICATORLIGHT);
+			}else{
+				lightsOn.add(LightType.LEFTINDICATORLIGHT);
+			}
+			if(lightsOn.contains(LightType.RIGHTTURNLIGHT)){
+				lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+			}else{
+				lightsOn.add(LightType.RIGHTINDICATORLIGHT);
 			}
 		}else{
-			if(towingAngle > 0){
-				--towingAngle;
+			lightsOn.remove(LightType.BRAKELIGHT);
+			lightsOn.remove(LightType.LEFTINDICATORLIGHT);
+			lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+		}
+		
+		//Set backup light state.
+		lightsOn.remove(LightType.BACKUPLIGHT);
+		for(PartEngine engine : engines.values()){
+			if(engine.currentGear < 0){
+				lightsOn.add(LightType.BACKUPLIGHT);
+				break;
 			}
 		}
 		
@@ -519,11 +509,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}else{
 			--rudderCooldown;
 		}
-	}
-	
-	@Override
-	public float getSteerAngle(){
-		return -rudderAngle/10F;
 	}
 	
 	@Override

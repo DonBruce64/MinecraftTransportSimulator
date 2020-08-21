@@ -39,7 +39,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				pos = pos.up();
 				
 				//Make sure the definition is set in the NBT we will be giving to our new entity.
-				WrapperNBT data = new WrapperNBT(heldStack);
+				WrapperNBT data = heldStack.hasTagCompound() ? new WrapperNBT(heldStack) : new WrapperNBT();
 				data.setString("packID", definition.packID);
 				data.setString("systemName", definition.systemName);
 				
@@ -63,16 +63,23 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				newVehicle.position.set((double) pos.getX(), (double) pos.getY(), (double) pos.getZ());
 				newVehicle.angles.y = -player.rotationYaw + 90;
 				
-				//Set inital electrical power.
-				newVehicle.electricPower = 12;
-				
 				//If the held stack doesn't have NBT, then we must be spawning a new vehicle.
-				//In this case, add default parts and fuel, if required.
+				//In this case, set default properties, if required.
 				if(!heldStack.hasTagCompound()){
-					//First add default parts via the vehicle's recusion.
-					EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle);
+					//Set initial electrical power.
+					newVehicle.electricPower = 12;
 					
-					//Next, add default instruments.
+					//Add default parts via the vehicle's recusion.
+					EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle);
+
+					//Set default vehicle text.
+					if(newVehicle.definition.rendering.textObjects != null){
+						for(byte i=0; i<newVehicle.definition.rendering.textObjects.size(); ++i){
+							newVehicle.textObjects.set(i, newVehicle.definition.rendering.textObjects.get(i).defaultText);
+						}
+					}
+					
+					//Add default instruments.
 					for(PackInstrument packInstrument : newVehicle.definition.motorized.instruments){
 						if(packInstrument.defaultInstrument != null){
 							try{

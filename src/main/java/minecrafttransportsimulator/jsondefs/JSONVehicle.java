@@ -145,7 +145,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public String panelTexture;
         public String panelTextColor;
         public String panelLitTextColor;
-        public List<JSONText> textLines = new ArrayList<JSONText>();
+        public List<JSONText> textObjects = new ArrayList<JSONText>();
         public List<VehicleAnimatedObject> animatedObjects = new ArrayList<VehicleAnimatedObject>();
     }
     
@@ -157,18 +157,17 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleAnimationDefinition{
     	public String animationType;
-    	public String sound;
-    	
-    	public boolean addPriorOffset;
+    	public String variable;
     	public double[] centerPoint;
     	public double[] axis;
-    	public String variable;
     	public double offset;
-    	public int duration;
-    	public int forwardsDelay;
-    	public int reverseDelay;
+    	public boolean addPriorOffset;
     	public double clampMin;
     	public double clampMax;
     	public boolean absolute;
+    	public int duration;
+    	public int forwardsDelay;
+    	public int reverseDelay;
+    	public String sound;
     }
 }

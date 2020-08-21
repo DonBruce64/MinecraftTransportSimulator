@@ -42,8 +42,6 @@ import net.minecraft.item.ItemStack;
 abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	
 	//Internal states.
-	public byte prevParkingBrakeAngle;
-	public byte parkingBrakeAngle;
 	private float hardnessHitThisTick = 0;
 	public double airDensity;
 	public double currentMass;
@@ -341,12 +339,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		int currentMass = definition.general.emptyMass;
 		for(APart part : parts){
 			if(part instanceof PartInteractable){
-				if(((PartInteractable) part).inventory != null){
-					currentMass += ((PartInteractable) part).inventory.getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
-				}
-				if(((PartInteractable) part).tank != null){
-					currentMass += ((PartInteractable) part).tank.getFluidLevel()/50;
-				}
+				currentMass += ((PartInteractable) part).getInventoryWeight();
 			}
 		}
 		
