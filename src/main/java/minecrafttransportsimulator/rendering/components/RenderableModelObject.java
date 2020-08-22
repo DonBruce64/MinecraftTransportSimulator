@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL11;
 import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -119,11 +118,11 @@ public final class RenderableModelObject{
 		
 		//Check if we need to render text on this object.
 		if(optionalPart != null){
-			if(RenderVehicle.renderTextMarkings(optionalPart.vehicle, optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textObjects, objectName)){
+			if(InterfaceRender.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textObjects, objectName, optionalPart.vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 		}else{
-			if(RenderVehicle.renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, objectName)){
+			if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, objectName, vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 		}

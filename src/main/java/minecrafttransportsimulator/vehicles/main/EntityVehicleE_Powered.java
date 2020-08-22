@@ -205,6 +205,14 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		return ConfigSystem.configObject.client.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMERUNNINGLIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
 	}
 	
+	 /**
+     * Returns true if the interior lights on this vehicle are on.  This is taken to mean the interior
+     * lights that cause the instrument cluster to light up, as well as any outer text markings.
+     */
+	public boolean areInteriorLightsOn(){
+		return (lightsOn.contains(LightType.NAVIGATIONLIGHT) || lightsOn.contains(LightType.RUNNINGLIGHT) || lightsOn.contains(LightType.HEADLIGHT)) && electricPower > 3;
+	}
+	
 	@Override
 	public void destroyAtPosition(Point3d position){
 		super.destroyAtPosition(position);

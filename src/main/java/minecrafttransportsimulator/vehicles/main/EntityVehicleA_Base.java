@@ -112,7 +112,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					
 					//If part data is null, we need to add default text too.
 					if(partData == null){
-						if(newPart.definition.rendering != null){
+						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
 							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
 								newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
 							}

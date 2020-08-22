@@ -17,8 +17,8 @@ public class TileEntityPole_Sign extends ATileEntityPole_Component{
 	public TileEntityPole_Sign(JSONPoleComponent definition){
 		super(definition);
 		//Populate the textLines with blank strings at construction.
-		if(definition.general.textLines != null){
-			for(byte i=0; i<definition.general.textLines.length; ++i){
+		if(definition.general.textObjects != null){
+			for(byte i=0; i<definition.general.textObjects.size(); ++i){
 				textLines.add("");
 			}
 		}

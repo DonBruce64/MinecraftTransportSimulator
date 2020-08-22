@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,14 +9,12 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.BuilderGUI;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceRender;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -101,13 +98,6 @@ public final class RenderVehicle{
 			}
 		}
 		return false;
-	}
-	
-    /**
-     * Checks if lights are on for this vehicle and instruments need to be lit up.
-     */
-	public static boolean isVehicleIlluminated(EntityVehicleF_Physics vehicle){
-		return (vehicle.lightsOn.contains(LightType.NAVIGATIONLIGHT) || vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) || vehicle.lightsOn.contains(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
 	}
 	
 	/**
@@ -256,7 +246,7 @@ public final class RenderVehicle{
 		}
 		
 		//Render any static text.
-		if(renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, null)){
+		if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, null, vehicle.areInteriorLightsOn())){
 			InterfaceRender.recallTexture();
 		}
 		
@@ -265,7 +255,7 @@ public final class RenderVehicle{
 		for(RenderableModelObject modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, null, partialTicks, modelObjects);
-				if(renderTextMarkings(vehicle, vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, modelObject.objectName)){
+				if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, modelObject.objectName, vehicle.areInteriorLightsOn())){
 					InterfaceRender.recallTexture();
 				}
 			}
@@ -349,7 +339,7 @@ public final class RenderVehicle{
 			}
 			
 			//Render any static text.
-			if(renderTextMarkings(part.vehicle, part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, null)){
+			if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, null, part.vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 			
@@ -358,7 +348,7 @@ public final class RenderVehicle{
 			for(RenderableModelObject modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
 					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
-					if(renderTextMarkings(part.vehicle, part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, modelObject.objectName)){
+					if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, modelObject.objectName, part.vehicle.areInteriorLightsOn())){
 						InterfaceRender.recallTexture();
 					}
 				}
@@ -812,81 +802,6 @@ public final class RenderVehicle{
 			GL11.glPopMatrix();
 		}
 		GL11.glDisable(GL11.GL_NORMALIZE);
-	}
-	
-	/**
-	 *  Renders all text markings given the passed-in parameters.  Text is changed via the player,
-	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
-	 *  in pass 0, as we don't do any alpha blending in this routine.
-	 *  Return true if we rendered anything.  This lets any rendering systems reset.
-	 *  Public, as sub-objects may need to render text on this vehicle.
-	 */
-	public static boolean renderTextMarkings(EntityVehicleF_Physics vehicle, List<JSONText> textDefinitions, List<String> textLines, String objectRendering){
-		if(InterfaceRender.getRenderPass() != 1){
-			boolean systemLightingEnabled = true;
-			boolean internalLightingEnabled = true;
-			if(textDefinitions != null){
-				for(byte i=0; i<textDefinitions.size(); ++i){
-					JSONText textDefinition = textDefinitions.get(i);
-					String text = textLines.get(i);
-					
-					//Render if our attached object and the object we are rendering on match.
-					if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
-						//Disable system lighting if we haven't already.
-						//System lighting doesn't work well with text.
-						if(systemLightingEnabled){
-							InterfaceRender.setSystemLightingState(false);
-							systemLightingEnabled = false;
-						}
-						
-						//If we have light-up text, disable lightmap.
-						if(textDefinition.lightsUp && isVehicleIlluminated(vehicle)){
-							if(internalLightingEnabled){
-								internalLightingEnabled = false;
-								InterfaceRender.setInternalLightingState(internalLightingEnabled);
-							}
-						}else if(!internalLightingEnabled){
-							internalLightingEnabled = true;
-							InterfaceRender.setInternalLightingState(internalLightingEnabled);
-						}
-						//System.out.println(text);
-						GL11.glPushMatrix();
-						//Offset by 1/2 a block to account for text centering.
-						GL11.glTranslated(textDefinition.pos[0], textDefinition.pos[1] + 0.5D/16D, textDefinition.pos[2]);
-						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-						//First rotate 180 along the X-axis to get us rendering right-side up.
-						GL11.glRotatef(180F, 1, 0, 0);
-						//Next, apply rotations.  Y is inverted due to the inverted X axis.
-						GL11.glRotated(-textDefinition.rot[1], 0, 1, 0);
-						GL11.glRotated(textDefinition.rot[0], 1, 0, 0);
-						GL11.glRotated(textDefinition.rot[2], 0, 0, 1);
-						
-						//Finally, render the text.
-						if(textDefinition.alignLeft){
-							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
-						}else if(textDefinition.alignRight){
-							BuilderGUI.drawScaledText(text, -BuilderGUI.getStringWidth(text), 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
-						}else{
-							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), true, false, 0, textDefinition.scale);
-						}
-						GL11.glPopMatrix();
-					}
-				}
-			}
-			
-			//Reset lighting.
-			if(!internalLightingEnabled){
-				InterfaceRender.setInternalLightingState(true);
-			}
-			if(!systemLightingEnabled){
-				InterfaceRender.setSystemLightingState(true);
-				return true;
-			}else{
-				return false;
-			}
-		}else{
-			return false;
-		}
 	}
 	
 	/**

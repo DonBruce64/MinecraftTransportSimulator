@@ -59,7 +59,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
 			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
-			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textLines != null;
+			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textObjects != null;
 			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
@@ -70,7 +70,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
 					if(player.getHeldStack().hasTagCompound()){							
-						textLines = new WrapperNBT(player.getHeldStack()).getStrings("textLines", component.definition.general.textLines.length);
+						textLines = new WrapperNBT(player.getHeldStack()).getStrings("textLines", component.definition.general.textObjects.size());
 					}
 					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{

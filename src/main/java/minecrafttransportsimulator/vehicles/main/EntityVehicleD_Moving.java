@@ -109,7 +109,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		getForcesAndMotions();
 		performGroundOperations();
 		//FIXME remove hacks when ground collision works.
-		position.y = 10;
+		position.y = 6;
 		motion.y = 0;
 		
 		rotation.y = 0;

@@ -14,7 +14,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 
 public class GUISign extends AGUIBase{
@@ -53,12 +53,13 @@ public class GUISign extends AGUIBase{
 		modelRender.textureLocation = "textures/poles/" + sign.definition.systemName + ".png";
 		
 		//Add text box components for every text.  Paired with labels to render text on the sign.
-		TextLine[] textDefinitions = pole.components.get(axis).definition.general.textLines;
-		for(byte i=0; i<textDefinitions.length; ++i){
-			GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, guiTop + 54 + i*10, 100, sign.getTextLines().get(i), 10, Color.WHITE, Color.BLACK, textDefinitions[i].characters);
+		List<JSONText> textObjects = pole.components.get(axis).definition.general.textObjects;
+		for(byte i=0; i<textObjects.size(); ++i){
+			JSONText textObject = textObjects.get(i);
+			GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, guiTop + 54 + i*10, 100, sign.getTextLines().get(i), 10, Color.WHITE, Color.BLACK, textObject.maxLength);
 			addTextBox(box);
 			signTextBoxes.add(box);
-			GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDefinitions[i].xPos*64F), modelRender.y - (int) (textDefinitions[i].yPos*64F), Color.decode(textDefinitions[i].color), sign.getTextLines().get(i), textDefinitions[i].scale*64F/16F, true, false, 0);
+			GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos[0]*64F), modelRender.y - (int) (textObject.pos[1]*64F), Color.decode(textObject.color), sign.getTextLines().get(i), textObject.scale*64F/16F, true, false, 0);
 			addLabel(label);
 			signTextLabels.add(label);
 		}

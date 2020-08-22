@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -14,7 +15,6 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONDecor.TextLine;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 
 public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>>{
@@ -48,37 +48,23 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 			InterfaceRender.bindTexture(tile.definition.packID, "textures/decors/" + tile.definition.systemName + ".png");
 			GL11.glCallList(displayListMap.get(tile.definition));
 			//If we are a fluid tank, render text.
-			if(tile.definition.general.textLines != null && tile instanceof IFluidTankProvider){
+			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){
 				FluidTank tank = ((IFluidTankProvider) tile).getTank();
-				InterfaceRender.setLightingState(false);
-				for(byte i=0; i<tile.definition.general.textLines.length; ++i){
-					TextLine text = tile.definition.general.textLines[i];
-					GL11.glPushMatrix();
-					GL11.glTranslatef(text.xPos, text.yPos, text.zPos + (i < 3 ? 0.001F : -0.001F));
-					GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
-					GL11.glRotatef(180, 1, 0, 0);
-					//Need to rotate 180 for text on other sides.
-					if(i >= 3){
-						GL11.glRotatef(180, 0, 1, 0);	
-					}
+				String fluidName = tank.getFluidLevel() > 0 ? InterfaceGame.getFluidName(tank.getFluid()).toUpperCase() : "";
+				String fluidLevel = BuilderGUI.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
+				String fluidDispensed = BuilderGUI.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
+				
+				List<String> textLines = new ArrayList<String>();
+				for(byte i=0; i<tile.definition.general.textObjects.size(); ++i){
 					switch(i%3){
-						case(0) :{//Render fuel name.
-							BuilderGUI.drawText(tank.getFluidLevel() > 0 ? InterfaceGame.getFluidName(tank.getFluid()).toUpperCase() : "", 0, 0, Color.decode(text.color), true, false, 0);
-							break;
-						}
-						case(1) :{//Render fuel level.
-							String fluidLevel = String.format("%04.1f", tank.getFluidLevel()/1000F);
-							BuilderGUI.drawText(BuilderGUI.translate("tile.fuelpump.level") + fluidLevel + "b", 0,  0, Color.decode(text.color), true, false, 0);
-							break;
-						}
-						case(2) :{//Render fuel dispensed.
-							String fluidDispensed = String.format("%04.1f", tank.getAmountDispensed()/1000F);
-							BuilderGUI.drawText(BuilderGUI.translate("tile.fuelpump.dispensed") + fluidDispensed + "b", 0, 0, Color.decode(text.color), true, false, 0);
-							break;
-						}
+						case(0) :textLines.add(fluidName); break;
+						case(1) :textLines.add(fluidLevel); break;
+						case(2) :textLines.add(fluidDispensed); break;
 					}
-					GL11.glPopMatrix();
 				}
+				
+				InterfaceRender.setLightingState(false);
+				InterfaceRender.renderTextMarkings(tile.definition.general.textObjects, textLines, null, true);
 			}
 		}
 	}

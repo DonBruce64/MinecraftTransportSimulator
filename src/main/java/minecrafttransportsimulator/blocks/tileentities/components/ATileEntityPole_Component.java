@@ -24,7 +24,7 @@ public abstract class ATileEntityPole_Component{
 	public abstract float lightLevel();
 	
 	/**
-	 *  Gets the text lines for this component.  May return null if
+	 *  Gets the text for this component.  May return null if
 	 *  this component doesn't have any.
 	 */
 	public List<String> getTextLines(){
@@ -32,10 +32,10 @@ public abstract class ATileEntityPole_Component{
 	}
 	
 	/**
-	 *  Sets the text lines for this component from the passed-in list.
+	 *  Sets the text for this component from the passed-in list.
 	 *  This is a valid operation even on components that don't have
-	 *  text lines.  Null may be passed-in here on components that do
-	 *  have text lines.
+	 *  text.  Null may be passed-in here on components that do
+	 *  have text.
 	 */
 	public void setTextLines(List<String> textLines){}
 }

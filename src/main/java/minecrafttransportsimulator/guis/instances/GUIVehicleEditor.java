@@ -528,17 +528,17 @@ public class GUIVehicleEditor extends AGUIBase{
 			VehicleRotatableModelObject loading = vehicle.definition.rendering.rotatableModelObjects.get(currentIndex);
 			
 			int dataEntryBoxIndex = 1;
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.partName));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationPoint[0]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationPoint[1]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationPoint[2]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationAxis[0]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationAxis[1]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationAxis[2]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationVariable));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMin));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rotationClampMax));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.partName));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationPoint[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationPoint[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationPoint[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationAxis[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationAxis[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationAxis[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationVariable));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationClampMin));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rotationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -606,14 +606,14 @@ public class GUIVehicleEditor extends AGUIBase{
 			VehicleTranslatableModelObject loading = vehicle.definition.rendering.translatableModelObjects.get(currentIndex);
 			
 			int dataEntryBoxIndex = 1;
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.partName));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationAxis[0]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationAxis[1]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationAxis[2]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationVariable));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMin));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.translationClampMax));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.absoluteValue));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.partName));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationAxis[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationAxis[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationAxis[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationVariable));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationClampMin));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.translationClampMax));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.absoluteValue));
 		}
 
 		@Override
@@ -677,14 +677,14 @@ public class GUIVehicleEditor extends AGUIBase{
 			VehicleDisplayText loading = vehicle.definition.rendering.textMarkings.get(currentIndex);
 			
 			int dataEntryBoxIndex = 1;
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[0]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[1]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.pos[2]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[0]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[1]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.rot[2]));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.scale));
-			dataEntryBoxes.get(dataEntryBoxIndex++).setText(String.valueOf(loading.color));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.pos[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.pos[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.pos[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rot[0]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rot[1]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.rot[2]));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.scale));
+			dataEntryBoxes.get(dataEntryBoxIndex++).setTextLines(String.valueOf(loading.color));
 		}
 
 		@Override

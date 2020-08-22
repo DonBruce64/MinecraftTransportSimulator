@@ -127,7 +127,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				boundingBox.widthRadius -= 0.25;
 				boundingBox.depthRadius -= 0.25;
 			}
-		}else if(vehicle.definition.car == null){
+		}else if(vehicle.definition.car == null || vehicle.groundedWheels.isEmpty()){
 			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){

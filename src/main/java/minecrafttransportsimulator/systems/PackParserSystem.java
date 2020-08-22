@@ -160,7 +160,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their decor blocks to the mod.**/
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemDecor(new Gson().fromJson(jsonReader, JSONDecor.class)), jsonFileName, packID, ItemClassification.DECOR);
+    		JSONDecor definition = new Gson().fromJson(jsonReader, JSONDecor.class);
+    		performLegacyCompats(definition);
+    		setupItem(new ItemDecor(definition), jsonFileName, packID, ItemClassification.DECOR);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -403,7 +405,9 @@ public final class PackParserSystem{
     				object.color = line.color;
     				object.scale = line.scale;
     				object.maxLength = line.characters;
-    				object.pos = new double[]{line.xPos, line.yPos, line.zPos};
+    				object.pos = new double[]{line.xPos, line.yPos, line.zPos + 0.01F};
+    				object.rot = new double[]{0, 0, 0};
+    				pole.general.textObjects.add(object);
     			}
     		}
     	}else if(definition instanceof JSONDecor){
@@ -411,11 +415,20 @@ public final class PackParserSystem{
     		//If we are a decor using the old textlines, update them.
     		if(decor.general.textLines != null){
     			decor.general.textObjects = new ArrayList<JSONText>();
+    			int lineNumber = 0;
     			for(minecrafttransportsimulator.jsondefs.JSONDecor.TextLine line : decor.general.textLines){
     				JSONText object = new JSONText();
+    				object.lightsUp = true;
     				object.color = line.color;
     				object.scale = line.scale;
-    				object.pos = new double[]{line.xPos, line.yPos, line.zPos};
+    				if(lineNumber++ < 3){
+    					object.pos = new double[]{line.xPos, line.yPos, line.zPos + 0.0001F};
+    					object.rot = new double[]{0, 0, 0};
+    				}else{
+    					object.pos = new double[]{line.xPos, line.yPos, line.zPos - 0.0001F};
+    					object.rot = new double[]{0, 180, 0};
+    				}
+    				decor.general.textObjects.add(object);
     			}
     		}
     	}

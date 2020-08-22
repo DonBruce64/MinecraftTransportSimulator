@@ -3,7 +3,6 @@ package minecrafttransportsimulator.guis.instances;
 import mcinterface.InterfaceGame;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -45,7 +44,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	public GUILightingMode getGUILightMode(){
-		return RenderVehicle.isVehicleIlluminated(vehicle) ? GUILightingMode.LIT : GUILightingMode.DARK;
+		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override

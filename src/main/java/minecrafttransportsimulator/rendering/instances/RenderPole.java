@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.BuilderGUI;
 import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -22,7 +20,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.TransformLight;
@@ -182,16 +179,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 						}
 						
 						//Render text, if we have any.
-						if(component.definition.general.textLines != null){
-							for(byte i=0; i<component.definition.general.textLines.length; ++i){
-								TextLine text = component.definition.general.textLines[i];
-								GL11.glPushMatrix();
-								GL11.glTranslatef(text.xPos, text.yPos, text.zPos + 0.01F);
-								GL11.glScalef(text.scale/16F, text.scale/16F, text.scale/16F);
-								GL11.glRotatef(180, 1, 0, 0);
-								BuilderGUI.drawText(((TileEntityPole_Sign) component).getTextLines().get(i), 0, 0, Color.decode(text.color), true, false, 0);
-								GL11.glPopMatrix();
-							}
+						if(component.definition.general.textObjects != null){
+							InterfaceRender.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, false);
 							//Set color back to white to allow us to render other components.
 							InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 						}

@@ -37,7 +37,7 @@ public final class RenderInstrument{
 		Minecraft.getMinecraft().getTextureManager().bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
 		
 		//Check if the lights are on.  If so, disable the lightmap.
-		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
+		boolean lightsOn = vehicle.areInteriorLightsOn();
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
