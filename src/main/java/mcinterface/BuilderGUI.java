@@ -109,8 +109,8 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
+		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
 		if(gui.renderBackground()){
-			mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
 			renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 		}
 		

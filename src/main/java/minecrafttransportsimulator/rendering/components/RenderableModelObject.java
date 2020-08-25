@@ -142,7 +142,6 @@ public final class RenderableModelObject{
 	 *  Used to reset the display list in dev mode to allow the re-loading of models.
 	 */
 	public void resetDisplayList(){
-		GL11.glDeleteLists(displayLists.get(modelName).get(objectName), 1);
-		displayLists.get(modelName).remove(objectName);
+		GL11.glDeleteLists(displayLists.get(modelName).remove(objectName), 1);
 	}
 }

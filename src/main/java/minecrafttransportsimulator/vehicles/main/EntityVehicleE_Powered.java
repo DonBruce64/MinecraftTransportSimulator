@@ -224,8 +224,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		
 		//Damage all riders, including the controller.
 		WrapperPlayer controller = getController();
-		Damage controllerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, null);
-		Damage passengerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, controller);
+		Damage controllerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, null);
+		Damage passengerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, controller);
 		for(WrapperEntity rider : ridersToLocations.keySet()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);

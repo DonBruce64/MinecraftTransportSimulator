@@ -35,7 +35,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		tooltipLines.add(BuilderGUI.translate("info.item.wrench.attack"));
 		tooltipLines.add(BuilderGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
-			tooltipLines.add("Use on a vehicle while seated in it to activate the DevMode editor.");
+			tooltipLines.add("Sneak-use on a vehicle or while riding one to open devMode.");
 		}
 	}
 	
@@ -45,11 +45,16 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
 				if(vehicle.world.isClient()){
-					if(vehicle.equals(player.getEntityRiding()) && ConfigSystem.configObject.client.devMode.value){
-						BuilderGUI.openGUI(new GUIVehicleEditor(vehicle));
+					if(ConfigSystem.configObject.client.devMode.value){
+						if(player.isSneaking() || vehicle.equals(player.getEntityRiding())){
+							BuilderGUI.openGUI(new GUIVehicleEditor(vehicle));
+						}
 					}else{
-						BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
+						if(!player.isSneaking()){
+							BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
+						}
 					}
+					
 				}else{
 					return CallbackType.PLAYER;
 				}

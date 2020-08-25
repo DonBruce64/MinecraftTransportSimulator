@@ -111,27 +111,33 @@ public class VehicleGroundDeviceBox{
 		isCollided = false;
 		isGrounded = false;
 		collisionDepth = 0;
+		Point3d vehicleMotionOffset = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR);
+		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
 			currentBox = getSolidPoint();
-			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position);
-			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR));
+			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicleMotionOffset);
 			isCollided = !currentBox.collidingBlocks.isEmpty();
-			
-			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(PartGroundDevice.groundDetectionOffset));
-			isGrounded = isCollided ? false : !currentBox.collidingBlocks.isEmpty();
 			collisionDepth = currentBox.currentCollisionDepth.y;
+			
+			currentBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, groundCollisionOffset);
+			currentBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
+			isGrounded = isCollided ? false : !currentBox.collidingBlocks.isEmpty();
 			contactPoint.setTo(currentBox.localCenter).add(0D, -currentBox.heightRadius, 0D);
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 			currentBox = getLiquidPoint();
-			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position);
-			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR));
+			currentBox.globalCenter.setTo(currentBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicleMotionOffset);
 			isCollidedLiquid = currentBox.collidingBlocks.isEmpty();
-			
-			vehicle.world.updateBoundingBoxCollisions(currentBox, vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(PartGroundDevice.groundDetectionOffset));
-			isGroundedLiquid = isCollidedLiquid ? false : !currentBox.collidingBlocks.isEmpty();
 			double liquidCollisionDepth = currentBox.currentCollisionDepth.y;
+			
+			currentBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
+			vehicle.world.updateBoundingBoxCollisions(currentBox, groundCollisionOffset);
+			currentBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
+			isGroundedLiquid = isCollidedLiquid ? false : !currentBox.collidingBlocks.isEmpty();
 			
 			//If the liquid boxes are more collided, set collisions to those.
 			//Otherwise, use the solid values.
@@ -161,7 +167,7 @@ public class VehicleGroundDeviceBox{
 		heights /= groundDevices.size();
 		widths /= groundDevices.size();
 		boxRelativePosition.multiply(1D/groundDevices.size());
-		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths, heights, widths, false, false);
+		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths/2D, heights/2D, widths/2D, false, false);
 	}
 	
 	/**Updates the liquid collision point based on position of liquid devices and collision boxes.**/
@@ -185,6 +191,6 @@ public class VehicleGroundDeviceBox{
 		heights /= (liquidDevices.size() + liquidCollisionBoxes.size());
 		widths /= (liquidDevices.size() + liquidCollisionBoxes.size());
 		boxRelativePosition.multiply(1D/(liquidDevices.size() + liquidCollisionBoxes.size()));
-		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths, heights, widths, true, false);
+		return new BoundingBox(boxRelativePosition, boxRelativePosition.copy(), widths/2D, heights/2D, widths/2D, true, false);
 	}
 }

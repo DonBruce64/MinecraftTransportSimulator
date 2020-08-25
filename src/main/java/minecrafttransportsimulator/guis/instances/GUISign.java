@@ -16,25 +16,36 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class GUISign extends AGUIBase{
 	//Buttons.
 	private GUIComponentButton confirmButton;
 	
-	//Sign model.
+	//Object model renderer.
 	private GUIComponentOBJModel modelRender;
 	
 	//Input boxes
-	private final List<GUIComponentTextBox> signTextBoxes = new ArrayList<GUIComponentTextBox>();
-	private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
+	private final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
+	private final List<GUIComponentLabel> textLabels = new ArrayList<GUIComponentLabel>();
 	
 	//Pole and axis clicked on pole.
 	private final TileEntityPole pole;
 	private final Axis axis;
 	
+	//Clicked vehicle.
+	private final EntityVehicleF_Physics vehicle;
+	
 	public GUISign(TileEntityPole pole, Axis axis){
 		this.pole = pole;
 		this.axis = axis;
+		this.vehicle = null;
+	}
+	
+	public GUISign(EntityVehicleF_Physics vehicle){
+		this.pole = null;
+		this.axis = null;
+		this.vehicle = vehicle;
 	}
 	
 	@Override 
@@ -58,10 +69,10 @@ public class GUISign extends AGUIBase{
 			JSONText textObject = textObjects.get(i);
 			GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, guiTop + 54 + i*10, 100, sign.getTextLines().get(i), 10, Color.WHITE, Color.BLACK, textObject.maxLength);
 			addTextBox(box);
-			signTextBoxes.add(box);
+			textBoxes.add(box);
 			GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos[0]*64F), modelRender.y - (int) (textObject.pos[1]*64F), Color.decode(textObject.color), sign.getTextLines().get(i), textObject.scale*64F/16F, true, false, 0);
 			addLabel(label);
-			signTextLabels.add(label);
+			textLabels.add(label);
 		}
 		
 		//Add the confirm button.
@@ -70,7 +81,7 @@ public class GUISign extends AGUIBase{
 			public void onClicked(){
 				//Set sign text.
 				List<String> textLines = new ArrayList<String>();
-				for(GUIComponentTextBox box : signTextBoxes){
+				for(GUIComponentTextBox box : textBoxes){
 					textLines.add(box.getText());
 				}
 				InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
@@ -82,8 +93,8 @@ public class GUISign extends AGUIBase{
 	@Override
 	public void setStates(){
 		confirmButton.enabled = true;
-		for(byte i=0; i<signTextBoxes.size(); ++i){
-			signTextLabels.get(i).text = signTextBoxes.get(i).getText();
+		for(byte i=0; i<textBoxes.size(); ++i){
+			textLabels.get(i).text = textBoxes.get(i).getText();
 		}
 	}
 }

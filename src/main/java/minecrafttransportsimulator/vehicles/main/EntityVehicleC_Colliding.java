@@ -51,7 +51,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public Point3d headingVector = new Point3d(0, 0, 0);
 	public Point3d verticalVector = new Point3d(0, 0, 0);
 	public Point3d sideVector = new Point3d(0, 0, 0);
-	public Point3d groundVelocityVector = new Point3d(0, 0, 0);
+	public Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	public Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
 	
 	//Constants
@@ -88,13 +88,13 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Set vectors to current velocity and orientation.
 		prevVelocity = velocity;
 		headingVector.set(0D, 0D, 1D).rotateFine(angles);
-		groundVelocityVector.set(motion.x, 0D, motion.z);
-		groundVelocity = groundVelocityVector.dotProduct(headingVector);
 		normalizedVelocityVector.setTo(motion);
-		velocity = Math.abs(normalizedVelocityVector.dotProduct(headingVector));
+		velocity = normalizedVelocityVector.dotProduct(headingVector);
 		normalizedVelocityVector.normalize();
-		verticalVector = new Point3d(0D, 1D, 0D).rotateFine(rotation);
-		sideVector = headingVector.crossProduct(verticalVector);
+		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
+		sideVector = verticalVector.crossProduct(headingVector);
+		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
+		groundVelocity = normalizedGroundVelocityVector.length()*Math.signum(velocity);
 		
 		//Update mass.
 		if(definition != null){
@@ -274,7 +274,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			for(WrapperBlock block : box.collidingBlocks){
-				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
+				if(!block.isLiquid() && block.getHardness() <= Math.abs(velocity)*currentMass/250F && block.getHardness() >= 0){
 					if(ConfigSystem.configObject.damage.blockBreakage.value){
 						hardnessHitThisTick += block.getHardness();
 						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
@@ -287,7 +287,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 			}
 			
-			if(hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
+			if(hardnessHitThisTick > currentMass/(0.75 + Math.abs(velocity))/250F){
 				if(!world.isClient()){
 					destroyAtPosition(box.globalCenter);
 				}

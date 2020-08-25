@@ -16,8 +16,8 @@ public class PartGroundEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
 	protected final Point3i[] affectedBlocks;
 	
-	public PartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 		lastBlocksModified = new Point3i[definition.effector.blocksWide];
 		affectedBlocks = new Point3i[definition.effector.blocksWide];
 	}

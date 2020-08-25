@@ -10,8 +10,8 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartSeat extends APart{
 	
-	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 	}
 	
 	@Override

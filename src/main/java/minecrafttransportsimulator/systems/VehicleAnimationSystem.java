@@ -25,8 +25,8 @@ public final class VehicleAnimationSystem{
 	 *  If a clamp value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 */
 	public static double getVariableValue(String variable, double scaling, double offset, double minClamp, double maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
-		double value = offset + getVariableValue(variable, partialTicks, vehicle, optionalPart);
-		value = scaling*(absolute ? Math.abs(value) : value);
+		double value = getVariableValue(variable, partialTicks, vehicle, optionalPart);
+		value = offset + scaling*(absolute ? Math.abs(value) : value);
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
 		}else if(maxClamp != 0 && value > maxClamp){
@@ -148,7 +148,7 @@ public final class VehicleAnimationSystem{
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
-			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
+			case("speed"): return Math.abs(vehicle.velocity)*vehicle.SPEED_FACTOR*20;
 			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 			

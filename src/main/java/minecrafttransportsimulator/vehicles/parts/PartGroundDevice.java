@@ -44,8 +44,8 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
@@ -54,7 +54,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		//as fake parts have a few special properties.
 		if(!isFake() && getLongPartOffset() != 0){
 			packVehicleDef.pos[2] += getLongPartOffset();
-			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data);
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, null);
 			packVehicleDef.pos[2] -= getLongPartOffset();
 			//Only check collision if we are not adding this part from saved NBT data.
 			//If we are adding from NBT, then we should have a tag saying that.
@@ -88,7 +88,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			
 			//Set contact for wheel skidding effects.
 			if(definition.ground.isWheel){
-				if(prevAngularVelocity/((vehicle.groundVelocity)/(this.getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
+				if(prevAngularVelocity/((vehicle.groundVelocity)/(getHeight()*Math.PI)) < 0.25 && Math.abs(vehicle.velocity) > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
 					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
 					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
@@ -113,12 +113,12 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.world.isClient() && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
+			if(!vehicle.world.isClient() && Math.abs(vehicle.velocity) >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
 				boundingBox.widthRadius += 0.25;
 				boundingBox.depthRadius += 0.25;
 				final double wheelDamageAmount;
 				if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
-					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.velocity*vehicle.currentMass/1000F;
+					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*Math.abs(vehicle.velocity)*vehicle.currentMass/1000F;
 				}else{
 					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F;
 				}

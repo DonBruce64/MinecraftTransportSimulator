@@ -15,6 +15,8 @@ import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -43,7 +45,6 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 public final class RenderVehicle{	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, String> vehicleModelOverrides = new HashMap<String, String>();
 	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
@@ -53,25 +54,26 @@ public final class RenderVehicle{
 	private static final Map<String, List<RenderableModelObject>> partObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	
 	
-	/**Used to clear out the rendering caches of the passed-in vehicle in dev mode to allow the re-loading of models.**/
-	public static void clearVehicleCaches(EntityVehicleF_Physics vehicle){
-		vehicleDisplayLists.remove(vehicle.definition.genericName);
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
+	/**Used to clear out the rendering caches of any vehicles with the passed-in definition.
+	 * Used in dev mode to allow the re-loading of models.**/
+	public static void clearVehicleCaches(JSONVehicle definition){
+		GL11.glDeleteLists(vehicleDisplayLists.remove(definition.genericName), 1);
+		for(RenderableModelObject modelObject : vehicleObjectLists.get(definition.genericName)){
 			modelObject.resetDisplayList();
 		}
-		vehicleObjectLists.remove(vehicle.definition.genericName);
-		
-		vehicleObjectLists.remove(vehicle.definition.genericName);
-		treadDeltas.remove(vehicle.definition.genericName);
-		treadPoints.remove(vehicle.definition.genericName);
+		vehicleObjectLists.remove(definition.genericName);
+		treadDeltas.remove(definition.genericName);
+		treadPoints.remove(definition.genericName);
 	}
 	
-	/**
-	 * Used to inject a new model into the model map for vehicles.
-	 * Allow for hotloading models outside of the normal jar locations.
-	 **/
-	public static void injectModel(EntityVehicleF_Physics vehicle, String modelLocation){
-		vehicleModelOverrides.put(vehicle.definition.genericName, modelLocation);
+	/**Used to clear out the rendering caches of any parts with the passed-in definition.
+	 * Used in dev mode to allow the re-loading of models.**/
+	public static void clearPartCaches(JSONPart definition){
+		GL11.glDeleteLists(partDisplayLists.remove(definition.systemName), 1);
+		for(RenderableModelObject modelObject : partObjectLists.get(definition.systemName)){
+			modelObject.resetDisplayList();
+		}
+		partObjectLists.remove(definition.systemName);
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
@@ -108,10 +110,10 @@ public final class RenderVehicle{
 	public static void render(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Get the render offset.
 		//This is the interpolated movement, plus the prior position.
-		Point3d renderPosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply((double) partialTicks).add(vehicle.prevPosition);
+		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply((double) partialTicks).add(vehicle.prevPosition);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
-		renderPosition.subtract(InterfaceGame.getRenderViewEntity().getRenderedPosition(partialTicks));
+		Point3d renderPosition = vehiclePosition.copy().subtract(InterfaceGame.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the vehicle rotation.
 		Point3d renderRotation = vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(vehicle.angles);
@@ -167,6 +169,9 @@ public final class RenderVehicle{
 			InterfaceRender.renderEntityRiders(vehicle, partialTicks);
 		}
 		
+		//Translate the vehicle's world position to render the hitboxes as they use global coords.
+        GL11.glTranslated(-vehiclePosition.x, -vehiclePosition.y, -vehiclePosition.z);
+		
 		//Render holograms for missing parts.
 		renderPartBoxes(vehicle);
 		
@@ -203,12 +208,7 @@ public final class RenderVehicle{
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
 			//No distplay list for this model.  Parse and create it now.
-			Map<String, Float[][]> parsedModel;
-			if(vehicleModelOverrides.containsKey(vehicle.definition.genericName)){
-				parsedModel = OBJParser.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
-			}else{
-				parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
-			}
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
 			
 			//For anything that has a definition as an animation, add it to an animated list.
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
@@ -844,37 +844,36 @@ public final class RenderVehicle{
 							}
 							
 							BoundingBox box = packPartEntry.getKey();
-							Point3d boxRotatedCenter = box.localCenter.copy().rotateCoarse(vehicle.angles);
 							GL11.glBegin(GL11.GL_QUADS);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
 							
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
 							
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
 							
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
 							
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
 							
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-							GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+							GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
 							GL11.glEnd();
 						}
 					}
@@ -896,39 +895,36 @@ public final class RenderVehicle{
 		
 		//Draw collision boxes for the vehicle.
 		GL11.glBegin(GL11.GL_LINES);
-		//FIXME revert after testing.
 		for(BoundingBox box : vehicle.interactionBoxes){
-			Point3d boxRotatedCenter = box.localCenter.copy().rotateFine(vehicle.angles);
-			
 			//Bottom
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
 			
 			//Top
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
 			
 			//Vertical sides.
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z - box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x - box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y - box.heightRadius, boxRotatedCenter.z + box.depthRadius);
-			GL11.glVertex3d(boxRotatedCenter.x + box.widthRadius, boxRotatedCenter.y + box.heightRadius, boxRotatedCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
 		}
 		GL11.glEnd();
 		

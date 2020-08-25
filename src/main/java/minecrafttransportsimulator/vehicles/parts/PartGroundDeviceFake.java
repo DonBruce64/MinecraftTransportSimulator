@@ -13,8 +13,8 @@ import net.minecraft.item.Item;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(masterPart.vehicle, packVehicleDef, definition, data);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(masterPart.vehicle, packVehicleDef, definition, data, parentPart);
 		this.masterPart = masterPart;
 	}
 	

@@ -19,8 +19,8 @@ public final class PartInteractable extends APart{
 	public final WrapperInventory inventory;
 	public final FluidTank tank;
 	
-	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 		switch(definition.interactable.type){
 			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits); break;
 			case("barrel"): this.interactable = null; break;

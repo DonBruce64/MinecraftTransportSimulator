@@ -41,8 +41,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	private final double anglePerTickSpeed;
 		
-	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.shotsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.currentPitch = data.getDouble("currentPitch");

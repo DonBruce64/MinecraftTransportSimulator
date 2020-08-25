@@ -70,7 +70,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 					newVehicle.electricPower = 12;
 					
 					//Add default parts via the vehicle's recusion.
-					EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle);
+					EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null);
 
 					//Set default vehicle text.
 					if(newVehicle.definition.rendering.textObjects != null){
@@ -133,8 +133,10 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				
 				//Apply the boost, and check collisions.
 				//If the core collisions are colliding, set the vehicle as dead and abort.
+				//We need to update the boxes first, however, as they haven't been updated yet.
 				newVehicle.position.y += -minHeight;
 				for(BoundingBox coreBox : newVehicle.collisionBoxes){
+					coreBox.updateToEntity(newVehicle);
 					if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -minHeight, 0D))){
 						//New vehicle shouldn't be spawned.  Bail out.
 						return EnumActionResult.FAIL;

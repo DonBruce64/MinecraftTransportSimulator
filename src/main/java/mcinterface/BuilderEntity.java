@@ -139,7 +139,7 @@ public class BuilderEntity extends Entity{
     		}
     		
     		//Check if we are still valid, or need to be set dead.
-    		if(!entity.isValid){
+    		if(!entity.isValid || entity.position.y < -5){
     			setDead();
     		}
     	}else{
@@ -161,6 +161,10 @@ public class BuilderEntity extends Entity{
 		//Get rid of the fake light (if we have one) before we kill ourselves.
 		if(fakeLightPosition != null){
 			world.setBlockToAir(fakeLightPosition);
+		}
+		//If the entity is still valid, mark it as invalid.
+		if(entity != null && entity.isValid){
+			entity.isValid = false;
 		}
 	}
     

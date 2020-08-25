@@ -299,7 +299,8 @@ public class WrapperWorld{
 	 * Updates the blocks and depths of collisions for the passed-in BoundingBox to the box's internal variables.
 	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
 	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
-	 * This prevents excess calculations when trying to do movement calculations for a single axis.
+	 * This prevents excess calculations when trying to do movement calculations for a single axis.  Note that the
+	 * actual value of the motion does not matter for this function: only that a non-zero value be present for an axis.
 	 */
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion){
 		AxisAlignedBB mcBox = new AxisAlignedBB(
@@ -312,9 +313,9 @@ public class WrapperWorld{
 		);
 		
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
-		for(int i = (int) Math.floor(mcBox.minX); i < Math.floor(mcBox.maxX + 1); ++i){
-    		for(int j = (int) Math.floor(mcBox.minY); j < Math.floor(mcBox.maxY + 1); ++j){
-    			for(int k = (int) Math.floor(mcBox.minZ); k < Math.floor(mcBox.maxZ + 1); ++k){
+		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
+    		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
+    			for(int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k){
     				BlockPos pos = new BlockPos(i, j, k);
     				if(world.isBlockLoaded(pos)){
 	    				IBlockState state = world.getBlockState(pos);
@@ -331,40 +332,23 @@ public class WrapperWorld{
     		}
     	}
 		
+		//If we are in the depth bounds for this collision, set it as the collision depth.
 		box.currentCollisionDepth.set(0D, 0D, 0D);
 		for(AxisAlignedBB colBox : collidingAABBs){
 			if(collisionMotion.x > 0){
-				double testDepthX = mcBox.maxX - colBox.minX;
-				if(testDepthX < Math.abs(collisionMotion.x)){
-					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, testDepthX);
-				}
+				box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, mcBox.maxX - colBox.minX);
 			}else if(collisionMotion.x < 0){
-				double testDepthX = colBox.maxX - mcBox.minX;
-				if(testDepthX < Math.abs(collisionMotion.x)){
-					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, testDepthX);
-				}
+				box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, colBox.maxX - mcBox.minX);
 			}
 			if(collisionMotion.y > 0){
-				double testDepthY = mcBox.maxY - colBox.minY;
-				if(testDepthY < Math.abs(collisionMotion.y)){
-					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, testDepthY);
-				}
+				box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, mcBox.maxY - colBox.minY);
 			}else if(collisionMotion.y < 0){
-				double testDepthY = colBox.maxY - mcBox.minY;
-				if(testDepthY < Math.abs(collisionMotion.y)){
-					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, testDepthY);
-				}
+				box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, colBox.maxY - mcBox.minY);
 			}
 			if(collisionMotion.z > 0){
-				double testDepthZ = colBox.maxZ - mcBox.minZ;
-				if(testDepthZ < Math.abs(collisionMotion.z)){
-					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, testDepthZ);
-				}
+				box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
 			}else if(collisionMotion.z < 0){
-				double testDepthZ = colBox.maxZ - mcBox.minZ;
-				if(testDepthZ < Math.abs(collisionMotion.z)){
-					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, testDepthZ);
-				}
+				box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
 			}
 		}
 	}

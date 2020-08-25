@@ -407,6 +407,7 @@ public final class PackParserSystem{
     				object.maxLength = line.characters;
     				object.pos = new double[]{line.xPos, line.yPos, line.zPos + 0.01F};
     				object.rot = new double[]{0, 0, 0};
+    				object.fieldName = "TextLine #" + (pole.general.textObjects.size() + 1);
     				pole.general.textObjects.add(object);
     			}
     		}
@@ -428,29 +429,30 @@ public final class PackParserSystem{
     					object.pos = new double[]{line.xPos, line.yPos, line.zPos - 0.0001F};
     					object.rot = new double[]{0, 180, 0};
     				}
+    				object.fieldName = "TextLine #" + (decor.general.textObjects.size() + 1);
     				decor.general.textObjects.add(object);
     			}
     		}
     	}
     }
     
-    public static APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT partData){
+    public static APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT partData, APart parentPart){
     	if(definition.general.type.startsWith("engine_")){
-    		return new PartEngine(vehicle, packVehicleDef, definition, partData);
+    		return new PartEngine(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else if(definition.general.type.startsWith("gun_")){
-    		return new PartGun(vehicle, packVehicleDef, definition, partData);
+    		return new PartGun(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else if(definition.general.type.startsWith("ground_")){
-    		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData);
+    		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else{
 	    	switch(definition.general.type){
-				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData);
-				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData);
+				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData, parentPart);
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
-				//case "bullet": return PartBullet.class;
-	    		case "interactable": return new PartInteractable(vehicle, packVehicleDef, definition, partData);
-	    		case "effector": return new PartGroundEffector(vehicle, packVehicleDef, definition, partData);
-				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData);
+				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
+	    		case "interactable": return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
+	    		case "effector": return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
 			}
     	}
     	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");

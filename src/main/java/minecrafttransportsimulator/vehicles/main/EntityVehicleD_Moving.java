@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
@@ -108,15 +109,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now do update calculations and logic.
 		getForcesAndMotions();
 		performGroundOperations();
-		//FIXME remove hacks when ground collision works.
-		position.y = 6;
-		motion.y = 0;
-		
-		rotation.y = 0;
-				
-		//rotation.x = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
-		//rotation.z = Math.sin(Math.toRadians(90D*System.currentTimeMillis()/1000D))/2D;
-		
 		moveVehicle();
 		if(!world.isClient()){
 			dampenControlSurfaces();
@@ -217,20 +209,23 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(motion.y < 0){
 			if(rotation.x >= -0.1){
 				if((frontLeftGroundDeviceBox.isCollided && rearRightGroundDeviceBox.isCollided) || (frontRightGroundDeviceBox.isCollided && rearLeftGroundDeviceBox.isCollided)){
+					//System.out.println(frontLeftGroundDeviceBox.currentBox.globalCenter.y);
 					double collisionDepth = Math.max(Math.min(frontLeftGroundDeviceBox.collisionDepth, rearRightGroundDeviceBox.collisionDepth), Math.min(frontRightGroundDeviceBox.collisionDepth, rearLeftGroundDeviceBox.collisionDepth));
 					double motionToNotCollide = collisionDepth/SPEED_FACTOR;
 					motion.y += motionToNotCollide;
 					//Check if motionY is close to 0.  If so, we should make it 0 as we are
 					//just sitting on the ground and shouldn't have any motionY to begin with.
 					if(Math.abs(motion.y) < 0.0001){
-						motion.y = 0;
+						//motion.y = 0;
 					}
 					
 					frontLeftGroundDeviceBox.updateCollisionStatuses();
 					frontRightGroundDeviceBox.updateCollisionStatuses();
 					rearLeftGroundDeviceBox.updateCollisionStatuses();
 					rearRightGroundDeviceBox.updateCollisionStatuses();
-					return motion.y > 0 ? motion.y : 0;
+					//FIXME do we need this?
+					//return motion.y > 0 ? motion.y : 0;
+					return motion.y;
 				}
 			}else{
 				if(rearLeftGroundDeviceBox.isCollided || rearRightGroundDeviceBox.isCollided){
@@ -387,17 +382,18 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//As a final precaution, take a bit of extra movement off of the motions.
 		//This is done to prevent vehicles from moving into blocks when they shouldn't
 		//due to floating-point errors.
+		//FIXME see if we need this hack any more.
 		if(motion.x > 0){
-			motion.x -= 0.002F;
+			//motion.x -= 0.002F;
 		}
 		if(motion.x < 0){
-			motion.x += 0.002F;
+			//motion.x += 0.002F;
 		}
 		if(motion.z > 0){
-			motion.z -= 0.002F;
+			//motion.z -= 0.002F;
 		}
 		if(motion.z < 0){
-			motion.z += 0.002F;
+			//motion.z += 0.002F;
 		}
 	}
 
@@ -792,8 +788,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Before we end this tick we need to remove any motions added for ground devices.  These motions are required 
 		//only for the updating of the vehicle position due to rotation operations and should not be considered forces.
 		//Leaving them in will cause the physics system to think a force was applied, which will make it behave badly!
-		//We need to strip away any positive motionY we gave the vehicle to get it out of the ground if it
-		//collided on its ground devices, as well as any motionY we added when doing rotation adjustments.
+		//We need to strip away any positive motion.y we gave the vehicle to get it out of the ground if it
+		//collided on its ground devices, as well as any motion.y we added when doing rotation adjustments.
 		motion.y -= (groundCollisionBoost + groundRotationBoost/SPEED_FACTOR);
 	}
 	
@@ -803,34 +799,62 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * movement.  Must come AFTER force calculations as it depends on motions.
 	 */
 	private void performGroundOperations(){
+		//Get braking force and apply it to the motions.
 		float brakingFactor = getBrakingForceFactor();
 		if(brakingFactor > 0){
-			double motionXBraking = 20F*brakingFactor/currentMass*Math.signum(motion.x);
-			double motionZBraking = 20F*brakingFactor/currentMass*Math.signum(motion.z);
-			//If we have more braking than motions, just set our velocity to 0.
-			if(motion.x*motion.x + motion.z*motion.z < motionXBraking*motionXBraking + motionZBraking*motionZBraking){
+			double brakingForce = 20F*brakingFactor/currentMass;
+			if(brakingForce > Math.abs(velocity)){
 				motion.x = 0;
 				motion.z = 0;
 				rotation.y = 0;
 			}else{
-				motion.x -= motionXBraking;
-				motion.z -= motionZBraking;
+				motion.x -= brakingForce*motion.x/Math.abs(velocity);
+				motion.z -= brakingForce*motion.z/Math.abs(velocity);
 			}
 		}
 		
-		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0){
-			Point3d groundHeading = new Point3d(headingVector.x, 0, headingVector.z).normalize();
-			double vectorDelta = groundVelocityVector.copy().normalize().distanceTo(groundHeading);
-			if(vectorDelta > 0.001){
-				vectorDelta = Math.min(skiddingFactor, vectorDelta);
-				rotation.y += vectorDelta;
-				motion.x = groundHeading.x * Math.abs(groundVelocity);
-				motion.z = groundHeading.z * Math.abs(groundVelocity);
-			}
-		}
-		
+		//Add rotation based on our turning factor, and then re-set ground states.
 		rotation.y += getTurningFactor();
+		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
+		groundVelocity = normalizedGroundVelocityVector.length()*Math.signum(velocity);
+		normalizedGroundVelocityVector.normalize();
+		
+		//Check how much grip the wheels have.
+		float skiddingFactor = getSkiddingFactor();
+		if(skiddingFactor != 0 && Math.abs(groundVelocity) > 0.01){
+			//Have enough grip, get angle delta between heading and motion.
+			Point3d normalizedGroundHeading = new Point3d(headingVector.x, 0, headingVector.z).normalize();
+			Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeading);
+			double dotProduct = normalizedVelocityVector.dotProduct(headingVector);
+			double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
+			if(Math.abs(vectorDelta) > 0.001){
+				//Check if we are going in reverse and adjust our delta angle if so.
+				if(groundVelocity < 0){
+					if(vectorDelta >= 90){
+						vectorDelta = -(180 - vectorDelta);
+					}else if(vectorDelta <= -90){
+						vectorDelta = 180 + vectorDelta;
+					}
+				}
+
+				//Get factor of how much we can correct our turning.
+				double motionFactor;
+				if(vectorDelta > skiddingFactor){
+					motionFactor = skiddingFactor/vectorDelta;
+				}else if(vectorDelta < -skiddingFactor){
+					motionFactor = -skiddingFactor/vectorDelta;
+				}else{
+					motionFactor = 1;
+				}
+				
+				//Apply motive changes to the vehicle based on how much we can turn it.
+				//We basically take the two components of the motion, and apply one or the other depending on
+				//how much delta the vector says we can change.
+				Point3d idealMotion = normalizedGroundHeading.multiply(groundVelocity).multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
+				motion.x = idealMotion.x;
+				motion.z = idealMotion.z;
+			}
+		}
 	}
 	
 	/**
@@ -841,7 +865,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
-		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(PartGroundDevice groundDevice : groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
@@ -881,14 +905,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Returns factor for skidding based on lateral friction and velocity.
 	 * If the value is non-zero, it indicates that yaw changes from ground
 	 * device calculations should be applied due to said devices being in
-	 * contact with the ground.  Note that this should be called prior to 
-	 * turning code as it will interpret the yaw change as a skid and will 
-	 * attempt to prevent it!
+	 * contact with the ground.
 	 */
 	private float getSkiddingFactor(){
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
-		for(PartGroundDevice groundDevice : this.groundedGroundDevices){
+		for(PartGroundDevice groundDevice : groundedGroundDevices){
 			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
 		
@@ -920,6 +942,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
 			}
+			
 			//Also check for boat engines, which can make us turn if we are in water.
 			for(APart part : parts){
 				if(part instanceof PartPropeller){
@@ -939,15 +962,26 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				steeringAngleTemp /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
-				if(groundVelocity*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
-					steeringAngleTemp *= Math.pow(0.25F, (groundVelocity*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
+				if(Math.abs(groundVelocity)*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
+					steeringAngleTemp *= Math.pow(0.25F, (Math.abs(groundVelocity)*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = -(float) (steeringAngleTemp*groundVelocity/2F);
+				turningForce = (float) (steeringAngleTemp*Math.abs(groundVelocity)/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
-				//Now add the sign to this force.
+				//Now add the sign to this force based on our steering angle.
 				turningForce *= Math.signum(steeringAngle);
+				//If we have any engines reversing, those will cause us to invert our sign as turning is in the opposite yaw.
+				if(groundVelocity < 0){
+					for(APart part : parts){
+						if(part instanceof PartEngine){
+							if(((PartEngine) part).currentGear < 0){
+								turningForce = -turningForce;
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 		return turningForce;

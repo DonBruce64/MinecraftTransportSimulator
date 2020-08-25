@@ -58,7 +58,7 @@ public abstract class APart implements ISoundProvider{
 	public final BoundingBox boundingBox;
 	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
 		this.vehicle = vehicle;
 		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
 		this.totalOffset = placementOffset.copy();
@@ -77,39 +77,20 @@ public abstract class APart implements ISoundProvider{
 			}
 		}
 		
-		//Check to see if we are an additional part to a part on our parent.
-		//If we are a fake part, don't add ourselves.
-		if(!isFake()){
-			for(VehiclePart parentPackPart : vehicle.definition.parts){
-				if(parentPackPart.additionalParts != null){
-					for(VehiclePart partAdditionalPartPack : parentPackPart.additionalParts){
-						if(packVehicleDef.equals(partAdditionalPartPack)){
-							parentPart = vehicle.getPartAtLocation(new Point3d(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]));
-							parentPart.childParts.add(this);
-							this.disableMirroring = definition.general.disableMirroring;
-							return;
-						}
-					}
-				}
+		//If we are an additional part or sub-part, link ourselves now.
+		//If we are a fake part, don't even bother checking.
+		if(!isFake() && parentPart != null){
+			this.parentPart = parentPart;
+			parentPart.childParts.add(this);
+			if(packVehicleDef.isSubPart){
+				this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
+			}else{
+				this.disableMirroring = definition.general.disableMirroring;
 			}
-			
-			//If we aren't an additional part, see if we are a sub-part.
-			for(APart part : vehicle.parts){
-				if(part.definition.subParts != null){
-					for(VehiclePart partSubPartPack : part.definition.subParts){
-						VehiclePart correctedPack = vehicle.getPackForSubPart(part.vehicleDefinition, partSubPartPack);
-						if(EntityVehicleF_Physics.isPackAtPosition(correctedPack, placementOffset)){
-							parentPart = part;
-							parentPart.childParts.add(this);
-							this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
-							return;
-						}
-					}
-				}
-			}
+		}else{
+			this.disableMirroring = definition.general.disableMirroring;
+			this.parentPart = null;
 		}
-		this.disableMirroring = definition.general.disableMirroring;
-		parentPart = null;
 	}
 	
 	/**

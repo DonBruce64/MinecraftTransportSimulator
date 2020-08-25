@@ -74,8 +74,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private static final float LOW_OIL_PRESSURE = 40F;
 	
 	
-	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data){
-		super(vehicle, packVehicleDef, definition, data);
+	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
@@ -167,7 +167,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Add cooling for ambient temp.
 		ambientTemp = 25*vehicle.world.getTemperature(new Point3i(vehicle.position)) - 5*(Math.pow(2, vehicle.position.y/400) - 1);
-		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + Math.abs(vehicle.velocity)/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
 		//Check to see if electric or hand starter can keep running.
@@ -395,7 +395,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				PartPropeller propeller = (PartPropeller) part;
 				havePropeller = true;
 				Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.totalRotation.copy().add(vehicle.angles));
-				propellerAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
+				propellerAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(Math.abs(vehicle.velocity)).dotProduct(propellerThrustAxis);
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
@@ -444,7 +444,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		///Update variables used for jet thrust.
 		if(definition.engine.jetPowerFactor > 0){
 			Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(vehicle.angles));
-			engineAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
+			engineAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(Math.abs(vehicle.velocity)).dotProduct(engineThrustAxis);
 			
 			//Check for entities forward and aft of the engine and damage them.
 			if(!vehicle.world.isClient() && rpm >= 5000){
@@ -715,7 +715,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if(currentGear < 0){
 			++currentGear;
 		}else if(currentGear == 0){
-			if(vehicle.velocity < 0.25 || wheelFriction == 0){
+			if(Math.abs(vehicle.velocity) < 0.25 || wheelFriction == 0){
 				currentGear = 1;
 			}else if(vehicle.world.isClient()){
 				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
@@ -739,7 +739,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				--currentGear;
 			}
 		}else if(currentGear == 0){
-			if(vehicle.velocity < 0.25 || wheelFriction == 0){
+			if(Math.abs(vehicle.velocity) < 0.25 || wheelFriction == 0){
 				currentGear = -1;
 				//If the engine is running, and we are a big truck, turn on the backup beeper.
 				if(state.running && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isClient()){
@@ -826,7 +826,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				
 				//Don't let us have negative engine force at low speeds.
 				//This causes odd reversing behavior when the engine tries to maintain speed.
-				if(((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && vehicle.velocity < 0.25){
+				if(((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && Math.abs(vehicle.velocity) < 0.25){
 					wheelForce = 0;
 				}
 			}else{

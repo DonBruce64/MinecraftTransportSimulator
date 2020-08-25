@@ -41,6 +41,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
 	 * due to the various sub-classed variables not being ready yet.  To compensate, we add the parts we
 	 * wish to add to this list.  At the end of construction, these will be added to this vehicle, preventing NPEs.
+	 * This means that any top-level classes MUST iterate over this list and add parts after construction!
 	 */
 	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
@@ -58,9 +59,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			//Don't want crashes due to pack updates.
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
-				VehiclePart packPart = getPackDefForLocation(partData.getPoint3d("offset"));
 				JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partData.getString("packID")).get(partData.getString("systemName")).definition;
-				partsFromNBT.add(PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partData));
+				partsFromNBT.add(createPartFromData(partDefinition, partData, partData.getPoint3d("offset"), null));
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 				e.printStackTrace();
@@ -82,53 +82,113 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}
 		}
 	}
+	
+	/**
+	 * Creates a part from the passed-in data.
+	 */
+    public APart createPartFromData(JSONPart partDefinition, WrapperNBT partData, Point3d offset, AItemPart optionalItem){
+		//Get the part to add.
+		VehiclePart packPart = getPackDefForLocation(offset);
+		APart parentPart = null;
+		//Check to make sure the spot is free.
+		if(getPartAtLocation(offset) == null){
+			//Check to make sure the part is valid.
+			if(packPart.types.contains(partDefinition.general.type)){
+				//Check to make sure the part is in parameter ranges.
+				if(optionalItem == null || optionalItem.isPartValidForPackDef(packPart)){
+					//Try to find the parent part, if this part would have one.
+					for(VehiclePart parentPackPart : definition.parts){
+						if(parentPackPart.additionalParts != null){
+							for(VehiclePart partAdditionalPartPack : parentPackPart.additionalParts){
+								if(packPart.equals(partAdditionalPartPack)){
+									parentPart = getPartAtLocation(new Point3d(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]));
+									break;
+								}
+							}
+						}
+						if(parentPart != null){
+							break;
+						}
+					}
+					
+					//If we aren't an additional part, see if we are a sub-part.
+					for(APart part : parts){
+						if(part.definition.subParts != null){
+							for(VehiclePart partSubPartPack : part.definition.subParts){
+								VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, partSubPartPack);
+								if(isPackAtPosition(correctedPack, offset)){
+									parentPart = part;
+									break;
+								}
+							}
+							if(parentPart != null){
+								break;
+							}
+						}
+					}
+					
+					//Also check parts from NBT, in case we're in a loading-loop.
+					for(APart part : partsFromNBT){
+						if(part.definition.subParts.size() > 0){
+							VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
+							for(VehiclePart extraPackPart : part.definition.subParts){
+								VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+								if(isPackAtPosition(correctedPack, offset)){
+									parentPart = part;
+									break;
+								}
+							}
+							if(parentPart != null){
+								break;
+							}
+						}
+					}
+					
+					//Part is valid.  Create it and return it.
+					return PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partData != null ? partData : new WrapperNBT(), parentPart); 
+				}
+			}
+		}
+    	return null;
+    }
     
     /**
-	 * Adds the passed-part to this vehicle, but in this case the part is in item form
-	 * with associated data rather than a fully-constructed form.  This method will check
+	 * Adds the passed-part to this vehicle, but in this case the part is only a definition,
+	 * some NBT data source, and the offset of where it belongs.  This method will check
 	 * if the item-based part can go to this vehicle.  If so, it is constructed and added,
 	 * and a packet is sent to all clients to inform them of this change.  Returns true
 	 * if all operations completed, false if the part was not able to be added.
 	 * Note that the passed-in data MAY be null if the item didn't have any.
+	 * Also note that the item is optional, and is only used to do validity checks for min/max
+	 * and custom types.  If this is not required, it may be null.
 	 */
     public boolean addPartFromItem(AItemPart partItem, WrapperNBT partData, Point3d offset){
-		//Get the part to add.
-		VehiclePart packPart = getPackDefForLocation(offset);
-		//Check to make sure the spot is free.
-		if(getPartAtLocation(offset) == null){
-			//Check to make sure the part is valid.
-			if(packPart.types.contains(partItem.definition.general.type)){
-				//Check to make sure the part is in parameter ranges.
-				if(partItem.isPartValidForPackDef(packPart)){
-					//Part is valid.  Create it and add it.
-					APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partItem.definition, partData != null ? partData : new WrapperNBT()); 
-					addPart(newPart, false);
-					
-					//If the part doesn't have NBT, it must be new and we need to add default parts.
-					//Only do this if we actually have subParts for this part.
-					if(partData == null && partItem.definition.subParts != null){
-						addDefaultParts(partItem.definition.subParts, this);
-					}
-					
-					//If part data is null, we need to add default text too.
-					if(partData == null){
-						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
-							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
-								newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
-							}
-						}
-						partData = newPart.getData();
-					}
-					
-					//Send packet to client with part data.
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem.definition.packID, partItem.definition.systemName, partData), this);
-					
-					//Done adding the part, return true.
-					return true;
-				}
+    	APart newPart = createPartFromData(partItem.definition, partData, offset, partItem);
+    	if(newPart != null){
+    		addPart(newPart, false);
+			
+			//If the part doesn't have NBT, it must be new and we need to add default parts.
+			//Only do this if we actually have subParts for this part.
+			if(partData == null && newPart.definition.subParts != null){
+				addDefaultParts(newPart.definition.subParts, this, newPart.parentPart);
 			}
-		}
-    	return false;
+			
+			//If part data is null, we need to add default text too.
+			if(partData == null){
+				if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
+					for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
+						newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+					}
+				}
+				partData = newPart.getData();
+			}
+			
+			//Send packet to client with part data.
+			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, newPart.definition.packID, newPart.definition.systemName, partData, newPart.parentPart), this);
+			return true;
+    	}else{
+    		return false;
+    	}
     }
 	
     /**
@@ -186,7 +246,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * Gets the part at the specified location.
 	 */
 	public APart getPartAtLocation(Point3d offset){
-		for(APart part : this.parts){
+		for(APart part : parts){
 			if(part.placementOffset.equals(offset)){
 				return part;
 			}
@@ -211,7 +271,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			//Check to see if we can put a additional parts in this location.
 			//If a part is present at a location that can have an additional parts, we allow them to be placed.
 			if(packPart.additionalParts != null){
-				for(APart part : this.parts){
+				for(APart part : parts){
 					if(part.placementOffset.equals(partPos)){
 						for(VehiclePart additionalPart : packPart.additionalParts){
 							partPos = new Point3d(additionalPart.pos[0], additionalPart.pos[1], additionalPart.pos[2]);
@@ -224,7 +284,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		}
 		
 		//Next get any sub parts on parts that are present.
-		for(APart part : this.parts){
+		for(APart part : parts){
 			if(part.definition.subParts != null){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -258,7 +318,20 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		}
 		
 		//If this is not a main part or an additional part, check the sub-parts.
-		for(APart part : this.parts){
+		for(APart part : parts){
+			if(part.definition.subParts.size() > 0){
+				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
+				for(VehiclePart extraPackPart : part.definition.subParts){
+					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+					if(isPackAtPosition(correctedPack, offset)){
+						return correctedPack;
+					}
+				}
+			}
+		}
+		
+		//Also check parts from NBT, in case we're in a loading-loop.
+		for(APart part : partsFromNBT){
 			if(part.definition.subParts.size() > 0){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
@@ -336,14 +409,14 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * This method should only be called when the vehicle or part with the
 	 * passed-in definition is first placed, not when it's being loaded from saved data.
 	 */
-	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle){
+	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle, APart parentPart){
 		for(VehiclePart packDef : partsToAdd){
 			if(packDef.defaultPart != null){
 				try{
 					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
 					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
 					try{
-						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new WrapperNBT());
+						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new WrapperNBT(), parentPart);
 						vehicle.addPart(newPart, true);
 						
 						//Set default text for the new part, if we have any.
@@ -356,7 +429,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
 						if(packDef.additionalParts != null){
-							addDefaultParts(packDef.additionalParts, vehicle);
+							addDefaultParts(packDef.additionalParts, vehicle, newPart);
 						}
 						
 						//Check all sub-parts, if we have any.
@@ -366,7 +439,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 							for(VehiclePart subPartPack : newPart.definition.subParts){
 								subPartsToAdd.add(vehicle.getPackForSubPart(packDef, subPartPack));
 							}
-							addDefaultParts(subPartsToAdd, vehicle);
+							addDefaultParts(subPartsToAdd, vehicle, newPart);
 						}
 					}catch(NullPointerException e){
 						throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.genericName + " but that part doesn't exist in the pack item registry.");
