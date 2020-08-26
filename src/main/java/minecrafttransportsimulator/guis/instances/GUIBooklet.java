@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextRendering;
 import mcinterface.InterfaceInput;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -12,7 +13,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.packs.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
-import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletText;
+import minecrafttransportsimulator.jsondefs.JSONText;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -53,8 +54,8 @@ public class GUIBooklet extends AGUIBase{
 		
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
-		for(BookletText text : booklet.definition.general.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
+		for(JSONText text : booklet.definition.general.titleText){
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos[0], guiTop + (int)text.pos[1], Color.decode(text.color), text.defaultText, text.scale, TextRendering.values()[text.renderMode], false, text.wrapWidth);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -96,9 +97,9 @@ public class GUIBooklet extends AGUIBase{
 		//Regular page labels.
 		for(BookletPage page : booklet.definition.general.pages){
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
-			for(BookletText text : page.pageText){
+			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos[0], guiTop + (int)text.pos[1], Color.decode(text.color), text.defaultText, text.scale, TextRendering.values()[text.renderMode], false, text.wrapWidth);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){

@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
 import mcinterface.WrapperPlayer;
+import mcinterface.BuilderGUI.TextRendering;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -131,7 +132,7 @@ public class GUIInstruments extends AGUIBase{
 		}
 		
 		//Create the pack name label.
-		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, "", 1.0F, false, false, 0));
+		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, ""));
 
 		//Create the clear button.
 		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, BuilderGUI.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
@@ -165,7 +166,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", 1.0F, true, false, 150));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", 1.0F, TextRendering.CENTERED, false, 150));
 		
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.

@@ -195,6 +195,11 @@ public final class VehicleAnimationSystem{
 			}
 		}
 		
+		//Check if this is a custom variable.
+		if(vehicle.definition.rendering.customVariables != null){
+			return vehicle.customsOn.contains((byte)vehicle.definition.rendering.customVariables.indexOf(variable)) ? 1 : 0;
+		}
+		
 		//No variable found for anything.  We could have an error, but likely we have an older pack.
 		//Return 0 here to prevent pack crashes.
 		return 0;

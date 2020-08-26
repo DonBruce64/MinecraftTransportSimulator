@@ -41,6 +41,10 @@ public class GUIPanelGround extends AGUIPanel{
 	private static final int REVERSE_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int CRUISECONTROL_TEXTURE_WIDTH_OFFSET = REVERSE_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int CRUISECONTROL_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int GEAR_TEXTURE_WIDTH_OFFSET = CRUISECONTROL_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int GEAR_TEXTURE_HEIGHT_OFFSET = 176;
+	private static final int CUSTOM_TEXTURE_WIDTH_OFFSET = GEAR_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int CUSTOM_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private GUIComponentSelector lightSelector;
 	private GUIComponentSelector turnSignalSelector;
@@ -48,8 +52,10 @@ public class GUIPanelGround extends AGUIPanel{
 	private GUIComponentSelector sirenSelector;
 	private GUIComponentSelector reverseSelector;
 	private GUIComponentSelector cruiseControlSelector;
+	private GUIComponentSelector gearSelector;
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
+	private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
 	
 	public GUIPanelGround(EntityVehicleF_Physics groundVehicle){
 		super(groundVehicle);
@@ -238,6 +244,20 @@ public class GUIPanelGround extends AGUIPanel{
 			}
 		}
 		
+		//If we have gear, add a selector for it.
+		if(vehicle.definition.motorized.gearSequenceDuration != 0){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(gearSelector);
+		}
+		
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
 		for(int i=0; i<8; ++i){
 			//Go to next column if we are on our 4th row.
@@ -263,6 +283,31 @@ public class GUIPanelGround extends AGUIPanel{
 			trailerSelectors.add(trailerSelector);
 			addSelector(trailerSelector);
 		}
+		
+		//Create any custom slots, if we have any.
+		if(vehicle.definition.rendering.customVariables != null && vehicle.definition.rendering.customVariables.size() > 0){
+			xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
+			for(int i=0; i<vehicle.definition.rendering.customVariables.size(); ++i){
+				GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, vehicle.definition.rendering.customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						byte selectorNumber = (byte) customSelectors.indexOf(this);
+						switch(selectorNumber){
+							case(0) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_0, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(1) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_1, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(2) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_2, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(3) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_3, !vehicle.customsOn.contains(selectorNumber))); break;
+						}
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				customSelectors.add(customSelector);
+				addSelector(customSelector);
+			}
+		}
+		
 		return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 	}
 	
@@ -316,6 +361,15 @@ public class GUIPanelGround extends AGUIPanel{
 			cruiseControlSelector.selectorState = vehicle.cruiseControl ? 1 : 0;
 		}
 		
+		//If we have gear, set the selector state.
+		if(gearSelector != null){
+			if(vehicle.gearUpCommand){
+				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
+			}else{
+				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
+			}
+		}
+		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.
 		EntityVehicleF_Physics currentVehicle = vehicle;
 		for(int i=0; i<trailerSelectors.size(); ++i){
@@ -326,6 +380,11 @@ public class GUIPanelGround extends AGUIPanel{
 			}else{
 				trailerSelectors.get(i).visible = false;
 			}
+		}
+		
+		//Iterate through custom selectors and set their states.
+		for(byte i=0; i<customSelectors.size(); ++i){
+			customSelectors.get(i).selectorState = vehicle.customsOn.contains(i) ? 1 : 0;
 		}
 	}
 }

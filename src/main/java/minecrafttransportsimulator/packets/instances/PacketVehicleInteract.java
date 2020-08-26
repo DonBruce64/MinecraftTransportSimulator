@@ -13,7 +13,6 @@ import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
 /**Packet used to interact with vehicles.  Initially sent from clients to the server
@@ -63,11 +62,6 @@ public class PacketVehicleInteract extends APacketVehicle{
 			}else if(callback.equals(CallbackType.PLAYER)){
 				player.sendPacket(this);
 			}
-		}else if(heldStack.getItem().equals(Items.NAME_TAG) && type.rightClick){
-			//Special case as this is a MC item.
-			//FIXME make something else open the text GUI.
-			//vehicle.displayText = heldStack.getDisplayName().length() > vehicle.definition.rendering.displayTextMaxLength ? heldStack.getDisplayName().substring(0, vehicle.definition.rendering.displayTextMaxLength - 1) : heldStack.getDisplayName();
-			return false;
 		}else{
 			//Not holding an item that can interact with a vehicle.  Try to interact with parts or slots.
 			if(type.equals(PacketVehicleInteractType.PART_RIGHTCLICK)){

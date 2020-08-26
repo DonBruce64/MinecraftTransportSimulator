@@ -181,8 +181,6 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 						//Render text, if we have any.
 						if(component.definition.general.textObjects != null){
 							InterfaceRender.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, false);
-							//Set color back to white to allow us to render other components.
-							InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 						}
 					}
 					GL11.glPopMatrix();

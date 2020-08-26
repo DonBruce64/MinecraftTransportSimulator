@@ -75,7 +75,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 					//Set default vehicle text.
 					if(newVehicle.definition.rendering.textObjects != null){
 						for(byte i=0; i<newVehicle.definition.rendering.textObjects.size(); ++i){
-							newVehicle.textObjects.set(i, newVehicle.definition.rendering.textObjects.get(i).defaultText);
+							newVehicle.textLines.set(i, newVehicle.definition.rendering.textObjects.get(i).defaultText);
 						}
 					}
 					

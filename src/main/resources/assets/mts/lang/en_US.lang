@@ -281,6 +281,7 @@ info.item.bullet.quantity=Quantity:
 info.item.interactable.capacity=Capacity:
 
 info.item.wrench.use=Use on vehicle to change instruments.
+info.item.wrench.sneakuse=Sneak-use on vehicle to change text.
 info.item.wrench.useblock=Use on pole components to remove them.
 info.item.wrench.attack=Attack a vehicle part to remove.
 info.item.wrench.sneakattack=Sneak-attack a vehicle to remove.

@@ -27,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
+import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -81,6 +82,7 @@ public class InterfaceNetwork{
 		packetMappings.put(packetIndex++, PacketVehiclePartGroundDevice.class);
 		packetMappings.put(packetIndex++, PacketVehiclePartGun.class);
 		packetMappings.put(packetIndex++, PacketVehicleServerMovement.class);
+		packetMappings.put(packetIndex++, PacketVehicleTextChange.class);
 	}
 	
 	/**

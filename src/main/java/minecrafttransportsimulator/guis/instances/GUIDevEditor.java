@@ -34,7 +34,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class GUIVehicleEditor extends AGUIBase{
+public class GUIDevEditor extends AGUIBase{
 	
 	//Main screen components.
 	private GUIComponentButton modelRenderButton;
@@ -50,7 +50,7 @@ public class GUIVehicleEditor extends AGUIBase{
 	private GUIComponentButton confirmButton;
 	private GUIComponentOBJModel componentItemModel;
 	
-	public GUIVehicleEditor(EntityVehicleF_Physics vehicleClicked){
+	public GUIDevEditor(EntityVehicleF_Physics vehicleClicked){
 		this.vehicleClicked = vehicleClicked;
 	}
 	

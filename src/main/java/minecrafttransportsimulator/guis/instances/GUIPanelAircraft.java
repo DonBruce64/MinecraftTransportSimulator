@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -41,11 +43,14 @@ public class GUIPanelAircraft extends AGUIPanel{
 	private static final int AUTOPILOT_TEXTURE_WIDTH_OFFSET = TRIM_TEXTURE_WIDTH_OFFSET + 40;
 	private static final int AUTOPILOT_TEXTURE_HEIGHT_OFFSET = 216;
 	private static final int GEAR_TEXTURE_WIDTH_OFFSET = AUTOPILOT_TEXTURE_WIDTH_OFFSET + 20;
-	private static final int GEAR_TEXTURE_HEIGHT_OFFSET = 182;
+	private static final int GEAR_TEXTURE_HEIGHT_OFFSET = 176;
+	private static final int CUSTOM_TEXTURE_WIDTH_OFFSET = GEAR_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int CUSTOM_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private final Map<LightType, GUIComponentSelector> lightSelectors = new HashMap<LightType, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> starterSelectors = new HashMap<Byte, GUIComponentSelector>();
+	private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
 	private GUIComponentSelector aileronTrimSelector;
 	private GUIComponentSelector elevatorTrimSelector;
 	private GUIComponentSelector rudderTrimSelector;
@@ -239,7 +244,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		}
 		
 		//If we have gear, add a selector for it.
-		if(vehicle.definition.plane != null && vehicle.definition.motorized.gearSequenceDuration != 0){
+		if(vehicle.definition.motorized.gearSequenceDuration != 0){
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -252,7 +257,32 @@ public class GUIPanelAircraft extends AGUIPanel{
 			addSelector(gearSelector);
 		}
 		
-		return xOffset + GAP_BETWEEN_SELECTORS*2 + SELECTOR_SIZE;
+		//Create any custom slots, if we have any.
+		if(vehicle.definition.rendering.customVariables != null && vehicle.definition.rendering.customVariables.size() > 0){
+			xOffset += GAP_BETWEEN_SELECTORS*2 + SELECTOR_SIZE;
+			for(int i=0; i<vehicle.definition.rendering.customVariables.size(); ++i){
+				GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, vehicle.definition.rendering.customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						byte selectorNumber = (byte) customSelectors.indexOf(this);
+						switch(selectorNumber){
+							case(0) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_0, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(1) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_1, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(2) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_2, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(3) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_3, !vehicle.customsOn.contains(selectorNumber))); break;
+						}
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				customSelectors.add(customSelector);
+				addSelector(customSelector);
+			}
+			return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
+		}else{
+			return xOffset + GAP_BETWEEN_SELECTORS*2 + SELECTOR_SIZE;
+		}
 	}
 	
 	@Override
@@ -312,6 +342,11 @@ public class GUIPanelAircraft extends AGUIPanel{
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
 			}
+		}
+		
+		//Iterate through custom selectors and set their states.
+		for(byte i=0; i<customSelectors.size(); ++i){
+			customSelectors.get(i).selectorState = vehicle.customsOn.contains(i) ? 1 : 0;
 		}
 	}
 }

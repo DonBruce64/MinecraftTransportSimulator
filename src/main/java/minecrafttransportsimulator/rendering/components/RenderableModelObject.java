@@ -118,11 +118,11 @@ public final class RenderableModelObject{
 		
 		//Check if we need to render text on this object.
 		if(optionalPart != null){
-			if(InterfaceRender.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textObjects, objectName, optionalPart.vehicle.areInteriorLightsOn())){
+			if(InterfaceRender.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, objectName, optionalPart.vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 		}else{
-			if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, objectName, vehicle.areInteriorLightsOn())){
+			if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, objectName, vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 		}

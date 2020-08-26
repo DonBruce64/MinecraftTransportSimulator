@@ -7,11 +7,11 @@ public class JSONText{
 	public String fieldName;
     public String defaultText;
     public int maxLength;
+    public int wrapWidth;
     public String color;
     public String attachedTo;
 	
 	public boolean lightsUp;
-	public boolean alignLeft;
-	public boolean alignRight;
+	public int renderMode;
 	public boolean colorInheritied;
 }

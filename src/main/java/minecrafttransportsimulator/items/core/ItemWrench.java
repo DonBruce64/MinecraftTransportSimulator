@@ -9,7 +9,8 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
-import minecrafttransportsimulator.guis.instances.GUIVehicleEditor;
+import minecrafttransportsimulator.guis.instances.GUITextEditor;
+import minecrafttransportsimulator.guis.instances.GUIDevEditor;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -35,7 +36,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		tooltipLines.add(BuilderGUI.translate("info.item.wrench.attack"));
 		tooltipLines.add(BuilderGUI.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
-			tooltipLines.add("Sneak-use on a vehicle or while riding one to open devMode.");
+			tooltipLines.add("Use while riding a vehicle to open the devMode editor.");
 		}
 	}
 	
@@ -45,16 +46,13 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
 				if(vehicle.world.isClient()){
-					if(ConfigSystem.configObject.client.devMode.value){
-						if(player.isSneaking() || vehicle.equals(player.getEntityRiding())){
-							BuilderGUI.openGUI(new GUIVehicleEditor(vehicle));
-						}
+					if(ConfigSystem.configObject.client.devMode.value && vehicle.equals(player.getEntityRiding())){
+						BuilderGUI.openGUI(new GUIDevEditor(vehicle));
+					}else if(player.isSneaking()){
+						BuilderGUI.openGUI(new GUITextEditor(vehicle));
 					}else{
-						if(!player.isSneaking()){
-							BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
-						}
+						BuilderGUI.openGUI(new GUIInstruments(vehicle, player));
 					}
-					
 				}else{
 					return CallbackType.PLAYER;
 				}

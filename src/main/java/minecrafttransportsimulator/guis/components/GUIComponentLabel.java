@@ -3,6 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextRendering;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
@@ -16,7 +17,7 @@ public class GUIComponentLabel{
 	public final int y;
 	public final Color color;
 	public final float scale;
-	public final boolean centered;
+	public final TextRendering renderMode;
 	public final boolean shadow;
 	public final int wrapWidth;
 	
@@ -26,16 +27,16 @@ public class GUIComponentLabel{
 	private GUIComponentTextBox box;
 
 	public GUIComponentLabel(int x, int y, Color color, String text){
-		this(x, y, color, text, 1.0F, false, false, 0);
+		this(x, y, color, text, 1.0F, TextRendering.LEFT_ALIGNED, false, 0);
 	}
 	
-	public GUIComponentLabel(int x, int y, Color color, String text, float scale, boolean centered, boolean shadow, int wrapWidth){
+	public GUIComponentLabel(int x, int y, Color color, String text, float scale, TextRendering renderMode, boolean shadow, int wrapWidth){
 		this.x = x;
 		this.y = y;
 		this.color = color;
 		this.scale = scale;
 		this.text = text;
-		this.centered = centered;
+		this.renderMode = renderMode;
 		this.shadow = shadow;
 		this.wrapWidth = wrapWidth;
 	}
@@ -66,11 +67,7 @@ public class GUIComponentLabel{
 	 */
     public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
-	    	if(scale == 1.0){
-	    		BuilderGUI.drawText(text, x, y, color, centered, shadow, wrapWidth);
-			}else{
-				BuilderGUI.drawScaledText(text, x, y, color, centered, shadow, wrapWidth, scale);
-			}
+			BuilderGUI.drawScaledText(text, x, y, color, renderMode, shadow, wrapWidth, scale);
 		}
     }
 }

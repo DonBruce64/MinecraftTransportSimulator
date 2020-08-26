@@ -48,7 +48,7 @@ public abstract class APart implements ISoundProvider{
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	/**List containing text lines for saved text.**/
-	public final List<String> textObjects = new ArrayList<String>();
+	public final List<String> textLines = new ArrayList<String>();
 	
 	//Runtime variables.
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -73,7 +73,7 @@ public abstract class APart implements ISoundProvider{
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				textObjects.add(data.getString("textObject" + i));
+				textLines.add(data.getString("textLine" + i));
 			}
 		}
 		
@@ -263,7 +263,7 @@ public abstract class APart implements ISoundProvider{
 		WrapperNBT data = new WrapperNBT();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textObject" + i, textObjects.get(i));
+				data.setString("textLine" + i, textLines.get(i));
 			}
 		}
 		return data;

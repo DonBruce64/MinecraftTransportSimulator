@@ -246,7 +246,7 @@ public final class RenderVehicle{
 		}
 		
 		//Render any static text.
-		if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, null, vehicle.areInteriorLightsOn())){
+		if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, null, vehicle.areInteriorLightsOn())){
 			InterfaceRender.recallTexture();
 		}
 		
@@ -255,7 +255,7 @@ public final class RenderVehicle{
 		for(RenderableModelObject modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, null, partialTicks, modelObjects);
-				if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textObjects, modelObject.objectName, vehicle.areInteriorLightsOn())){
+				if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, modelObject.objectName, vehicle.areInteriorLightsOn())){
 					InterfaceRender.recallTexture();
 				}
 			}
@@ -339,7 +339,7 @@ public final class RenderVehicle{
 			}
 			
 			//Render any static text.
-			if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, null, part.vehicle.areInteriorLightsOn())){
+			if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, null, part.vehicle.areInteriorLightsOn())){
 				InterfaceRender.recallTexture();
 			}
 			
@@ -348,7 +348,7 @@ public final class RenderVehicle{
 			for(RenderableModelObject modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
 					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
-					if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textObjects, modelObject.objectName, part.vehicle.areInteriorLightsOn())){
+					if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, modelObject.objectName, part.vehicle.areInteriorLightsOn())){
 						InterfaceRender.recallTexture();
 					}
 				}

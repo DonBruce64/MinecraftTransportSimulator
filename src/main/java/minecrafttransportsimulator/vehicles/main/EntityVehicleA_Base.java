@@ -177,7 +177,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			if(partData == null){
 				if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
 					for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
-						newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+						newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
 					}
 				}
 				partData = newPart.getData();
@@ -422,7 +422,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						//Set default text for the new part, if we have any.
 						if(newPart.definition.rendering != null){
 							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
-								newPart.textObjects.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+								newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
 							}
 						}
 						

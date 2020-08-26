@@ -12,7 +12,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.guis.instances.GUISign;
+import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -101,7 +101,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			}else if(packID.isEmpty() && textLines == null){
 				if(pole.components.get(axis).getTextLines() != null){
 					if(world.isClient()){
-						BuilderGUI.openGUI(new GUISign(pole, axis));
+						BuilderGUI.openGUI(new GUITextEditor(pole, axis));
 					}else{
 						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
 						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));

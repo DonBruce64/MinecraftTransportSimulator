@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.BuilderGUI.TextRendering;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
@@ -357,13 +358,7 @@ public class InterfaceRender{
 						GL11.glRotated(textDefinition.rot[2], 0, 0, 1);
 						
 						//Finally, render the text.
-						if(textDefinition.alignLeft){
-							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
-						}else if(textDefinition.alignRight){
-							BuilderGUI.drawScaledText(text, -BuilderGUI.getStringWidth(text), 0, Color.decode(textDefinition.color), false, false, 0, textDefinition.scale);
-						}else{
-							BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), true, false, 0, textDefinition.scale);
-						}
+						BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), TextRendering.values()[textDefinition.renderMode], false, textDefinition.wrapWidth, textDefinition.scale);
 						GL11.glPopMatrix();
 					}
 				}
@@ -375,6 +370,8 @@ public class InterfaceRender{
 			}
 			if(!systemLightingEnabled){
 				setSystemLightingState(true);
+				//Set color back to white, the font renderer sets this to not-white.
+				setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 				return true;
 			}else{
 				return false;

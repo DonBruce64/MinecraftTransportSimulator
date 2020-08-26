@@ -147,6 +147,41 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public String panelLitTextColor;
         public List<JSONText> textObjects = new ArrayList<JSONText>();
         public List<VehicleAnimatedObject> animatedObjects = new ArrayList<VehicleAnimatedObject>();
+        public List<String> customVariables = new ArrayList<String>();
+        
+        //DEPRECIATED CODE!
+        public int displayTextMaxLength;
+        public boolean textLighted;
+        public String defaultDisplayText;
+        public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
+        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    }
+    
+    public class VehicleDisplayText{
+    	public double[] pos;
+        public double[] rot;
+        public float scale;
+        public String color;
+    }
+    
+    public class VehicleRotatableModelObject{
+    	public String partName;
+    	public double[] rotationPoint;
+    	public double[] rotationAxis;
+    	public String rotationVariable;
+    	public float rotationClampMin;
+    	public float rotationClampMax;
+    	public boolean absoluteValue;
+    }
+    
+    public class VehicleTranslatableModelObject{
+    	public String partName;
+    	public double[] translationAxis;
+    	public String translationVariable;
+    	public float translationClampMin;
+    	public float translationClampMax;
+    	public boolean absoluteValue;
     }
     
     public class VehicleAnimatedObject{

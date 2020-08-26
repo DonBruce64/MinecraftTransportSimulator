@@ -287,10 +287,10 @@ public class BuilderGUI extends GuiScreen{
 	//--------------------START OF STATIC HELPER METHODS--------------------
 	/**
 	 *  Draws the specified text using the MC fontRenderer.  This method can render the text in multiple ways depending
-	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be the center
-	 *  point of the string, not the top-left as normal.  If wrapWidth is anything else but 0, then the wordWrap
-	 *  method will be called to render multi-line text.  Note that after this operation the font texture will be bound, 
-	 *  so take care when calling this method in the middle of rendering operations.
+	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be  the center 
+	 *  point of the string, rather that the top-left of the string like normal.  If wrapWidth is anything else but 0, 
+	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
+	 *  will be bound, so take care when calling this method in the middle  of rendering operations.
 	 */
 	public static void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
 		if(fontRenderer == null){
@@ -319,13 +319,25 @@ public class BuilderGUI extends GuiScreen{
 	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
-	public static void drawScaledText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth, float scale){
+	public static void drawScaledText(String text, int x, int y, Color color, TextRendering renderMode, boolean shadow, int wrapWidth, float scale){
 		if(fontRenderer == null){
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		}
 		GL11.glPushMatrix();
-		if(centered){
+		if(renderMode.equals(TextRendering.CENTERED)){
 			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
+		}else if(renderMode.equals(TextRendering.JUSTIFIED)){
+			int stringWidth = fontRenderer.getStringWidth(text);
+			if(stringWidth > wrapWidth){
+				float scaleFactor = stringWidth > 0 ? wrapWidth/(float)stringWidth : 1.0F;
+				GL11.glTranslatef(x - scale*wrapWidth/2, y + 4*scale*(1 - scaleFactor), 0);
+				scale *= scaleFactor;
+			}else{
+				GL11.glTranslatef(x - scale*stringWidth/2, y, 0);
+			}
+			wrapWidth = 0;
+		}else if(renderMode.equals(TextRendering.RIGHT_ALIGNED)){
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text), y, 0);
 		}else{
 			GL11.glTranslatef(x, y, 0);
 		}
@@ -439,5 +451,15 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	public static void openGUI(AGUIBase gui){
 		FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
+	}
+	
+	/**
+	 *  List of enums that define how text is rendered.
+	 */
+	public static enum TextRendering{
+		CENTERED,
+		LEFT_ALIGNED,
+		RIGHT_ALIGNED,
+		JUSTIFIED;
 	}
 }

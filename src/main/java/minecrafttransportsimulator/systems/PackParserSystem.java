@@ -37,8 +37,11 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
@@ -77,6 +80,9 @@ public final class PackParserSystem{
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONVehicle mainDefinition = new Gson().fromJson(jsonReader, JSONVehicle.class);
+    		if(mainDefinition.rendering != null){
+    			doAnimationLegacyCompats(mainDefinition.rendering, mainDefinition);
+    		}
     		mainDefinition.genericName = jsonFileName;
     		for(VehicleDefinition subDefinition : mainDefinition.definitions){
     			//Need to copy the JSON into a new instance to allow differing systemNames.
@@ -347,6 +353,9 @@ public final class PackParserSystem{
     				}
     			}
     		}
+    		if(partDef.rendering != null){
+    			doAnimationLegacyCompats(partDef.rendering, new JSONVehicle());
+    		}
     	}else if(definition instanceof JSONVehicle){
     		JSONVehicle vehicleDef = (JSONVehicle) definition;
     		//If we still have the old type parameter and are an aircraft, set the flag to true.
@@ -433,6 +442,100 @@ public final class PackParserSystem{
     				decor.general.textObjects.add(object);
     			}
     		}
+    	}
+    }
+    
+    private static void doAnimationLegacyCompats(VehicleRendering rendering, JSONVehicle jsonInstance){
+    	if(rendering.textMarkings != null){
+    		rendering.textObjects = new ArrayList<JSONText>();
+    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText marking : rendering.textMarkings){
+				JSONText object = new JSONText();
+				object.lightsUp = rendering.textLighted;
+				object.color = marking.color;
+				object.scale = marking.scale;
+				object.maxLength = rendering.displayTextMaxLength;
+				object.pos = marking.pos;
+				object.rot = marking.rot;
+				object.fieldName = "Text";
+				object.defaultText = rendering.defaultDisplayText;
+				rendering.textObjects.add(object);
+			}
+    	}
+    	if(rendering.rotatableModelObjects != null){
+    		if(rendering.animatedObjects == null){
+    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
+    		}
+    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects){
+    			VehicleAnimatedObject object = null;
+    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
+    				if(testObject.objectName.equals(rotatable.partName)){
+    					object = testObject;
+    					break;
+    				}
+    			}
+    			if(object == null){
+    				object = jsonInstance.new VehicleAnimatedObject();
+    				object.objectName = rotatable.partName;
+    				object.animations = new ArrayList<VehicleAnimationDefinition>();
+    				rendering.animatedObjects.add(object);
+    			}
+    			
+    			VehicleAnimationDefinition animation = jsonInstance.new VehicleAnimationDefinition();
+    			animation.animationType = "rotation";
+    	    	animation.variable = rotatable.rotationVariable;
+    	    	animation.centerPoint = rotatable.rotationPoint;
+    	    	animation.axis = rotatable.rotationAxis;
+    	    	animation.clampMin = rotatable.rotationClampMin;
+    	    	animation.clampMax = rotatable.rotationClampMax;
+    	    	animation.absolute = rotatable.absoluteValue;
+    	    	if(rotatable.rotationVariable.equals("steering_wheel")){
+    	    		animation.variable = "rudder";
+    	    		animation.axis[0] = -animation.axis[0];
+    	    		animation.axis[1] = -animation.axis[1];
+    	    		animation.axis[2] = -animation.axis[2];
+    	    	}
+    	    	if(rotatable.rotationVariable.equals("door")){
+    	    		animation.duration = 30;
+    	    	}
+    	    	object.animations.add(animation);
+			}
+    	}
+    	if(rendering.translatableModelObjects != null){
+    		if(rendering.animatedObjects == null){
+    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
+    		}
+    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects){
+    			VehicleAnimatedObject object = null;
+    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
+    				if(testObject.objectName.equals(translatable.partName)){
+    					object = testObject;
+    					break;
+    				}
+    			}
+    			if(object == null){
+    				object = jsonInstance.new VehicleAnimatedObject();
+    				object.objectName = translatable.partName;
+    				object.animations = new ArrayList<VehicleAnimationDefinition>();
+    			}
+    			
+    			VehicleAnimationDefinition animation = jsonInstance.new VehicleAnimationDefinition();
+    			animation.animationType = "translation";
+    	    	animation.variable = translatable.translationVariable;
+    	    	animation.axis = translatable.translationAxis;
+    	    	animation.clampMin = translatable.translationClampMin;
+    	    	animation.clampMax = translatable.translationClampMax;
+    	    	animation.absolute = translatable.absoluteValue;
+    	    	if(translatable.translationVariable.equals("steering_wheel")){
+    	    		animation.variable = "rudder";
+    	    		animation.axis[0] = -animation.axis[0];
+    	    		animation.axis[1] = -animation.axis[1];
+    	    		animation.axis[2] = -animation.axis[2];
+    	    	}
+    	    	if(translatable.translationVariable.equals("door")){
+    	    		animation.duration = 30;
+    	    	}
+    	    	object.animations.add(animation);
+			}
     	}
     }
     
