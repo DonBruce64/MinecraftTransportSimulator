@@ -28,24 +28,27 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class PacketBulletHit extends APacketBase{
-	private final Point3d hitLocation;
+	private final Point3d localCenter;
+	private final Point3d globalCenter;
 	private final double bulletVelocity;
 	private final String bulletPackID;
 	private final String bulletSystemName;
 	private final int hitEntityID;
 
-	public PacketBulletHit(Point3d hitLocation, double velocity, ItemPartBullet bullet, WrapperEntity hitEntity){
+	public PacketBulletHit(BoundingBox box, double velocity, ItemPartBullet bullet, WrapperEntity hitEntity){
 		super(null);
-		this.hitLocation = hitLocation;
+		this.localCenter = box.localCenter;
+		this.globalCenter = box.globalCenter;
 		this.bulletVelocity = velocity;
 		this.bulletPackID = bullet.definition.packID;
 		this.bulletSystemName = bullet.definition.systemName;
-		this.hitEntityID = hitEntity.getID();
+		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
 	}
 	
 	public PacketBulletHit(ByteBuf buf){
 		super(buf);
-		this.hitLocation = readPoint3dFromBuffer(buf);
+		this.localCenter = readPoint3dFromBuffer(buf);
+		this.globalCenter = readPoint3dFromBuffer(buf);
 		this.bulletVelocity = buf.readDouble();
 		this.bulletPackID = readStringFromBuffer(buf);
 		this.bulletSystemName = readStringFromBuffer(buf);
@@ -54,7 +57,9 @@ public class PacketBulletHit extends APacketBase{
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
-		writePoint3dToBuffer(hitLocation, buf);
+		super.writeToBuffer(buf);
+		writePoint3dToBuffer(localCenter, buf);
+		writePoint3dToBuffer(globalCenter, buf);
 		buf.writeDouble(bulletVelocity);
 		writeStringToBuffer(bulletPackID, buf);
 		writeStringToBuffer(bulletSystemName, buf);
@@ -63,13 +68,14 @@ public class PacketBulletHit extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
+		JSONPart bulletDefinition = (JSONPart) MTSRegistry.packItemMap.get(bulletPackID).get(bulletSystemName).definition;
+		BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false);
 		if(!world.isClient()){
 			//If we are an explosive bullet, just blow up at our current position.
 			//Otherwise do attack logic.
-			JSONPart bulletDefinition = (JSONPart) MTSRegistry.packItemMap.get(bulletPackID).get(bulletSystemName).definition;
-			BoundingBox box = new BoundingBox(hitLocation, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F);
+			
 			if(bulletDefinition.bullet.type.equals("explosive")){
-				world.spawnExplosion(player, hitLocation, bulletDefinition.bullet.diameter/10F, false);
+				world.spawnExplosion(player, box.globalCenter, bulletDefinition.bullet.diameter/10F, false);
 			}else{
 				//If we hit an entity, apply damage to them.
 				if(hitEntityID != -1){
@@ -96,7 +102,7 @@ public class PacketBulletHit extends APacketBase{
 					//If we are a water bullet, and we hit fire, put it out. 
 					//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
 					//In this case, we need to simply spawn a few block particles to alert the player of a hit.
-					Point3i hitPosition = new Point3i(hitLocation);
+					Point3i hitPosition = new Point3i(box.globalCenter);
 					if(bulletDefinition.bullet.type.equals("water")){
 						hitPosition.add(0, 1, 0);
 						if(world.isFire(hitPosition)){
@@ -123,7 +129,7 @@ public class PacketBulletHit extends APacketBase{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound and spawn some particles.
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(hitLocation));
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(box.globalCenter));
 		}
 	}
 }

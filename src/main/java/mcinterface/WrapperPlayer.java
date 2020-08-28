@@ -31,9 +31,10 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
  * @author don_bruce
  */
 public class WrapperPlayer extends WrapperEntity{
+	
 	final EntityPlayer player;
 	
-	public WrapperPlayer(EntityPlayer player){
+	protected WrapperPlayer(EntityPlayer player){
 		super(player);
 		this.player = player;
 	}
@@ -125,7 +126,7 @@ public class WrapperPlayer extends WrapperEntity{
 		for(EntityLiving entityLiving : player.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
 			if(entityLiving.getLeashed() && player.equals(entityLiving.getLeashHolder())){
 				entityLiving.clearLeashed(true, !player.capabilities.isCreativeMode);
-				return new WrapperEntity(entityLiving);
+				return WrapperWorld.getWrapperFor(entityLiving.world).getWrapperFor(entityLiving);
 			}
 		}
 		return null;

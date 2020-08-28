@@ -34,6 +34,9 @@ public class ItemPartGun extends AItemPart{
 		tooltipLines.add(I18n.format("info.item.gun.fireDelay") + definition.gun.fireDelay);
 		tooltipLines.add(I18n.format("info.item.gun.muzzleVelocity") + definition.gun.muzzleVelocity);
 		tooltipLines.add(I18n.format("info.item.gun.capacity") + definition.gun.capacity);
+		if(definition.gun.autoReload){
+			tooltipLines.add(I18n.format("info.item.gun.autoReload"));
+		}
 		tooltipLines.add(I18n.format("info.item.gun.yawRange") + definition.gun.minYaw + "-" + definition.gun.maxYaw);
 		tooltipLines.add(I18n.format("info.item.gun.pitchRange") + definition.gun.minPitch + "-" + definition.gun.maxPitch);
 	}

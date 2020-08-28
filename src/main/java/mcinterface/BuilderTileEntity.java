@@ -73,7 +73,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		//Create our client-side TE here if required.
 		if(tileEntity == null){
 			//Get the block that makes this TE and restore it from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
 		}
 	}
 	
@@ -95,7 +95,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		super.readFromNBT(tag);
 		if(tileEntity == null && tag.hasKey("teid")){
 			//Restore the TE from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
 		}
     }
     

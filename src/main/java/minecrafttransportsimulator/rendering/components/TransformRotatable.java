@@ -20,7 +20,7 @@ public class TransformRotatable extends ATransformRenderable{
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//rotation magnitude is the magnitude of that vector.
-		this.rotationAxis = new Point3d(definition.axis[0], definition.axis[1], definition.axis[2]);
+		this.rotationAxis = definition.axis.copy();
 		this.rotationMagnitude = rotationAxis.length();
 		rotationAxis.normalize();
 	}
@@ -46,9 +46,9 @@ public class TransformRotatable extends ATransformRenderable{
 		
 		//Do rotation.
 		if(rotation != 0){
-			GL11.glTranslated(definition.centerPoint[0], definition.centerPoint[1], definition.centerPoint[2]);
+			GL11.glTranslated(definition.centerPoint.x, definition.centerPoint.y, definition.centerPoint.z);
 			GL11.glRotated(rotation, rotationAxis.x, rotationAxis.y, rotationAxis.z);
-			GL11.glTranslated(-definition.centerPoint[0], -definition.centerPoint[1], -definition.centerPoint[2]);
+			GL11.glTranslated(-definition.centerPoint.x, -definition.centerPoint.y, -definition.centerPoint.z);
 		}
 		return rotation;
 	}

@@ -60,14 +60,14 @@ public abstract class APart implements ISoundProvider{
 		
 	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
 		this.vehicle = vehicle;
-		this.placementOffset = new Point3d(packVehicleDef.pos[0], packVehicleDef.pos[1], packVehicleDef.pos[2]);
+		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
 		this.definition = definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
 		this.boundingBox = new BoundingBox(getPositionOffset(0).add(placementOffset), worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false);
-		this.placementRotation = packVehicleDef.rot != null ? new Point3d(packVehicleDef.rot[0], packVehicleDef.rot[1], packVehicleDef.rot[2]) : new Point3d(0, 0, 0);
-		this.totalRotation = placementRotation;
+		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d(0, 0, 0);
+		this.totalRotation = placementRotation.copy();
 		this.isValid = true;
 		
 		//Load text.
@@ -173,8 +173,8 @@ public abstract class APart implements ISoundProvider{
 		//First rotate about the rotation point and angles.
 		Point3d rotationAngles = getPositionRotation(partialTicks);
 		if(!rotationAngles.isZero()){
-			positionOffset = new Point3d(-vehicleDefinition.rotationPosition[0], -vehicleDefinition.rotationPosition[1], -vehicleDefinition.rotationPosition[2]).rotateFine(rotationAngles);
-			positionOffset.add(vehicleDefinition.rotationPosition[0], vehicleDefinition.rotationPosition[1], vehicleDefinition.rotationPosition[2]);
+			//"Translate" back to the main vehicle point, apply the rotation, then "translate" back.
+			positionOffset = vehicleDefinition.rotationPosition.copy().multiply(-1D).rotateFine(rotationAngles).add(vehicleDefinition.rotationPosition);
 		}else{
 			positionOffset = new Point3d(0D, 0D, 0D);
 		}
@@ -182,7 +182,7 @@ public abstract class APart implements ISoundProvider{
 		//Now translate.  This may incorporate rotation angles.
 		if(vehicleDefinition.translationVariable != null){
 			double translationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.translationVariable, 1, 0, vehicleDefinition.translationClampMin, vehicleDefinition.translationClampMax, vehicleDefinition.translationAbsolute, partialTicks, vehicle, this);
-			Point3d translationOffset = new Point3d(translationValue*vehicleDefinition.translationPosition[0], translationValue*vehicleDefinition.translationPosition[1], translationValue*vehicleDefinition.translationPosition[2]); 
+			Point3d translationOffset = vehicleDefinition.translationPosition.copy().multiply(translationValue); 
 			if(!rotationAngles.isZero()){
 				translationOffset.rotateFine(rotationAngles);
 			}
@@ -203,7 +203,7 @@ public abstract class APart implements ISoundProvider{
 		if(vehicleDefinition.rotationVariable != null){
 			double rotationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.rotationVariable, 1, 0, vehicleDefinition.rotationClampMin, vehicleDefinition.rotationClampMax, vehicleDefinition.rotationAbsolute, partialTicks, vehicle, this);
 			if(rotationValue != 0){
-				return new Point3d(rotationValue*vehicleDefinition.rotationAngles[0], rotationValue*vehicleDefinition.rotationAngles[1], rotationValue*vehicleDefinition.rotationAngles[2]);
+				return vehicleDefinition.rotationAngles.copy().multiply(rotationValue);
 			}
 		}
 		return new Point3d(0, 0, 0);

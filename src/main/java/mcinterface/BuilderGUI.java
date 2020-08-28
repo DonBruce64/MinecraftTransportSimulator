@@ -292,57 +292,64 @@ public class BuilderGUI extends GuiScreen{
 	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
 	 *  will be bound, so take care when calling this method in the middle  of rendering operations.
 	 */
-	public static void drawText(String text, int x, int y, Color color, boolean centered, boolean shadow, int wrapWidth){
+	public static void drawBasicText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
 		if(fontRenderer == null){
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		}
-		if(centered){
+		if(renderPosition.equals(TextPosition.CENTERED)){
 			if(wrapWidth == 0){
 				x -= fontRenderer.getStringWidth(text)/2;
 			}else{
 				x -= Math.min(wrapWidth/2, fontRenderer.getStringWidth(text)/2);
 			}
 		}
-		if(shadow){
-			fontRenderer.drawStringWithShadow(text, x, y, color.getRGB());
+		
+		if(wrapWidth == 0){
+			fontRenderer.drawString(text, x, y, color.getRGB());
 		}else{
-			if(wrapWidth == 0){
-				fontRenderer.drawString(text, x, y, color.getRGB());
-			}else{
-				fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
-			}
+			fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
 		}
 	}
 	
 	/**
-	 *  Similar to {@link #drawText(String, int, int, Color, boolean, boolean, int)}, except this method
+	 *  Similar to {@link #drawBasicText(String, int, int, Color, TextPosition, int)}, except this method
 	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
-	public static void drawScaledText(String text, int x, int y, Color color, TextRendering renderMode, boolean shadow, int wrapWidth, float scale){
+	public static void drawScaledText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
+		//Get font renderer, if we don't have it yet.
 		if(fontRenderer == null){
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		}
-		GL11.glPushMatrix();
-		if(renderMode.equals(TextRendering.CENTERED)){
-			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
-		}else if(renderMode.equals(TextRendering.JUSTIFIED)){
-			int stringWidth = fontRenderer.getStringWidth(text);
-			if(stringWidth > wrapWidth){
-				float scaleFactor = stringWidth > 0 ? wrapWidth/(float)stringWidth : 1.0F;
-				GL11.glTranslatef(x - scale*wrapWidth/2, y + 4*scale*(1 - scaleFactor), 0);
-				scale *= scaleFactor;
-			}else{
-				GL11.glTranslatef(x - scale*stringWidth/2, y, 0);
+		
+		//Check for auto-scaling.
+		if(autoScaled){
+			//Get the string width.  This is in text-pixels, and by default 1tp=1block.
+			//We scale this to the actual pixel-width by multiplying it by the incoming scale.
+			float stringWidth = scale*fontRenderer.getStringWidth(text);
+			
+			//If the string width in pixels is greater than the wrap width, adjust scale.
+			//We also need to cancel wrapping if our scaled value is within bounds.
+			float scaleFactor = stringWidth > 0 ? wrapWidth/stringWidth : 1.0F;
+			if(stringWidth/scale > wrapWidth){
+				if(stringWidth > wrapWidth){
+					scale *= scaleFactor;
+				}
+				wrapWidth = 0;
 			}
-			wrapWidth = 0;
-		}else if(renderMode.equals(TextRendering.RIGHT_ALIGNED)){
+		}
+		
+		//Push to translate text.
+		GL11.glPushMatrix();
+		if(renderPosition.equals(TextPosition.CENTERED)){
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
+		}else if(renderPosition.equals(TextPosition.RIGHT_ALIGNED)){
 			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text), y, 0);
 		}else{
 			GL11.glTranslatef(x, y, 0);
 		}
 		GL11.glScalef(scale, scale, scale);
-		drawText(text, 0, 0, color, false, shadow, wrapWidth);
+		drawBasicText(text, 0, 0, color, TextPosition.LEFT_ALIGNED, wrapWidth);
 		GL11.glPopMatrix();
 	}
 	
@@ -456,10 +463,9 @@ public class BuilderGUI extends GuiScreen{
 	/**
 	 *  List of enums that define how text is rendered.
 	 */
-	public static enum TextRendering{
+	public static enum TextPosition{
 		CENTERED,
 		LEFT_ALIGNED,
-		RIGHT_ALIGNED,
-		JUSTIFIED;
+		RIGHT_ALIGNED;
 	}
 }

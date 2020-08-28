@@ -48,8 +48,9 @@ public final class ParticleBullet extends AParticle{
         this.bulletItem = bulletItem;
         this.playerID = player.getID();
         this.vehicle = vehicle;
-        this.box = new BoundingBox(new Point3d(0D, 0D, 0D), getSize(), getSize(), getSize());
-        this.damage = new Damage("bullet", 0, box, null);
+        this.box = new BoundingBox(position, getSize(), getSize(), getSize());
+        //FIXME add pain.
+        this.damage = new Damage("bullet", 1, box, null);
     }
 	
 	@Override
@@ -68,7 +69,7 @@ public final class ParticleBullet extends AParticle{
 			if(!attackedEntities.isEmpty()){
 				if(playerID == InterfaceGame.getClientPlayer().getID()){
 					for(WrapperEntity entity : attackedEntities.keySet()){
-						InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity).globalCenter, velocity, bulletItem, entity));
+						InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, bulletItem, entity));
 					}
 				}
 				age = maxAge;
@@ -79,7 +80,8 @@ public final class ParticleBullet extends AParticle{
 			//We may hit more than one block here if we're a big bullet.  That's okay.
 			if(box.updateCollidingBlocks(world, offset)){
 				for(WrapperBlock block : box.collidingBlocks){
-					InterfaceNetwork.sendToServer(new PacketBulletHit(new Point3d(block.getPosition()), velocity, bulletItem, null));
+					Point3d position = new Point3d(block.getPosition());
+					InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bulletItem, null));
 				}
 				age = maxAge;
 				return;

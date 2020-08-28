@@ -6,8 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import mcinterface.WrapperNBT;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.AItemPack;
@@ -64,7 +66,10 @@ public final class PackParserSystem{
 	/**List of log entries to be added to the log.  Saved here as the log won't be ready till preInit, which
 	 * runs after this parsing operation.*/
 	public static List<String> logEntries = new ArrayList<String>();
-    
+	
+	/**Custom Gson instance for parsing packs.*/
+	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(Point3d.class, Point3d.adapter).create(); 
+	
     
     //-----START OF INIT LOGIC-----
     /**Packs should call this upon load to add their content to the mod.
@@ -79,7 +84,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONVehicle mainDefinition = new Gson().fromJson(jsonReader, JSONVehicle.class);
+    		JSONVehicle mainDefinition = packParser.fromJson(jsonReader, JSONVehicle.class);
     		if(mainDefinition.rendering != null){
     			doAnimationLegacyCompats(mainDefinition.rendering, mainDefinition);
     		}
@@ -132,7 +137,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPart definition = new Gson().fromJson(jsonReader, JSONPart.class);
+    		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
     		performLegacyCompats(definition);
     		setupItem(createPartItem(definition), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
@@ -144,7 +149,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemInstrument(new Gson().fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
+    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -154,7 +159,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their pole components to the mod.**/
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPoleComponent definition = new Gson().fromJson(jsonReader, JSONPoleComponent.class);
+    		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		performLegacyCompats(definition);
 	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), jsonFileName, packID, ItemClassification.POLE);
     	}catch(Exception e){
@@ -166,7 +171,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their decor blocks to the mod.**/
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONDecor definition = new Gson().fromJson(jsonReader, JSONDecor.class);
+    		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
     		performLegacyCompats(definition);
     		setupItem(new ItemDecor(definition), jsonFileName, packID, ItemClassification.DECOR);
     	}catch(Exception e){
@@ -178,7 +183,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	setupItem(new ItemItem(new Gson().fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
+	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -188,7 +193,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their booklets to the mod.**/
     public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemBooklet(new Gson().fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
+    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -414,11 +419,12 @@ public final class PackParserSystem{
     				object.color = line.color;
     				object.scale = line.scale;
     				object.maxLength = line.characters;
-    				object.pos = new double[]{line.xPos, line.yPos, line.zPos + 0.01F};
-    				object.rot = new double[]{0, 0, 0};
+    				object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.01D);
+    				object.rot = new Point3d(0, 0, 0);
     				object.fieldName = "TextLine #" + (pole.general.textObjects.size() + 1);
     				pole.general.textObjects.add(object);
     			}
+    			pole.general.textLines = null;
     		}
     	}else if(definition instanceof JSONDecor){
     		JSONDecor decor = (JSONDecor) definition;
@@ -432,15 +438,16 @@ public final class PackParserSystem{
     				object.color = line.color;
     				object.scale = line.scale;
     				if(lineNumber++ < 3){
-    					object.pos = new double[]{line.xPos, line.yPos, line.zPos + 0.0001F};
-    					object.rot = new double[]{0, 0, 0};
+    					object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.0001D);
+    					object.rot = new Point3d(0, 0, 0);
     				}else{
-    					object.pos = new double[]{line.xPos, line.yPos, line.zPos - 0.0001F};
-    					object.rot = new double[]{0, 180, 0};
+    					object.pos = new Point3d(line.xPos, line.yPos, line.zPos - 0.0001D);
+    					object.rot = new Point3d(0, 180, 0);
     				}
     				object.fieldName = "TextLine #" + (decor.general.textObjects.size() + 1);
     				decor.general.textObjects.add(object);
     			}
+    			 decor.general.textLines = null;
     		}
     	}
     }
@@ -460,6 +467,7 @@ public final class PackParserSystem{
 				object.defaultText = rendering.defaultDisplayText;
 				rendering.textObjects.add(object);
 			}
+    		rendering.textMarkings = null;
     	}
     	if(rendering.rotatableModelObjects != null){
     		if(rendering.animatedObjects == null){
@@ -490,15 +498,14 @@ public final class PackParserSystem{
     	    	animation.absolute = rotatable.absoluteValue;
     	    	if(rotatable.rotationVariable.equals("steering_wheel")){
     	    		animation.variable = "rudder";
-    	    		animation.axis[0] = -animation.axis[0];
-    	    		animation.axis[1] = -animation.axis[1];
-    	    		animation.axis[2] = -animation.axis[2];
+    	    		animation.axis.multiply(-1D);
     	    	}
     	    	if(rotatable.rotationVariable.equals("door")){
     	    		animation.duration = 30;
     	    	}
     	    	object.animations.add(animation);
 			}
+    		rendering.rotatableModelObjects = null;
     	}
     	if(rendering.translatableModelObjects != null){
     		if(rendering.animatedObjects == null){
@@ -527,15 +534,14 @@ public final class PackParserSystem{
     	    	animation.absolute = translatable.absoluteValue;
     	    	if(translatable.translationVariable.equals("steering_wheel")){
     	    		animation.variable = "rudder";
-    	    		animation.axis[0] = -animation.axis[0];
-    	    		animation.axis[1] = -animation.axis[1];
-    	    		animation.axis[2] = -animation.axis[2];
+    	    		animation.axis.multiply(-1D);
     	    	}
     	    	if(translatable.translationVariable.equals("door")){
     	    		animation.duration = 30;
     	    	}
     	    	object.animations.add(animation);
 			}
+    		rendering.translatableModelObjects = null;
     	}
     }
     

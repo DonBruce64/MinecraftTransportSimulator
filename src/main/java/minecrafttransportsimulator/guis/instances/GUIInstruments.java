@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
 import mcinterface.WrapperPlayer;
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -166,7 +166,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", 1.0F, TextRendering.CENTERED, false, 150));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", TextPosition.CENTERED, 150, 1.0F, false));
 		
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.

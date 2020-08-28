@@ -149,7 +149,7 @@ public final class ControlSystem{
 			//Now check subParts of our seat.
 			for(APart subPart : seat.childParts){
 				if(subPart instanceof PartGun){
-					InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
+					InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) subPart, gun.isPressed()));
 				}
 			}
 			//If we are the vehicle controller, check for guns that don't have seats. 

@@ -31,7 +31,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 	
 	@Override
 	public EnumActionResult onItemUse(EntityPlayer player, World mcWorld, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
-		WrapperWorld world = new WrapperWorld(mcWorld);
+		WrapperWorld world = WrapperWorld.getWrapperFor(mcWorld);
 		if(!world.isClient() && player.getHeldItem(hand) != null){
 			ItemStack heldStack = player.getHeldItem(hand);
 			if(heldStack.getItem() != null){
@@ -123,7 +123,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				//First boost Y based on collision boxes.
 				double minHeight = 0;
 				for(VehicleCollisionBox collisionBox : newVehicle.definition.collision){
-					minHeight = Math.min(collisionBox.pos[1] - collisionBox.height/2F, minHeight);
+					minHeight = Math.min(collisionBox.pos.y - collisionBox.height/2F, minHeight);
 				}
 				
 				//Next, boost based on parts.
@@ -166,6 +166,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 	@Override
 	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperNBT data){
 		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, data);
+		//Need to wait for vehicle to load-in before we try to add saved parts.
 		for(APart part : vehicle.partsFromNBT){
 			vehicle.addPart(part, true);
 		}

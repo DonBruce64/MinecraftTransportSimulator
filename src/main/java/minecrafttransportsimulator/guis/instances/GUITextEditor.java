@@ -4,8 +4,10 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -60,7 +62,7 @@ public class GUITextEditor extends AGUIBase{
 			TileEntityPole_Sign sign = (TileEntityPole_Sign) pole.components.get(axis);
 			
 			//Add the render to render the sign.
-			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + 200, guiTop + 100, 64.0F, false, false, false);
+			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
 			modelRender.modelDomain = sign.definition.packID;
 			if(sign.definition.general.modelName != null){
@@ -76,9 +78,19 @@ public class GUITextEditor extends AGUIBase{
 			textLines = sign.getTextLines();
 			
 			//Add render-able labels for the sign object.
+			signLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textObject = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos[0]*64F), modelRender.y - (int) (textObject.pos[1]*64F), Color.decode(textObject.color), sign.getTextLines().get(i), textObject.scale*64F/16F, TextRendering.values()[textObject.renderMode], false, textObject.wrapWidth);
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), sign.getTextLines().get(i), TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
+					@Override
+					public void renderText(){
+						GL11.glPushMatrix();
+						GL11.glTranslatef(x, y, 0);
+						GL11.glScalef(64F/16F, 64F/16F, 64F/16F);
+						BuilderGUI.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
+						GL11.glPopMatrix();
+				    }
+				};
 				addLabel(label);
 				signLabels.add(label);
 			}
@@ -110,7 +122,7 @@ public class GUITextEditor extends AGUIBase{
 		int boxWidth = vehicle != null ? 200 : 100;
 		for(JSONText textObject : textObjects){
 			if(!renderedFields.contains(textObject.fieldName)){
-				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 20 + currentOffset, Color.BLACK, textObject.fieldName);
+				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, Color.BLACK, textObject.fieldName);
 				addLabel(label);
 				int textRowsRequired = 1 + 5*textObject.maxLength/boxWidth;
 				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, textLines.get(textObjects.indexOf(textObject)), 12*textRowsRequired, Color.WHITE, Color.BLACK, textObject.maxLength);
@@ -125,7 +137,7 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 160, 80, BuilderGUI.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, BuilderGUI.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				if(pole != null){

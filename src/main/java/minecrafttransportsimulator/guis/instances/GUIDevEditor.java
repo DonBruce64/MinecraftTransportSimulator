@@ -9,9 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -26,6 +23,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This is a special GUI that is called in devMode to allow vehicle editing.
@@ -93,7 +91,7 @@ public class GUIDevEditor extends AGUIBase{
 								continue;
 							}
 							FileWriter writer = new FileWriter(jsonFile);
-							new GsonBuilder().setPrettyPrinting().create().toJson(packItem.definition, packItem.definition.getClass(), writer);
+							PackParserSystem.packParser.toJson(packItem.definition, packItem.definition.getClass(), writer);
 							lastTimeModified = jsonFile.lastModified();
 							writer.flush();
 							writer.close();
@@ -158,7 +156,7 @@ public class GUIDevEditor extends AGUIBase{
 										try{
 											if(packItem.definition instanceof JSONVehicle){
 												JSONVehicle definition = (JSONVehicle) packItem.definition;
-												JSONVehicle loadedDefinition = new Gson().fromJson(new FileReader(jsonFile), JSONVehicle.class);
+												JSONVehicle loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONVehicle.class);
 												definition.general = loadedDefinition.general;
 												definition.definitions = loadedDefinition.definitions;
 												definition.motorized = loadedDefinition.motorized;
@@ -172,7 +170,7 @@ public class GUIDevEditor extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONPart){
 												JSONPart definition = (JSONPart) packItem.definition;
-												JSONPart loadedDefinition = new Gson().fromJson(new FileReader(jsonFile), JSONPart.class);
+												JSONPart loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONPart.class);
 												definition.general = loadedDefinition.general;
 												definition.engine = loadedDefinition.engine;
 												definition.ground = loadedDefinition.ground;
@@ -189,13 +187,13 @@ public class GUIDevEditor extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;
-												JSONInstrument loadedDefinition = new Gson().fromJson(new FileReader(jsonFile), JSONInstrument.class);
+												JSONInstrument loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONInstrument.class);
 												definition.general = loadedDefinition.general;
 												definition.components = loadedDefinition.components;
 												
 											}else if(packItem.definition instanceof JSONPoleComponent){
 												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
-												JSONPoleComponent loadedDefinition = new Gson().fromJson(new FileReader(jsonFile), JSONPoleComponent.class);
+												JSONPoleComponent loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONPoleComponent.class);
 												definition.general = loadedDefinition.general;
 												
 											}else{

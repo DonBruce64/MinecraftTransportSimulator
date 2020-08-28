@@ -1,14 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.InterfaceAudio;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
@@ -21,14 +19,14 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
  * @author don_bruce
  */
 public class PacketVehiclePartGun extends APacketVehiclePart{
-	private final boolean triggerChange;
+	private final boolean controlPulse;
 	private final boolean triggerState;
 	private final String bulletPackID;
 	private final String bulletSystemName;
 	
 	public PacketVehiclePartGun(PartGun gun, boolean triggerState){
 		super(gun.vehicle, gun.placementOffset);
-		this.triggerChange = true;
+		this.controlPulse = true;
 		this.triggerState = triggerState;
 		this.bulletPackID = null;
 		this.bulletSystemName = null;
@@ -36,7 +34,7 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 	
 	public PacketVehiclePartGun(PartGun gun, String bulletPackID, String bulletSystemName){
 		super(gun.vehicle, gun.placementOffset);
-		this.triggerChange = false;
+		this.controlPulse = false;
 		this.triggerState = false;
 		this.bulletPackID = bulletPackID;
 		this.bulletSystemName = bulletSystemName;
@@ -44,8 +42,8 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 	
 	public PacketVehiclePartGun(ByteBuf buf){
 		super(buf);
-		this.triggerChange = buf.readBoolean();
-		if(triggerChange){
+		this.controlPulse = buf.readBoolean();
+		if(controlPulse){
 			this.triggerState = buf.readBoolean();
 			this.bulletPackID = null;
 			this.bulletSystemName = null;
@@ -59,8 +57,8 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeBoolean(triggerChange);
-		if(triggerChange){
+		buf.writeBoolean(controlPulse);
+		if(controlPulse){
 			buf.writeBoolean(triggerState);
 		}else{
 			writeStringToBuffer(bulletPackID, buf);
@@ -71,14 +69,10 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
-		if(triggerChange){
+		if(controlPulse){
 			gun.firing = triggerState;
 		}else{
-			gun.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(bulletPackID).get(bulletSystemName);
-			gun.bulletsLeft += gun.loadedBullet.definition.bullet.quantity;
-			gun.reloadTimeRemaining = gun.definition.gun.reloadTime;
-			gun.reloading = true;
-			InterfaceAudio.playQuickSound(new SoundInstance(gun, gun.definition.packID + ":" + gun.definition.systemName + "_reloading"));
+			gun.tryToReload((ItemPartBullet) MTSRegistry.packItemMap.get(bulletPackID).get(bulletSystemName));
 		}
 		return true;
 	}

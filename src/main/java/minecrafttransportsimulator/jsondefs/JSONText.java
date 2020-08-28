@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+
 public class JSONText{
-	public double[] pos;
-    public double[] rot;
+	public Point3d pos;
+    public Point3d rot;
 	public float scale;
 	public String fieldName;
     public String defaultText;
@@ -12,6 +14,7 @@ public class JSONText{
     public String attachedTo;
 	
 	public boolean lightsUp;
-	public int renderMode;
+	public int renderPosition;
+	public boolean autoScale;
 	public boolean colorInheritied;
 }

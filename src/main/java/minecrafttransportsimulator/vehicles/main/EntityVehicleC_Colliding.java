@@ -75,8 +75,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Create initial collision boxes.  Needed to test spawn logic.
 		for(int i=0; i<definition.collision.size(); ++i){
 			VehicleCollisionBox boxDefinition = definition.collision.get(i);
-			Point3d boxLocalOffset = new Point3d(boxDefinition.pos[0], boxDefinition.pos[1], boxDefinition.pos[2]);
-			BoundingBox newBox = new BoundingBox(boxLocalOffset, boxLocalOffset.copy().rotateCoarse(angles).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().rotateCoarse(angles).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
 			vehicleCollisionBoxes.add(newBox);
 			collisionBoxes.add(newBox);
 		}
@@ -214,11 +213,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public void addPart(APart part, boolean ignoreCollision){
 		super.addPart(part, ignoreCollision);
 		//Add part to collision map if it has collision.
-		if(part.definition.collision != null){
+		if(part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
 			for(VehicleCollisionBox boxDefinition : part.definition.collision){
-				Point3d boxLocalOffset = new Point3d(boxDefinition.pos[0], boxDefinition.pos[1], boxDefinition.pos[2]);
-				BoundingBox newBox = new BoundingBox(boxLocalOffset, boxLocalOffset.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
 			}

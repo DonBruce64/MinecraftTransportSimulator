@@ -53,12 +53,17 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
 		if(!isFake() && getLongPartOffset() != 0){
-			packVehicleDef.pos[2] += getLongPartOffset();
-			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, null);
-			packVehicleDef.pos[2] -= getLongPartOffset();
+			packVehicleDef.pos.z += getLongPartOffset();
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, this);
+			packVehicleDef.pos.z -= getLongPartOffset();
 			//Only check collision if we are not adding this part from saved NBT data.
 			//If we are adding from NBT, then we should have a tag saying that.
-			vehicle.addPart(fakePart, data.getBoolean("isExisting"));
+			//FIXME fake parts don't save/load correctly.
+			if(data.getBoolean("isExisting")){
+				vehicle.partsFromNBT.add(fakePart);
+			}else{
+				vehicle.addPart(fakePart, false);
+			}
 		}else{
 			fakePart = null;
 		}
@@ -67,7 +72,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	@Override
 	public void attack(Damage damage){
 		if(definition.ground.isWheel && !isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
-			if(damage.isExplosion || Math.random() < 0.1){
+			if(damage.isExplosion || Math.random() < 0.5){
 				if(!vehicle.world.isClient()){
 					setFlat();
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
@@ -180,7 +185,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	@Override
 	public Point3d getActionRotation(float partialTicks){
 		double xRotation = definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0;
-		double yRotation = vehicleDefinition.turnsWithSteer && definition.ground.extraCollisionBoxOffset == 0 ? vehicle.rudderAngle/10D*Math.signum(totalOffset.z) : 0;
+		double yRotation = vehicleDefinition.turnsWithSteer && definition.ground.extraCollisionBoxOffset == 0 ? -vehicle.rudderAngle/10D*Math.signum(totalOffset.z) : 0;
 		return new Point3d(xRotation, yRotation, 0D);
 		
 	}

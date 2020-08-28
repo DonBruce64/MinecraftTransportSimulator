@@ -9,7 +9,7 @@ import java.util.Map;
 
 import mcinterface.BuilderGUI;
 import mcinterface.InterfaceInput;
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -130,7 +130,7 @@ public class GUIConfig extends AGUIBase{
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
 		vehicleSelectionButtons.clear();		
-		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+110, Color.BLACK, BuilderGUI.translate("gui.config.joystick.error"), 1.0F, TextRendering.LEFT_ALIGNED, false, 240));
+		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+110, Color.BLACK, BuilderGUI.translate("gui.config.joystick.error"), TextPosition.LEFT_ALIGNED, 240, 1.0F, false));
 		for(String vehicleType : vehicleTypes){
 			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(InterfaceInput.isJoystickSupportEnabled() ? 2 : 1)), 120, BuilderGUI.translate("gui.config.controls." + vehicleType + ".keyboard")){
 				public void onClicked(){

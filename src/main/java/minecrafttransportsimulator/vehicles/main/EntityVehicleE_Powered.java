@@ -282,7 +282,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			for(VehiclePart packPart : definition.parts){
 				for(String type : packPart.types){
 					if(type.startsWith("engine")){
-						if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
+						if(part.placementOffset.equals(packPart.pos)){
 							engines.put(engineNumber, (PartEngine) part);
 							return;
 						}
@@ -306,7 +306,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		for(VehiclePart packPart : definition.parts){
 			for(String type : packPart.types){
 				if(type.startsWith("engine")){
-					if(part.placementOffset.x == packPart.pos[0] && part.placementOffset.y == packPart.pos[1] && part.placementOffset.z == packPart.pos[2]){
+					if(part.placementOffset.equals(packPart.pos)){
 						engines.remove(engineNumber);
 						return;
 					}

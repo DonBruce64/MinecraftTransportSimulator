@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
@@ -19,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Base vehicle class.  All vehicle entities should extend this class.
  * It is primarily responsible for the adding and removal of parts.
@@ -45,6 +48,12 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 */
 	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
+	/**Cached pack definition mappings for sub-part packs.  First key is the parent vehicle part definition, which links to a map..
+	 * This second map is keyed by a part vehicle definition, with the value equal to a corrected vehicle definition.  This means that
+	 * in total, this object contains all sub-packs created on any vehicle for any part with sub-packs.  This is done as parts with
+	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any vehicle part location.*/
+	private static final Map<VehiclePart, Map<VehiclePart, VehiclePart>> SUBPACK_MAPPINGS = new HashMap<VehiclePart, Map<VehiclePart, VehiclePart>>();  
+	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
@@ -54,13 +63,21 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
 		
 		//Add parts.
+		//Also Replace ride-able locations with seat locations.
+		//This ensures we use the proper location for mapping operations.
+		locationsToRiders.clear();
 		for(int i=0; i<data.getInteger("totalParts"); ++i){
 			//Use a try-catch for parts in case they've changed since this vehicle was last placed.
 			//Don't want crashes due to pack updates.
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
 				JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partData.getString("packID")).get(partData.getString("systemName")).definition;
-				partsFromNBT.add(createPartFromData(partDefinition, partData, partData.getPoint3d("offset"), null));
+				Point3d partOffset = partData.getPoint3d("offset");
+				APart part = createPartFromData(partDefinition, partData, partOffset, null);
+				partsFromNBT.add(part);
+				if(part instanceof PartSeat){
+					locationsToRiders.put(part.placementOffset, null);
+				}
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
 				e.printStackTrace();
@@ -97,11 +114,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				//Check to make sure the part is in parameter ranges.
 				if(optionalItem == null || optionalItem.isPartValidForPackDef(packPart)){
 					//Try to find the parent part, if this part would have one.
-					for(VehiclePart parentPackPart : definition.parts){
-						if(parentPackPart.additionalParts != null){
-							for(VehiclePart partAdditionalPartPack : parentPackPart.additionalParts){
-								if(packPart.equals(partAdditionalPartPack)){
-									parentPart = getPartAtLocation(new Point3d(parentPackPart.pos[0], parentPackPart.pos[1], parentPackPart.pos[2]));
+					for(VehiclePart packVehicleDef : definition.parts){
+						if(packVehicleDef.additionalParts != null){
+							for(VehiclePart packAdditionalDef : packVehicleDef.additionalParts){
+								if(offset.equals(packAdditionalDef.pos)){
+									parentPart = getPartAtLocation(packVehicleDef.pos);
 									break;
 								}
 							}
@@ -112,28 +129,15 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					}
 					
 					//If we aren't an additional part, see if we are a sub-part.
-					for(APart part : parts){
+					//This consists of both existing and NBT parts.
+					List<APart> partsToCheck = new ArrayList<APart>();
+					partsToCheck.addAll(parts);
+					partsToCheck.addAll(partsFromNBT);
+					for(APart part : partsToCheck){
 						if(part.definition.subParts != null){
 							for(VehiclePart partSubPartPack : part.definition.subParts){
 								VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, partSubPartPack);
-								if(isPackAtPosition(correctedPack, offset)){
-									parentPart = part;
-									break;
-								}
-							}
-							if(parentPart != null){
-								break;
-							}
-						}
-					}
-					
-					//Also check parts from NBT, in case we're in a loading-loop.
-					for(APart part : partsFromNBT){
-						if(part.definition.subParts.size() > 0){
-							VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-							for(VehiclePart extraPackPart : part.definition.subParts){
-								VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-								if(isPackAtPosition(correctedPack, offset)){
+								if(offset.equals(correctedPack.pos)){
 									parentPart = part;
 									break;
 								}
@@ -224,7 +228,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}else{
 				parts.remove(part);
 			}
-			if(locationsToRiders.containsKey(part.placementOffset)){
+			if(ridersToLocations.containsKey(locationsToRiders.get(part.placementOffset))){
 				removeRider(locationsToRiders.get(part.placementOffset), null);
 			}
 			if(part.isValid){
@@ -244,9 +248,16 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	
 	/**
 	 * Gets the part at the specified location.
+	 * This also checks NBT parts in case we are doing
+	 * this check for parent-part lookups during construction.
 	 */
 	public APart getPartAtLocation(Point3d offset){
 		for(APart part : parts){
+			if(part.placementOffset.equals(offset)){
+				return part;
+			}
+		}
+		for(APart part : partsFromNBT){
 			if(part.placementOffset.equals(offset)){
 				return part;
 			}
@@ -265,17 +276,15 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		LinkedHashMap<Point3d, VehiclePart> packParts = new LinkedHashMap<Point3d, VehiclePart>();
 		//First get all the regular part spots.
 		for(VehiclePart packPart : definition.parts){
-			Point3d partPos = new Point3d(packPart.pos[0], packPart.pos[1], packPart.pos[2]);
-			packParts.put(partPos, packPart);
+			packParts.put(packPart.pos, packPart);
 			
 			//Check to see if we can put a additional parts in this location.
 			//If a part is present at a location that can have an additional parts, we allow them to be placed.
 			if(packPart.additionalParts != null){
 				for(APart part : parts){
-					if(part.placementOffset.equals(partPos)){
+					if(part.placementOffset.equals(packPart.pos)){
 						for(VehiclePart additionalPart : packPart.additionalParts){
-							partPos = new Point3d(additionalPart.pos[0], additionalPart.pos[1], additionalPart.pos[2]);
-							packParts.put(partPos, additionalPart);
+							packParts.put(additionalPart.pos, additionalPart);
 						}
 						break;
 					}
@@ -289,7 +298,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					packParts.put(new Point3d(correctedPack.pos[0], correctedPack.pos[1], correctedPack.pos[2]), correctedPack);
+					packParts.put(correctedPack.pos, correctedPack);
 				}
 			}
 			
@@ -350,56 +359,64 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 *Helper method to prevent casting to floats all over for position-specific tests.
 	 */
 	public static boolean isPackAtPosition(VehiclePart packPart, Point3d offset){
-		return (float)packPart.pos[0] == (float)offset.x && (float)packPart.pos[1] == (float)offset.y && (float)packPart.pos[2] == (float)offset.z;
+		return packPart.pos.equals(offset);
 	}
 	
 	/**
 	 * Returns a PackPart with the correct properties for a SubPart.  This is because
-	 * subParts inherit some properties from their parent parts. 
+	 * subParts inherit some properties from their parent parts.  All created sub-part
+	 * packs are cached locally once created, as they need to not create new Point3d instances.
+	 * If they did, then the lookup relation between them and their spot in the vehicle would
+	 * get broken for maps on each reference.
 	 */
 	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
-		VehiclePart correctPack = definition.new VehiclePart();
-		correctPack.isSubPart = true;
-		
-		//Get the offset position for this part.
-		//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
-		correctPack.pos = new double[3];
-		correctPack.pos[0] = parentPack.pos[0] + (parentPack.pos[0] < 0 ^ parentPack.inverseMirroring ? -subPack.pos[0] : subPack.pos[0]);
-		correctPack.pos[1] = parentPack.pos[1] + subPack.pos[1];
-		correctPack.pos[2] = parentPack.pos[2] + subPack.pos[2];
-		
-		//Add current and parent rotation to make a total rotation for this part.
-		if(parentPack.rot != null || subPack.rot != null){
-			correctPack.rot = new double[3];
-		}
-		if(parentPack.rot != null){
-			correctPack.rot[0] += parentPack.rot[0];
-			correctPack.rot[1] += parentPack.rot[1];
-			correctPack.rot[2] += parentPack.rot[2];
-		}
-		if(subPack.rot != null){
-			correctPack.rot[0] += subPack.rot[0];
-			correctPack.rot[1] += subPack.rot[1];
-			correctPack.rot[2] += subPack.rot[2];
+		if(!SUBPACK_MAPPINGS.containsKey(parentPack)){
+			SUBPACK_MAPPINGS.put(parentPack, new HashMap<VehiclePart, VehiclePart>());
 		}
 		
-		correctPack.turnsWithSteer = parentPack.turnsWithSteer;
-		correctPack.isController = subPack.isController;
-		correctPack.inverseMirroring = subPack.inverseMirroring;
-		correctPack.types = subPack.types;
-		correctPack.customTypes = subPack.customTypes;
-		correctPack.minValue = subPack.minValue;
-		correctPack.maxValue = subPack.maxValue;
-		correctPack.dismountPos = subPack.dismountPos;
-		correctPack.exhaustPos = subPack.exhaustPos;
-        correctPack.exhaustVelocity = subPack.exhaustVelocity;
-        correctPack.intakeOffset = subPack.intakeOffset;
-        correctPack.additionalParts = subPack.additionalParts;
-        correctPack.treadYPoints = subPack.treadYPoints;
-        correctPack.treadZPoints = subPack.treadZPoints;
-        correctPack.treadAngles = subPack.treadAngles;
-        correctPack.defaultPart = subPack.defaultPart;
-		return correctPack;
+		VehiclePart correctedPack = SUBPACK_MAPPINGS.get(parentPack).get(subPack);
+		if(correctedPack == null){
+			correctedPack = definition.new VehiclePart();
+			correctedPack.isSubPart = true;
+			
+			//Get the offset position for this part.
+			//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
+			correctedPack.pos = new Point3d(
+				parentPack.pos.x + (parentPack.pos.x < 0 ^ parentPack.inverseMirroring ? -subPack.pos.x : subPack.pos.x),
+				parentPack.pos.y + subPack.pos.y,
+				parentPack.pos.z + subPack.pos.z
+			);
+			
+			//Add parent and part rotation to make a total rotation for this sub-part.
+			correctedPack.rot = new Point3d(0D, 0D, 0D);
+			if(parentPack.rot != null){
+				correctedPack.rot = parentPack.rot.copy();
+				if(subPack.rot != null){
+					correctedPack.rot.add(subPack.rot);
+				}
+			}else if(subPack.rot != null){
+				correctedPack.rot = subPack.rot.copy();
+			}
+			
+			correctedPack.turnsWithSteer = parentPack.turnsWithSteer;
+			correctedPack.isController = subPack.isController;
+			correctedPack.inverseMirroring = subPack.inverseMirroring;
+			correctedPack.types = subPack.types;
+			correctedPack.customTypes = subPack.customTypes;
+			correctedPack.minValue = subPack.minValue;
+			correctedPack.maxValue = subPack.maxValue;
+			correctedPack.dismountPos = subPack.dismountPos;
+			correctedPack.exhaustPos = subPack.exhaustPos;
+	        correctedPack.exhaustVelocity = subPack.exhaustVelocity;
+	        correctedPack.intakeOffset = subPack.intakeOffset;
+	        correctedPack.additionalParts = subPack.additionalParts;
+	        correctedPack.treadYPoints = subPack.treadYPoints;
+	        correctedPack.treadZPoints = subPack.treadZPoints;
+	        correctedPack.treadAngles = subPack.treadAngles;
+	        correctedPack.defaultPart = subPack.defaultPart;
+	        SUBPACK_MAPPINGS.get(parentPack).put(subPack, correctedPack);
+		}
+		return correctedPack;
 	}
 	
 	/**
@@ -459,8 +476,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		int totalParts = 0;
 		for(APart part : parts){
-			//Don't save the part if it's not valid.
-			if(part.isValid){
+			//Don't save the part if it's not valid or a fake part.
+			if(part.isValid && !part.isFake()){
 				WrapperNBT partData = part.getData();
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.

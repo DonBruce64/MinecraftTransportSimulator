@@ -5,6 +5,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -97,42 +99,26 @@ public class InterfaceGame{
 	 *  isn't possible. 
 	 */
 	public static WrapperWorld getClientWorld(){
-		if(cachedClientWorld == null || !cachedClientWorld.world.equals(Minecraft.getMinecraft().world)){
-			if(Minecraft.getMinecraft().world != null){
-				cachedClientWorld = new WrapperWorld(Minecraft.getMinecraft().world);
-			}
-		}
-		return cachedClientWorld;
+		return WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
 	}
-	private static WrapperWorld cachedClientWorld;
 	
 	/**
 	 *  Returns the player.  Only valid on CLIENTs as on servers
 	 *  there are multiple players.
 	 */
 	public static WrapperPlayer getClientPlayer(){
-		if(cachedClientPlayer == null || cachedClientPlayer.entity.isDead || !cachedClientPlayer.entity.equals(Minecraft.getMinecraft().player)){
-			if(Minecraft.getMinecraft().player != null){
-				cachedClientPlayer = new WrapperPlayer(Minecraft.getMinecraft().player);
-			}
-		}
-		return cachedClientPlayer;
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		return WrapperWorld.getWrapperFor(player.world).getWrapperFor(player);
 	}
-	private static WrapperPlayer cachedClientPlayer;
 	
 	/**
 	 *  Returns the entity that is used to set up the render camera.
 	 *  Normally the player, but can (may?) change.
 	 */
 	public static WrapperEntity getRenderViewEntity(){
-		if(cachedRenderViewEntity == null || cachedRenderViewEntity.entity.isDead || !cachedRenderViewEntity.entity.equals(Minecraft.getMinecraft().getRenderViewEntity())){
-			if(Minecraft.getMinecraft().getRenderViewEntity() != null){
-				cachedRenderViewEntity = new WrapperEntity(Minecraft.getMinecraft().getRenderViewEntity());
-			}
-		}
-		return cachedRenderViewEntity;
+		Entity entity = Minecraft.getMinecraft().getRenderViewEntity();
+		return WrapperWorld.getWrapperFor(entity.world).getWrapperFor(entity);
 	}
-	private static WrapperEntity cachedRenderViewEntity;
 	
     /**
      * Reduce the chunk-gen distance to 1 when the player is in a vehicle that's above the set height.

@@ -18,13 +18,15 @@ import net.minecraft.util.text.TextComponentTranslation;
  * and motion variables for entities, as well as setting their riding statuses.  Note that 
  * the passed-in {@link Entity} reference MAY be null to allow for more convenient return
  * calls in methods.  Check this via {@link #isValid()} before you do operations with this wrapper!
+ * Also note that wrappers are cached to allow map operations for their hashcodes, and to prevent
+ * excess calls to creating instances.
  *
  * @author don_bruce
  */
 public class WrapperEntity{
 	final Entity entity;
 	
-	public WrapperEntity(Entity entity){
+	protected WrapperEntity(Entity entity){
 		this.entity = entity;
 	}
 	

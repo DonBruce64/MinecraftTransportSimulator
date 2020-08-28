@@ -270,6 +270,7 @@ info.item.gun.length=Length (m):
 info.item.gun.fireDelay=Fire Delay (ticks): 
 info.item.gun.muzzleVelocity=Velocity (blk/s): 
 info.item.gun.capacity=Bullet Capacity: 
+info.item.gun.autoReload=Auto-Reloads
 info.item.gun.yawRange=Yaw Range: 
 info.item.gun.pitchRange=Pitch Range: 
 info.item.bullet.type.normal=Normal Bullet

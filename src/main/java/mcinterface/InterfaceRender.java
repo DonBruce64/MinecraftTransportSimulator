@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
@@ -347,18 +347,18 @@ public class InterfaceRender{
 						}
 						//System.out.println(text);
 						GL11.glPushMatrix();
-						//Offset by 1/2 a block to account for text centering.
-						GL11.glTranslated(textDefinition.pos[0], textDefinition.pos[1] + 0.5D*textDefinition.scale/16D, textDefinition.pos[2]);
-						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+						//Translate to the position to render.
+						GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
 						//First rotate 180 along the X-axis to get us rendering right-side up.
 						GL11.glRotatef(180F, 1, 0, 0);
 						//Next, apply rotations.  Y is inverted due to the inverted X axis.
-						GL11.glRotated(-textDefinition.rot[1], 0, 1, 0);
-						GL11.glRotated(textDefinition.rot[0], 1, 0, 0);
-						GL11.glRotated(textDefinition.rot[2], 0, 0, 1);
-						
+						GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
+						GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
+						GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
+						//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
+						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 						//Finally, render the text.
-						BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), TextRendering.values()[textDefinition.renderMode], false, textDefinition.wrapWidth, textDefinition.scale);
+						BuilderGUI.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 						GL11.glPopMatrix();
 					}
 				}
@@ -459,11 +459,13 @@ public class InterfaceRender{
     public static void on(CameraSetup event){
     	if(event.getEntity().getRidingEntity() instanceof BuilderEntity){
     		if(InterfaceGame.inFirstPerson()){            	
-    			AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
             	//FIXME this probably should be some sort of vector calculation.
+    			//AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
+
     			
     			//Need to check if the riding entity exists.  Player may be loading the entity on the client but it hasn't
     			//gotten the supplemental data from the server yet.
+    			/*
     			if(ridingEntity != null){
 	            	//Get yaw delta between entity and player from-180 to 180.
 	            	double playerYawDelta = (360 + (ridingEntity.angles.y - -event.getEntity().rotationYaw)%360)%360;
@@ -480,7 +482,7 @@ public class InterfaceRender{
 	            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
 	            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
 	            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
-    			}
+    			}*/
         	}else if(InterfaceGame.inThirdPerson()){
         		GL11.glTranslatef(0, 0F, -zoomLevel);
         		GL11.glTranslated(-1D, 1D, -2D);

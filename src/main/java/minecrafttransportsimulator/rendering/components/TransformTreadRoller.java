@@ -60,8 +60,8 @@ public class TransformTreadRoller extends TransformRotatable{
 			definition = vehicle.definition.new VehicleAnimationDefinition();
 			definition.animationType = "rotation";
 			definition.variable = "engine_driveshaft_rotation_1";
-			definition.centerPoint = new double[]{0, yPos, zPos};
-			definition.axis = new double[]{0, 0, 0};
+			definition.centerPoint = new Point3d(0D, yPos, zPos);
+			definition.axis = new Point3d(0D, 0D, 0D);
 		}
 		
 		//Return the created roller.

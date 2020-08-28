@@ -21,7 +21,7 @@ public class TransformTranslatable extends ATransformRenderable{
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//translation magnitude is the magnitude of that vector.
-		this.translationAxis = new Point3d(definition.axis[0], definition.axis[1], definition.axis[2]);
+		this.translationAxis = definition.axis.copy();
 		this.translationMagnitude = translationAxis.length();
 		translationAxis.normalize();
 	}

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceInput;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -55,7 +55,7 @@ public class GUIBooklet extends AGUIBase{
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
 		for(JSONText text : booklet.definition.general.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos[0], guiTop + (int)text.pos[1], Color.decode(text.color), text.defaultText, text.scale, TextRendering.values()[text.renderMode], false, text.wrapWidth);
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -99,7 +99,7 @@ public class GUIBooklet extends AGUIBase{
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos[0], guiTop + (int)text.pos[1], Color.decode(text.color), text.defaultText, text.scale, TextRendering.values()[text.renderMode], false, text.wrapWidth);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
@@ -197,7 +197,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		BuilderGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText, false, 0);
+	    		BuilderGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

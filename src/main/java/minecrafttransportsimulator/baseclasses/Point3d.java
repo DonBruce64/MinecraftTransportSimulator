@@ -1,5 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.io.IOException;
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+
 /**Double implementation of point class.
  *
  * @author don_bruce
@@ -27,6 +34,11 @@ public class Point3d extends APoint3<Double, Point3d>{
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public String toString(){
+		return "[" + x + ", " + y + ", " + z + "]";
 	}
 	
 	@Override
@@ -248,4 +260,38 @@ public class Point3d extends APoint3<Double, Point3d>{
 	 * Rz=[[cos(R),-sin(R),0],[sin(R),cos(R),0],[0,0,1]]
 	 * {[C,0,-D],[0,1,0],[D,0,C]}*{[1,0,0],[0,A,-B],[0,B,A]}*{[E,-F,0],[F,E,0],[0,0,1]}
 	 */
+	
+	/**Class for use in JSON operations.
+	 *
+	 * @author don_bruce
+	 */
+	public static final TypeAdapter<Point3d> adapter = new TypeAdapter<Point3d>(){
+		
+		@Override
+		public Point3d read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				reader.beginArray();
+				Point3d point = new Point3d(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
+				reader.endArray();
+				return point;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, Point3d point) throws IOException{
+			if(point == null){
+				writer.nullValue();
+				return;
+			}else{
+				writer.beginArray();
+				writer.value(point.x);
+				writer.value(point.y);
+				writer.value(point.z);
+				writer.endArray();
+			}
+		}
+	};
 }

@@ -8,7 +8,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -117,9 +116,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	public void update(){
-		//Copy the rudder angle to the steering angle before calling super.
-		steeringAngle = -rudderAngle/10F;
-		
 		//If we are a towed trailer, and we aren't scheduled for an update, skip this cycle.
 		//Instead, we get called to update from the vehicle we are being towed by.
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
@@ -198,6 +194,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}else{
 			return super.getCurrentMass();
 		}
+	}
+	
+	@Override
+	protected float getSteeringAngle(){
+		return -rudderAngle/10F;
 	}
 	
 	@Override
@@ -359,12 +360,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			rotation.x = (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x + sideVector.y*totalTorque.y)/momentPitch;
 			rotation.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
 			rotation.z = totalTorque.z/momentRoll;
-			
-			if(world.isClient() && ConfigSystem.configObject.client.devMode.value){
-				System.out.format("States: Mass:%f TrackAngle:%f WingArea:%f\n", currentMass, trackAngle, currentWingArea);
-				System.out.format("Forces: Engine:%f Drag:%f Wing/Elevator:%f Ballast:%f Gravity:%f\n", thrustForce.length(), dragForce, wingForce + elevatorForce, ballastForce, gravitationalForce);
-				System.out.format("Torques: Engine:%f Elevator:%f Rudder:%f Aileron:%f\n", thrustTorque.length(), elevatorTorque, rudderTorque, aileronTorque);
-			}
 		}else{
 			///START OF NEW CODE.
 			/*

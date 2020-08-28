@@ -151,14 +151,17 @@ public abstract class AEntityBase{
 	 */
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(riderLocation != null){
-			if(locationsToRiders.containsKey(riderLocation)){
+			if(locationsToRiders.get(riderLocation) != null){
 				//We already have a rider in this location.
 				return false;
 			}else{
 				//If this rider wasn't riding this vehicle before, adjust their yaw.
 				//This prevents bad math due to 360+ degree rotations.
+				//If we are riding this vehicle, clear out the location before we change it.
 				if(!ridersToLocations.containsKey(rider)){
 					rider.setYaw(angles.y);
+				}else{
+					locationsToRiders.put(ridersToLocations.get(rider), null);
 				}
 				
 				//Add rider to map, and send out packet if required.
@@ -192,7 +195,7 @@ public abstract class AEntityBase{
 	 */
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(ridersToLocations.containsKey(rider)){
-			locationsToRiders.remove(ridersToLocations.get(rider));
+			locationsToRiders.put(ridersToLocations.get(rider), null);
 			if(iterator != null){
 				iterator.remove();
 			}else{

@@ -103,7 +103,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			Point3d dismountPosition;
 			if(packPart.dismountPos != null){
 				//We have a dismount position in the JSON.  Use it.
-				dismountPosition = new Point3d(packPart.dismountPos[0], packPart.dismountPos[1], packPart.dismountPos[2]).rotateCoarse(angles).add(position);
+				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
 			}else{
 				//We don't have a dismount position.  Put us to the right or left of the seat depending on x-offset.
 				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);	

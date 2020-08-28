@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextRendering;
+import mcinterface.BuilderGUI.TextPosition;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -67,7 +67,7 @@ public class GUIRadio extends AGUIBase{
 				teachMode = false;
 			}
 		});
-		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, Color.BLACK, "SOURCE", 1.0F, TextRendering.CENTERED, false, 0).setButton(offButton));
+		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, Color.BLACK, "SOURCE", TextPosition.CENTERED, 0, 1.0F, false).setButton(offButton));
 		addButton(localButton = new GUIComponentButton(offButton.x, offButton.y + offButton.height, offButton.width, "PC", offButton.height, true){
 			@Override
 			public void onClicked(){
@@ -92,7 +92,7 @@ public class GUIRadio extends AGUIBase{
 		
 		//Playback order for local files.
 		addButton(randomButton = new GUIComponentButton(offButton.x + offButton.width + 15, offButton.y, offButton.width, "RANDOM", offButton.height, true){public void onClicked(){radio.sorted = false;}});
-		addLabel(new GUIComponentLabel(randomButton.x + randomButton.width/2, randomButton.y - 10, Color.BLACK, "PLAY ORDER", 1.0F, TextRendering.CENTERED, false, 0).setButton(randomButton));
+		addLabel(new GUIComponentLabel(randomButton.x + randomButton.width/2, randomButton.y - 10, Color.BLACK, "PLAY ORDER", TextPosition.CENTERED, 0, 1.0F, false).setButton(randomButton));
 		addButton(orderedButton = new GUIComponentButton(randomButton.x, randomButton.y + randomButton.height, randomButton.width, "SORTED", randomButton.height, true){public void onClicked(){radio.sorted = true;}});
 		
 		//Internet set button.
@@ -115,7 +115,7 @@ public class GUIRadio extends AGUIBase{
 		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){public void onClicked(){radio.changeVolume(--radio.volume);}});
 		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, Color.WHITE, Color.BLACK, 32));
 		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){public void onClicked(){equalizerMode = true;}});
-		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", 1.0F, TextRendering.CENTERED, false, 0).setButton(volUpButton));
+		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", TextPosition.CENTERED, 0, 1.0F, false).setButton(volUpButton));
 		
 		//Preset buttons.
 		presetButtons.clear();

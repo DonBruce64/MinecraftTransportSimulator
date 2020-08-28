@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import mcinterface.InterfaceNetwork;
@@ -34,11 +35,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public String ownerUUID = "";
 	
 	//Internal states.
-	protected float steeringAngle;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
 	private final Point3d clientDeltaR;
+	private final Point3d clientDeltaMApplied = new Point3d(0D, 0D, 0D);
+	private final Point3d clientDeltaRApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d motionApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d rotationApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
@@ -55,10 +57,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private static final double MAX_ROTATION_RAD_PER_TICK = 0.0174533D*2D;
 	
     //Classes used for ground device collisions.
-  	protected VehicleGroundDeviceBox frontLeftGroundDeviceBox;
-  	protected VehicleGroundDeviceBox frontRightGroundDeviceBox;
-  	protected VehicleGroundDeviceBox rearLeftGroundDeviceBox;
-  	protected VehicleGroundDeviceBox rearRightGroundDeviceBox;
+  	protected final VehicleGroundDeviceBox frontLeftGroundDeviceBox;
+  	protected final VehicleGroundDeviceBox frontRightGroundDeviceBox;
+  	protected final VehicleGroundDeviceBox rearLeftGroundDeviceBox;
+  	protected final VehicleGroundDeviceBox rearRightGroundDeviceBox;
     
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
 	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
@@ -74,6 +76,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.serverDeltaR = data.getPoint3d("serverDeltaA");
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
+		this.frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, true);
+		this.frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, false);
+		this.rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, true);
+		this.rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, false);
 	}
 	
 	@Override
@@ -92,20 +98,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		
-		//Create boxes if we haven't yet.
-		//Update the BoundingBoxes that make them up if we have.
-		if(frontLeftGroundDeviceBox == null){
-			frontLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, true);
-			frontRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, true, false);
-			rearLeftGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, true);
-			rearRightGroundDeviceBox = new VehicleGroundDeviceBox((EntityVehicleF_Physics) this, false, false);
-		}else{
-			frontLeftGroundDeviceBox.updateBoundingBoxes();
-			frontRightGroundDeviceBox.updateBoundingBoxes();
-			rearLeftGroundDeviceBox.updateBoundingBoxes();
-			rearRightGroundDeviceBox.updateBoundingBoxes();
-		}
-		
 		//Now do update calculations and logic.
 		getForcesAndMotions();
 		performGroundOperations();
@@ -113,6 +105,24 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!world.isClient()){
 			dampenControlSurfaces();
 		}
+	}
+	
+	@Override
+	public void addPart(APart part, boolean ignoreCollision){
+		super.addPart(part, ignoreCollision);
+		frontLeftGroundDeviceBox.updateBoundingBoxes();
+		frontRightGroundDeviceBox.updateBoundingBoxes();
+		rearLeftGroundDeviceBox.updateBoundingBoxes();
+		rearRightGroundDeviceBox.updateBoundingBoxes();
+	}
+	
+	@Override
+	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
+		super.removePart(part, iterator, playBreakSound);
+		frontLeftGroundDeviceBox.updateBoundingBoxes();
+		frontRightGroundDeviceBox.updateBoundingBoxes();
+		rearLeftGroundDeviceBox.updateBoundingBoxes();
+		rearRightGroundDeviceBox.updateBoundingBoxes();
 	}
 	
 	
@@ -731,11 +741,32 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied), this);
 			}
 		}else{
-			//Make sure the server is sending delta packets and NBT is initialized before we try to do delta correction.
+			//Make sure the server is sending delta packets before we try to do delta correction.
 			if(!serverDeltaM.isZero()){
+				//Get the delta difference, and square it.  Then divide it by 25.
+				//This gives us a good "bubberbanding correction" formula for deltas.
+				//We add this correction motion to the existing motion applied.
+				//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
+				clientDeltaMApplied.setTo(serverDeltaM).subtract(clientDeltaM);
+				clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
+				clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
+				clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
+				clientDeltaMApplied.multiply(1D/25D);
+				motionApplied.add(clientDeltaMApplied);
+				
+				clientDeltaRApplied.setTo(serverDeltaR).subtract(clientDeltaR);
+				clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
+				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
+				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
+				clientDeltaRApplied.multiply(1D/25D);
+				rotationApplied.add(clientDeltaRApplied);
+				
+				
+				//FIXME do we need this complex logic? I don't think we do, but we may.
 				//Check to make sure the delta is non-zero before trying to do complex math to calculate it.
 				//Saves a bit of CPU power due to division and multiplication operations, and prevents constant
 				//movement due to floating-point errors.
+				/*
 				if(serverDeltaM.x - clientDeltaM.x != 0){
 					motionApplied.x += (serverDeltaM.x - clientDeltaM.x)/25D*Math.abs(serverDeltaM.x - clientDeltaM.x);
 				}else{
@@ -766,7 +797,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					rotationApplied.z += (serverDeltaR.z - clientDeltaR.z)/25D*Math.abs(serverDeltaR.z - clientDeltaR.z);
 				}else{
 					rotationApplied.z = 0;
-				}
+				}*/
 				
 				//Add actual movement to client deltas.
 				clientDeltaM.add(motionApplied);
@@ -927,10 +958,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Sign of returned value indicates which direction entity should yaw.
 	 * A 0 value indicates no yaw change.
 	 */
-	protected float getTurningFactor(){
+	private float getTurningFactor(){
 		float turningForce = 0;
-		float steeringAngleTemp = steeringAngle;
-		if(steeringAngleTemp != 0){
+		float steeringAngle = getSteeringAngle();
+		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
 			//Check grounded wheels for turn contributions.
@@ -954,19 +985,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 			if(turningFactor > 0){
 				//Now that we know we can turn, we can attempt to change the track.
-				steeringAngleTemp = Math.abs(steeringAngleTemp);
+				double steeringFactor = Math.abs(steeringAngle);
 				if(turningFactor < 1){
-					steeringAngleTemp *= turningFactor;
+					steeringFactor *= turningFactor;
 				}
 				//Adjust steering angle to be aligned with distance of the turning part from the center of the vehicle.
-				steeringAngleTemp /= turningDistance;
+				steeringFactor /= turningDistance;
 				//Another thing that can affect the steering angle is speed.
 				//More speed makes for less wheel turn to prevent crazy circles.
 				if(Math.abs(groundVelocity)*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
-					steeringAngleTemp *= Math.pow(0.25F, (Math.abs(groundVelocity)*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
+					steeringFactor *= Math.pow(0.25F, (Math.abs(groundVelocity)*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
 				}
 				//Adjust turn force to steer angle based on turning factor.
-				turningForce = (float) (steeringAngleTemp*Math.abs(groundVelocity)/2F);
+				turningForce = (float) (steeringFactor*Math.abs(groundVelocity)/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
 				//Now add the sign to this force based on our steering angle.
@@ -991,6 +1022,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		serverDeltaM.add(motion);
 		serverDeltaR.add(rotation);
 	}
+	
+	/**
+	 * Method block for getting the steering angle of this vehicle.
+	 */
+	protected abstract float getSteeringAngle();
 	
 	/**
 	 * Method block for force and motion calculations.

@@ -3,6 +3,8 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+
 public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
 	/**A generic name for this vehicle.  This is simply the {@link AJSONItem#systemName}, minus
 	 * the {@link VehicleDefinition#subName}.  Set after JSON is parsed into an object and
@@ -76,8 +78,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehiclePart{
     	public boolean isSubPart;
-        public double[] pos;
-        public double[] rot;
+        public Point3d pos;
+        public Point3d rot;
         public boolean turnsWithSteer;
         public boolean isController;
         public boolean inverseMirroring;
@@ -91,20 +93,20 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         
         //Animation variables.
         public String translationVariable;
-        public double[] translationPosition;
+        public Point3d translationPosition;
         public float translationClampMin;
         public float translationClampMax;
         public boolean translationAbsolute;
         public String rotationVariable;
-        public double[] rotationPosition;
-        public double[] rotationAngles;
+        public Point3d rotationPosition;
+        public Point3d rotationAngles;
         public float rotationClampMin;
         public float rotationClampMax;
         public boolean rotationAbsolute;
         
         
         //Seat-specific part variables.
-        public float[] dismountPos;
+        public Point3d dismountPos;
         
         //Engine-specific part variables.
         public float[] exhaustPos;
@@ -121,7 +123,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class VehicleCollisionBox{
-        public float[] pos;
+        public Point3d pos;
         public float width;
         public float height;
         public boolean isInterior;
@@ -159,16 +161,16 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class VehicleDisplayText{
-    	public double[] pos;
-        public double[] rot;
+    	public Point3d pos;
+        public Point3d rot;
         public float scale;
         public String color;
     }
     
     public class VehicleRotatableModelObject{
     	public String partName;
-    	public double[] rotationPoint;
-    	public double[] rotationAxis;
+    	public Point3d rotationPoint;
+    	public Point3d rotationAxis;
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
@@ -177,7 +179,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleTranslatableModelObject{
     	public String partName;
-    	public double[] translationAxis;
+    	public Point3d translationAxis;
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;
@@ -193,8 +195,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public class VehicleAnimationDefinition{
     	public String animationType;
     	public String variable;
-    	public double[] centerPoint;
-    	public double[] axis;
+    	public Point3d centerPoint;
+    	public Point3d axis;
     	public double offset;
     	public boolean addPriorOffset;
     	public double clampMin;

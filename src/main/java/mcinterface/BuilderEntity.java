@@ -173,7 +173,8 @@ public class BuilderEntity extends Entity{
 		if(!world.isRemote && entity != null){
 			if(source.getImmediateSource() != null){
 				Entity attacker = source.getImmediateSource();
-				WrapperPlayer playerSource = source.getTrueSource() instanceof EntityPlayer ? new WrapperPlayer((EntityPlayer) source.getTrueSource()) : null;
+				Entity trueSource = source.getTrueSource();
+				WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperWorld.getWrapperFor(trueSource.world).getWrapperFor((EntityPlayer) trueSource) : null;
 				Damage damage = null;
 				
 				//Check the damage at the current position of the attacker.
@@ -258,7 +259,7 @@ public class BuilderEntity extends Entity{
     	//In this case, we're re-loading riders and need to put them
     	//in their proper locations.
     	if(force){
-    		entity.addRider(new WrapperEntity(mcEntity), null);
+    		entity.addRider(WrapperWorld.getWrapperFor(mcEntity.world).getWrapperFor(mcEntity), null);
     	}
     	return super.startRiding(mcEntity, force);
     }
@@ -294,7 +295,7 @@ public class BuilderEntity extends Entity{
     	super.readFromNBT(tag);
 		if(entity == null && tag.hasKey("entityid")){
 			//Restore the Entity from saved state.
-			entity = entityMap.get(tag.getString("entityid")).createEntity(new WrapperWorld(world), new WrapperNBT(tag));
+			entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
 			entitiesToBuilders.put(entity, this);
 		}
 	}

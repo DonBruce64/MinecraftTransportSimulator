@@ -138,7 +138,7 @@ public class BuilderBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		return block.onClicked(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), new WrapperPlayer(player));
+		return block.onClicked(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperWorld.getWrapperFor(world).getWrapperFor(player));
 	}
     
     @Override
@@ -207,7 +207,7 @@ public class BuilderBlock extends Block{
     	//Gets the collision boxes. We forward this call to the block to handle.
     	//We add-on 0.5D to offset the box to the correct location.
     	List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
-    	block.addCollisionBoxes(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
+    	block.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
     	for(BoundingBox box : collisionBoxes){
     		AxisAlignedBB mcBox = new AxisAlignedBB(
 				pos.getX() + 0.5D + box.globalCenter.x - box.widthRadius, 

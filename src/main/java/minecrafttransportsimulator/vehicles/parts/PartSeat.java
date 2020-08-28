@@ -53,8 +53,9 @@ public final class PartSeat extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		if(vehicle.locationsToRiders.containsKey(placementOffset)){
-			vehicle.removeRider(vehicle.locationsToRiders.get(placementOffset), null);
+		WrapperEntity rider = vehicle.locationsToRiders.get(placementOffset);
+		if(rider != null){
+			vehicle.removeRider(rider, null);
 		}
 	}
 

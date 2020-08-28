@@ -3,6 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextPosition;
 
 /**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
@@ -116,7 +117,7 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(){
     	if(visible){
-    		BuilderGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText, false, 0);
+    		BuilderGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
     	}
     }
     

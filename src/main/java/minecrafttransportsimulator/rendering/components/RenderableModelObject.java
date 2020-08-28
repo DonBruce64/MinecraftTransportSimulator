@@ -55,15 +55,15 @@ public final class RenderableModelObject{
 			}
 		}else{
 			this.applyAfter = null;
-			if(objectName.contains("&")){
-				transforms.add(new TransformLight(modelName, objectName, vertices));
-			}
 			if(objectName.toLowerCase().contains("roller")){
 				transforms.add(TransformTreadRoller.create(objectName, null, vehicle, vertices));
-			}
-			if(objectName.toLowerCase().contains("window")){
-				transforms.add(new TransformWindow(vertices));
-			}
+			}	
+		}
+		if(objectName.contains("&")){
+			transforms.add(new TransformLight(modelName, objectName, vertices));
+		}
+		if(objectName.toLowerCase().contains("window")){
+			transforms.add(new TransformWindow(vertices));
 		}
 	}
 	

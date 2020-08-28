@@ -384,11 +384,11 @@ public final class RenderVehicle{
 	private static void rotatePart(APart part, float partialTicks){
 		if(!part.placementRotation.isZero()){
 			if(part.parentPart != null && part.vehicleDefinition.isSubPart){
-				GL11.glRotated(-(part.placementRotation.y - part.parentPart.placementRotation.y), 0, 1, 0);
+				GL11.glRotated(part.placementRotation.y - part.parentPart.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x - part.parentPart.placementRotation.x, 1, 0, 0);
 				GL11.glRotated(part.placementRotation.z - part.parentPart.placementRotation.z, 0, 0, 1);
 			}else{
-				GL11.glRotated(-part.placementRotation.y, 0, 1, 0);
+				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
 				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
 			}
@@ -396,14 +396,14 @@ public final class RenderVehicle{
 		
 		Point3d positionRotation = part.getPositionRotation(partialTicks);
 		if(!positionRotation.isZero()){
-			GL11.glRotated(-positionRotation.y, 0, 1, 0);
+			GL11.glRotated(positionRotation.y, 0, 1, 0);
 			GL11.glRotated(positionRotation.x, 1, 0, 0);
 			GL11.glRotated(positionRotation.z, 0, 0, 1);
 		}
 
 		Point3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.isZero()){
-			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.y, 0, 1, 0);
 			GL11.glRotated(actionRotation.x, 1, 0, 0);
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
 		}

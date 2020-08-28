@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -70,7 +69,7 @@ public final class VehicleAnimationSystem{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = vehicle.getPartAtLocation(new Point3d(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]));
+							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
@@ -111,8 +110,10 @@ public final class VehicleAnimationSystem{
 			}else if(optionalPart instanceof PartGun){
 				PartGun gun = (PartGun) optionalPart;
 				switch(variable){
-					case("gun_pitch"): return gun.currentPitch;
-					case("gun_yaw"): return gun.currentYaw;
+					case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
+					case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
+					case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+					case("gun_reload"): return gun.reloadTimeRemaining/(double)gun.definition.gun.reloadTime;
 					case("gun_ammo_count"): return gun.bulletsLeft;
 					case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
 				}

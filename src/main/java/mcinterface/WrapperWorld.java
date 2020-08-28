@@ -49,20 +49,76 @@ import net.minecraftforge.common.IPlantable;
  * MC has seen fit to change over multiple versions (such as lighting) and as such
  * provides a single point of entry to the world to interface with it.  This class
  * should be used whenever possible to replace the normal world object reference
- * with methods that re-direct to this wrapper.  This wrapper is normally created
- * from an instance of an {@link World} object passed-in to the constructor, so this
- * means you'll need something to get an instance of the MC world beforehand.
+ * with methods that re-direct to this wrapper.  This wrapper can only be created
+ * internally, and is obtained via a static method to ensure world wrappers aren't
+ * created constantly.  This method requires an instance of an {@link World} object 
+ * passed-in to the constructor, so this means you'll need something to get an 
+ * instance of the MC world beforehand.
  * Note that other wrappers may access the world variable directly for things
  * that are specific to their classes (such as blocks getting states).
  *
  * @author don_bruce
  */
 public class WrapperWorld{
+	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
+	private final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
+	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
+	private static final WrapperEntity NULL_ENTITY_WRAPPER = new WrapperEntity(null);
+	private static final WrapperPlayer NULL_PLAYER_WRAPPER = new WrapperPlayer(null);
 	
 	final World world;
 
-	public WrapperWorld(World world){
+	private WrapperWorld(World world){
 		this.world = world;
+	}
+	
+	/**
+	 *  Returns a wrapper instance for the passed-in world instance.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 */
+	public static WrapperWorld getWrapperFor(World world){
+		if(world != null){
+			if(!worldWrappers.containsKey(world)){
+				worldWrappers.put(world, new WrapperWorld(world));
+			}
+			return worldWrappers.get(world);
+		}else{
+			return null;
+		}
+	}
+	
+	/**
+	 *  Returns a wrapper instance for the passed-in entity instance.
+	 *  Null may be passed-in to obtain a null wrapper, should this be desired.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 */
+	public WrapperEntity getWrapperFor(Entity entity){
+		if(entity != null){
+			if(!entityWrappers.containsKey(entity)){
+				entityWrappers.put(entity, new WrapperEntity(entity));
+			}
+			return entityWrappers.get(entity);
+		}else{
+			return NULL_ENTITY_WRAPPER;
+		}
+	}
+	
+	/**
+	 *  Returns a wrapper instance for the passed-in player instance.
+	 *  Null may be passed-in to obtain a null wrapper, should this be desired.
+	 *  Note that the wrapped player class MAY be side-specific, so avoid casting
+	 *  the wrapped entity directly if you aren't sure what its class is.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 */
+	public WrapperPlayer getWrapperFor(EntityPlayer player){
+		if(player != null){
+			if(!playerWrappers.containsKey(player)){
+				playerWrappers.put(player, new WrapperPlayer(player));
+			}
+			return playerWrappers.get(player);
+		}else{
+			return NULL_PLAYER_WRAPPER;
+		}
 	}
 	
 	/**
@@ -106,7 +162,7 @@ public class WrapperWorld{
 	 */
 	public WrapperEntity getEntity(int id){
 		Entity entity = world.getEntityByID(id);
-		return entity instanceof EntityPlayer ? new WrapperPlayer((EntityPlayer) entity) : new WrapperEntity(entity);
+		return entity instanceof EntityPlayer ? getWrapperFor((EntityPlayer) entity) : getWrapperFor(entity);
 	}
 	
 	/**
@@ -164,30 +220,34 @@ public class WrapperWorld{
 				}
 			}
 			
-			//Now that all entities have been filtered out, attack all the ones that are left.
-			//If we are a client, don't attack.  Simply return the entities.
-			if(isClient()){
-				Map<WrapperEntity, BoundingBox> entities = new HashMap<WrapperEntity, BoundingBox>();
+			//If we are on the server, attack the entities.
+			if(!isClient()){
 				for(Entity entity : collidedEntities){
-					if(entity instanceof BuilderEntity){
-						//Need to check which box we hit for this entity.
-						for(BoundingBox box : ((BuilderEntity) entity).entity.collisionBoxes){
-							if(box.intersects(damage.box)){
-								entities.put(new WrapperEntity(entity), box);
-								break;
-							}
-						}
-					}else{
-						entities.put(new WrapperEntity(entity), null);
-					}
+					WrapperEntity.attack(entity, damage);
 				}
-				return entities;
-			}
-			for(Entity entity : collidedEntities){
-				WrapperEntity.attack(entity, damage);
 			}
 		}
-		return null;
+		
+		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
+		if(isClient()){
+			Map<WrapperEntity, BoundingBox> entities = new HashMap<WrapperEntity, BoundingBox>();
+			for(Entity entity : collidedEntities){
+				if(entity instanceof BuilderEntity){
+					//Need to check which box we hit for this entity.
+					for(BoundingBox box : ((BuilderEntity) entity).entity.interactionBoxes){
+						if(box.intersects(damage.box)){
+							entities.put(getWrapperFor(entity), box);
+							break;
+						}
+					}
+				}else{
+					entities.put(getWrapperFor(entity), null);
+				}
+			}
+			return entities;
+		}else{
+			return null;
+		}
 	}
 	
 	/**

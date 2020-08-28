@@ -120,6 +120,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			}
 			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter), vehicle);
 		}
+		backfireEngine();
 	}
 	
 	@Override

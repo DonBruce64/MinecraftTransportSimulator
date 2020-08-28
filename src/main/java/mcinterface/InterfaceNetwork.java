@@ -141,7 +141,7 @@ public class InterfaceNetwork{
 	 *  Used for handling packets arriving on the server.
 	 */
 	private static WrapperWorld getServerWorld(MessageContext ctx){
-		return new WrapperWorld(ctx.getServerHandler().player.world);
+		return WrapperWorld.getWrapperFor(ctx.getServerHandler().player.world);
 	}
 	
 	/**
@@ -149,7 +149,7 @@ public class InterfaceNetwork{
 	 *  Used for handling packets arriving on the server.
 	 */
 	private static WrapperPlayer getServerPlayer(MessageContext ctx){
-		return new WrapperPlayer(ctx.getServerHandler().player);
+		return getServerWorld(ctx).getWrapperFor(ctx.getServerHandler().player);
 	}
 	
 	
