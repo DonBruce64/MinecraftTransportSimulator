@@ -14,7 +14,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceBox;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
@@ -282,8 +281,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 *  no collision box collides with another block, even if it requires all the ground devices to be collided.
 	 */
 	private void correctCollidingMovement(){
-		rotation.set(0D, 0D, 0D);
-		
 		//First check the X-axis.
 		if(motion.x != 0){
 			for(BoundingBox box : collisionBoxes){
@@ -1000,18 +997,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				turningForce = (float) (steeringFactor*Math.abs(groundVelocity)/2F);
 				//Correct for speedFactor changes.
 				turningForce *= SPEED_FACTOR/0.35F;
-				//Now add the sign to this force based on our steering angle.
+				//Now add the sign to this force based on our steering angle and ground velocity.
 				turningForce *= Math.signum(steeringAngle);
-				//If we have any engines reversing, those will cause us to invert our sign as turning is in the opposite yaw.
-				if(groundVelocity < 0){
-					for(APart part : parts){
-						if(part instanceof PartEngine){
-							if(((PartEngine) part).currentGear < 0){
-								turningForce = -turningForce;
-								break;
-							}
-						}
-					}
+				if(Math.abs(groundVelocity) < 0.05){
+					turningForce = 0;
+				}else if(groundVelocity <= -0.05){
+					turningForce = -turningForce;
 				}
 			}
 		}

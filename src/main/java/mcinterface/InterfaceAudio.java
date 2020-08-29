@@ -79,28 +79,48 @@ public class InterfaceAudio{
 			isSystemPaused = false;
 		}
 		
-		
-		//Update player position velocity, and orientation.
-		//PaulsCode does this for us in 1.12.2, so we don't need to do that.
-		//However, it fouls up velocity, so we need to re-do that one.
-		//Note that players riding entities use the entitie's velocity.
-		//player.putPosition(playerPosition);
-		//AL10.alListener(AL10.AL_POSITION, playerPosition);
-		Object entityRiding = InterfaceGame.getClientPlayer().getEntityRiding(); 
-		if(entityRiding instanceof ISoundProvider){
-			playerVelocity.clear();
-			FloatBuffer entityVelocity = ((ISoundProvider) entityRiding).getProviderVelocity();
-			playerVelocity.put(entityVelocity);
-			//need to flip this back to normal as it's assumed this won't be used except during an update call.
-			entityVelocity.flip();
-			playerVelocity.flip();
-		}else{
-			InterfaceGame.getClientPlayer().putVelocity(playerVelocity);
+		//If the world is null, we need to stop all sounds as we're on the main screen.
+		if(InterfaceGame.getClientWorld() == null){
+			Iterator<SoundInstance> iterator = queuedSounds.iterator();
+    		while(iterator.hasNext()){
+    			iterator.remove();
+    		}
+    		for(SoundInstance playingSound : playingSounds){
+    			playingSound.stop();
+    		}
 		}
-		AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
-		//player.putOrientation(playerOrientation);
-		//AL10.alListener(AL10.AL_ORIENTATION, playerOrientation);
-	    
+		
+		//Add all queued sounds to playing sounds and start them.
+		for(SoundInstance sound : queuedSounds){
+			AL10.alSourcePlay(sound.sourceIndex);
+			playingSounds.add(sound);
+		}
+		queuedSounds.clear();
+		
+		//If the player is valid, do position and velocity updates for them.
+		WrapperPlayer player = InterfaceGame.getClientPlayer();
+		if(player != null){
+			//Update player position velocity, and orientation.
+			//PaulsCode does this for us in 1.12.2, so we don't need to do that.
+			//However, it fouls up velocity, so we need to re-do that one.
+			//Note that players riding entities use the entitie's velocity.
+			//player.putPosition(playerPosition);
+			//AL10.alListener(AL10.AL_POSITION, playerPosition);
+			Object entityRiding = player.getEntityRiding(); 
+			if(entityRiding instanceof ISoundProvider){
+				playerVelocity.clear();
+				FloatBuffer entityVelocity = ((ISoundProvider) entityRiding).getProviderVelocity();
+				playerVelocity.put(entityVelocity);
+				//need to flip this back to normal as it's assumed this won't be used except during an update call.
+				entityVelocity.flip();
+				playerVelocity.flip();
+			}else{
+				player.putVelocity(playerVelocity);
+			}
+			AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
+			//player.putOrientation(playerOrientation);
+			//AL10.alListener(AL10.AL_ORIENTATION, playerOrientation);
+		}
 	    
 		//We also need to check if the doppler has been set to 0.
 		//MC does that somewhere in the the code as it's 0 during the update cycle.
@@ -112,15 +132,6 @@ public class InterfaceAudio{
 			AL10.alDopplerVelocity(1F/20F/2F);
 			AL10.alDopplerFactor(1.0F);
 		}
-		
-		
-		//Add all queued sounds to playing sounds and start them.
-		for(SoundInstance sound : queuedSounds){
-			AL10.alSourcePlay(sound.sourceIndex);
-			playingSounds.add(sound);
-		}
-		queuedSounds.clear();
-		
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
@@ -352,6 +363,7 @@ public class InterfaceAudio{
 			try{
 				InterfaceAudio.update();
 			}catch(Exception e){
+				//e.printStackTrace();
 				//Do nothing.  We only get exceptions here if OpenAL isn't ready.
 			}
         }
@@ -362,7 +374,9 @@ public class InterfaceAudio{
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
+    	System.out.println("ULOAD EVENT" );
     	if(event.getWorld().isRemote){
+    		System.out.println("CLIENT" );
     		Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
     			if(iterator.next().provider.getProviderDimension() == event.getWorld().provider.getDimension()){
@@ -371,7 +385,10 @@ public class InterfaceAudio{
     		}
     		for(SoundInstance playingSound : playingSounds){
     			if(playingSound.provider.getProviderDimension() == event.getWorld().provider.getDimension()){
+    				System.out.println("Stopping sound: " + playingSound.soundName);
     				playingSound.stop();
+    			}else{
+    				System.out.println("CONT sound: " + playingSound.soundName);
     			}
     		}
     		

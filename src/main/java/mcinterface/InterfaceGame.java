@@ -25,7 +25,8 @@ import net.minecraftforge.fml.relauncher.Side;
  * @author don_bruce
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
-public class InterfaceGame{	
+public class InterfaceGame{
+	
 	/**
 	 *  Returns true if the mod with the passed-in modID is present.
 	 */
@@ -96,7 +97,7 @@ public class InterfaceGame{
 	/**
 	 *  Returns the world.  Only valid on CLIENTs as on servers
 	 *  there are multiple worlds (dimensions) so a global reference
-	 *  isn't possible. 
+	 *  isn't possible.
 	 */
 	public static WrapperWorld getClientWorld(){
 		return WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
@@ -104,11 +105,12 @@ public class InterfaceGame{
 	
 	/**
 	 *  Returns the player.  Only valid on CLIENTs as on servers
-	 *  there are multiple players.
+	 *  there are multiple players.  Note that the player MAY be null if the
+	 *  world hasn't been loaded yet.
 	 */
 	public static WrapperPlayer getClientPlayer(){
 		EntityPlayer player = Minecraft.getMinecraft().player;
-		return WrapperWorld.getWrapperFor(player.world).getWrapperFor(player);
+		return player != null ? WrapperWorld.getWrapperFor(player.world).getWrapperFor(player) : null;
 	}
 	
 	/**
