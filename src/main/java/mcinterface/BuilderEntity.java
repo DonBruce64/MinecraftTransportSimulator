@@ -86,7 +86,7 @@ public class BuilderEntity extends Entity{
     			furthestHeightRadius = (float) Math.max(furthestHeightRadius, box.localCenter.y + box.heightRadius);
     			furthestWidthRadius = (float) Math.max(furthestWidthRadius, box.localCenter.z + box.depthRadius);
     		}
-    		this.setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
+    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
     		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
     		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
     		
@@ -103,7 +103,7 @@ public class BuilderEntity extends Entity{
     		//Check that riders are still present prior to updating them.
     		//This handles dismounting of riders from entities in a non-event-driven way.
     		//We do this because other mods and Sponge like to screw up the events...
-    		Iterator<WrapperEntity> riderIterator = entity.ridersToLocations.keySet().iterator();
+    		Iterator<WrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
     		while(riderIterator.hasNext()){
     			WrapperEntity rider = riderIterator.next();
     			if(!this.equals(rider.entity.getRidingEntity())){
@@ -219,7 +219,7 @@ public class BuilderEntity extends Entity{
     public void updatePassenger(Entity passenger){
     	//Forward passenger updates to the entity, if it exists.
     	if(entity != null){
-    		Iterator<WrapperEntity> iterator = entity.ridersToLocations.keySet().iterator();
+    		Iterator<WrapperEntity> iterator = entity.locationRiderMap.inverse().keySet().iterator();
     		while(iterator.hasNext()){
     			WrapperEntity rider = iterator.next();
     			if(rider.equals(passenger)){
@@ -227,6 +227,8 @@ public class BuilderEntity extends Entity{
     				return;
     			}
     		}
+    		//Couldn't find rider in entity list.  Add them as a passenger.
+    		entity.addRider(passenger instanceof EntityPlayer ? entity.world.getWrapperFor((EntityPlayer)passenger) : entity.world.getWrapperFor(passenger), null);
     	}
     }
     
@@ -251,17 +253,6 @@ public class BuilderEntity extends Entity{
     	//If we are setting our ID on a client, request NBT data from the server to load the rest of our properties.
     	//We do this on our next update tick, as we may not yet be spawned at this point.
     	requestDataFromServer = world.isRemote;
-    }
-    
-    @Override
-    public boolean startRiding(Entity mcEntity, boolean force){
-    	//Forward this call to the entity if this is a force riding.
-    	//In this case, we're re-loading riders and need to put them
-    	//in their proper locations.
-    	if(force){
-    		entity.addRider(WrapperWorld.getWrapperFor(mcEntity.world).getWrapperFor(mcEntity), null);
-    	}
-    	return super.startRiding(mcEntity, force);
     }
     
     @Override
@@ -338,7 +329,9 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
         		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
 	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
-	    		if(vehicle.collisionBoxes.contains(boxClicked)){
+	    		if(vehicle.doorBoxes.containsKey(boxClicked)){
+		    		InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.DOOR_RIGHTCLICK));
+	    		}else if(vehicle.collisionBoxes.contains(boxClicked)){
 	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_RIGHTCLICK));
 	    		}else if(vehicle.partInteractionBoxes.contains(boxClicked)){
 	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_RIGHTCLICK));

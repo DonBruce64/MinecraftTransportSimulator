@@ -44,8 +44,8 @@ public class PacketEntityRiderChange extends APacketEntity{
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity){
 		if(position != null){
 			//Correlate the position object with the entity position objects.
-			//Need to pass-in the actual object to ensure map equality.
-			for(Point3d ridablePosition : entity.locationsToRiders.keySet()){
+			//Need to pass-in the actual object to ensure hash equality.
+			for(Point3d ridablePosition : entity.locationRiderMap.keySet()){
 				if(ridablePosition.equals(position)){
 					entity.addRider(world.getEntity(riderID), ridablePosition);
 					return true;

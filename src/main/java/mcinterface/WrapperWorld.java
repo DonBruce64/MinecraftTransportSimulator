@@ -97,7 +97,12 @@ public class WrapperWorld{
 			if(!entityWrappers.containsKey(entity)){
 				entityWrappers.put(entity, new WrapperEntity(entity));
 			}
-			return entityWrappers.get(entity);
+			WrapperEntity wrapper = entityWrappers.get(entity);
+			if(!wrapper.isValid()){
+				wrapper = new WrapperEntity(entity);
+				entityWrappers.put(entity, wrapper);
+			}
+			return wrapper;
 		}else{
 			return NULL_ENTITY_WRAPPER;
 		}
@@ -114,6 +119,11 @@ public class WrapperWorld{
 		if(player != null){
 			if(!playerWrappers.containsKey(player)){
 				playerWrappers.put(player, new WrapperPlayer(player));
+			}
+			WrapperPlayer wrapper = playerWrappers.get(player);
+			if(!wrapper.isValid()){
+				wrapper = new WrapperPlayer(player);
+				playerWrappers.put(player, wrapper);
 			}
 			return playerWrappers.get(player);
 		}else{
@@ -260,38 +270,35 @@ public class WrapperWorld{
 			//Don't move riding entities or our own builders.
 			if(!(entity instanceof BuilderEntity) && entity.getRidingEntity() == null){
 				for(BoundingBox box : boxesToCheck){
-					//Make sure this box can support moving entities.
-					if(!box.movesEntities){
-						//Check if we collide with the entity.
-						//Add a slight yOffset to every box to "grab" entities standing on collision points.
-						AxisAlignedBB entityBox = entity.getEntityBoundingBox();
-						if(
-							entityBox.maxX > box.globalCenter.x - box.widthRadius - 0.25D && 
-							entityBox.minX < box.globalCenter.x + box.widthRadius + 0.25D && 
-							entityBox.maxY > box.globalCenter.y - box.heightRadius - 0.5D && 
-							entityBox.minY < box.globalCenter.y + box.heightRadius + 0.5D &&
-							entityBox.maxZ > box.globalCenter.z - box.depthRadius - 0.25D &&
-							entityBox.minZ < box.globalCenter.z + box.depthRadius + 0.25D)
-						{
-							//Entity has collided with this box.  Adjust movement to allow them to ride on it.
-							Point3d entityDeltaOffset = new Point3d(entity.posX - intialPosition.x, entity.posY - intialPosition.y, entity.posZ - intialPosition.z);
-							Point3d finalOffset = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset);
-							
-							//If the entity is within 0.5 units of the top of the box, make them be on top of it.
-							//This also keeps the entity from falling into the box due to MC's stupid collision code that doesn't
-							//handle moving hitboxes well.
-							double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY + finalOffset.y;
-							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (entity.motionY < 0 || entity.motionY < entityBottomDelta)){
-								finalOffset.y = entityBottomDelta;
-								if(entity.motionY < 0){
-									entity.motionY = 0;
-								}
+					//Check if we collide with the entity.
+					//Add a slight yOffset to every box to "grab" entities standing on collision points.
+					AxisAlignedBB entityBox = entity.getEntityBoundingBox();
+					if(
+						entityBox.maxX > box.globalCenter.x - box.widthRadius - 0.25D && 
+						entityBox.minX < box.globalCenter.x + box.widthRadius + 0.25D && 
+						entityBox.maxY > box.globalCenter.y - box.heightRadius - 0.5D && 
+						entityBox.minY < box.globalCenter.y + box.heightRadius + 0.5D &&
+						entityBox.maxZ > box.globalCenter.z - box.depthRadius - 0.25D &&
+						entityBox.minZ < box.globalCenter.z + box.depthRadius + 0.25D)
+					{
+						//Entity has collided with this box.  Adjust movement to allow them to ride on it.
+						Point3d entityDeltaOffset = new Point3d(entity.posX - intialPosition.x, entity.posY - intialPosition.y, entity.posZ - intialPosition.z);
+						Point3d finalOffset = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset);
+						
+						//If the entity is within 0.5 units of the top of the box, make them be on top of it.
+						//This also keeps the entity from falling into the box due to MC's stupid collision code that doesn't
+						//handle moving hitboxes well.
+						double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY + finalOffset.y;
+						if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (entity.motionY < 0 || entity.motionY < entityBottomDelta)){
+							finalOffset.y = entityBottomDelta;
+							if(entity.motionY < 0){
+								entity.motionY = 0;
 							}
-							
-							//Set entity position.
-							entity.setPosition(entity.posX + finalOffset.x, entity.posY + finalOffset.y, entity.posZ + finalOffset.z);
-							break;
 						}
+						
+						//Set entity position.
+						entity.setPosition(entity.posX + finalOffset.x, entity.posY + finalOffset.y, entity.posZ + finalOffset.z);
+						break;
 					}
 				}
 			}
@@ -372,6 +379,7 @@ public class WrapperWorld{
 			box.globalCenter.z + box.depthRadius
 		);
 		
+		box.collidingBlocks.clear();
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){

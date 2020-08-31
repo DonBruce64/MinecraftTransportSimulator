@@ -3,10 +3,12 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperEntity;
@@ -71,22 +73,24 @@ public abstract class AEntityBase{
 	/**List of bounding boxes that should be used for interaction of other entities with this entity.**/
 	public List<BoundingBox> interactionBoxes = new ArrayList<BoundingBox>();
 	
+	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
+	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
+	 * This should be populated prior to trying to load riders, so ideally this will be populated during construction..
+	 **/
+	public List<Point3d> ridableLocations = new ArrayList<Point3d>();
+	
+	/**List of locations where rider were last save.  This is used to re-populate riders on reloads.
+	 * It can be assumed that riders will be re-added in the same order the location list was saved.
+	 **/
+	public List<Point3d> savedRiderLocations = new ArrayList<Point3d>();
+	
 	/**Maps relative position locations to riders riding at those positions.  Only one rider
 	 * may be present per position.  Positions should be modified via mutable modification to
 	 * avoid modifying this map.  The only modifications should be done when a rider is 
-	 * mounting/dismounting this entity and we don't want to track them anymore.  Note that
-	 * this map contains all possible places riders can sit.  And not all keys will have non-null values.
+	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public LinkedHashMap<Point3d, WrapperEntity> locationsToRiders = new LinkedHashMap<Point3d, WrapperEntity>();
-	
-	/**Maps riders to their relative locations.  This is an inverse of {@link #locationsToRiders},
-	 * in that the key is the rider, not the position.  Note that all riders riding this entity
-	 * will be in this map, but not all possible riding spots will have a rider.  This is the key
-	 * difference between this map and the location map, and why we don't use a BiMap here.
-	 * While you are free to read this map, all modifications should be through the method calls in this class.
-	 **/
-	public LinkedHashMap<WrapperEntity, Point3d> ridersToLocations = new LinkedHashMap<WrapperEntity, Point3d>();
+	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
 	public AEntityBase(WrapperWorld world, WrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
@@ -101,10 +105,10 @@ public abstract class AEntityBase{
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
 		
-		//Load rider positions.  We don't have riders here yet, so just make the locations.
+		//Load saved rider positions.  We don't have riders here yet, so just make the locations.
 		//Riders come from the Builder class after construction as that class saves them.
-		for(int riderIndex=0; riderIndex<data.getInteger("totalRiderLocations"); ++riderIndex){
-			locationsToRiders.put(data.getPoint3d("riderLocation" + riderIndex), null);
+		for(int riderIndex=0; riderIndex<data.getInteger("totalSavedRiderLocations"); ++riderIndex){
+			savedRiderLocations.add(data.getPoint3d("savedRiderLocation" + riderIndex));
 		}
 		
 		if(world.isClient()){
@@ -134,7 +138,7 @@ public abstract class AEntityBase{
 	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Update entity position.
 		if(rider.isValid()){
-			rider.setPosition(ridersToLocations.get(rider));
+			rider.setPosition(locationRiderMap.inverse().get(rider));
 		}else{
 			//Remove invalid rider.
 			removeRider(rider, iterator);
@@ -146,45 +150,34 @@ public abstract class AEntityBase{
 	 *  should try to ride.  If this isn't possible, return false.  Otherwise,
 	 *  return true.  Call this ONLY on the server!  Packets are sent to clients
 	 *  for syncing so calling this on clients will result in Bad Stuff.
-	 *  Note that null should be passed-in when re-loading this entity from saved
-	 *  data.  In this case, the rider will be placed in the next free slot.
+	 *  If we are re-loading a rider from saved data, pass-in null as the position
+	 *  
 	 */
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
-		if(riderLocation != null){
-			if(locationsToRiders.get(riderLocation) != null){
-				//We already have a rider in this location.
-				return false;
-			}else{
-				//If this rider wasn't riding this vehicle before, adjust their yaw.
-				//This prevents bad math due to 360+ degree rotations.
-				//If we are riding this vehicle, clear out the location before we change it.
-				if(!ridersToLocations.containsKey(rider)){
-					rider.setYaw(angles.y);
-				}else{
-					locationsToRiders.put(ridersToLocations.get(rider), null);
-				}
-				
-				//Add rider to map, and send out packet if required.
-				ridersToLocations.put(rider, riderLocation);
-				locationsToRiders.put(riderLocation, rider);
-				rider.setRiding(this);
-				if(!world.isClient()){
-					InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, riderLocation), this);
-				}
-				return true;
-			}
+		if(riderLocation == null){
+			riderLocation = savedRiderLocations.get(0);
+		}
+		savedRiderLocations.remove(riderLocation);
+		if(locationRiderMap.containsKey(riderLocation)){
+			//We already have a rider in this location.
+			return false;
 		}else{
-			for(Point3d location : locationsToRiders.keySet()){
-				if(locationsToRiders.get(location) == null){
-					riderLocation = location;
-					break;
-				}
-			}
-			if(riderLocation != null){
-				return addRider(rider, riderLocation);
+			//If this rider wasn't riding this vehicle before, adjust their yaw.
+			//This prevents bad math due to 360+ degree rotations.
+			//If we are riding this vehicle, clear out the location before we change it.
+			if(!locationRiderMap.containsValue(rider)){
+				rider.setYaw(angles.y);
 			}else{
-				return false;
+				locationRiderMap.inverse().remove(rider);
 			}
+			
+			//Add rider to map, and send out packet if required.
+			locationRiderMap.put(riderLocation, rider);
+			rider.setRiding(this);
+			if(!world.isClient()){
+				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, riderLocation), this);
+			}
+			return true;
 		}
 	}
 	
@@ -194,12 +187,11 @@ public abstract class AEntityBase{
 	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
 	 */
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
-		if(ridersToLocations.containsKey(rider)){
-			locationsToRiders.put(ridersToLocations.get(rider), null);
+		if(locationRiderMap.containsValue(rider)){
 			if(iterator != null){
 				iterator.remove();
 			}else{
-				ridersToLocations.remove(rider);
+				locationRiderMap.inverse().remove(rider);
 			}
 			rider.setRiding(null);
 			if(!world.isClient()){
@@ -241,11 +233,11 @@ public abstract class AEntityBase{
 		data.setPoint3d("angles", angles);
 		data.setPoint3d("rotation", rotation);
 		
-		//Save rider positions.  That way riders don't get moved to other locations on world save/load.
+		//Save rider positions.  That way the entity knows where the rider is on world re-load.
 		int riderIndex = 0;
-		for(Point3d riderLocation : locationsToRiders.keySet()){
-			data.setPoint3d("riderLocation" + riderIndex++, riderLocation);
+		for(Point3d riderLocation : locationRiderMap.keySet()){
+			data.setPoint3d("savedRiderLocation" + riderIndex++, riderLocation);
 		}
-		data.setInteger("totalRiderLocations", riderIndex);
+		data.setInteger("totalSavedRiderLocations", riderIndex);
 	}
 }

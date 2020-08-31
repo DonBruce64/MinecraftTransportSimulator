@@ -35,6 +35,11 @@ public class WrapperEntity{
 		return entity.equals(obj instanceof WrapperEntity ? ((WrapperEntity) obj).entity : obj);
 	}
 	
+	@Override
+	public int hashCode(){
+        return entity.hashCode();
+    }
+	
 	/**
 	 *  Returns true if this entity is valid.  More specifically, this
 	 *  returns true if the entity passed-in to create this wrapper was

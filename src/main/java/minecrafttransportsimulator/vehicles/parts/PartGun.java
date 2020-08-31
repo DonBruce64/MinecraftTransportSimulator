@@ -257,13 +257,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public WrapperPlayer getCurrentController(){
 		//Check our parent part, if we have one.
 		if(parentPart instanceof PartSeat){
-			return (WrapperPlayer) vehicle.locationsToRiders.get(parentPart.placementOffset);
+			return (WrapperPlayer) vehicle.locationRiderMap.get(parentPart.placementOffset);
 		}
 		
 		//Check any child parts.
 		for(APart childPart : childParts){
 			if(childPart instanceof PartSeat){
-				return (WrapperPlayer) vehicle.locationsToRiders.get(childPart.placementOffset);
+				return (WrapperPlayer) vehicle.locationRiderMap.get(childPart.placementOffset);
 			}
 		}
 		
@@ -271,7 +271,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
 				if(vehiclePart.vehicleDefinition.isController){
-					return (WrapperPlayer) vehicle.locationsToRiders.get(vehiclePart.placementOffset);
+					return (WrapperPlayer) vehicle.locationRiderMap.get(vehiclePart.placementOffset);
 				}
 			}
 		}

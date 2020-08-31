@@ -19,7 +19,7 @@ public final class PartSeat extends APart{
 		//See if we can interact with the seats of this vehicle.
 		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
 		if(!vehicle.locked || vehicle.equals(player.getEntityRiding())){
-			WrapperEntity riderForSeat = vehicle.locationsToRiders.get(placementOffset);
+			WrapperEntity riderForSeat = vehicle.locationRiderMap.get(placementOffset);
 			if(riderForSeat != null){
 				//We already have a rider for this seat.  If it's not us, mark the seat as taken.
 				//If it's an entity that can be leashed, dismount the entity and leash it.
@@ -53,7 +53,7 @@ public final class PartSeat extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		WrapperEntity rider = vehicle.locationsToRiders.get(placementOffset);
+		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
 		if(rider != null){
 			vehicle.removeRider(rider, null);
 		}

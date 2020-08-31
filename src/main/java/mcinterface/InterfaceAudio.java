@@ -374,9 +374,7 @@ public class InterfaceAudio{
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
-    	System.out.println("ULOAD EVENT" );
     	if(event.getWorld().isRemote){
-    		System.out.println("CLIENT" );
     		Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
     			if(iterator.next().provider.getProviderDimension() == event.getWorld().provider.getDimension()){
@@ -385,10 +383,7 @@ public class InterfaceAudio{
     		}
     		for(SoundInstance playingSound : playingSounds){
     			if(playingSound.provider.getProviderDimension() == event.getWorld().provider.getDimension()){
-    				System.out.println("Stopping sound: " + playingSound.soundName);
     				playingSound.stop();
-    			}else{
-    				System.out.println("CONT sound: " + playingSound.soundName);
     			}
     		}
     		

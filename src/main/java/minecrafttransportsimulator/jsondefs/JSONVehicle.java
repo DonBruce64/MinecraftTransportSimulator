@@ -13,13 +13,14 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
 	 */
 	public String genericName;
 	
-	public List<VehicleDefinition> definitions = new ArrayList<VehicleDefinition>();
+	public List<VehicleDefinition> definitions;
     public VehicleMotorizedConfig motorized;
     public VehiclePlane plane;
     public VehicleBlimp blimp;
     public VehicleCar car;
-    public List<VehiclePart> parts = new ArrayList<VehiclePart>();
-    public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
+    public List<VehiclePart> parts;
+    public List<VehicleCollisionBox> collision;
+    public List<VehicleDoor> doors;
     public VehicleRendering rendering;
     
     public class VehicleGeneral extends AJSONCraftable<JSONVehicle.VehicleGeneral>.General{
@@ -46,7 +47,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float[] hookupPos;
         public String hookupType;
         public boolean isTrailer;
-        public List<PackInstrument> instruments = new ArrayList<PackInstrument>();
+        public List<PackInstrument> instruments;
     }
     
     public class VehiclePlane{
@@ -90,6 +91,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public VehiclePart additionalPart;
         public List<VehiclePart> additionalParts;
         public String defaultPart;
+        public String linkedDoor;
         
         //Animation variables.
         public String translationVariable;
@@ -130,6 +132,14 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public boolean collidesWithLiquids;
     }
     
+    public class VehicleDoor{
+        public String name;
+    	public Point3d closedPos;
+        public Point3d openPos;
+        public float width;
+        public float height;
+    }
+    
     public class PackInstrument{
         public float[] pos;
         public float[] rot;
@@ -147,9 +157,10 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public String panelTexture;
         public String panelTextColor;
         public String panelLitTextColor;
-        public List<JSONText> textObjects = new ArrayList<JSONText>();
-        public List<VehicleAnimatedObject> animatedObjects = new ArrayList<VehicleAnimatedObject>();
-        public List<String> customVariables = new ArrayList<String>();
+        public List<JSONText> textObjects;
+        public List<VehicleAnimatedObject> animatedObjects;
+        public List<VehicleCameraObject> cameraObjects;
+        public List<String> customVariables;
         
         //DEPRECIATED CODE!
         public int displayTextMaxLength;
@@ -189,7 +200,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public class VehicleAnimatedObject{
     	public String objectName;
     	public String applyAfter;
-    	public List<VehicleAnimationDefinition> animations = new ArrayList<VehicleAnimationDefinition>();
+    	public List<VehicleAnimationDefinition> animations;
     }
     
     public class VehicleAnimationDefinition{
@@ -206,5 +217,11 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public int forwardsDelay;
     	public int reverseDelay;
     	public String sound;
+    }
+    
+    public class VehicleCameraObject{
+    	public Point3d pos;
+    	public Point3d rot;
+    	public List<VehicleAnimationDefinition> animations;
     }
 }

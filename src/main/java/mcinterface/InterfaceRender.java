@@ -24,9 +24,12 @@ import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCameraObject;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -80,7 +83,9 @@ public class InterfaceRender{
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureDomain;
 	private static String pushedTextureLocation;
-	private static int zoomLevel = 0;
+	private static int zoomLevel;
+	private static int customCameraIndex;
+	private static boolean runningCustomCameras;
 	
 	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
@@ -276,7 +281,7 @@ public class InterfaceRender{
 	 *  and the entity and its riders have been culled from rendering.
 	 */
 	public static void renderEntityRiders(AEntityBase entity, float partialTicks){
-		for(WrapperEntity rider : entity.ridersToLocations.keySet()){
+		for(WrapperEntity rider : entity.locationRiderMap.values()){
 			if(!(InterfaceGame.getClientPlayer().equals(rider.entity) && InterfaceGame.inFirstPerson()) && rider.entity.posY > rider.entity.world.getHeight()){
 				GL11.glPushMatrix();
 				Point3d riderPosition = rider.getRenderedPosition(partialTicks);
@@ -394,9 +399,9 @@ public class InterfaceRender{
         		//Get total angles for the entity the player is riding.
         		Point3d totalAngles = ridingEntity.angles.copy();
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
-	            	for(WrapperEntity rider : ridingEntity.ridersToLocations.keySet()){
+	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 						if(Minecraft.getMinecraft().player.equals(rider.entity)){
-							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(rider));
+							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 		            		totalAngles = ridingEntity.angles.copy().add(seat.placementRotation).add(seat.getPositionRotation(event.getPartialRenderTick()).add(seat.getActionRotation(event.getPartialRenderTick())));
 		            		if(seat.parentPart != null){
 		            			totalAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()).add(seat.parentPart.getActionRotation(event.getPartialRenderTick())));
@@ -457,38 +462,96 @@ public class InterfaceRender{
      */
     @SubscribeEvent
     public static void on(CameraSetup event){
-    	if(event.getEntity().getRidingEntity() instanceof BuilderEntity){
-    		if(InterfaceGame.inFirstPerson()){            	
-            	//FIXME this probably should be some sort of vector calculation.
-    			//AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
-
-    			
-    			//Need to check if the riding entity exists.  Player may be loading the entity on the client but it hasn't
-    			//gotten the supplemental data from the server yet.
-    			/*
-    			if(ridingEntity != null){
-	            	//Get yaw delta between entity and player from-180 to 180.
-	            	double playerYawDelta = (360 + (ridingEntity.angles.y - -event.getEntity().rotationYaw)%360)%360;
-	            	if(playerYawDelta > 180){
-	            		playerYawDelta-=360;
-	            	}
-	            	
-	            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
-	            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
-	            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-	            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
-	            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
-	            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
-	            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
-	            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
-	            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
-    			}*/
-        	}else if(InterfaceGame.inThirdPerson()){
-        		GL11.glTranslatef(0, 0F, -zoomLevel);
-        		GL11.glTranslated(-1D, 1D, -2D);
-            }else{
-                GL11.glTranslatef(0, 0F, zoomLevel);
-        	}
+    	Entity player = event.getEntity();
+    	if(player.getRidingEntity() instanceof BuilderEntity){
+    		AEntityBase entity = ((BuilderEntity) player.getRidingEntity()).entity;
+    		if(entity instanceof EntityVehicleF_Physics){
+    			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+    			Point3d riderLocation = vehicle.locationRiderMap.inverse().get(WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor(event.getEntity()));
+        		if(riderLocation != null){
+		    		if(InterfaceGame.inFirstPerson()){
+		    			if(runningCustomCameras){
+		    				Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
+		    				++customCameraIndex;
+		    				runningCustomCameras = false;
+		    			}else{
+		    				customCameraIndex = 0;
+		    			}
+		            	//FIXME this probably should be some sort of vector calculation.
+		    			//AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
+		
+		    			
+		    			//Need to check if the riding entity exists.  Player may be loading the entity on the client but it hasn't
+		    			//gotten the supplemental data from the server yet.
+		    			/*
+		    			if(ridingEntity != null){
+			            	//Get yaw delta between entity and player from-180 to 180.
+			            	double playerYawDelta = (360 + (ridingEntity.angles.y - -event.getEntity().rotationYaw)%360)%360;
+			            	if(playerYawDelta > 180){
+			            		playerYawDelta-=360;
+			            	}
+			            	
+			            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
+			            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
+			            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
+			            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
+			            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
+			            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
+			            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
+			            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
+			            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
+		    			}*/
+		        	}else if(InterfaceGame.inThirdPerson()){
+		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
+		            }else{
+		            	if(vehicle.definition.rendering.cameraObjects != null){
+		            		if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
+		            			//Set custom camera flag and player angles to match vehicle.
+		            			runningCustomCameras = true;
+		            			VehicleCameraObject camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
+				        		player.rotationYaw = (float) -vehicle.angles.y;
+				        		player.prevRotationYaw = (float) -vehicle.prevAngles.y;
+				        		player.rotationPitch = (float) vehicle.angles.x;
+				        		player.prevRotationPitch = (float) vehicle.prevAngles.x;
+				        		
+				        		//Rotate 180 to get facing the front.
+				        		GL11.glRotated(180F, 0, 1, 0);
+				        		//Translate and rotate to vehicle center, plus the default position.  Y is inverted for some reason here...
+				        		GL11.glTranslated(-riderLocation.x + camera.pos.x, -(riderLocation.y + camera.pos.y), 4D - riderLocation.z + camera.pos.z);
+				        		//Rotate to initial rotation.
+				        		if(camera.rot != null){
+				        			GL11.glTranslated(-camera.pos.x, camera.pos.y, -camera.pos.z);
+					        		GL11.glRotated(-camera.rot.y, 0, 1, 0);
+					        		GL11.glRotated(camera.rot.x, 1, 0, 0);
+					        		GL11.glRotated(camera.rot.z, 0, 0, 1);
+					        		GL11.glTranslated(camera.pos.x, -camera.pos.y, camera.pos.z);
+				        		}
+				        		//Do camera animation transforms, if we have any.
+				        		if(camera.animations != null){
+				        			for(VehicleAnimationDefinition animation : camera.animations){
+				        				double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
+				        				if(animation.animationType.equals("translation")){
+				        					Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
+				        					GL11.glTranslated(translationAmount.x, -translationAmount.y, translationAmount.z);
+				        				}else if(animation.animationType.equals("rotation")){
+				        					Point3d rotationAxis = animation.axis.copy().normalize();
+				        					if(animationValue != 0){
+				        						GL11.glTranslated(camera.pos.x, -camera.pos.y, camera.pos.z);
+				        						GL11.glRotated(animationValue, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+				        						GL11.glTranslated(-camera.pos.x, camera.pos.y, -camera.pos.z);
+				        					}
+				        				}
+				        			}
+				        		}
+				        		return;
+		            		}else{
+		            			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+		            		}
+		            	}
+		            	GL11.glTranslatef(0, 0F, zoomLevel);
+		            }
+        		}
+    		}
         }
     }
     
@@ -504,9 +567,9 @@ public class InterfaceRender{
 				if(Minecraft.getMinecraft().player.getRidingEntity() instanceof BuilderEntity){
 					AEntityBase ridingEntity = ((BuilderEntity) Minecraft.getMinecraft().player.getRidingEntity()).entity;
 					if(ridingEntity instanceof EntityVehicleF_Physics){
-						for(WrapperEntity rider : ridingEntity.ridersToLocations.keySet()){
+						for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 							if(Minecraft.getMinecraft().player.equals(rider.entity)){
-								PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.ridersToLocations.get(rider));
+								PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 								if(seat.vehicleDefinition.isController){
 									//Make a new HUD if we need to.
 									if(currentHUD == null){

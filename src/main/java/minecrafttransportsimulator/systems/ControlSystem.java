@@ -137,7 +137,7 @@ public final class ControlSystem{
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gun){
-		Point3d seatPos = vehicle.ridersToLocations.get(InterfaceGame.getClientPlayer());
+		Point3d seatPos = vehicle.locationRiderMap.inverse().get(InterfaceGame.getClientPlayer());
 		if(seatPos != null){
 			PartSeat seat = (PartSeat) vehicle.getPartAtLocation(seatPos);
 			//If we are seated, attempt to control guns.

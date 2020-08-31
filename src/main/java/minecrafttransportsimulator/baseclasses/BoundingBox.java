@@ -34,13 +34,13 @@ public class BoundingBox{
 	public double heightRadius;
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
-	public final boolean movesEntities;
+	public final boolean isInterior;
 	
 	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
 		this(center, center, widthRadius, heightRadius, depthRadius, false, false);
 	}
 	
-	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean movesEntities){
+	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
@@ -49,7 +49,7 @@ public class BoundingBox{
 		this.heightRadius = heightRadius;
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
-		this.movesEntities = movesEntities;
+		this.isInterior = isInterior;
 	}
 	
 	/**
@@ -61,7 +61,6 @@ public class BoundingBox{
 	public boolean updateCollidingBlocks(WrapperWorld world, Point3d offset){
 		tempGlobalCenter.setTo(globalCenter);
 		globalCenter.add(offset);
-		collidingBlocks.clear();
 		world.updateBoundingBoxCollisions(this, offset);
 		globalCenter.setTo(tempGlobalCenter);
 		return !collidingBlocks.isEmpty();

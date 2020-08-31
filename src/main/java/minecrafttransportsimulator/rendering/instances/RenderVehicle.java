@@ -825,7 +825,7 @@ public final class RenderVehicle{
 			if(heldStack != null){
 				if(heldStack.getItem() instanceof AItemPart){
 					AItemPart heldItem = (AItemPart) heldStack.getItem();
-					for(Entry<BoundingBox, VehiclePart> packPartEntry : vehicle.partSlotBoxes.entrySet()){
+					for(Entry<BoundingBox, VehiclePart> packPartEntry : vehicle.activePartSlotBoxes.entrySet()){
 						boolean isHoldingPart = false;
 						boolean isPartValid = false;
 						

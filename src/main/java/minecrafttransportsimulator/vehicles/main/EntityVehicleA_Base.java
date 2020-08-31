@@ -65,7 +65,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
-		locationsToRiders.clear();
+		ridableLocations.clear();
 		for(int i=0; i<data.getInteger("totalParts"); ++i){
 			//Use a try-catch for parts in case they've changed since this vehicle was last placed.
 			//Don't want crashes due to pack updates.
@@ -76,7 +76,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				APart part = createPartFromData(partDefinition, partData, partOffset, null);
 				partsFromNBT.add(part);
 				if(part instanceof PartSeat){
-					locationsToRiders.put(part.placementOffset, null);
+					ridableLocations.add(part.placementOffset);
 				}
 			}catch(Exception e){
 				MTS.MTSLog.error("ERROR IN LOADING PART FROM NBT!");
@@ -228,8 +228,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}else{
 				parts.remove(part);
 			}
-			if(ridersToLocations.containsKey(locationsToRiders.get(part.placementOffset))){
-				removeRider(locationsToRiders.get(part.placementOffset), null);
+			if(locationRiderMap.containsKey(part.placementOffset)){
+				removeRider(locationRiderMap.get(part.placementOffset), null);
 			}
 			if(part.isValid){
 				part.remove();
@@ -437,7 +437,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						vehicle.addPart(newPart, true);
 						
 						//Set default text for the new part, if we have any.
-						if(newPart.definition.rendering != null){
+						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
 							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
 								newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
 							}

@@ -35,7 +35,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
-		Point3d riderPositionOffset = ridersToLocations.get(rider);
+		Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
 		if(rider.isValid()){
 			//Get the part (seat) this rider is riding.
 			PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
@@ -74,14 +74,16 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//We override the default rider addition behavior here as we need to rotate
 		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
-		boolean riderAlreadyInSeat = ridersToLocations.containsKey(rider);
+		boolean riderAlreadyInSeat = locationRiderMap.containsValue(rider);
 		boolean success = super.addRider(rider, riderLocation);
 		
 		if(success){
 			//If we weren't riding before, set the player's yaw to the same yaw as the vehicle.
 			//We do this to ensure we don't have 360+ rotations to deal with.
 			if(!riderAlreadyInSeat){
-				PartSeat seat = (PartSeat) getPartAtLocation(riderLocation);
+				//Need to invert the lookup as location may be null from the builder.
+				//Rider won't be, as it's required, so we can use it to get the actual location.
+				PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 				rider.setYaw(angles.y + seat.placementRotation.y);
 			}
 		}
@@ -93,7 +95,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
-		Point3d riderLocation = ridersToLocations.get(rider);
+		Point3d riderLocation = locationRiderMap.inverse().get(rider);
 		super.removeRider(rider, iterator);
 		
 		//Set the rider dismount position if we are on the server.
@@ -118,8 +120,9 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	 *  Helper method used to get the controlling player for this vehicle.
 	 */
 	public WrapperPlayer getController(){
-		for(WrapperEntity rider : ridersToLocations.keySet()){
-			PartSeat seat = (PartSeat) getPartAtLocation(ridersToLocations.get(rider));
+		for(Point3d location : locationRiderMap.keySet()){
+			PartSeat seat = (PartSeat) getPartAtLocation(location);
+			WrapperEntity rider = locationRiderMap.get(location);
 			if(seat != null && seat.vehicleDefinition.isController && rider instanceof WrapperPlayer){
 				return (WrapperPlayer) rider;
 			}

@@ -2,10 +2,12 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import mcinterface.InterfaceGame;
 import mcinterface.WrapperBlock;
@@ -21,6 +23,7 @@ import minecrafttransportsimulator.items.core.ItemWrench;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -53,17 +56,20 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public Point3d sideVector = new Point3d(0, 0, 0);
 	public Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	public Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
+	public final Set<String> doorsOpen = new HashSet<String>();
 	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
 	//Boxes used for collision and interaction with this vehicle.
-	public final List<BoundingBox> vehicleCollisionBoxes = new ArrayList<BoundingBox>();
-	public final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
+	private final List<BoundingBox> vehicleCollisionBoxes = new ArrayList<BoundingBox>();
+	private final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
+	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
 	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
 	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
+	public final Map<BoundingBox, String> doorBoxes = new HashMap<BoundingBox, String>();
 	
 	
 	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
@@ -75,9 +81,25 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Create initial collision boxes.  Needed to test spawn logic.
 		for(int i=0; i<definition.collision.size(); ++i){
 			VehicleCollisionBox boxDefinition = definition.collision.get(i);
-			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().rotateCoarse(angles).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy(), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
 			vehicleCollisionBoxes.add(newBox);
 			collisionBoxes.add(newBox);
+			if(!newBox.isInterior){
+				blockCollisionBoxes.add(newBox);
+			}
+		}
+		
+		//Create door boxes, and set states based on saved data.
+		if(definition.doors != null){
+			doorsOpen.clear();
+			for(VehicleDoor door : definition.doors){
+				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true);
+				doorBoxes.put(box, door.name);
+				collisionBoxes.add(box);
+				if(data.getBoolean("doorsOpen_" + door.name)){
+					doorsOpen.add(door.name);
+				}
+			}
 		}
 	}
 	
@@ -114,6 +136,20 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		
+		//Update door collision boxes.  If the door is open, make the door global center be in the open position.
+		for(Entry<BoundingBox, String> doorEntry : doorBoxes.entrySet()){
+			BoundingBox box = doorEntry.getKey();
+			for(VehicleDoor door : definition.doors){
+				if(door.name.equals(doorEntry.getValue())){
+					if(doorsOpen.contains(door.name)){
+						box.globalCenter.setTo(door.openPos).rotateFine(angles).add(position);
+					}else{
+						box.globalCenter.setTo(door.closedPos).rotateFine(angles).add(position);
+					}
+				}
+			}
+		}
+		
 		//Clear out interaction boxes, as some boxes may not be added this tick depending on various factors.
 		interactionBoxes.clear();
 		partInteractionBoxes.clear();
@@ -129,7 +165,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				//If the part is a seat, and we are riding it, don't add it.
 				//This keeps us from clicking our own seat when we want to click other things.
 				if(part instanceof PartSeat){
-					if(part.placementOffset.equals(ridersToLocations.get(clientPlayer))){
+					if(part.placementOffset.equals(locationRiderMap.inverse().get(clientPlayer))){
 						continue;
 					}
 				}
@@ -143,6 +179,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				//Seats are left in because it'd be a pain to switch items.
 				//Guns are also left in as the player may be clicking them with a bullet part to load them.
 				if(clientPlayer.isHoldingItem(AItemPart.class) && !(part instanceof PartSeat) && !(part instanceof PartGun)){
+					continue;
+				}
+				//If the part is linked to a door, and that door isn't open, and the player isn't in the vehicle, don't add it.
+				//This prevents the player from interacting with things from outside the vehicle when the door is shut, but lets
+				//them move around inside the vehicle.
+				if(part.vehicleDefinition.linkedDoor != null && !doorsOpen.contains(part.vehicleDefinition.linkedDoor) && !this.equals(clientPlayer.getEntityRiding())){
 					continue;
 				}
 			}
@@ -168,19 +210,22 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					AItemPart heldPart = (AItemPart) player.getHeldStack().getItem();
 					//Does the part held match this packPart?
 					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.general.type)){
-						//Part matches.  Add the box.  Set the box bounds to the generic box, or the
-						//special bounds of the custom part if we're holding one.
-						BoundingBox box = partSlotBoxEntry.getKey();
-						if(heldPart instanceof ItemPartCustom){
-							box.widthRadius = heldPart.definition.custom.width/2D;
-							box.heightRadius = heldPart.definition.custom.height/2D;
-							box.depthRadius = heldPart.definition.custom.width/2D;
-						}else{
-							box.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
-							box.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;
-							box.depthRadius = PART_SLOT_HITBOX_WIDTH/2D;
+						//Does a door not exist, or is at least open?  Or are we riding this vehicle?
+						if(partSlotBoxEntry.getValue().linkedDoor == null || doorsOpen.contains(partSlotBoxEntry.getValue().linkedDoor) || this.equals(player.getEntityRiding())){
+							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
+							//special bounds of the custom part if we're holding one.
+							BoundingBox box = partSlotBoxEntry.getKey();
+							if(heldPart instanceof ItemPartCustom){
+								box.widthRadius = heldPart.definition.custom.width/2D;
+								box.heightRadius = heldPart.definition.custom.height/2D;
+								box.depthRadius = heldPart.definition.custom.width/2D;
+							}else{
+								box.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
+								box.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;
+								box.depthRadius = PART_SLOT_HITBOX_WIDTH/2D;
+							}
+							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 						}
-						activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 					}
 				}
 			}
@@ -219,11 +264,22 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
+				if(!newBox.isInterior){
+					blockCollisionBoxes.add(newBox);
+				}
 			}
 		}
 		
-		//Recalculate slots.
-		recalculatePartSlots();
+		//Remove entry from slot boxes.
+		Iterator<BoundingBox> iterator = partSlotBoxes.keySet().iterator();
+		while(iterator.hasNext()){
+			BoundingBox box = iterator.next();
+			if(box.localCenter.equals(part.placementOffset)){
+				activePartSlotBoxes.remove(box);
+				iterator.remove();
+				break;
+			}
+		}
 	}
 	
 	@Override
@@ -233,12 +289,17 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(partCollisionBoxes.containsKey(part)){
 			for(BoundingBox box : partCollisionBoxes.get(part)){
 				collisionBoxes.remove(box);
+				blockCollisionBoxes.remove(box);
 			}
 			partCollisionBoxes.remove(part);
 		}
 		
-		//Recalculate slots.
-		recalculatePartSlots();
+		//Add slot to boxes.
+		BoundingBox newSlotBox = new BoundingBox(part.placementOffset, part.placementOffset.copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false); 
+		partSlotBoxes.put(newSlotBox, part.vehicleDefinition);
+		if(!world.isClient()){
+			activePartSlotBoxes.put(newSlotBox, part.vehicleDefinition);
+		}
 	}
 	
 	/**
@@ -342,7 +403,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Add passenger inventory mass as well.
-		for(WrapperEntity rider : ridersToLocations.keySet()){
+		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider instanceof WrapperPlayer){
 				currentMass += 100 + ((WrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
 			}else{
@@ -350,5 +411,14 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		return currentMass;
+	}
+	
+	@Override
+	public void save(WrapperNBT data){
+		super.save(data);
+		//Save open doors.
+		for(String doorName : doorsOpen){
+			data.setBoolean("doorsOpen_" + doorName, true);
+		}
 	}
 }

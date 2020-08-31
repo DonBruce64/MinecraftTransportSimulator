@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.core.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -86,10 +87,13 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 								String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
 								String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
 								try{
-									newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName));
-								}catch(NullPointerException e){
-									throw new IllegalArgumentException("ERROR: Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.genericName + " but that instrument doesn't exist in the pack item registry.");
-								}
+									ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
+									if(instrument != null){
+										newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
+										continue;
+									}
+								}catch(NullPointerException e){}
+								throw new IllegalArgumentException("ERROR: Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.genericName + " but that instrument doesn't exist in the pack item registry.");
 							}catch(IndexOutOfBoundsException e){
 								throw new IllegalArgumentException("ERROR: Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
 							}
@@ -117,6 +121,13 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 							throw new IllegalArgumentException("ERROR: A defaultFuelQty was specified for: " + newVehicle.definition.genericName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
 						}
 					}
+					
+					//Open all doors.  This lets players know we can close them and put things in slots.
+					if(definition.doors != null){
+						for(VehicleDoor door : definition.doors){
+							newVehicle.doorsOpen.add(door.name);
+						}
+					}
 				}
 				
 				//Get how far above the ground the vehicle needs to be, and move it to that position.
@@ -135,7 +146,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				//If the core collisions are colliding, set the vehicle as dead and abort.
 				//We need to update the boxes first, however, as they haven't been updated yet.
 				newVehicle.position.y += -minHeight;
-				for(BoundingBox coreBox : newVehicle.collisionBoxes){
+				for(BoundingBox coreBox : newVehicle.blockCollisionBoxes){
 					coreBox.updateToEntity(newVehicle);
 					if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -minHeight, 0D))){
 						//New vehicle shouldn't be spawned.  Bail out.
@@ -170,6 +181,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 		for(APart part : vehicle.partsFromNBT){
 			vehicle.addPart(part, true);
 		}
+		vehicle.partsFromNBT.clear();
 		return vehicle;
 	}
 

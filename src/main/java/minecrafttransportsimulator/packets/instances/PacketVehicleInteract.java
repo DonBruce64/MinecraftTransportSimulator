@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.Map.Entry;
+
 import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
@@ -80,6 +83,23 @@ public class PacketVehicleInteract extends APacketVehicle{
 						}
 					}
 				}
+			}else if(type.equals(PacketVehicleInteractType.DOOR_RIGHTCLICK)){
+				//Can't open locked vehicles.
+				if(vehicle.locked){
+					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+				}else{
+					//Open the clicked door.
+					for(Entry<BoundingBox, String> doorEntry : vehicle.doorBoxes.entrySet()){
+						if(doorEntry.getKey().localCenter.equals(hitPosition)){
+							if(vehicle.doorsOpen.contains(doorEntry.getValue())){
+								vehicle.doorsOpen.remove(doorEntry.getValue());
+							}else{
+								vehicle.doorsOpen.add(doorEntry.getValue());
+							}
+							return true;
+						}
+					}
+				}
 			}
 		}
 		return false;
@@ -90,7 +110,8 @@ public class PacketVehicleInteract extends APacketVehicle{
 		COLLISION_LEFTCLICK(false),
 		PART_RIGHTCLICK(true),
 		PART_LEFTCLICK(false),
-		PART_SLOT_RIGHTCLICK(true);
+		PART_SLOT_RIGHTCLICK(true),
+		DOOR_RIGHTCLICK(true);
 		
 		private final boolean rightClick;
 		

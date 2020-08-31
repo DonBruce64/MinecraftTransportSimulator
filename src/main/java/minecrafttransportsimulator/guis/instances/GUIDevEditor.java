@@ -165,6 +165,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.car = loadedDefinition.car;
 												definition.parts = loadedDefinition.parts;
 												definition.collision = loadedDefinition.collision;
+												definition.doors = loadedDefinition.doors;
 												definition.rendering = loadedDefinition.rendering;
 												RenderVehicle.clearVehicleCaches(definition);
 												

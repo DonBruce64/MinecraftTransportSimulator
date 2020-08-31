@@ -39,17 +39,18 @@ public class VehicleGroundDeviceBox{
 		this.isLeft = isLeft;
 		
 		//Do an initial update once constructed.
-		updateBoundingBoxes();
+		updateMembers();
+		updateBounds();
 		updateCollisionStatuses();
 	}
 	
 	/**
-	 * Updates what bounding boxes make up this GDB.  These should change as parts are added and removed.
+	 * Updates what objects make up this GDB.  These should change as parts are added and removed.
 	 */
-	public void updateBoundingBoxes(){
+	public void updateMembers(){
 		//Get all liquid collision boxes.  Parts can add these via their collision boxes.
 		liquidCollisionBoxes.clear();
-		for(BoundingBox box : vehicle.collisionBoxes){
+		for(BoundingBox box : vehicle.blockCollisionBoxes){
 			if(box.collidesWithLiquids){
 				if(isFront && box.localCenter.z > 0){
 					if(isLeft && box.localCenter.x >= 0){
@@ -101,7 +102,13 @@ public class VehicleGroundDeviceBox{
 				}
 			}
 		}
-		
+	}
+	
+	/**
+	 * Updates this boxes' bounds to match the included members.  This should only be done when we
+	 * change members, or if a member has changed position.
+	 */
+	public void updateBounds(){
 		//Update solid box local center and size.
 		solidBox.localCenter.set(0D, 0D, 0D);
 		solidBox.widthRadius = 0;
@@ -155,7 +162,7 @@ public class VehicleGroundDeviceBox{
 			solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset);
 			solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-			isGrounded = isCollided ? false : !solidBox.collidingBlocks.isEmpty();
+			isGrounded = isCollided ? true : !solidBox.collidingBlocks.isEmpty();
 			contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
 		}
 		
@@ -168,16 +175,23 @@ public class VehicleGroundDeviceBox{
 			liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
 			vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset);
 			liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-			isGroundedLiquid = isCollidedLiquid ? false : !liquidBox.collidingBlocks.isEmpty();
+			isGroundedLiquid = isCollidedLiquid ? true : !liquidBox.collidingBlocks.isEmpty();
 			
-			//If the liquid boxes are more collided, set collisions to those.
+			//If the liquid boxes are grounded and are more collided, use liquid values.
 			//Otherwise, use the solid values.
-			if(isCollidedLiquid && (liquidCollisionDepth > collisionDepth)){
+			if(isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)){
 				isCollided = isCollidedLiquid;
 				isGrounded = isGroundedLiquid;
 				collisionDepth = liquidCollisionDepth;
 				contactPoint.setTo(liquidBox.localCenter).add(0D, -liquidBox.heightRadius, 0D);
 			}
 		}
+	}
+	
+	/**
+	 * Returns true if this box has any boxes and is ready for collision operations.
+	 */
+	public boolean isReady(){
+		return !groundDevices.isEmpty() || !liquidDevices.isEmpty();
 	}
 }

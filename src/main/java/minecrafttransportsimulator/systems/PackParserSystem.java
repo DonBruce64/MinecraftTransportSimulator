@@ -89,48 +89,52 @@ public final class PackParserSystem{
     			doAnimationLegacyCompats(mainDefinition.rendering, mainDefinition);
     		}
     		mainDefinition.genericName = jsonFileName;
-    		for(VehicleDefinition subDefinition : mainDefinition.definitions){
-    			//Need to copy the JSON into a new instance to allow differing systemNames.
-    			JSONVehicle mainDefinitionCopy = new JSONVehicle();
-    			mainDefinitionCopy.packID = mainDefinition.packID;
-    			mainDefinitionCopy.classification = mainDefinition.classification;
-    			mainDefinitionCopy.genericName = mainDefinition.genericName;
-    			//Need to copy general too, as we need to set the name for each general section to be unique.
-    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
-    			mainDefinitionCopy.general.name = subDefinition.name;
-    			mainDefinitionCopy.general.description = mainDefinition.general.description;
-    			mainDefinitionCopy.general.materials = mainDefinition.general.materials;
-    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
-    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
-    			mainDefinitionCopy.general.type = mainDefinition.general.type;
-    			
-    			//Copy the rest of the parameters as-is.
-    			mainDefinitionCopy.definitions = mainDefinition.definitions;
-    			mainDefinitionCopy.motorized = mainDefinition.motorized;
-    			mainDefinitionCopy.plane = mainDefinition.plane;
-    			mainDefinitionCopy.blimp = mainDefinition.blimp;
-    			mainDefinitionCopy.car = mainDefinition.car;
-    			mainDefinitionCopy.parts = mainDefinition.parts;
-    			mainDefinitionCopy.collision = mainDefinition.collision;
-    			mainDefinitionCopy.rendering = mainDefinition.rendering;
-    			
-    			performLegacyCompats(mainDefinitionCopy);
-    			ItemVehicle vehicle = new ItemVehicle(mainDefinitionCopy, subDefinition.subName);
-    			setupItem(vehicle, jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
-    			List<String> materials = new ArrayList<String>();
-				for(String material : mainDefinitionCopy.general.materials){
-					materials.add(material);
-				}
-				for(String material : subDefinition.extraMaterials){
-					materials.add(material);
-				}
-				//Need to set this again to account for the extraMaterials.
-				MTSRegistry.packCraftingMap.put(vehicle, materials.toArray(new String[materials.size()]));
+	    	for(VehicleDefinition subDefinition : mainDefinition.definitions){
+	    		try{
+	    			//Need to copy the JSON into a new instance to allow differing systemNames.
+	    			JSONVehicle mainDefinitionCopy = new JSONVehicle();
+	    			mainDefinitionCopy.packID = mainDefinition.packID;
+	    			mainDefinitionCopy.classification = mainDefinition.classification;
+	    			mainDefinitionCopy.genericName = mainDefinition.genericName;
+	    			//Need to copy general too, as we need to set the name for each general section to be unique.
+	    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
+	    			mainDefinitionCopy.general.name = subDefinition.name;
+	    			mainDefinitionCopy.general.description = mainDefinition.general.description;
+	    			mainDefinitionCopy.general.materials = mainDefinition.general.materials;
+	    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
+	    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
+	    			mainDefinitionCopy.general.type = mainDefinition.general.type;
+	    			
+	    			//Copy the rest of the parameters as-is.
+	    			mainDefinitionCopy.definitions = mainDefinition.definitions;
+	    			mainDefinitionCopy.motorized = mainDefinition.motorized;
+	    			mainDefinitionCopy.plane = mainDefinition.plane;
+	    			mainDefinitionCopy.blimp = mainDefinition.blimp;
+	    			mainDefinitionCopy.car = mainDefinition.car;
+	    			mainDefinitionCopy.parts = mainDefinition.parts;
+	    			mainDefinitionCopy.collision = mainDefinition.collision;
+	    			mainDefinitionCopy.rendering = mainDefinition.rendering;
+	    			
+	    			performLegacyCompats(mainDefinitionCopy);
+	    			ItemVehicle vehicle = new ItemVehicle(mainDefinitionCopy, subDefinition.subName);
+	    			setupItem(vehicle, jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
+	    			List<String> materials = new ArrayList<String>();
+					for(String material : mainDefinitionCopy.general.materials){
+						materials.add(material);
+					}
+					for(String material : subDefinition.extraMaterials){
+						materials.add(material);
+					}
+					//Need to set this again to account for the extraMaterials.
+					MTSRegistry.packCraftingMap.put(vehicle, materials.toArray(new String[materials.size()]));
+	    		}catch(Exception e){
+	    			throw new NullPointerException("Unable to parse definition #" + (mainDefinition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+	    		}
     		}
-    		
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
+    		e.printStackTrace();
     	}
     }
     
@@ -523,6 +527,7 @@ public final class PackParserSystem{
     				object = jsonInstance.new VehicleAnimatedObject();
     				object.objectName = translatable.partName;
     				object.animations = new ArrayList<VehicleAnimationDefinition>();
+    				rendering.animatedObjects.add(object);
     			}
     			
     			VehicleAnimationDefinition animation = jsonInstance.new VehicleAnimationDefinition();
