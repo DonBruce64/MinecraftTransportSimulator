@@ -61,7 +61,7 @@ public class ItemWrench extends Item implements IItemVehicleInteractable{
 					//Player can remove part.  Spawn item in the world and remove part.
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
-					vehicle.removePart(part, null, false);
+					vehicle.removePart(part, null);
 					Item droppedItem = part.getItem();
 					if(droppedItem != null){
 						vehicle.world.spawnItemStack(new ItemStack(droppedItem), part.getData(), part.worldPos);

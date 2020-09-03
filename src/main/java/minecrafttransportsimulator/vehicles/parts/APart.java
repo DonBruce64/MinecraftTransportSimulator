@@ -307,7 +307,7 @@ public abstract class APart implements ISoundProvider{
 	}
     
 	@Override
-    public FloatBuffer getProviderVelocity(){
+    public Point3d getProviderVelocity(){
 		return vehicle.getProviderVelocity();
 	}
 	

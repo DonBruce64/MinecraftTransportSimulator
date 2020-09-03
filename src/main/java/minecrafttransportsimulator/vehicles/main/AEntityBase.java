@@ -2,9 +2,11 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.collect.BiMap;
@@ -75,9 +77,12 @@ public abstract class AEntityBase{
 	
 	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
 	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
-	 * This should be populated prior to trying to load riders, so ideally this will be populated during construction..
+	 * This should be populated prior to trying to load riders, so ideally this will be populated during construction.
+	 * Note that these values are shared as keys in the rider map, so if you change them, you will no longer have
+	 * hash equality in the keys.  If you need to interface with the map with a new Point3d object, you should do equality
+	 * checks on this list to find the "same" point and use that in map operations to ensure hash-matching of the map.
 	 **/
-	public List<Point3d> ridableLocations = new ArrayList<Point3d>();
+	public Set<Point3d> ridableLocations = new HashSet<Point3d>();
 	
 	/**List of locations where rider were last save.  This is used to re-populate riders on reloads.
 	 * It can be assumed that riders will be re-added in the same order the location list was saved.
@@ -136,9 +141,10 @@ public abstract class AEntityBase{
 	 *  riders of said entity will be.
 	 */
 	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
-		//Update entity position.
+		//Update entity position and motion.
 		if(rider.isValid()){
 			rider.setPosition(locationRiderMap.inverse().get(rider));
+			rider.setVelocity(motion);
 		}else{
 			//Remove invalid rider.
 			removeRider(rider, iterator);
@@ -155,8 +161,22 @@ public abstract class AEntityBase{
 	 */
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(riderLocation == null){
-			riderLocation = savedRiderLocations.get(0);
+			if(savedRiderLocations.isEmpty()){
+				return false;
+			}else{
+				riderLocation = savedRiderLocations.get(0);
+			}
 		}
+		
+		//Need to find the actual point reference for this to ensure hash equality.
+		for(Point3d location : ridableLocations){
+			if(riderLocation.equals(location)){
+				riderLocation = location;
+				break;
+			}
+		}
+		
+		//Remove the existing location, if we have one.
 		savedRiderLocations.remove(riderLocation);
 		if(locationRiderMap.containsKey(riderLocation)){
 			//We already have a rider in this location.

@@ -50,19 +50,20 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
-		//we will be invalid.  Check that to prevent loops.  Also set some parameters manually
+		//we will be marked as such.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
+		//Don't add the fake part until the first update loop.  This prevents save/load errors.
 		if(!isFake() && getLongPartOffset() != 0){
-			packVehicleDef.pos.z += getLongPartOffset();
-			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, this);
-			packVehicleDef.pos.z -= getLongPartOffset();
-			//Only check collision if we are not adding this part from saved NBT data.
-			//If we are adding from NBT, then we should have a tag saying that.
-			//FIXME fake parts don't save/load correctly.
-			if(data.getBoolean("isExisting")){
-				vehicle.partsFromNBT.add(fakePart);
-			}else{
+			//Need to swap placement for fake part so it uses the offset.
+			Point3d actualPlacement = packVehicleDef.pos;
+			packVehicleDef.pos = packVehicleDef.pos.copy().add(0D, 0D, (double) getLongPartOffset());
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, null);
+			packVehicleDef.pos = actualPlacement;
+			//This hack prevents us from adding this part to the main list during vehicle construction.
+			if(vehicle.partSlotBoxes != null){
 				vehicle.addPart(fakePart, false);
+			}else{
+				vehicle.partsFromNBT.add(fakePart);
 			}
 		}else{
 			fakePart = null;
@@ -147,13 +148,13 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		super.remove();
 		if(fakePart != null){
 			fakePart.isValid = false;
+			vehicle.removePart(fakePart, null);
 		}
 	}
 	
 	@Override
 	public WrapperNBT getData(){
 		WrapperNBT data = super.getData();
-		data.setBoolean("isExisting", true);
 		data.setBoolean("isFlat", isFlat);
 		return data;
 	}

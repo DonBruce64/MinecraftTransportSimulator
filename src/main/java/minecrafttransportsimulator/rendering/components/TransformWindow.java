@@ -22,7 +22,7 @@ public class TransformWindow extends ATransformRenderable{
 	}
 	
 	@Override
-	public boolean shouldRender(){
+	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		return ConfigSystem.configObject.client.renderWindows.value;
 	}
 

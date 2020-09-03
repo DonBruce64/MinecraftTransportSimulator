@@ -78,7 +78,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		if(partPackID.isEmpty()){
-			vehicle.removePart(vehicle.getPartAtLocation(offset), null, false);
+			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
 		}else{
 			VehiclePart packPart = vehicle.getPackDefForLocation(offset);
 			vehicle.addPart(PackParserSystem.createPart(vehicle, packPart, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, partData, vehicle.getPartAtLocation(partClickedOffset)), false);

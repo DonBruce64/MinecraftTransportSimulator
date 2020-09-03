@@ -6,7 +6,6 @@ import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
 import mcinterface.InterfaceRender;
 import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -20,7 +19,6 @@ import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Class that handles all control operations.
  * 
@@ -85,31 +83,31 @@ public final class ControlSystem{
 	
 	private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA){
 		if(lookR.isPressed()){
-			clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() - 3);
+			clientPlayer.setYaw(clientPlayer.getYaw() - 3);
 		}
 		if(lookL.isPressed()){
-			clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() + 3);
+			clientPlayer.setYaw(clientPlayer.getYaw() + 3);
 		}
 		if(lookU.isPressed()){
-			clientPlayer.setRotations(clientPlayer.getPitch() - 3, clientPlayer.getYaw());
+			clientPlayer.setPitch(clientPlayer.getPitch() - 3);
 		}
 		if(lookD.isPressed()){
-			clientPlayer.setRotations(clientPlayer.getPitch() + 3, clientPlayer.getYaw());
+			clientPlayer.setPitch(clientPlayer.getPitch() + 3);
 		}
 		
 		float pollData = lookA.getMultistateValue();
 		if(pollData != 0){
 			if(pollData >= 0.125F && pollData <= 0.375F){
-				clientPlayer.setRotations(clientPlayer.getPitch() + 3, clientPlayer.getYaw());
+				clientPlayer.setPitch(clientPlayer.getPitch() + 3);
 			}
 			if(pollData >= 0.375F && pollData <= 0.625F){
-				clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() - 3);
+				clientPlayer.setYaw(clientPlayer.getYaw() - 3);
 			}
 			if(pollData >= 0.625F && pollData <= 0.875F){
-				clientPlayer.setRotations(clientPlayer.getPitch() - 3, clientPlayer.getYaw());
+				clientPlayer.setPitch(clientPlayer.getPitch() - 3);
 			}
 			if(pollData >= 0.875F || pollData <= 0.125F){
-				clientPlayer.setRotations(clientPlayer.getPitch(), clientPlayer.getYaw() + 3);
+				clientPlayer.setYaw(clientPlayer.getYaw() + 3);
 			}
 		}
 	}
@@ -136,38 +134,12 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gun){
-		Point3d seatPos = vehicle.locationRiderMap.inverse().get(InterfaceGame.getClientPlayer());
-		if(seatPos != null){
-			PartSeat seat = (PartSeat) vehicle.getPartAtLocation(seatPos);
-			//If we are seated, attempt to control guns.
-			//Only control guns our seat is a part of, or guns with no seats part of them.
-			//First check our parent part.
-			if(seat.parentPart instanceof PartGun){
-				InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
-			}
-			//Now check subParts of our seat.
-			for(APart subPart : seat.childParts){
-				if(subPart instanceof PartGun){
-					InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) subPart, gun.isPressed()));
-				}
-			}
-			//If we are the vehicle controller, check for guns that don't have seats. 
-			if(seat.vehicleDefinition.isController){
-				for(APart part : vehicle.parts){
-					if(part instanceof PartGun){
-						if(!(part.parentPart instanceof PartSeat)){
-							boolean hasControllingSeats = false;
-							for(APart subPart : part.childParts){
-								if(subPart instanceof PartSeat){
-									hasControllingSeats = true;
-								}
-							}
-							if(!hasControllingSeats){
-								InterfaceNetwork.sendToServer(new PacketVehiclePartGun((PartGun) seat.parentPart, gun.isPressed()));
-							}
-						}
-					}
+	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger){
+		for(APart part : vehicle.parts){
+			if(part instanceof PartGun){
+				PartGun gun = (PartGun) part;
+				if(InterfaceGame.getClientPlayer().equals(gun.getCurrentController())){
+					InterfaceNetwork.sendToServer(new PacketVehiclePartGun(gun, gunTrigger.isPressed()));
 				}
 			}
 		}

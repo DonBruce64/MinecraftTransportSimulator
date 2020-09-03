@@ -104,23 +104,24 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public void attack(Damage damage){
-		if(damage.isExplosion){
-			hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;
-			if(!definition.engine.isSteamPowered){
-				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
-				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
-				if(!brokenStarter)brokenStarter = Math.random() < 0.05;
+		if(!isCreative){
+			if(damage.isExplosion){
+				hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;
+				if(!definition.engine.isSteamPowered){
+					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+					if(!brokenStarter)brokenStarter = Math.random() < 0.05;
+				}
+				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter), vehicle);
+			}else{
+				hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
+				if(!definition.engine.isSteamPowered){
+					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+				}
+				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter), vehicle);
 			}
-			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter), vehicle);
-		}else{
-			hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
-			if(!definition.engine.isSteamPowered){
-				if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
-				if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
-			}
-			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter), vehicle);
 		}
-		backfireEngine();
 	}
 	
 	@Override
@@ -220,7 +221,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				
 				//Add extra hours if we are running the engine too fast.
 				if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)){
-					hours += 0.001*(rpm - getSafeRPMFromMax(definition.engine.maxRPM))/10F*getTotalWearFactor();
+					hours += (rpm - getSafeRPMFromMax(definition.engine.maxRPM))/getSafeRPMFromMax(definition.engine.maxRPM)*getTotalWearFactor();
 				}
 			}
 			
@@ -249,20 +250,20 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				pressure = Math.min(90 - temp/10, pressure + rpm/startRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
 							
 				//Add extra hours and temp if we have low oil.
-				if(pressure < LOW_OIL_PRESSURE){
+				if(pressure < LOW_OIL_PRESSURE && !isCreative){
 					temp += Math.max(0, (20*rpm/definition.engine.maxRPM)/20);
 					hours += 0.01*getTotalWearFactor();
 				}
 				
 				//Add extra hours if we tried to run the engine fast without it being warmed up.
-				if(rpm > startRPM*1.5 && temp < COLD_TEMP){
+				if(rpm > startRPM*1.5 && temp < COLD_TEMP && !isCreative){
 					hours += 0.001*(rpm/startRPM - 1)*getTotalWearFactor();
 				}
 				
 				//Add extra hours, and possibly explode the engine, if its too hot.
-				if(temp > OVERHEAT_TEMP_1){
+				if(temp > OVERHEAT_TEMP_1 && !isCreative){
 					hours += 0.001*(temp - OVERHEAT_TEMP_1)*getTotalWearFactor();
-					if(temp > FAILURE_TEMP && !vehicle.world.isClient() && !isCreative){
+					if(temp > FAILURE_TEMP && !vehicle.world.isClient()){
 						explodeEngine();
 					}
 				}

@@ -69,8 +69,9 @@ public final class RenderVehicle{
 	/**Used to clear out the rendering caches of any parts with the passed-in definition.
 	 * Used in dev mode to allow the re-loading of models.**/
 	public static void clearPartCaches(JSONPart definition){
-		GL11.glDeleteLists(partDisplayLists.remove(definition.systemName), 1);
-		for(RenderableModelObject modelObject : partObjectLists.get(definition.systemName)){
+		String modelName = "objmodels/parts/" + definition.systemName + ".obj";
+		GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
+		for(RenderableModelObject modelObject : partObjectLists.get(modelName)){
 			modelObject.resetDisplayList();
 		}
 		partObjectLists.remove(definition.systemName);

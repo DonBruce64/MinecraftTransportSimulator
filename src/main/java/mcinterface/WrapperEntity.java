@@ -1,7 +1,5 @@
 package mcinterface;
 
-import java.nio.FloatBuffer;
-
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -103,6 +101,40 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Gets the entity's position as a point.
+	 */
+	public Point3d getPosition(){
+		mutablePosition.set(entity.posX, entity.posY, entity.posZ);
+		return mutablePosition;
+	}
+	private final Point3d mutablePosition = new Point3d(0D, 0D, 0D);
+	
+	/**
+	 *  Sets the entity's position to the passed-in point.
+	 */
+	public void setPosition(Point3d position){
+		entity.setPosition(position.x, position.y, position.z);
+	}
+	
+	/**
+	 *  Gets the entity's velocity as a vector.
+	 */
+	public Point3d getVelocity(){
+		mutableVelocity.set(entity.motionX, entity.motionY, entity.motionZ);
+		return mutableVelocity;
+	}
+	private final Point3d mutableVelocity = new Point3d(0D, 0D, 0D);
+	
+	/**
+	 *  Sets the entity's velocity to the passed-in vector.
+	 */
+	public void setVelocity(Point3d motion){
+		entity.motionX = motion.x;
+		entity.motionY = motion.y;
+		entity.motionZ = motion.z;
+	}
+	
+	/**
 	 *  Returns the entity's pitch (x-axis rotation).
 	 */
 	public float getPitch(){
@@ -121,16 +153,23 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Sets the entities pitch and yaw.
+	 *  Sets the entity's yaw to the passed-in yaw.
 	 *  NOTE: the yaw value from this function is inverted
 	 *  from the normal MC standard to have it follow the RHR
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
-	public void setRotations(double pitch, double yaw){
-		entity.rotationPitch = (float) pitch;
-		entity.rotationYaw = (float) -yaw;
+	public void setYaw(double yaw){
+		entity.rotationYaw = (float)-yaw;
 	}
+	
+	/**
+	 *  Sets the entity's pitch to the passed-in pitch.
+	 */
+	public void setPitch(double pitch){
+		entity.rotationPitch = (float)pitch;
+	}
+	
 	
 	/**
 	 *  Returns the entity's NBT data.
@@ -163,34 +202,6 @@ public class WrapperEntity{
 			}
 		}
 		return false;
-	}
-	
-	/**
-	 *  Sets the entity's position to the passed-in point.
-	 */
-	public void setPosition(Point3d position){
-		entity.setPosition(position.x, position.y, position.z);
-	}
-	
-	/**
-	 *  Sets the entity's yaw to the passed-in yaw.
-	 */
-	public void setYaw(double yaw){
-		entity.rotationYaw = (float)-yaw;
-	}
-	
-	/**
-	 *  Sets the entity's yaw to the passed-in yaw.
-	 */
-	public void setPitch(double pitch){
-		entity.rotationPitch = (float)pitch;
-	}
-	
-	/**
-	 *  Adds the passed-in values to the entity's position.
-	 */
-	public void addToPosition(double x, double y, double z){
-		entity.setPosition(entity.posX + x, entity.posY + y, entity.posZ + z);
 	}
 	
 	/**
@@ -264,44 +275,4 @@ public class WrapperEntity{
 		return mutableRenderPosition;
 	}
 	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
-	
-	/**
-	 *  Puts the entity's position into the passed-in buffer.
-	 *  Used for operations where position needs to be checked frequently.
-	 *  Note that this may be called from another thread safely.
-	 */
-	public void putPosition(FloatBuffer buffer){
-		buffer.rewind();
-		buffer.put((float) entity.posX);
-		buffer.put((float) entity.posY);
-		buffer.put((float) entity.posZ);
-		buffer.flip();
-	}
-	
-	/**
-	 *  Puts the entity's velocity into the passed-in buffer.
-	 *  Used for operations where velocity needs to be checked frequently.
-	 *  Note that this may be called from another thread safely.
-	 */
-	public void putVelocity(FloatBuffer buffer){
-		buffer.rewind();
-		buffer.put((float) entity.motionX);
-		buffer.put((float) entity.motionY);
-		buffer.put((float) entity.motionZ);
-		buffer.flip();
-	}
-	
-	/**
-	 *  Puts the entity's orientation as vectors into the passed-in buffer.
-	 *  Used for operations where orientation needs to be checked frequently.
-	 *  Note that this may be called from another thread safely.
-	 */
-	public void putOrientation(FloatBuffer buffer){
-		buffer.put(0, (float) Math.sin(Math.toRadians(entity.rotationYaw)));
-		buffer.put(1, 0.0F);
-		buffer.put(2, (float) Math.cos(Math.toRadians(entity.rotationYaw)));
-		buffer.put(3, 0.0F);
-		buffer.put(4, 1.0F);
-		buffer.put(5, 0.0F);
-	}
 }

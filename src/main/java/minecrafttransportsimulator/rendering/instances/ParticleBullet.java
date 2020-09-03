@@ -39,7 +39,6 @@ public final class ParticleBullet extends AParticle{
 	private final int playerID;
 	private final EntityVehicleF_Physics vehicle;
 	private final BoundingBox box;
-	private final Damage damage;
 	
 	private final Map<ItemPartBullet, Integer> bulletDisplayLists = new HashMap<ItemPartBullet, Integer>();
 	
@@ -49,8 +48,6 @@ public final class ParticleBullet extends AParticle{
         this.playerID = player.getID();
         this.vehicle = vehicle;
         this.box = new BoundingBox(position, getSize(), getSize(), getSize());
-        //FIXME add pain.
-        this.damage = new Damage("bullet", 1, box, null);
     }
 	
 	@Override
@@ -59,10 +56,10 @@ public final class ParticleBullet extends AParticle{
 		double velocity = motion.length();
 		Point3d normalizedVelocity = motion.copy().normalize();
 		Point3d offset = normalizedVelocity.copy();
+		Damage damage = new Damage("bullet", velocity*bulletItem.definition.bullet.diameter/5, box, null);
 		for(double velocityOffset=0; velocityOffset<=velocity; velocityOffset+=0.25D){
 			//Update bounding box offset to current offset.
 			offset.setTo(normalizedVelocity).multiply(velocityOffset);
-			//box.globalCenter.setTo(normalizedVelocity).multiply(velocityOffset).add(position);
 			
 			//Check for collided entities and attack them.
 			Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle);
@@ -105,7 +102,7 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	protected int generateMaxAge(){
-		return 60;
+		return 10*20;
 	}
 	
 	@Override

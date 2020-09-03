@@ -13,8 +13,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraftforge.event.world.WorldEvent;
@@ -48,10 +48,6 @@ public class InterfaceAudio{
 	/**This gets incremented whenever we try to get a source and fail.  If we get to 10, the sound system
 	 * will stop attempting to play sounds.  Used for when mods take all the sources.**/
 	private static byte sourceGetFailures = 0;
-	
-	//private static final FloatBuffer playerPosition = BufferUtils.createFloatBuffer(3);
-	private static final FloatBuffer playerVelocity = BufferUtils.createFloatBuffer(3);
-	//private static final FloatBuffer playerOrientation = BufferUtils.createFloatBuffer(6);
 	
 	/**
 	 *  Main update loop.  Call every tick to update playing sounds,
@@ -97,41 +93,8 @@ public class InterfaceAudio{
 		}
 		queuedSounds.clear();
 		
-		//If the player is valid, do position and velocity updates for them.
+		//Get the player for further calculations.
 		WrapperPlayer player = InterfaceGame.getClientPlayer();
-		if(player != null){
-			//Update player position velocity, and orientation.
-			//PaulsCode does this for us in 1.12.2, so we don't need to do that.
-			//However, it fouls up velocity, so we need to re-do that one.
-			//Note that players riding entities use the entitie's velocity.
-			//player.putPosition(playerPosition);
-			//AL10.alListener(AL10.AL_POSITION, playerPosition);
-			Object entityRiding = player.getEntityRiding(); 
-			if(entityRiding instanceof ISoundProvider){
-				playerVelocity.clear();
-				FloatBuffer entityVelocity = ((ISoundProvider) entityRiding).getProviderVelocity();
-				playerVelocity.put(entityVelocity);
-				//need to flip this back to normal as it's assumed this won't be used except during an update call.
-				entityVelocity.flip();
-				playerVelocity.flip();
-			}else{
-				player.putVelocity(playerVelocity);
-			}
-			AL10.alListener(AL10.AL_VELOCITY, playerVelocity);
-			//player.putOrientation(playerOrientation);
-			//AL10.alListener(AL10.AL_ORIENTATION, playerOrientation);
-		}
-	    
-		//We also need to check if the doppler has been set to 0.
-		//MC does that somewhere in the the code as it's 0 during the update cycle.
-		if(AL10.alGetFloat(AL10.AL_DOPPLER_FACTOR) == 0){
-			//Sound normally is at a speed of 17.15m/tick.
-			//But the doppler equations assume m/second.
-			//We need to set the factor of 1/20 here to fix that.
-			//We the divide it by 2 again to lower the speed down a little further to account for MC's slow movement.
-			AL10.alDopplerVelocity(1F/20F/2F);
-			AL10.alDopplerFactor(1.0F);
-		}
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
@@ -153,15 +116,9 @@ public class InterfaceAudio{
 				if(sound.stopSound){
 					AL10.alSourceStop(sound.sourceIndex);
 				}else{
-					//Update position and velocity.
-					//If we are a radio, we set our velocity to the player's velocity to keep doppler away.
-					AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-					if(sound.radio != null){
-						AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, playerVelocity);
-					}else{
-						//System.out.format("XP:%f XS:%f  YP:%f YS:%f  ZP:%f ZS:%f\n", playerVelocity.get(0), sound.provider.getProviderVelocity().get(0), playerVelocity.get(1), sound.provider.getProviderVelocity().get(1), playerVelocity.get(2), sound.provider.getProviderVelocity().get(2));
-						AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
-					}
+					//Update position.
+					FloatBuffer providerPosbuffer = sound.provider.getProviderPosition();
+					AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, providerPosbuffer);
 					
 					//If the player is inside an enclosed vehicle, half the sound volume.
 					if(InterfaceGame.shouldSoundBeDampened(sound)){
@@ -169,9 +126,23 @@ public class InterfaceAudio{
 					}else{
 						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
 					}
+					
+					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
+					//Otherwise, set pitch as normal.
+					if(sound.looping && !sound.provider.equals(player.getEntityRiding())){
+						Point3d providerVelocity = sound.provider.getProviderVelocity();
+						providerVelocity.y = 0;
+						Point3d playerVelocity = player.getVelocity();
+						playerVelocity.y = 0;
+						double initalDelta = player.getPosition().add((double)-providerPosbuffer.get(0), (double)-providerPosbuffer.get(1), (double)-providerPosbuffer.get(2)).length();
+						double finalDelta = player.getPosition().add(playerVelocity).add((double)-providerPosbuffer.get(0), (double)-providerPosbuffer.get(1), (double)-providerPosbuffer.get(2)).subtract(providerVelocity).length();
+						float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
+						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
+					}else{
+						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
+					}
 
-					//Update pitch and rolloff distance, which is based on pitch.
-		    	    AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
+					//Update rolloff distance, which is based on pitch.
 					AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
 
 					//If we are a radio, check for more data.  Also set the number of buffers we have.
@@ -220,6 +191,7 @@ public class InterfaceAudio{
 				sound.provider.restartSound(sound);
 			}
 			playingSounds.clear();
+			sourceGetFailures = 0;
 		}
 	}
 	
@@ -248,7 +220,6 @@ public class InterfaceAudio{
 				AL10.alGetError();
 				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
 				AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
-	    	    AL10.alSource(sound.sourceIndex, AL10.AL_VELOCITY, sound.provider.getProviderVelocity());
 	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 	    	    
 				//Done setting up buffer.  Queue sound to start playing.

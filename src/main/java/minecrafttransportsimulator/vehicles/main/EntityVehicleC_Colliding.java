@@ -162,6 +162,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		for(APart part : parts){
 			if(world.isClient()){
 				WrapperPlayer clientPlayer = InterfaceGame.getClientPlayer();
+				//If the part is fake, don't add it.
+				if(part.isFake()){
+					continue;
+				}
+				
 				//If the part is a seat, and we are riding it, don't add it.
 				//This keeps us from clicking our own seat when we want to click other things.
 				if(part instanceof PartSeat){
@@ -207,6 +212,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			WrapperPlayer player = InterfaceGame.getClientPlayer();
 			if(player.isHoldingItem(AItemPart.class)){
 				for(Entry<BoundingBox, VehiclePart> partSlotBoxEntry : partSlotBoxes.entrySet()){
+					//System.out.println(partSlotBoxEntry.getValue().types);
 					AItemPart heldPart = (AItemPart) player.getHeldStack().getItem();
 					//Does the part held match this packPart?
 					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.general.type)){
@@ -270,21 +276,13 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		
-		//Remove entry from slot boxes.
-		Iterator<BoundingBox> iterator = partSlotBoxes.keySet().iterator();
-		while(iterator.hasNext()){
-			BoundingBox box = iterator.next();
-			if(box.localCenter.equals(part.placementOffset)){
-				activePartSlotBoxes.remove(box);
-				iterator.remove();
-				break;
-			}
-		}
+		//Recalculate slots.
+		recalculatePartSlots();
 	}
 	
 	@Override
-	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
-		super.removePart(part, iterator, playBreakSound);
+	public void removePart(APart part, Iterator<APart> iterator){
+		super.removePart(part, iterator);
 		//Remove collision boxes from maps.
 		if(partCollisionBoxes.containsKey(part)){
 			for(BoundingBox box : partCollisionBoxes.get(part)){
@@ -294,12 +292,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			partCollisionBoxes.remove(part);
 		}
 		
-		//Add slot to boxes.
-		BoundingBox newSlotBox = new BoundingBox(part.placementOffset, part.placementOffset.copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false); 
-		partSlotBoxes.put(newSlotBox, part.vehicleDefinition);
-		if(!world.isClient()){
-			activePartSlotBoxes.put(newSlotBox, part.vehicleDefinition);
-		}
+		//Recalculate slots.
+		recalculatePartSlots();
 	}
 	
 	/**

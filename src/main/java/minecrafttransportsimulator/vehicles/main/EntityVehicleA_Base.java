@@ -65,7 +65,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
-		ridableLocations.clear();
 		for(int i=0; i<data.getInteger("totalParts"); ++i){
 			//Use a try-catch for parts in case they've changed since this vehicle was last placed.
 			//Don't want crashes due to pack updates.
@@ -95,7 +94,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			APart part = iterator.next();
 			part.update();
 			if(!part.isValid){
-				removePart(part, iterator, true);
+				removePart(part, iterator);
 			}
 		}
 	}
@@ -214,6 +213,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				position.y += part.getHeight();
 			}
 		}
+		
+		//Add a ride-able location.
+		if(part instanceof PartSeat){
+			ridableLocations.add(part.placementOffset);
+		}
 	}
 	
 	/**
@@ -221,7 +225,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
    	 * let the part handle removal code.  Iterator is optional, but if you're in any code block that
    	 * is iterating over the parts list, and you don't pass that iterator in, you'll get a CME.
    	 */
-	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
+	public void removePart(APart part, Iterator<APart> iterator){
 		if(parts.contains(part)){
 			if(iterator != null){
 				iterator.remove();
@@ -237,12 +241,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
 				}
 			}
-			if(!world.isClient()){
-				if(playBreakSound){
-					//FIXME play different sound for removing things.  Preferabley through the wrapper.
-					//this.playSound(SoundEvents.ITEM_SHIELD_BREAK, 2.0F, 1.0F);
-				}
-			}
+		}
+		
+		//Remove a ride-able location.
+		if(part instanceof PartSeat){
+			ridableLocations.remove(part.placementOffset);
 		}
 	}
 	

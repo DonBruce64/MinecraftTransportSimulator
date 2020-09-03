@@ -28,7 +28,7 @@ public abstract class ATransformRenderable{
 	 *  By default, all transforms are rendered, but this may be overridden should
 	 *  the object this transform is on need to be made invisible.
 	 */
-	public boolean shouldRender(){
+	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		return true;
 	}
 	

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartPropeller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -100,6 +101,7 @@ public class PartPropeller extends APart{
 			//If we are too damaged, remove ourselves.
 			if(damage > definition.propeller.startingHealth && !vehicle.world.isClient()){
 				isValid = false;
+				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartPropeller(this), vehicle);
 			}
 		}
 	}
@@ -124,7 +126,7 @@ public class PartPropeller extends APart{
 	@Override
 	public Point3d getActionRotation(float partialTicks){
 		if(definition.propeller.isRotor){
-			return new Point3d(-vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+			return new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
 		}else{
 			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 		}

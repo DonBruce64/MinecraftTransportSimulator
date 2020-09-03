@@ -51,6 +51,10 @@ public final class RenderableModelObject{
 						}
 						break;
 					}
+					case("visibility") :{
+						transforms.add(new TransformVisibile(animation));
+						break;
+					}
 				}
 			}
 		}else{
@@ -75,7 +79,7 @@ public final class RenderableModelObject{
 		GL11.glPushMatrix();
 		double priorOffset = 0;
 		for(ATransformRenderable transform : transforms){
-			if(!transform.shouldRender()){
+			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
 				//Found a transform that told us not to render.
 				//Return to prevent rendering.
 				GL11.glPopMatrix();
@@ -142,6 +146,8 @@ public final class RenderableModelObject{
 	 *  Used to reset the display list in dev mode to allow the re-loading of models.
 	 */
 	public void resetDisplayList(){
-		GL11.glDeleteLists(displayLists.get(modelName).remove(objectName), 1);
+		if(displayLists.containsKey(modelName)){
+			GL11.glDeleteLists(displayLists.get(modelName).remove(objectName), 1);
+		}
 	}
 }

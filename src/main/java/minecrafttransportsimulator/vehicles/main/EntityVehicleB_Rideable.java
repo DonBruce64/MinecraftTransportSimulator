@@ -40,18 +40,18 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			//Get the part (seat) this rider is riding.
 			PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
 
-			//Now set the actual position for the seat.
+			//Now set the actual position/motion for the seat.
 			Point3d seatLocationOffset = new Point3d(0D, rider.getEyeHeight() + rider.getSeatOffset(), 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset);
+			rider.setVelocity(motion);
 			
 			//If we are on the client, and the game isn't paused, and the player has lockedView selected, rotate them with the vehicle.
 			//If we aren't paused, and we have a lockedView, rotate us with the vehicle.
             if(world.isClient() && !InterfaceGame.isGamePaused() && lockCameraToMovement){
     			//Only change pitch in third-person.  First-person pitch changes will result in the player looking the wrong way.
+            	rider.setYaw(rider.getYaw() + angles.y - prevAngles.y);
         		if(!InterfaceGame.inFirstPerson()){
-        			rider.setRotations(rider.getPitch() + angles.x - prevAngles.x, rider.getYaw() + angles.y - prevAngles.y);
-        		}else{
-        			rider.setRotations(rider.getPitch(), rider.getYaw() + angles.y - prevAngles.y);
+        			rider.setPitch(rider.getPitch() + angles.x - prevAngles.x);
         		}
              }
 			

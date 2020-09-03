@@ -65,6 +65,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				++gunNumber;
 			}
 		}
+		for(APart part : vehicle.partsFromNBT){
+			if(part instanceof PartGun){
+				++gunNumber;
+			}
+		}
 	}
 	
 	@Override
@@ -191,7 +196,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
 			lastBullet = loadedBullet;
 			lastController = playerController;
-			--bulletsLeft;
+			if(!vehicle.world.isClient()){
+				//Only remove bullets from the server.  We remove them from the client when they spawn.
+				--bulletsLeft;
+			}
 		}
 		
 		//If we are out of bullets, and aren't cooling down from firing, re-load ourselves from any vehicle inventories.
@@ -267,7 +275,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 		}
 		
-		//Check any sub-parts.
+		//Not parent or child.  Get main vehicle controller.
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
 				if(vehiclePart.vehicleDefinition.isController){
@@ -315,22 +323,26 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		
 	@Override
 	public void spawnParticles(){
-		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire){
+		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire && bulletsLeft > 0){
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
 			//This is based on the barrel length and shell size.
-			Point3d bulletOrientation = currentOrientation.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
+			Point3d gunFactoredAngles = currentOrientation.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
+			gunFactoredAngles.add(totalRotation).add(vehicle.angles);
 			
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
-			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(bulletOrientation.copy().multiply(definition.gun.muzzleVelocity/20D/10D));
+			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(gunFactoredAngles));
 			
 			//Get the bullet's initial position.  This is based off the gun orientation and barrel length.
-			bulletOrientation.multiply((double) definition.gun.length).add(worldPos);
+			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(gunFactoredAngles).add(worldPos);
 	        
 			//Add the bullet as a particle.
-			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletOrientation, bulletVelocity, lastBullet, lastController, vehicle));
+			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletPosition, bulletVelocity, lastBullet, lastController, vehicle));
 			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
+			
+			//Remove a bullet from the count.
+			--bulletsLeft;
 		}
 	}
 }

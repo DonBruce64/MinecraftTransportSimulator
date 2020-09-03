@@ -218,20 +218,26 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			thrustTorque.set(0D, 0D, 0D);
 			for(PartEngine engine : engines.values()){
 				Point3d engineForce = engine.getForceOutput();
+				boolean addThrustTorque = false;
 				thrustForce.add(engineForce);
-				thrustTorque.add(engineForce.y*-engine.placementOffset.z, engineForce.z*engine.placementOffset.x, engineForce.y*engine.placementOffset.x);
+				
 				//If the engine has a rotor add engine torque.
 				//Torque added is relative to the engine force output, factored by the angle of the control surface.
 				for(APart part : engine.childParts){
 					if(part instanceof PartPropeller){
+						addThrustTorque = true;
 						if(part.definition.propeller.isRotor){
-							double engineTotalForce = 5D*engineForce.length();
-							double rollTorque = aileronAngle != 0 ? engineTotalForce*aileronAngle/MAX_AILERON_ANGLE - angles.z : (angles.z > 0 ? -Math.min(angles.z, 5) : Math.min(-angles.z, 5));
-							double pitchTorque = elevatorAngle != 0 ? engineTotalForce*-elevatorAngle/MAX_ELEVATOR_ANGLE - angles.x : (angles.x > 0 ? -Math.min(angles.x, 5) : Math.min(-angles.x, 5));
-							double yawTorque =  engineTotalForce*rudderAngle/MAX_RUDDER_ANGLE;
-							thrustTorque.add(pitchTorque, yawTorque, rollTorque);
+							double rollDelta = aileronAngle/10D - angles.z;
+							double pitchDelta = -elevatorAngle/10D - angles.x;
+							double yawDelta =  5D*rudderAngle/MAX_RUDDER_ANGLE;
+							thrustTorque.add(pitchDelta, yawDelta, rollDelta).multiply(200D);
 						}
 					}
+				}
+				
+				//We also need to add torque if we have jet power or if we had a propeller providing force.
+				if(addThrustTorque || engine.definition.engine.jetPowerFactor > 0){
+					thrustTorque.add(engineForce.y*-engine.placementOffset.z, engineForce.z*engine.placementOffset.x, engineForce.y*engine.placementOffset.x);
 				}
 			}
 			

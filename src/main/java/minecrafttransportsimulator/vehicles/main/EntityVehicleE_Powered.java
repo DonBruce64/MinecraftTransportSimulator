@@ -78,7 +78,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	//Internal radio variables.
 	private final Radio radio = new Radio(this);
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
-	private final FloatBuffer soundVelocity = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -206,11 +205,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		soundPosition.put((float) position.y);
 		soundPosition.put((float) position.z);
 		soundPosition.flip();
-		soundVelocity.rewind();
-		soundVelocity.put((float) motion.x);
-		soundVelocity.put((float) motion.y);
-		soundVelocity.put((float) motion.z);
-		soundVelocity.flip();
 	}
 	
 	@Override
@@ -300,8 +294,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
-		super.removePart(part, iterator, playBreakSound);
+	public void removePart(APart part, Iterator<APart> iterator){
+		super.removePart(part, iterator);
 		byte engineNumber = 0;
 		for(VehiclePart packPart : definition.parts){
 			for(String type : packPart.types){
@@ -352,8 +346,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
     
 	@Override
-    public FloatBuffer getProviderVelocity(){
-		return soundVelocity;
+    public Point3d getProviderVelocity(){
+		return motion;
 	}
 	
 	@Override

@@ -119,8 +119,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void removePart(APart part, Iterator<APart> iterator, boolean playBreakSound){
-		super.removePart(part, iterator, playBreakSound);
+	public void removePart(APart part, Iterator<APart> iterator){
+		super.removePart(part, iterator);
 		groundDeviceBoxes.updateMembers();
 		groundDeviceBoxes.updateBounds();
 	}
@@ -684,17 +684,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(steeringAngle != 0){
 			float turningFactor = 0;
 			float turningDistance = 0;
-			//Check grounded wheels for turn contributions.
+			//Check grounded ground devices for turn contributions.
 			for(PartGroundDevice groundDevice : groundedGroundDevices){
-				float frictionLoss = groundDevice.getFrictionLoss();
-				//Do we have enough friction to change yaw?
-				if(groundDevice.vehicleDefinition.turnsWithSteer && groundDevice.getLateralFriction() - frictionLoss > 0){
-					turningFactor += groundDevice.getLateralFriction() - frictionLoss;
+				if(groundDevice.vehicleDefinition.turnsWithSteer){
 					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
 			}
+			if(turningDistance != 0){
+				turningFactor = 1.0F;
+			}
 			
-			//Also check for boat engines, which can make us turn if we are in water.
+			//Also check for boat propellers, which can make us turn if we are in water.
 			for(APart part : parts){
 				if(part instanceof PartPropeller){
 					if(part.isInLiquid()){
