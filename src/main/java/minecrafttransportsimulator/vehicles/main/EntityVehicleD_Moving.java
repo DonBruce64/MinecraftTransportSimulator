@@ -69,7 +69,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.brakeOn = data.getBoolean("brakeOn");
 		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
-		this.serverDeltaR = data.getPoint3d("serverDeltaA");
+		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
 		this.groundDeviceBoxes = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
@@ -791,6 +791,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now that that the movement has been checked, move the vehicle.
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR);
 		rotationApplied.setTo(rotation);
+		System.out.println(velocity);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
@@ -800,7 +801,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Make sure the server is sending delta packets before we try to do delta correction.
 			if(!serverDeltaM.isZero()){
 				//Get the delta difference, and square it.  Then divide it by 25.
-				//This gives us a good "bubberbanding correction" formula for deltas.
+				//This gives us a good "rubberbanding correction" formula for deltas.
 				//We add this correction motion to the existing motion applied.
 				//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
 				clientDeltaMApplied.setTo(serverDeltaM).subtract(clientDeltaM);
@@ -855,7 +856,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					rotationApplied.z = 0;
 				}*/
 				
-				//Add actual movement to client deltas.
+				//Add actual movement to client deltas to prevent further corrections.
 				clientDeltaM.add(motionApplied);
 				clientDeltaR.add(rotationApplied);
 			}
@@ -868,8 +869,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			world.moveEntities(collisionBoxes, position, angles, motionApplied, rotationApplied);
 		}
 		
-		//Now add actual position and angles.  Needs to be done before moving entities to tell the
-		//system the initial angle and delta angle for movement calculations.
+		//Now add actual position and angles.
 		position.add(motionApplied);
 		angles.add(rotationApplied);
 		
@@ -994,23 +994,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 			}
 		}
-		
-		//As a final precaution, take a bit of extra movement off of the motions.
-		//This is done to prevent vehicles from moving into blocks when they shouldn't
-		//due to floating-point errors.
-		//FIXME see if we need this hack any more.
-		if(motion.x > 0){
-			//motion.x -= 0.002F;
-		}
-		if(motion.x < 0){
-			//motion.x += 0.002F;
-		}
-		if(motion.z > 0){
-			//motion.z -= 0.002F;
-		}
-		if(motion.z < 0){
-			//motion.z += 0.002F;
-		}
 	}
 	
 	public void addToServerDeltas(Point3d motion, Point3d rotation){
@@ -1041,7 +1024,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("brakeOn", brakeOn);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setString("ownerUUID", ownerUUID);
-		data.setPoint3d("serverDeltaM", serverDeltaR);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
+		data.setPoint3d("serverDeltaR", serverDeltaR);
 	}
 }

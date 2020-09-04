@@ -839,32 +839,43 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}else{
 			//No wheel force.  Check for propellers to provide force.
 			for(APart part : childParts){
-				if(part instanceof PartPropeller && state.running && Math.abs(((PartPropeller) part).currentPitch) > 5){
+				if(part instanceof PartPropeller && state.running){
 					PartPropeller propeller = (PartPropeller) part;
 					//Get the current linear velocity of the propeller, based on our axial velocity.
+					//This is is meters per second.
 					double currentLinearVelocity = 20D*propellerAxialVelocity;
 					//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
-					double desiredLinearVelocity = 0.0254D*propeller.currentPitch*20D*propeller.angularVelocity;
-					//Multiply by a factor to get the true desired linear velocity.  This is slightly higher than theoretical ideal.
-					desiredLinearVelocity *= (1D*propeller.currentPitch/propeller.definition.propeller.diameter + 0.2D)/(1D*propeller.currentPitch/propeller.definition.propeller.diameter);
+					//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
+					//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances
+					//here, like perhaps the propeller manufactures reporting the prop pitch to match cruise, but for physics, that don't work,
+					//because the propeller never reaches that speed during cruise due to drag.  So we add a small addition here to compensate.
+					double desiredLinearVelocity = 0.0254D*(propeller.currentPitch + 20)*20D*propeller.angularVelocity;
+					//Not sure why, but this follows given the fact cruising speed of aircraft is a bit
 					if(desiredLinearVelocity != 0){
+						//Thrust produced by the propeller is the different between the desired linear velocity and the current linear velocity.
+						//This gets the magnitude of the initial thrust force.
+						//We square this value, but keep the sign, as lifting mechanics square velocity.  
+						double thrust = (desiredLinearVelocity - currentLinearVelocity);
+						//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
+						thrust *= Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2);
+						//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
+						thrust *= vehicle.airDensity/25D;
+						/*double thrust = vehicle.airDensity
+								*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)
+								*Math.abs(desiredLinearVelocity)*(desiredLinearVelocity - currentLinearVelocity)
+								*Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)
+								/400D;*/
+	
 						//Get the angle of attack of the propeller.
 						//Note pitch velocity is in linear in meters per second, 
 						//This means we need to convert it to meters per revolution before we can move on.
 						//This gets the angle as a ratio of forward pitch to propeller circumference.
-						double angleOfAttack = ((desiredLinearVelocity - currentLinearVelocity)/(rpm/propellerGearboxRatio/60D))/(propeller.definition.propeller.diameter*Math.PI*0.0254D);
-						double thrust = vehicle.airDensity
-								*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)
-								*Math.abs(desiredLinearVelocity)*(desiredLinearVelocity - currentLinearVelocity)
-								*Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)
-								/400D;
-	
-						//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f Gearbox:%f\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack, propellerGearboxRatio);
-						
 						//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
+						double angleOfAttack = ((desiredLinearVelocity - currentLinearVelocity)/(rpm/propellerGearboxRatio/60D))/(propeller.definition.propeller.diameter*Math.PI*0.0254D);
 						if(Math.abs(angleOfAttack) > 0.4663D){
 							thrust *= 0.4663D/Math.abs(angleOfAttack);
 						}
+						//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f Gearbox:%f Velocity:%f Side:%s\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack, propellerGearboxRatio, vehicle.velocity, vehicle.world.isClient() ? "CLIENT" : "SERVER");
 						
 						//If the propeller is in the water, increase thrust.
 						if(isPropellerInLiquid){

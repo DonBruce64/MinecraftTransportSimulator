@@ -29,7 +29,6 @@ public class ItemPartPropeller extends AItemPart{
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		super.addInformation(stack, world, tooltipLines, flagIn);
 		tooltipLines.add(I18n.format(definition.propeller.isDynamicPitch ? "info.item.propeller.dynamicPitch" : "info.item.propeller.staticPitch"));
-		tooltipLines.add(I18n.format("info.item.propeller.numberBlades") + definition.propeller.numberBlades);
 		tooltipLines.add(I18n.format("info.item.propeller.pitch") + definition.propeller.pitch);
 		tooltipLines.add(I18n.format("info.item.propeller.diameter") + definition.propeller.diameter);
 		tooltipLines.add(I18n.format("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*definition.propeller.diameter)));

@@ -109,9 +109,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Set vectors to current velocity and orientation.
 		prevVelocity = velocity;
 		headingVector.set(0D, 0D, 1D).rotateFine(angles);
-		normalizedVelocityVector.setTo(motion);
-		velocity = normalizedVelocityVector.dotProduct(headingVector);
-		normalizedVelocityVector.normalize();
+		normalizedVelocityVector.setTo(motion).normalize();
+		velocity = motion.length();
 		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
 		sideVector = verticalVector.crossProduct(headingVector);
 		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
