@@ -41,7 +41,7 @@ public class PacketFluidTankChange extends APacketBase{
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		FluidTank tank = FluidTank.createdClientTanks.get(tankID);
-		//TODO we get nulls her when loading the world with engines started.  Find an fix.
+		//Tank may be null if the client hasn't loaded this tank yet. 
 		if(tank != null){
 			if(fluidDelta < 0){
 				tank.drain(fluidName, -fluidDelta, true);

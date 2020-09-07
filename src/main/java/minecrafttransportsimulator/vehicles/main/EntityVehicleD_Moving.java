@@ -152,7 +152,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					frontRightGroundDeviceBox.updateCollisions();
 					rearLeftGroundDeviceBox.updateCollisions();
 					rearRightGroundDeviceBox.updateCollisions();
-					//FIXME do we need this?
 					//return motion.y > 0 ? motion.y : 0;
 					return motion.y;
 				}
@@ -655,12 +654,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundDeviceBoxes.updateCollisions();
 		
 		//If any ground devices are collided after our movement, apply corrections to prevent this.
-		//The first correction we apply is +y motion.  This counteracts gravity, and ant GDBs that may
+		//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
 		//have been moved into the ground by the application of our motion and rotation.  We do this before collision
 		//boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
 		//all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
 		//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
-		//instantly climb mountains.  Because of this, we add only 1/4 block, or enough motionY to prevent collision,
+		//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
 		//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
 		double groundCollisionBoost = groundDeviceBoxes.getMaxCollisionDepth()/SPEED_FACTOR;
 		if(groundCollisionBoost > 0){
@@ -669,7 +668,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
 			//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
 			if(motion.y + groundCollisionBoost > 0){
-				groundCollisionBoost = Math.min(groundCollisionBoost, 0.1D/SPEED_FACTOR);
+				groundCollisionBoost = Math.min(groundCollisionBoost, 0.125D/SPEED_FACTOR);
 				motion.y += groundCollisionBoost;
 				groundCollisionBoost = motion.y;
 			}else{
@@ -697,7 +696,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(collisionBoxCollided){
 			correctCollidingMovement();
 		}else{
-			groundRotationBoost = groundDeviceBoxes.performPitchCorrection(groundCollisionBoost);
+			//FIXME enable when we get motion y working.
+			//groundRotationBoost = groundDeviceBoxes.performPitchCorrection(groundCollisionBoost);
 			//FIXME enable when we do roll.
 			//groundRotationBoost = groundDeviceBoxes.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
@@ -730,6 +730,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 				clientDeltaRApplied.multiply(1D/25D);
 				rotationApplied.add(clientDeltaRApplied);
+				
 				
 				
 				//FIXME do we need this complex logic? I don't think we do, but we may.

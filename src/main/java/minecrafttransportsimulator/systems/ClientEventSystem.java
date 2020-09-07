@@ -19,7 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber(Side.CLIENT)
 @SideOnly(Side.CLIENT)
 public final class ClientEventSystem{
-    //TODO move this to the abstracted config file when we do that.
+    //TODO move this to the abstracted create tabs when we do that.
     
     /**
      * Renders a warning on the MTS core creative tab if there is no pack data.

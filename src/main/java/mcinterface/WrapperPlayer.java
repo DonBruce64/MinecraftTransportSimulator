@@ -253,7 +253,7 @@ public class WrapperPlayer extends WrapperEntity{
 		if(tile.tile instanceof IInventory){
 			player.displayGUIChest((IInventory) tile.tile);
 		}else if(tile.tile instanceof IFluidTank){
-			//TODO shove this into a generic fluid code somewhere.
+			//TODO shove this into the itemstack wrapper when we make it.
 			IFluidTank tileTank = (IFluidTank) tile;
 			ItemStack stack = player.getHeldItemMainhand();
 			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
