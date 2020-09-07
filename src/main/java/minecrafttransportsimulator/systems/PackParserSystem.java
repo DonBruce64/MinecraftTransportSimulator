@@ -308,32 +308,32 @@ public final class PackParserSystem{
     					partDef.ground.spacing = partDef.tread.spacing;
     					break;
     				}case("crate"):{
-    					partDef.general.type = "interactable";
+    					partDef.general.type = "interactable_crate";
     					partDef.interactable = partDef.new PartInteractable();
-    					partDef.interactable.type = "crate";
-    					partDef.interactable.inventoryUnits = 3;
+    					partDef.interactable.interactionType = "crate";
+    					partDef.interactable.inventoryUnits = 9;
     					partDef.interactable.feedsVehicles = true;
     					break;
     				}case("barrel"):{
-    					partDef.general.type = "interactable";
+    					partDef.general.type = "interactable_barrel";
     					partDef.interactable = partDef.new PartInteractable();
-    					partDef.interactable.type = "barrel";
+    					partDef.interactable.interactionType = "barrel";
     					partDef.interactable.inventoryUnits = 5;
     					break;
     				}case("crafting_table"):{
-    					partDef.general.type = "interactable";
+    					partDef.general.type = "interactable_crafting_table";
     					partDef.interactable = partDef.new PartInteractable();
-    					partDef.interactable.type = "crafting_table";
+    					partDef.interactable.interactionType = "crafting_table";
     					break;
     				}case("furnace"):{
-    					partDef.general.type = "interactable";
+    					partDef.general.type = "interactable_furnace";
     					partDef.interactable = partDef.new PartInteractable();
-    					partDef.interactable.type = "furnace";
+    					partDef.interactable.interactionType = "furnace";
     					break;
     				}case("brewing_stand"):{
-    					partDef.general.type = "interactable";
+    					partDef.general.type = "interactable_brewing_stand";
     					partDef.interactable = partDef.new PartInteractable();
-    					partDef.interactable.type = "brewing_stand";
+    					partDef.interactable.interactionType = "brewing_stand";
     					break;
     				}case("fertilizer"):{
     					partDef.general.type = "effector";
@@ -362,6 +362,46 @@ public final class PackParserSystem{
     				}
     			}
     		}
+    		
+    		if(partDef.subParts != null){
+	    		//Check all part slots for ground device names and update them.
+	    		//Also check if we define an additional part, and make it a list instead.
+	    		//Finally, switch all crates and barrels to effectors with the appropriate type.
+	    		for(VehiclePart subPartDef : partDef.subParts){
+	    			if(subPartDef.additionalPart != null){
+	    				subPartDef.additionalParts = new ArrayList<VehiclePart>();
+	    				subPartDef.additionalParts.add(subPartDef.additionalPart);
+	    			}
+	    			for(byte i=0; i<subPartDef.types.size(); ++i){
+	    				String subPartName = subPartDef.types.get(i);
+	    				if(subPartName.equals("wheel") || subPartName.equals("skid") || subPartName.equals("pontoon") || subPartName.equals("tread")){
+	    					if(subPartName.equals("tread")){
+	    						subPartDef.turnsWithSteer = true;
+	    					}
+	    					subPartDef.types.set(i, "ground_" + subPartName);
+	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
+	    					subPartDef.types.set(i, "interactable_" + subPartName);
+	    				}
+	    				//If we have additional parts, check those too.
+	    				if(subPartDef.additionalParts != null){
+	    					for(VehiclePart additionalPart : subPartDef.additionalParts){
+		    					for(byte j=0; j<additionalPart.types.size(); ++j){
+		    	    				subPartName = additionalPart.types.get(j);
+		    	    				if(subPartName.equals("wheel") || subPartName.equals("skid") || subPartName.equals("pontoon") || subPartName.equals("tread")){
+		    	    					if(subPartName.equals("tread")){
+		    	    						additionalPart.turnsWithSteer = true;
+		    	    					}
+		    	    					additionalPart.types.set(j, "ground_" + subPartName);
+		    	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
+		    	    					subPartDef.types.set(i, "interactable_" + subPartName);
+		    	    				}
+		    	    			}
+	    					}
+	    				}
+	    			}
+	    		}
+    		}
+    		
     		if(partDef.rendering != null){
     			doAnimationLegacyCompats(partDef.rendering, new JSONVehicle());
     		}
@@ -384,6 +424,7 @@ public final class PackParserSystem{
     		
     		//Check all part slots for ground device names and update them.
     		//Also check if we define an additional part, and make it a list instead.
+    		//Finally, switch all crates and barrels to effectors with the appropriate type.
     		for(VehiclePart part : vehicleDef.parts){
     			if(part.additionalPart != null){
     				part.additionalParts = new ArrayList<VehiclePart>();
@@ -396,6 +437,8 @@ public final class PackParserSystem{
     						part.turnsWithSteer = true;
     					}
     					part.types.set(i, "ground_" + partName);
+    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
+    					part.types.set(i, "interactable_" + partName);
     				}
     				//If we have additional parts, check those too.
     				if(part.additionalParts != null){
@@ -407,6 +450,8 @@ public final class PackParserSystem{
 	    	    						additionalPart.turnsWithSteer = true;
 	    	    					}
 	    	    					additionalPart.types.set(j, "ground_" + partName);
+	    	    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
+	    	    					part.types.set(i, "interactable_" + partName);
 	    	    				}
 	    	    			}
     					}
@@ -557,6 +602,8 @@ public final class PackParserSystem{
     		return new PartGun(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else if(definition.general.type.startsWith("ground_")){
     		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("interactable_")){
+        	return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else{
 	    	switch(definition.general.type){
 				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
@@ -564,7 +611,6 @@ public final class PackParserSystem{
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
-	    		case "interactable": return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
 	    		case "effector": return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
 				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
 			}
@@ -579,12 +625,13 @@ public final class PackParserSystem{
     		return new ItemPartGun(definition);
     	}else if(definition.general.type.startsWith("ground_")){
     		return new ItemPartGroundDevice(definition);
+    	}else if(definition.general.type.startsWith("interactable_")){
+    		return new ItemPartInteractable(definition);
     	}else{
 	    	switch(definition.general.type){
 				case "propeller": return new ItemPartPropeller(definition);
 				case "seat": return new ItemPartGeneric(definition);
 				case "bullet": return new ItemPartBullet(definition);
-				case "interactable": return new ItemPartInteractable(definition);
 				case "effector": return new ItemPartGeneric(definition);
 				case "custom": return new ItemPartCustom(definition);
 	    	}

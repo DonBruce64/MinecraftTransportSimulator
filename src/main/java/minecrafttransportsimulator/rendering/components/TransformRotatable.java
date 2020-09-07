@@ -38,10 +38,10 @@ public class TransformRotatable extends ATransformRenderable{
 		
 		//Add offsets and clamp translation.
 		rotation = rotationMagnitude*(definition.absolute ? Math.abs(rotation) : rotation) + definition.offset + offset;
-		if(definition.clampMin != 0 && rotation < definition.clampMin){
-			rotation = definition.clampMin;
-		}else if(definition.clampMax != 0 && rotation > definition.clampMax){
-			rotation = definition.clampMax;
+		if(definition.clampMin != 0 && rotation < definition.clampMin + offset){
+			rotation = definition.clampMin + offset;
+		}else if(definition.clampMax != 0 && rotation > definition.clampMax - offset){
+			rotation = definition.clampMax - offset;
 		}
 		
 		//Do rotation.

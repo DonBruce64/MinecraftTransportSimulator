@@ -12,11 +12,9 @@ import java.util.Map;
 import java.util.Set;
 
 import mcinterface.InterfaceAudio;
-import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
@@ -51,7 +49,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public boolean reverseThrust;
 	public boolean gearUpCommand;
 	public byte throttle;
-	public double fuel;
 	
 	//Internal states.
 	public byte totalGuns;
@@ -59,7 +56,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public double electricPower;
 	public double electricUsage;
 	public double electricFlow;
-	public String fluidName;
+	public FluidTank fuelTank;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
@@ -84,9 +81,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		
 		//Load simple variables.
 		this.throttle = (byte) data.getInteger("throttle");
-    	this.fuel = data.getDouble("fuel");
 		this.electricPower = data.getDouble("electricPower");
-		this.fluidName = data.getString("fluidName");
+		this.fuelTank = new FluidTank(data, definition.motorized.fuelCapacity, world.isClient());
 		
 		//Load lights.
 		lightsOn.clear();
@@ -137,9 +133,19 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void update(){
 		super.update();
-		if(fuel <= 0){
-			fuel = 0;
-			fluidName = "";
+		if(fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
+			//If we have space for fuel, and we have tanks with it, transfer it.
+			for(APart part : parts){
+				if(part instanceof PartInteractable && part.definition.interactable.feedsVehicles){
+					FluidTank tank = ((PartInteractable) part).tank;
+					if(tank != null){
+						double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
+						if(amountFilled > 0){
+							fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
+						}
+					}
+				}
+			}
 		}
 		
 		//Do trailer-specific logic, if we are one and towed.
@@ -229,18 +235,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			world.spawnItemStack(stack, null, position);
 		}
 		
-		//Damage all riders, including the controller.
-		WrapperPlayer controller = getController();
-		Damage controllerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, null);
-		Damage passengerCrashDamage = new Damage(definition.general.type + "crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, controller);
-		for(WrapperEntity rider : locationRiderMap.values()){
-			if(rider.equals(controller)){
-				rider.attack(controllerCrashDamage);
-			}else{
-				rider.attack(passengerCrashDamage);
-			}
-		}
-		
 		//Oh, and add explosions.  Because those are always fun.
 		//Note that this is done after spawning all parts here and in the super call,
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
@@ -251,7 +245,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					explosivePower += ((PartInteractable) part).getExplosiveContribution();
 				}
 			}
-			world.spawnExplosion(this, position, explosivePower + fuel/10000D + 1D, true);
+			world.spawnExplosion(this, position, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
 		
 		//Finally, if we are being towed, unhook us from our tower.
@@ -263,7 +257,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	protected float getCurrentMass(){
-		return (float) (super.getCurrentMass() + fuel/50);
+		return (float) (super.getCurrentMass() + fuelTank.getWeight());
 	}
 	
 	@Override
@@ -364,9 +358,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public void save(WrapperNBT data){
 		super.save(data);
 		data.setInteger("throttle", throttle);
-		data.setDouble("fuel", fuel);
 		data.setDouble("electricPower", electricPower);
-		data.setString("fluidName", fluidName);
+		fuelTank.save(data);
 		
 		String lightsOnString = "";
 		for(LightType light : lightsOn){

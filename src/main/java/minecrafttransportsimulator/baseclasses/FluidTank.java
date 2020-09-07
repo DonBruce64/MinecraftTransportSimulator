@@ -5,8 +5,16 @@ import java.util.Map;
 
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 /**Basic fluid tanks class.  Class contains methods for filling and draining, as well as automatic
  * syncing of fluid levels across clients and servers.  This allows the tank to be put on any object
@@ -24,16 +32,16 @@ public class FluidTank{
 	private final int maxLevel;
 	private final boolean onClient;
 	private String currentFluid;
-	private int fluidLevel;
-	private int fluidDispensed;
+	private double fluidLevel;
+	private double fluidDispensed;
 	
 	public FluidTank(WrapperNBT data, int maxLevel, boolean onClient){
-		this.tankID = data.getInteger("tankID") == 0 ? idCounter++ : data.getInteger("tankID"); 
+		this.tankID = onClient ? data.getInteger("tankID") : idCounter++;
 		this.maxLevel = maxLevel;
 		this.onClient = onClient;
 		this.currentFluid = data.getString("currentFluid");
-		this.fluidLevel = data.getInteger("fluidLevel");
-		this.fluidDispensed = data.getInteger("fluidDispensed");
+		this.fluidLevel = data.getDouble("fluidLevel");
+		this.fluidDispensed = data.getDouble("fluidDispensed");
 		if(onClient){
 			createdClientTanks.put(tankID, this);
 		}else{
@@ -44,7 +52,7 @@ public class FluidTank{
 	/**
 	 *  Gets the current fluid level.
 	 */
-	public int getFluidLevel(){
+	public double getFluidLevel(){
 		return fluidLevel;
 	}
 	
@@ -58,7 +66,7 @@ public class FluidTank{
 	/**
 	 *  Gets the amount of fluid dispensed since the last call to {@link #resetAmountDispensed()} 
 	 */
-	public int getAmountDispensed(){
+	public double getAmountDispensed(){
 		return fluidDispensed;
 	}
 	
@@ -78,10 +86,12 @@ public class FluidTank{
 	}
 	
 	/**
-	 *  Sets the fluid in this tank.
+	 *  Manually sets the fluid and level of this tank.  Used for initial filling of the tank when
+	 *  you don't want to sent packets or perform any validity checks.  Do NOT use for normal operations!
 	 */
-	public void setFluid(String fluidName){
+	public void manuallySet(String fluidName, double fluidLevel){
 		this.currentFluid = fluidName;
+		this.fluidLevel = fluidLevel;
 	}
 	
 	/**
@@ -91,7 +101,7 @@ public class FluidTank{
 	 *  internal state should be left as-is.  Return value is the
 	 *  amount filled.
 	 */
-	public int fill(String fluid, int maxAmount, boolean doFill){
+	public double fill(String fluid, double maxAmount, boolean doFill){
 		if(currentFluid.isEmpty() || currentFluid.equals(fluid)){
 			if(maxAmount >= getMaxLevel() - fluidLevel){
 				maxAmount = getMaxLevel() - fluidLevel;
@@ -119,7 +129,7 @@ public class FluidTank{
 	 *  internal state should be left as-is.  Return value is the
 	 *  amount drained.
 	 */
-	public int drain(String fluid, int maxAmount, boolean doDrain){
+	public double drain(String fluid, double maxAmount, boolean doDrain){
 		if(!currentFluid.isEmpty() && currentFluid.equals(fluid)){
 			if(maxAmount >= fluidLevel){
 				maxAmount = fluidLevel;
@@ -155,12 +165,75 @@ public class FluidTank{
 	}
 	
 	/**
+	 *  Gets the weight of the fluid in this tank.
+	 */
+	public double getWeight(){
+		return fluidLevel/50D;
+	}
+	
+	/**
+	 *  Attempts to make the passed-in player interact with the tank.
+	 *  If the stack the player is holding holds liquid, and the player can fill the tank with that liquid, 
+	 *  that action is taken.  If the stack could hold liquid, and the player is sneaking, it is filled.
+	 *  If any action is taken that modifies the state of the item the player is holding, true is returned.
+	 */
+	public boolean interactWith(WrapperPlayer player){
+		//TODO abstract this when we can.
+		ItemStack stack = player.getHeldStack();
+		if(stack != null){
+			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+				//If we are sneaking, drain this tank.  If we are not, fill it.
+				if(!player.isSneaking()){
+					//Item can provide fluid.  Check if we can accept it.
+					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+					if(drainedStack != null){
+						//Able to take fluid from item, attempt to do so.
+						int amountToDrain = (int) fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
+						drainedStack = handler.drain(amountToDrain, !player.isCreative());
+						if(drainedStack != null){
+							//Was able to provide liquid from item.  Fill the tank.
+							fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
+							player.setHeldStack(handler.getContainer());
+							return true;
+						}
+					}
+				}else{
+					//Item can hold fluid.  Check if we can fill it.
+					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+					FluidStack containedStack = FluidRegistry.getFluidStack(currentFluid, (int) fluidLevel);
+					int amountFilled = handler.fill(containedStack, true);
+					if(amountFilled > 0){
+						//Were able to fill the item.  Apply state change to tank and item.
+						drain(currentFluid, amountFilled, true);
+						player.setHeldStack(handler.getContainer());
+						return true;
+					}
+				}
+			}else if(stack.getItem().equals(MTSRegistry.jerrycan)){
+				//Have a jerrycan.  Attempt to fill it up.
+				if(!stack.hasTagCompound() || !stack.getTagCompound().getBoolean("isFull")){
+					if(fluidLevel >= 1000){
+						NBTTagCompound stackTag = new NBTTagCompound();
+						stackTag.setBoolean("isFull", true);
+						stackTag.setString("fluidName", currentFluid);
+						stack.setTagCompound(stackTag);
+						drain(currentFluid, 1000, true);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
 	 *  Saves tank data to the passed-in NBT.
 	 */
 	public void save(WrapperNBT data){
 		data.setInteger("tankID", tankID);
 		data.setString("currentFluid", currentFluid);
-		data.setInteger("fluidLevel", fluidLevel);
-		data.setInteger("fluidDispensed", fluidDispensed);
+		data.setDouble("fluidLevel", fluidLevel);
+		data.setDouble("fluidDispensed", fluidDispensed);
 	}
 }

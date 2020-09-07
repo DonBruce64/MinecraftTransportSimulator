@@ -81,7 +81,7 @@ public class PartPropeller extends APart{
 				boundingBox.heightRadius += 0.2;
 				boundingBox.depthRadius += 0.2;
 				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*propellerGearboxRatio/500F, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(propellerDamage, vehicle);
+				vehicle.world.attackEntities(propellerDamage, vehicle, null);
 				boundingBox.widthRadius -= 0.2;
 				boundingBox.heightRadius -= 0.2;
 				boundingBox.depthRadius -= 0.2;

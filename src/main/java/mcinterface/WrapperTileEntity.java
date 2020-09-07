@@ -79,6 +79,12 @@ public class WrapperTileEntity{
 			}
 			
 			@Override
+			public boolean isUsableByPlayer(EntityPlayer player){
+				//Always return true to prevent chest GUI from closing.
+				return true; 
+		    }
+			
+			@Override
 			public int getSizeInventory(){
 		        return numberSlots;
 		    }

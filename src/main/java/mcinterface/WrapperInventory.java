@@ -2,6 +2,7 @@ package mcinterface;
 
 import java.util.Map;
 
+import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -29,7 +30,7 @@ public class WrapperInventory{
 	 *  Returns an instance for TEs.
 	 */
 	public static WrapperInventory getTileEntityInventory(WrapperTileEntity tile){
-		return tile instanceof IInventory ? new WrapperInventory(tile) : null;
+		return tile.tile instanceof IInventory ? new WrapperInventory(tile) : null;
 	}
 	
 	/**
@@ -173,5 +174,21 @@ public class WrapperInventory{
 			}
 		}
 		return weight;
+	}
+	
+	/**
+	 *  Gets the explosive power of this inventory.  Used when this container is blown up.
+	 *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
+	 *  that fuel-containing items are stable enough to not blow up when this container is hit.
+	 */
+	public double getExplosiveness(){
+		double explosivePower = 0;
+		for(int i=0; i<inventory.getSizeInventory(); ++i){
+			ItemStack stack = getStackInSlot(i);
+			if(stack.getItem() instanceof ItemPartBullet){
+				explosivePower += stack.getCount()*((ItemPartBullet) stack.getItem()).definition.bullet.diameter/10D;
+			}
+		}
+		return explosivePower;
 	}
 }

@@ -2,6 +2,7 @@ package mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -260,7 +261,13 @@ public class WrapperEntity{
 		if(damage.ignoreArmor){
 			newSource.setDamageBypassesArmor();
 		}
+		if(ConfigSystem.configObject.general.creativeDamage.value){
+			newSource.setDamageAllowedInCreativeMode();
+		}
 		attackedEntity.attackEntityFrom(newSource, (float) damage.amount);
+		if(attackedEntity instanceof EntityLivingBase){
+			((EntityLivingBase) attackedEntity).hurtResistantTime = 0;
+		}
 	}
 	
 	/**

@@ -152,14 +152,10 @@ public final class VehicleAnimationSystem{
 			case("speed"): return Math.abs(vehicle.velocity)*vehicle.SPEED_FACTOR*20;
 			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
-			
-			//Inertia from accelerating and braking.
-            case("acceleration"): return vehicle.acclInertia();
-            case("braking"): return vehicle.brakeInertia();
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
-			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity;
+			case("fuel"): return vehicle.fuelTank.getFluidLevel()/vehicle.fuelTank.getMaxLevel();
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;

@@ -32,10 +32,10 @@ public class TransformTranslatable extends ATransformRenderable{
 		
 		//Add offsets and clamp translation.
 		translation = translationMagnitude*(definition.absolute ? Math.abs(translation) : translation) + definition.offset + offset;
-		if(definition.clampMin != 0 && translation < definition.clampMin){
-			translation = definition.clampMin;
-		}else if(definition.clampMax != 0 && translation > definition.clampMax){
-			translation = definition.clampMax;
+		if(definition.clampMin != 0 && translation < definition.clampMin + offset){
+			translation = definition.clampMin + offset;
+		}else if(definition.clampMax != 0 && translation > definition.clampMax - offset){
+			translation = definition.clampMax - offset;
 		}
 		
 		//Do the actual translation, if we aren't 0.

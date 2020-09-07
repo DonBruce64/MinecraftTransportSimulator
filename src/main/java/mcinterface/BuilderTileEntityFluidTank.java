@@ -38,17 +38,17 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
 	@Override
 	public FluidStack getFluid(){
-		return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getTank().getFluid()), tileEntity.getTank().getFluidLevel()) : null;
+		return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getTank().getFluid()), (int) tileEntity.getTank().getFluidLevel()) : null;
 	}
 
 	@Override
 	public int getFluidAmount(){
-		return tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0;
+		return (int) (tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0);
 	}
 
 	@Override
 	public int getCapacity(){
-		return tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0;
+		return (int) (tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0);
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	@Override
 	public int fill(FluidStack stack, boolean doFill){
 		if(tileEntity != null){
-			int fillAmount = tileEntity.getTank().fill(stack.getFluid().getName(), stack.amount, doFill);
+			int fillAmount = (int) tileEntity.getTank().fill(stack.getFluid().getName(), stack.amount, doFill);
 			if(fillAmount > 0 && doFill){
 				FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(stack.getFluid(), fillAmount), world, getPos(), this, fillAmount));
 			}
@@ -79,7 +79,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	
 	@Override
 	public FluidStack drain(FluidStack stack, boolean doDrain){
-		int drainAmount = tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), stack.amount, doDrain) : 0;
+		int drainAmount = (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), stack.amount, doDrain) : 0);
 		if(drainAmount > 0 && doDrain){
 			FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(stack.getFluid(), drainAmount), world, getPos(), this, drainAmount));
 		}

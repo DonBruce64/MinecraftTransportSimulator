@@ -6,9 +6,11 @@ import javax.annotation.Nullable;
 
 import mcinterface.BuilderGUI;
 import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -41,14 +43,20 @@ public class ItemJerrycan extends Item implements IItemVehicleInteractable{
 	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
+				//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
+				if(part instanceof PartInteractable){
+					FluidTank tank = ((PartInteractable) part).tank;
+					if(tank != null && tank.interactWith(player)){
+						return CallbackType.NONE;
+					}
+				}
 				ItemStack stack = player.getHeldStack();
 				if(stack.hasTagCompound() && stack.getTagCompound().getBoolean("isFull")){
-					if(vehicle.fluidName.isEmpty() || vehicle.fluidName.equals(stack.getTagCompound().getString("fluidName"))){
-						if(vehicle.fuel + 1000 > vehicle.definition.motorized.fuelCapacity){
+					if(vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(stack.getTagCompound().getString("fluidName"))){
+						if(vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()){
 							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.toofull"));
 						}else{
-							vehicle.fluidName = stack.getTagCompound().getString("fluidName");
-							vehicle.fuel += 1000;
+							vehicle.fuelTank.fill(stack.getTagCompound().getString("fluidName"), 1000, true);
 							stack.setTagCompound(null);
 							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.success"));
 						}

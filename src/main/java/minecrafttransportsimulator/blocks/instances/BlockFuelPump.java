@@ -9,7 +9,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -17,11 +16,6 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEntityFuelPump>{
 	
@@ -36,37 +30,9 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
 			FluidTank tank = pump.getTank();
 			
-			//If we are holding an item, try to add it to the fuel pump.
-			ItemStack stack = player.getHeldStack();
-			if(stack != null){
-				if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
-					//Item can provide fuel.  Check if we can accept it.
-					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
-					if(drainedStack != null){
-						//Able to take fuel from item, attempt to do so.
-						int amountToDrain = tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
-						drainedStack = handler.drain(amountToDrain, !player.isCreative());
-						if(drainedStack != null){
-							//Was able to provide fuel from item.  Fill the pump.
-							tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
-							player.setHeldStack(handler.getContainer());
-						}
-					}
-					return true;
-				}else if(stack.getItem().equals(MTSRegistry.jerrycan)){
-					//Have a jerrycan.  Attempt to fill it up.
-					if(!stack.hasTagCompound() || !stack.getTagCompound().getBoolean("isFull")){
-						if(tank.getFluidLevel() >= 1000){
-							NBTTagCompound stackTag = new NBTTagCompound();
-							stackTag.setBoolean("isFull", true);
-							stackTag.setString("fluidName", tank.getFluid());
-							stack.setTagCompound(stackTag);
-							tank.drain(tank.getFluid(), 1000, true);
-						}
-					}
-					return true;
-				}
+			//If we are holding an item, interact with the pump.
+			if(tank.interactWith(player)){
+				return true;
 			}
         	
 			//We don't have a vehicle connected.  Try to connect one now.
@@ -91,8 +57,8 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     					player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.nofuel"));
     				}else{
         				//Check to make sure this vehicle can take this fuel pump's fuel type.
-    					if(!nearestVehicle.fluidName.isEmpty()){
-    						if(!tank.getFluid().equals(nearestVehicle.fluidName)){
+    					if(!nearestVehicle.fuelTank.getFluid().isEmpty()){
+    						if(!tank.getFluid().equals(nearestVehicle.fuelTank.getFluid())){
     							player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.wrongtype"));
     							return true;
     						}

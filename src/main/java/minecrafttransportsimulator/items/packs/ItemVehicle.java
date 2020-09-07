@@ -112,12 +112,11 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 										mostPotentFluid = fluidName;
 									}
 								}
-								newVehicle.fluidName = mostPotentFluid;
-								newVehicle.fuel = newVehicle.definition.motorized.defaultFuelQty;
+								newVehicle.fuelTank.manuallySet(mostPotentFluid, newVehicle.definition.motorized.defaultFuelQty);
 								break;
 							}
 						}
-						if(newVehicle.fluidName.isEmpty()){
+						if(newVehicle.fuelTank.getFluid().isEmpty()){
 							throw new IllegalArgumentException("ERROR: A defaultFuelQty was specified for: " + newVehicle.definition.genericName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
 						}
 					}

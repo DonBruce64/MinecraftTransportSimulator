@@ -127,6 +127,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	@Override
 	public void update(){
 		super.update();
+		//Set fuel flow to 0 for the start of this cycle.
+		fuelFlow = 0;
+		
 		//Set current gear ratio based on current gear.
 		currentGearRatio = definition.engine.gearRatios[currentGear + reverseGears];
 		
@@ -185,9 +188,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(!isCreative){
 					vehicle.electricUsage += 0.05F;
 				}
-				if(vehicle.fuel > getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value && !isCreative){
-					vehicle.fuel -= getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
-					fuelFlow += getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value;
+				if(!isCreative){
+					fuelFlow += vehicle.fuelTank.drain(vehicle.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value, !vehicle.world.isClient());
 				}
 			}
 		}else if(state.hsOn){
@@ -230,16 +232,14 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				//TODO do steam engine logic.
 			}else{
 				//Try to get fuel from the vehicle and calculate fuel flow.
-				if(!isCreative && !vehicle.fluidName.isEmpty()){
+				if(!isCreative && !vehicle.fuelTank.getFluid().isEmpty()){
 					if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
 						throw new IllegalArgumentException("ERROR: Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
-					}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fluidName)){
+					}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicle.fuelTank.getFluid())){
 						//Clear out the fuel from this vehicle as it's the wrong type.
-						vehicle.fuel = 0;
-						vehicle.fluidName = "";
+						vehicle.fuelTank.drain(vehicle.fuelTank.getFluid(), vehicle.fuelTank.getFluidLevel(), true);
 					}else{
-						fuelFlow = getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fluidName)*rpm*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM;
-						vehicle.fuel -= fuelFlow;
+						fuelFlow += vehicle.fuelTank.drain(vehicle.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicle.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM, !vehicle.world.isClient());
 					}
 				}
 				
@@ -279,7 +279,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(!vehicle.world.isClient()){
 					if(!vehicle.world.isClient() && isInLiquid()){
 						stallEngine(Signal.DROWN);
-					}else if(vehicle.fuel == 0 && !isCreative){
+					}else if(!isCreative && vehicle.fuelTank.getFluidLevel() == 0){
 						stallEngine(Signal.FUEL_OUT);
 					}else if(rpm < stallRPM){
 						stallEngine(Signal.TOO_SLOW);
@@ -331,9 +331,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			//Start engine if the RPM is high enough to cause it to start by itself.
 			//Used for drowned engines that come out of the water, or engines that don't
 			//have the ability to engage a starter.
-			if(rpm > startRPM){
-				if(vehicle.fuel > 0 || isCreative){
-					if(!isInLiquid() && state.magnetoOn && !vehicle.world.isClient()){
+			if(rpm > startRPM && !vehicle.world.isClient()){
+				if(isCreative || vehicle.fuelTank.getFluidLevel() > 0){
+					if(!isInLiquid() && state.magnetoOn){
 						startEngine();
 					}
 				}
@@ -455,12 +455,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				boundingBox.depthRadius += 0.25;
 				boundingBox.globalCenter.add(vehicle.headingVector);
 				Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(jetIntake, vehicle);
+				vehicle.world.attackEntities(jetIntake, vehicle, null);
 				
 				boundingBox.globalCenter.subtract(vehicle.headingVector);
 				boundingBox.globalCenter.subtract(vehicle.headingVector);
 				Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, jetIntake.attacker).setFire();
-				vehicle.world.attackEntities(jetExhaust, vehicle);
+				vehicle.world.attackEntities(jetExhaust, vehicle, null);
 				
 				boundingBox.globalCenter.add(vehicle.headingVector);
 				boundingBox.widthRadius -= 0.25;
@@ -1089,7 +1089,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				}
 			}else{
 				for(byte i=0; i<5; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+					InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 				}
 			}
 		}
@@ -1097,20 +1097,20 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Render oil and fuel leak particles.
 		if(oilLeak){
 			if(vehicle.ticksExisted%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos, vehicle.motion, 0.0F, 0.0F, 0.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		if(fuelLeak){
 			if((vehicle.ticksExisted + 5)%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos, vehicle.motion, 1.0F, 0.0F, 0.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		
 		//Render engine smoke if we're overheating.  Only for non-steam engines.
 		if(!definition.engine.isSteamPowered && temp > OVERHEAT_TEMP_1){
-			InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
+			InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 			if(temp > OVERHEAT_TEMP_2){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 			}
 		}
 	}

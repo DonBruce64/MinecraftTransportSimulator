@@ -294,12 +294,16 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//Set the states of the magneto selectors.
 		for(Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()){
-			magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).state.magnetoOn ? 1 : 0;
+			if(vehicle.engines.containsKey(magnetoEntry.getKey())){
+				magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).state.magnetoOn ? 1 : 0;
+			}
 		}
 		
 		//Set the states of the starter selectors.
 		for(Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()){
-			starterEntry.getValue().selectorState = vehicle.engines.get(starterEntry.getKey()).state.magnetoOn ? (vehicle.engines.get(starterEntry.getKey()).state.esOn ? 2 : 1) : 0;
+			if(vehicle.engines.containsKey(starterEntry.getKey())){
+				starterEntry.getValue().selectorState = vehicle.engines.get(starterEntry.getKey()).state.magnetoOn ? (vehicle.engines.get(starterEntry.getKey()).state.esOn ? 2 : 1) : 0;
+			}
 		}
 				
 		//For every tick we have one of the trim selectors pressed, do the corresponding trim action.

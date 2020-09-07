@@ -158,10 +158,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 					prevOrientation.y += 360;
 				}
 			}else{
-				if(currentOrientation.y < definition.gun.maxYaw){
+				if(currentOrientation.y > definition.gun.maxYaw){
 					currentOrientation.y = definition.gun.maxYaw;
 				}
-				if(currentOrientation.y > definition.gun.minYaw){
+				if(currentOrientation.y < definition.gun.minYaw){
 					currentOrientation.y = definition.gun.minYaw;
 				}
 			}
@@ -248,9 +248,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 					loadedBullet = bullet;
 					bulletsLeft += bullet.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, bullet.definition.packID, bullet.definition.systemName), this.vehicle);
 					if(vehicle.world.isClient()){
 						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
+					}else{
+						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, bullet.definition.packID, bullet.definition.systemName), this.vehicle);
 					}
 					return true;
 				}

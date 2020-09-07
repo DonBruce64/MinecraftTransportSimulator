@@ -74,7 +74,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	public void attack(Damage damage){
 		if(definition.ground.isWheel && !isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
 			if(damage.isExplosion || Math.random() < 0.5){
-				if(!vehicle.world.isClient()){
+				if(!vehicle.world.isClient() && definition.ground.canGoFlat){
 					setFlat();
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
 				}
@@ -129,7 +129,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F;
 				}
 				Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(wheelDamage, vehicle);
+				vehicle.world.attackEntities(wheelDamage, vehicle, null);
 				boundingBox.widthRadius -= 0.25;
 				boundingBox.depthRadius -= 0.25;
 			}

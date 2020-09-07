@@ -78,14 +78,16 @@ public class BoundingBox{
 	
 	/**
 	 *  Returns true if the passed-in point is inside this box.
+	 *  Note that this returns true for points on the border, to allow use to use in
+	 *  in conjunction with hit-scanning code to find out which box got hit-scanned.
 	 */
 	public boolean isPointInside(Point3d point){
-		return 	globalCenter.x - widthRadius < point.x &&
-				globalCenter.x + widthRadius > point.x &&
-				globalCenter.y - heightRadius < point.y &&
-				globalCenter.y + heightRadius > point.y &&
-				globalCenter.z - depthRadius < point.z &&
-				globalCenter.z + depthRadius > point.z;
+		return 	globalCenter.x - widthRadius <= point.x &&
+				globalCenter.x + widthRadius >= point.x &&
+				globalCenter.y - heightRadius <= point.y &&
+				globalCenter.y + heightRadius >= point.y &&
+				globalCenter.z - depthRadius <= point.z &&
+				globalCenter.z + depthRadius >= point.z;
 	}
 	
 	/**
@@ -125,7 +127,7 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-	public Point3d getXPPlaneCollision(Point3d start, Point3d end, double xPoint){
+	public Point3d getXPlaneCollision(Point3d start, Point3d end, double xPoint){
         Point3d collisionPoint = start.getIntermediateWithXValue(end, xPoint);
         return collisionPoint != null && this.intersectsWithYZ(collisionPoint) ? collisionPoint : null;
     }
@@ -155,10 +157,10 @@ public class BoundingBox{
 	 */
 	public Point3d getIntersectionPoint(Point3d start, Point3d end){
 		//First check minX.
-		Point3d intersection = getXPPlaneCollision(start, end, globalCenter.x - widthRadius);
+		Point3d intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
 		
 		//Now get maxX.
-		Point3d secondIntersection = getXPPlaneCollision(start, end, globalCenter.x + widthRadius);
+		Point3d secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
 		
 		//If minX is null, or if maxX is not null, and is closer to the start point than minX, it's our new intersection.
 		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){

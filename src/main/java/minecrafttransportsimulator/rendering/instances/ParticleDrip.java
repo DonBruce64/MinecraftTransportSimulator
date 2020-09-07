@@ -17,6 +17,7 @@ public class ParticleDrip extends AParticle{
 		wasOnGround = onGround;
 		//Drips go down to the ground, until the hit it, at which point they stay there for a while.
 		motion.multiply(0.96);
+		motion.add(0D, -0.06D, 0D);
 		if(onGround){
 			motion.multiply(0.02);
 		}

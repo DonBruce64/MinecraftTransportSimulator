@@ -28,9 +28,9 @@ public class ItemPartInteractable extends AItemPart{
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		super.addInformation(stack, world, tooltipLines, flagIn);
-		if(definition.interactable.type.equals("crate")){
+		if(definition.interactable.interactionType.equals("crate")){
 			tooltipLines.add(BuilderGUI.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*9);
-		}else if(definition.interactable.type.equals("barrel")){
+		}else if(definition.interactable.interactionType.equals("barrel")){
 			tooltipLines.add(BuilderGUI.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*1000 + "mb");
 		}
 	}

@@ -14,9 +14,9 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 public class PacketFluidTankChange extends APacketBase{
 	private final int tankID;
 	private final String fluidName;
-	private final int fluidDelta;
+	private final double fluidDelta;
 	
-	public PacketFluidTankChange(FluidTank tank, int fluidDelta){
+	public PacketFluidTankChange(FluidTank tank, double fluidDelta){
 		super(null);
 		this.tankID = tank.tankID;
 		this.fluidName = tank.getFluid();
@@ -27,7 +27,7 @@ public class PacketFluidTankChange extends APacketBase{
 		super(buf);
 		this.tankID = buf.readInt();
 		this.fluidName = readStringFromBuffer(buf);
-		this.fluidDelta = buf.readInt();
+		this.fluidDelta = buf.readDouble();
 	}
 	
 	@Override
@@ -35,16 +35,19 @@ public class PacketFluidTankChange extends APacketBase{
 		super.writeToBuffer(buf);
 		buf.writeInt(tankID);
 		writeStringToBuffer(fluidName, buf);
-		buf.writeInt(fluidDelta);
+		buf.writeDouble(fluidDelta);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		FluidTank tank = FluidTank.createdClientTanks.get(tankID);
-		if(fluidDelta < 0){
-			tank.drain(fluidName, -fluidDelta, true);
-		}else{
-			tank.fill(fluidName, fluidDelta, true);
+		//TODO we get nulls her when loading the world with engines started.  Find an fix.
+		if(tank != null){
+			if(fluidDelta < 0){
+				tank.drain(fluidName, -fluidDelta, true);
+			}else{
+				tank.fill(fluidName, fluidDelta, true);
+			}
 		}
 	}
 }

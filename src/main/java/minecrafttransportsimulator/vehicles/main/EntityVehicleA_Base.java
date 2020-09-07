@@ -227,19 +227,23 @@ abstract class EntityVehicleA_Base extends AEntityBase{
    	 */
 	public void removePart(APart part, Iterator<APart> iterator){
 		if(parts.contains(part)){
+			//Remove part from main list of parts.
 			if(iterator != null){
 				iterator.remove();
 			}else{
 				parts.remove(part);
 			}
+			//Remove any riders riding this part from the riding map.
 			if(locationRiderMap.containsKey(part.placementOffset)){
 				removeRider(locationRiderMap.get(part.placementOffset), null);
 			}
+			//If the part is still valid, call the part's removal code for it to process.
 			if(part.isValid){
 				part.remove();
-				if(!world.isClient()){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
-				}
+			}
+			//If we are on the server, notify all clients of this change.
+			if(!world.isClient()){
+				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
 			}
 		}
 		

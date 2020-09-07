@@ -47,47 +47,44 @@ public final class ParticleBullet extends AParticle{
         this.bulletItem = bulletItem;
         this.playerID = player.getID();
         this.vehicle = vehicle;
-        this.box = new BoundingBox(position, getSize(), getSize(), getSize());
+        this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
     }
 	
 	@Override
 	public void update(boolean onGround){
-		super.update(onGround);
 		double velocity = motion.length();
-		Point3d normalizedVelocity = motion.copy().normalize();
-		Point3d offset = normalizedVelocity.copy();
 		Damage damage = new Damage("bullet", velocity*bulletItem.definition.bullet.diameter/5, box, null);
-		for(double velocityOffset=0; velocityOffset<=velocity; velocityOffset+=0.25D){
-			//Update bounding box offset to current offset.
-			offset.setTo(normalizedVelocity).multiply(velocityOffset);
-			
-			//Check for collided entities and attack them.
-			Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle);
-			if(!attackedEntities.isEmpty()){
-				if(playerID == InterfaceGame.getClientPlayer().getID()){
-					for(WrapperEntity entity : attackedEntities.keySet()){
-						InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, bulletItem, entity));
-					}
+		
+		//Check for collided entities and attack them.
+		Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle, motion);
+		if(!attackedEntities.isEmpty()){
+			if(playerID == InterfaceGame.getClientPlayer().getID()){
+				for(WrapperEntity entity : attackedEntities.keySet()){
+					InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, bulletItem, entity));
 				}
-				age = maxAge;
-				return;
 			}
-			
-			//Didn't hit an entity.  Check for blocks.
-			//We may hit more than one block here if we're a big bullet.  That's okay.
-			if(box.updateCollidingBlocks(world, offset)){
-				for(WrapperBlock block : box.collidingBlocks){
-					Point3d position = new Point3d(block.getPosition());
-					InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bulletItem, null));
-				}
-				age = maxAge;
-				return;
+			age = maxAge;
+			return;
+		}
+		
+		//Didn't hit an entity.  Check for blocks.
+		//We may hit more than one block here if we're a big bullet.  That's okay.
+		if(box.updateCollidingBlocks(world, motion)){
+			for(WrapperBlock block : box.collidingBlocks){
+				Point3d position = new Point3d(block.getPosition());
+				InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bulletItem, null));
 			}
+			age = maxAge;
+			return;
 		}
 					
 		//We didn't collide with anything, slow down and fall down towards the ground.
 		motion.multiply(0.98D);
 		motion.y -= 0.0245D;
+		
+		//Send our updated position to the super.
+		//Doing this last lets us damage on the first update tick.
+		super.update(onGround);
 	}
 	
 	@Override

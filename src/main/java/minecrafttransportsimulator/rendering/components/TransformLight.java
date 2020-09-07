@@ -59,7 +59,7 @@ public class TransformLight extends ATransformRenderable{
 			this.vertices = new Float[masterVertices.length][];
 			this.centerPoints = new Point3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
-			for(short i=0; i<centerPoints.length; ++i){
+			for(int i=0; i<centerPoints.length; ++i){
 				double minX = 999;
 				double maxX = -999;
 				double minY = 999;
@@ -248,7 +248,7 @@ public class TransformLight extends ATransformRenderable{
 		InterfaceRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(byte i=0; i<centerPoints.length; ++i){
+		for(int i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
 				Float[] vertex = vertices[(i)*6+j];
 				//Add a slight translation to the light size to make the flare move off it.
@@ -275,7 +275,7 @@ public class TransformLight extends ATransformRenderable{
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
 		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
-		for(byte i=0; i<centerPoints.length; ++i){
+		for(int i=0; i<centerPoints.length; ++i){
 			GL11.glPushMatrix();
 			//Translate light to the center of the cone beam.
 			GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);

@@ -7,6 +7,7 @@ import mcinterface.WrapperTileEntity;
 import mcinterface.WrapperTileEntity.WrapperEntityBrewingStand;
 import mcinterface.WrapperTileEntity.WrapperEntityChest;
 import mcinterface.WrapperTileEntity.WrapperEntityFurnace;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -21,31 +22,44 @@ public final class PartInteractable extends APart{
 	
 	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
-		switch(definition.interactable.type){
+		switch(definition.interactable.interactionType){
 			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits); break;
 			case("barrel"): this.interactable = null; break;
 			case("crafting_table"): this.interactable = null; break;
 			case("furnace"): this.interactable = new WrapperEntityFurnace(vehicle.world, data); break;
 			case("brewing_stand"): this.interactable = new WrapperEntityBrewingStand(vehicle.world, data); break;
-			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.type + " is not a valid type of interactable part.");
+			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
-		this.inventory = WrapperInventory.getTileEntityInventory(interactable);
-		this.tank = definition.interactable.type.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*1000, vehicle.world.isClient()) : null;
+		this.inventory = interactable != null ? WrapperInventory.getTileEntityInventory(interactable) : null;
+		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*1000, vehicle.world.isClient()) : null;
 	}
 	
 	@Override
 	public boolean interact(WrapperPlayer player){
 		if(!vehicle.locked){
-			if(definition.interactable.type.equals("crafting_table")){
+			if(definition.interactable.interactionType.equals("crafting_table")){
 				player.openCraftingGUI();
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
-			}
+			}else if(tank != null){
+				tank.interactWith(player);
+			}	
 		}else{
 			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 		}
 		return true;
     }
+	
+	@Override
+	public void attack(Damage damage){
+		double explosivePower = getExplosiveContribution();
+		if(explosivePower > 0){
+			vehicle.world.spawnExplosion(vehicle, worldPos, explosivePower, true);
+			//We just set ourselves invalid rather than removing as we might be in a part-loop here.
+			//Doing a removal would get us a CME.
+			isValid = false;
+		}
+	}
 	
 	@Override
 	public void update(){
@@ -98,7 +112,7 @@ public final class PartInteractable extends APart{
 			}
 			return count/(double)inventory.getSize();
 		}else if(tank != null){
-			return tank.getFluidLevel()/(double)tank.getMaxLevel();
+			return tank.getFluidLevel()/tank.getMaxLevel();
 		}else{
 			return 0;
 		}
@@ -118,7 +132,7 @@ public final class PartInteractable extends APart{
 		if(inventory != null){
 			return inventory.getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
 		}else if(tank != null){
-			return tank.getFluidLevel()/50;
+			return tank.getWeight();
 		}else{
 			return 0;
 		}
@@ -126,8 +140,7 @@ public final class PartInteractable extends APart{
 	
 	public double getExplosiveContribution(){
 		if(inventory != null){
-			//TODO check for ammo.
-			return 0;
+			return inventory.getExplosiveness();
 		}else if(tank != null){
 			return tank.getExplosiveness();
 		}else{

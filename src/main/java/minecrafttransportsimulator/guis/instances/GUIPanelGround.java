@@ -347,8 +347,10 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Set the state of the engine selectors.
 		for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
-			PartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
-			engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
+			if(vehicle.engines.containsKey(engineEntry.getKey())){
+				PartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
+				engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
+			}
 		}
 		
 		//If we have reverse thrust, set the selector state.

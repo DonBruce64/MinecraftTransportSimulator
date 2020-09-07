@@ -41,6 +41,8 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
@@ -199,8 +201,10 @@ public class WrapperWorld{
 	 *  {@link BuilderEntity} as the value to the entity key.
 	 *  This is because attacking cannot be done on clients, but it may be useful to 
 	 *  know what entities could have been attacked should the call have been made on a server.
+	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
+	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, BoundingBox> attackEntities(Damage damage, AEntityBase damageSource){
+	public Map<WrapperEntity, BoundingBox> attackEntities(Damage damage, AEntityBase damageSource, Point3d motion){
 		AxisAlignedBB mcBox = new AxisAlignedBB(
 				damage.box.globalCenter.x - damage.box.widthRadius,
 				damage.box.globalCenter.y - damage.box.heightRadius,
@@ -209,7 +213,32 @@ public class WrapperWorld{
 				damage.box.globalCenter.y + damage.box.heightRadius,
 				damage.box.globalCenter.z + damage.box.depthRadius
 			);
-		List<Entity> collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+		
+		List<Entity> collidedEntities;
+		List<Point3d> rayTraceHits = new ArrayList<Point3d>();;
+		if(motion != null){
+			mcBox = mcBox.expand(motion.x, motion.y, motion.z);
+			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
+			Vec3d start = new Vec3d(damage.box.globalCenter.x, damage.box.globalCenter.y, damage.box.globalCenter.z);
+			Vec3d end = start.addVector(motion.x, motion.y, motion.z);
+			Iterator<Entity> iterator = collidedEntities.iterator();
+			while(iterator.hasNext()){
+				Entity entity = iterator.next();
+				RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(start, end); 
+				if(rayTrace == null){
+					iterator.remove();
+				}else{
+					Point3d hitPoint = new Point3d(rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z);
+					rayTraceHits.add(hitPoint);
+				}
+			}
+		}else{
+			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+			rayTraceHits = null;
+		}
+		
+		//Found collided entities.  Do checks to remove excess entities and attack them if required.
 		if(!collidedEntities.isEmpty()){
 			if(damageSource != null){
 				//Iterate over all entities.  If the entity is the passed-in source, or riding the source, remove it.
@@ -245,9 +274,16 @@ public class WrapperWorld{
 				if(entity instanceof BuilderEntity){
 					//Need to check which box we hit for this entity.
 					for(BoundingBox box : ((BuilderEntity) entity).entity.interactionBoxes){
-						if(box.intersects(damage.box)){
-							entities.put(getWrapperFor(entity), box);
-							break;
+						if(motion == null){
+							if(box.intersects(damage.box)){
+								entities.put(getWrapperFor(entity), box);
+								break;
+							}
+						}else{
+							if(box.isPointInside(rayTraceHits.get(collidedEntities.indexOf(entity)))){
+								entities.put(getWrapperFor(entity), box);
+								break;
+							}
 						}
 					}
 				}else{

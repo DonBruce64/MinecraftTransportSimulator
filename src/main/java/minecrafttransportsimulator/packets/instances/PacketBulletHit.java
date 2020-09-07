@@ -73,7 +73,6 @@ public class PacketBulletHit extends APacketBase{
 		if(!world.isClient()){
 			//If we are an explosive bullet, just blow up at our current position.
 			//Otherwise do attack logic.
-			
 			if(bulletDefinition.bullet.type.equals("explosive")){
 				world.spawnExplosion(player, box.globalCenter, bulletDefinition.bullet.diameter/10F, false);
 			}else{
@@ -83,7 +82,7 @@ public class PacketBulletHit extends APacketBase{
 					if(entityHit != null){
 						//Create damage object and attack the entity.
 						float damageAmount = (float) (Math.pow(20*bulletVelocity/100F, 2)*bulletDefinition.bullet.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
-						Damage damage = new Damage("bullet." + bulletDefinition.bullet.type, damageAmount, box, player);
+						Damage damage = new Damage("bullet", damageAmount, box, player);
 						if(bulletDefinition.bullet.type.equals("water")){
 							damage.isWater = true;
 						}

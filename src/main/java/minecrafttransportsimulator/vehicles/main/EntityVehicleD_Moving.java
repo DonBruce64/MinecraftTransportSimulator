@@ -45,13 +45,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D);
 	
-	private int brakingTime = 10;
-	private int throttleTime = 10;
-	private double bodyAcceleration;
-	private double forceOfInertia;
-	private double bodyBrakeAngle;
-	private double bodyAcclAngle;
-	
 	//Constants.
 	private static final double MAX_ROTATION_RAD_PER_TICK = 0.0174533D*2D;
 	
@@ -124,80 +117,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundDeviceBoxes.updateMembers();
 		groundDeviceBoxes.updateBounds();
 	}
-	
-	
-//Calculating Force of Inertia which will give mow much force is needed that is to be applied
-//to the suspensions when accelerating and braking to derive the angle.
-	
-	//Accelerating animation which calculates the amount of time the throttle is pressed to derive the acceleration
-	//to then get the value of force exerted by inertia.
-	public double acclInertia() {
-		
-		forceOfInertia = currentMass*(bodyAcceleration);
-
-		
-		if (velocity > prevVelocity) {
-			
-			throttleTime++;
-			
-		}else {
-			
-			throttleTime = 0;
-		}
-		
-        if(throttleTime > 10 && !parkingBrakeOn && groundVelocity >= 3){
-        	
-        	bodyAcceleration = (groundVelocity/throttleTime);
-        	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01)); 
-        	
-        	return bodyAcclAngle;
-        	
-        }else if(throttleTime > 10 && !parkingBrakeOn && groundVelocity <= -3){
-        	
-        	bodyAcceleration = (groundVelocity/throttleTime);
-        	
-        	bodyAcclAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01)); 
-        	
-        	return bodyAcclAngle;
-        	
-        }else {
-        	
-        	bodyAcclAngle = 0;
-        	
-        	return 0;
-        }
-     }
-	
-	//Braking animation which calculates the amount of time the brake is pressed to derive the deceleration
-	//to then get the value of force exerted by inertia.
-	public double brakeInertia() {
-		
-		forceOfInertia = currentMass*(bodyAcceleration);
-		
-	    if (brakeOn && velocity != 0 || parkingBrakeOn && velocity != 0) {
-	    	
-	    	bodyAcceleration = (groundVelocity/brakingTime);
-	    	
-	        if(groundVelocity < -3) {
-	        	
-	        	bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*-0.01));
-	        	
-	        }else {
-	        	
-		        bodyBrakeAngle = Math.toDegrees(Math.atan((groundVelocity/forceOfInertia)*0.01));
-		        
-	        }
-	        
-	        return bodyBrakeAngle;
-	        
-	    }else {
-	    	
-	    	bodyBrakeAngle = 0;
-	    	
-	    	return 0;
-	    }
-	 }
 	
 	/**
 	 *  This needs to be called before checking pitch and roll of ground devices.  It is responsible for ensuring that
@@ -626,11 +545,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
-				if(velocity > 0) {
-					brakingTime++;
-				}
-			}else if(velocity == 0) {
-				brakingTime = 10;
 			}
 			if(addedFactor != 0){
 				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);
@@ -791,7 +705,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now that that the movement has been checked, move the vehicle.
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR);
 		rotationApplied.setTo(rotation);
-		System.out.println(velocity);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);

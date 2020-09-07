@@ -29,7 +29,7 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 		//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
 		if(connectedVehicle != null & !world.isClient()){
 			//Don't fuel vehicles that don't exist.
-			if(connectedVehicle.isValid){
+			if(!connectedVehicle.isValid){
 				connectedVehicle = null;
 				return;
 			}
@@ -42,21 +42,22 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 				return;
 			}
 			//If we have room for fuel, try to add it to the vehicle.
-			if(connectedVehicle.definition.motorized.fuelCapacity - connectedVehicle.fuel >= 10){
-				if(!tank.getFluid().isEmpty()){
-					connectedVehicle.fluidName = tank.getFluid();
-					int fuelDrained = tank.drain(tank.getFluid(), 10, true);
-					connectedVehicle.fuel += fuelDrained;
+			if(tank.getFluidLevel() > 0){
+			double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), 10, false);
+				if(amountToFill > 0){
+					double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
+					connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
+					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
-					//No more fuel.  Disconnect vehicle.
+					//No more room in the vehicle.  Disconnect.
 					connectedVehicle = null;
-					InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
-					InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
+					InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);	
 				}
 			}else{
-				//No more room in the vehicle.  Disconnect.
+				//No more fuel.  Disconnect vehicle.
 				connectedVehicle = null;
-				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);
+				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
+				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
 			}
 		}
 	}

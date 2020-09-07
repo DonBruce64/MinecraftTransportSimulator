@@ -92,9 +92,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d totalForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
 	
 	//Torques.
-	private float momentRoll;//kg*m^2
-	private float momentPitch;//kg*m^2
-	private float momentYaw;//kg*m^2
+	private double momentRoll;//kg*m^2
+	private double momentPitch;//kg*m^2
+	private double momentYaw;//kg*m^2
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
@@ -209,9 +209,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
 			//Set moments.
-			momentRoll = (float) (definition.general.emptyMass*(1.5F+(fuel/10000F)));
-			momentPitch = (float) (2*currentMass);
-			momentYaw = (float) (3*currentMass);
+			momentRoll = definition.general.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
+			momentPitch = 2D*currentMass;
+			momentYaw = 3D*currentMass;
 			
 			//Get engine thrust force contributions.
 			thrustForce.set(0D, 0D, 0D);

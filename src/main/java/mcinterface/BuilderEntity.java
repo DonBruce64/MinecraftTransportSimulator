@@ -162,24 +162,39 @@ public class BuilderEntity extends Entity{
 		if(fakeLightPosition != null){
 			world.setBlockToAir(fakeLightPosition);
 		}
-		//If the entity is still valid, mark it as invalid.
-		if(entity != null && entity.isValid){
+		//Mark entity as invalid and remove from maps.
+		if(entity != null){
 			entity.isValid = false;
+			if(world.isRemote){
+				AEntityBase.createdClientEntities.remove(entity.lookupID);
+			}else{
+				AEntityBase.createdServerEntities.remove(entity.lookupID);
+			}
 		}
 	}
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){
 		if(!world.isRemote && entity != null){
-			if(source.getImmediateSource() != null){
-				Entity attacker = source.getImmediateSource();
-				Entity trueSource = source.getTrueSource();
-				WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperWorld.getWrapperFor(trueSource.world).getWrapperFor((EntityPlayer) trueSource) : null;
+			Entity attacker = source.getImmediateSource();
+			Entity trueSource = source.getTrueSource();
+			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperWorld.getWrapperFor(trueSource.world).getWrapperFor((EntityPlayer) trueSource) : null;
+			if(lastExplosionPosition != null && source.isExplosion()){
+				//We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
+				//it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
+				//Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
+				BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
+				for(BoundingBox box : entity.interactionBoxes){
+					if(box.intersects(explosiveBounds)){
+						entity.attack(new Damage(source.damageType, amount, box, playerSource).setExplosive());
+					}
+				}
+				lastExplosionPosition = null;
+			}else if(attacker != null){
 				Damage damage = null;
-				
 				//Check the damage at the current position of the attacker.
 				Point3d attackerPosition = new Point3d(attacker.posX, attacker.posY, attacker.posZ);
-				for(BoundingBox box : entity.collisionBoxes){
+				for(BoundingBox box : entity.interactionBoxes){
 					if(box.isPointInside(attackerPosition)){
 						damage = new Damage(source.damageType, amount, box, playerSource);
 						break;
@@ -190,7 +205,7 @@ public class BuilderEntity extends Entity{
 					//Check the theoretical position of the entity should it have moved.
 					//Some projectiles may call their attacking code before updating their positions.
 					attackerPosition.add(attacker.motionX, attacker.motionY, attacker.motionZ);
-					for(BoundingBox box : entity.collisionBoxes){
+					for(BoundingBox box : entity.interactionBoxes){
 						if(box.isPointInside(attackerPosition)){
 							damage = new Damage(source.damageType, amount, box, playerSource);
 							break;
@@ -202,14 +217,6 @@ public class BuilderEntity extends Entity{
 				if(damage != null){
 					entity.attack(damage);
 				} 
-			}else if(lastExplosionPosition != null && source.isExplosion()){
-				//We encountered an explosion.  These don't have entities linked to them, despite TNT being a TE.
-				//Note that explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
-				for(BoundingBox box : entity.collisionBoxes){
-					if(box.isPointInside(lastExplosionPosition)){
-						entity.attack(new Damage(source.damageType, amount, box, null).setExplosive());
-					}
-				}	
 			}
 		}
 		return true;

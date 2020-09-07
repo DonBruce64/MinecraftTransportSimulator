@@ -250,9 +250,10 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  is clicking this TE with liquids, then the liquids will be stored or retrieved from this TE.
 	 */
 	public void openTileEntityGUI(WrapperTileEntity tile){
-		if(tile instanceof IInventory){
-			player.displayGUIChest((IInventory) tile);
+		if(tile.tile instanceof IInventory){
+			player.displayGUIChest((IInventory) tile.tile);
 		}else if(tile.tile instanceof IFluidTank){
+			//TODO shove this into a generic fluid code somewhere.
 			IFluidTank tileTank = (IFluidTank) tile;
 			ItemStack stack = player.getHeldItemMainhand();
 			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){

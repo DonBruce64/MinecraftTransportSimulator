@@ -27,7 +27,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.item.ItemStack;
@@ -149,63 +148,19 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		
-		//Clear out interaction boxes, as some boxes may not be added this tick depending on various factors.
-		interactionBoxes.clear();
-		partInteractionBoxes.clear();
-		
-		//Part interaction boxes are linked to the part's bounding box, so we don't need to update those.
-		//Rather, the part will update them on it's own update call.
-		//However, we do need to decide which interaction boxes we add to the interaction list.
-		//While we add all the boxes on the server, we only add some on the clients.
-		//This is dependent on what the current player entity is holding.
-		for(APart part : parts){
-			if(world.isClient()){
-				WrapperPlayer clientPlayer = InterfaceGame.getClientPlayer();
-				//If the part is fake, don't add it.
-				if(part.isFake()){
-					continue;
-				}
-				
-				//If the part is a seat, and we are riding it, don't add it.
-				//This keeps us from clicking our own seat when we want to click other things.
-				if(part instanceof PartSeat){
-					if(part.placementOffset.equals(locationRiderMap.inverse().get(clientPlayer))){
-						continue;
-					}
-				}
-				//If the player is holding a wrench, and the part has children, don't add it.
-				//Player shouldn't be able to wrench parts with children.
-				if(clientPlayer.isHoldingItem(ItemWrench.class) && !part.childParts.isEmpty()){
-					continue;
-				}
-				//If the player is holding a part, and the part isn't a seat, don't add it.
-				//This prevents us from clicking on parts when we're trying to place one.
-				//Seats are left in because it'd be a pain to switch items.
-				//Guns are also left in as the player may be clicking them with a bullet part to load them.
-				if(clientPlayer.isHoldingItem(AItemPart.class) && !(part instanceof PartSeat) && !(part instanceof PartGun)){
-					continue;
-				}
-				//If the part is linked to a door, and that door isn't open, and the player isn't in the vehicle, don't add it.
-				//This prevents the player from interacting with things from outside the vehicle when the door is shut, but lets
-				//them move around inside the vehicle.
-				if(part.vehicleDefinition.linkedDoor != null && !doorsOpen.contains(part.vehicleDefinition.linkedDoor) && !this.equals(clientPlayer.getEntityRiding())){
-					continue;
-				}
-			}
-			
-			//Conditions to add have been met, do so.
-			interactionBoxes.add(part.boundingBox);
-			partInteractionBoxes.add(part.boundingBox);
-		}
-		
 		//Update part slot box positions.
 		for(BoundingBox box : partSlotBoxes.keySet()){
 			box.updateToEntity(this);
 		}
 		
+		//Clear out interaction boxes, as some boxes may not be added this tick depending on various factors.
+		interactionBoxes.clear();
+		partInteractionBoxes.clear();
+		
 		//Add active part slots to slot boxes.
 		//Only do this on clients; servers always have all boxes active to handle clicks.
 		//Boxes added on clients depend on what the player is holding.
+		//We add these before part boxes so the player can click them before clicking a part.
 		if(world.isClient()){
 			activePartSlotBoxes.clear();
 			WrapperPlayer player = InterfaceGame.getClientPlayer();
@@ -238,6 +193,45 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Add all the active open slot boxes to the interaction frame.
 		interactionBoxes.addAll(activePartSlotBoxes.keySet());
+		
+		//Part interaction boxes are linked to the part's bounding box, so we don't need to update those.
+		//Rather, the part will update them on it's own update call.
+		//However, we do need to decide which interaction boxes we add to the interaction list.
+		//While we add all the boxes on the server, we only add some on the clients.
+		//This is dependent on what the current player entity is holding.
+		for(APart part : parts){
+			if(world.isClient()){
+				WrapperPlayer clientPlayer = InterfaceGame.getClientPlayer();
+				//If the part is fake, don't add it.
+				if(part.isFake()){
+					continue;
+				}
+				
+				//If the part is a seat, and we are riding it, don't add it.
+				//This keeps us from clicking our own seat when we want to click other things.
+				if(part instanceof PartSeat){
+					if(part.placementOffset.equals(locationRiderMap.inverse().get(clientPlayer))){
+						continue;
+					}
+				}
+				//If the player is holding a wrench, and the part has children, don't add it.
+				//Player shouldn't be able to wrench parts with children.
+				if(clientPlayer.isHoldingItem(ItemWrench.class) && !part.childParts.isEmpty()){
+					continue;
+				}
+				
+				//If the part is linked to a door, and that door isn't open, and the player isn't in the vehicle, don't add it.
+				//This prevents the player from interacting with things from outside the vehicle when the door is shut, but lets
+				//them move around inside the vehicle.
+				if(part.vehicleDefinition.linkedDoor != null && !doorsOpen.contains(part.vehicleDefinition.linkedDoor) && !this.equals(clientPlayer.getEntityRiding())){
+					continue;
+				}
+			}
+			
+			//Conditions to add have been met, do so.
+			interactionBoxes.add(part.boundingBox);
+			partInteractionBoxes.add(part.boundingBox);
+		}
 		
 		//Now add the collision boxes.  These go last as we want to avoid clicking on them and they should be checked last.
 		//We do need to add these, however, as the player can interact with collision boxes to open inventories or wrench
@@ -379,6 +373,18 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnItemStack(new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata()), null, position);
 				}
+			}
+		}
+		
+		//Damage all riders, including the controller.
+		WrapperPlayer controller = getController();
+		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, null);
+		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, controller);
+		for(WrapperEntity rider : locationRiderMap.values()){
+			if(rider.equals(controller)){
+				rider.attack(controllerCrashDamage);
+			}else{
+				rider.attack(passengerCrashDamage);
 			}
 		}
 	}	

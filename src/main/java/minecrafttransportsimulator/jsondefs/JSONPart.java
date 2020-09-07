@@ -66,6 +66,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public boolean isWheel;
     	public boolean isTread;
     	public boolean canFloat;
+		public boolean canGoFlat;
     	public float width;
     	public float height;
     	public float motiveFriction;
@@ -104,7 +105,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     }
     
     public class PartInteractable{
-    	public String type;
+    	public String interactionType;
     	public boolean feedsVehicles;
     	public byte inventoryUnits;
     }
