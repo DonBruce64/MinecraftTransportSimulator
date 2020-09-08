@@ -54,6 +54,7 @@ public class JSONConfig{
 	}
 	
 	public static class ConfigDamage{
+		public ConfigBoolean crashes = new ConfigBoolean(true, "Whether or not vehicles can crash at all.");
 		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
 		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
