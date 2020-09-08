@@ -201,7 +201,7 @@ public final class ControlSystem{
 		}		
 		
 		//Check flaps.
-		if(aircraft.definition.plane != null && aircraft.definition.plane.hasFlaps){
+		if(aircraft.definition.motorized.hasFlaps){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
 				InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
 			}
@@ -340,10 +340,10 @@ public final class ControlSystem{
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT, true));
+			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
 		}
 		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT, false));
+			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
 		}
 		
 		//Check if horn button is pressed.

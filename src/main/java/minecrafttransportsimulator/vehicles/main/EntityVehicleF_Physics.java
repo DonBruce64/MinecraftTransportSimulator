@@ -180,6 +180,13 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 		}
 		
+		//Adjust flaps to current setting.
+		if(flapCurrentAngle < flapDesiredAngle){
+			++flapCurrentAngle;
+		}else if(flapCurrentAngle > flapDesiredAngle){
+			--flapCurrentAngle;
+		}
+		
 		//If we are towing a vehicle, update it now.
 		if(towedVehicle != null){
 			towedVehicle.updateThisCycle = true;
@@ -242,53 +249,27 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Get forces.  Some forces are specific to JSON sections.
-			gravitationalForce = currentMass*(9.8/400);
-			if(definition.blimp != null || definition.plane != null){
-				//We are an aircraft.  We need to set our trackAngle here for forces, as well as the drag coefficient.
-				trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));
-				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + 0.03F;
-			}else{
-				//Not an aircraft.  We're either a car, or something else entirely.
-				//If we don't have any grounded ground devices, assume we are in the air or in water.
-				//In both cases, we need to increase drag.  If we aren't a car, just set a constant 2.0 coefficient.
-				dragCoeff = definition.car != null ? (groundedGroundDevices.isEmpty() ? definition.car.dragCoefficient*3F : definition.car.dragCoefficient) : 2.0F; 
-				dragForce = 0.5F*airDensity*velocity*velocity*5.0F*dragCoeff;
-			}
+			//First get gravity.
+			gravitationalForce = definition.motorized.ballastVolume == 0 ? currentMass*(9.8/400) : 0;
 			
-			if(definition.blimp != null){
+			//Get the track angle.  This is used for control surfaces.
+			trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));
+			
+			//Get the lift coefficients and states for control surfaces.
+			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
+			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
+			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
+			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
+			
+			//Set blimp-specific states before calculating forces.
+			if(definition.general.isBlimp){
 				//Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
 				//we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
 				//which key is pressed, they both activate the rudder for turning.
-				//Blimps also have more drag than planes, so we 
 				if((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle)){
 					rudderAngle = aileronAngle;
 					rudderCooldown = aileronCooldown;
-				}
-				
-				//Set coefficients.
-				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
-				
-				//Get forces.  Set gravity to 0 as blimps aren't affected by that.
-				dragForce = 0.5F*airDensity*velocity*velocity*definition.blimp.crossSectionalArea*dragCoeff;		
-				rudderForce = 0.5F*airDensity*velocity*velocity*definition.blimp.rudderArea*rudderLiftCoeff;
-				gravitationalForce = 0;
-				
-				//Get torques.
-				rudderTorque = rudderForce*definition.blimp.tailDistance;
-				
-				//Ballast gets less effective at applying positive lift at higher altitudes.
-				//This prevents blimps from ascending into space.
-				//Also take into account motionY, as we should provide less force if we are already going in the same direction.
-				if(elevatorAngle < 0){
-					ballastForce = airDensity*definition.blimp.ballastVolume*-elevatorAngle/100D;
-				}else if(elevatorAngle > 0){
-					ballastForce = 1.225*definition.blimp.ballastVolume*-elevatorAngle/100D;
-				}else{
-					ballastForce = 1.225*definition.blimp.ballastVolume*10D*-motion.y;
-				}
-				if(motion.y*ballastForce != 0){
-					ballastForce /= Math.pow(1 + Math.abs(motion.y), 2);
 				}
 				
 				//If the throttle is idle, and we have the brake pressed at a slow speed, stop the blimp.
@@ -299,7 +280,59 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					thrustForce.set(0D, 0D, 0D);
 					thrustTorque.set(0D, 0D, 0D);
 				}
-				
+			}
+			
+			//Get the drag coefficient and force.
+			if(definition.general.isAircraft){
+				//Aircraft are 0.03 by default, or whatever is specified.
+				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
+			}else{
+				dragCoeff = definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 2.0D;
+				//If we aren't an aircraft, check for grounded ground devices.
+				//If we don't have any grounded ground devices, assume we are in the air or in water.
+				//This results in an increase in drag due to poor airflow.
+				if(groundedGroundDevices.isEmpty()){
+					dragCoeff *= 3D;
+				}
+			}
+			if(definition.motorized.crossSectionalArea > 0){
+				dragForce = 0.5F*airDensity*velocity*velocity*definition.motorized.crossSectionalArea*dragCoeff;
+			}else if(definition.motorized.wingSpan > 0){
+				dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.motorized.wingSpan*definition.motorized.wingSpan/currentWingArea*0.8));
+			}else{
+				dragForce = 0.5F*airDensity*velocity*velocity*5.0F*dragCoeff;
+			}
+			
+			//Get ballast force.
+			if(definition.motorized.ballastVolume > 0){
+				//Ballast gets less effective at applying positive lift at higher altitudes.
+				//This prevents blimps from ascending into space.
+				//Also take into account motionY, as we should provide less force if we are already going in the same direction.
+				if(elevatorAngle < 0){
+					ballastForce = airDensity*definition.motorized.ballastVolume*-elevatorAngle/100D;
+				}else if(elevatorAngle > 0){
+					ballastForce = 1.225*definition.motorized.ballastVolume*-elevatorAngle/100D;
+				}else{
+					ballastForce = 1.225*definition.motorized.ballastVolume*10D*-motion.y;
+				}
+				if(motion.y*ballastForce != 0){
+					ballastForce /= Math.pow(1 + Math.abs(motion.y), 2);
+				}
+			}
+			
+			//Get all other forces.
+			wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
+			aileronForce = 0.5F*airDensity*velocity*velocity*definition.motorized.aileronArea*aileronLiftCoeff;
+			elevatorForce = 0.5F*airDensity*velocity*velocity*definition.motorized.elevatorArea*elevatorLiftCoeff;			
+			rudderForce = 0.5F*airDensity*velocity*velocity*definition.motorized.rudderArea*rudderLiftCoeff;
+			
+			//Get torques.  Point for ailerons is 0.75% to the edge of the wing.
+			aileronTorque = aileronForce*definition.motorized.wingSpan*0.5F*0.75F;
+			elevatorTorque = elevatorForce*definition.motorized.tailDistance;
+			rudderTorque = rudderForce*definition.motorized.tailDistance;
+			
+			//Do more blimp-specific things for the forces.
+			if(definition.general.isBlimp){
 				//Roll and pitch are applied only if we aren't level.
 				//This only happens if we fall out of the sky and land on the ground and tilt.
 				if(angles.z > 0){
@@ -316,40 +349,12 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				}else{
 					elevatorTorque = 0;
 				}
-			}else if(definition.plane != null){
-				//Adjust flaps to current setting.  If no flaps are present, then this will never change.
-				if(flapCurrentAngle < flapDesiredAngle){
-					++flapCurrentAngle;
-				}else if(flapCurrentAngle > flapDesiredAngle){
-					--flapCurrentAngle;
-				}
-				
-				//Set coefficients and areas.
-				wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
-				aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-				elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-				rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
-				currentWingArea = definition.plane.wingArea + definition.plane.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
-				
-				//Get forces.
-				dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.plane.wingSpan*definition.plane.wingSpan/currentWingArea*0.8));
-				wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-				aileronForce = 0.5F*airDensity*velocity*velocity*definition.plane.aileronArea*aileronLiftCoeff;
-				elevatorForce = 0.5F*airDensity*velocity*velocity*definition.plane.elevatorArea*elevatorLiftCoeff;			
-				rudderForce = 0.5F*airDensity*velocity*velocity*definition.plane.rudderArea*rudderLiftCoeff;
-				
-				//Get torques.
-				aileronTorque = aileronForce*definition.plane.wingSpan*0.5F*0.75F;
-				elevatorTorque = elevatorForce*definition.plane.tailDistance;
-				rudderTorque = rudderForce*definition.plane.tailDistance;
-				
-				//As a special case, if the plane is pointed upwards and stalling, add a forwards pitch to allow the plane to right itself.
-				//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-				if(velocity < 0.25 && groundedGroundDevices.isEmpty()){
-					if(angles.x < -45){
-						elevatorTorque += 100;
-					}
-				}
+			}
+			
+			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
+			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
+			if(definition.motorized.wingArea > 0 && velocity < 0.25 && angles.x < -45 && groundedGroundDevices.isEmpty()){
+				elevatorTorque += 100;
 			}
 			
 			//Add all forces to the main force matrix and apply them.
@@ -521,7 +526,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	}
 	
 	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
-		if(Math.abs(angleOfAttack) <= 15*1.25){
+		if(angleOfAttack == 0){
+			return 0;
+		}else if(Math.abs(angleOfAttack) <= 15*1.25){
 			return maxLiftCoeff*Math.sin(Math.PI/2*angleOfAttack/15);
 		}else if(Math.abs(angleOfAttack) <= 15*1.5){
 			if(angleOfAttack > 0){

@@ -13,6 +13,7 @@ public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
     	public List<JSONText> textObjects;
     }
     
+    @Deprecated
     public class TextLine{
     	public float xPos;
     	public float yPos;

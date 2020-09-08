@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
@@ -16,14 +15,17 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     public PartInteractable interactable;
     public PartEffector effector;
     public PartCustom custom;
-    public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
-    public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
+    public List<VehiclePart> subParts;
+    public List<VehicleCollisionBox> collision;
     public VehicleRendering rendering;
     
-    //Depreciated blocks.  Used only for legacy compat.
+    @Deprecated
     public PartWheel wheel;
+    @Deprecated
     public PartPontoon pontoon;
+    @Deprecated
     public PartSkid skid;
+    @Deprecated
     public PartTread tread;
 
     public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
@@ -119,24 +121,24 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public float width;
     	public float height;
     }
-    
+    @Deprecated
     public class PartWheel{
     	public float diameter;
         public float motiveFriction;
         public float lateralFriction;
     }
-    
+    @Deprecated
     public class PartSkid{
     	public float width;
     	public float lateralFriction;
     }
-    
+    @Deprecated
     public class PartPontoon{
     	public float width;
     	public float lateralFriction;
         public float extraCollisionBoxOffset;
     }
-    
+    @Deprecated
     public class PartTread{
     	public float width;
     	public float motiveFriction;

@@ -1,17 +1,20 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.InterfaceAudio;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
 /**Packet used to send signals to engines.  This can be a state change or damage from an attack.
  * Constructors are present for each of these situations, though the side this packet is present
- *  on differ between packet types.  For example engine signal data is sent both from clients to
- *   the server, and from the server to clients, while damage information is only sent from
+ * on differ between packet types.  For example engine signal data is sent both from clients to
+ * the server, and from the server to clients, while damage information is only sent from
  * servers to clients.
  * 
  * @author don_bruce
@@ -104,6 +107,9 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 					engine.brokenStarter = true;
 				}
 				break;
+			}case BAD_SHIFT: {
+				InterfaceAudio.playQuickSound(new SoundInstance(engine, MTS.MODID + ":engine_shifting_grinding"));
+				break;
 			}
 		}
 		return true;
@@ -120,6 +126,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		FUEL_OUT,
 		TOO_SLOW,
 		DROWN,
-		DAMAGE;
+		DAMAGE,
+		BAD_SHIFT;
 	}
 }

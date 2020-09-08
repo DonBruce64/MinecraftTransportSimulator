@@ -27,7 +27,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.item.ItemStack;
 
@@ -53,8 +52,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public Point3d headingVector = new Point3d(0, 0, 0);
 	public Point3d verticalVector = new Point3d(0, 0, 0);
 	public Point3d sideVector = new Point3d(0, 0, 0);
-	public Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	public Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
+	public Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
+	public Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
 	public final Set<String> doorsOpen = new HashSet<String>();
 	
 	//Constants
@@ -62,8 +62,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
 	//Boxes used for collision and interaction with this vehicle.
-	private final List<BoundingBox> vehicleCollisionBoxes = new ArrayList<BoundingBox>();
-	private final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
+	public final List<BoundingBox> vehicleCollisionBoxes = new ArrayList<BoundingBox>();
+	public final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
 	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
 	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
 	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
@@ -108,12 +108,14 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Set vectors to current velocity and orientation.
 		prevVelocity = velocity;
 		headingVector.set(0D, 0D, 1D).rotateFine(angles);
-		normalizedVelocityVector.setTo(motion).normalize();
-		velocity = motion.length();
 		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
 		sideVector = verticalVector.crossProduct(headingVector);
+		normalizedVelocityVector.setTo(motion).normalize();
+		velocity = motion.length();
 		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
-		groundVelocity = normalizedGroundVelocityVector.length()*Math.signum(velocity);
+		groundVelocity = normalizedGroundVelocityVector.length();
+		normalizedGroundVelocityVector.normalize();
+		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
 		
 		//Update mass.
 		if(definition != null){
@@ -121,8 +123,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 		}
 		
-		//Update the collision boxes.
-		//First update the vehicle collision boxes.
+		//Update vehicle collision boxes.
 		for(int i=0; i<definition.collision.size(); ++i){
 			vehicleCollisionBoxes.get(i).updateToEntity(this);
 		}
@@ -153,7 +154,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			box.updateToEntity(this);
 		}
 		
-		//Clear out interaction boxes, as some boxes may not be added this tick depending on various factors.
+		//Clear out interaction and slot boxes, as some boxes may not be added this tick depending on various factors.
 		interactionBoxes.clear();
 		partInteractionBoxes.clear();
 		
@@ -320,7 +321,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			for(WrapperBlock block : box.collidingBlocks){
-				if(!block.isLiquid() && block.getHardness() <= Math.abs(velocity)*currentMass/250F && block.getHardness() >= 0){
+				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
 					if(ConfigSystem.configObject.damage.blockBreakage.value){
 						hardnessHitThisTick += block.getHardness();
 						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
@@ -333,7 +334,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 			}
 			
-			if(hardnessHitThisTick > currentMass/(0.75 + Math.abs(velocity))/250F){
+			if(hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
 					destroyAtPosition(box.globalCenter);
 				}
@@ -378,8 +379,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Damage all riders, including the controller.
 		WrapperPlayer controller = getController();
-		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, null);
-		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*Math.abs(velocity)*20, null, controller);
+		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, null);
+		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, controller);
 		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);
@@ -387,29 +388,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				rider.attack(passengerCrashDamage);
 			}
 		}
-	}	
-	
-	/**
-	 * Calculates the current mass of the vehicle.
-	 * Includes core mass, player weight (including inventory), and cargo.
-	 */
-	protected float getCurrentMass(){
-		int currentMass = definition.general.emptyMass;
-		for(APart part : parts){
-			if(part instanceof PartInteractable){
-				currentMass += ((PartInteractable) part).getInventoryWeight();
-			}
-		}
-		
-		//Add passenger inventory mass as well.
-		for(WrapperEntity rider : locationRiderMap.values()){
-			if(rider instanceof WrapperPlayer){
-				currentMass += 100 + ((WrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
-			}else{
-				currentMass += 100;
-			}
-		}
-		return currentMass;
 	}
 	
 	@Override

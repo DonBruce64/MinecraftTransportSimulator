@@ -336,14 +336,8 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
         		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
 	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
-	    		if(vehicle.doorBoxes.containsKey(boxClicked)){
-		    		InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.DOOR_RIGHTCLICK));
-	    		}else if(vehicle.collisionBoxes.contains(boxClicked)){
-	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_RIGHTCLICK));
-	    		}else if(vehicle.partInteractionBoxes.contains(boxClicked)){
-	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_RIGHTCLICK));
-	    		}else if(vehicle.partSlotBoxes.containsKey(boxClicked)){
-	    			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_SLOT_RIGHTCLICK));
+	    		if(vehicle.interactionBoxes.contains(boxClicked)){
+		    		InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, true));
 	    		}else{
 	    			MTS.MTSLog.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
@@ -367,16 +361,12 @@ public class BuilderEntity extends Entity{
     		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
     		if(event.getEntityPlayer().world.isRemote){
 	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
-	    		if(!vehicle.partSlotBoxes.containsKey(boxClicked)){
-	    			if(vehicle.collisionBoxes.contains(boxClicked)){
-	        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.COLLISION_LEFTCLICK));
-	        		}else if(vehicle.partInteractionBoxes.contains(boxClicked)){
-	        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, PacketVehicleInteract.PacketVehicleInteractType.PART_LEFTCLICK));
-	        		}else{
-	        			MTS.MTSLog.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
-	        		}
-	    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
-	    		}
+    			if(vehicle.interactionBoxes.contains(boxClicked)){
+        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, false));
+        		}else{
+        			MTS.MTSLog.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+        		}
+    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
     		}
 	    	event.setCanceled(true);
     	}

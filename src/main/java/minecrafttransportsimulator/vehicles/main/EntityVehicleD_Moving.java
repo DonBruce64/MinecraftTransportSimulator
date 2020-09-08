@@ -34,6 +34,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public String ownerUUID = "";
 	
 	//Internal states.
+	public boolean goingInReverse;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -43,7 +44,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d motionApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d rotationApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
-	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D);
+	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D); 
 	
 	//Constants.
 	private static final double MAX_ROTATION_RAD_PER_TICK = 0.0174533D*2D;
@@ -475,43 +476,48 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	private void performGroundOperations(){
 		//Get braking force and apply it to the motions.
-		float brakingFactor = getBrakingForceFactor();
+		float brakingFactor = getBrakingForce();
 		if(brakingFactor > 0){
 			double brakingForce = 20F*brakingFactor/currentMass;
-			if(brakingForce > Math.abs(velocity)){
+			if(brakingForce > velocity){
 				motion.x = 0;
 				motion.z = 0;
 				rotation.y = 0;
 			}else{
-				motion.x -= brakingForce*motion.x/Math.abs(velocity);
-				motion.z -= brakingForce*motion.z/Math.abs(velocity);
+				motion.x -= brakingForce*motion.x/velocity;
+				motion.z -= brakingForce*motion.z/velocity;
 			}
 		}
 		
 		//Add rotation based on our turning factor, and then re-set ground states.
-		rotation.y += getTurningFactor();
-		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
-		groundVelocity = normalizedGroundVelocityVector.length()*Math.signum(velocity);
-		normalizedGroundVelocityVector.normalize();
-		
+		//For turning, we keep turning momentum if the wheels are turned.
+		double turningForce = getTurningForce();
+		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
+		if(!goingInReverse && dotProduct < -0.75 && turningForce == 0){
+			goingInReverse = true;
+		}else if(goingInReverse && dotProduct > 0.75 && turningForce == 0){
+			goingInReverse = false;
+		}
+		if(turningForce != 0){
+			rotation.y += goingInReverse ? -turningForce : turningForce;
+		}
 		//Check how much grip the wheels have.
-		float skiddingFactor = getSkiddingFactor();
-		if(skiddingFactor != 0 && Math.abs(groundVelocity) > 0.01){
+		float skiddingFactor = getSkiddingForce();
+		if(skiddingFactor != 0 && groundVelocity > 0.01){
 			//Have enough grip, get angle delta between heading and motion.
-			Point3d normalizedGroundHeading = new Point3d(headingVector.x, 0, headingVector.z).normalize();
-			Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeading);
-			double dotProduct = normalizedVelocityVector.dotProduct(headingVector);
+			Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
 			double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
-			if(Math.abs(vectorDelta) > 0.001){
-				//Check if we are going in reverse and adjust our delta angle if so.
-				if(groundVelocity < 0){
-					if(vectorDelta >= 90){
-						vectorDelta = -(180 - vectorDelta);
-					}else if(vectorDelta <= -90){
-						vectorDelta = 180 + vectorDelta;
-					}
+			//Check if we are backwards and adjust our delta angle if so.
+			if(goingInReverse && dotProduct < 0){
+				if(vectorDelta >= 90){
+					vectorDelta = -(180 - vectorDelta);
+				}else if(vectorDelta <= -90){
+					vectorDelta = 180 + vectorDelta;
 				}
-
+			}
+			
+			//If we are offset, adjust our angle.
+			if(Math.abs(vectorDelta) > 0.001){
 				//Get factor of how much we can correct our turning.
 				double motionFactor;
 				if(vectorDelta > skiddingFactor){
@@ -521,11 +527,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}else{
 					motionFactor = 1;
 				}
+				//FIXME remove this on build day.
+				//System.out.format("Dot:%f Vel:%f Turn:%f InRev:%b Client:%s Delta:%f\n", dotProduct, velocity, turningForce, goingInReverse, world.isClient() ? "1" : "0", vectorDelta);
 				
 				//Apply motive changes to the vehicle based on how much we can turn it.
 				//We basically take the two components of the motion, and apply one or the other depending on
 				//how much delta the vector says we can change.
-				Point3d idealMotion = normalizedGroundHeading.multiply(groundVelocity).multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
+				Point3d idealMotion = goingInReverse ? normalizedGroundHeadingVector.copy().multiply(-groundVelocity) : normalizedGroundHeadingVector.copy().multiply(groundVelocity);
+				idealMotion.multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
 			}
@@ -533,10 +542,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
-	 * Returns factor for braking.
+	 * Returns force for braking.
 	 * Depends on number of grounded core collision sections and braking ground devices.
 	 */
-	private float getBrakingForceFactor(){
+	private float getBrakingForce(){
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
@@ -569,12 +578,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
-	 * Returns factor for skidding based on lateral friction and velocity.
+	 * Returns force for skidding based on lateral friction and velocity.
 	 * If the value is non-zero, it indicates that yaw changes from ground
 	 * device calculations should be applied due to said devices being in
 	 * contact with the ground.
 	 */
-	private float getSkiddingFactor(){
+	private float getSkiddingForce(){
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
 		for(PartGroundDevice groundDevice : groundedGroundDevices){
@@ -587,62 +596,52 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
-	 * Returns factor for turning based on lateral friction, velocity, and wheel distance.
+	 * Returns force for turning based on lateral friction, velocity, and wheel distance.
 	 * Sign of returned value indicates which direction entity should yaw.
 	 * A 0 value indicates no yaw change.
 	 */
-	private float getTurningFactor(){
-		float turningForce = 0;
+	private double getTurningForce(){
 		float steeringAngle = getSteeringAngle();
 		if(steeringAngle != 0){
-			float turningFactor = 0;
-			float turningDistance = 0;
+			double turningDistance = 0;
 			//Check grounded ground devices for turn contributions.
+			//Their distance from the center of the vehicle defines our turn arc.
 			for(PartGroundDevice groundDevice : groundedGroundDevices){
 				if(groundDevice.vehicleDefinition.turnsWithSteer){
-					turningDistance = (float) Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
+					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
-			}
-			if(turningDistance != 0){
-				turningFactor = 1.0F;
 			}
 			
-			//Also check for boat propellers, which can make us turn if we are in water.
-			for(APart part : parts){
-				if(part instanceof PartPropeller){
-					if(part.isInLiquid()){
-						turningFactor += 1.0F;
-						turningDistance = (float) Math.max(turningDistance, Math.abs(part.placementOffset.z));
+			//If we didn't find any ground devices to make us turn, check propellers in the water.
+			if(turningDistance == 0){
+				for(APart part : parts){
+					if(part instanceof PartPropeller){
+						if(part.isInLiquid()){
+							turningDistance = Math.max(turningDistance, Math.abs(part.placementOffset.z));
+							break;
+						}
 					}
 				}
-			}
-			if(turningFactor > 0){
-				//Now that we know we can turn, we can attempt to change the track.
-				double steeringFactor = Math.abs(steeringAngle);
-				if(turningFactor < 1){
-					steeringFactor *= turningFactor;
+			}			
+			
+			//If we are able to turn, calculate the force we create to do so. 
+			if(turningDistance > 0){
+				//Steering force is initially is the value of the angle, divided by the distance to the wheels.
+				//This means tighter turning for shorter-wheelbase vehicles and more input.
+				//This is opposite of the torque-based forces for control surfaces.
+				double turningForce = steeringAngle/turningDistance;
+				//Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
+				if(groundVelocity > 0.35D){
+					turningForce *= Math.pow(0.25F, groundVelocity - 0.35D);
 				}
-				//Adjust steering angle to be aligned with distance of the turning part from the center of the vehicle.
-				steeringFactor /= turningDistance;
-				//Another thing that can affect the steering angle is speed.
-				//More speed makes for less wheel turn to prevent crazy circles.
-				if(Math.abs(groundVelocity)*SPEED_FACTOR/0.35F - turningFactor/3F > 0){
-					steeringFactor *= Math.pow(0.25F, (Math.abs(groundVelocity)*(0.75F + SPEED_FACTOR/0.35F/4F) - turningFactor/3F));
-				}
-				//Adjust turn force to steer angle based on turning factor.
-				turningForce = (float) (steeringFactor*Math.abs(groundVelocity)/2F);
-				//Correct for speedFactor changes.
-				turningForce *= SPEED_FACTOR/0.35F;
-				//Now add the sign to this force based on our steering angle and ground velocity.
-				turningForce *= Math.signum(steeringAngle);
-				if(Math.abs(groundVelocity) < 0.05){
-					turningForce = 0;
-				}else if(groundVelocity <= -0.05){
-					turningForce = -turningForce;
-				}
+				//Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
+				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
+				//We need to take speed-factor into account here, as that will make us move different lengths per tick.
+				//Finally, we need to reduce this by a constant to get "proper" force..
+				return turningForce*groundVelocity*(SPEED_FACTOR/0.35D)/2D;
 			}
 		}
-		return turningForce;
+		return 0;
 	}
 	
 	/**
@@ -696,8 +695,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(collisionBoxCollided){
 			correctCollidingMovement();
 		}else{
-			//FIXME enable when we get motion y working.
-			//groundRotationBoost = groundDeviceBoxes.performPitchCorrection(groundCollisionBoost);
+			groundRotationBoost = groundDeviceBoxes.performPitchCorrection(groundCollisionBoost);
 			//FIXME enable when we do roll.
 			//groundRotationBoost = groundDeviceBoxes.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
@@ -730,45 +728,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 				clientDeltaRApplied.multiply(1D/25D);
 				rotationApplied.add(clientDeltaRApplied);
-				
-				
-				
-				//FIXME do we need this complex logic? I don't think we do, but we may.
-				//Check to make sure the delta is non-zero before trying to do complex math to calculate it.
-				//Saves a bit of CPU power due to division and multiplication operations, and prevents constant
-				//movement due to floating-point errors.
-				/*
-				if(serverDeltaM.x - clientDeltaM.x != 0){
-					motionApplied.x += (serverDeltaM.x - clientDeltaM.x)/25D*Math.abs(serverDeltaM.x - clientDeltaM.x);
-				}else{
-					motionApplied.x = 0;
-				}
-				if(serverDeltaM.y - clientDeltaM.y != 0){
-					motionApplied.y += (serverDeltaM.y - clientDeltaM.y)/25D*Math.abs(serverDeltaM.y - clientDeltaM.y);
-				}else{
-					motionApplied.y = 0;
-				}
-				if(serverDeltaM.z - clientDeltaM.z != 0){
-					motionApplied.z += (serverDeltaM.z - clientDeltaM.z)/25D*Math.abs(serverDeltaM.z - clientDeltaM.z);
-				}else{
-					motionApplied.z = 0;
-				}
-				
-				if(serverDeltaR.x - clientDeltaR.x != 0){
-					rotationApplied.x += (serverDeltaR.x - clientDeltaR.x)/25D*Math.abs(serverDeltaR.x - clientDeltaR.x);
-				}else{
-					rotationApplied.x = 0;
-				}
-				if(serverDeltaR.y - clientDeltaR.y != 0){
-					rotationApplied.y += (serverDeltaR.y - clientDeltaR.y)/25D*Math.abs(serverDeltaR.y - clientDeltaR.y);
-				}else{
-					rotationApplied.y = 0;
-				}
-				if(serverDeltaR.z - clientDeltaR.z != 0){
-					rotationApplied.z += (serverDeltaR.z - clientDeltaR.z)/25D*Math.abs(serverDeltaR.z - clientDeltaR.z);
-				}else{
-					rotationApplied.z = 0;
-				}*/
 				
 				//Add actual movement to client deltas to prevent further corrections.
 				clientDeltaM.add(motionApplied);

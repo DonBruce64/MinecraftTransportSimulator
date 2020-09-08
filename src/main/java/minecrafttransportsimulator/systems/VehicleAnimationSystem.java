@@ -149,7 +149,7 @@ public final class VehicleAnimationSystem{
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
-			case("speed"): return Math.abs(vehicle.velocity)*vehicle.SPEED_FACTOR*20;
+			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
 			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 
@@ -165,7 +165,7 @@ public final class VehicleAnimationSystem{
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
 			case("rain"): return 1.0D + Math.sin(vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)/2D;
-			case("door"): return vehicle.parkingBrakeOn && Math.abs(vehicle.velocity) < 0.25 ? 1 : 0;
+			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
 			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
 			

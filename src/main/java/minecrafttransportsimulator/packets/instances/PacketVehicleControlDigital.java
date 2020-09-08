@@ -45,7 +45,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
-				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.car != null && vehicle.definition.car.isBigTruck){
+				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
 					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
@@ -108,25 +108,29 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				}
 				return false;
 			}
-			case SHIFT : {
+			case SHIFT_UP : {
 				for(PartEngine engine : vehicle.engines.values()){
-					if(controlState){
-						engine.shiftUp(true);
-					}else{
-						engine.shiftDown(true);
-					}
+					engine.shiftUp(controlState);
 				}
-				break;
+				//Return here as we may not have shifted.
+				return false;
+			}
+			case SHIFT_DN : {
+				for(PartEngine engine : vehicle.engines.values()){
+					engine.shiftDown(controlState);
+				}
+				//Return here as we may not have shifted.
+				return false;
 			}
 			case REVERSE : {
-				if(vehicle.definition.blimp != null){
+				if(vehicle.definition.general.isBlimp){
 					for(PartEngine engine : vehicle.engines.values()){
 						if(controlState){
-							engine.shiftDown(true);
-							engine.shiftDown(true);
+							engine.shiftDown(false);
+							engine.shiftDown(false);
 						}else{
-							engine.shiftUp(true);
-							engine.shiftUp(true);
+							engine.shiftUp(false);
+							engine.shiftUp(false);
 						}
 					}
 				}else{
@@ -162,7 +166,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 		P_BRAKE,
 		HORN,
 		SIREN,
-		SHIFT,
+		SHIFT_UP,
+		SHIFT_DN,
 		TRAILER,
 		REVERSE,
 		GEAR,

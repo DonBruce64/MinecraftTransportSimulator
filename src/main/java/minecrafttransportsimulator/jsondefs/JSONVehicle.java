@@ -14,9 +14,12 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
 	public String genericName;
 	
 	public List<VehicleDefinition> definitions;
-    public VehicleMotorizedConfig motorized;
+    public VehicleMotorized motorized;
+    @Deprecated
     public VehiclePlane plane;
+    @Deprecated
     public VehicleBlimp blimp;
+    @Deprecated
     public VehicleCar car;
     public List<VehiclePart> parts;
     public List<VehicleCollisionBox> collision;
@@ -25,6 +28,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     
     public class VehicleGeneral extends AJSONCraftable<JSONVehicle.VehicleGeneral>.General{
     	public boolean isAircraft;
+    	public boolean isBlimp;
     	public boolean openTop;
     	public int emptyMass;
     	public String type;
@@ -36,20 +40,36 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public String[] extraMaterials;
     }
     
-    public class VehicleMotorizedConfig{
+    public class VehicleMotorized{
+    	public boolean isBigTruck;
+    	public boolean isTrailer;
+    	public boolean isFrontWheelDrive;
+    	public boolean isRearWheelDrive;
+    	public boolean hasCruiseControl;
+    	public boolean hasAutopilot;
+    	public boolean hasFlaps;
     	public int fuelCapacity;
     	public int defaultFuelQty;
     	public int gearSequenceDuration;
+    	public float axleRatio;
+    	public float dragCoefficient;
+    	public float tailDistance;
+    	public float wingSpan;
+        public float wingArea;
+        public float aileronArea;
+        public float elevatorArea;
+        public float rudderArea;
+        public float crossSectionalArea;
+        public float ballastVolume;
     	public String hornSound;
     	public String sirenSound;
         public float[] hitchPos;
         public String[] hitchTypes;
         public float[] hookupPos;
         public String hookupType;
-        public boolean isTrailer;
         public List<PackInstrument> instruments;
     }
-    
+    @Deprecated
     public class VehiclePlane{
         public boolean hasFlaps;
         public boolean hasAutopilot;
@@ -60,14 +80,14 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float elevatorArea;
         public float rudderArea;
     }
-    
+    @Deprecated
     public class VehicleBlimp{
         public float crossSectionalArea;
         public float tailDistance;
         public float rudderArea;
         public float ballastVolume;
     }
-    
+    @Deprecated
     public class VehicleCar{
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
@@ -88,6 +108,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public List<String> customTypes;
         public float minValue;
         public float maxValue;
+        @Deprecated
         public VehiclePart additionalPart;
         public List<VehiclePart> additionalParts;
         public String defaultPart;
@@ -141,9 +162,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     }
     
     public class PackInstrument{
-        public float[] pos;
-        public float[] rot;
-        public float[] hudpos;
+        public Point3d pos;
+        public Point3d rot;
         public float scale;
         public int hudX;
         public int hudY;
@@ -163,21 +183,27 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public List<String> customVariables;
         
         //DEPRECIATED CODE!
+        @Deprecated
         public int displayTextMaxLength;
+        @Deprecated
         public boolean textLighted;
+        @Deprecated
         public String defaultDisplayText;
+        @Deprecated
         public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
+        @Deprecated
         public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+        @Deprecated
         public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
     }
-    
+    @Deprecated
     public class VehicleDisplayText{
     	public Point3d pos;
         public Point3d rot;
         public float scale;
         public String color;
     }
-    
+    @Deprecated
     public class VehicleRotatableModelObject{
     	public String partName;
     	public Point3d rotationPoint;
@@ -187,7 +213,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public float rotationClampMax;
     	public boolean absoluteValue;
     }
-    
+    @Deprecated
     public class VehicleTranslatableModelObject{
     	public String partName;
     	public Point3d translationAxis;

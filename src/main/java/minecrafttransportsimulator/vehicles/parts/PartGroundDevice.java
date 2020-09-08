@@ -94,7 +94,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			
 			//Set contact for wheel skidding effects.
 			if(definition.ground.isWheel){
-				if(prevAngularVelocity/((vehicle.groundVelocity)/(getHeight()*Math.PI)) < 0.25 && Math.abs(vehicle.velocity) > 0.3){
+				if(prevAngularVelocity/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
 					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
 					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
@@ -119,12 +119,12 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			}
 			
 			//Check for colliding entities and damage them.
-			if(!vehicle.world.isClient() && Math.abs(vehicle.velocity) >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
+			if(!vehicle.world.isClient() && vehicle.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
 				boundingBox.widthRadius += 0.25;
 				boundingBox.depthRadius += 0.25;
 				final double wheelDamageAmount;
 				if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
-					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*Math.abs(vehicle.velocity)*vehicle.currentMass/1000F;
+					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.velocity*vehicle.currentMass/1000F;
 				}else{
 					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F;
 				}
@@ -133,7 +133,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				boundingBox.widthRadius -= 0.25;
 				boundingBox.depthRadius -= 0.25;
 			}
-		}else if(vehicle.definition.car == null || vehicle.groundedWheels.isEmpty()){
+		}else if((placementOffset.z > 0 && !vehicle.definition.motorized.isFrontWheelDrive) || (placementOffset.z <= 0 && !vehicle.definition.motorized.isRearWheelDrive)){
 			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
@@ -212,7 +212,11 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	public double getDesiredAngularVelocity(){
-		return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
+		if(vehicle.goingInReverse){
+			return getLongPartOffset() == 0 ? -vehicle.groundVelocity/(getHeight()*Math.PI) : -vehicle.groundVelocity;
+		}else{
+			return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
+		}
 	}
 	
 	public boolean isOnGround(){

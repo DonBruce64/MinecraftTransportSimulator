@@ -28,17 +28,16 @@ import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
-import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
  * As entities don't render above 255 well due to the new chunk visibility system, 
  * this code is called both from the regular render loop and manually from
- * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
+ * the event-based last pass.  This pass is -1, and should allow both the regular
+ * and blending operations to run.
  *
  * @author don_bruce
  */
@@ -692,16 +691,26 @@ public final class RenderVehicle{
 				
 				//If we have any leftover roller path, account for it here to keep spacing consistent.
 				//We may also have leftover straight path length if we didn't do anything on a roller.
+				//If we have roller length, make sure to offset it to account for the curvature of the roller.
+				//If we don't do this, the line won't start at the end of the prior roller..
 				//If we are on the last roller, we need to get the first roller to complete the loop.
 				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
-				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ) + leftoverPathLength + rollerPathLength;
-				double normalizedY = (nextRoller.startY - yPoint)/straightPathLength;
-				double normalizedZ = (nextRoller.startZ - zPoint)/straightPathLength;
-				while(straightPathLength > deltaDist){
+				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				double extraPathLength = rollerPathLength + leftoverPathLength;
+				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
+				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
+				while(straightPathLength + extraPathLength > deltaDist){
 					//Go to and add the next point on the straight path.
-					straightPathLength -= deltaDist;
-					yPoint += normalizedY*deltaDist;
-					zPoint += normalizedZ*deltaDist;
+					if(extraPathLength > 0){
+						yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
+						zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
+						straightPathLength -= (deltaDist - extraPathLength);
+						extraPathLength = 0;
+					}else{
+						yPoint += normalizedY*deltaDist;
+						zPoint += normalizedZ*deltaDist;
+						straightPathLength -= deltaDist;
+					}
 					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
 				}
 				leftoverPathLength = straightPathLength;
@@ -791,10 +800,10 @@ public final class RenderVehicle{
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			GL11.glPushMatrix();
-			GL11.glTranslatef(packInstrument.pos[0], packInstrument.pos[1], packInstrument.pos[2]);
-			GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
-			GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
-			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
+			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.y);
+			GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
+			GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
+			GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
 			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){

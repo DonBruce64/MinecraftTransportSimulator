@@ -12,6 +12,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 
@@ -128,5 +130,28 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Calculates the current mass of the vehicle.
+	 * Includes core mass, player weight (including inventory), and cargo.
+	 */
+	protected float getCurrentMass(){
+		int currentMass = definition.general.emptyMass;
+		for(APart part : parts){
+			if(part instanceof PartInteractable){
+				currentMass += ((PartInteractable) part).getInventoryWeight();
+			}
+		}
+		
+		//Add passenger inventory mass as well.
+		for(WrapperEntity rider : locationRiderMap.values()){
+			if(rider instanceof WrapperPlayer){
+				currentMass += 100 + ((WrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
+			}else{
+				currentMass += 100;
+			}
+		}
+		return currentMass;
 	}
 }

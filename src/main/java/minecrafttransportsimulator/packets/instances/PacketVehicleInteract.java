@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.List;
 import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
@@ -28,25 +29,25 @@ import net.minecraft.item.ItemStack;
  */
 public class PacketVehicleInteract extends APacketVehicle{
 	private final Point3d hitPosition;
-	private PacketVehicleInteractType type;
+	private boolean rightClick;
 		
-	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, Point3d hitPosition, PacketVehicleInteractType type){
+	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, Point3d hitPosition, boolean rightClick){
 		super(vehicle);
 		this.hitPosition = hitPosition;
-		this.type = type;
+		this.rightClick = rightClick;
 	}
 	
 	public PacketVehicleInteract(ByteBuf buf){
 		super(buf);
 		this.hitPosition = readPoint3dFromBuffer(buf);
-		this.type = PacketVehicleInteractType.values()[buf.readByte()];
+		this.rightClick = buf.readBoolean();
 	}
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		writePoint3dToBuffer(hitPosition, buf);
-		buf.writeByte(type.ordinal());
+		buf.writeBoolean(rightClick);
 	}
 
 	@Override
@@ -56,41 +57,65 @@ public class PacketVehicleInteract extends APacketVehicle{
 		ItemStack heldStack = player.getHeldStack();
 		APart part = vehicle.getPartAtLocation(hitPosition);
 		
+		//If our part is null, see if we clicked a part's collision box instead.
+		if(part == null){
+			for(Entry<APart, List<BoundingBox>> partCollisionEntry : vehicle.partCollisionBoxes.entrySet()){
+				for(BoundingBox box : partCollisionEntry.getValue()){
+					if(box.localCenter.equals(hitPosition)){
+						part = partCollisionEntry.getKey();
+						break;
+					}
+				}
+				if(part != null){
+					break;
+				}
+			}
+		}
+		
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
 		//Otherwise, try to do part-based interaction.
 		if(heldStack.getItem() instanceof IItemVehicleInteractable){
-			CallbackType callback = ((IItemVehicleInteractable) heldStack.getItem()).doVehicleInteraction(vehicle, part, player, ownerState, type.rightClick);
+			CallbackType callback = ((IItemVehicleInteractable) heldStack.getItem()).doVehicleInteraction(vehicle, part, player, ownerState, rightClick);
 			if(callback.equals(CallbackType.ALL)){
 				return true;
 			}else if(callback.equals(CallbackType.PLAYER)){
 				player.sendPacket(this);
 			}
 		}else{
-			//Not holding an item that can interact with a vehicle.  Try to interact with parts or slots.
-			if(type.equals(PacketVehicleInteractType.PART_RIGHTCLICK)){
-				part.interact(player);
-			}else if(type.equals(PacketVehicleInteractType.PART_LEFTCLICK)){
-				part.attack(new Damage("player", 1.0F, part.boundingBox, player));
-			}else if(type.equals(PacketVehicleInteractType.PART_SLOT_RIGHTCLICK)){
-				//Only owners can add vehicle parts.
-				if(!canPlayerEditVehicle){
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+			//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself..
+			if(part != null){
+				if(rightClick){
+					part.interact(player);
 				}else{
-					//Attempt to add the part.  Vehicle is responsible for callback packet here.
-					if(heldStack.getItem() instanceof AItemPart){
-						if(vehicle.addPartFromItem((AItemPart) heldStack.getItem(), heldStack.hasTagCompound() ? new WrapperNBT(heldStack) : null, hitPosition)){				
-							player.removeItem(heldStack, 1);
+					part.attack(new Damage("player", 1.0F, part.boundingBox, player));
+				}
+			}else{
+				//Check if we clicked a part slot box.
+				for(BoundingBox slotBox : vehicle.activePartSlotBoxes.keySet()){
+					if(slotBox.localCenter.equals(hitPosition)){
+						//Only owners can add vehicle parts.
+						if(!canPlayerEditVehicle){
+							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+						}else{
+							//Attempt to add the part.  Vehicle is responsible for callback packet here.
+							if(heldStack.getItem() instanceof AItemPart){
+								if(vehicle.addPartFromItem((AItemPart) heldStack.getItem(), heldStack.hasTagCompound() ? new WrapperNBT(heldStack) : null, hitPosition)){				
+									player.removeItem(heldStack, 1);
+								}
+							}
 						}
+						return false;
 					}
 				}
-			}else if(type.equals(PacketVehicleInteractType.DOOR_RIGHTCLICK)){
-				//Can't open locked vehicles.
-				if(vehicle.locked){
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
-				}else{
-					//Open the clicked door.
-					for(Entry<BoundingBox, String> doorEntry : vehicle.doorBoxes.entrySet()){
-						if(doorEntry.getKey().localCenter.equals(hitPosition)){
+				
+				//Check if we clicked a door.
+				for(Entry<BoundingBox, String> doorEntry : vehicle.doorBoxes.entrySet()){
+					if(doorEntry.getKey().localCenter.equals(hitPosition)){
+						//Can't open locked vehicles.
+						if(vehicle.locked){
+							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+						}else{
+							//Open or close the clicked door.
 							if(vehicle.doorsOpen.contains(doorEntry.getValue())){
 								vehicle.doorsOpen.remove(doorEntry.getValue());
 							}else{
@@ -103,20 +128,5 @@ public class PacketVehicleInteract extends APacketVehicle{
 			}
 		}
 		return false;
-	}
-	
-	public static enum PacketVehicleInteractType{
-		COLLISION_RIGHTCLICK(true),
-		COLLISION_LEFTCLICK(false),
-		PART_RIGHTCLICK(true),
-		PART_LEFTCLICK(false),
-		PART_SLOT_RIGHTCLICK(true),
-		DOOR_RIGHTCLICK(true);
-		
-		private final boolean rightClick;
-		
-		private PacketVehicleInteractType(boolean rightClick){
-			this.rightClick = rightClick;
-		}
 	}
 }

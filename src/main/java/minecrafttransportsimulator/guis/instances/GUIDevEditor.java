@@ -160,9 +160,6 @@ public class GUIDevEditor extends AGUIBase{
 												definition.general = loadedDefinition.general;
 												definition.definitions = loadedDefinition.definitions;
 												definition.motorized = loadedDefinition.motorized;
-												definition.plane = loadedDefinition.plane;
-												definition.blimp = loadedDefinition.blimp;
-												definition.car = loadedDefinition.car;
 												definition.parts = loadedDefinition.parts;
 												definition.collision = loadedDefinition.collision;
 												definition.doors = loadedDefinition.doors;

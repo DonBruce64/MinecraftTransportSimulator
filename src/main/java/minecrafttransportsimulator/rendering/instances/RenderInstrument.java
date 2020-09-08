@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.InterfaceRender;
@@ -10,8 +7,6 @@ import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
  * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an
@@ -20,9 +15,7 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public final class RenderInstrument{	
-	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
-	
-    /**
+	/**
      * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 
      * vehicle JSON parameters into account as it does not know which instrument is being rendered.  This means that 
      * any transformations that need to be applied for translation or scaling should be applied prior to calling this
@@ -30,11 +23,8 @@ public final class RenderInstrument{
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
 	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
-		//First get the appropriate texture file for this instrument combination.
-		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
-			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
-		}
-		Minecraft.getMinecraft().getTextureManager().bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
+		//First bind the texture file for this insturment's pack.
+		InterfaceRender.bindTexture(instrument.definition.packID, "textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
@@ -51,7 +41,7 @@ public final class RenderInstrument{
 				
 				//If the vehicle lights are on, disable the lightmap.
 				if(lightsOn){
-					Minecraft.getMinecraft().entityRenderer.disableLightmap();
+					InterfaceRender.setInternalLightingState(false);
 				}
 				
 				//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
@@ -135,7 +125,7 @@ public final class RenderInstrument{
 			
 			//Reset lightmap if we had previously disabled it.
 			if(lightsOn){
-				Minecraft.getMinecraft().entityRenderer.enableLightmap();
+				InterfaceRender.setInternalLightingState(true);
 			}
 			
 			//Reset blend state.

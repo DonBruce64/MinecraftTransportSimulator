@@ -190,7 +190,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		};
 		addSelector(rudderTrimSelector);
 		
-		if(haveReverseThrustOption && vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
+		if(haveReverseThrustOption && vehicle.definition.motorized.hasAutopilot){
 			//If we have both reverse AND Autopilot, render them side-by-side. otherwise just render one in the middle
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
@@ -229,7 +229,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			}
 			
 			//If we have autopilot, add a selector for it.
-			if(vehicle.definition.plane != null && vehicle.definition.plane.hasAutopilot){
+			if(vehicle.definition.motorized.hasAutopilot){
 				autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
@@ -321,7 +321,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have reverse thrust, set the selector state.
 		if(reverseSelector != null){
-			if(vehicle.definition.blimp != null){
+			if(vehicle.definition.general.isBlimp){
 				reverseSelector.selectorState = 0;
 				for(PartEngine engine : vehicle.engines.values()){
 					if(engine.currentGear < 0){

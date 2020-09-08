@@ -407,6 +407,17 @@ public final class PackParserSystem{
     		}
     	}else if(definition instanceof JSONVehicle){
     		JSONVehicle vehicleDef = (JSONVehicle) definition;
+    		//Move vehicle parameters to the motorized section.
+    		if(vehicleDef.car != null){
+    			vehicleDef.motorized.isBigTruck = vehicleDef.car.isBigTruck;
+    			vehicleDef.motorized.isFrontWheelDrive = vehicleDef.car.isFrontWheelDrive;
+    			vehicleDef.motorized.isRearWheelDrive = vehicleDef.car.isRearWheelDrive;
+    			vehicleDef.motorized.hasCruiseControl = vehicleDef.car.hasCruiseControl;
+    			vehicleDef.motorized.axleRatio = vehicleDef.car.axleRatio;
+    			vehicleDef.motorized.dragCoefficient = vehicleDef.car.dragCoefficient;
+    			vehicleDef.car = null;
+    		}
+    		
     		//If we still have the old type parameter and are an aircraft, set the flag to true.
     		if(vehicleDef.general.type != null){
     			if(vehicleDef.general.type.equals("plane") || vehicleDef.general.type.equals("blimp") || vehicleDef.general.type.equals("helicopter")){
@@ -414,12 +425,32 @@ public final class PackParserSystem{
     			}
     		}
     		
-    		if(((JSONVehicle) definition).plane != null){
-    			JSONVehicle planeDef = (JSONVehicle) definition;
+    		if(vehicleDef.plane != null){
+    			vehicleDef.general.isAircraft = true;
+    			vehicleDef.motorized.hasFlaps = vehicleDef.plane.hasFlaps;
+    			vehicleDef.motorized.hasAutopilot = vehicleDef.plane.hasAutopilot;
+    			vehicleDef.motorized.wingSpan = vehicleDef.plane.wingSpan;
+    			vehicleDef.motorized.wingArea = vehicleDef.plane.wingArea;
+    			vehicleDef.motorized.tailDistance = vehicleDef.plane.tailDistance;
+    			vehicleDef.motorized.aileronArea = vehicleDef.plane.aileronArea;
+    			vehicleDef.motorized.elevatorArea = vehicleDef.plane.elevatorArea;
+    			vehicleDef.motorized.rudderArea = vehicleDef.plane.rudderArea;
+    			vehicleDef.plane = null;
+    			
     			//If aileronArea is 0, we're a legacy plane and need to adjust.
-    			if(planeDef.plane.aileronArea == 0){
-    				planeDef.plane.aileronArea = planeDef.plane.wingArea/5F;
+    			if(vehicleDef.motorized.aileronArea == 0){
+    				vehicleDef.motorized.aileronArea = vehicleDef.motorized.wingArea/5F;
     			}
+    		}
+    		
+    		if(vehicleDef.blimp != null){
+    			vehicleDef.general.isAircraft = true;
+    			vehicleDef.general.isBlimp = true;
+    			vehicleDef.motorized.crossSectionalArea = vehicleDef.blimp.crossSectionalArea;
+    			vehicleDef.motorized.tailDistance = vehicleDef.blimp.tailDistance;
+    			vehicleDef.motorized.rudderArea = vehicleDef.blimp.rudderArea;
+    			vehicleDef.motorized.ballastVolume = vehicleDef.blimp.ballastVolume;
+    			vehicleDef.blimp = null;
     		}
     		
     		//Check all part slots for ground device names and update them.
@@ -451,7 +482,7 @@ public final class PackParserSystem{
 	    	    					}
 	    	    					additionalPart.types.set(j, "ground_" + partName);
 	    	    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
-	    	    					part.types.set(i, "interactable_" + partName);
+	    	    					additionalPart.types.set(i, "interactable_" + partName);
 	    	    				}
 	    	    			}
     					}

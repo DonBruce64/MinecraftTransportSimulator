@@ -335,7 +335,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		//If this is not a main part or an additional part, check the sub-parts.
 		for(APart part : parts){
-			if(part.definition.subParts.size() > 0){
+			if(part.definition.subParts != null && part.definition.subParts.size() > 0){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);

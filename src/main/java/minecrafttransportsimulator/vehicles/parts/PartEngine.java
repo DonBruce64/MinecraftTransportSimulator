@@ -12,6 +12,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.PartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
@@ -172,7 +173,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Add cooling for ambient temp.
 		ambientTemp = 25*vehicle.world.getTemperature(new Point3i(vehicle.position)) - 5*(Math.pow(2, vehicle.position.y/400) - 1);
-		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + Math.abs(vehicle.velocity)/500F;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/500F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
 		//Check to see if electric or hand starter can keep running.
@@ -288,23 +289,23 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			}
 			
 			//Do automatic transmission functions if needed.
-			if(definition.engine.isAutomatic){
+			if(definition.engine.isAutomatic && !vehicle.world.isClient()){
 				if(currentGear > 0){
 					if(shiftCooldown == 0){
 						if(definition.engine.upShiftRPM != null && definition.engine.downShiftRPM != null){
 							if(rpm > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F)) {
-								shiftUp(false);
+								shiftUp(true);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}else if(rpm < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-								shiftDown(false);
+								shiftDown(true);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}
 						}else{
 							if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
-								shiftUp(false);
+								shiftUp(true);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}else if(rpm < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-								shiftDown(false);
+								shiftDown(true);
 								shiftCooldown = definition.engine.shiftSpeed;
 							}
 						}
@@ -341,10 +342,10 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		
 		//Update engine RPM.  This depends on what is connected.
-		//First check to see if we need to check driven wheels.  Only for cars.
+		//First check to see if we need to check driven wheels.
 		//While doing this we also get the friction those wheels are providing.
 		//This is used later in force calculations.
-		if(vehicle.definition.car != null){
+		if(vehicle.definition.motorized.isFrontWheelDrive || vehicle.definition.motorized.isRearWheelDrive){
 			lowestWheelVelocity = 999F;
 			desiredWheelVelocity = -999F;
 			wheelFriction = 0;
@@ -352,7 +353,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			
 			//Update wheel friction and velocity.
 			for(PartGroundDevice wheel : vehicle.wheels){
-				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+				if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
 					if(wheel.isOnGround()){
@@ -367,7 +368,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			if(currentGearRatio != 0 && starterLevel == 0){
 				//Don't adjust it down to stall the engine, that can only be done via backfire.
 				if(wheelFriction > 0){
-					double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.car.axleRatio;
+					double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.motorized.axleRatio;
 					rpm += (desiredRPM - rpm)/10D;
 					if(rpm < stallRPM && state.running){
 						rpm = stallRPM;
@@ -376,13 +377,13 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//No wheel force.  Adjust wheels to engine speed.
 					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+						if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
 							if(currentGearRatio != 0){
-								wheel.angularVelocity = (float) rpm/currentGearRatio/vehicle.definition.car.axleRatio/60F/20F;
+								wheel.angularVelocity = rpm/currentGearRatio/vehicle.definition.motorized.axleRatio/1200D;
 							}else if(wheel.angularVelocity > 0){
-								wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01F);
+								wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01D);
 							}else{
-								wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01F);
+								wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01D);
 							}
 						}
 					}
@@ -397,7 +398,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				PartPropeller propeller = (PartPropeller) part;
 				havePropeller = true;
 				Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.totalRotation.copy().add(vehicle.angles));
-				propellerAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(Math.abs(vehicle.velocity)).dotProduct(propellerThrustAxis);
+				propellerAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
@@ -446,7 +447,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		///Update variables used for jet thrust.
 		if(definition.engine.jetPowerFactor > 0){
 			Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(vehicle.angles));
-			engineAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(Math.abs(vehicle.velocity)).dotProduct(engineThrustAxis);
+			engineAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
 			
 			//Check for entities forward and aft of the engine and damage them.
 			if(!vehicle.world.isClient() && rpm >= 5000){
@@ -470,20 +471,20 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		
 		//Update engine and driveshaft rotation.
-		//If we are on a car, the driveshaft needs to follow the wheel rotation, not our own.
+		//If we are linked to wheels on the ground follow the wheel rotation, not our own.
 		prevEngineRotation = engineRotation;
 		engineRotation += 360D*rpm/1200D;
 		prevDriveshaftRotation = driveshaftRotation;
-		if(vehicle.definition.car != null){
-			double driveShaftDesiredSpeed = Double.MIN_VALUE;
-			for(PartGroundDevice wheel : vehicle.wheels){
-				if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
-					driveShaftDesiredSpeed = Math.max(Math.abs(wheel.angularVelocity), driveShaftDesiredSpeed);
-				}
+		double driveshaftDesiredSpeed = -999;
+		for(PartGroundDevice wheel : vehicle.wheels){
+			if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
+				driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
 			}
-			driveshaftRotation += vehicle.SPEED_FACTOR*driveShaftDesiredSpeed*Math.signum(vehicle.groundVelocity)*360D;
+		}
+		if(driveshaftDesiredSpeed != -999){
+			driveshaftRotation += 360D*driveshaftDesiredSpeed*vehicle.SPEED_FACTOR;
 		}else{
-			driveshaftRotation += 360D*rpm/1200D*definition.engine.gearRatios[currentGear + reverseGears];
+			driveshaftRotation += 360D*rpm/1200D*currentGearRatio;
 		}
 	}
 	
@@ -493,7 +494,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
 		state = EngineStates.ENGINE_OFF;
 		for(PartGroundDevice wheel : vehicle.wheels){
-			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
+			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
 				wheel.skipAngularCalcs = false;
 			}
 		}
@@ -713,45 +714,53 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 	}
 	
-	public void shiftUp(boolean packet){
-		if(currentGear < 0){
-			++currentGear;
-		}else if(currentGear == 0){
-			if(Math.abs(vehicle.velocity) < 0.25 || wheelFriction == 0){
-				currentGear = 1;
-			}else if(vehicle.world.isClient()){
-				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
+	public void shiftUp(boolean autoShift){
+		byte nextGear = 0;
+		boolean doShift = false;
+		if(currentGear < 0){//Reverse to neutral or higher reverse.
+			doShift = true;
+			nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
+		}else if(currentGear == 0){//Neutral to 1st.
+			nextGear = 1;
+			doShift = vehicle.velocity < 0.35 || wheelFriction == 0 || !vehicle.goingInReverse;
+		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
+			doShift = !definition.engine.isAutomatic || (autoShift && !vehicle.world.isClient());
+			nextGear = (byte) (currentGear + 1);
+		}
+		if(doShift || vehicle.world.isClient()){
+			currentGear = nextGear;
+			if(!vehicle.world.isClient()){
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, autoShift), vehicle);
 			}
-		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){
-			if(definition.engine.isAutomatic && packet){
-				if(currentGear < 1){
-					currentGear = 1;
-				}
-			}else{
-				++currentGear;
-			}
+		}else if(!vehicle.world.isClient() && !autoShift){
+			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT), vehicle);
 		}
 	}
 	
-	public void shiftDown(boolean packet){
-		if(currentGear > 0){
-			if(definition.engine.isAutomatic && packet){
-				currentGear = 0;
-			}else{
-				--currentGear;
+	public void shiftDown(boolean autoShift){
+		byte nextGear = 0;
+		boolean doShift = false;
+		if(currentGear >= 1){//Forwards gear to lower forwards gear or neutral.
+			doShift = true;
+			nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
+		}else if(currentGear == 0){//Neutral to reverse.
+			nextGear = -1;
+			doShift = vehicle.velocity < 0.35 || wheelFriction == 0 || vehicle.goingInReverse;
+		}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
+			doShift = true;
+			nextGear = (byte) (currentGear - 1);
+		}
+		if(doShift || vehicle.world.isClient()){
+			currentGear = nextGear;
+			if(!vehicle.world.isClient()){
+				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, autoShift), vehicle);
 			}
-		}else if(currentGear == 0){
-			if(Math.abs(vehicle.velocity) < 0.25 || wheelFriction == 0){
-				currentGear = -1;
-				//If the engine is running, and we are a big truck, turn on the backup beeper.
-				if(state.running && vehicle.definition.car != null && vehicle.definition.car.isBigTruck && vehicle.world.isClient()){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
-				}
-			}else if(vehicle.world.isClient()){
-				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":engine_shifting_grinding"));
+			//If the engine is running, and we are a big truck, turn on the backup beeper.
+			if(currentGear == -1 && state.running && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
+				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 			}
-		}else if(currentGear + reverseGears > 0){
-			--currentGear;
+		}else if(!vehicle.world.isClient() && !autoShift){
+			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT), vehicle);
 		}
 	}
 	
@@ -792,25 +801,25 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
-				wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.car.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+				wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				//Check to see if the wheels need to spin out.
 				//If they do, we'll need to provide less force.
-				if(Math.abs(wheelForce/300F) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300F))){
-					wheelForce *= vehicle.currentMass/100000F*wheelFriction/Math.abs(wheelForce/300F);					
+				if(Math.abs(wheelForce/300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300D))){
+					wheelForce *= vehicle.currentMass/100000D*wheelFriction/Math.abs(wheelForce/300F);					
 					for(PartGroundDevice wheel : vehicle.wheels){
-						if((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive)){
+						if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
 							if(currentGearRatio > 0){
 								if(wheelForce >= 0){
-									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity + 0.01);
+									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
 								}else{
-									wheel.angularVelocity = (float) Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity - 0.01);
+									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
 								}
 							}else{
 								if(wheelForce >= 0){
-									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity - 0.01);
+									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
 								}else{
 									
-									wheel.angularVelocity = (float) Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.car.axleRatio, wheel.angularVelocity + 0.01);
+									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
 								}
 							}
 							wheel.skipAngularCalcs = true;
@@ -820,7 +829,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.car.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.car.isRearWheelDrive))){
+						if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
 							wheel.angularVelocity = lowestWheelVelocity;
 						}
 					}
@@ -828,7 +837,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				
 				//Don't let us have negative engine force at low speeds.
 				//This causes odd reversing behavior when the engine tries to maintain speed.
-				if(((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && Math.abs(vehicle.velocity) < 0.25){
+				if(((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && vehicle.velocity < 0.25){
 					wheelForce = 0;
 				}
 			}else{

@@ -191,7 +191,7 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		
-		if(haveReverseThrustOption && vehicle.definition.car != null && vehicle.definition.car.hasCruiseControl){
+		if(haveReverseThrustOption && vehicle.definition.motorized.hasCruiseControl){
 			//If we have both reverse AND cruise control, render them side-by-side. otherwise just render one in the middle
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
@@ -230,7 +230,7 @@ public class GUIPanelGround extends AGUIPanel{
 			}
 			
 			//If we have cruise control, add a selector for it.
-			if(vehicle.definition.car != null && vehicle.definition.car.hasCruiseControl){
+			if(vehicle.definition.motorized.hasCruiseControl){
 				cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, BuilderGUI.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){

@@ -28,7 +28,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	public AGUIPanel(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
 		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
-		if(vehicle.definition.blimp != null){
+		if(vehicle.definition.general.isBlimp){
 			haveReverseThrustOption = true;
 		}else{
 			for(APart part : vehicle.parts){

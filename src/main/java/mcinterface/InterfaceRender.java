@@ -536,9 +536,9 @@ public class InterfaceRender{
 				        				}else if(animation.animationType.equals("rotation")){
 				        					Point3d rotationAxis = animation.axis.copy().normalize();
 				        					if(animationValue != 0){
-				        						GL11.glTranslated(camera.pos.x, -camera.pos.y, camera.pos.z);
-				        						GL11.glRotated(animationValue, rotationAxis.x, rotationAxis.y, rotationAxis.z);
 				        						GL11.glTranslated(-camera.pos.x, camera.pos.y, -camera.pos.z);
+				        						GL11.glRotated(animationValue, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+				        						GL11.glTranslated(camera.pos.x, -camera.pos.y, camera.pos.z);
 				        					}
 				        				}
 				        			}

@@ -11,6 +11,7 @@ public class JSONPoleComponent extends AJSONMultiModel<JSONPoleComponent.PoleGen
     	public List<JSONText> textObjects;
     }
     
+    @Deprecated
     public class TextLine{
     	public byte characters;
     	public float xPos;

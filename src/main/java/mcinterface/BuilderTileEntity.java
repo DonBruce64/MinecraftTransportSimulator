@@ -102,9 +102,13 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	@Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
-		tileEntity.save(new WrapperNBT(tag));
-		//Also save the class ID so we know what to construct when MC loads this TE back up.
-		tag.setString("teid", tileEntity.getClass().getSimpleName());
+		if(tileEntity != null){
+			tileEntity.save(new WrapperNBT(tag));
+			//Also save the class ID so we know what to construct when MC loads this TE back up.
+			tag.setString("teid", tileEntity.getClass().getSimpleName());
+		}else{
+			invalidate();
+		}
         return tag;
     }
 	
