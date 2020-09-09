@@ -33,7 +33,7 @@ public class ItemPartEngine extends AItemPart{
     @SideOnly(Side.CLIENT)
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems){
 		super.getSubItems(tab, subItems);
-		if(this.getCreativeTab().equals(tab)){
+		if(this.getCreativeTab().equals(tab) || tab == CreativeTabs.SEARCH){
 			ItemStack engineStackCreative = new ItemStack(this);
 			NBTTagCompound stackTag = new NBTTagCompound();
 			stackTag.setBoolean("isCreative", true);
