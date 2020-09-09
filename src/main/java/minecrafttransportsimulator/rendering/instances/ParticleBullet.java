@@ -20,6 +20,7 @@ import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.OBJParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This part class is special, in that it does not extend APart.
@@ -53,7 +54,7 @@ public final class ParticleBullet extends AParticle{
 	@Override
 	public void update(boolean onGround){
 		double velocity = motion.length();
-		Damage damage = new Damage("bullet", velocity*bulletItem.definition.bullet.diameter/5, box, null);
+		Damage damage = new Damage("bullet", velocity*bulletItem.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
 		//Check for collided entities and attack them.
 		Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle, motion);

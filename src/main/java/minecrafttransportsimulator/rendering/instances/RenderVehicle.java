@@ -800,7 +800,7 @@ public final class RenderVehicle{
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			GL11.glPushMatrix();
-			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.y);
+			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
 			GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
 			GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
 			GL11.glRotated(packInstrument.rot.z, 0, 0, 1);

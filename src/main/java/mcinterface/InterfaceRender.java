@@ -477,30 +477,22 @@ public class InterfaceRender{
 		    			}else{
 		    				customCameraIndex = 0;
 		    			}
-		            	//FIXME this probably should be some sort of vector calculation.
-		    			//AEntityBase ridingEntity = ((BuilderEntity) event.getEntity().getRidingEntity()).entity;
-		
 		    			
-		    			//Need to check if the riding entity exists.  Player may be loading the entity on the client but it hasn't
-		    			//gotten the supplemental data from the server yet.
-		    			/*
-		    			if(ridingEntity != null){
-			            	//Get yaw delta between entity and player from-180 to 180.
-			            	double playerYawDelta = (360 + (ridingEntity.angles.y - -event.getEntity().rotationYaw)%360)%360;
-			            	if(playerYawDelta > 180){
-			            		playerYawDelta-=360;
-			            	}
-			            	
-			            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
-			            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
-			            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-			            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
-			            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
-			            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(ridingEntity.prevAngles.z + (ridingEntity.angles.z - ridingEntity.prevAngles.z)*event.getRenderPartialTicks());
-			            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(ridingEntity.prevAngles.x + (ridingEntity.angles.x - ridingEntity.prevAngles.x)*event.getRenderPartialTicks());
-			            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
-			            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
-		    			}*/
+		            	//Get yaw delta between entity and player from-180 to 180.
+		            	double playerYawDelta = (360 + (vehicle.angles.y - -event.getEntity().rotationYaw)%360)%360;
+		            	if(playerYawDelta > 180){
+		            		playerYawDelta-=360;
+		            	}
+		            	
+		            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
+		            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
+		            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
+		            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
+		            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
+		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
+		            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
+		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
+		            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
 		        	}else if(InterfaceGame.inThirdPerson()){
 		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
 		            }else{

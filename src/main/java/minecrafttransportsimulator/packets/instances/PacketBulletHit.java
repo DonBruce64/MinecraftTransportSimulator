@@ -81,8 +81,8 @@ public class PacketBulletHit extends APacketBase{
 					WrapperEntity entityHit = world.getEntity(hitEntityID);
 					if(entityHit != null){
 						//Create damage object and attack the entity.
-						float damageAmount = (float) (Math.pow(20*bulletVelocity/100F, 2)*bulletDefinition.bullet.diameter/10F*ConfigSystem.configObject.damage.bulletDamageFactor.value);
-						Damage damage = new Damage("bullet", damageAmount, box, player);
+						double damageAmount = bulletVelocity*bulletDefinition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
+						Damage damage = new Damage("bullet", damageAmount, box, player).ignoreCooldown();
 						if(bulletDefinition.bullet.type.equals("water")){
 							damage.isWater = true;
 						}

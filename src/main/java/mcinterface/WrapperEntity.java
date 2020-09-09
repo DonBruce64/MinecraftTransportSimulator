@@ -206,7 +206,7 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Attacks the entity.  The string passed-in should be the damage type.
+	 *  Attacks the entity.
 	 */
 	public void attack(Damage damage){
 		attack(entity, damage);
@@ -215,7 +215,7 @@ public class WrapperEntity{
 	/**
 	 *  Package-private method for attacking.  Allows for direct reference
 	 *  to the entity variable through the interfaces without the need to
-	 *  create a wrapper instance.
+	 *  create a wrapper instance for attacking entities.
 	 */
 	static void attack(Entity attackedEntity, Damage damage){
 		//If this entity is one of ours, just forward the damage and exit.
@@ -261,13 +261,13 @@ public class WrapperEntity{
 		if(damage.ignoreArmor){
 			newSource.setDamageBypassesArmor();
 		}
+		if(damage.ignoreCooldown && attackedEntity instanceof EntityLivingBase){
+			((EntityLivingBase) attackedEntity).hurtResistantTime = 0;
+		}
 		if(ConfigSystem.configObject.general.creativeDamage.value){
 			newSource.setDamageAllowedInCreativeMode();
 		}
 		attackedEntity.attackEntityFrom(newSource, (float) damage.amount);
-		if(attackedEntity instanceof EntityLivingBase){
-			((EntityLivingBase) attackedEntity).hurtResistantTime = 0;
-		}
 	}
 	
 	/**

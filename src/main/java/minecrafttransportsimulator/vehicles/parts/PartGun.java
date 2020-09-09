@@ -25,6 +25,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public int bulletsLeft;
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
+	public double vehiclePitchContribution;
 	private ItemPartBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on entity loading.
@@ -116,23 +117,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//If the controller is null, and we are firing, set us to not do so.
 		//We ain't coding sentrys here.... yet.
 		if(playerController != null){
-			//First adjust pitch.
-			double deltaPitch = playerController.getPitch() - (currentOrientation.x + totalRotation.x + vehicle.angles.x);
-			//System.out.format("Current:%f Player:%f Delta:%f Min:%f, max:%f\n", currentOrientation.x, playerController.getPitch(), deltaPitch, definition.gun.minPitch, definition.gun.maxPitch);
-			if(deltaPitch < 0){
-				currentOrientation.x += Math.max(-anglePerTickSpeed, deltaPitch); 
-			}else if(deltaPitch > 0){
-				currentOrientation.x += Math.min(anglePerTickSpeed, deltaPitch);
-			}
-			//Apply pitch clamps.
-			if(currentOrientation.x < -definition.gun.maxPitch){
-				currentOrientation.x = -definition.gun.maxPitch;
-			}
-			if(currentOrientation.x > -definition.gun.minPitch){
-				currentOrientation.x = -definition.gun.minPitch;
-			}
-			
-			//Now adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
+			//Aadjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
 			double deltaYaw = playerController.getYaw() - (currentOrientation.y + totalRotation.y + vehicle.angles.y);
 			while(deltaYaw > 180){
 				deltaYaw -= 360;
@@ -165,6 +150,26 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 					currentOrientation.y = definition.gun.minYaw;
 				}
 			}
+			
+			//Adjust pitch.
+			//For pitch, we need to find the relative angle of the player to the vehicle's 0-pitch plane.
+			//When the player rotates their head, they don't do so relative to the pitch of the vehicle the gun is on, 
+			//so a yaw change can result in a pitch change.
+			vehiclePitchContribution = vehicle.angles.x*Math.cos(Math.toRadians(vehicle.angles.y - currentOrientation.y));
+			double deltaPitch = playerController.getPitch() - (currentOrientation.x + totalRotation.x + vehiclePitchContribution);
+			if(deltaPitch < 0){
+				currentOrientation.x += Math.max(-anglePerTickSpeed, deltaPitch); 
+			}else if(deltaPitch > 0){
+				currentOrientation.x += Math.min(anglePerTickSpeed, deltaPitch);
+			}
+			//Apply pitch clamps.
+			if(currentOrientation.x < -definition.gun.maxPitch){
+				currentOrientation.x = -definition.gun.maxPitch;
+			}
+			if(currentOrientation.x > -definition.gun.minPitch){
+				currentOrientation.x = -definition.gun.minPitch;
+			}
+			
 		}else{
 			firing = false;
 		}
@@ -329,7 +334,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
 			//This is based on the barrel length and shell size.
 			Point3d gunFactoredAngles = currentOrientation.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
-			gunFactoredAngles.add(totalRotation).add(vehicle.angles);
+			gunFactoredAngles.add(totalRotation).add(vehiclePitchContribution, vehicle.angles.y, 0D);
 			
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
 			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(gunFactoredAngles));

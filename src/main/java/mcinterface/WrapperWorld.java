@@ -17,6 +17,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
@@ -27,7 +28,9 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -334,6 +337,36 @@ public class WrapperWorld{
 						
 						//Set entity position.
 						entity.setPosition(entity.posX + finalOffset.x, entity.posY + finalOffset.y, entity.posZ + finalOffset.z);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 *  Loads all entities that are in the passed-in range into the passed-in entity.
+	 *  Only non-hostile mobs will be loaded.
+	 */
+	public void loadEntities(BoundingBox box, AEntityBase vehicle){
+		AxisAlignedBB mcBox = new AxisAlignedBB(
+			box.globalCenter.x - box.widthRadius,
+			box.globalCenter.y - box.heightRadius,
+			box.globalCenter.z - box.depthRadius,
+			box.globalCenter.x + box.widthRadius,
+			box.globalCenter.y + box.heightRadius,
+			box.globalCenter.z + box.depthRadius
+		);
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(BuilderEntity.entitiesToBuilders.get(vehicle), mcBox)){
+			if(entity instanceof INpc || entity instanceof IAnimals){
+				for(Point3d ridableLocation : vehicle.ridableLocations){
+					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
+						if(vehicle instanceof EntityVehicleF_Physics){
+							if(((EntityVehicleF_Physics) vehicle).getPartAtLocation(ridableLocation).vehicleDefinition.isController){
+								continue;
+							}
+						}
+						vehicle.addRider(new WrapperEntity(entity), ridableLocation);
 						break;
 					}
 				}

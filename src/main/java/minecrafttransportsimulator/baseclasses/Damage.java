@@ -27,6 +27,7 @@ public class Damage{
 	public boolean isWater;
 	public boolean isExplosion;
 	public boolean ignoreArmor;
+	public boolean ignoreCooldown;
 	
 	public Damage(String name, double amount, BoundingBox box, WrapperPlayer attacker){
 		this.name = name;
@@ -68,6 +69,15 @@ public class Damage{
 	 */
 	public Damage ignoreArmor(){
 		this.ignoreArmor = true;
+		return this;
+	}
+	
+	/**
+	 * Sets this damage to ignore cooldown.
+	 * Returns object for construction simplicity.
+	 */
+	public Damage ignoreCooldown(){
+		this.ignoreCooldown = true;
 		return this;
 	}
 }
