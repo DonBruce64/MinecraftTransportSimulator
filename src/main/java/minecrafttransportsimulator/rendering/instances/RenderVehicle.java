@@ -429,7 +429,7 @@ public final class RenderVehicle{
 			//Now that we have the total distance, generate a set of points for the path.
 			//These points should be as far apart as the spacing parameter.
 			deltas = new ArrayList<Float[]>();
-			final float spacing = treadPart.definition.tread.spacing;
+			final float spacing = treadPart.definition.ground.spacing;
 			byte pointIndex = 0;
 			float currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
 			float currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
@@ -523,7 +523,7 @@ public final class RenderVehicle{
 		}
 		
 		
-		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.ground.spacing/treadPart.definition.ground.spacing);
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;
 		}
@@ -628,7 +628,7 @@ public final class RenderVehicle{
 				totalPathLength += Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			}
 			
-			double deltaDist = treadPart.definition.tread.spacing + (totalPathLength%treadPart.definition.tread.spacing)/(totalPathLength/treadPart.definition.tread.spacing);
+			double deltaDist = treadPart.definition.ground.spacing + (totalPathLength%treadPart.definition.ground.spacing)/(totalPathLength/treadPart.definition.ground.spacing);
 			double leftoverPathLength = 0;
 			double yPoint = 0;
 			double zPoint = 0; 
@@ -724,7 +724,7 @@ public final class RenderVehicle{
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
 		float treadLinearPosition = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.vehicle.SPEED_FACTOR);
-		float treadMovementPercentage = treadLinearPosition%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing;
+		float treadMovementPercentage = treadLinearPosition%treadPart.definition.ground.spacing/treadPart.definition.ground.spacing;
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;
 		}

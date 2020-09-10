@@ -1,16 +1,32 @@
 package mcinterface;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.items.core.AItemBase;
+import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.packs.AItemPack;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/**Builder for MC GUI classes.  Constructor takes a type of {@link AItemBase}, but
+/**Builder for MC items.  Constructor takes a type of {@link AItemBase}, but
  * is only visible when calling {@link #createItem(AItemBase)}.  This will automatically
  * construct the item and will return the created instance of the item (not builder)
  * for use in the code.  The builder instance is cached and saved to be registered
@@ -19,15 +35,18 @@ import net.minecraft.world.World;
  *
  * @author don_bruce
  */
-public class BuilderItem extends Item{	
+@Mod.EventBusSubscriber
+public class BuilderItem extends Item{
+	final AItemBase item;
 	
-	private final AItemBase item;
+	//TODO make this package-private on final item abstraction.
+	public static final Map<AItemBase, BuilderItem> itemWrapperMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
-	private BuilderItem(AItemBase item, boolean isStackable){
+	private BuilderItem(AItemBase item){
 		super();
 		this.item = item;
 		setFull3D();
-		if(!isStackable){
+		if(!item.canBeStacked()){
 			this.setMaxStackSize(1);
 		}
 	}
@@ -39,7 +58,7 @@ public class BuilderItem extends Item{
 	 */
 	@Override
 	public String getItemStackDisplayName(ItemStack stack){
-        return item.getItemName();
+        return BuilderGUI.translate(item.getItemName());
 	}
 	
 	/**
@@ -51,21 +70,59 @@ public class BuilderItem extends Item{
 	 */
 	@Override
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		item.addTooltipLines(tooltipLines, stack.getTagCompound());
+		item.addTooltipLines(tooltipLines, stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound()) : new WrapperNBT());
 	}
 	
+	/**
+	 *  This is called by the main MC system to "use" this item on a block.
+	 *  Forwards this to the main item for processing.
+	 */
+	@Override
+	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
+		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
+		return item.onBlockClicked(wrapper, wrapper.getWrapperFor(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+	}
 	
-	//--------------------START OF INSTANCE HELPER METHODS--------------------	
-
-
-	
-	//--------------------START OF STATIC HELPER METHODS--------------------
 	/**
 	 *  Creates a wrapper for the the passed-in Item, saving the wrapper to be registered later.
 	 *  This wrapper instance will interact with all MC code via passthrough of the item's methods.
 	 *  Returns the passed-in item for constructor convenience.
 	 */
-	public static void registerItem(AItemBase item){
-		//TODO save item in a list here for registration.
+	public static AItemBase createItem(AItemBase item){
+		itemWrapperMap.put(item, new BuilderItem(item));
+		return item;
+	}
+	
+	/**
+	 * Registers all items we have created up to this point.
+	 */
+	@SubscribeEvent
+	public static void registerItems(RegistryEvent.Register<Item> event){
+		//Register all items in our wrapper map.
+		for(Entry<AItemBase, BuilderItem> entry : itemWrapperMap.entrySet()){
+			AItemBase item = entry.getKey();
+			BuilderItem mcItem = entry.getValue();
+			String tabID = item.getCreativeTabID();
+			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
+				//TODO this hard-code gets removed when the main mod correctly becomes a pack.
+				if(tabID.equals(MTS.MODID)){
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(BuilderGUI.translate("itemGroup.tabMTSCore"), mcItem));
+				}else{
+					//TODO make custom creative tabs here.
+				}
+			}
+			BuilderCreativeTab.createdTabs.get(tabID).addItem(mcItem);
+			
+			event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+		}
+		
+		//TODO remove this when we load pack items as builders and they are in the main builder item map here.
+		BuilderCreativeTab coreTab = BuilderCreativeTab.createdTabs.get(MTS.MODID);
+		//Register all core MTS "pack" items.
+		for(AItemPack<?> item : MTSRegistry.packItemMap.get(MTS.MODID).values()){
+			coreTab.addItem(item);
+			String name = item.definition.systemName;
+			event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+		}
 	}
 }

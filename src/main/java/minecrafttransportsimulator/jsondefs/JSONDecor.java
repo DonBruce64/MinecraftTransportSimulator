@@ -11,6 +11,9 @@ public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
     	public float depth;
     	public TextLine[] textLines;
     	public List<JSONText> textObjects;
+    	public List<String> itemTypes;
+    	public List<String> partTypes;
+    	public List<String> items;
     }
     
     @Deprecated

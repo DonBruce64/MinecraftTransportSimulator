@@ -3,6 +3,8 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderItem;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.client.Minecraft;
@@ -32,7 +34,7 @@ public final class CreativeTabPack extends CreativeTabs{
 	@Override
 	public ItemStack getTabIconItem(){
 		//We won't ever use this, but it keeps the compiler happy.
-		return new ItemStack(MTSRegistry.wrench);
+		return new ItemStack(BuilderItem.itemWrapperMap.get(MTS.WRENCH));
 	}
 	
 	@Override

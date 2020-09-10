@@ -732,7 +732,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			if(!vehicle.world.isClient()){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, autoShift), vehicle);
 			}
-		}else if(!vehicle.world.isClient() && !autoShift){
+		}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
 			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT), vehicle);
 		}
 	}
@@ -759,7 +759,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			if(currentGear == -1 && state.running && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
 				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 			}
-		}else if(!vehicle.world.isClient() && !autoShift){
+		}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
 			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT), vehicle);
 		}
 	}

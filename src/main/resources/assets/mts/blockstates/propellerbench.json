@@ -1,8 +1,0 @@
-{
-    "variants": {
-        "facing=south": { "model": "mts:propellerbench" },
-        "facing=north": { "model": "mts:propellerbench", "y": 180 },
-        "facing=east":  { "model": "mts:propellerbench", "y": 270 },
-        "facing=west":  { "model": "mts:propellerbench", "y": 90 }
-    }
-}

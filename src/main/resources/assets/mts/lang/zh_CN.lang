@@ -293,7 +293,7 @@ tile.seatbench.name=座位与箱子制造台
 tile.gunbench.name=枪械制造台
 tile.custombench.name=工具制造台 (自定义部件)
 tile.instrumentbench.name=仪表制造台
-tile.componentbench.name=组件制造台 (自定义物品)
+tile.itembench.name=组件制造台 (自定义物品)
 tile.decorbench.name=装饰品制造台 (装饰性方块)
 
 tile.fuelpump.name=燃油泵
@@ -318,8 +318,8 @@ advancements.mts.root.description=使用载具启程!
 advancements.mts.rtfm.title=RTFM
 advancements.mts.rtfm.description=合成一本驾驶员手册
 
-advancements.mts.componentbench.title=在线购买一切
-advancements.mts.componentbench.description=制作组件制造台
+advancements.mts.itembench.title=在线购买一切
+advancements.mts.itembench.description=制作组件制造台
 advancements.mts.custombench.title=自定义部件
 advancements.mts.custombench.description=制作工具制造台
 advancements.mts.decorbench.title=我以为这是装饰工艺...

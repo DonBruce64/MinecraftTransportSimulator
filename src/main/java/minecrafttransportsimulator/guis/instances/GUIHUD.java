@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.guis.instances;
 
 import mcinterface.InterfaceGame;
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.systems.ClientEventSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
- * as well as the {@link ClientEventSystem} to render the HUD.  Note that when
+ * as well as the {@link InterfaceRender} to render the HUD.  Note that when
  * the HUD is rendered in the vehicle it will NOT inhibit key inputs as the
  * HUD there is designed to be an overlay rather than an actual GUI.
  * 

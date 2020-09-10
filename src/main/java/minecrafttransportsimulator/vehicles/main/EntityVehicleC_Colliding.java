@@ -19,7 +19,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.ItemWrench;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;

@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import mcinterface.WrapperNBT;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -227,9 +228,8 @@ public final class PackParserSystem{
     	}
     	
     	//Set the creative tab.  Need to check if we're an internal item or not.
-    	if(item.definition.packID.equals("mts")){
-    		item.setCreativeTab(MTSRegistry.coreTab);
-		}else{
+    	//TODO remove this check when we do pack-tab abstraction.
+    	if(!item.definition.packID.equals(MTS.MODID)){
 			if(!MTSRegistry.packTabs.containsKey(packID)){
 				MTSRegistry.packTabs.put(packID, new CreativeTabPack(packID));
 			}
@@ -336,25 +336,25 @@ public final class PackParserSystem{
     					partDef.interactable.interactionType = "brewing_stand";
     					break;
     				}case("fertilizer"):{
-    					partDef.general.type = "effector";
+    					partDef.general.type = "effector_fertilizer";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "fertilizer";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("harvester"):{
-    					partDef.general.type = "effector";
+    					partDef.general.type = "effector_harvester";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "harvester";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("planter"):{
-    					partDef.general.type = "effector";
+    					partDef.general.type = "effector_planter";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "planter";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("plow"):{
-    					partDef.general.type = "effector";
+    					partDef.general.type = "effector_plow";
     					partDef.effector = partDef.new PartEffector();
     					partDef.effector.type = "plow";
     					partDef.effector.blocksWide = 1;
@@ -635,6 +635,8 @@ public final class PackParserSystem{
     		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else if(definition.general.type.startsWith("interactable_")){
         	return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("effector_")){
+           	return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
     	}else{
 	    	switch(definition.general.type){
 				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
@@ -642,7 +644,6 @@ public final class PackParserSystem{
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
-	    		case "effector": return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
 				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
 			}
     	}
@@ -658,12 +659,13 @@ public final class PackParserSystem{
     		return new ItemPartGroundDevice(definition);
     	}else if(definition.general.type.startsWith("interactable_")){
     		return new ItemPartInteractable(definition);
+    	}else if(definition.general.type.startsWith("effector_")){
+    		return new ItemPartGeneric(definition);
     	}else{
 	    	switch(definition.general.type){
 				case "propeller": return new ItemPartPropeller(definition);
 				case "seat": return new ItemPartGeneric(definition);
 				case "bullet": return new ItemPartBullet(definition);
-				case "effector": return new ItemPartGeneric(definition);
 				case "custom": return new ItemPartCustom(definition);
 	    	}
     	}

@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.items.core.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;

@@ -15,7 +15,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
-import minecrafttransportsimulator.items.core.ItemWrench;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.packs.ItemPole;
 import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;

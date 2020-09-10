@@ -1,6 +1,5 @@
 package mcinterface;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.block.Block;
@@ -305,22 +304,7 @@ public class BuilderBlock extends Block{
 	 * Also adds the respective TileEntity if the block has one.
 	 */
 	@SubscribeEvent
-	public static void registerBlocks(RegistryEvent.Register<Block> event){				
-		//Create the crafting bench wrappers and register them.
-		//None of these will be TEs, so we don't have to check for that.
-		for(Field field : MTSRegistry.class.getFields()){
-			if(field.getType().equals(BuilderBlock.class)){
-				try{
-					//Get the name of the wrapper and register it.
-					BuilderBlock block = (BuilderBlock) field.get(null);
-					String name = field.getName().toLowerCase();
-					event.getRegistry().register(block.setRegistryName(name).setUnlocalizedName(name));
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
-		
+	public static void registerBlocks(RegistryEvent.Register<Block> event){
 		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));

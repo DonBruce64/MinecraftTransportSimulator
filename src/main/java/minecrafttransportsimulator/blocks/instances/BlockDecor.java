@@ -2,13 +2,16 @@ package minecrafttransportsimulator.blocks.instances;
 
 import java.util.List;
 
+import mcinterface.BuilderGUI;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
 
 public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntityDecor>{
 	
@@ -28,6 +31,17 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntit
     	}else{
 			super.addCollisionBoxes(world, location, collidingBoxes);
 		}
+	}
+    
+    @Override
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+		if(world.isClient()){
+			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
+			if(decor.definition.general.itemTypes != null){
+				BuilderGUI.openGUI(new GUIPartBench(decor, player));
+			}
+		}
+		return true;
 	}
     
     @Override

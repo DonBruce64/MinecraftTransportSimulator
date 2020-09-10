@@ -4,15 +4,16 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.items.core.IItemVehicleInteractable;
-import minecrafttransportsimulator.items.core.IItemVehicleInteractable.CallbackType;
-import minecrafttransportsimulator.items.core.IItemVehicleInteractable.PlayerOwnerState;
+import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.items.components.IItemVehicleInteractable.CallbackType;
+import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.packs.parts.AItemPart;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -54,7 +55,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		boolean canPlayerEditVehicle = player.isOP() || vehicle.ownerUUID.isEmpty() || player.getUUID().equals(vehicle.ownerUUID);
 		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
-		ItemStack heldStack = player.getHeldStack();
+		WrapperItemStack heldStack = player.getHeldWrapperStack();
 		APart part = vehicle.getPartAtLocation(hitPosition);
 		
 		//If our part is null, see if we clicked a part's collision box instead.
@@ -98,9 +99,10 @@ public class PacketVehicleInteract extends APacketVehicle{
 							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
 						}else{
 							//Attempt to add the part.  Vehicle is responsible for callback packet here.
-							if(heldStack.getItem() instanceof AItemPart){
-								if(vehicle.addPartFromItem((AItemPart) heldStack.getItem(), heldStack.hasTagCompound() ? new WrapperNBT(heldStack) : null, hitPosition)){				
-									player.removeItem(heldStack, 1);
+							ItemStack stack = heldStack.stack;
+							if(stack.getItem() instanceof AItemPart){
+								if(vehicle.addPartFromItem((AItemPart) stack.getItem(), stack.hasTagCompound() ? new WrapperNBT(stack) : null, hitPosition)){				
+									player.removeItem(stack, 1);
 								}
 							}
 						}

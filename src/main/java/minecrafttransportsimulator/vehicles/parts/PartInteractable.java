@@ -42,7 +42,7 @@ public final class PartInteractable extends APart{
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
-				tank.interactWith(player);
+				player.getHeldWrapperStack().interactWithTank(tank, player);
 			}	
 		}else{
 			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));

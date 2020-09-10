@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.packs;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
-import minecrafttransportsimulator.items.core.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 
 public class ItemPole extends ItemPoleComponent implements IItemBlock{

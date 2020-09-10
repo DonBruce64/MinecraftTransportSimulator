@@ -18,10 +18,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -108,8 +104,16 @@ public class WrapperPlayer extends WrapperEntity{
 	/**
 	 *  Returns the held stack.
 	 */
+	//TODO this goes away when we finish abstration.
 	public ItemStack getHeldStack(){
 		return player.getHeldItemMainhand();
+	}
+	
+	/**
+	 *  Returns the held stack as a wrapper.
+	 */
+	public WrapperItemStack getHeldWrapperStack(){
+		return new WrapperItemStack(player.getHeldItemMainhand());
 	}
 	
 	/**
@@ -246,34 +250,11 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  Opens the GUI for the passed-in TE, or fails to open any GUI if the TE doesn't have one.
 	 *  Actual validity of the GUI being open is left to the TE implementation.
 	 *  Note: This method is for any TE that has inventory.  This includes, but is not limited to,
-	 *  chests, furnaces, and brewing stands.  Also of note: if this TE holds liquids, and the player
-	 *  is clicking this TE with liquids, then the liquids will be stored or retrieved from this TE.
+	 *  chests, furnaces, and brewing stands.
 	 */
 	public void openTileEntityGUI(WrapperTileEntity tile){
 		if(tile.tile instanceof IInventory){
 			player.displayGUIChest((IInventory) tile.tile);
-		}else if(tile.tile instanceof IFluidTank){
-			//TODO shove this into the itemstack wrapper when we make it.
-			IFluidTank tileTank = (IFluidTank) tile;
-			ItemStack stack = player.getHeldItemMainhand();
-			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
-				IFluidHandlerItem itemHandler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-				//If we are empty or sneaking, drain the tile, otherwise fill.
-				//We use 1000 here for the test as buckets will only drain that amount.
-				FluidStack drainedTestStack = itemHandler.drain(1000, false);
-				if(player.isSneaking() || drainedTestStack == null || drainedTestStack.amount == 0){
-					if(tileTank.getFluid() != null){
-						tileTank.drain(itemHandler.fill(tileTank.getFluid(), true), true);
-					}							
-				}else{
-					if(tileTank.getFluid() != null){
-						tileTank.fill(itemHandler.drain(new FluidStack(tileTank.getFluid().getFluid(), tileTank.getCapacity() - tileTank.getFluidAmount()), true), true);
-					}else{
-						tileTank.fill(itemHandler.drain(tileTank.getCapacity() - tileTank.getFluidAmount(), true), true);
-					}
-				}
-				player.setHeldItem(EnumHand.MAIN_HAND, itemHandler.getContainer());
-			}
 		}
 	}
 }

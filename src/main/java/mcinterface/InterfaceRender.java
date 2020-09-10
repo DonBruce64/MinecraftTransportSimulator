@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
@@ -21,6 +22,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -695,16 +697,16 @@ public class InterfaceRender{
 		
 		//Register the item models.
 		//First register the core items.
+		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemWrapperMap.entrySet()){
+			try{
+				registerCoreItemRender(entry.getValue());
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 		for(Field field : MTSRegistry.class.getFields()){
-			//Regular item.
-			if(field.getType().equals(Item.class)){
-				try{
-					registerCoreItemRender((Item) field.get(null));
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}else if(field.getType().equals(BuilderBlock.class)){
-				//Wrapper block item, get item from it to register.
+			//Wrapper block item, get item from it to register.
+			if(field.getType().equals(BuilderBlock.class)){
 				try{
 					BuilderBlock wrapper = (BuilderBlock) field.get(null);
 					registerCoreItemRender(Item.getItemFromBlock(wrapper));

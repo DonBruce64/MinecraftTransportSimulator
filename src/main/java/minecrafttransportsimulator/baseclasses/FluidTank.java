@@ -5,16 +5,8 @@ import java.util.Map;
 
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 /**Basic fluid tanks class.  Class contains methods for filling and draining, as well as automatic
  * syncing of fluid levels across clients and servers.  This allows the tank to be put on any object
@@ -169,62 +161,6 @@ public class FluidTank{
 	 */
 	public double getWeight(){
 		return fluidLevel/50D;
-	}
-	
-	/**
-	 *  Attempts to make the passed-in player interact with the tank.
-	 *  If the stack the player is holding holds liquid, and the player can fill the tank with that liquid, 
-	 *  that action is taken.  If the stack could hold liquid, and the player is sneaking, it is filled.
-	 *  If any action is taken that modifies the state of the item the player is holding, true is returned.
-	 */
-	public boolean interactWith(WrapperPlayer player){
-		//TODO abstract this when we can.
-		ItemStack stack = player.getHeldStack();
-		if(stack != null){
-			if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
-				//If we are sneaking, drain this tank.  If we are not, fill it.
-				if(!player.isSneaking()){
-					//Item can provide fluid.  Check if we can accept it.
-					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-					FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
-					if(drainedStack != null){
-						//Able to take fluid from item, attempt to do so.
-						int amountToDrain = (int) fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
-						drainedStack = handler.drain(amountToDrain, !player.isCreative());
-						if(drainedStack != null){
-							//Was able to provide liquid from item.  Fill the tank.
-							fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
-							player.setHeldStack(handler.getContainer());
-							return true;
-						}
-					}
-				}else{
-					//Item can hold fluid.  Check if we can fill it.
-					IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-					FluidStack containedStack = FluidRegistry.getFluidStack(currentFluid, (int) fluidLevel);
-					int amountFilled = handler.fill(containedStack, true);
-					if(amountFilled > 0){
-						//Were able to fill the item.  Apply state change to tank and item.
-						drain(currentFluid, amountFilled, true);
-						player.setHeldStack(handler.getContainer());
-						return true;
-					}
-				}
-			}else if(stack.getItem().equals(MTSRegistry.jerrycan)){
-				//Have a jerrycan.  Attempt to fill it up.
-				if(!stack.hasTagCompound() || !stack.getTagCompound().getBoolean("isFull")){
-					if(fluidLevel >= 1000){
-						NBTTagCompound stackTag = new NBTTagCompound();
-						stackTag.setBoolean("isFull", true);
-						stackTag.setString("fluidName", currentFluid);
-						stack.setTagCompound(stackTag);
-						drain(currentFluid, 1000, true);
-						return true;
-					}
-				}
-			}
-		}
-		return false;
 	}
 	
 	/**

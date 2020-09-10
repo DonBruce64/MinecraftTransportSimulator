@@ -1,0 +1,11 @@
+{
+	"general": {
+		"name" : "Seat & Cargo Bench",
+		"materials" : ["minecraft:ingotIron:0:4", "minecraft:iron_axe:0:1"],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["part"],
+		"partTypes" : ["seat", "crate", "interactable_", "effector_"]
+	}
+}

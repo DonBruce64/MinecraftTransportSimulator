@@ -9,8 +9,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
-/**Decor tile entity.  Just contains the definiton so we know how
- * to render this in the TESR call.
+/**Decor tile entity.  Contains the definition so we know how
+ * to render this in the TESR call, as well as if we need to do
+ * crafting operations if we are a crafting decor type.
  *
  * @author don_bruce
  */

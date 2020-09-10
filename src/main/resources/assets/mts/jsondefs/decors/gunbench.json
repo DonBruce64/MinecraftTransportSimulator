@@ -1,0 +1,11 @@
+{
+	"general": {
+		"name" : "Gun Bench",
+		"materials" : ["minecraft:iron_block:0:2", "minecraft:diamond:0:1", "minecraft:dye:1:1", "minecraft:dye:2:1"],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["part"],
+		"partTypes" : ["gun_", "bullet"]
+	}
+}

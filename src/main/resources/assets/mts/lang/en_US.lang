@@ -314,7 +314,7 @@ tile.seatbench.name=Table Saw (Seats & Cargo)
 tile.gunbench.name=Rifling Machine (Guns & Ammo)
 tile.custombench.name=Tool Bench (Custom Parts)
 tile.instrumentbench.name=Instrument Bench
-tile.componentbench.name=Component Bench (Custom Items)
+tile.itembench.name=Component Bench (Custom Items)
 tile.decorbench.name=Decor Bench (Decorative Blocks)
 
 tile.fuelpump.level=LVL:
@@ -329,8 +329,6 @@ advancements.mts.root.description=Start your journey into powered transport!
 advancements.mts.rtfm.title=RTFM
 advancements.mts.rtfm.description=Craft a Manual
 
-advancements.mts.componentbench.title=You Can Buy Anything Online
-advancements.mts.componentbench.description=Create a Component Bench
 advancements.mts.custombench.title=Custom Parts
 advancements.mts.custombench.description=Create a Tool Bench
 advancements.mts.decorbench.title=I Thought This Was Decocraft...
@@ -341,6 +339,8 @@ advancements.mts.gunbench.title=Pew Pew
 advancements.mts.gunbench.description=Create a Rifling Machine
 advancements.mts.instrumentbench.title=Instrumental
 advancements.mts.instrumentbench.description=Create an Instrument Bench
+advancements.mts.itembench.title=You Can Buy Anything Online
+advancements.mts.itembench.description=Create an Item Bench
 advancements.mts.propellerbench.title=Propwash
 advancements.mts.propellerbench.description=Create a Propeller Bench
 advancements.mts.seatbench.title=Seats, Supplies, and Storage

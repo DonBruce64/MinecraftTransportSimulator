@@ -286,7 +286,7 @@ item.seatbench.name=Настольная пила
 tile.gunbench.name=Оружейный станок
 tile.custombench.name=Производственный станок
 tile.instrumentbench.name=Инструментально-сборочный станок
-tile.componentbench.name=Компонентный станок
+tile.itembench.name=Компонентный станок
 
 item.fuelpump.name=Топливная колонка
 item.fuelpump.level=LVL:
@@ -307,8 +307,8 @@ advancements.mts.root.description=Начни своё погружение в Т
 advancements.mts.rtfm.title=RTFM
 advancements.mts.rtfm.description=Получи Руководство Транспортных Систем
 
-advancements.mts.componentbench.title=Всё можно заказать онлайн!
-advancements.mts.componentbench.description=Создай/получи компонентный станок
+advancements.mts.itembench.title=Всё можно заказать онлайн!
+advancements.mts.itembench.description=Создай/получи компонентный станок
 advancements.mts.custombench.title=Специальные детали своими руками
 advancements.mts.custombench.description=Создай/получи производственный станок
 advancements.mts.enginebench.title=Соберём же огненное жерло

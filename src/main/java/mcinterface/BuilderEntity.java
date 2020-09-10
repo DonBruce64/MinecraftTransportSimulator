@@ -11,7 +11,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.IItemEntityProvider;
+import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;

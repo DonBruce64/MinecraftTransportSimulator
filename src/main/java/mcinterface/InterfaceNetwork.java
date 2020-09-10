@@ -62,6 +62,7 @@ public class InterfaceNetwork{
 		
 		//Now register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
+		//TODO this should be sent to the network interface, not directly registered.
 		byte packetIndex = 0;
 		packetMappings.put(packetIndex++, PacketBulletHit.class);
 		packetMappings.put(packetIndex++, PacketEntityCSHandshake.class);

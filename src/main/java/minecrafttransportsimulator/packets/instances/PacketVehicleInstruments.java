@@ -5,7 +5,7 @@ import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
-import minecrafttransportsimulator.items.core.ItemWrench;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.packs.ItemInstrument;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;

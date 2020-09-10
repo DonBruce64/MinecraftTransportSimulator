@@ -4,7 +4,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockDecor;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockSignalController;
-import minecrafttransportsimulator.items.core.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 
 /**Decor item.  Note that while this item can (and does) spawn decor blocks,

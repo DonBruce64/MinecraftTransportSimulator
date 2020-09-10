@@ -17,7 +17,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 public class BuilderParticle extends Particle{
 	private final AParticle particle;
 	
-    public BuilderParticle(AParticle particle){
+    BuilderParticle(AParticle particle){
 		super(particle.world.world, particle.position.x, particle.position.y, particle.position.z);
 		this.particle = particle;
 		this.particleMaxAge = particle.maxAge;

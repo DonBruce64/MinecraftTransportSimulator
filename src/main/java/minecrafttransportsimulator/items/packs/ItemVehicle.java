@@ -5,7 +5,7 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.core.IItemEntityProvider;
+import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;

@@ -1,8 +1,0 @@
-{
-    "variants": {
-        "facing=south": { "model": "mts:seatbench" },
-        "facing=north": { "model": "mts:seatbench", "y": 180 },
-        "facing=east":  { "model": "mts:seatbench", "y": 270 },
-        "facing=west":  { "model": "mts:seatbench", "y": 90 }
-    }
-}
