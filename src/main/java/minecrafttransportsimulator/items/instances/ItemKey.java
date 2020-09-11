@@ -42,7 +42,7 @@ public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 				}else{
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
-					WrapperItemStack stack = player.getHeldWrapperStack();
+					WrapperItemStack stack = player.getHeldStack();
 					WrapperNBT data = stack.getData();
 					String keyVehicleUUID = data.getString("vehicle");
 					if(keyVehicleUUID.isEmpty()){

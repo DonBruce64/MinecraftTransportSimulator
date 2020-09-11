@@ -7,19 +7,23 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 
 /**Base item class for all pack-created items.  Stores information such as the
  * pack the item belongs to and the class that extends {@link AJSONItem} that
- * is the instance of the item's pack.  It will also attempt to place blocks
- * from this item should the pack item implement {@link IItemBlock}, and may
- * interact with vehicles should it extend {@link IItemVehicleInteractable}.
+ * is the instance of the item's pack.
  * 
  * @author don_bruce
  */
-@Deprecated//TODO DO NOT USE UNTIL AFTER V19!
 public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> extends AItemBase{
 	public final JSONDefinition definition;
 	
 	public AItemPack(JSONDefinition definition){
 		super();
 		this.definition = definition;
+	}
+	
+	@Override
+	public String getRegistrationName(){
+		//TODO this need to be the full name when packs register with MTS.
+		//return definition.packID + ":" + definition.systemName;
+		return definition.systemName;
 	}
 	
 	@Override

@@ -17,7 +17,8 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.IRadioProvider;
@@ -29,7 +30,6 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
-import net.minecraft.item.ItemStack;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -67,7 +67,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final List<String> textLines = new ArrayList<String>();
 	
 	//Collision maps.
-	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
+	public final Map<Byte, JSONInstrument> instruments = new HashMap<Byte, JSONInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	public final List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
@@ -121,7 +121,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			String instrumentPackID = data.getString("instrument" + i + "_packID");
 			String instrumentSystemName = data.getString("instrument" + i + "_systemName");
 			if(!instrumentPackID.isEmpty()){
-				ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
+				JSONInstrument instrument = (JSONInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName).definition;
 				//Check to prevent loading of faulty instruments due to updates.
 				if(instrument != null){
 					instruments.put(i, instrument);
@@ -230,9 +230,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public void destroyAtPosition(Point3d position){
 		super.destroyAtPosition(position);
 		//Spawn instruments in the world.
-		for(ItemInstrument instrument : instruments.values()){
-			ItemStack stack = new ItemStack(instrument);
-			world.spawnItemStack(stack, null, position);
+		for(JSONInstrument instrument : instruments.values()){
+			ItemInstrument item = (ItemInstrument) MTSRegistry.packItemMap.get(instrument.packID).get(instrument.systemName);
+			world.spawnItem(item, null, position);
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
@@ -384,8 +384,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){
 			if(instruments.containsKey(i)){
-				data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
-				data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
+				data.setString("instrument" + i + "_packID", instruments.get(i).packID);
+				data.setString("instrument" + i + "_systemName", instruments.get(i).systemName);
 			}
 		}
 	}

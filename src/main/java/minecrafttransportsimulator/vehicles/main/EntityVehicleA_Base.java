@@ -13,7 +13,7 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -102,7 +102,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**
 	 * Creates a part from the passed-in data.
 	 */
-    public APart createPartFromData(JSONPart partDefinition, WrapperNBT partData, Point3d offset, AItemPart optionalItem){
+    public APart createPartFromData(JSONPart partDefinition, WrapperNBT partData, Point3d offset, ItemPart optionalItem){
 		//Get the part to add.
 		VehiclePart packPart = getPackDefForLocation(offset);
 		APart parentPart = null;
@@ -165,7 +165,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * Also note that the item is optional, and is only used to do validity checks for min/max
 	 * and custom types.  If this is not required, it may be null.
 	 */
-    public boolean addPartFromItem(AItemPart partItem, WrapperNBT partData, Point3d offset){
+    public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset){
     	APart newPart = createPartFromData(partItem.definition, partData, offset, partItem);
     	if(newPart != null){
     		addPart(newPart, false);

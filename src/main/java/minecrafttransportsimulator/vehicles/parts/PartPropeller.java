@@ -32,7 +32,7 @@ public class PartPropeller extends APart{
 	@Override
 	public void attack(Damage damage){
 		if(damage.attacker != null){
-			if(damage.attacker.getHeldStack().isEmpty()){
+			if(damage.attacker.getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON), vehicle);

@@ -12,6 +12,7 @@ import java.util.Set;
 import mcinterface.InterfaceGame;
 import mcinterface.WrapperBlock;
 import mcinterface.WrapperEntity;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
@@ -19,9 +20,9 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemWrench;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
-import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -165,10 +166,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(world.isClient()){
 			activePartSlotBoxes.clear();
 			WrapperPlayer player = InterfaceGame.getClientPlayer();
-			if(player.isHoldingItem(AItemPart.class)){
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof ItemPart){
 				for(Entry<BoundingBox, VehiclePart> partSlotBoxEntry : partSlotBoxes.entrySet()){
-					//System.out.println(partSlotBoxEntry.getValue().types);
-					AItemPart heldPart = (AItemPart) player.getHeldStack().getItem();
+					ItemPart heldPart = (ItemPart) heldItem;
 					//Does the part held match this packPart?
 					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.general.type)){
 						//Does a door not exist, or is at least open?  Or are we riding this vehicle?
@@ -176,7 +177,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 							//special bounds of the custom part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
-							if(heldPart instanceof ItemPartCustom){
+							if(heldPart.definition.general.type.equals("custom")){
 								box.widthRadius = heldPart.definition.custom.width/2D;
 								box.heightRadius = heldPart.definition.custom.height/2D;
 								box.depthRadius = heldPart.definition.custom.width/2D;
@@ -217,7 +218,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 				//If the player is holding a wrench, and the part has children, don't add it.
 				//Player shouldn't be able to wrench parts with children.
-				if(clientPlayer.isHoldingItem(ItemWrench.class) && !part.childParts.isEmpty()){
+				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){
 					continue;
 				}
 				
@@ -364,7 +365,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Remove all parts from the vehicle and place them as items.
 		for(APart part : parts){
 			if(part.getItem() != null){
-				world.spawnItemStack(new ItemStack(part.getItem()), part.getData(), part.worldPos);
+				world.spawnItem(part.getItem(), part.getData(), part.worldPos);
 			}
 		}
 		
@@ -372,7 +373,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		for(ItemStack craftingStack : MTSRegistry.getMaterials(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName))){
 			for(int i=0; i<craftingStack.getCount(); ++i){
 				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
-					world.spawnItemStack(new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata()), null, position);
+					world.spawnItemStack(new WrapperItemStack(new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())), position);
 				}
 			}
 		}

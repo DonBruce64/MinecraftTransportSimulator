@@ -1,5 +1,6 @@
-package minecrafttransportsimulator.items.packs;
+package minecrafttransportsimulator.items.instances;
 
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 
 public class ItemItem extends AItemPack<JSONItem>{

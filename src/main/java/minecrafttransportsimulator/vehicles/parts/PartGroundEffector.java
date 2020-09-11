@@ -4,13 +4,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import mcinterface.WrapperInventory;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.item.ItemStack;
 
 public class PartGroundEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
@@ -56,14 +56,14 @@ public class PartGroundEffector extends APart{
 					}
 					case("harvester"): {
 						//Harvest drops, and add to inventories.
-						List<ItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
+						List<WrapperItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
 						for(APart part : vehicle.parts){
 							if(part instanceof PartInteractable){
 								WrapperInventory inventory = ((PartInteractable) part).inventory;
 								if(inventory != null){
-									Iterator<ItemStack> iterator = drops.iterator();
+									Iterator<WrapperItemStack> iterator = drops.iterator();
 									while(iterator.hasNext()){
-										ItemStack stack = iterator.next();
+										WrapperItemStack stack = iterator.next();
 										if(inventory.addStack(stack, -1)){
 											iterator.remove();
 											break;
@@ -74,9 +74,9 @@ public class PartGroundEffector extends APart{
 						}
 						
 						//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-						for(ItemStack stack : drops){
-							if(stack.getCount() > 0){
-								vehicle.world.spawnItemStack(stack, null, worldPos);
+						for(WrapperItemStack stack : drops){
+							if(stack.getSize() > 0){
+								vehicle.world.spawnItemStack(stack, worldPos);
 							}
 						}
 					}

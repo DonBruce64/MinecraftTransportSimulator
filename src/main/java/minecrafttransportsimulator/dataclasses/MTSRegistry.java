@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import mcinterface.BuilderItem;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
-import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -36,9 +37,6 @@ public final class MTSRegistry{
 	 * overriding the crafting materials in said JSON, and to concatenate the materials in {@link JSONVehicle}*/
 	public static final Map<AItemPack<? extends AJSONItem<?>>, String[]> packCraftingMap = new HashMap<AItemPack<? extends AJSONItem<?>>, String[]>();
 	
-	/**Map of creative tabs for packs.  Keyed by packID.  Populated by the {@link PackParserSystem}**/
-	public static final Map<String, CreativeTabPack> packTabs = new HashMap<String, CreativeTabPack>();
-	
 	/**
 	 * This is called by packs to query what items they have registered.
 	 * Used to allow packs to register their own items after core mod processing.
@@ -48,7 +46,7 @@ public final class MTSRegistry{
 	public static List<Item> getItemsForPack(String packID){
 		List<Item> items = new ArrayList<Item>();
 		for(AItemPack<? extends AJSONItem<?>> packItem : packItemMap.get(packID).values()){
-			items.add(packItem);
+			items.add(BuilderItem.itemWrapperMap.get(packItem));
 		}
 		return items;
 	}

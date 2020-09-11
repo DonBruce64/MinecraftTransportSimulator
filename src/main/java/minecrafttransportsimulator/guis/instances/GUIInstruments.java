@@ -8,18 +8,18 @@ import java.util.TreeMap;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
-import mcinterface.WrapperPlayer;
 import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
@@ -68,9 +68,9 @@ public class GUIInstruments extends AGUIBase{
 		//Add all packs that have instruments in them.
 		//This depends on if the player has the instruments, or if they are in creative.
 		for(String packID : MTSRegistry.packItemMap.keySet()){
-			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
+			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> packItem : MTSRegistry.packItemMap.get(packID).values()){
 				if(packItem instanceof ItemInstrument){
-					if(player.isCreative() || player.hasItem(packItem, 1, 0)){
+					if(player.isCreative() || player.hasItem(packItem)){
 						//Add the instrument to the list of instruments the player has.
 						if(!playerInstruments.containsKey(packID)){
 							playerInstruments.put(packID, new ArrayList<ItemInstrument>());

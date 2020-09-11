@@ -14,13 +14,13 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.item.Item;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
  * Use {@link BuilderEntity#addPart(APart, boolean)} to add parts 
@@ -247,8 +247,8 @@ public abstract class APart implements ISoundProvider{
 	 * Gets the item for this part.  If the part should not return an item 
 	 * (either due to damage or other reasons) make this method return null.
 	 */
-	public Item getItem(){
-		return MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
+	public ItemPart getItem(){
+		return (ItemPart) MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
 	}
 	
 	/**

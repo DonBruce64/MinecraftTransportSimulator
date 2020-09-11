@@ -11,7 +11,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.packs.ItemBooklet;
+import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 

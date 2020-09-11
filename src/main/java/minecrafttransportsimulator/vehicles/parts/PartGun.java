@@ -9,7 +9,8 @@ import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
@@ -17,7 +18,6 @@ import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.item.ItemStack;
 
 public class PartGun extends APart implements IVehiclePartFXProvider{	
 	//Stored variables used to determine bullet firing behavior.
@@ -26,14 +26,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
 	public double vehiclePitchContribution;
-	private ItemPartBullet loadedBullet;
+	private JSONPart loadedBulletDefinition;
 	
 	//These variables are used during firing and will be reset on entity loading.
 	public boolean firing;
 	public int temp;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
-	private ItemPartBullet lastBullet;
 	private WrapperPlayer lastController;
 	private byte gunNumber;
 	private long lastTimeFired;
@@ -50,11 +49,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
-			this.loadedBullet = (ItemPartBullet) MTSRegistry.packItemMap.get(loadedBulletPack).get(loadedBulletName);
+			this.loadedBulletDefinition = (JSONPart) MTSRegistry.packItemMap.get(loadedBulletPack).get(loadedBulletName).definition;
 		}
 		//If we didn't load the bullet due to pack changes, set the current bullet count to 0.
 		//This prevents pack changes from locking guns.
-		if(loadedBullet == null){
+		if(loadedBulletDefinition == null){
 			bulletsLeft = 0;
 		}
 		this.anglePerTickSpeed = (50/definition.gun.diameter + 1/definition.gun.length);
@@ -77,10 +76,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public boolean interact(WrapperPlayer player){
 		//Check to see if we have any bullets in our hands.
 		//If so, try to re-load this gun with them.
-		ItemStack heldStack = player.getHeldStack();
-		if(heldStack != null && heldStack.getItem() instanceof ItemPartBullet){
-			if(tryToReload((ItemPartBullet) heldStack.getItem())){
-				player.removeItem(heldStack, 1);
+		AItemBase heldItem = player.getHeldItem();
+		if(heldItem instanceof ItemPart){
+			if(tryToReload((ItemPart) heldItem)){
+				player.removeItem(heldItem, null);
 			}
 		}
 		return true;
@@ -199,7 +198,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
 			cooldownTimeRemaining = definition.gun.fireDelay;
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
-			lastBullet = loadedBullet;
 			lastController = playerController;
 			if(!vehicle.world.isClient()){
 				//Only remove bullets from the server.  We remove them from the client when they spawn.
@@ -218,9 +216,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 					WrapperInventory inventory = ((PartInteractable) part).inventory;
 					if(inventory != null && part.definition.interactable.feedsVehicles){
 						for(byte i=0; i<inventory.getSize(); ++i){
-							ItemStack stack = inventory.getStackInSlot(i);
-							if(stack != null && stack.getItem() instanceof ItemPartBullet){
-								if(tryToReload((ItemPartBullet) stack.getItem())){
+							AItemBase item = inventory.getItemInSlot(i);
+							if(item instanceof ItemPart){
+								if(tryToReload((ItemPart) item)){
 									//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 									//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
 									inventory.decrement(i);
@@ -235,30 +233,32 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//If we are on the client, we need to leave this here, as the client might still be processing bullet firing.
 			//IF we set it null during that time, the bullet would be fired and not know what it was.
 			if(!vehicle.world.isClient()){
-				loadedBullet = null;
+				loadedBulletDefinition = null;
 			}
 		}
 	}
 	
 	/**
-	 * Attempts to reload the gun with the passed-in bullet.  Returns true if the bullet
-	 * was loaded, false if not.  Responsible for packet callbacks and playing sounds.
+	 * Attempts to reload the gun with the passed-in part.  Returns true if the part is a bullet
+	 * and was loaded, false if not.  Responsible for packet callbacks and playing sounds.
 	 */
-	public boolean tryToReload(ItemPartBullet bullet){
-		if(reloadTimeRemaining == 0){
-			//Only fill bullets if we match the bullet already in the gun, or if our diameter matches.
-			if((loadedBullet == null && bullet.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(bullet)){
-				//Make sure we don't over-fill the gun.
-				if(bullet.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
-					loadedBullet = bullet;
-					bulletsLeft += bullet.definition.bullet.quantity;
-					reloadTimeRemaining = definition.gun.reloadTime;
-					if(vehicle.world.isClient()){
-						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
-					}else{
-						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, bullet.definition.packID, bullet.definition.systemName), this.vehicle);
+	public boolean tryToReload(ItemPart part){
+		if(part.definition.bullet != null){
+			if(reloadTimeRemaining == 0){
+				//Only fill bullets if we match the bullet already in the gun, or if our diameter matches.
+				if((loadedBulletDefinition == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBulletDefinition.equals(part.definition)){
+					//Make sure we don't over-fill the gun.
+					if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
+						loadedBulletDefinition = part.definition;
+						bulletsLeft += part.definition.bullet.quantity;
+						reloadTimeRemaining = definition.gun.reloadTime;
+						if(vehicle.world.isClient()){
+							InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
+						}else{
+							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, loadedBulletDefinition.packID, loadedBulletDefinition.systemName), vehicle);
+						}
+						return true;
 					}
-					return true;
 				}
 			}
 		}
@@ -300,9 +300,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		data.setInteger("shotsFired", shotsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setPoint3d("currentOrientation", currentOrientation);
-		if(loadedBullet != null){
-			data.setString("loadedBulletPack", loadedBullet.definition.packID);
-			data.setString("loadedBulletName", loadedBullet.definition.systemName);
+		if(loadedBulletDefinition != null){
+			data.setString("loadedBulletPack", loadedBulletDefinition.packID);
+			data.setString("loadedBulletName", loadedBulletDefinition.systemName);
 		}
 		return data;
 	}
@@ -343,7 +343,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(gunFactoredAngles).add(worldPos);
 	        
 			//Add the bullet as a particle.
-			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletPosition, bulletVelocity, lastBullet, lastController, vehicle));
+			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletPosition, bulletVelocity, loadedBulletDefinition, lastController, vehicle));
 			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			

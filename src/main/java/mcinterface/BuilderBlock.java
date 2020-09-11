@@ -18,8 +18,8 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
-import minecrafttransportsimulator.items.packs.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
@@ -150,13 +150,12 @@ public class BuilderBlock extends Block{
     	//Note that this method is only used for middle-clicking and nothing else.  Failure to return valid results
     	//here will result in air being grabbed, and no WAILA support.
     	if(block instanceof IBlockTileEntity<?>){
-    		//TODO move this into the interface when we have a wrapper itemstack.
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.definition;
     				if(definition != null){
-    					ItemStack stack = new ItemStack(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName)));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
@@ -192,7 +191,7 @@ public class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
         			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
-        				drops.add(new ItemStack(item));
+        				drops.add(new ItemStack(BuilderItem.itemWrapperMap.get(item)));
         			}
         			dropsAtPositions.put(pos, drops);
     			}

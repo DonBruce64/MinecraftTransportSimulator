@@ -3,7 +3,8 @@ package minecrafttransportsimulator.rendering.instances;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.InterfaceRender;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -22,16 +23,16 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
+	public static void drawInstrument(JSONInstrument definition, byte partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
-		InterfaceRender.bindTexture(instrument.definition.packID, "textures/instruments.png");
+		InterfaceRender.bindTexture(definition.packID, "textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
-		for(byte i=0; i<instrument.definition.components.size(); ++i){
-			Component section = instrument.definition.components.get(i);
+		for(byte i=0; i<definition.components.size(); ++i){
+			Component section = definition.components.get(i);
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
 			if((!section.lightOverlay && InterfaceRender.getRenderPass() != 1) || (section.lightOverlay && InterfaceRender.getRenderPass() != 0)){

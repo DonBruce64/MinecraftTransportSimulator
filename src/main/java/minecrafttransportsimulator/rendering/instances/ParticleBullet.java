@@ -16,7 +16,7 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.OBJParser;
@@ -36,16 +36,16 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  */
 
 public final class ParticleBullet extends AParticle{
-	private final ItemPartBullet bulletItem;
+	private final JSONPart definition;
 	private final int playerID;
 	private final EntityVehicleF_Physics vehicle;
 	private final BoundingBox box;
 	
-	private final Map<ItemPartBullet, Integer> bulletDisplayLists = new HashMap<ItemPartBullet, Integer>();
+	private final Map<JSONPart, Integer> bulletDisplayLists = new HashMap<JSONPart, Integer>();
 	
-    public ParticleBullet(WrapperWorld world, Point3d position, Point3d motion, ItemPartBullet bulletItem, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+    public ParticleBullet(WrapperWorld world, Point3d position, Point3d motion, JSONPart definition, WrapperPlayer player, EntityVehicleF_Physics vehicle){
     	super(world, position, motion);
-        this.bulletItem = bulletItem;
+        this.definition = definition;
         this.playerID = player.getID();
         this.vehicle = vehicle;
         this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
@@ -54,14 +54,14 @@ public final class ParticleBullet extends AParticle{
 	@Override
 	public void update(boolean onGround){
 		double velocity = motion.length();
-		Damage damage = new Damage("bullet", velocity*bulletItem.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
+		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
 		//Check for collided entities and attack them.
 		Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle, motion);
 		if(!attackedEntities.isEmpty()){
 			if(playerID == InterfaceGame.getClientPlayer().getID()){
 				for(WrapperEntity entity : attackedEntities.keySet()){
-					InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, bulletItem, entity));
+					InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, definition, entity));
 				}
 			}
 			age = maxAge;
@@ -73,7 +73,7 @@ public final class ParticleBullet extends AParticle{
 		if(box.updateCollidingBlocks(world, motion)){
 			for(WrapperBlock block : box.collidingBlocks){
 				Point3d position = new Point3d(block.getPosition());
-				InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bulletItem, null));
+				InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, definition, null));
 			}
 			age = maxAge;
 			return;
@@ -95,7 +95,7 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	public float getSize(){
-		return bulletItem.definition.bullet.diameter/1000F;
+		return definition.bullet.diameter/1000F;
 	}
 	
 	@Override
@@ -110,20 +110,20 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	public boolean isBright(){
-		return bulletItem.definition.bullet.type.equals("tracer");
+		return definition.bullet.type.equals("tracer");
 	}
 	
 	@Override
 	public void render(float partialTicks){
         //Parse the model if we haven't already.
-        if(!bulletDisplayLists.containsKey(bulletItem)){
+        if(!bulletDisplayLists.containsKey(definition)){
         	final String modelLocation;
-        	if(bulletItem.definition.general.modelName != null){
-				modelLocation = "objmodels/parts/" + bulletItem.definition.general.modelName + ".obj";
+        	if(definition.general.modelName != null){
+				modelLocation = "objmodels/parts/" + definition.general.modelName + ".obj";
 			}else{
-				modelLocation = "objmodels/parts/" + bulletItem.definition.systemName + ".obj";
+				modelLocation = "objmodels/parts/" + definition.systemName + ".obj";
 			}
-        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(bulletItem.definition.packID, modelLocation);
+        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, modelLocation);
         	int displayListIndex = GL11.glGenLists(1);
     		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -136,11 +136,11 @@ public final class ParticleBullet extends AParticle{
     		}
     		GL11.glEnd();
     		GL11.glEndList();
-        	bulletDisplayLists.put(bulletItem, displayListIndex);
+        	bulletDisplayLists.put(definition, displayListIndex);
         }
         
         //Bind the texture for this bullet.
-        InterfaceRender.bindTexture(bulletItem.definition.packID, "textures/items/" + bulletItem.definition.systemName + ".png");
+        InterfaceRender.bindTexture(definition.packID, "textures/items/" + definition.systemName + ".png");
         
         //Render the parsed model.  Translation will already have been applied, 
         //so we just need to rotate ourselves based on our velocity.
@@ -148,6 +148,6 @@ public final class ParticleBullet extends AParticle{
         double pitch = -Math.toDegrees(Math.asin(motion.y/Math.sqrt(motion.x*motion.x+motion.y*motion.y+motion.z*motion.z)));
         GL11.glRotated(yaw, 0, 1, 0);
         GL11.glRotated(pitch, 1, 0, 0);
-        GL11.glCallList(bulletDisplayLists.get(bulletItem));
+        GL11.glCallList(bulletDisplayLists.get(definition));
 	}
 }

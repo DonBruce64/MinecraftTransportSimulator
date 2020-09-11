@@ -1,5 +1,6 @@
-package minecrafttransportsimulator.items.packs;
+package minecrafttransportsimulator.items.instances;
 
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 
 public class ItemPoleComponent extends AItemPack<JSONPoleComponent>{

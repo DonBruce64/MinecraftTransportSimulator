@@ -39,8 +39,9 @@ public abstract class AItemBase{
 	/**
 	 *  Called when the item tooltip is being displayed.  The passed-in list will contain
 	 *  all the lines in the tooltip, so add or remove lines as you see fit.  If you don't
-	 *  want to add any lines just leave this method blank. NBT is passed-in to allow for
-	 *  state-based tooltip lines to be added.
+	 *  want to add any lines just leave this method blank. Data is assured not to be null.
+	 *  However, this does not mean the data block will be populated with values.  If the
+	 *  item is fresh from crafting, it may not have any data.
 	 */
 	public abstract void addTooltipLines(List<String> tooltipLines, WrapperNBT data);
 	
@@ -55,6 +56,15 @@ public abstract class AItemBase{
 		}else{
 			return false;
 		}
+	}
+	
+	/**
+	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(WrapperWorld, WrapperPlayer, Point3i, Axis)}
+	 *  is called before this method, and if an only if that method returns false will this method be called.
+	 *  If this item does something, return true.
+	 */
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+		return false;
 	}
 	
 	/**

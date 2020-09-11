@@ -8,28 +8,19 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import mcinterface.BuilderItem;
 import mcinterface.WrapperNBT;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.CreativeTabPack;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.ItemBooklet;
-import minecrafttransportsimulator.items.packs.ItemDecor;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
-import minecrafttransportsimulator.items.packs.ItemItem;
-import minecrafttransportsimulator.items.packs.ItemPole;
-import minecrafttransportsimulator.items.packs.ItemPoleComponent;
-import minecrafttransportsimulator.items.packs.ItemVehicle;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
-import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
-import minecrafttransportsimulator.items.packs.parts.ItemPartCustom;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGeneric;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGroundDevice;
-import minecrafttransportsimulator.items.packs.parts.ItemPartGun;
-import minecrafttransportsimulator.items.packs.parts.ItemPartInteractable;
-import minecrafttransportsimulator.items.packs.parts.ItemPartPropeller;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemBooklet;
+import minecrafttransportsimulator.items.instances.ItemDecor;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPole;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONCraftable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONBooklet;
@@ -144,7 +135,7 @@ public final class PackParserSystem{
     	try{
     		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
     		performLegacyCompats(definition);
-    		setupItem(createPartItem(definition), jsonFileName, packID, ItemClassification.PART);
+    		setupItem(new ItemPart(definition), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
     		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		logEntries.add(e.getMessage());
@@ -212,9 +203,8 @@ public final class PackParserSystem{
     	item.definition.classification = classification;
     	item.definition.systemName = systemName;
     	
-		//Set the unlocalized name.  The packs use this to register the items on their side,
-    	//so the format needs to be standard.
-		item.setUnlocalizedName(packID + "." + systemName);
+    	//Add the item to the builder system.
+    	BuilderItem.createItem(item);
     	
     	//Put the item in the map in the registry.
     	if(!MTSRegistry.packItemMap.containsKey(packID)){
@@ -226,15 +216,6 @@ public final class PackParserSystem{
     	if(item.definition.general instanceof AJSONCraftable.General){
     		MTSRegistry.packCraftingMap.put(item, ((AJSONCraftable<?>.General) item.definition.general).materials);
     	}
-    	
-    	//Set the creative tab.  Need to check if we're an internal item or not.
-    	//TODO remove this check when we do pack-tab abstraction.
-    	if(!item.definition.packID.equals(MTS.MODID)){
-			if(!MTSRegistry.packTabs.containsKey(packID)){
-				MTSRegistry.packTabs.put(packID, new CreativeTabPack(packID));
-			}
-			item.setCreativeTab(MTSRegistry.packTabs.get(packID));
-		}
     }
     
     /**
@@ -273,7 +254,7 @@ public final class PackParserSystem{
     			switch(partDef.general.type){
     				case("wheel"):{
     					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground = partDef.new JSONPartGroundDevice();
     					partDef.ground.isWheel = true;
     					partDef.ground.width = partDef.wheel.diameter/2F;
     					partDef.ground.height = partDef.wheel.diameter;
@@ -282,14 +263,14 @@ public final class PackParserSystem{
     					break;
     				}case("skid"):{
     					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground = partDef.new JSONPartGroundDevice();
     					partDef.ground.width = partDef.skid.width;
     					partDef.ground.height = partDef.skid.width;
     					partDef.ground.lateralFriction = partDef.skid.lateralFriction;
     					break;
     				}case("pontoon"):{
     					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground = partDef.new JSONPartGroundDevice();
     					partDef.ground.canFloat = true;
     					partDef.ground.width = partDef.pontoon.width;
     					partDef.ground.height = partDef.pontoon.width;
@@ -298,7 +279,7 @@ public final class PackParserSystem{
     					break;
     				}case("tread"):{
     					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new PartGroundDevice();
+    					partDef.ground = partDef.new JSONPartGroundDevice();
     					partDef.ground.isTread = true;
     					partDef.ground.width = partDef.tread.width;
     					partDef.ground.height = partDef.tread.width;
@@ -309,53 +290,53 @@ public final class PackParserSystem{
     					break;
     				}case("crate"):{
     					partDef.general.type = "interactable_crate";
-    					partDef.interactable = partDef.new PartInteractable();
+    					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "crate";
     					partDef.interactable.inventoryUnits = 9;
     					partDef.interactable.feedsVehicles = true;
     					break;
     				}case("barrel"):{
     					partDef.general.type = "interactable_barrel";
-    					partDef.interactable = partDef.new PartInteractable();
+    					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "barrel";
     					partDef.interactable.inventoryUnits = 5;
     					break;
     				}case("crafting_table"):{
     					partDef.general.type = "interactable_crafting_table";
-    					partDef.interactable = partDef.new PartInteractable();
+    					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "crafting_table";
     					break;
     				}case("furnace"):{
     					partDef.general.type = "interactable_furnace";
-    					partDef.interactable = partDef.new PartInteractable();
+    					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "furnace";
     					break;
     				}case("brewing_stand"):{
     					partDef.general.type = "interactable_brewing_stand";
-    					partDef.interactable = partDef.new PartInteractable();
+    					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "brewing_stand";
     					break;
     				}case("fertilizer"):{
     					partDef.general.type = "effector_fertilizer";
-    					partDef.effector = partDef.new PartEffector();
+    					partDef.effector = partDef.new JSONPartEffector();
     					partDef.effector.type = "fertilizer";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("harvester"):{
     					partDef.general.type = "effector_harvester";
-    					partDef.effector = partDef.new PartEffector();
+    					partDef.effector = partDef.new JSONPartEffector();
     					partDef.effector.type = "harvester";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("planter"):{
     					partDef.general.type = "effector_planter";
-    					partDef.effector = partDef.new PartEffector();
+    					partDef.effector = partDef.new JSONPartEffector();
     					partDef.effector.type = "planter";
     					partDef.effector.blocksWide = 1;
     					break;
     				}case("plow"):{
     					partDef.general.type = "effector_plow";
-    					partDef.effector = partDef.new PartEffector();
+    					partDef.effector = partDef.new JSONPartEffector();
     					partDef.effector.type = "plow";
     					partDef.effector.blocksWide = 1;
     					break;
@@ -648,28 +629,6 @@ public final class PackParserSystem{
 			}
     	}
     	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
-    }
-    
-    public static AItemPart createPartItem(JSONPart definition){
-    	if(definition.general.type.startsWith("engine_")){
-    		return new ItemPartEngine(definition);
-    	}else if(definition.general.type.startsWith("gun_")){
-    		return new ItemPartGun(definition);
-    	}else if(definition.general.type.startsWith("ground_")){
-    		return new ItemPartGroundDevice(definition);
-    	}else if(definition.general.type.startsWith("interactable_")){
-    		return new ItemPartInteractable(definition);
-    	}else if(definition.general.type.startsWith("effector_")){
-    		return new ItemPartGeneric(definition);
-    	}else{
-	    	switch(definition.general.type){
-				case "propeller": return new ItemPartPropeller(definition);
-				case "seat": return new ItemPartGeneric(definition);
-				case "bullet": return new ItemPartBullet(definition);
-				case "custom": return new ItemPartCustom(definition);
-	    	}
-    	}
-		throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part item.");
     }
     
     public enum ItemClassification{

@@ -7,8 +7,6 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
@@ -39,24 +37,7 @@ public class WrapperNBT{
 
 	WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
-	}
-	
-	//TODO make this package-private when we get wrappd itemstacks.
-	//TODO check to see if we should apply the tag we create to the stack ever.
-	public WrapperNBT(ItemStack stack){
-		if(stack.hasTagCompound()){
-			this.tag = stack.getTagCompound();
-		}else{
-			this.tag = new NBTTagCompound();
-			stack.setTagCompound(tag);
-		}
-	}
-	
-	public WrapperNBT(Entity entity){
-		this.tag = new NBTTagCompound();
-		entity.writeToNBT(tag);
-	}
-	
+	}	
 	
 	//Booleans
 	public boolean getBoolean(String name){

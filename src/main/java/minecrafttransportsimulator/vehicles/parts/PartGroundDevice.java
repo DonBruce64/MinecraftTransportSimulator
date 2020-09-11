@@ -9,6 +9,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
@@ -17,7 +18,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.item.Item;
 
 /**A ground device is simply a part of a vehicle that touches the ground.
  * This class is used to perform ground physics, which include steering, 
@@ -160,7 +160,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public Item getItem(){
+	public ItemPart getItem(){
 		return isFlat ? null : super.getItem();
 	}
 	

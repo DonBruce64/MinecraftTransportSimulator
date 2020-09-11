@@ -5,16 +5,16 @@ import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperItemStack;
-import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.CallbackType;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -55,7 +55,8 @@ public class PacketVehicleInteract extends APacketVehicle{
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		boolean canPlayerEditVehicle = player.isOP() || vehicle.ownerUUID.isEmpty() || player.getUUID().equals(vehicle.ownerUUID);
 		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
-		WrapperItemStack heldStack = player.getHeldWrapperStack();
+		WrapperItemStack heldStack = player.getHeldStack();
+		AItemBase heldItem = heldStack.getItem();
 		APart part = vehicle.getPartAtLocation(hitPosition);
 		
 		//If our part is null, see if we clicked a part's collision box instead.
@@ -75,15 +76,15 @@ public class PacketVehicleInteract extends APacketVehicle{
 		
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
 		//Otherwise, try to do part-based interaction.
-		if(heldStack.getItem() instanceof IItemVehicleInteractable){
-			CallbackType callback = ((IItemVehicleInteractable) heldStack.getItem()).doVehicleInteraction(vehicle, part, player, ownerState, rightClick);
+		if(heldItem instanceof IItemVehicleInteractable){
+			CallbackType callback = ((IItemVehicleInteractable) heldItem).doVehicleInteraction(vehicle, part, player, ownerState, rightClick);
 			if(callback.equals(CallbackType.ALL)){
 				return true;
 			}else if(callback.equals(CallbackType.PLAYER)){
 				player.sendPacket(this);
 			}
 		}else{
-			//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself..
+			//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself.
 			if(part != null){
 				if(rightClick){
 					part.interact(player);
@@ -98,11 +99,10 @@ public class PacketVehicleInteract extends APacketVehicle{
 						if(!canPlayerEditVehicle){
 							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
 						}else{
-							//Attempt to add the part.  Vehicle is responsible for callback packet here.
-							ItemStack stack = heldStack.stack;
-							if(stack.getItem() instanceof AItemPart){
-								if(vehicle.addPartFromItem((AItemPart) stack.getItem(), stack.hasTagCompound() ? new WrapperNBT(stack) : null, hitPosition)){				
-									player.removeItem(stack, 1);
+							//Attempt to add a part.  Vehicle is responsible for callback packet here.
+							if(heldItem instanceof ItemPart){
+								if(vehicle.addPartFromItem((ItemPart) heldItem, heldStack.getData(), hitPosition)){				
+									player.removeStack(heldStack, 1);
 								}
 							}
 						}

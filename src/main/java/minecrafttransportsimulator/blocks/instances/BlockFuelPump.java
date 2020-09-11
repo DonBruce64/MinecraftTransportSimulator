@@ -33,7 +33,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
 			FluidTank tank = pump.getTank();
 			
 			//If we are holding an item, interact with the pump.
-			WrapperItemStack stack = player.getHeldWrapperStack();
+			WrapperItemStack stack = player.getHeldStack();
 			if(stack.interactWithTank(tank, player) > 0){
 				return true;
 			}

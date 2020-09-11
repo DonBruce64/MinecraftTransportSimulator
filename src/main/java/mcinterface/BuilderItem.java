@@ -10,19 +10,20 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPack;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -39,7 +40,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class BuilderItem extends Item{
 	final AItemBase item;
 	
-	//TODO make this package-private on final item abstraction.
+	//TODO make this private when packs don't need to access our items.
 	public static final Map<AItemBase, BuilderItem> itemWrapperMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
 	private BuilderItem(AItemBase item){
@@ -84,12 +85,30 @@ public class BuilderItem extends Item{
 	}
 	
 	/**
+	 *  This is called by the main MC system to "use" this item.
+	 *  Forwards this to the main item for processing.
+	 */
+	@Override
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
+		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
+		return item.onUsed(wrapper, wrapper.getWrapperFor(player)) ? new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand)) : new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));
+	}
+	
+	/**
 	 *  Creates a wrapper for the the passed-in Item, saving the wrapper to be registered later.
 	 *  This wrapper instance will interact with all MC code via passthrough of the item's methods.
 	 *  Returns the passed-in item for constructor convenience.
 	 */
 	public static AItemBase createItem(AItemBase item){
 		itemWrapperMap.put(item, new BuilderItem(item));
+		//TODO remove when packs don't register their own items.
+		if(item instanceof AItemPack){
+			String packID = ((AItemPack<?>) item).definition.packID;
+			String systemName = ((AItemPack<?>) item).definition.systemName;
+			if(!packID.equals(MTS.MODID)){
+				itemWrapperMap.get(item).setUnlocalizedName(packID + "." + systemName);
+			}
+		}
 		return item;
 	}
 	
@@ -106,23 +125,18 @@ public class BuilderItem extends Item{
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
 				//TODO this hard-code gets removed when the main mod correctly becomes a pack.
 				if(tabID.equals(MTS.MODID)){
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(BuilderGUI.translate("itemGroup.tabMTSCore"), mcItem));
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(BuilderGUI.translate("itemGroup.tabMTSCore"), item));
 				}else{
-					//TODO make custom creative tabs here.
+					//TODO remove this when packs define their tab names.
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
 				}
 			}
-			BuilderCreativeTab.createdTabs.get(tabID).addItem(mcItem);
+			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
-			event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
-		}
-		
-		//TODO remove this when we load pack items as builders and they are in the main builder item map here.
-		BuilderCreativeTab coreTab = BuilderCreativeTab.createdTabs.get(MTS.MODID);
-		//Register all core MTS "pack" items.
-		for(AItemPack<?> item : MTSRegistry.packItemMap.get(MTS.MODID).values()){
-			coreTab.addItem(item);
-			String name = item.definition.systemName;
-			event.getRegistry().register(item.setRegistryName(name).setUnlocalizedName(name));
+			//TODO remove when packs don't register their own items.
+			if(tabID.equals(MTS.MODID)){
+				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+			}
 		}
 	}
 }

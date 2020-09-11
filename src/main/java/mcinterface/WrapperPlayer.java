@@ -1,7 +1,8 @@
 package mcinterface;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.block.BlockWorkbench;
@@ -13,7 +14,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -84,46 +84,6 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
-	 *  Returns true if the item the player is holding is an instance of the
-	 *  passed-in class.  Assumes main-hand for all cases.
-	 */
-	public boolean isHoldingItem(Class<?> itemClass){
-		//TODO this needs to get removed when we add wrapper itemstacks.
-		return itemClass.isInstance(player.getHeldItemMainhand().getItem());
-	}
-	
-	/**
-	 *  Returns true if the player is holding the passed-in item.
-	 *  Assumes main-hand for all cases.  This method allows
-	 *  for string-based checking rather than class-based.
-	 */
-	public boolean isHoldingItem(String itemName){
-		return player.getHeldItemMainhand().getItem().equals(Item.getByNameOrId(itemName));
-	}
-	
-	/**
-	 *  Returns the held stack.
-	 */
-	//TODO this goes away when we finish abstration.
-	public ItemStack getHeldStack(){
-		return player.getHeldItemMainhand();
-	}
-	
-	/**
-	 *  Returns the held stack as a wrapper.
-	 */
-	public WrapperItemStack getHeldWrapperStack(){
-		return new WrapperItemStack(player.getHeldItemMainhand());
-	}
-	
-	/**
-	 *  Sets the held stack.
-	 */
-	public void setHeldStack(ItemStack stack){
-		player.setHeldItem(EnumHand.MAIN_HAND, stack);
-	}
-	
-	/**
 	 *  Gets the currently-leashed entity for this player, or null if it doesn't exist.
 	 */
 	public WrapperEntity getLeashedEntity(){
@@ -137,19 +97,77 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
-	 *  Returns true if the player has the quantity of the passed-in item in their inventory.
-	 *  Note that metadata isn't used in later MC releases.
+	 *  Returns the held item.  Only valid for {@link AItemBase} items.
 	 */
-	public boolean hasItem(Item itemToFind, int countToFind, int metadataToFind){
+	public AItemBase getHeldItem(){
+		return player.getHeldItemMainhand().getItem() instanceof BuilderItem ? ((BuilderItem) player.getHeldItemMainhand().getItem()).item : null;
+	}
+	
+	/**
+	 *  Returns the held stack as a wrapper.
+	 */
+	public WrapperItemStack getHeldStack(){
+		return new WrapperItemStack(player.getHeldItemMainhand());
+	}
+	
+	/**
+	 *  Sets the held stack.
+	 */
+	public void setHeldStack(ItemStack stack){
+		player.setHeldItem(EnumHand.MAIN_HAND, stack);
+	}
+	
+	/**
+	 *  Returns true if the player has the passed-in item in their inventory.
+	 *  This method does not care about NBT, so use the stack method if you need that.
+	 */
+	public boolean hasItem(AItemBase itemToFind){
 		for(ItemStack stack : player.inventory.mainInventory){
-			if(itemToFind.equals(stack.getItem())){
-				countToFind -= stack.getCount();
-				if(countToFind <= 0){
-					return true;
-				}
+			if(BuilderItem.itemWrapperMap.get(itemToFind).equals(stack.getItem())){
+				return true;
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 *  Attempts to add the passed-in stack to the player's inventory.
+	 *  Returns true if addition was successful.  If the player is
+	 *  in creative, this will return true, even if the stack
+	 *  wasn't added.
+	 */
+	public boolean addItem(AItemBase item, WrapperNBT data){
+		ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(item));
+		if(data != null){
+			stack.setTagCompound(data.tag);
+		}
+		return getInventory().addStack(new WrapperItemStack(stack), -1) || player.isCreative();
+	}
+	
+	/**
+	 *  Attempts to remove the passed-in item from the player's inventory.
+	 *  Returns true if removal was successful.  Note that if the player
+	 *  is in creative mode, then removal will not actually occur.
+	 */
+	public boolean removeItem(AItemBase item, WrapperNBT data){
+		if(isCreative()){
+			return true;
+		}else{
+			return player.inventory.clearMatchingItems(BuilderItem.itemWrapperMap.get(item), 0, 1, data != null ? data.tag : null) == 1;
+		}
+	}
+	
+	/**
+	 *  Attempts to remove the passed-in stack with the passed-in quantity from the player's inventory.
+	 *  Returns true if removal was successful.  Note that if the player
+	 *  is in creative mode, then removal will not actually occur.
+	 */
+	public boolean removeStack(WrapperItemStack stack, int qty){
+		if(isCreative()){
+			return true;
+		}else{
+			return player.inventory.clearMatchingItems(stack.stack.getItem(), stack.stack.getMetadata(), qty, stack.stack.getTagCompound()) == qty;
+		}
 	}
 	
 	/**
@@ -182,32 +200,9 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public void craftItem(AItemPack<? extends AJSONItem<?>> item){
 		for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
-			removeItem(materialStack, materialStack.getCount());
+			removeStack(new WrapperItemStack(materialStack), materialStack.getCount());
 		}
-		addItem(new ItemStack(item));
-	}
-	
-	/**
-	 *  Attempts to add the passed-in stack to the player's inventory.
-	 *  Returns true if addition was successful.  If the player is
-	 *  in creative, this will return true, even if the stack
-	 *  wasn't added.
-	 */
-	public boolean addItem(ItemStack stackToAdd){
-		return getInventory().addStack(stackToAdd, -1) || player.isCreative();
-	}
-	
-	/**
-	 *  Attempts to remove the passed-in stack from the player's inventory.
-	 *  Returns true if removal was successful.  Note that if the player
-	 *  is in creative mode, then removal will not actually occur.
-	 */
-	public boolean removeItem(ItemStack stackToRemove, int qty){
-		if(isCreative()){
-			return true;
-		}else{
-			return stackToRemove.getCount() == player.inventory.clearMatchingItems(stackToRemove.getItem(), stackToRemove.getMetadata(), qty, stackToRemove.getTagCompound());
-		}
+		addItem(item, null);
 	}
 	
 	/**

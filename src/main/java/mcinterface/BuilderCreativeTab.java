@@ -7,6 +7,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.items.components.AItemBase;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -29,20 +30,20 @@ public final class BuilderCreativeTab extends CreativeTabs{
 	private Item itemIcon;
 	private final List<Item> items = new ArrayList<Item>();
 	
-	//TODO make this package-private when pack items get abstracted.
-	public static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
+	static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
 	
-	public BuilderCreativeTab(String name, Item itemIcon){
+	public BuilderCreativeTab(String name, AItemBase itemIcon){
 		super(name);
-		this.itemIcon = itemIcon;
+		this.itemIcon = BuilderItem.itemWrapperMap.get(itemIcon);
 	}
 	
 	/**
      * Adds the passed-in item to this tab.
      */
-	public void addItem(Item item){
-		items.add(item);
-		item.setCreativeTab(this);
+	public void addItem(AItemBase item){
+		Item mcItem = BuilderItem.itemWrapperMap.get(item);
+		items.add(mcItem);
+		mcItem.setCreativeTab(this);
     }
 	
 	@Override

@@ -15,8 +15,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 	
@@ -53,18 +51,18 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
 					vehicle.removePart(part, null);
-					Item droppedItem = part.getItem();
+					ItemPart droppedItem = part.getItem();
 					if(droppedItem != null){
-						vehicle.world.spawnItemStack(new ItemStack(droppedItem), part.getData(), part.worldPos);
+						vehicle.world.spawnItem(droppedItem, part.getData(), part.worldPos);
 					}
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
 					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
-						ItemStack vehicleStack = new ItemStack(MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName));
+						AItemBase vehicleItem = MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName);
 						WrapperNBT vehicleData = new WrapperNBT();
 						vehicle.save(vehicleData);
-						vehicle.world.spawnItemStack(vehicleStack, vehicleData, vehicle.position);
+						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
 						vehicle.isValid = false;
 					}
 				}

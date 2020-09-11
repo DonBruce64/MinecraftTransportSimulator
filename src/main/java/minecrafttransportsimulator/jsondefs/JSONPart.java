@@ -6,15 +6,15 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
-public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
-    public PartEngine engine;
-    public PartGroundDevice ground;
-    public PartPropeller propeller;
-    public PartGun gun;
-    public PartBullet bullet;
-    public PartInteractable interactable;
-    public PartEffector effector;
-    public PartCustom custom;
+public class JSONPart extends AJSONMultiModel<JSONPart.JSONPartGeneral>{
+    public JSONPartEngine engine;
+    public JSONPartGroundDevice ground;
+    public JSONPartPropeller propeller;
+    public JSONPartGun gun;
+    public JSONPartBullet bullet;
+    public JSONPartInteractable interactable;
+    public JSONPartEffector effector;
+    public JSONPartCustom custom;
     public List<VehiclePart> subParts;
     public List<VehicleCollisionBox> collision;
     public VehicleRendering rendering;
@@ -28,14 +28,14 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     @Deprecated
     public PartTread tread;
 
-    public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
+    public class JSONPartGeneral extends AJSONMultiModel<JSONPart.JSONPartGeneral>.General{
     	public String type;
     	public String customType;
     	public boolean disableMirroring;
     	public boolean useVehicleTexture;
     }
     
-    public class PartEngine{
+    public class JSONPartEngine{
     	public boolean isAutomatic;
     	public boolean isSteamPowered;
     	public boolean flamesOnStartup;
@@ -64,7 +64,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
 		}
     }
     
-    public class PartGroundDevice{
+    public class JSONPartGroundDevice{
     	public boolean isWheel;
     	public boolean isTread;
     	public boolean canFloat;
@@ -77,7 +77,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
         public float spacing;
     }
     
-    public class PartPropeller{
+    public class JSONPartPropeller{
     	public boolean isDynamicPitch;
     	public boolean isRotor;
     	public short pitch;
@@ -85,7 +85,7 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public int startingHealth;
     }
     
-    public class PartGun{
+    public class JSONPartGun{
     	public boolean autoReload;
     	public boolean isTurret;
     	public int capacity;
@@ -100,24 +100,24 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public float length;
     }
     
-    public class PartBullet{
+    public class JSONPartBullet{
     	public String type;
     	public int quantity;
     	public float diameter;
     }
     
-    public class PartInteractable{
+    public class JSONPartInteractable{
     	public String interactionType;
     	public boolean feedsVehicles;
     	public byte inventoryUnits;
     }
     
-    public class PartEffector{
+    public class JSONPartEffector{
     	public String type;
     	public int blocksWide;
     }
     
-    public class PartCustom{
+    public class JSONPartCustom{
     	public float width;
     	public float height;
     }

@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import mcinterface.BuilderItem;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
@@ -34,16 +33,13 @@ public class MTS {
 	public static Logger MTSLog;
 	public static File minecraftDir;
 	
-	//TODO remove this when we complete item abstraction.
-	public static AItemBase WRENCH;
-	
 	static{
 		//Enable universal bucket so we can use buckets on fuel pumps.
 		FluidRegistry.enableUniversalBucket();
 		
 		//Create main items.
 		//TODO this should be not in the main MTS class when we abstract it.  Need our own loader.
-		WRENCH = BuilderItem.createItem(new ItemWrench());
+		BuilderItem.createItem(new ItemWrench());
 		BuilderItem.createItem(new ItemKey());
 		BuilderItem.createItem(new ItemJumperCable());
 		BuilderItem.createItem(new ItemJerrycan());

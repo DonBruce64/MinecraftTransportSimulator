@@ -32,7 +32,7 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
-				WrapperItemStack stack = player.getHeldWrapperStack();
+				WrapperItemStack stack = player.getHeldStack();
 				WrapperNBT data = stack.getData();
 				
 				//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.

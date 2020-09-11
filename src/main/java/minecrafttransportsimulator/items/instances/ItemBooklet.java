@@ -1,14 +1,11 @@
-package minecrafttransportsimulator.items.packs;
+package minecrafttransportsimulator.items.instances;
 
 import mcinterface.BuilderGUI;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONBooklet;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.world.World;
 
 public class ItemBooklet extends AItemPack<JSONBooklet>{
 	/*Current page of this booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
@@ -19,11 +16,11 @@ public class ItemBooklet extends AItemPack<JSONBooklet>{
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
-		if(world.isRemote){
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+		if(world.isClient()){
 			BuilderGUI.openGUI(new GUIBooklet(this));
 		}
-        return new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));
+        return true;
     }
 	
 	@Override

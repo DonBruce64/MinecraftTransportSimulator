@@ -9,6 +9,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -176,7 +177,9 @@ public class WrapperEntity{
 	 *  Returns the entity's NBT data.
 	 */
 	public WrapperNBT getNBT(){
-		return new WrapperNBT(entity);
+		NBTTagCompound tag = new NBTTagCompound();
+		entity.writeToNBT(tag);
+		return new WrapperNBT(tag);
 	}
 	
 	/**

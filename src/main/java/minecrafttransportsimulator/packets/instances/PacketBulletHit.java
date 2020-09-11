@@ -12,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -35,13 +34,13 @@ public class PacketBulletHit extends APacketBase{
 	private final String bulletSystemName;
 	private final int hitEntityID;
 
-	public PacketBulletHit(BoundingBox box, double velocity, ItemPartBullet bullet, WrapperEntity hitEntity){
+	public PacketBulletHit(BoundingBox box, double velocity, JSONPart definition, WrapperEntity hitEntity){
 		super(null);
 		this.localCenter = box.localCenter;
 		this.globalCenter = box.globalCenter;
 		this.bulletVelocity = velocity;
-		this.bulletPackID = bullet.definition.packID;
-		this.bulletSystemName = bullet.definition.systemName;
+		this.bulletPackID = definition.packID;
+		this.bulletSystemName = definition.systemName;
 		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
 	}
 	

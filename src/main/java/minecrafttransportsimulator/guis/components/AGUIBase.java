@@ -5,7 +5,7 @@ import java.util.List;
 
 import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Base GUI class.  This type is used in the constructor of {@link BuilderGUI} to allow us to use

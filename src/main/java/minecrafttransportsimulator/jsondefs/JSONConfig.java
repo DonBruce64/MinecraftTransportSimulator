@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Custom Config class.  This contains all fields used in config operation,
@@ -78,21 +78,15 @@ public class JSONConfig{
 		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
-				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
-					if(item instanceof ItemPartEngine){
-						ItemPartEngine itemEngine = (ItemPartEngine) item;
-						if(itemEngine.definition.general.type.startsWith("engine")){
-							//For old packs, if we don't have a fuelType set it to diesel.
-							//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
-							if(itemEngine.definition.engine.fuelType == null){
-								itemEngine.definition.engine.fuelType = "diesel";
-							}
-							
+				for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : MTSRegistry.packItemMap.get(packID).values()){
+					if(item instanceof ItemPart){
+						ItemPart part = (ItemPart) item;
+						if(part.definition.general.type.startsWith("engine")){
 							//If we don't have the fuel in the fuel map, add it.
 							//Default fuel list depends on the fuel name.
-							if(!fuels.containsKey(itemEngine.definition.engine.fuelType)){
+							if(!fuels.containsKey(part.definition.engine.fuelType)){
 								Map<String, Double> fluids = new HashMap<String, Double>();
-								switch(itemEngine.definition.engine.fuelType){
+								switch(part.definition.engine.fuelType){
 									case "gasoline" :{
 										fluids.put("lava", 1.0);
 										fluids.put("gasoline", 1.0);
@@ -125,7 +119,7 @@ public class JSONConfig{
 									}
 									default: fluids.put("lava", 1.0); break;
 								}
-								fuels.put(itemEngine.definition.engine.fuelType, fluids);
+								fuels.put(part.definition.engine.fuelType, fluids);
 							}
 						}
 					}

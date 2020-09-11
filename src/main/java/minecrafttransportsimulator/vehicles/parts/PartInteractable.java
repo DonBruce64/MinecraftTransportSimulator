@@ -42,7 +42,7 @@ public final class PartInteractable extends APart{
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
-				player.getHeldWrapperStack().interactWithTank(tank, player);
+				player.getHeldStack().interactWithTank(tank, player);
 			}	
 		}else{
 			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
@@ -94,7 +94,7 @@ public final class PartInteractable extends APart{
 		int count = 0;
 		if(inventory != null){
 			for(int i=0; i<inventory.getSize(); ++i){
-				if(inventory.getStackInSlot(i) != null){
+				if(inventory.getItemInSlot(i) != null){
 					++count;
 				}
 			}
@@ -106,7 +106,7 @@ public final class PartInteractable extends APart{
 		if(inventory != null){
 			int count = 0;
 			for(int i=0; i<inventory.getSize(); ++i){
-				if(inventory.getStackInSlot(i) != null){
+				if(inventory.getItemInSlot(i) != null){
 					++count;
 				}
 			}

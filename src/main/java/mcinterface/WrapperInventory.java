@@ -2,8 +2,10 @@ package mcinterface;
 
 import java.util.Map;
 
-import minecrafttransportsimulator.items.packs.parts.ItemPartBullet;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 /**Wrapper for inventories.  This class has multiple constructors to allow for access
@@ -43,9 +45,16 @@ public class WrapperInventory{
 	/**
 	 *  Returns the stack in the specified slot.
 	 */
-	public ItemStack getStackInSlot(int slot){
-		//TODO change this when we get wrapper itemstacks.
-		return inventory.getStackInSlot(slot);
+	public WrapperItemStack getStackInSlot(int slot){
+		return new WrapperItemStack(inventory.getStackInSlot(slot));
+	}
+	
+	/**
+	 *  Returns the item in the specified slot.  Only valid for {@link AItemBase} items.
+	 */
+	public AItemBase getItemInSlot(int slot){
+		Item item = inventory.getStackInSlot(slot).getItem();
+		return item instanceof BuilderItem ? ((BuilderItem) item).item : null;
 	}
 	
 	/**
@@ -54,7 +63,8 @@ public class WrapperInventory{
 	 *  If the slot is specified, then the method will check to make sure the item in
 	 *  the stack is compatible with the existing stack, and the max size won't be exceeded.
 	 */
-	public boolean addStack(ItemStack stack, int slot){
+	public boolean addStack(WrapperItemStack wrapperStack, int slot){
+		ItemStack stack = wrapperStack.stack;
 		if(stack.isItemDamaged()){
             //Damaged items can't be stacked, so we need a free slot for them.
 			//If we didn't specify the slot, try to find the next empty one now.
@@ -184,9 +194,12 @@ public class WrapperInventory{
 	public double getExplosiveness(){
 		double explosivePower = 0;
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
-			ItemStack stack = getStackInSlot(i);
-			if(stack.getItem() instanceof ItemPartBullet){
-				explosivePower += stack.getCount()*((ItemPartBullet) stack.getItem()).definition.bullet.diameter/10D;
+			WrapperItemStack stack = getStackInSlot(i);
+			if(stack.getItem() instanceof ItemPart){
+				ItemPart part = ((ItemPart) stack.getItem());
+				if(part.definition.bullet != null){
+					explosivePower += stack.getSize()*part.definition.bullet.diameter/10D;
+				}
 			}
 		}
 		return explosivePower;

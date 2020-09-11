@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.items.packs;
+package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockPole;

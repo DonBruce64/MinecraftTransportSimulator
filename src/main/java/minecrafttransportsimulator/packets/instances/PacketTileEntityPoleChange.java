@@ -13,10 +13,10 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.items.packs.ItemPoleComponent;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the client.
  * Packet does server-side checks to see if the player could change the pole, and if so, it applies those
@@ -87,12 +87,13 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
-					ItemStack poleStack = new ItemStack(MTSRegistry.packItemMap.get(component.definition.packID).get(component.definition.systemName));
+					AItemBase item = MTSRegistry.packItemMap.get(component.definition.packID).get(component.definition.systemName);
+					WrapperNBT data = null;
 					if(component.getTextLines() != null){
-						WrapperNBT data = new WrapperNBT(poleStack);
+						data = new WrapperNBT();
 						data.setStrings("textLines", component.getTextLines());
 					}
-					if(world.isClient() || player.isCreative() || player.addItem(poleStack)){
+					if(world.isClient() || player.isCreative() || player.addItem(item, data)){
 						pole.components.remove(axis);
 						pole.updateLightState();
 						return true;
@@ -123,7 +124,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					newComponent.setTextLines(textLines);
 				}
 				pole.updateLightState();
-				player.removeItem(player.getHeldStack(), 1);
+				player.removeStack(player.getHeldStack(), 1);
 				return true;
 			} 
 		}

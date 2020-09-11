@@ -15,10 +15,10 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
  * @author don_bruce
  */
 public class WrapperItemStack{
-	//TODO make this private when we get final abstraction done.
-	public final ItemStack stack;
+	final ItemStack stack;
 	
-	WrapperItemStack(ItemStack stack){
+	//TODO make this private when we don't have itemstacks as crafting materials.
+	public WrapperItemStack(ItemStack stack){
 		this.stack = stack;
 	}
 	

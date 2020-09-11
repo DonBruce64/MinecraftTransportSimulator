@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
@@ -15,9 +16,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPole;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemWrench;
-import minecrafttransportsimulator.items.packs.ItemPole;
-import minecrafttransportsimulator.items.packs.ItemPoleComponent;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
@@ -45,9 +47,10 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	@Override
 	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
 		//If there's no NBT data, this is a new pole and needs to have its initial component added.
-		if(!player.getHeldStack().hasTagCompound()){
+		WrapperNBT data = player.getHeldStack().getData();
+		if(data.getString("packID").isEmpty()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldStack().getItem()).definition));
+			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldItem()).definition));
 		}
 	}
 	
@@ -58,9 +61,11 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
-			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
+			WrapperItemStack heldStack = player.getHeldStack();
+			AItemBase heldItem = heldStack.getItem();
+			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textObjects != null;
-			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
+			boolean isPlayerHoldingComponent = heldItem instanceof ItemPoleComponent && !(heldItem instanceof ItemPole);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
 					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
@@ -68,9 +73,9 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(isPlayerHoldingComponent){
 					List<String> textLines = null;
-					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
-					if(player.getHeldStack().hasTagCompound()){							
-						textLines = new WrapperNBT(player.getHeldStack()).getStrings("textLines", component.definition.general.textObjects.size());
+					ItemPoleComponent component = (ItemPoleComponent) heldItem;
+					if(component.definition.general.textObjects != null){
+						textLines = heldStack.getData().getStrings("textLines", component.definition.general.textObjects.size());
 					}
 					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
