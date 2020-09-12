@@ -210,6 +210,10 @@ public class PartGroundDevice extends APart implements FXPart{
 		
 	}
 	
+	public void repair(){
+		isFlat = false;
+	}
+	
 	public void setFlat(){
 		isFlat = true;
 		if(vehicle.world.isRemote){

@@ -24,6 +24,10 @@ public abstract class APacketPart implements IMessage{
 	
 	@Override
 	public void fromBytes(ByteBuf buf){
+		readBytes(buf);
+	}
+	
+	public void readBytes(ByteBuf buf){
 		this.id = buf.readInt();
 		this.x = buf.readDouble();
 		this.y = buf.readDouble();
@@ -32,6 +36,10 @@ public abstract class APacketPart implements IMessage{
 
 	@Override
 	public void toBytes(ByteBuf buf){
+		writeBytes(buf);
+	}
+	
+	public void writeBytes(ByteBuf buf){
 		buf.writeInt(this.id);
 		buf.writeDouble(this.x);
 		buf.writeDouble(this.y);
