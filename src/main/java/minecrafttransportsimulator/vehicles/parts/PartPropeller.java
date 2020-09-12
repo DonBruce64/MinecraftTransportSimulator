@@ -8,7 +8,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartPropeller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -100,8 +99,12 @@ public class PartPropeller extends APart{
 			
 			//If we are too damaged, remove ourselves.
 			if(damage > definition.propeller.startingHealth && !vehicle.world.isClient()){
+				if(ConfigSystem.configObject.damage.explosions.value){
+					vehicle.world.spawnExplosion(vehicle, worldPos, 1F, true);
+				}else{
+					vehicle.world.spawnExplosion(vehicle, worldPos, 0F, false);
+				}
 				isValid = false;
-				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartPropeller(this), vehicle);
 			}
 		}
 	}

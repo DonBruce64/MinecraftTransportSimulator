@@ -75,12 +75,12 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
 					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){
-						if(entity instanceof EntityVehicleF_Physics){
+						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){
 								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-								Point3d hitchPos = new Point3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]).rotateCoarse(vehicle.rotation).add(vehicle.position);
-								Point3d hookupPos = new Point3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]).rotateCoarse(testVehicle.rotation).add(testVehicle.position);
+								Point3d hitchPos = vehicle.definition.motorized.hitchPos.copy().rotateCoarse(vehicle.rotation).add(vehicle.position);
+								Point3d hookupPos = testVehicle.definition.motorized.hookupPos.copy().rotateCoarse(testVehicle.rotation).add(testVehicle.position);
 								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){

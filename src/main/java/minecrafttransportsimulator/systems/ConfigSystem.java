@@ -44,7 +44,6 @@ public final class ConfigSystem{
 				//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
 				for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
 					if(!configObject.fuel.fuels.containsKey(fuelValues.getKey())){
-						System.out.println(fuelValues.getKey());
 						configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
 					}
 				}

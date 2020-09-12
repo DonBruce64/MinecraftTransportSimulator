@@ -275,7 +275,7 @@ info.item.bullet.type.incendiary=Incendiary Bullet
 info.item.bullet.type.armor_piercing=Armor Piercing Bullet
 info.item.bullet.diameter=Diameter (mm): 
 info.item.bullet.quantity=Quantity: 
-info.item.interactable.capacity=Capacity:
+info.item.interactable.capacity=Capacity: 
 
 info.item.wrench.use=Use on vehicle to change instruments.
 info.item.wrench.sneakuse=Sneak-use on vehicle to change text.

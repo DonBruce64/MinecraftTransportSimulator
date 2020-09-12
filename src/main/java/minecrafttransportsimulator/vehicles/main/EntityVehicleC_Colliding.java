@@ -48,14 +48,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public double airDensity;
 	public double currentMass;
 	public double velocity;
-	public double groundVelocity;
 	public double prevVelocity;
-	public Point3d headingVector = new Point3d(0, 0, 0);
-	public Point3d verticalVector = new Point3d(0, 0, 0);
-	public Point3d sideVector = new Point3d(0, 0, 0);
-	public Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
-	public Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
-	public Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
+	public final Point3d headingVector = new Point3d(0, 0, 0);
+	public final Point3d verticalVector = new Point3d(0, 0, 0);
+	public final Point3d sideVector = new Point3d(0, 0, 0);
+	public final Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
 	public final Set<String> doorsOpen = new HashSet<String>();
 	
 	//Constants
@@ -84,7 +81,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy(), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
 			vehicleCollisionBoxes.add(newBox);
 			collisionBoxes.add(newBox);
-			if(!newBox.isInterior){
+			if(!newBox.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
 				blockCollisionBoxes.add(newBox);
 			}
 		}
@@ -110,13 +107,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		prevVelocity = velocity;
 		headingVector.set(0D, 0D, 1D).rotateFine(angles);
 		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
-		sideVector = verticalVector.crossProduct(headingVector);
+		sideVector.setTo(verticalVector.crossProduct(headingVector));
 		normalizedVelocityVector.setTo(motion).normalize();
 		velocity = motion.length();
-		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
-		groundVelocity = normalizedGroundVelocityVector.length();
-		normalizedGroundVelocityVector.normalize();
-		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
 		
 		//Update mass.
 		if(definition != null){
@@ -323,13 +316,14 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			for(WrapperBlock block : box.collidingBlocks){
 				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
-					if(ConfigSystem.configObject.damage.blockBreakage.value){
+					if(ConfigSystem.configObject.general.blockBreakage.value){
 						hardnessHitThisTick += block.getHardness();
 						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							world.destroyBlock(block.getPosition());
 						}
 					}else{
+						hardnessHitThisTick = 0;
 						motion.set(0D, 0D, 0D);
 					}
 				}

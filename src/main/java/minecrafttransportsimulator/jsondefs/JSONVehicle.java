@@ -63,9 +63,9 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float ballastVolume;
     	public String hornSound;
     	public String sirenSound;
-        public float[] hitchPos;
+        public Point3d hitchPos;
         public String[] hitchTypes;
-        public float[] hookupPos;
+        public Point3d hookupPos;
         public String hookupType;
         public List<PackInstrument> instruments;
     }
@@ -132,6 +132,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public Point3d dismountPos;
         
         //Engine-specific part variables.
+        //FIXME make this a set of objects.
         public float[] exhaustPos;
         public float[] exhaustVelocity;
         public float intakeOffset;

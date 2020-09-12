@@ -29,6 +29,8 @@ public class JSONConfig{
 		public ConfigBoolean opSignEditingOnly = new ConfigBoolean(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
 		public ConfigBoolean opPickupVehiclesOnly = new ConfigBoolean(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
 		public ConfigBoolean creativePickupVehiclesOnly = new ConfigBoolean(false, "If true, vehicles can only be picked up in creative mode.");
+		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
+		public ConfigBoolean noclipVehicles = new ConfigBoolean(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
 		public ConfigBoolean creativeDamage = new ConfigBoolean(false, "If true, damage from vehicles and guns will be applied to creative players.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
@@ -56,7 +58,6 @@ public class JSONConfig{
 	
 	public static class ConfigDamage{
 		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
-		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
 		public ConfigBoolean wheelDamageIgnoreVelocity = new ConfigBoolean(false, "Whether or not velocity is ignored when calculating wheel damage.");
 		public ConfigDouble propellerDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a propeller.");

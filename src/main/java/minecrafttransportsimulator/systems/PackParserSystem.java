@@ -292,14 +292,14 @@ public final class PackParserSystem{
     					partDef.general.type = "interactable_crate";
     					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "crate";
-    					partDef.interactable.inventoryUnits = 9;
+    					partDef.interactable.inventoryUnits = 1;
     					partDef.interactable.feedsVehicles = true;
     					break;
     				}case("barrel"):{
     					partDef.general.type = "interactable_barrel";
     					partDef.interactable = partDef.new JSONPartInteractable();
     					partDef.interactable.interactionType = "barrel";
-    					partDef.interactable.inventoryUnits = 5;
+    					partDef.interactable.inventoryUnits = 1;
     					break;
     				}case("crafting_table"):{
     					partDef.general.type = "interactable_crafting_table";

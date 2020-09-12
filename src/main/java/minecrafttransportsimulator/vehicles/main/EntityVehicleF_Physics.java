@@ -121,7 +121,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
 		if(towedByVehicle != null && !updateThisCycle){
 			//TODO make this un-commented when trailers have proper physics.
-			//return;
+			return;
 		}else{
 			updateThisCycle = false;
 		}
@@ -210,8 +210,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getForcesAndMotions(){
-		//angles.set(-10D, 0D, 0D);
-		//motion.set(0D, 0D, 2D);
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
@@ -373,47 +371,23 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			rotation.z = totalTorque.z/momentRoll;
 		}else{
 			///START OF NEW CODE.
-			/*
-			//Get the vector from this trailer's center position to the hitch of the towing vehicle.
-			Point3d tractorHitchOffset = new Point3d(towedByVehicle.definition.motorized.hitchPos[0], towedByVehicle.definition.motorized.hitchPos[1], towedByVehicle.definition.motorized.hitchPos[2]);
-			tractorHitchOffset = RotationSystem.getRotatedPoint(tractorHitchOffset, rotationPitch, rotationYaw, rotationRoll).add(towedByVehicle.positionVector).subtract(positionVector);
-			
-			//Get the vector for the current hookup position on this vehicle.
-			Point3d trailerHookupOffset = new Point3d(definition.motorized.hookupPos[0], definition.motorized.hookupPos[1], definition.motorized.hookupPos[2]);
-			trailerHookupOffset = RotationSystem.getRotatedPoint(trailerHookupOffset, rotationPitch, rotationYaw, rotationRoll);
-			
-			//Move the trailer to have the hitch align with the hookup.
-			motionX = tractorHitchOffset.x - trailerHookupOffset.x;
-			motionY = tractorHitchOffset.y - trailerHookupOffset.y;
-			motionZ = tractorHitchOffset.z - trailerHookupOffset.z;
-			
-			//Normalize the hitch and hookpup vectors for yaw changes.
-			//Get the angle between them to get the dot product and find out how much yaw we need to add/subtract.
+			//Get the offset of the hitch and the hookup to calculate the yaw we need to add.
+			Point3d tractorHitchOffset = towedByVehicle.definition.motorized.hitchPos.copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
+			double tractorHitchDistance = tractorHitchOffset.length();
 			tractorHitchOffset.normalize();
-			trailerHookupOffset.normalize();
-			motionYaw = velocity > 0 ? (float) (Math.signum(tractorHitchOffset.crossProduct(trailerHookupOffset).y)*Math.toDegrees(Math.acos(Math.min(1.0D, tractorHitchOffset.dotProduct(trailerHookupOffset))))) : 0;
+			Point3d trailerHookupOffset = definition.motorized.hookupPos.copy().rotateFine(angles).normalize();
 			
-			//If our rear wheels aren't on the ground, pitch upwards to make them be so.
-			//Pitch speed is determined by elevation difference of our rear wheels and wheels of what is towing us.
-			motionPitch = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.currentBox.minY + towedByVehicle.rearRightGroundDeviceBox.currentBox.minY)/2) - ((rearLeftGroundDeviceBox.currentBox.minY + rearRightGroundDeviceBox.currentBox.minY)/2)) * 2),0.1),1.0)) : 0;
+			//Angle the trailer so the hitch and hookup line up.
+			rotation.y += -Math.toDegrees(Math.asin(tractorHitchOffset.dotProduct(trailerHookupOffset)));
 			
-			
-			//We apply this angle as the motionYaw, which get applied quicker or slower depending on the trailer size.
-			//If we are in the air, pitch up to get our devices on the ground. 
-			//Finally, we Match our tower's roll, as that's just a value we generally want to keep.  Hills of course can change this.
-			if(Float.isNaN(motionYaw)){
-				System.out.println("NAN");
-				System.out.println(tractorHitchOffset.dotProduct(trailerHookupOffset));
-				System.out.println(Math.toDegrees(Math.acos(tractorHitchOffset.dotProduct(trailerHookupOffset))));
-				System.out.println(Math.signum(tractorHitchOffset.crossProduct(trailerHookupOffset).y));
-			}
-			
-			//Try to match our parent's roll.
-			motionRoll = (towedByVehicle.rotationRoll - rotationRoll)/10;			
-			*/
+			//Set movement to make us move to the hitch.  We need to re-calculate the hitch position here as we added yaw and changed it.
+			//We also need to un-normalize the hitch offset to get the actual distance.
+			tractorHitchOffset.multiply(tractorHitchDistance);
+			trailerHookupOffset.setTo(definition.motorized.hookupPos).rotateFine(angles);
+			motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset));
 			
 			///START OF OLD CODE.
-			
+			/*
 			//We use a second hitchPos here to allow us to calculate the yaw angle we need to apply.
 			//If we don't, the vehicle has no clue of the orientation of the towed vehicle hitch and gets all jittery.
 			//This is because when the hitch and the hookup are at the same point, the dot product returns floating-point errors.
@@ -439,7 +413,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Now set the motions.
 			motion.x = hitchPos.x - hookupPos.x;
 			motion.y = hitchPos.y - hookupPos.y;
-			motion.z = hitchPos.z - hookupPos.z;
+			motion.z = hitchPos.z - hookupPos.z;*/
 		}
 	}
 	

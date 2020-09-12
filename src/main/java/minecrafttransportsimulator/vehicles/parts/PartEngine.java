@@ -610,7 +610,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
 					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
-			}else{
+			}else if(internalFuel == 0){
 				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
 				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}

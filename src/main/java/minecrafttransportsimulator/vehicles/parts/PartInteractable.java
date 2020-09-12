@@ -23,7 +23,7 @@ public final class PartInteractable extends APart{
 	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		switch(definition.interactable.interactionType){
-			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits); break;
+			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits*9); break;
 			case("barrel"): this.interactable = null; break;
 			case("crafting_table"): this.interactable = null; break;
 			case("furnace"): this.interactable = new WrapperEntityFurnace(vehicle.world, data); break;
@@ -31,7 +31,7 @@ public final class PartInteractable extends APart{
 			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? WrapperInventory.getTileEntityInventory(interactable) : null;
-		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*1000, vehicle.world.isClient()) : null;
+		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;
 	}
 	
 	@Override

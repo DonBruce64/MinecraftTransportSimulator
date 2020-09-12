@@ -59,6 +59,7 @@ public class ItemPart extends AItemPack<JSONPart>{
 			}
 			case("engine") : {
 				if(data.getBoolean("isCreative")){
+					//TODO make this part of the GUI builder for abstraction.
 					tooltipLines.add(TextFormatting.DARK_PURPLE + BuilderGUI.translate("info.item.engine.creative"));
 				}
 				tooltipLines.add(BuilderGUI.translate("info.item.engine.maxrpm") + definition.engine.maxRPM);
@@ -121,10 +122,9 @@ public class ItemPart extends AItemPack<JSONPart>{
 			}
 			case("interactable") : {
 				if(definition.interactable.interactionType.equals("crate")){
-					//FIXME need to figure out how to convert inventory units to single-slots.
 					tooltipLines.add(BuilderGUI.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*9);
 				}else if(definition.interactable.interactionType.equals("barrel")){
-					tooltipLines.add(BuilderGUI.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*1000 + "mb");
+					tooltipLines.add(BuilderGUI.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*10000 + "mb");
 				}
 				break;
 			}
