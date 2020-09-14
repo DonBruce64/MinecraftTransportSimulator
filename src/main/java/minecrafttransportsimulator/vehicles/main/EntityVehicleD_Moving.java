@@ -37,6 +37,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Internal states.
 	public boolean goingInReverse;
 	public double groundVelocity;
+	public EntityVehicleF_Physics towedVehicle;
+	public EntityVehicleF_Physics towedByVehicle;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -335,13 +337,16 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
 		//If we hit something, however, we need to inhibit the movement so we don't do that.
 		//This prevents vehicles from phasing through walls even though they are driving on the ground.
+		//If we are being towed, don't check for collisions, as this can lead to
 		boolean collisionBoxCollided = false;
-		tempBoxAngles.setTo(rotation).add(angles);
-		for(BoundingBox box : blockCollisionBoxes){
-			tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-			if(box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-				collisionBoxCollided = true;
-				break;
+		if(towedByVehicle == null){
+			tempBoxAngles.setTo(rotation).add(angles);
+			for(BoundingBox box : blockCollisionBoxes){
+				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+				if(box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+					collisionBoxCollided = true;
+					break;
+				}
 			}
 		}
 		

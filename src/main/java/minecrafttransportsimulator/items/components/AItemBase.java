@@ -46,6 +46,12 @@ public abstract class AItemBase{
 	public abstract void addTooltipLines(List<String> tooltipLines, WrapperNBT data);
 	
 	/**
+	 *  Gets all item data values for the given item, and adds them to the passed-in list.
+	 *  By default, this method does nothing, which means no additional blocks are present.
+	 */
+	public void getDataBlocks(List<WrapperNBT> list){}
+	
+	/**
 	 *  Called when the player clicks a block with this item.  The position of the block
 	 *  clicked and what axis it was hit at is passed-in for reference.  If this item did a thing
 	 *  due to this clicking, return true, as this prevents calling the block's clicked method. 

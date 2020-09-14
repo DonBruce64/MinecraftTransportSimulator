@@ -172,6 +172,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			
 			//If the part doesn't have NBT, it must be new and we need to add default parts.
 			//Only do this if we actually have subParts for this part.
+    		//FIXME partData will never be null, so this mucks up default parts.
 			if(partData == null && newPart.definition.subParts != null){
 				addDefaultParts(newPart.definition.subParts, this, newPart.parentPart);
 			}
@@ -202,15 +203,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		parts.add(part);
 		if(!ignoreCollision){
 			//Check for collision, and boost if needed.
-			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, 0D, 0D))){
+			//Need to add negative y to get boost collision depth.
+			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, -0.00001D, 0D))){
 				//Adjust roll first, as otherwise we could end up with a sunk vehicle.
 				angles.z = 0;
-				position.y += part.getHeight();
-			}
-			
-			//Sometimes we need to do this for parts that are deeper into the ground.
-			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, Math.max(0, -part.placementOffset.y) + part.getHeight(), 0D))){
-				position.y += part.getHeight();
+				position.y += part.boundingBox.currentCollisionDepth.y;
 			}
 		}
 		
@@ -237,10 +234,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			if(locationRiderMap.containsKey(part.placementOffset)){
 				removeRider(locationRiderMap.get(part.placementOffset), null);
 			}
-			//If the part is still valid, call the part's removal code for it to process.
-			if(part.isValid){
-				part.remove();
-			}
+			//Call the part's removal code for it to process.
+			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
@@ -348,7 +343,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		//Also check parts from NBT, in case we're in a loading-loop.
 		for(APart part : partsFromNBT){
-			if(part.definition.subParts.size() > 0){
+			if(part.definition.subParts != null && part.definition.subParts.size() > 0){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
@@ -413,8 +408,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			correctedPack.minValue = subPack.minValue;
 			correctedPack.maxValue = subPack.maxValue;
 			correctedPack.dismountPos = subPack.dismountPos;
-			correctedPack.exhaustPos = subPack.exhaustPos;
-	        correctedPack.exhaustVelocity = subPack.exhaustVelocity;
+	        correctedPack.exhaustObjects = subPack.exhaustObjects;
 	        correctedPack.intakeOffset = subPack.intakeOffset;
 	        correctedPack.additionalParts = subPack.additionalParts;
 	        correctedPack.treadYPoints = subPack.treadYPoints;

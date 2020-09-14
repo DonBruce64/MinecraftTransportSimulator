@@ -26,7 +26,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MTS {
 	public static final String MODID="mts";
 	public static final String MODNAME="Minecraft Transport Simulator";
-	public static final String MODVER="19.0.0-BETA-5";
+	public static final String MODVER="19.0.0-BETA-6";
 	
 	@Instance(value = MTS.MODID)
 	public static MTS instance;

@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -861,19 +862,13 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					double desiredLinearVelocity = 0.0254D*(propeller.currentPitch + 20)*20D*propeller.angularVelocity;
 					//Not sure why, but this follows given the fact cruising speed of aircraft is a bit
 					if(desiredLinearVelocity != 0){
-						//Thrust produced by the propeller is the different between the desired linear velocity and the current linear velocity.
+						//Thrust produced by the propeller is the difference between the desired linear velocity and the current linear velocity.
 						//This gets the magnitude of the initial thrust force.
-						//We square this value, but keep the sign, as lifting mechanics square velocity.  
 						double thrust = (desiredLinearVelocity - currentLinearVelocity);
 						//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
 						thrust *= Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2);
 						//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
 						thrust *= vehicle.airDensity/25D;
-						/*double thrust = vehicle.airDensity
-								*Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2)
-								*Math.abs(desiredLinearVelocity)*(desiredLinearVelocity - currentLinearVelocity)
-								*Math.pow(propeller.definition.propeller.diameter/2D/Math.abs(propeller.currentPitch) + propeller.definition.propeller.numberBlades/1000D, 1.5)
-								/400D;*/
 	
 						//Get the angle of attack of the propeller.
 						//Note pitch velocity is in linear in meters per second, 
@@ -1027,7 +1022,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	public void spawnParticles(){
 		//Render exhaust smoke if we have any exhausts and are running.
 		//If we are starting and have flames set, render those instead.
-		if(vehicleDefinition.exhaustPos != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+		if(vehicleDefinition.exhaustObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 			//Render a smoke for every cycle the exhaust makes.
 			//Depending on the number of positions we have, render an exhaust for every one.
 			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1042,32 +1037,32 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				long camTime = currentTime%engineCycleTimeMills;
 				
 				float particleColor = definition.engine.isSteamPowered ? 0.0F : (float) Math.max(1 - temp/COLD_TEMP, 0);
-				boolean singleExhaust = vehicleDefinition.exhaustPos.length == 3;
+				boolean singleExhaust = vehicleDefinition.exhaustObjects.size() == 1;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
+				for(ExhaustObject exhaust : vehicleDefinition.exhaustObjects){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills*3/vehicleDefinition.exhaustPos.length;
-						long camMin = (i/3)*camOffset;
+						long camOffset = engineCycleTimeMills/vehicleDefinition.exhaustObjects.size();
+						long camMin = vehicleDefinition.exhaustObjects.indexOf(exhaust)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
 							continue;
 						}
 					}
 					
-					Point3d exhaustOffset = new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]).rotateFine(vehicle.angles).add(vehicle.position);
-					Point3d velocityOffset = new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]).rotateFine(vehicle.angles);
+					Point3d exhaustOffset = exhaust.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
+					Point3d velocityOffset = exhaust.velocity.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.14;
 					if(state.running){
-						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), 1.0F));
+						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), exhaust.scale));
 						//Also play steam chuff sound if we are a steam engine.
 						if(definition.engine.isSteamPowered){
 							InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
@@ -1085,15 +1080,15 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Will be from the engine or the exhaust if we have any.
 		if(backfired){
 			backfired = false;
-			if(vehicleDefinition.exhaustPos != null){
-				for(int i=0; i<vehicleDefinition.exhaustPos.length; i+=3){
-					Point3d exhaustOffset = new Point3d(vehicleDefinition.exhaustPos[i], vehicleDefinition.exhaustPos[i+1], vehicleDefinition.exhaustPos[i+2]).rotateFine(vehicle.angles).add(vehicle.position);
-					Point3d velocityOffset = new Point3d(vehicleDefinition.exhaustVelocity[i], vehicleDefinition.exhaustVelocity[i+1], vehicleDefinition.exhaustVelocity[i+2]).rotateFine(vehicle.angles);
+			if(vehicleDefinition.exhaustObjects != null){
+				for(ExhaustObject exhaust : vehicleDefinition.exhaustObjects){
+					Point3d exhaustOffset = exhaust.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
+					Point3d velocityOffset = exhaust.velocity.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.07 - Math.random()*0.14;
 					for(byte j=0; j<5; ++j){
-						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, exhaust.scale*2.5F));
 					}
 				}
 			}else{

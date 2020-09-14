@@ -56,24 +56,30 @@ public final class RenderVehicle{
 	/**Used to clear out the rendering caches of any vehicles with the passed-in definition.
 	 * Used in dev mode to allow the re-loading of models.**/
 	public static void clearVehicleCaches(JSONVehicle definition){
-		GL11.glDeleteLists(vehicleDisplayLists.remove(definition.genericName), 1);
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(definition.genericName)){
-			modelObject.resetDisplayList();
+		if(vehicleDisplayLists.containsKey(definition.genericName)){
+			GL11.glDeleteLists(vehicleDisplayLists.remove(definition.genericName), 1);
+			for(RenderableModelObject modelObject : vehicleObjectLists.get(definition.genericName)){
+				modelObject.resetDisplayList();
+			}
+			vehicleObjectLists.remove(definition.genericName);
+			treadDeltas.remove(definition.genericName);
+			treadPoints.remove(definition.genericName);
 		}
-		vehicleObjectLists.remove(definition.genericName);
-		treadDeltas.remove(definition.genericName);
-		treadPoints.remove(definition.genericName);
 	}
 	
 	/**Used to clear out the rendering caches of any parts with the passed-in definition.
 	 * Used in dev mode to allow the re-loading of models.**/
 	public static void clearPartCaches(JSONPart definition){
 		String modelName = "objmodels/parts/" + definition.systemName + ".obj";
-		GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
-		for(RenderableModelObject modelObject : partObjectLists.get(modelName)){
-			modelObject.resetDisplayList();
+		if(partDisplayLists.containsKey(modelName)){
+			GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
 		}
-		partObjectLists.remove(definition.systemName);
+		if(partObjectLists.containsKey(modelName)){
+			for(RenderableModelObject modelObject : partObjectLists.get(modelName)){
+				modelObject.resetDisplayList();
+			}
+			partObjectLists.remove(definition.systemName);
+		}
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){

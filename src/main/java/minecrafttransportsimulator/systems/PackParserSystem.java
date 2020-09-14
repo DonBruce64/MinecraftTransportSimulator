@@ -35,6 +35,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -441,6 +442,16 @@ public final class PackParserSystem{
     			if(part.additionalPart != null){
     				part.additionalParts = new ArrayList<VehiclePart>();
     				part.additionalParts.add(part.additionalPart);
+    			}
+    			if(part.exhaustPos != null){
+    				part.exhaustObjects = new ArrayList<ExhaustObject>();
+    				for(int i=0; i<part.exhaustPos.length; i+=3){
+    					ExhaustObject exhaust = part.new ExhaustObject();
+    					exhaust.pos = new Point3d(part.exhaustPos[i], part.exhaustPos[i+1], part.exhaustPos[i+2]);
+    					exhaust.velocity = new Point3d(part.exhaustVelocity[i], part.exhaustVelocity[i+1], part.exhaustVelocity[i+2]);
+    					exhaust.scale = 1.0F;
+    					part.exhaustObjects.add(exhaust);
+    				}
     			}
     			for(byte i=0; i<part.types.size(); ++i){
     				String partName = part.types.get(i);

@@ -57,8 +57,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public double electricUsage;
 	public double electricFlow;
 	public FluidTank fuelTank;
-	public EntityVehicleF_Physics towedVehicle;
-	public EntityVehicleF_Physics towedByVehicle;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
 	/**List containing all active custom variable indexes.    Created as a set to allow for add calls that don't add duplicates.**/
@@ -152,7 +150,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		//Otherwise, do normal update logic for DRLs.
 		if(definition.motorized.isTrailer){
 			//Check to make sure vehicle isn't dead for some reason.
-			if(towedByVehicle != null && towedByVehicle.isValid){
+			if(towedByVehicle != null && !towedByVehicle.isValid){
 				towedByVehicle = null;
 			}else{
 				//If we are being towed update our lights to match the vehicle we are being towed by.

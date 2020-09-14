@@ -377,7 +377,7 @@ public class GUIPanelGround extends AGUIPanel{
 		for(int i=0; i<trailerSelectors.size(); ++i){
 			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
 				trailerSelectors.get(i).visible = true;
-				trailerSelectors.get(i).selectorState = currentVehicle.towedVehicle != null ? 1 : 0;
+				trailerSelectors.get(i).selectorState = currentVehicle.towedVehicle != null ? 0 : 1;
 				currentVehicle = currentVehicle.towedVehicle;
 			}else{
 				trailerSelectors.get(i).visible = false;

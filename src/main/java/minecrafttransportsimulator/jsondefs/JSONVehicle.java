@@ -127,16 +127,6 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float rotationClampMax;
         public boolean rotationAbsolute;
         
-        
-        //Seat-specific part variables.
-        public Point3d dismountPos;
-        
-        //Engine-specific part variables.
-        //FIXME make this a set of objects.
-        public float[] exhaustPos;
-        public float[] exhaustVelocity;
-        public float intakeOffset;
-        
         //Ground-specific variables.
         public float extraCollisionBoxOffset;
         
@@ -144,6 +134,24 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         public float[] treadYPoints;
         public float[] treadZPoints;
         public float[] treadAngles;
+        
+        //Seat-specific part variables.
+        public Point3d dismountPos;
+        
+        //Engine-specific part variables.
+        //FIXME make this a set of objects.
+        @Deprecated
+        public float[] exhaustPos;
+        @Deprecated
+        public float[] exhaustVelocity;
+        public List<ExhaustObject> exhaustObjects;
+        public float intakeOffset;
+        
+        public class ExhaustObject{
+        	public Point3d pos;
+        	public Point3d velocity;
+        	public float scale;
+        }
     }
     
     public class VehicleCollisionBox{

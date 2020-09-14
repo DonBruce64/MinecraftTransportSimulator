@@ -100,6 +100,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private double rudderTorque;//kg*m^2/ticks^2
 	private Point3d thrustTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
+	private Point3d rotorRotation = new Point3d(0D, 0D, 0D);//degrees
 
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -221,6 +222,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Get engine thrust force contributions.
 			thrustForce.set(0D, 0D, 0D);
 			thrustTorque.set(0D, 0D, 0D);
+			rotorRotation.set(0D, 0D, 0D);
 			for(PartEngine engine : engines.values()){
 				Point3d engineForce = engine.getForceOutput();
 				boolean addThrustTorque = false;
@@ -234,8 +236,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 						if(part.definition.propeller.isRotor){
 							double rollDelta = aileronAngle/10D - angles.z;
 							double pitchDelta = -elevatorAngle/10D - angles.x;
-							double yawDelta =  5D*rudderAngle/MAX_RUDDER_ANGLE;
-							thrustTorque.add(pitchDelta, yawDelta, rollDelta).multiply(200D);
+							double yawDelta =  -5D*rudderAngle/MAX_RUDDER_ANGLE;
+							rotorRotation.add(pitchDelta, yawDelta, rollDelta);
 						}
 					}
 				}
@@ -369,22 +371,35 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			rotation.x = (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x + sideVector.y*totalTorque.y)/momentPitch;
 			rotation.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
 			rotation.z = totalTorque.z/momentRoll;
+			rotation.add(rotorRotation);
 		}else{
 			///START OF NEW CODE.
 			//Get the offset of the hitch and the hookup to calculate the yaw we need to add.
-			Point3d tractorHitchOffset = towedByVehicle.definition.motorized.hitchPos.copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
-			double tractorHitchDistance = tractorHitchOffset.length();
-			tractorHitchOffset.normalize();
-			Point3d trailerHookupOffset = definition.motorized.hookupPos.copy().rotateFine(angles).normalize();
+			Point3d tractorHitchOffset = towedByVehicle.definition.motorized.hitchPos.copy().add(0D, 0D, 1D).rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
+			Point3d trailerHookupOffset = definition.motorized.hookupPos.copy().rotateFine(angles);
 			
 			//Angle the trailer so the hitch and hookup line up.
-			rotation.y += -Math.toDegrees(Math.asin(tractorHitchOffset.dotProduct(trailerHookupOffset)));
+			//FIXME fix towing physics.
+			tractorHitchOffset.y = 0;
+			trailerHookupOffset.y = 0;
+			tractorHitchOffset.normalize();
+			trailerHookupOffset.normalize();
+			double rotationDelta = -Math.toDegrees(Math.acos(tractorHitchOffset.dotProduct(trailerHookupOffset)));
+			rotationDelta *= Math.signum(tractorHitchOffset.crossProduct(trailerHookupOffset).y);
+			if(!Double.isNaN(rotationDelta)){
+				rotation.y += rotationDelta;
+				angles.y += rotationDelta;
+				
+				//Now move the trailer to the hitch.
+				tractorHitchOffset.setTo(towedByVehicle.definition.motorized.hitchPos).rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
+				trailerHookupOffset = definition.motorized.hookupPos.copy().rotateFine(angles);
+				motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset));
+				angles.y -= rotationDelta;
+			}
 			
-			//Set movement to make us move to the hitch.  We need to re-calculate the hitch position here as we added yaw and changed it.
-			//We also need to un-normalize the hitch offset to get the actual distance.
-			tractorHitchOffset.multiply(tractorHitchDistance);
-			trailerHookupOffset.setTo(definition.motorized.hookupPos).rotateFine(angles);
-			motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset));
+			//Set rotation to help align the trailer.
+			rotation.x = -0.001F;
+			rotation.z = towedByVehicle.rotation.z;
 			
 			///START OF OLD CODE.
 			/*
@@ -403,7 +418,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//If we are in the air, pitch up to get our devices on the ground. Pitching speed is determined by elevation difference of rear wheels.
-			//FIXME fix towing physics.  Also, WTF are we here?  Nothing is being towed...
+			/
 			//motion.x = groundedGroundDevices.isEmpty() ? -(float)(Math.min(Math.max(Math.abs((((towedByVehicle.rearLeftGroundDeviceBox.contactPoint.y + towedByVehicle.rearRightGroundDeviceBox.contactPoint.y)/2) - ((rearLeftGroundDeviceBox.contactPoint.y + rearRightGroundDeviceBox.contactPoint.y)/2)) * 2),0.1),1.0)) : 0;
 			//Don't apply yaw if we aren't moving. Apply Yaw in proportion to trailer length
 			motion.y = Math.abs(velocity) > 0 ? (float) (towingDeltaYaw/(2*Math.abs(definition.motorized.hookupPos[2]))) : 0;

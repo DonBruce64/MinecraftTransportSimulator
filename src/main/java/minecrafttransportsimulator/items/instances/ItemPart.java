@@ -139,6 +139,16 @@ public class ItemPart extends AItemPack<JSONPart>{
 	}
 	
 	@Override
+	public void getDataBlocks(List<WrapperNBT> dataBlocks){
+		//If this is an engine, add a creative variant.
+		if(partPrefix.equals("engine")){
+			WrapperNBT data = new WrapperNBT();
+			data.setBoolean("isCreative", true);
+			dataBlocks.add(data);
+		}
+	}
+	
+	@Override
 	public String getModelLocation(){
 		return definition.general.modelName != null ? "objmodels/parts/" + definition.general.modelName + ".obj" : "objmodels/parts/" + definition.systemName + ".obj";
 	}

@@ -74,13 +74,17 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 						return true;
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
+					//FIXME re-enable this when we decide to do pain of trailers.
+					player.sendPacket(new PacketPlayerChatMessage("This functionality has been disabled for this release.  Please check back in V19.1.0!"));
+					return false;
+					/*
 					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){
 						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){
 								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-								Point3d hitchPos = vehicle.definition.motorized.hitchPos.copy().rotateCoarse(vehicle.rotation).add(vehicle.position);
-								Point3d hookupPos = testVehicle.definition.motorized.hookupPos.copy().rotateCoarse(testVehicle.rotation).add(testVehicle.position);
+								Point3d hitchPos = vehicle.definition.motorized.hitchPos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
+								Point3d hookupPos = testVehicle.definition.motorized.hookupPos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
 								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){
@@ -99,8 +103,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 								}
 							}
 						}
-					}
-					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
+					}*/
+					//player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
 				}else{
 					if(!world.isClient()){
 						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));

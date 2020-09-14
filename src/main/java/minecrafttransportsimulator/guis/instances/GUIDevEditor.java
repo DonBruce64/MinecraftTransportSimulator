@@ -198,6 +198,7 @@ public class GUIDevEditor extends AGUIBase{
 												continue;
 											}
 										}catch(Exception e){
+											e.printStackTrace();
 											debug.setText(debug.getText() + "\nERROR: could not parse file.  Error is: " + e.getMessage());
 										}
 									}

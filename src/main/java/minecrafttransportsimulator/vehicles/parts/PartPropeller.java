@@ -26,6 +26,13 @@ public class PartPropeller extends APart{
 		this.damage = data.getDouble("damage");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
+		if(definition.propeller.isRotor){
+			//Rotors need different collision box bounds as they are pointed upwards.
+			boundingBox.widthRadius = getWidth()/2D;
+			boundingBox.heightRadius = 0.5D;
+			boundingBox.depthRadius = getWidth()/2D;
+			
+		}
 	}
 	
 	@Override
@@ -45,6 +52,11 @@ public class PartPropeller extends APart{
 	@Override
 	public void update(){
 		super.update();
+		//Maybe we aren't connected to an engine?  Not sure how this could happen, but it could.
+		if(connectedEngine == null){
+			isValid = false;
+			return;
+		}
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		if(definition.propeller.isDynamicPitch){
 			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
@@ -93,7 +105,7 @@ public class PartPropeller extends APart{
 				
 				//If the propeller is over-speeding, damage it enough to break it.
 				if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
-					damage += 9999;
+					damage += definition.propeller.startingHealth;
 				}
 			}
 			
@@ -118,7 +130,7 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public float getWidth(){
-		return definition.propeller.diameter*0.0254F/2F;
+		return definition.propeller.diameter*0.0254F;
 	}
 
 	@Override

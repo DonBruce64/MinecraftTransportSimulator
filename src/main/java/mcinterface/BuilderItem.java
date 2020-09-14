@@ -1,5 +1,6 @@
 package mcinterface;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,6 +22,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
@@ -72,6 +75,24 @@ public class BuilderItem extends Item{
 	@Override
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		item.addTooltipLines(tooltipLines, stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound()) : new WrapperNBT());
+	}
+	
+	/**
+	 *  Adds sub-items to the creative tab.  We override this to make custom items in the creative tab.
+	 *  This is currently only vehicle engines.
+	 */
+	@Override
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items){
+		super.getSubItems(tab, items);
+		List<WrapperNBT> dataBlocks = new ArrayList<WrapperNBT>();
+		item.getDataBlocks(dataBlocks);
+		for(WrapperNBT data : dataBlocks){
+			if(this.isInCreativeTab(tab)){
+				ItemStack stack = new ItemStack(this);
+				stack.setTagCompound(data.tag);
+				items.add(stack);
+			}
+		}
 	}
 	
 	/**
