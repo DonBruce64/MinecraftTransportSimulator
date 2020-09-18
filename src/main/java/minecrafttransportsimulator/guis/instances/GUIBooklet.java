@@ -4,15 +4,16 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextPosition;
+import mcinterface.InterfaceInput;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.packs.ItemBooklet;
+import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
-import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletText;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperInput;
+import minecrafttransportsimulator.jsondefs.JSONText;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -53,8 +54,8 @@ public class GUIBooklet extends AGUIBase{
 		
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
-		for(BookletText text : booklet.definition.general.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
+		for(JSONText text : booklet.definition.general.titleText){
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -96,9 +97,9 @@ public class GUIBooklet extends AGUIBase{
 		//Regular page labels.
 		for(BookletPage page : booklet.definition.general.pages){
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
-			for(BookletText text : page.pageText){
+			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + text.offsetX, guiTop + text.offsetY, Color.decode(text.color), text.text, text.scale, text.centered, false, text.wrapWidth);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
@@ -123,7 +124,7 @@ public class GUIBooklet extends AGUIBase{
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;
 		
 		//Check the mouse to see if it updated and we need to change pages.
-		int wheelMovement = WrapperInput.getTrackedMouseWheel();
+		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement > 0 && rightButton.visible){
 			++booklet.pageNumber;
 		}else if(wheelMovement < 0 && leftButton.visible){
@@ -196,7 +197,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		WrapperGUI.drawText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText, false, 0);
+	    		BuilderGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

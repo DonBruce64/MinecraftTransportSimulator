@@ -1,5 +1,10 @@
 #Translated by don_bruce
 
+death.attack.bullet.null.null=%1$s was shot by a spy
+death.attack.bullet.null.player=%1$s got distracted while fighting %2$s and got shot by a spy
+death.attack.bullet.player.null=%2$s was shot by %1$s
+death.attack.bullet.player.player=%1$s got distracted while fighting %2$s and got shot by %3$s
+
 death.attack.propellor.null.null=%1$s was shredded by a propeller
 death.attack.propellor.null.player=%1$s was shredded by a propeller while fighting %2$s
 death.attack.propellor.player.null=%1$s was shredded by %2$s's propeller
@@ -20,15 +25,10 @@ death.attack.wheel.null.player=%1$s was was run over while fighting %2$s
 death.attack.wheel.player.null=%1$s was run over by %2$s 
 death.attack.wheel.player.player=%1$s was run over by %2$s while fighting %3$s
 
-death.attack.planecrash.null.null=%1$s died in a plane crash
-death.attack.planecrash.null.player=%1$s got distracted while fighting %2$s and died in a plane crash
-death.attack.planecrash.player.null=%2$s crashed their plane and killed %1$s
-death.attack.planecrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash a plane into them
-
-death.attack.carcrash.null.null=%1$s died in a car crash
-death.attack.carcrash.null.player=%1$s got distracted while fighting %2$s and died in a car crash
-death.attack.carcrash.player.null=%2$s crashed their car and killed %1$s
-death.attack.carcrash.player.player=%1$s got distracted while fighting %2$s and let %3$s crash a car into them
+death.attack.crash.null.null=%1$s died in a crash
+death.attack.crash.null.player=%1$s got distracted while fighting %2$s and died in a crash
+death.attack.crash.player.null=%2$s crashed their vehicle and killed %1$s
+death.attack.crash.player.player=%1$s got distracted while fighting %2$s and let %3$s crashed their vehicle
  
 interact.key.info.lock=Vehicle locked!
 interact.key.info.unlock=Vehicle unlocked!
@@ -63,10 +63,6 @@ interact.jumpercable.powerequal=The two engines now have the same battery level.
 interact.jumpercable.alreadylinked=This engine is already linked to another engine and cannot be linked.
 interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
 interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
-
-interact.ticket.linked=NPC linked to ticket.
-interact.ticket.notnpc=This isn't an NPC.  Only NPCs can be assigned to tickets.
-interact.ticket.toofar=The NPC linked to the ticket is too far from the seat.  They must be within 15 blocks.
 
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
@@ -150,7 +146,8 @@ gui.trafficsignalcontroller.primary=Primary axis:
 gui.trafficsignalcontroller.signalmode=Mode: 
 gui.trafficsignalcontroller.modetime=Time Delay
 gui.trafficsignalcontroller.modetrigger=Vehicle Trigger
-gui.trafficsignalcontroller.moderemote=Computer Control
+gui.trafficsignalcontroller.moderedstone=Redstone Trigger
+gui.trafficsignalcontroller.moderemote=Redstone Control
 gui.trafficsignalcontroller.greenmaintime=Time main signal is Green:
 gui.trafficsignalcontroller.greencrosstime=Time cross signal is Green: 
 gui.trafficsignalcontroller.yellowmaintime=Time main signal is Yellow: 
@@ -270,6 +267,7 @@ info.item.gun.length=Length (m):
 info.item.gun.fireDelay=Fire Delay (ticks): 
 info.item.gun.muzzleVelocity=Velocity (blk/s): 
 info.item.gun.capacity=Bullet Capacity: 
+info.item.gun.autoReload=Auto-Reloads
 info.item.gun.yawRange=Yaw Range: 
 info.item.gun.pitchRange=Pitch Range: 
 info.item.bullet.type.normal=Normal Bullet
@@ -278,10 +276,10 @@ info.item.bullet.type.incendiary=Incendiary Bullet
 info.item.bullet.type.armor_piercing=Armor Piercing Bullet
 info.item.bullet.diameter=Diameter (mm): 
 info.item.bullet.quantity=Quantity: 
-info.item.barrel.capacity=Capacity: 
-info.item.crate.capacity=Capacity: 
+info.item.interactable.capacity=Capacity: 
 
 info.item.wrench.use=Use on vehicle to change instruments.
+info.item.wrench.sneakuse=Sneak-use on vehicle to change text.
 info.item.wrench.useblock=Use on pole components to remove them.
 info.item.wrench.attack=Attack a vehicle part to remove.
 info.item.wrench.sneakattack=Sneak-attack a vehicle to remove.
@@ -299,10 +297,9 @@ info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
 info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
-info.item.ticket.line1=Sneak-use on an NPC to assign him the ticket.
-info.item.ticket.line2=Use on a seat to make the assigned NPC sit.
-info.item.ticket.line3=Use on a ridden NPC to dismount them.
-info.item.ticket.line4=Use while commanding a vehicle to make all NPCs mount or dismount.
+info.item.ticket.line1=Right-click on a vehicle to load nearby entities.
+info.item.ticket.line2=Sneak-click on a vehicle to unload all entities.
+info.item.ticket.line3=Note: Will not unload players.
 
 item.wrench.name=Wrench
 item.key.name=Key
@@ -318,7 +315,7 @@ tile.seatbench.name=Table Saw (Seats & Cargo)
 tile.gunbench.name=Rifling Machine (Guns & Ammo)
 tile.custombench.name=Tool Bench (Custom Parts)
 tile.instrumentbench.name=Instrument Bench
-tile.componentbench.name=Component Bench (Custom Items)
+tile.itembench.name=Component Bench (Custom Items)
 tile.decorbench.name=Decor Bench (Decorative Blocks)
 
 tile.fuelpump.level=LVL:
@@ -333,8 +330,6 @@ advancements.mts.root.description=Start your journey into powered transport!
 advancements.mts.rtfm.title=RTFM
 advancements.mts.rtfm.description=Craft a Manual
 
-advancements.mts.componentbench.title=You Can Buy Anything Online
-advancements.mts.componentbench.description=Create a Component Bench
 advancements.mts.custombench.title=Custom Parts
 advancements.mts.custombench.description=Create a Tool Bench
 advancements.mts.decorbench.title=I Thought This Was Decocraft...
@@ -345,6 +340,8 @@ advancements.mts.gunbench.title=Pew Pew
 advancements.mts.gunbench.description=Create a Rifling Machine
 advancements.mts.instrumentbench.title=Instrumental
 advancements.mts.instrumentbench.description=Create an Instrument Bench
+advancements.mts.itembench.title=You Can Buy Anything Online
+advancements.mts.itembench.description=Create an Item Bench
 advancements.mts.propellerbench.title=Propwash
 advancements.mts.propellerbench.description=Create a Propeller Bench
 advancements.mts.seatbench.title=Seats, Supplies, and Storage
@@ -362,5 +359,7 @@ advancements.mts.jumpercable.title=Jump Start
 advancements.mts.jumpercable.description=Create some jumper cables
 advancements.mts.key.title=Swiper no Swiping
 advancements.mts.key.description=Create a Key for locking vehicles
+advancements.mts.ticket.title=Ticket to Ride
+advancements.mts.key.description=Create a Ticket to load entities into vehicles
 advancements.mts.wrench.title=Better Than Duct Tape
 advancements.mts.wrench.description=Create a wrench for reparing vehicles

@@ -1,19 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.nbt.NBTTagCompound;
 
 public final class PartCustom extends APart{
 	
-	public PartCustom(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
-	}
-	
-	@Override
-	public NBTTagCompound getPartNBTTag(){
-		return new NBTTagCompound();
+	public PartCustom(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
 	}
 	
 	@Override

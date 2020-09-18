@@ -1,11 +1,13 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**This class contains static methods for vehicle animations.  These are used to animate
@@ -15,14 +17,15 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
  * @author don_bruce
  */
 public final class VehicleAnimationSystem{
+	
 	/**
-	 *  Returns the current value for the passed-in variable on the passed-in vehicle.  A part may or
+	 *  Returns the clamped value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
-	 *  If a value other than 0 is passed-in, the variable returned will be clamped to that value.
-	 *  This is in both the positive and negative direction.
+	 *  If a clamp value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 */
-	public static double getVariableValue(String variable, double scaling, float offset, float minClamp, float maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
-		double value = offset + scaling*(absolute ? Math.abs(getVariableValue(variable, partialTicks, vehicle, optionalPart)) : getVariableValue(variable, partialTicks, vehicle, optionalPart));
+	public static double getVariableValue(String variable, double scaling, double offset, double minClamp, double maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
+		double value = getVariableValue(variable, partialTicks, vehicle, optionalPart);
+		value = offset + scaling*(absolute ? Math.abs(value) : value);
 		if(minClamp != 0 && value < minClamp){
 			return minClamp;
 		}else if(maxClamp != 0 && value > maxClamp){
@@ -32,7 +35,11 @@ public final class VehicleAnimationSystem{
 		}
 	}
 	
-	private static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
+	/**
+	 *  Returns the raw value for the passed-in variable on the passed-in vehicle.  A part may or
+	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
+	 */
+	public static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
@@ -42,9 +49,11 @@ public final class VehicleAnimationSystem{
 			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
 			switch(partType){
+				case("interactable"): partClass = PartInteractable.class; break;	
 				case("engine"): partClass = PartEngine.class; break;
-				case("propeller"): partClass = PartPropeller.class; break;
 				case("gun"): partClass = PartGun.class; break;
+				case("propeller"): partClass = PartPropeller.class; break;
+				
 				default: if(ConfigSystem.configObject.client.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
 				}else{
@@ -60,7 +69,7 @@ public final class VehicleAnimationSystem{
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos[0], vehiclePart.pos[1], vehiclePart.pos[2]);
+							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
 							}else{
@@ -98,19 +107,29 @@ public final class VehicleAnimationSystem{
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				}
+			}else if(optionalPart instanceof PartGun){
+				PartGun gun = (PartGun) optionalPart;
+				switch(variable){
+					case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
+					case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
+					case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+					case("gun_reload"): return gun.reloadTimeRemaining/(double)gun.definition.gun.reloadTime;
+					case("gun_ammo_count"): return gun.bulletsLeft;
+					case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
+				}
+			}else if(optionalPart instanceof PartInteractable){
+				PartInteractable interactable = (PartInteractable) optionalPart;
+				switch(variable){
+					case("interactable_count"): return interactable.getInventoryCount();
+					case("interactable_percent"): return interactable.getInventoryPercent();
+					case("interactable_capacity"): return interactable.getInventoryCapacity();
+				}
 			}else if(optionalPart instanceof PartPropeller){
 				PartPropeller propeller = (PartPropeller) optionalPart;
 				switch(variable){
 					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 					case("propeller_pitch_in"): return propeller.currentPitch;
 					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
-				}
-			}else if(optionalPart instanceof PartGun){
-				PartGun gun = (PartGun) optionalPart;
-				switch(variable){
-					case("gun_pitch"): return gun.currentPitch;
-					case("gun_yaw"): return gun.currentYaw;
-					case("gun_ammo"): return gun.bulletsLeft;
 				}
 			}
 			
@@ -126,34 +145,27 @@ public final class VehicleAnimationSystem{
 		//Try vehicle variables now.
 		switch(variable){
 			//Vehicle world position cases.	
-			case("yaw"): return -vehicle.rotationYaw;
-			case("pitch"): return vehicle.rotationPitch;
-			case("roll"): return vehicle.rotationRoll;
-			case("altitude"): return vehicle.posY;
-			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
-			case("turn_coordinator"): return ((vehicle.rotationRoll - vehicle.prevRotationRoll)/10 + vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15D*25;
-			case("turn_indicator"): return (vehicle.rotationYaw - vehicle.prevRotationYaw)/0.15F*25F;
-			
-			//Inertia from accelerating and braking.
-            case("acceleration"): return vehicle.acclInertia();
-            case("braking"): return vehicle.brakeInertia();
+			case("yaw"): return vehicle.angles.y;
+			case("pitch"): return vehicle.angles.x;
+			case("roll"): return vehicle.angles.z;
+			case("altitude"): return vehicle.position.y;
+			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
-			case("fuel"): return vehicle.fuel/vehicle.definition.motorized.fuelCapacity;
+			case("fuel"): return vehicle.fuelTank.getFluidLevel()/vehicle.fuelTank.getMaxLevel();
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return vehicle.electricFlow*20D;
 			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
-			case("reverser"): return vehicle.reversePercent/20D;
-			case("steering_wheel"): return vehicle.getSteerAngle();
+			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
-			case("rain"): return vehicle.world.isRainingAt(vehicle.getPosition()) && vehicle.world.getRainStrength(1.0F) == 1.0F ? (1.0D + Math.sin(((int)(vehicle.world.getRainStrength(1.0F) + vehicle.world.getThunderStrength(1.0F))*Math.toRadians(360*System.currentTimeMillis()/1000))))/2D : 0;
-			case("door"): return (vehicle.prevParkingBrakeAngle + (vehicle.parkingBrakeAngle - vehicle.prevParkingBrakeAngle)*partialTicks)/30D;
-			case("trailer"): return vehicle.towingAngle/30D;
-			case("hookup"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.towingAngle/30D : 0;
+			case("rain"): return 1.0D + Math.sin(vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)/2D;
+			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
+			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
+			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
 			
 			//State cases generally used on aircraft.
 			case("aileron"): return vehicle.aileronAngle/10D;
@@ -164,9 +176,11 @@ public final class VehicleAnimationSystem{
 			case("trim_aileron"): return vehicle.aileronTrim/10D;
 			case("trim_elevator"): return vehicle.elevatorTrim/10D;
 			case("trim_rudder"): return vehicle.rudderTrim/10D;
-			case("vertical_speed"): return vehicle.motionY*vehicle.SPEED_FACTOR*20;
-			case("lift_reserve"): return -vehicle.trackAngle*3 + 20;
-			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.velocityVector);
+			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
+			case("lift_reserve"): return vehicle.trackAngle*3 + 20;
+			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
+			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
+			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 		}
@@ -178,7 +192,19 @@ public final class VehicleAnimationSystem{
 			}
 		}
 		
-		//No variable found for anything.  We could have an error, but likely we have an older pack.
+		//Check if this is a door variable.
+		for(String doorName : vehicle.doorsOpen){
+			if(variable.equals(doorName)){
+				return 1;
+			}
+		}
+		
+		//Check if this is a custom variable.
+		if(vehicle.definition.rendering.customVariables != null){
+			return vehicle.customsOn.contains((byte)vehicle.definition.rendering.customVariables.indexOf(variable)) ? 1 : 0;
+		}
+		
+		//No variable found for anything.  We could have an error, but likely we have an older pack or are a closed door.
 		//Return 0 here to prevent pack crashes.
 		return 0;
 	}

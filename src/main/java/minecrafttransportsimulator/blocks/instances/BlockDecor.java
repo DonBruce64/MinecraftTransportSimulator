@@ -2,15 +2,18 @@ package minecrafttransportsimulator.blocks.instances;
 
 import java.util.List;
 
+import mcinterface.BuilderGUI;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
 
-public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor>{
+public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntityDecor>{
 	
     public BlockDecor(){
     	super(10.0F, 5.0F);
@@ -31,7 +34,23 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<JSONDecor
 	}
     
     @Override
-	public TileEntityDecor createTileEntity(){
-		return new TileEntityDecor();
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+		if(world.isClient()){
+			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
+			if(decor.definition.general.itemTypes != null){
+				BuilderGUI.openGUI(new GUIPartBench(decor, player));
+			}
+		}
+		return true;
+	}
+    
+    @Override
+	public TileEntityDecor createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+		return new TileEntityDecor(world, position, data);
+	}
+
+	@Override
+	public Class<TileEntityDecor> getTileEntityClass(){
+		return TileEntityDecor.class;
 	}
 }

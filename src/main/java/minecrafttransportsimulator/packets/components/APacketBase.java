@@ -3,12 +3,13 @@ package minecrafttransportsimulator.packets.components;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.Point3d;
 
 /**Base packet class.  All packets must extend this class to be used with the
- * {@link WrapperNetwork}.  This allows for standard packet handling across
+ * {@link InterfaceNetwork}.  This allows for standard packet handling across
  * all MC versions.
  *
  * @author don_bruce
@@ -32,7 +33,7 @@ public abstract class APacketBase{
 	 *  the buffer so the network knows what packet class this packet goes to!
 	 */
 	public void writeToBuffer(ByteBuf buf){
-		buf.writeByte(WrapperNetwork.getPacketIndex(this));
+		buf.writeByte(InterfaceNetwork.getPacketIndex(this));
 	}
 	
 	/**
@@ -65,5 +66,21 @@ public abstract class APacketBase{
 		//Need to increment the index as the read doesn't do that automatically.
 		buf.readerIndex(buf.readerIndex() + stringLength);
 		return returnString;
+	}
+	
+	/**
+	 *  Helper method to write a Point3d to the buffer.
+	 */
+	protected static void writePoint3dToBuffer(Point3d point, ByteBuf buf){
+		buf.writeDouble(point.x);
+		buf.writeDouble(point.y);
+		buf.writeDouble(point.z);
+	}
+	
+	/**
+	 *  Helper method to read a Point3d from the buffer.
+	 */
+	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
+		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
 	}
 }

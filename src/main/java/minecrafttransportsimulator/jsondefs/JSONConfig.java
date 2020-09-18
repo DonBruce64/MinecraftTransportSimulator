@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.parts.ItemPartEngine;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Custom Config class.  This contains all fields used in config operation,
@@ -25,13 +25,16 @@ public class JSONConfig{
 	public ConfigControls controls = new ConfigControls();
 	
 	public static class ConfigGeneral{
+		public ConfigBoolean dumpCraftingConfig = new ConfigBoolean(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
 		public ConfigBoolean opSignEditingOnly = new ConfigBoolean(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
 		public ConfigBoolean opPickupVehiclesOnly = new ConfigBoolean(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
 		public ConfigBoolean creativePickupVehiclesOnly = new ConfigBoolean(false, "If true, vehicles can only be picked up in creative mode.");
+		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
+		public ConfigBoolean noclipVehicles = new ConfigBoolean(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
+		public ConfigBoolean creativeDamage = new ConfigBoolean(false, "If true, damage from vehicles and guns will be applied to creative players.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
-		public ConfigDouble clingSpeed = new ConfigDouble(0.25D, "Speed (in BLK/S) at which players start to slide off vehicles due to wind.  Does not affect collision boxes set as interior in the vehicle JSON.");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
 		
 		public static class ConfigItemWeights{
@@ -55,7 +58,6 @@ public class JSONConfig{
 	
 	public static class ConfigDamage{
 		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
-		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
 		public ConfigBoolean wheelDamageIgnoreVelocity = new ConfigBoolean(false, "Whether or not velocity is ignored when calculating wheel damage.");
 		public ConfigDouble propellerDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a propeller.");
@@ -77,21 +79,15 @@ public class JSONConfig{
 		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
 			for(String packID : MTSRegistry.packItemMap.keySet()){
-				for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packItemMap.get(packID).values()){
-					if(item instanceof ItemPartEngine){
-						ItemPartEngine itemEngine = (ItemPartEngine) item;
-						if(itemEngine.definition.general.type.startsWith("engine")){
-							//For old packs, if we don't have a fuelType set it to diesel.
-							//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
-							if(itemEngine.definition.engine.fuelType == null){
-								itemEngine.definition.engine.fuelType = "diesel";
-							}
-							
+				for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : MTSRegistry.packItemMap.get(packID).values()){
+					if(item instanceof ItemPart){
+						ItemPart part = (ItemPart) item;
+						if(part.definition.general.type.startsWith("engine")){
 							//If we don't have the fuel in the fuel map, add it.
 							//Default fuel list depends on the fuel name.
-							if(!fuels.containsKey(itemEngine.definition.engine.fuelType)){
+							if(!fuels.containsKey(part.definition.engine.fuelType)){
 								Map<String, Double> fluids = new HashMap<String, Double>();
-								switch(itemEngine.definition.engine.fuelType){
+								switch(part.definition.engine.fuelType){
 									case "gasoline" :{
 										fluids.put("lava", 1.0);
 										fluids.put("gasoline", 1.0);
@@ -124,7 +120,7 @@ public class JSONConfig{
 									}
 									default: fluids.put("lava", 1.0); break;
 								}
-								fuels.put(itemEngine.definition.engine.fuelType, fluids);
+								fuels.put(part.definition.engine.fuelType, fluids);
 							}
 						}
 					}

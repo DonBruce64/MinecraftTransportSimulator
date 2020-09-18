@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.lwjgl.opengl.GL11;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
@@ -221,5 +224,25 @@ public final class OBJParser{
 		}
 		
 		return compiledArray.toArray(new Float[compiledArray.size()][8]);
+	}
+	
+	/**
+	 *  Generates an OpenGL DisplayList from the passed-in OBJ model array, returning the
+	 *  index.
+	 */
+	public static int generateDisplayList(Map<String, Float[][]> parsedModel){
+		int displayListIndex = GL11.glGenLists(1);
+		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
+			for(Float[] vertex : entry.getValue()){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			}
+		}
+		GL11.glEnd();
+		GL11.glEndList();
+		return displayListIndex;
 	}
 }

@@ -1,11 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet sent to pumps on clients to change what vehicle they are connected to.
  * 
@@ -16,7 +17,7 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 	
 	public PacketTileEntityPumpConnection(TileEntityFuelPump pump){
 		super(pump);
-		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.getEntityId() : -1;
+		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.lookupID : -1;
 	}
 	
 	public PacketTileEntityPumpConnection(ByteBuf buf){
@@ -33,10 +34,10 @@ public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntity
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFuelPump pump){
 		if(vehicleID != -1){
-			EntityVehicleF_Physics vehicle = world.getVehicle(vehicleID); 
-			if(vehicle != null && vehicle.definition != null){
+			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(vehicleID); 
+			if(vehicle != null){
 				pump.connectedVehicle = vehicle;
-				pump.totalTransfered = 0;
+				pump.getTank().resetAmountDispensed();
 			}
 		}else{
 			pump.connectedVehicle = null;

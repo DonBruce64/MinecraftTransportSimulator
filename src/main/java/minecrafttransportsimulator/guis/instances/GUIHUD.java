@@ -1,21 +1,22 @@
 package minecrafttransportsimulator.guis.instances;
 
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
-import minecrafttransportsimulator.systems.ClientEventSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
- * as well as the {@link ClientEventSystem} to render the HUD.  Note that when
+ * as well as the {@link InterfaceRender} to render the HUD.  Note that when
  * the HUD is rendered in the vehicle it will NOT inhibit key inputs as the
  * HUD there is designed to be an overlay rather than an actual GUI.
  * 
  * @author don_bruce
  */
 public class GUIHUD extends AGUIBase{
-	public static final int HUD_WIDTH = 400;
-	public static final int HUD_HEIGHT = 140;
+	private static final int HUD_WIDTH = 400;
+	private static final int HUD_HEIGHT = 140;
 	private final EntityVehicleF_Physics vehicle;
 
 	public GUIHUD(EntityVehicleF_Physics vehicle){
@@ -37,8 +38,13 @@ public class GUIHUD extends AGUIBase{
 	public void setStates(){}
 	
 	@Override
+	public boolean renderBackground(){
+		return InterfaceGame.inFirstPerson() ? !ConfigSystem.configObject.client.transpHUD_1P.value : !ConfigSystem.configObject.client.transpHUD_3P.value;
+	}
+	
+	@Override
 	public GUILightingMode getGUILightMode(){
-		return RenderVehicle.isVehicleIlluminated(vehicle) ? GUILightingMode.LIT : GUILightingMode.DARK;
+		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override

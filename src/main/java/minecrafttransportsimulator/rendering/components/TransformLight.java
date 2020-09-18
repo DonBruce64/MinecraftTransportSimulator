@@ -4,22 +4,21 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.InterfaceRender;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.world.EnumSkyBlock;
 
 /**This class represents a light object of a model.  Inputs are the name of the name model
 * and the name of the light.
 *
 * @author don_bruce
 */
-public class TransformLight extends ARenderableTransform{
+public class TransformLight extends ATransformRenderable{
 	public final LightType type;
 	public final boolean isLightupTexture;
 	
@@ -35,6 +34,7 @@ public class TransformLight extends ARenderableTransform{
 	private final Float[] size;
 	
 	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
+		super(null);
 		this.type = getTypeFromName(objectName);
 		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZZ"
 		//Where NAME is what switch it goes to.
@@ -59,7 +59,7 @@ public class TransformLight extends ARenderableTransform{
 			this.vertices = new Float[masterVertices.length][];
 			this.centerPoints = new Point3d[masterVertices.length/6];
 			this.size = new Float[masterVertices.length/6];
-			for(short i=0; i<centerPoints.length; ++i){
+			for(int i=0; i<centerPoints.length; ++i){
 				double minX = 999;
 				double maxX = -999;
 				double minY = 999;
@@ -108,10 +108,11 @@ public class TransformLight extends ARenderableTransform{
 	}
 
 	@Override
-	public void applyTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 8V.
 		setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+		return 0;
 	}
 	
 	@Override
@@ -121,7 +122,7 @@ public class TransformLight extends ARenderableTransform{
 		//we'll have rendered the object so we can safely change textures.
 		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
 		boolean lightActuallyOn = vehicle.lightsOn.contains(type) && isFlashingLightOn();
-		float sunLight = vehicle.world.getSunBrightness(0)*(vehicle.world.getLightFor(EnumSkyBlock.SKY, vehicle.getPosition()) - vehicle.world.getSkylightSubtracted())/15F;
+		float sunLight = vehicle.world.getLightBrightness(new Point3i(vehicle.position), false);
 		//Lights start dimming due to low power at 8V.
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
@@ -143,7 +144,7 @@ public class TransformLight extends ARenderableTransform{
 	 */
 	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness){
 		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
-		if(WrapperRender.getRenderPass() != 1){
+		if(InterfaceRender.getRenderPass() != 1){
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
 			if(renderColor && lightOn && electricFactor > 0){
@@ -158,7 +159,7 @@ public class TransformLight extends ARenderableTransform{
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? WrapperRender.getRenderPass() != 1 : WrapperRender.getRenderPass() != 0); 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? InterfaceRender.getRenderPass() != 1 : InterfaceRender.getRenderPass() != 0); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
@@ -174,10 +175,10 @@ public class TransformLight extends ARenderableTransform{
 		
 		//Set color back to normal, turn off blending, turn on lighting, and un-bind the light textures.
 		//This resets the operations in here for other transforms.
-		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		WrapperRender.setBlendState(false, false);
-		WrapperRender.setLightingState(true);
-		WrapperRender.recallTexture();
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.setBlendState(false, false);
+		InterfaceRender.setLightingState(true);
+		InterfaceRender.recallTexture();
 	}
 	
 	/**
@@ -193,8 +194,8 @@ public class TransformLight extends ARenderableTransform{
 	 *  Sets the lighting status for light-up texture rendering.  Has no effect if such rendering isn't part of this light.
 	 */
 	public void setLightupTextureState(boolean lightOn, float electricFactor){
-		if(WrapperRender.getRenderPass() != 1 && isLightupTexture){
-			WrapperRender.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
+		if(InterfaceRender.getRenderPass() != 1 && isLightupTexture){
+			InterfaceRender.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
 		}
 	}
 	
@@ -203,9 +204,9 @@ public class TransformLight extends ARenderableTransform{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderColor(float alphaValue){
-		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/light.png");
-		WrapperRender.setLightingState(false);
-		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/light.png");
+		InterfaceRender.setLightingState(false);
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the light coords based on the normals to make the light
@@ -222,9 +223,9 @@ public class TransformLight extends ARenderableTransform{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		WrapperRender.bindTexture("minecraft", "textures/blocks/glass.png");
-		WrapperRender.setLightingState(!disableLighting);
-		WrapperRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.bindTexture("minecraft", "textures/blocks/glass.png");
+		InterfaceRender.setLightingState(!disableLighting);
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the cover coords based on the normals to make the light
@@ -242,12 +243,12 @@ public class TransformLight extends ARenderableTransform{
 	 *  both lighting and lightmap here to prevent the flare from being dim.
 	 */
 	private void renderFlare(float alphaValue){
-		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
-		WrapperRender.setLightingState(false);
-		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
-		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
+		InterfaceRender.setLightingState(false);
+		InterfaceRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(byte i=0; i<centerPoints.length; ++i){
+		for(int i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
 				Float[] vertex = vertices[(i)*6+j];
 				//Add a slight translation to the light size to make the flare move off it.
@@ -267,14 +268,14 @@ public class TransformLight extends ARenderableTransform{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderBeam(float alphaValue){
-		WrapperRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
-		WrapperRender.setLightingState(false);
-		WrapperRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
-		WrapperRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
+		InterfaceRender.setLightingState(false);
+		InterfaceRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
 		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
-		for(byte i=0; i<centerPoints.length; ++i){
+		for(int i=0; i<centerPoints.length; ++i){
 			GL11.glPushMatrix();
 			//Translate light to the center of the cone beam.
 			GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);

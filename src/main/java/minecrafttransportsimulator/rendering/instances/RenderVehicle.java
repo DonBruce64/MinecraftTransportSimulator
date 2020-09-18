@@ -1,58 +1,51 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceRender;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.VehicleAxisAlignedBB;
-import minecrafttransportsimulator.items.packs.parts.AItemPart;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.rendering.components.ARenderableTransform;
+import minecrafttransportsimulator.rendering.components.ATransformRenderable;
+import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
-import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.TransformLight;
-import minecrafttransportsimulator.rendering.components.TransformRotatable;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
-import minecrafttransportsimulator.systems.ClientEventSystem;
-import minecrafttransportsimulator.systems.VehicleEffectsSystem.FXPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
  * As entities don't render above 255 well due to the new chunk visibility system, 
  * this code is called both from the regular render loop and manually from
- * {@link ClientEventSystem#on(RenderWorldLastEvent)}.
+ * the event-based last pass.  This pass is -1, and should allow both the regular
+ * and blending operations to run.
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends Render<EntityVehicleF_Physics>{	
+public final class RenderVehicle{	
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, String> vehicleModelOverrides = new HashMap<String, String>();
 	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
+	@Deprecated
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
 	
@@ -60,63 +53,39 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, List<RenderableModelObject>> partObjectLists = new HashMap<String, List<RenderableModelObject>>();
 	
-	//RENDER DATA MAPS.  Keyed by each instance of each vehicle loaded.
-	private static final Map<EntityVehicleF_Physics, RenderTickData> renderData = new HashMap<EntityVehicleF_Physics, RenderTickData>();
 	
-	public RenderVehicle(RenderManager renderManager){
-		super(renderManager);
-	}
-	
-	/**Used to clear out the rendering caches of the passed-in vehicle in dev mode to allow the re-loading of models.**/
-	public static void clearVehicleCaches(EntityVehicleF_Physics vehicle){
-		vehicleDisplayLists.remove(vehicle.definition.genericName);
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
-			modelObject.resetDisplayList();
+	/**Used to clear out the rendering caches of any vehicles with the passed-in definition.
+	 * Used in dev mode to allow the re-loading of models.**/
+	public static void clearVehicleCaches(JSONVehicle definition){
+		if(vehicleDisplayLists.containsKey(definition.genericName)){
+			GL11.glDeleteLists(vehicleDisplayLists.remove(definition.genericName), 1);
+			for(RenderableModelObject modelObject : vehicleObjectLists.get(definition.genericName)){
+				modelObject.resetDisplayList();
+			}
+			vehicleObjectLists.remove(definition.genericName);
+			treadDeltas.remove(definition.genericName);
+			treadPoints.remove(definition.genericName);
 		}
-		vehicleObjectLists.remove(vehicle.definition.genericName);
-		
-		vehicleObjectLists.remove(vehicle.definition.genericName);
-		treadDeltas.remove(vehicle.definition.genericName);
-		treadPoints.remove(vehicle.definition.genericName);
 	}
 	
-	/**
-	 * Used to inject a new model into the model map for vehicles.
-	 * Allow for hotloading models outside of the normal jar locations.
-	 **/
-	public static void injectModel(EntityVehicleF_Physics vehicle, String modelLocation){
-		vehicleModelOverrides.put(vehicle.definition.genericName, modelLocation);
-	}
-	
-	@Override
-	protected ResourceLocation getEntityTexture(EntityVehicleF_Physics entity){
-		return null;
-	}
-	
-	@Override
-	public void doRender(EntityVehicleF_Physics vehicle, double x, double y, double z, float entityYaw, float partialTicks){
-		if(vehicle.definition != null){
-			//If we don't have render data yet, create one now.
-			if(!renderData.containsKey(vehicle)){
-				renderData.put(vehicle, new RenderTickData(new WrapperWorld(vehicle.world)));
+	/**Used to clear out the rendering caches of any parts with the passed-in definition.
+	 * Used in dev mode to allow the re-loading of models.**/
+	public static void clearPartCaches(JSONPart definition){
+		String modelName = "objmodels/parts/" + definition.systemName + ".obj";
+		if(partDisplayLists.containsKey(modelName)){
+			GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
+		}
+		if(partObjectLists.containsKey(modelName)){
+			for(RenderableModelObject modelObject : partObjectLists.get(modelName)){
+				modelObject.resetDisplayList();
 			}
-			
-			//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-			int renderPass = WrapperRender.getRenderPass();
-			if(renderPass == -1){
-				renderPass = 2;
-			}
-			
-			//If we need to render, do so now.
-			if(renderData.get(vehicle).shouldRender(renderPass, partialTicks)){
-				render(vehicle, partialTicks);
-			}
+			partObjectLists.remove(definition.systemName);
 		}
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
 		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
-			for(ARenderableTransform transform : modelObject.transforms){
+			for(ATransformRenderable transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
 					if(((TransformLight) transform).type.equals(light)){
 						return true;
@@ -124,10 +93,10 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 				}
 			}
 		}
-		for(APart part : vehicle.getVehicleParts()){
+		for(APart part : vehicle.parts){
 			if(partObjectLists.containsKey(part.getModelLocation())){
 				for(RenderableModelObject modelObject : partObjectLists.get(part.getModelLocation())){
-					for(ARenderableTransform transform : modelObject.transforms){
+					for(ATransformRenderable transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
 							if(((TransformLight) transform).type.equals(light)){
 								return true;
@@ -140,52 +109,44 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		return false;
 	}
 	
-    /**
-     * Checks if lights are on for this vehicle and instruments need to be lit up.
-     */
-	public static boolean isVehicleIlluminated(EntityVehicleF_Physics vehicle){
-		return (vehicle.lightsOn.contains(LightType.NAVIGATIONLIGHT) || vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) || vehicle.lightsOn.contains(LightType.HEADLIGHT)) && vehicle.electricPower > 3;
-	}
-	
 	/**
 	 *  Renders the vehicle in its entirety.  Rendering happens normally in pass 0 (solid) and 1 (transparent), but may happen in the
 	 *  special pass -1 (end) if the vehicle wasn't rendered in either pass 0 or 1 due to chunk render culling.  Some rendering routines
 	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.
 	 */
-	private static void render(EntityVehicleF_Physics vehicle, float partialTicks){
-		//Set render camera position.
-		Point3d renderPosition = WrapperGame.getRenderViewEntity().getRenderedPosition(partialTicks);
+	public static void render(EntityVehicleF_Physics vehicle, float partialTicks){
+		//Get the render offset.
+		//This is the interpolated movement, plus the prior position.
+		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply((double) partialTicks).add(vehicle.prevPosition);
 		
-		//Get vehicle position and rotation.
-        double vehicleX = vehicle.lastTickPosX + (vehicle.posX - vehicle.lastTickPosX) * partialTicks;
-        double vehicleY = vehicle.lastTickPosY + (vehicle.posY - vehicle.lastTickPosY) * partialTicks;
-        double vehicleZ = vehicle.lastTickPosZ + (vehicle.posZ - vehicle.lastTickPosZ) * partialTicks;
-		double rotateYaw = -vehicle.rotationYaw + (vehicle.rotationYaw - vehicle.prevRotationYaw)*(double)(1 - partialTicks);
-        double rotatePitch = vehicle.rotationPitch - (vehicle.rotationPitch - vehicle.prevRotationPitch)*(double)(1 - partialTicks);
-        double rotateRoll = vehicle.rotationRoll - (vehicle.rotationRoll - vehicle.prevRotationRoll)*(double)(1 - partialTicks);
+		//Subtract the vehcle's position by the render entity position to get the delta for translating.
+		Point3d renderPosition = vehiclePosition.copy().subtract(InterfaceGame.getRenderViewEntity().getRenderedPosition(partialTicks));
+		
+		//Get the vehicle rotation.
+		Point3d renderRotation = vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(vehicle.angles);
        
         //Set up lighting.
-        WrapperRender.setLightingToVehicle(vehicle);
+        InterfaceRender.setLightingToEntity(vehicle);
         
         //Use smooth shading for main model rendering.
 		GL11.glShadeModel(GL11.GL_SMOOTH);
         
         //Push the matrix on the stack and translate and rotate to the vehicle's position.
         GL11.glPushMatrix();
-        GL11.glTranslated(vehicleX - renderPosition.x, vehicleY - renderPosition.y, vehicleZ - renderPosition.z);
+        GL11.glTranslated(renderPosition.x, renderPosition.y, renderPosition.z);
         
         GL11.glPushMatrix();
-        GL11.glRotated(rotateYaw, 0, 1, 0);
-        GL11.glRotated(rotatePitch, 1, 0, 0);
-        GL11.glRotated(rotateRoll, 0, 0, 1);
+        GL11.glRotated(renderRotation.y, 0, 1, 0);
+        GL11.glRotated(renderRotation.x, 1, 0, 0);
+        GL11.glRotated(renderRotation.z, 0, 0, 1);
 		
         //Render the main model.
 		renderMainModel(vehicle, partialTicks);
 		
 		//Render all the parts.  Parts get translated to their offset position prior to rendering.
-		for(APart part : vehicle.getVehicleParts()){
-			//Only render valid parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
-			if(part.isValid() && !part.vehicleDefinition.isSubPart){
+		for(APart part : vehicle.parts){
+			//Only render real parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
+			if(!part.isFake() && !part.vehicleDefinition.isSubPart){
 				GL11.glPushMatrix();
 				if(part.definition.ground != null && part.definition.ground.isTread){
 					//Treads don't get translated by y, or z.
@@ -206,35 +167,35 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		//Render all instruments on the vehicle.
 		renderInstruments(vehicle);
 		
-		//Render text markings.
-		renderTextMarkings(vehicle);
-		
-		//Render holograms for missing parts.
-		renderPartBoxes(vehicle);
-		
 		//Pop vehicle rotation matrix as the following calls use world coords.
 		GL11.glPopMatrix();
 		
 		//Check to see if we need to manually render riders.
 		//This happens if we force-render this vehicle in pass -1.
-		if(WrapperRender.getRenderPass() == -1){
-			WrapperRender.renderVehicleRiders(vehicle, partialTicks);
+		if(InterfaceRender.getRenderPass() == -1){
+			InterfaceRender.renderEntityRiders(vehicle, partialTicks);
 		}
 		
+		//Translate the vehicle's world position to render the hitboxes as they use global coords.
+        GL11.glTranslated(-vehiclePosition.x, -vehiclePosition.y, -vehiclePosition.z);
+		
+		//Render holograms for missing parts.
+		renderPartBoxes(vehicle);
+		
 		//Render bounding boxes for parts and collision points.
-		if(WrapperRender.shouldRenderBoundingBoxes()){
+		if(InterfaceRender.shouldRenderBoundingBoxes()){
 			renderBoundingBoxes(vehicle);
 		}
 		
 		//Pop vehicle translation matrix and reset all states.
 		GL11.glPopMatrix();
-		WrapperRender.resetStates();
+		InterfaceRender.resetStates();
 		
 		//Spawn particles, but only once per render cycle.
-		if(WrapperRender.getRenderPass() != 1 && !WrapperGame.isGamePaused()){
-			for(APart part : vehicle.getVehicleParts()){
-				if(part instanceof FXPart){
-					((FXPart) part).spawnParticles();
+		if(InterfaceRender.getRenderPass() != 1 && !InterfaceGame.isGamePaused()){
+			for(APart part : vehicle.parts){
+				if(part instanceof IVehiclePartFXProvider){
+					((IVehiclePartFXProvider) part).spawnParticles();
 				}
 			}
 		}
@@ -244,7 +205,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 *  Renders the main vehicle model.  The model file is determined from the general name of the JSON, which is really
 	 *  just the JSON's file name.  Vehicle model is first translated to the position of the vehicle in the world,
 	 *  rotated to the roll, pitch, and yaw, of the vehicle, and then all static portions are rendered.  Dynamic
-	 *  animated portions like {@link TransformRotatable}s, {@link TransformTranslatable}s, and
+	 *  animated portions like {@link TransformRotatable2}s, {@link TransformTranslatable}s, and
 	 *  {@link WindowPart}s are rendered after this with their respective transformations applied.  All renders are
 	 *  cached in DisplayLists, as we only need to translate and rotate them, not apply any transforms or splits.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
@@ -254,57 +215,64 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
 			//No distplay list for this model.  Parse and create it now.
-			Map<String, Float[][]> parsedModel;
-			if(vehicleModelOverrides.containsKey(vehicle.definition.genericName)){
-				parsedModel = OBJParser.parseOBJModel(null, vehicleModelOverrides.get(vehicle.definition.genericName));
-			}else{
-				parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
-			}
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
 			
-			//Set up the Gl operations and lists.
+			//For anything that has a definition as an animation, add it to an animated list.
+			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
 			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
-			int displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				//Create model objects for all components of the model.
-				//If we have any objects that don't have transforms, ignore them.
-				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.genericName, entry.getKey(), entry.getValue(), vehicle, null);
-				if(modelObject.transforms.isEmpty()){
-					for(Float[] vertex : entry.getValue()){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			if(vehicle.definition.rendering.animatedObjects != null){
+				for(VehicleAnimatedObject definition : vehicle.definition.rendering.animatedObjects){
+					if(parsedModel.containsKey(definition.objectName)){
+						modelObjects.add(new RenderableModelObject(vehicle.definition.genericName, definition.objectName, definition, parsedModel.get(definition.objectName), vehicle, null));
+						parsedModel.remove(definition.objectName);
 					}
-				}else{
-					modelObjects.add(modelObject);
 				}
 			}
-			GL11.glEnd();
-			GL11.glEndList();
+			
+			//Now check for any non-animated model objects.
+			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
+			while(iterator.hasNext()){
+				Entry<String, Float[][]> entry = iterator.next();
+				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.genericName, entry.getKey(), null, entry.getValue(), vehicle, null);
+				if(!modelObject.transforms.isEmpty()){
+					modelObjects.add(modelObject);
+					iterator.remove();
+				}
+			}
 			
 			//Now finalize the maps.
-			vehicleDisplayLists.put(vehicle.definition.genericName, displayListIndex);
+			vehicleDisplayLists.put(vehicle.definition.genericName, OBJParser.generateDisplayList(parsedModel));
 			vehicleObjectLists.put(vehicle.definition.genericName, modelObjects);
 		}
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		WrapperRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
-		if(WrapperRender.getRenderPass() != 1){
+		InterfaceRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
+		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
 		}
 		
+		//Render any static text.
+		if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, null, vehicle.areInteriorLightsOn())){
+			InterfaceRender.recallTexture();
+		}
+		
 		//The display list only renders static objects.  We need to render dynamic ones manually.
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.genericName)){
-			modelObject.render(vehicle, null, partialTicks);
+		List<RenderableModelObject> modelObjects = vehicleObjectLists.get(vehicle.definition.genericName);
+		for(RenderableModelObject modelObject : modelObjects){
+			if(modelObject.applyAfter == null){
+				modelObject.render(vehicle, null, partialTicks, modelObjects);
+				if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, modelObject.objectName, vehicle.areInteriorLightsOn())){
+					InterfaceRender.recallTexture();
+				}
+			}
 		}
 	}
 	
 	/**
 	 *  Renders all parts on the vehicle.  Parts are first translated to their actual position, which they keep track of.
 	 *  After this they are rotated via {@link #rotatePart(APart, float)}.  Finally, any parts of the part
-	 *  model that are {@link TransformRotatable}s or {@link TransformTranslatable}s are rendered with
+	 *  model that are {@link TransformRotatable2}s or {@link TransformTranslatable}s are rendered with
 	 *  their rotations applied.  This makes rendering a split process.  Translate to position, rotate at position,
 	 *  render static portions of part model, apply transforms to animated portions of the part model, and then
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
@@ -312,40 +280,42 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	private static void renderPart(APart part, float partialTicks){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
-			//Create the part display list and modelObjects.
-			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(part.definition.packID, partModelLocation);
-			int displayListIndex = GL11.glGenLists(1);
-			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-			GL11.glBegin(GL11.GL_TRIANGLES);
-			for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				//Create model objects for all components of the model.
-				//If we have any objects that don't have transforms, ignore them.
-				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), entry.getValue(), part.vehicle, part);
-				if(modelObject.transforms.isEmpty()){
-					for(Float[] vertex : entry.getValue()){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			
+			//For anything that has a definition as an animation, add it to an animated list.
+			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
+			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
+			if(part.definition.rendering != null && part.definition.rendering.animatedObjects != null){
+				for(VehicleAnimatedObject definition : part.definition.rendering.animatedObjects){
+					if(parsedModel.containsKey(definition.objectName)){
+						modelObjects.add(new RenderableModelObject(partModelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), part.vehicle, part));
+						parsedModel.remove(definition.objectName);
 					}
-				}else{
-					modelObjects.add(modelObject);
 				}
 			}
-			GL11.glEnd();
-			GL11.glEndList();
 			
-			//Now finalize the maps
-			partDisplayLists.put(partModelLocation, displayListIndex);
+			//Now check for any non-animated model objects.
+			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
+			while(iterator.hasNext()){
+				Entry<String, Float[][]> entry = iterator.next();
+				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), null, entry.getValue(), part.vehicle, part);
+				if(!modelObject.transforms.isEmpty()){
+					modelObjects.add(modelObject);
+					iterator.remove();
+				}
+			}
+			
+			//Now finalize the maps.
+			partDisplayLists.put(partModelLocation, OBJParser.generateDisplayList(parsedModel));
 			partObjectLists.put(partModelLocation, modelObjects);
 		}
 		
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
 		if(!part.definition.general.useVehicleTexture){
-			WrapperRender.setTexture(part.definition.packID, part.getTextureLocation());
+			InterfaceRender.setTexture(part.definition.packID, part.getTextureLocation());
 		}else{
-			WrapperRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
+			InterfaceRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
 		}
 		
 		//Rotate the part prior to rendering the displayList.
@@ -363,7 +333,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		
 		//If we are a tread, do the tread-specific render rather than the display list.
 		//Don't do this for pass 1 though as treads don't have transparency.
-		if(part.definition.ground != null && part.definition.ground.isTread && WrapperRender.getRenderPass() != 1){
+		if(part.definition.ground != null && part.definition.ground.isTread && InterfaceRender.getRenderPass() != 1){
 			if(part.vehicleDefinition.treadZPoints != null){
 				doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
@@ -371,13 +341,24 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			}
 		}else{
     		//Render the part DisplayList, but only if we aren't in the transparent pass.
-			if(WrapperRender.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
 			}
 			
+			//Render any static text.
+			if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, null, part.vehicle.areInteriorLightsOn())){
+				InterfaceRender.recallTexture();
+			}
+			
 			//The display list only renders static object.  We need to render dynamic ones manually.
-			for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
-				modelObject.render(part.vehicle, part, partialTicks);
+			List<RenderableModelObject> modelObjects = partObjectLists.get(partModelLocation);
+			for(RenderableModelObject modelObject : modelObjects){
+				if(modelObject.applyAfter == null){
+					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
+					if(InterfaceRender.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, modelObject.objectName, part.vehicle.areInteriorLightsOn())){
+						InterfaceRender.recallTexture();
+					}
+				}
 			}
 			
 			//Now that we have rendered this part, render any sub-part children.
@@ -410,11 +391,11 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	private static void rotatePart(APart part, float partialTicks){
 		if(!part.placementRotation.isZero()){
 			if(part.parentPart != null && part.vehicleDefinition.isSubPart){
-				GL11.glRotated(-(part.placementRotation.y - part.parentPart.placementRotation.y), 0, 1, 0);
+				GL11.glRotated(part.placementRotation.y - part.parentPart.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x - part.parentPart.placementRotation.x, 1, 0, 0);
 				GL11.glRotated(part.placementRotation.z - part.parentPart.placementRotation.z, 0, 0, 1);
 			}else{
-				GL11.glRotated(-part.placementRotation.y, 0, 1, 0);
+				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
 				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
 				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
 			}
@@ -422,14 +403,14 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		
 		Point3d positionRotation = part.getPositionRotation(partialTicks);
 		if(!positionRotation.isZero()){
-			GL11.glRotated(-positionRotation.y, 0, 1, 0);
+			GL11.glRotated(positionRotation.y, 0, 1, 0);
 			GL11.glRotated(positionRotation.x, 1, 0, 0);
 			GL11.glRotated(positionRotation.z, 0, 0, 1);
 		}
 
 		Point3d actionRotation = part.getActionRotation(partialTicks);
 		if(!actionRotation.isZero()){
-			GL11.glRotated(-actionRotation.y, 0, 1, 0);
+			GL11.glRotated(actionRotation.y, 0, 1, 0);
 			GL11.glRotated(actionRotation.x, 1, 0, 0);
 			GL11.glRotated(actionRotation.z, 0, 0, 1);
 		}
@@ -439,6 +420,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 *  Renders the treads using a manual system.  Points are defined by pack authors and are located in the
 	 *  vehicle JSON.  This method is more cumbersome for the authors, but allows for precise path control.
 	 */
+	@Deprecated
 	private static void doManualTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.definition.genericName);
 		if(deltas == null){
@@ -455,7 +437,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			//Now that we have the total distance, generate a set of points for the path.
 			//These points should be as far apart as the spacing parameter.
 			deltas = new ArrayList<Float[]>();
-			final float spacing = treadPart.definition.tread.spacing;
+			final float spacing = treadPart.definition.ground.spacing;
 			byte pointIndex = 0;
 			float currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
 			float currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
@@ -549,7 +531,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		}
 		
 		
-		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing);
+		float treadMovementPercentage = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.getHeight()/Math.PI%treadPart.definition.ground.spacing/treadPart.definition.ground.spacing);
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;
 		}
@@ -576,8 +558,8 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	}
 	
 	/**
-	 *  Renders the treads using an automatic calculation system.  This system is good for simple treads,
-	 *  though will render oddly on complex paths.
+	 *  Renders the treads using an automatic calculation system.
+	 *  This is required to prevent the need to manually input a ton of points and reduce pack creator's work.
 	 */
 	private static void doAutomaticTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Double[]> points = treadPoints.get(treadPart.vehicle.definition.genericName);
@@ -586,7 +568,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			//Search through rotatable parts on the vehicle and grab the rollers.
 			Map<Integer, TransformTreadRoller> parsedRollers = new HashMap<Integer, TransformTreadRoller>();
 			for(RenderableModelObject modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.genericName)){
-				for(ARenderableTransform transform : modelObject.transforms){
+				for(ATransformRenderable transform : modelObject.transforms){
 					if(transform instanceof TransformTreadRoller){
 						TransformTreadRoller treadTransform = (TransformTreadRoller) transform;
 						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
@@ -648,13 +630,23 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 			//This is the closest value to the definition's tread spacing.
 			double totalPathLength = 0;
 			for(int i=0; i<rollers.length; ++i){
+				//Get roller and add roller path contribution.
 				TransformTreadRoller roller = rollers[i];
 				totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+				
+				//Get next roller and add distance path contribution.
+				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+				//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
 				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
-				totalPathLength += Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					totalPathLength += 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+				}else{
+					totalPathLength += straightPathLength;
+				}
 			}
 			
-			double deltaDist = treadPart.definition.tread.spacing + (totalPathLength%treadPart.definition.tread.spacing)/(totalPathLength/treadPart.definition.tread.spacing);
+			double deltaDist = treadPart.definition.ground.spacing + (totalPathLength%treadPart.definition.ground.spacing)/(totalPathLength/treadPart.definition.ground.spacing);
 			double leftoverPathLength = 0;
 			double yPoint = 0;
 			double zPoint = 0; 
@@ -717,21 +709,53 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 				
 				//If we have any leftover roller path, account for it here to keep spacing consistent.
 				//We may also have leftover straight path length if we didn't do anything on a roller.
+				//If we have roller length, make sure to offset it to account for the curvature of the roller.
+				//If we don't do this, the line won't start at the end of the prior roller.
 				//If we are on the last roller, we need to get the first roller to complete the loop.
+				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+				//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
+				//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
 				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
-				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ) + leftoverPathLength + rollerPathLength;
-				double normalizedY = (nextRoller.startY - yPoint)/straightPathLength;
-				double normalizedZ = (nextRoller.startZ - zPoint)/straightPathLength;
-				while(straightPathLength > deltaDist){
-					//Go to and add the next point on the straight path.
-					straightPathLength -= deltaDist;
-					yPoint += normalizedY*deltaDist;
-					zPoint += normalizedZ*deltaDist;
-					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				double extraPathLength = rollerPathLength + leftoverPathLength;
+				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
+				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
+				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					double hyperbolicPathLength = 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+					double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
+					double hyperbolicPathMaxY = treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant);
+					double hyperbolicFunctionCurrent = 0;
+					while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
+						//Go to and add the next point on the hyperbolic path.
+						if(extraPathLength > 0){
+							hyperbolicFunctionCurrent += extraPathLength*hyperbolicFunctionStep;
+							extraPathLength = 0;
+						}else{
+							hyperbolicFunctionCurrent += hyperbolicFunctionStep;
+						}
+						yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant) - hyperbolicPathMaxY;
+						zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
+						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant))});
+					}
+					leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
+				}else{
+					while(straightPathLength + extraPathLength > deltaDist){
+						//Go to and add the next point on the straight path.
+						if(extraPathLength > 0){
+							yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
+							zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
+							straightPathLength -= (deltaDist - extraPathLength);
+							extraPathLength = 0;
+						}else{
+							yPoint += normalizedY*deltaDist;
+							zPoint += normalizedZ*deltaDist;
+							straightPathLength -= deltaDist;
+						}
+						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+					}
+					leftoverPathLength = straightPathLength;
 				}
-				leftoverPathLength = straightPathLength;
 			}
-			
 			treadPoints.put(treadPart.vehicle.definition.genericName, points);
 		}
 				
@@ -740,7 +764,7 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
 		float treadLinearPosition = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.vehicle.SPEED_FACTOR);
-		float treadMovementPercentage = treadLinearPosition%treadPart.definition.tread.spacing/treadPart.definition.tread.spacing;
+		float treadMovementPercentage = treadLinearPosition%treadPart.definition.ground.spacing/treadPart.definition.ground.spacing;
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;
 		}
@@ -816,10 +840,10 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			GL11.glPushMatrix();
-			GL11.glTranslatef(packInstrument.pos[0], packInstrument.pos[1], packInstrument.pos[2]);
-			GL11.glRotatef(packInstrument.rot[0], 1, 0, 0);
-			GL11.glRotatef(packInstrument.rot[1], 0, 1, 0);
-			GL11.glRotatef(packInstrument.rot[2], 0, 0, 1);
+			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
+			GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
+			GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
+			GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
 			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
@@ -831,132 +855,75 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	}
 	
 	/**
-	 *  Renders all text markings for this vehicle.  Text is changed via the player,
-	 *  and may be lit up if configured to do so in the JSON.  This should only be called 
-	 *  in pass 0, as we don't do any alpha blending in this routine.
-	 */
-	private static void renderTextMarkings(EntityVehicleF_Physics vehicle){
-		if(WrapperRender.getRenderPass() != 1){
-			//Disable system lighting as we have issues with it in 3D rendering.
-			WrapperRender.setSystemLightingState(false);
-			
-			//If we have light-up text, disable lightmap too.
-			if(vehicle.definition.rendering.textLighted && isVehicleIlluminated(vehicle)){
-				WrapperRender.setInternalLightingState(false);
-			}
-			
-			//Render all text strings.
-			for(VehicleDisplayText text : vehicle.definition.rendering.textMarkings){
-				GL11.glPushMatrix();
-				GL11.glTranslatef(text.pos[0], text.pos[1], text.pos[2]);
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				//First rotate 180 along the X-axis to get us rendering right-side up.
-				GL11.glRotatef(180F, 1, 0, 0);
-				
-				//Next, apply rotations.  Only doing so if they exist.
-				//Apply the Y-rotation first as it will always be used and allows for correct X-rotations.
-				if(text.rot[1] != 0){
-					GL11.glRotatef(-text.rot[1], 0, 1, 0);
-				}
-				if(text.rot[0] != 0){
-					GL11.glRotatef(text.rot[0], 1, 0, 0);
-				}
-				if(text.rot[2] != 0){
-					GL11.glRotatef(text.rot[2], 0, 0, 1);
-				}
-				
-				//Finally, render the text.
-				WrapperGUI.drawScaledText(vehicle.displayText, 0, 0, Color.decode(text.color), true, false, 0, text.scale);
-				GL11.glPopMatrix();
-			}
-		}
-	}
-	
-	/**
 	 *  Renders holographic part boxes when holding parts that can go on this vehicle.  This
 	 *  needs to be rendered in pass 1 to do alpha blending.
 	 */
 	private static void renderPartBoxes(EntityVehicleF_Physics vehicle){
-		if(WrapperRender.getRenderPass() != 0){
+		if(InterfaceRender.getRenderPass() != 0){
 			//Disable lighting and texture rendering, and enable blending.
-			WrapperRender.setLightingState(false);
-			WrapperRender.setBlendState(true, false);
+			InterfaceRender.setLightingState(false);
+			InterfaceRender.setBlendState(true, false);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			
 			//Enable blending if on pass -1 for transparency.
-			if(WrapperRender.getRenderPass() == -1){
-				WrapperRender.setBlendState(true, false);
+			if(InterfaceRender.getRenderPass() == -1){
+				InterfaceRender.setBlendState(true, false);
 			}
 			
-			WrapperPlayer player = WrapperGame.getClientPlayer();
-			ItemStack heldStack = player.getHeldStack();
-			if(heldStack != null){
-				if(heldStack.getItem() instanceof AItemPart){
-					AItemPart heldItem = (AItemPart) heldStack.getItem();
-					for(Entry<Point3d, VehiclePart> packPartEntry : vehicle.getAllPossiblePackParts().entrySet()){
-						boolean isPresent = false;
-						boolean isHoldingPart = false;
-						boolean isPartValid = false;
-						
-						if(vehicle.getPartAtLocation(packPartEntry.getKey().x, packPartEntry.getKey().y, packPartEntry.getKey().z) != null){
-							isPresent = true;
+			WrapperPlayer player = InterfaceGame.getClientPlayer();
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof ItemPart){
+				ItemPart heldPart = (ItemPart) heldItem;
+				for(Entry<BoundingBox, VehiclePart> packPartEntry : vehicle.activePartSlotBoxes.entrySet()){
+					boolean isHoldingPart = false;
+					boolean isPartValid = false;
+					
+					if(packPartEntry.getValue().types.contains(heldPart.definition.general.type)){
+						isHoldingPart = true;
+						if(heldPart.isPartValidForPackDef(packPartEntry.getValue())){
+							isPartValid = true;
+						}
+					}
+							
+					if(isHoldingPart){
+						if(isPartValid){
+							InterfaceRender.setColorState(0, 1, 0, 0.5F);
+						}else{
+							InterfaceRender.setColorState(1, 0, 0, 0.5F);
 						}
 						
-						if(packPartEntry.getValue().types.contains(heldItem.definition.general.type)){
-							isHoldingPart = true;
-							if(heldItem.isPartValidForPackDef(packPartEntry.getValue())){
-								isPartValid = true;
-							}
-						}
-								
-						if(!isPresent && isHoldingPart){
-							Point3d offset = packPartEntry.getKey();
-							//If we are a custom part, use the custom hitbox.  Otherwise use the regular one.
-							AxisAlignedBB box;
-							if(packPartEntry.getValue().types.contains("custom") && heldItem.definition.general.type.equals("custom")){
-								box = new AxisAlignedBB(offset.x - heldItem.definition.custom.width/2F, offset.y - heldItem.definition.custom.height/2F, offset.z - heldItem.definition.custom.width/2F, offset.x + heldItem.definition.custom.width/2F, offset.y + heldItem.definition.custom.height/2F, offset.z + heldItem.definition.custom.width/2F);		
-							}else{
-								box = new AxisAlignedBB(offset.x - 0.375F, offset.y - 0.5F, offset.z - 0.375F, offset.x + 0.375F, offset.y + 1.25F, offset.z + 0.375F);
-							}
-							
-							if(isPartValid){
-								WrapperRender.setColorState(0, 1, 0, 0.5F);
-							}else{
-								WrapperRender.setColorState(1, 0, 0, 0.5F);
-							}
-							GL11.glBegin(GL11.GL_QUADS);
-							
-							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-							
-							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-							
-							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-							GL11.glVertex3d(box.minX, box.minY, box.minZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-							
-							GL11.glVertex3d(box.minX, box.minY, box.minZ);
-							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-							
-							GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
-							GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.minZ);
-							GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
-							
-							GL11.glVertex3d(box.minX, box.minY, box.maxZ);
-							GL11.glVertex3d(box.minX, box.minY, box.minZ);
-							GL11.glVertex3d(box.maxX, box.minY, box.minZ);
-							GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
-							GL11.glEnd();
-						}
+						BoundingBox box = packPartEntry.getKey();
+						GL11.glBegin(GL11.GL_QUADS);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+						
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+						GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+						GL11.glEnd();
 					}
 				}
 			}
@@ -969,53 +936,53 @@ public final class RenderVehicle extends Render<EntityVehicleF_Physics>{
 	 */
 	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
 		//Set states for box render.
-		WrapperRender.setLightingState(false);
+		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		WrapperRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 		GL11.glLineWidth(3.0F);
 		
 		//Draw collision boxes for the vehicle.
-		for(VehicleAxisAlignedBB box : vehicle.collisionBoxes){
-			Point3d boxOffset = box.pos.copy().add(-vehicle.posX, -vehicle.posY, -vehicle.posZ);
-			GL11.glBegin(GL11.GL_LINES);
+		GL11.glBegin(GL11.GL_LINES);
+		for(BoundingBox box : vehicle.interactionBoxes){
 			//Bottom
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
 			
 			//Top
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
 			
 			//Vertical sides.
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z - box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x - box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y - box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glVertex3d(boxOffset.x + box.width/2F, boxOffset.y + box.height/2F, boxOffset.z + box.width/2F);
-			GL11.glEnd();
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z - box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x - box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z + box.depthRadius);
+			GL11.glVertex3d(box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
 		}
+		GL11.glEnd();
 		
 		//Draw part center points.
-		WrapperRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
 		GL11.glBegin(GL11.GL_LINES);
-		for(APart part : vehicle.getVehicleParts()){
-			GL11.glVertex3d(part.worldPos.x - vehicle.posX, part.worldPos.y - vehicle.posY - part.getHeight(), part.worldPos.z - vehicle.posZ);
-			GL11.glVertex3d(part.worldPos.x - vehicle.posX, part.worldPos.y - vehicle.posY + part.getHeight(), part.worldPos.z - vehicle.posZ);
+		for(APart part : vehicle.parts){
+			Point3d partRotatedCenter = part.totalOffset.copy().rotateCoarse(vehicle.angles);
+			GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y - part.getHeight(), partRotatedCenter.z);
+			GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y + part.getHeight(), partRotatedCenter.z);
 		}
 		GL11.glEnd();
 		GL11.glLineWidth(1.0F);

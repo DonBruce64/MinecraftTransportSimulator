@@ -3,12 +3,12 @@ package minecrafttransportsimulator.guis.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
 
-/**Base GUI class.  This type is used in the constructor of {@link WrapperGUI} to allow us to use
+/**Base GUI class.  This type is used in the constructor of {@link BuilderGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
  * update the wrapper rather than the whole GUI. In essence, this class holds the data and state of the
  * GUI, while the wrapper chooses how to interpret and render said state.
@@ -42,6 +42,13 @@ public abstract class AGUIBase{
 	 *  Called right before rendering to allow GUIs to set the states of their objects. 
 	 */
 	public abstract void setStates();
+	
+	/**
+	 *  If this is false, then no background texture will be rendered.
+	 */
+	public boolean renderBackground(){
+		return true;
+	}
 	
 	/**
 	 *  If this is true, then the dark background gradient will be rendered behind the GUI.

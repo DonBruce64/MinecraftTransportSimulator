@@ -16,9 +16,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import javazoom.jl.decoder.Equalizer;
+import mcinterface.InterfaceAudio;
+import mcinterface.InterfaceOGGDecoder;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
-import minecrafttransportsimulator.wrappers.WrapperOGGDecoder;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
  * This class keeps track of the sound source (local files, Internet, server), as well as the
@@ -154,7 +154,7 @@ public class Radio{
 	 */
 	public ByteBuffer getSampleBuffer(){
 		ByteBuffer buffer = decoder.readBlock();
-		return buffer != null ? (decoder.isStereo() ? WrapperAudio.stereoToMono(buffer) : buffer) : null;
+		return buffer != null ? (decoder.isStereo() ? InterfaceAudio.stereoToMono(buffer) : buffer) : null;
 	}
 	
 	/**
@@ -229,7 +229,7 @@ public class Radio{
 						decoder = new MP3Decoder(new FileInputStream(musicFiles.get(0)), equalizer);
 						currentSound = new SoundInstance(provider, musicFiles.get(0).getParentFile().getName() + "\nNow Playing: " + musicFiles.get(0).getName(), false, this);
 						currentSound.volume = volume/10F;
-						WrapperAudio.playStreamedSound(currentSound);
+						InterfaceAudio.playStreamedSound(currentSound);
 						displayText = "Station: " + currentSound.soundName;
 						displayText += "\nBuffers:";
 						queuedBuffers = 0;
@@ -310,7 +310,7 @@ public class Radio{
 						try{
 							switch(contentType){
 								case("audio/mpeg") : decoder = new MP3Decoder(url.openStream(), equalizer); break;
-								case("application/ogg") : decoder = new WrapperOGGDecoder(url); break;
+								case("application/ogg") : decoder = new InterfaceOGGDecoder(url); break;
 							}
 						}catch(Exception e){
 							e.printStackTrace();
@@ -319,7 +319,7 @@ public class Radio{
 						//Start this sound playing.
 						currentSound = new SoundInstance(provider, station, false, thisRadio);
 						currentSound.volume = volume/10F;
-						WrapperAudio.playStreamedSound(currentSound);
+						InterfaceAudio.playStreamedSound(currentSound);
 					}
 				};
 				decoderInitThread.start();

@@ -1,15 +1,15 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
-import minecrafttransportsimulator.items.core.ItemWrench;
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemWrench;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.item.ItemStack;
 
 /**Packet used to change instruments on vehicles.  Sent to the server
  * to process the instrument change, and then sent to all clients if
@@ -56,7 +56,9 @@ public class PacketVehicleInstruments extends APacketVehicle{
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){
-			if(!player.addItem(new ItemStack(vehicle.instruments.get(slot)))){
+			JSONInstrument definition = vehicle.instruments.get(slot);
+			ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
+			if(!player.addItem(instrument, null)){
 				return false;
 			}
 		}
@@ -70,13 +72,13 @@ public class PacketVehicleInstruments extends APacketVehicle{
 			//This is only done on the server, as checking on the client won't make any difference.
 			ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
-				if(player.hasItem(instrument, 1, 0)){
-					player.removeItem(new ItemStack(instrument));
+				if(player.hasItem(instrument)){
+					player.removeItem(instrument, null);
 				}else{
 					return false;
 				}
 			}
-			vehicle.instruments.put(slot, instrument);
+			vehicle.instruments.put(slot, instrument.definition);
 		}
 		return true;
 	}

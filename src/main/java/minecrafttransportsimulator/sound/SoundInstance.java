@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.wrappers.WrapperAudio;
+import mcinterface.InterfaceAudio;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
- * in the {@link WrapperAudio} system.  This class holds data such as the current
+ * in the {@link InterfaceAudio} system.  This class holds data such as the current
  * source the sound is playing from, whether the sound is supposed to be looping or not, etc.  
  * Setting {@link #stopSound} will stop this sound immediately, while {@link #streaming} tells
  * the audio system that this sound needs to be read in via chunks rather than all at once.

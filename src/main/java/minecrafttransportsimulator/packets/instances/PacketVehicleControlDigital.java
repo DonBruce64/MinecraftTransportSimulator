@@ -1,17 +1,14 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.InterfaceAudio;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.systems.RotationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.wrappers.WrapperAudio;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
-import net.minecraft.entity.Entity;
 
 /**Packet used for controlling vehicles.  Responsible for handing singular button presses.
  * 
@@ -46,22 +43,22 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
-				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.car != null && vehicle.definition.car.isBigTruck){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
+				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
 			case HORN : {
 				if(world.isClient() && !vehicle.hornOn && controlState){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
 				}
 				vehicle.hornOn = controlState;
 				break;
 			}
 			case SIREN : {
 				if(world.isClient() && !vehicle.sirenOn && controlState){
-					WrapperAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
 				}
 				vehicle.sirenOn = controlState;
 				break;
@@ -75,15 +72,17 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 						return true;
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
-					for(Entity entity : vehicle.world.loadedEntityList){
-						if(entity instanceof EntityVehicleF_Physics){
+					//FIXME re-enable this when we decide to do pain of trailers.
+					player.sendPacket(new PacketPlayerChatMessage("This functionality has been disabled for this release.  Please check back later."));
+					return false;
+					/*
+					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){
+						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){
 								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
-								Point3d hitchOffset = new Point3d(vehicle.definition.motorized.hitchPos[0], vehicle.definition.motorized.hitchPos[1], vehicle.definition.motorized.hitchPos[2]);
-								Point3d hitchPos = RotationSystem.getRotatedPoint(hitchOffset, vehicle.rotationPitch, vehicle.rotationYaw, vehicle.rotationRoll).add(vehicle.positionVector);
-								Point3d hookupOffset = new Point3d(testVehicle.definition.motorized.hookupPos[0], testVehicle.definition.motorized.hookupPos[1], testVehicle.definition.motorized.hookupPos[2]);
-								Point3d hookupPos = RotationSystem.getRotatedPoint(hookupOffset, testVehicle.rotationPitch, testVehicle.rotationYaw, testVehicle.rotationRoll).add(testVehicle.positionVector);
+								Point3d hitchPos = vehicle.definition.motorized.hitchPos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
+								Point3d hookupPos = testVehicle.definition.motorized.hookupPos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
 								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){
@@ -102,8 +101,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 								}
 							}
 						}
-					}
-					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
+					}*/
+					//player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
 				}else{
 					if(!world.isClient()){
 						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));
@@ -111,25 +110,29 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				}
 				return false;
 			}
-			case SHIFT : {
+			case SHIFT_UP : {
 				for(PartEngine engine : vehicle.engines.values()){
-					if(controlState){
-						engine.shiftUp(true);
-					}else{
-						engine.shiftDown(true);
-					}
+					engine.shiftUp(controlState);
 				}
-				break;
+				//Return here as we may not have shifted.
+				return false;
+			}
+			case SHIFT_DN : {
+				for(PartEngine engine : vehicle.engines.values()){
+					engine.shiftDown(controlState);
+				}
+				//Return here as we may not have shifted.
+				return false;
 			}
 			case REVERSE : {
-				if(vehicle.definition.blimp != null){
+				if(vehicle.definition.general.isBlimp){
 					for(PartEngine engine : vehicle.engines.values()){
 						if(controlState){
-							engine.shiftDown(true);
-							engine.shiftDown(true);
+							engine.shiftDown(false);
+							engine.shiftDown(false);
 						}else{
-							engine.shiftUp(true);
-							engine.shiftUp(true);
+							engine.shiftUp(false);
+							engine.shiftUp(false);
 						}
 					}
 				}else{
@@ -152,6 +155,10 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case TRIM_ROLL : vehicle.aileronTrim = (short) clampAngle(-100, 100, vehicle.aileronTrim + (controlState ? 1 : -1)); break;
 			case TRIM_PITCH : vehicle.elevatorTrim = (short) clampAngle(-100, 100, vehicle.elevatorTrim + (controlState ? 1 : -1)); break;
 			case TRIM_YAW : vehicle.rudderTrim = (short) clampAngle(-100, 100, vehicle.rudderTrim + (controlState ? 1 : -1)); break;
+			case CUSTOM_0 : if(controlState){vehicle.customsOn.add((byte)0);}else{vehicle.customsOn.remove((byte)0);}; break;
+			case CUSTOM_1 : if(controlState){vehicle.customsOn.add((byte)1);}else{vehicle.customsOn.remove((byte)1);}; break;
+			case CUSTOM_2 : if(controlState){vehicle.customsOn.add((byte)2);}else{vehicle.customsOn.remove((byte)2);}; break;
+			case CUSTOM_3 : if(controlState){vehicle.customsOn.add((byte)3);}else{vehicle.customsOn.remove((byte)3);}; break;
 		}
 		return true;
 	}
@@ -161,7 +168,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 		P_BRAKE,
 		HORN,
 		SIREN,
-		SHIFT,
+		SHIFT_UP,
+		SHIFT_DN,
 		TRAILER,
 		REVERSE,
 		GEAR,
@@ -170,6 +178,10 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 		FLAPS,
 		TRIM_ROLL,
 		TRIM_PITCH,
-		TRIM_YAW;
+		TRIM_YAW,
+		CUSTOM_0,
+		CUSTOM_1,
+		CUSTOM_2,
+		CUSTOM_3;
 	}
 }

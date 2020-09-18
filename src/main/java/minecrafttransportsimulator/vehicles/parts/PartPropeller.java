@@ -1,66 +1,71 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import java.util.List;
-
-import minecrafttransportsimulator.MTS;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.DamageSources.DamageSourcePropellor;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal;
-import minecrafttransportsimulator.packets.parts.PacketPartEngineSignal.PacketEngineTypes;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.DamageSource;
 
 public class PartPropeller extends APart{	
-	public float angularPosition;
-	public float angularVelocity;
-	public float damage;
+	public double angularPosition;
+	public double angularVelocity;
+	public double damage;
 	public short currentPitch;
 	
 	private final PartEngine connectedEngine;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, NBTTagCompound dataTag){
-		super(vehicle, packVehicleDef, definition, dataTag);
-		this.damage = dataTag.getFloat("damage");
+	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, definition, data, parentPart);
+		this.damage = data.getDouble("damage");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
+		if(definition.propeller.isRotor){
+			//Rotors need different collision box bounds as they are pointed upwards.
+			boundingBox.widthRadius = getWidth()/2D;
+			boundingBox.heightRadius = 0.5D;
+			boundingBox.depthRadius = getWidth()/2D;
+			
+		}
 	}
 	
 	@Override
-	public void attackPart(DamageSource source, float damage){
-		if(source.getTrueSource() instanceof EntityPlayer){
-			EntityPlayer player = (EntityPlayer) source.getTrueSource();
-			if(player.getHeldItemMainhand().isEmpty()){
-				if(!vehicle.equals(player.getRidingEntity())){
+	public void attack(Damage damage){
+		if(damage.attacker != null){
+			if(damage.attacker.getHeldItem() == null){
+				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
-					MTS.MTSNet.sendToAll(new PacketPartEngineSignal(connectedEngine, PacketEngineTypes.HS_ON));
+					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON), vehicle);
 				}
 				return;
 			}
 		}
-		damagePropeller(damage);
+		this.damage += damage.amount;
 	}
 	
 	@Override
-	public void updatePart(){
-		super.updatePart();
+	public void update(){
+		super.update();
+		//Maybe we aren't connected to an engine?  Not sure how this could happen, but it could.
+		if(connectedEngine == null){
+			isValid = false;
+			return;
+		}
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
 		if(definition.propeller.isDynamicPitch){
 			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
 				--currentPitch;
 			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.rpm < (PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) - 200) && currentPitch > MIN_DYNAMIC_PITCH){
+			}else if(connectedEngine.rpm < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM)*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(connectedEngine.rpm > (PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM) - 150) && currentPitch < definition.propeller.pitch){
+			}else if(connectedEngine.rpm > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM)*0.85 && currentPitch < definition.propeller.pitch){
 				++currentPitch;
 			}
 		}
@@ -80,45 +85,52 @@ public class PartPropeller extends APart{
 		angularPosition += angularVelocity;
 		
 		//Damage propeller or entities if required.
-		if(!vehicle.world.isRemote){
+		if(!vehicle.world.isClient()){
 			if(connectedEngine.rpm >= 100){
-				List<EntityLivingBase> collidedEntites = vehicle.world.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox.expand(0.2F, 0.2F, 0.2F));
-				if(!collidedEntites.isEmpty()){
-					Entity attacker = null;
-					for(Entity passenger : vehicle.getPassengers()){
-						PartSeat seat = vehicle.getSeatForRider(passenger);
-						if(seat != null && seat.vehicleDefinition.isController){
-							attacker = passenger;
-							break;
-						}
-					}
-					for(int i=0; i < collidedEntites.size(); ++i){
-						if(!vehicle.equals(collidedEntites.get(i).getRidingEntity())){
-							collidedEntites.get(i).attackEntityFrom(new DamageSourcePropellor(attacker), (float) (ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*propellerGearboxRatio/500F));
-						}
-					}
-				}
-				if(isPartColliding()){
-					damagePropeller(1);
+				//Expand the bounding box bounds, and send off the attack.
+				boundingBox.widthRadius += 0.2;
+				boundingBox.heightRadius += 0.2;
+				boundingBox.depthRadius += 0.2;
+				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*propellerGearboxRatio/500F, boundingBox, vehicle.getController());
+				vehicle.world.attackEntities(propellerDamage, vehicle, null);
+				boundingBox.widthRadius -= 0.2;
+				boundingBox.heightRadius -= 0.2;
+				boundingBox.depthRadius -= 0.2;
+				
+				//If the propeller is colliding with blocks, damage it.
+				if(!boundingBox.collidingBlocks.isEmpty()){
+					++damage;
 					
 				}
+				
+				//If the propeller is over-speeding, damage it enough to break it.
 				if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
-					damagePropeller(9999);
+					damage += definition.propeller.startingHealth;
 				}
+			}
+			
+			//If we are too damaged, remove ourselves.
+			if(damage > definition.propeller.startingHealth && !vehicle.world.isClient()){
+				if(ConfigSystem.configObject.damage.explosions.value){
+					vehicle.world.spawnExplosion(vehicle, worldPos, 1F, true);
+				}else{
+					vehicle.world.spawnExplosion(vehicle, worldPos, 0F, false);
+				}
+				isValid = false;
 			}
 		}
 	}
 	
 	@Override
-	public NBTTagCompound getPartNBTTag(){
-		NBTTagCompound dataTag = new NBTTagCompound();		
-		dataTag.setFloat("damage", this.damage);
-		return dataTag;
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();		
+		data.setDouble("damage", damage);
+		return data;
 	}
 	
 	@Override
 	public float getWidth(){
-		return definition.propeller.diameter*0.0254F/2F;
+		return definition.propeller.diameter*0.0254F;
 	}
 
 	@Override
@@ -129,16 +141,9 @@ public class PartPropeller extends APart{
 	@Override
 	public Point3d getActionRotation(float partialTicks){
 		if(definition.propeller.isRotor){
-			return new Point3d(-vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+			return new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
 		}else{
 			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
-		}
-	}
-	
-	private void damagePropeller(float damage){
-		this.damage += damage;
-		if(this.damage > definition.propeller.startingHealth && !vehicle.world.isRemote){
-			vehicle.removePart(this, true);
 		}
 	}
 }

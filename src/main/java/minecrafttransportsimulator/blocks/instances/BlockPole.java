@@ -4,28 +4,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperItemStack;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
-import minecrafttransportsimulator.items.core.ItemWrench;
-import minecrafttransportsimulator.items.packs.ItemPole;
-import minecrafttransportsimulator.items.packs.ItemPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPole;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
  * placement of components on poles via the Tile Entity.
  *
  * @author don_bruce
  */
-public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleComponent>{
+public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntityPole>{
 	private final Map<Axis, BoundingBox> axisBounds = new HashMap<Axis, BoundingBox>();
 	
 	public BlockPole(){
@@ -33,21 +35,22 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 		double connectorRadius = 0.125D;
 		double axialRadius = (0.5D - connectorRadius)/2D;
 		double axialCenterPoint = 0.5D - axialRadius;
-		axisBounds.put(Axis.NONE, new BoundingBox(0, 0, 0, connectorRadius, connectorRadius, connectorRadius));
-		axisBounds.put(Axis.UP, new BoundingBox(0, axialCenterPoint, 0, connectorRadius, axialRadius, connectorRadius));
-		axisBounds.put(Axis.DOWN, new BoundingBox(0, -axialCenterPoint, 0, connectorRadius, axialRadius, connectorRadius));
-		axisBounds.put(Axis.NORTH, new BoundingBox(0, 0, -axialCenterPoint, connectorRadius, connectorRadius, axialRadius));
-		axisBounds.put(Axis.SOUTH, new BoundingBox(0, 0, axialCenterPoint, connectorRadius, connectorRadius, axialRadius));
-		axisBounds.put(Axis.EAST, new BoundingBox(axialCenterPoint, 0, 0, axialRadius, connectorRadius, connectorRadius));
-		axisBounds.put(Axis.WEST, new BoundingBox(-axialCenterPoint, 0, 0, axialRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.NONE, new BoundingBox(new Point3d(0, 0, 0), connectorRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.UP, new BoundingBox(new Point3d(0, axialCenterPoint, 0), connectorRadius, axialRadius, connectorRadius));
+		axisBounds.put(Axis.DOWN, new BoundingBox(new Point3d(0, -axialCenterPoint, 0), connectorRadius, axialRadius, connectorRadius));
+		axisBounds.put(Axis.NORTH, new BoundingBox(new Point3d(0, 0, -axialCenterPoint), connectorRadius, connectorRadius, axialRadius));
+		axisBounds.put(Axis.SOUTH, new BoundingBox(new Point3d(0, 0, axialCenterPoint), connectorRadius, connectorRadius, axialRadius));
+		axisBounds.put(Axis.EAST, new BoundingBox(new Point3d(axialCenterPoint, 0, 0), axialRadius, connectorRadius, connectorRadius));
+		axisBounds.put(Axis.WEST, new BoundingBox(new Point3d(-axialCenterPoint, 0, 0), axialRadius, connectorRadius, connectorRadius));
 	}
 	
 	@Override
 	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){
 		//If there's no NBT data, this is a new pole and needs to have its initial component added.
-		if(!player.getHeldStack().hasTagCompound()){
+		WrapperNBT data = player.getHeldStack().getData();
+		if(data.getString("packID").isEmpty()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldStack().getItem()).definition));
+			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldItem()).definition));
 		}
 	}
 	
@@ -58,21 +61,23 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
-			boolean isPlayerHoldingWrench = player.isHoldingItem(ItemWrench.class);
-			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textLines != null;
-			boolean isPlayerHoldingComponent = player.isHoldingItem(ItemPoleComponent.class) && !player.isHoldingItem(ItemPole.class);
+			WrapperItemStack heldStack = player.getHeldStack();
+			AItemBase heldItem = heldStack.getItem();
+			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
+			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textObjects != null;
+			boolean isPlayerHoldingComponent = heldItem instanceof ItemPoleComponent && !(heldItem instanceof ItemPole);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(isPlayerHoldingComponent){
 					List<String> textLines = null;
-					ItemPoleComponent component = (ItemPoleComponent) player.getHeldStack().getItem();
-					if(player.getHeldStack().hasTagCompound()){							
-						textLines = new WrapperNBT(player.getHeldStack().getTagCompound()).getStrings("textLines", component.definition.general.textLines.length);
+					ItemPoleComponent component = (ItemPoleComponent) heldItem;
+					if(component.definition.general.textObjects != null){
+						textLines = heldStack.getData().getStrings("textLines", component.definition.general.textObjects.size());
 					}
-					WrapperNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
 					return false;
 				}
@@ -98,7 +103,12 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<JSONPoleCo
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(){
-		return new TileEntityPole();
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+		return new TileEntityPole(world, position, data);
+	}
+
+	@Override
+	public Class<TileEntityPole> getTileEntityClass(){
+		return TileEntityPole.class;
 	}
 }

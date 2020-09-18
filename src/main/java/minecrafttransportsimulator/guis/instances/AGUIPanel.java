@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -29,10 +28,10 @@ public abstract class AGUIPanel extends AGUIBase{
 	public AGUIPanel(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
 		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
-		if(vehicle.definition.blimp != null){
+		if(vehicle.definition.general.isBlimp){
 			haveReverseThrustOption = true;
 		}else{
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.parts){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
 						haveReverseThrustOption = true;
@@ -76,7 +75,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	
 	@Override
 	public GUILightingMode getGUILightMode(){
-		return RenderVehicle.isVehicleIlluminated(vehicle) ? GUILightingMode.LIT : GUILightingMode.DARK;
+		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override

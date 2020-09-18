@@ -1,17 +1,13 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.items.packs.ItemInstrument;
+import mcinterface.InterfaceRender;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.wrappers.WrapperRender;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
  * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an
@@ -20,38 +16,33 @@ import net.minecraft.util.ResourceLocation;
  * @author don_bruce
  */
 public final class RenderInstrument{	
-	private static Map<String, ResourceLocation> instrumentTextureSheets = new HashMap<String, ResourceLocation>();
-	
-    /**
+	/**
      * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 
      * vehicle JSON parameters into account as it does not know which instrument is being rendered.  This means that 
      * any transformations that need to be applied for translation or scaling should be applied prior to calling this
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
-		//First get the appropriate texture file for this instrument combination.
-		if(!instrumentTextureSheets.containsKey(instrument.definition.packID)){
-			instrumentTextureSheets.put(instrument.definition.packID, new ResourceLocation(instrument.definition.packID, "textures/instruments.png"));
-		}
-		Minecraft.getMinecraft().getTextureManager().bindTexture(instrumentTextureSheets.get(instrument.definition.packID));
+	public static void drawInstrument(JSONInstrument definition, byte partNumber, EntityVehicleF_Physics vehicle){
+		//First bind the texture file for this insturment's pack.
+		InterfaceRender.bindTexture(definition.packID, "textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
-		boolean lightsOn = RenderVehicle.isVehicleIlluminated(vehicle);
+		boolean lightsOn = vehicle.areInteriorLightsOn();
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
-		for(byte i=0; i<instrument.definition.components.size(); ++i){
-			Component section = instrument.definition.components.get(i);
+		for(byte i=0; i<definition.components.size(); ++i){
+			Component section = definition.components.get(i);
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if((!section.lightOverlay && WrapperRender.getRenderPass() != 1) || (section.lightOverlay && WrapperRender.getRenderPass() != 0)){
+			if((!section.lightOverlay && InterfaceRender.getRenderPass() != 1) || (section.lightOverlay && InterfaceRender.getRenderPass() != 0)){
 				GL11.glPushMatrix();
 				//Translate to the component, but slightly away from the instrument location to prevent clipping.
 				GL11.glTranslatef(section.xCenter, section.yCenter, i*0.1F);
 				
 				//If the vehicle lights are on, disable the lightmap.
 				if(lightsOn){
-					Minecraft.getMinecraft().entityRenderer.disableLightmap();
+					InterfaceRender.setInternalLightingState(false);
 				}
 				
 				//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
@@ -135,12 +126,12 @@ public final class RenderInstrument{
 			
 			//Reset lightmap if we had previously disabled it.
 			if(lightsOn){
-				Minecraft.getMinecraft().entityRenderer.enableLightmap();
+				InterfaceRender.setInternalLightingState(true);
 			}
 			
 			//Reset blend state.
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			if(WrapperRender.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glDisable(GL11.GL_BLEND);
 			}
 		}

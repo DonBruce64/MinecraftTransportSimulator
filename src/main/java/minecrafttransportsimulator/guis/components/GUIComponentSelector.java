@@ -2,7 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.wrappers.WrapperGUI;
+import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextPosition;
 
 /**Custom class for selectors.  Selectors are like buttons, except they allow for side-sensitive clicking.
  * Their {@link #onClicked()} method takes a boolean parameter that allows them to perform different actions 
@@ -85,7 +86,7 @@ public abstract class GUIComponentSelector{
     public void renderSelector(int mouseX, int mouseY){
     	if(visible){
 			int textureUStart = selectorSectionHeightOffset + selectorState*selectorSectionHeight;
-    		WrapperGUI.renderSheetTexture(x, y, width, height, selectorSectionWidthOffset, textureUStart, selectorSectionWidthOffset + selectorSectionWidth, textureUStart + selectorSectionHeight, textureWidth, textureHeight);
+    		BuilderGUI.renderSheetTexture(x, y, width, height, selectorSectionWidthOffset, textureUStart, selectorSectionWidthOffset + selectorSectionWidth, textureUStart + selectorSectionHeight, textureWidth, textureHeight);
 		}
     }
 	
@@ -97,7 +98,7 @@ public abstract class GUIComponentSelector{
 	 */
     public void renderText(boolean lightsOn){
     	if(visible){
-    		WrapperGUI.drawScaledText(text, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, true, false, 0, 0.75F);
+    		BuilderGUI.drawScaledText(text, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextPosition.CENTERED, 0, 0.75F, false);
     	}
     }
 }

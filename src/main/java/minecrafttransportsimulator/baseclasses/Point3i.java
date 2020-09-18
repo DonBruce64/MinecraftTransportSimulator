@@ -15,6 +15,13 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		super(x, y, z);
 	}
 	
+	/**
+	 * Helper constructor for casting-down double points to integers.
+	 */
+	public Point3i(Point3d point){
+		this((int) point.x, (int) point.y, (int) point.z);
+	}
+	
 	@Override
 	public boolean equals(Object object){
 		if(object instanceof Point3i){
@@ -30,6 +37,14 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		return this;
+	}
+	
+	@Override
+	public Point3i setTo(Point3i point){
+		this.x = point.x;
+		this.y = point.y;
+		this.z = point.z;
 		return this;
 	}
 	

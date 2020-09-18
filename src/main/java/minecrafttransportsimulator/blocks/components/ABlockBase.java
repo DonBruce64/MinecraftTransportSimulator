@@ -2,13 +2,14 @@ package minecrafttransportsimulator.blocks.components;
 
 import java.util.List;
 
+import mcinterface.BuilderBlock;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.wrappers.WrapperBlock;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
-/**Base Block class.  This type is used in the constructor of {@link WrapperBlock} to allow us to use
+/**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
  * Seriously guys, you make a game about blocks.  How many times you gonna re-invent them?
  * Anyways... This code contains methods for the block's hardness, blast resistance, and rotation.
@@ -19,7 +20,7 @@ public abstract class ABlockBase{
 	public final float hardness;
 	public final float blastResistance;
 	
-	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(0, 0, 0, 0.5D, 0.5D, 0.5D);
+	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(new Point3d(0, 0, 0), 0.5D, 0.5D, 0.5D);
 	
 	public ABlockBase(float hardness, float blastResistance){
 		this.hardness = hardness;
@@ -50,7 +51,7 @@ public abstract class ABlockBase{
 	 *  not modifiable by any block-based code.
 	 */
 	public float getRotation(WrapperWorld world, Point3i location){
-		return WrapperBlock.getRotation(world, location);
+		return BuilderBlock.getRotation(world, location);
 	}
 	
 	/**

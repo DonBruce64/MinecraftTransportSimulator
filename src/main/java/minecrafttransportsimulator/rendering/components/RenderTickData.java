@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.wrappers.WrapperWorld;
+import mcinterface.WrapperWorld;
 
 /**Helper class used to handle rendering operations across multiple passes.  Tracks
  * rendering times and returns true or false to tell systems to render.  This is done

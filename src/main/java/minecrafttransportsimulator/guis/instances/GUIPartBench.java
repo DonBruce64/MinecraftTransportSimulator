@@ -6,29 +6,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.blocks.instances.BlockPartsBench;
+import mcinterface.BuilderGUI;
+import mcinterface.BuilderGUI.TextPosition;
+import mcinterface.InterfaceGame;
+import mcinterface.InterfaceInput;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
-import minecrafttransportsimulator.items.packs.AItemPack;
-import minecrafttransportsimulator.items.packs.ItemVehicle;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.wrappers.WrapperGUI;
-import minecrafttransportsimulator.wrappers.WrapperGame;
-import minecrafttransportsimulator.wrappers.WrapperInput;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -38,11 +37,11 @@ import net.minecraft.nbt.NBTTagCompound;
  * @author don_bruce
  */
 public class GUIPartBench extends AGUIBase{
-	/*Last item this bench was on when closed.  Keyed by block*/
-	private static final Map<BlockPartsBench, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<BlockPartsBench, AItemPack<? extends AJSONItem<?>>>();
+	/*Last item this GUI was on when closed.  Keyed by block instance.*/
+	private static final Map<TileEntityDecor, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<TileEntityDecor, AItemPack<? extends AJSONItem<?>>>();
 	
 	//Init variables.
-	private final BlockPartsBench bench;
+	private final TileEntityDecor decor;
 	private final WrapperPlayer player;
 	
 	//Buttons and labels.
@@ -84,18 +83,18 @@ public class GUIPartBench extends AGUIBase{
 	boolean displayVehicleInfo = false;
 	
 
-	public GUIPartBench(BlockPartsBench bench, WrapperPlayer player){
-		this.bench = bench;
+	public GUIPartBench(TileEntityDecor decor, WrapperPlayer player){
+		this.decor = decor;
 		this.player = player;
-		if(lastOpenedItem.containsKey(bench)){
-			currentItem = lastOpenedItem.get(bench);
+		if(lastOpenedItem.containsKey(decor)){
+			currentItem = lastOpenedItem.get(decor);
 			currentPack = currentItem.definition.packID;
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
 			for(String packID : MTSRegistry.packItemMap.keySet()){
 				if(currentPack == null){
 					for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
-						if(bench.isJSONValid(packItem.definition)){
+						if(isJSONValid(packItem.definition)){
 							currentItem = packItem;
 							currentPack = packItem.definition.packID;
 							return;
@@ -126,7 +125,7 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
-		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, Color.WHITE, "", 1.0F, true, false, 0));
+		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, Color.WHITE, "", TextPosition.CENTERED, 0, 1.0F, false));
 		
 		
 		//Create part navigation section.
@@ -144,9 +143,9 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", 0.75F, true, false, 0));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 0.75F, false, false, (int) (150/0.75F)));
-		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", 1.0F, false, false, 150));
+		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", TextPosition.CENTERED, 0, 0.75F, false));
+		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", TextPosition.LEFT_ALIGNED, (int) (150/0.75F), 0.75F, false));
+		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", TextPosition.LEFT_ALIGNED, 150, 1.0F, false));
 		
 		
 		//Create color navigation section.
@@ -164,7 +163,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, WrapperGUI.translate("gui.vehicle_bench.color"), 1.0F, true, false, 0).setButton(nextColorButton));
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, BuilderGUI.translate("gui.vehicle_bench.color"), TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
@@ -195,7 +194,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				WrapperNetwork.sendToServer(new PacketPlayerCraftItem(currentItem));
+				InterfaceNetwork.sendToServer(new PacketPlayerCraftItem(currentItem));
 			}
 		});
 		
@@ -223,7 +222,7 @@ public class GUIPartBench extends AGUIBase{
 		confirmButton.enabled = currentItem != null && player.hasMaterials(currentItem);
 		
 		//Check the mouse to see if it updated and we need to change items.
-		int wheelMovement = WrapperInput.getTrackedMouseWheel();
+		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement > 0 && nextPartButton.enabled){
 			nextPartButton.onClicked();
 		}else if(wheelMovement < 0 && prevPartButton.enabled){
@@ -264,7 +263,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
 				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
-					if(bench.isJSONValid(packItem.definition)){
+					if(isJSONValid(packItem.definition)){
 						nextPack = packIDs.get(i);
 						break;
 					}
@@ -278,7 +277,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
 				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
-					if(bench.isJSONValid(packItem.definition)){
+					if(isJSONValid(packItem.definition)){
 						prevPack = packIDs.get(i);
 						break;
 					}
@@ -301,7 +300,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentItem == null){
 			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(currentPack).values()){
 				if(currentItem == null || (currentItem instanceof ItemVehicle && nextSubItem == null)){
-					if(bench.isJSONValid(packItem.definition)){
+					if(isJSONValid(packItem.definition)){
 						if(currentItem == null){
 							currentItem = packItem;
 							currentItemIndex = packItems.indexOf(currentItem);
@@ -321,7 +320,7 @@ public class GUIPartBench extends AGUIBase{
 		nextSubItem = null;
 		if(currentItemIndex < packItems.size()){
 			for(int i=currentItemIndex+1; i<packItems.size() && nextItem == null; ++i){
-				if(bench.isJSONValid(packItems.get(i).definition)){
+				if(isJSONValid(packItems.get(i).definition)){
 					//If we are for vehicles, and this item is the same sub-item classification, 
 					//set nextSubItem and continue on.
 					if(currentItem instanceof ItemVehicle){
@@ -344,7 +343,7 @@ public class GUIPartBench extends AGUIBase{
 		prevSubItem = null;
 		if(currentItemIndex > 0){
 			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || currentItem instanceof ItemVehicle); --i){
-				if(bench.isJSONValid(packItems.get(i).definition)){
+				if(isJSONValid(packItems.get(i).definition)){
 					//If we are for vehicles, and we didn't switch items, and this item
 					//is the same sub-item classification, set prevSubItem and continue on.
 					//If we did switch, we want the first subItem in the set of items to
@@ -372,15 +371,12 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
-		packName.text = WrapperGame.getModName(currentPack);
+		packName.text = InterfaceGame.getModName(currentPack);
 		partName.text = currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName;
 		
-		//TODO this needs to go away when we get a wrapper itemstack.
 		//Create part description text.
-		ItemStack tempStack = new ItemStack(currentItem);
-		tempStack.setTagCompound(new NBTTagCompound());
 		List<String> descriptiveLines = new ArrayList<String>();
-		tempStack.getItem().addInformation(tempStack, Minecraft.getMinecraft().world, descriptiveLines, ITooltipFlag.TooltipFlags.NORMAL);
+		currentItem.addTooltipLines(descriptiveLines, new WrapperNBT());
 		partInfo.text = "";
 		for(String line : descriptiveLines){
 			partInfo.text += line + "\n";
@@ -426,7 +422,24 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Now update the last saved item.
-		lastOpenedItem.put(bench, currentItem);
+		lastOpenedItem.put(decor, currentItem);
+	}
+	
+	private boolean isJSONValid(AJSONItem<?> definition){
+		if(decor.definition.general.items != null){
+			return decor.definition.general.items.contains(definition.packID + ":" + definition.systemName);
+		}else if(decor.definition.general.itemTypes.contains(definition.classification.toString().toLowerCase())){
+			if(definition instanceof JSONPart && decor.definition.general.partTypes != null){
+				for(String partType : decor.definition.general.partTypes){
+					if(((JSONPart) definition).general.type.contains(partType)){
+						return true;
+					}
+				}
+			}else{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private String getVehicleInfoText(){
@@ -478,18 +491,18 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
-		totalInformation += WrapperGUI.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
+		totalInformation += BuilderGUI.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
 		if(minFuelConsumption != 99){
-			totalInformation += WrapperGUI.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
+			totalInformation += BuilderGUI.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
 		}
 		if(minWheelSize != 99){
-			totalInformation += WrapperGUI.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
+			totalInformation += BuilderGUI.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
 		}
 		return totalInformation;
 	}

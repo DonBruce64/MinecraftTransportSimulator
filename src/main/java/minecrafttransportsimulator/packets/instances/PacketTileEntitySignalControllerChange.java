@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpState;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 public class PacketTileEntitySignalControllerChange extends APacketTileEntity<TileEntitySignalController>{
 	private final OpMode currentOpMode;

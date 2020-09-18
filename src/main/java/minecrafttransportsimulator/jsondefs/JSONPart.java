@@ -1,39 +1,41 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
-public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
-    public PartEngine engine;
+public class JSONPart extends AJSONMultiModel<JSONPart.JSONPartGeneral>{
+    public JSONPartEngine engine;
+    public JSONPartGroundDevice ground;
+    public JSONPartPropeller propeller;
+    public JSONPartGun gun;
+    public JSONPartBullet bullet;
+    public JSONPartInteractable interactable;
+    public JSONPartEffector effector;
+    public JSONPartCustom custom;
+    public List<VehiclePart> subParts;
+    public List<VehicleCollisionBox> collision;
+    public VehicleRendering rendering;
+    
+    @Deprecated
     public PartWheel wheel;
-    public PartPontoonConfig pontoon;
+    @Deprecated
+    public PartPontoon pontoon;
+    @Deprecated
     public PartSkid skid;
+    @Deprecated
     public PartTread tread;
-    public PartGroundDevice ground;
-    public PartPropeller propeller;
-    public PartCrate crate;
-    public PartBarrel barrel;
-    public PartGun gun;
-    public PartBullet bullet;
-    public PartEffector effector;
-    public PartCustom custom;
-    public List<VehiclePart> subParts = new ArrayList<VehiclePart>();
-    public List<VehicleCollisionBox> collision = new ArrayList<VehicleCollisionBox>();
-    public PartRendering rendering;
 
-    public class PartGeneral extends AJSONMultiModel<JSONPart.PartGeneral>.General{
+    public class JSONPartGeneral extends AJSONMultiModel<JSONPart.JSONPartGeneral>.General{
     	public String type;
     	public String customType;
     	public boolean disableMirroring;
     	public boolean useVehicleTexture;
     }
     
-    public class PartEngine{
+    public class JSONPartEngine{
     	public boolean isAutomatic;
     	public boolean isSteamPowered;
     	public boolean flamesOnStartup;
@@ -62,35 +64,11 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
 		}
     }
     
-    public class PartWheel{
-    	public float diameter;
-        public float motiveFriction;
-        public float lateralFriction;
-    }
-    
-    public class PartSkid{
-    	public float width;
-    	public float lateralFriction;
-    }
-    
-    public class PartPontoonConfig{
-    	public float width;
-    	public float lateralFriction;
-        public float extraCollisionBoxOffset;
-    }
-    
-    public class PartTread{
-    	public float width;
-    	public float motiveFriction;
-        public float lateralFriction;
-        public float extraCollisionBoxOffset;
-        public float spacing;
-    }
-    
-    public class PartGroundDevice{
+    public class JSONPartGroundDevice{
     	public boolean isWheel;
     	public boolean isTread;
     	public boolean canFloat;
+		public boolean canGoFlat;
     	public float width;
     	public float height;
     	public float motiveFriction;
@@ -99,24 +77,15 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
         public float spacing;
     }
     
-    public class PartPropeller{
+    public class JSONPartPropeller{
     	public boolean isDynamicPitch;
     	public boolean isRotor;
-    	public byte numberBlades;
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
     }
     
-    public class PartCrate{
-    	public byte rows;
-    }
-    
-    public class PartBarrel{
-    	public int capacity;
-    }
-    
-    public class PartGun{
+    public class JSONPartGun{
     	public boolean autoReload;
     	public boolean isTurret;
     	public int capacity;
@@ -131,23 +100,50 @@ public class JSONPart extends AJSONMultiModel<JSONPart.PartGeneral>{
     	public float length;
     }
     
-    public class PartBullet{
+    public class JSONPartBullet{
     	public String type;
     	public int quantity;
     	public float diameter;
     }
     
-    public class PartEffector{
+    public class JSONPartInteractable{
+    	public String interactionType;
+    	public boolean feedsVehicles;
+    	public byte inventoryUnits;
+    }
+    
+    public class JSONPartEffector{
+    	public String type;
     	public int blocksWide;
     }
     
-    public class PartCustom{
+    public class JSONPartCustom{
     	public float width;
     	public float height;
     }
-    
-    public class PartRendering{
-        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
-        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    @Deprecated
+    public class PartWheel{
+    	public float diameter;
+        public float motiveFriction;
+        public float lateralFriction;
+    }
+    @Deprecated
+    public class PartSkid{
+    	public float width;
+    	public float lateralFriction;
+    }
+    @Deprecated
+    public class PartPontoon{
+    	public float width;
+    	public float lateralFriction;
+        public float extraCollisionBoxOffset;
+    }
+    @Deprecated
+    public class PartTread{
+    	public float width;
+    	public float motiveFriction;
+        public float lateralFriction;
+        public float extraCollisionBoxOffset;
+        public float spacing;
     }
 }

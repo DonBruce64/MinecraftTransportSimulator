@@ -1,8 +1,0 @@
-{
-    "variants": {
-        "facing=south": { "model": "mts:instrumentbench" },
-        "facing=north": { "model": "mts:instrumentbench", "y": 180 },
-        "facing=east":  { "model": "mts:instrumentbench", "y": 270 },
-        "facing=west":  { "model": "mts:instrumentbench", "y": 90 }
-    }
-}

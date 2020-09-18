@@ -1,14 +1,12 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
-/**A specific class of {@link TransformRotatable}, designed
+/**A specific class of {@link TransformRotatable2}, designed
  * for tread rollers.  Contains an extra method for calculating things.
  * Also auto-creates rotatableModelObject definitions in the relevant JSON.
  *
@@ -28,8 +26,8 @@ public class TransformTreadRoller extends TransformRotatable{
 	public double endZ;
 	public double endAngle;
 	
-	private TransformTreadRoller(String modelName, String objectName, List<VehicleRotatableModelObject> rotatableModelObjects, double yPos, double zPos, double radius, double circumference){
-		super(modelName, objectName, rotatableModelObjects);
+	private TransformTreadRoller(String objectName, VehicleAnimationDefinition definition, double yPos, double zPos, double radius, double circumference){
+		super(definition);
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		this.zPos = zPos;
 		this.yPos = yPos;
@@ -40,7 +38,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	/**
 	 * Helper function to create a tread roller.
 	 */
-	public static TransformTreadRoller create(String modelName, String objectName, EntityVehicleF_Physics vehicle, Float[][] vertices){
+	public static TransformTreadRoller create(String objectName, VehicleAnimationDefinition definition, EntityVehicleF_Physics vehicle, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;
@@ -57,27 +55,17 @@ public class TransformTreadRoller extends TransformRotatable{
 		double radius = (maxZ - minZ)/2D;
 		double circumference = 2*Math.PI*radius;
 		
-		//Add this roller as a rotatable if it doesn't exist.
-		boolean existsInJSON = false;
-		for(VehicleRotatableModelObject rotatable : vehicle.definition.rendering.rotatableModelObjects){
-			if(rotatable.partName.endsWith(objectName)){
-				existsInJSON = true;
-				break;
-			}
+		if(definition == null){
+			//We don't have a definition for this, auto-create one and return the roller with it.
+			definition = vehicle.definition.new VehicleAnimationDefinition();
+			definition.animationType = "rotation";
+			definition.variable = "engine_driveshaft_rotation_1";
+			definition.centerPoint = new Point3d(0D, yPos, zPos);
+			definition.axis = new Point3d(0D, 0D, 0D);
 		}
 		
-		if(!existsInJSON){
-			//We don't have this definition.  Add it.
-			VehicleRotatableModelObject rotatable = vehicle.definition.new VehicleRotatableModelObject();
-			rotatable.partName = objectName;
-			rotatable.rotationVariable = "engine_driveshaft_rotation_1";
-			rotatable.rotationPoint = new double[]{0, yPos, zPos};
-			rotatable.rotationAxis = new double[]{0, 0, 0};
-			vehicle.definition.rendering.rotatableModelObjects.add(rotatable);
-		}
-		
-		//Create and return the roller.
-		return new TransformTreadRoller(modelName, objectName, vehicle.definition.rendering.rotatableModelObjects, yPos, zPos, radius, circumference);
+		//Return the created roller.
+		return new TransformTreadRoller(objectName, definition, yPos, zPos, radius, circumference);
 	}
 	
 	/**
@@ -153,7 +141,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	protected boolean updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
 		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
 		if(rotationAxis.x == 0){
-			for(APart part : vehicle.getVehicleParts()){
+			for(APart part : vehicle.parts){
 				if(part instanceof PartGroundDevice && part.definition.ground.isTread){
 					//360 degrees is 1 block, so if we have a roller of circumference of 1,
 					//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.

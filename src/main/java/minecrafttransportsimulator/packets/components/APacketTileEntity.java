@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface.WrapperPlayer;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.wrappers.WrapperNetwork;
-import minecrafttransportsimulator.wrappers.WrapperPlayer;
-import minecrafttransportsimulator.wrappers.WrapperWorld;
 
 /**Packet class that includes a default implementation for transmitting a tile entity
  * to allow tile entity-specific interactions on the other side of the network.
@@ -40,7 +40,7 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 		if(tile != null && tile.world != null){
 			if(handle(world, player, tile) && !world.isClient()){
 				world.markTileEntityChanged(position);
-				WrapperNetwork.sendToAllClients(this);
+				InterfaceNetwork.sendToAllClients(this);
 			}
 		}
 	}

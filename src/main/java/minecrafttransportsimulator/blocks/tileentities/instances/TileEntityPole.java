@@ -6,15 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import mcinterface.WrapperNBT;
+import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.packs.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
-import minecrafttransportsimulator.wrappers.WrapperNBT;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -24,6 +26,24 @@ import minecrafttransportsimulator.wrappers.WrapperNBT;
 */
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
+	
+	public TileEntityPole(WrapperWorld world, Point3i position, WrapperNBT data){
+		super(world, position, data);
+		//Load components back in.
+		for(Axis axis : Axis.values()){
+			String packID = data.getString("packID" + axis.ordinal());
+			if(!packID.isEmpty()){
+				String systemName = data.getString("systemName" + axis.ordinal());
+				@SuppressWarnings("unchecked")
+				AItemPack<JSONPoleComponent> componentItem = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
+				components.put(axis, newComponent);
+				if(newComponent.getTextLines() != null){
+					newComponent.setTextLines(data.getStrings("textLines", newComponent.getTextLines().size()));
+				}
+			}
+		}
+	}
 	
 	/**
 	 * Helper method to update light state and re-do world lighting if required.
@@ -51,24 +71,10 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-    public void load(WrapperNBT data){
-		super.load(data);
-		//Load components back in.
-		for(Axis axis : Axis.values()){
-			String packID = data.getString("packID" + axis.ordinal());
-			if(!packID.isEmpty()){
-				String systemName = data.getString("systemName" + axis.ordinal());
-				AItemPack<JSONPoleComponent> componentItem = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
-				components.put(axis, newComponent);
-				if(newComponent.getTextLines() != null){
-					newComponent.setTextLines(data.getStrings("textLines", newComponent.getTextLines().size()));
-				}
-			}
-		}
-    }
-    
+	public RenderPole getRenderer(){
+		return new RenderPole();
+	}
+	
 	@Override
     public void save(WrapperNBT data){
 		super.save(data);
@@ -81,11 +87,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			}
 		}
     }
-	
-	@Override
-	public RenderPole getRenderer(){
-		return new RenderPole();
-	}
 	
 	/**
 	 *  Helper method to create a component for this TE.  Does not add the component.
