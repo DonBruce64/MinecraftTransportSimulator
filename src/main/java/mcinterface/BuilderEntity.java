@@ -2,7 +2,9 @@ package mcinterface;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -17,9 +19,11 @@ import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
@@ -27,6 +31,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -253,6 +258,41 @@ public class BuilderEntity extends Entity{
 		//We only return collision boxes here as we don't want the player to collide with interaction boxes.
 		return collisionBoxes != null ? collisionBoxes : super.getCollisionBoundingBox();
     }
+	
+	@Override
+	public ItemStack getPickedResult(RayTraceResult target){
+		if(entity instanceof EntityVehicleF_Physics){
+			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+			for(BoundingBox box : vehicle.interactionBoxes){
+				if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
+					APart part = vehicle.getPartAtLocation(box.localCenter);
+					
+					//If the part is null, see if we clicked a part's collision box instead.
+					if(part == null){
+						for(Entry<APart, List<BoundingBox>> partCollisionEntry : vehicle.partCollisionBoxes.entrySet()){
+							for(BoundingBox collisionBox : partCollisionEntry.getValue()){
+								if(collisionBox.equals(box)){
+									part = partCollisionEntry.getKey();
+									break;
+								}
+							}
+							if(part != null){
+								break;
+							}
+						}
+					}
+					
+					//If we found a part, return it as an item.
+					if(part != null){
+						ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(part.getItem()));
+						stack.setTagCompound(part.getData().tag);
+						return stack;
+					}
+				}
+			}
+		}
+		return ItemStack.EMPTY;
+	}
     
     @Override
     public void setEntityId(int id){
@@ -333,11 +373,11 @@ public class BuilderEntity extends Entity{
     @SubscribeEvent
     public static void on(PlayerInteractEvent.EntityInteract event){
     	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
-    		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND)){
-        		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
-	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
-	    		if(vehicle.interactionBoxes.contains(boxClicked)){
-		    		InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, true));
+    		BuilderEntity builder = (BuilderEntity) event.getTarget();
+    		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
+	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
+	    		if(boxClicked != null){
+		    		InterfaceNetwork.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
 	    			MTS.MTSLog.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
@@ -358,11 +398,11 @@ public class BuilderEntity extends Entity{
     @SubscribeEvent
     public static void on(AttackEntityEvent event){
     	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
-    		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) ((BuilderEntity) event.getTarget()).entity;
+    		BuilderEntity builder = (BuilderEntity) event.getTarget();
     		if(event.getEntityPlayer().world.isRemote){
-	    		BoundingBox boxClicked = ((BuilderEntity) event.getTarget()).interactionBoxes.lastBoxRayTraced;
-    			if(vehicle.interactionBoxes.contains(boxClicked)){
-        			InterfaceNetwork.sendToServer(new PacketVehicleInteract(vehicle, boxClicked.localCenter, false));
+	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
+    			if(boxClicked != null){
+        			InterfaceNetwork.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
         			MTS.MTSLog.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}

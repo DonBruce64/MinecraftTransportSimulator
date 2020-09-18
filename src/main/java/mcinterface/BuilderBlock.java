@@ -16,7 +16,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -97,9 +96,7 @@ public class BuilderBlock extends Block{
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
 		Class<? extends ATileEntityBase<?>> teClass = ((IBlockTileEntity<?>) block).getTileEntityClass();
-		if(TileEntitySignalController.class.isAssignableFrom(teClass)){
-			return new BuilderTileEntitySignalController();
-		}else if(IFluidTankProvider.class.isAssignableFrom(teClass)){
+		if(IFluidTankProvider.class.isAssignableFrom(teClass)){
 			return getTileEntityTankWrapper(block);
 		}else{
 			return getTileEntityGenericWrapper(block);
@@ -307,7 +304,6 @@ public class BuilderBlock extends Block{
 		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
-		GameRegistry.registerTileEntity(BuilderTileEntitySignalController.class, new ResourceLocation(MTS.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntitySignalController.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.Tickable.class, new ResourceLocation(MTS.MODID, BuilderTileEntityFluidTank.class.getSimpleName() + BuilderTileEntityFluidTank.Tickable.class.getSimpleName()));
 		

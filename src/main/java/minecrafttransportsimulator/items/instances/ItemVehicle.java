@@ -68,7 +68,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 				newVehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recusion.
-				EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null);
+				EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null, false);
 
 				//Set default vehicle text.
 				if(newVehicle.definition.rendering.textObjects != null){

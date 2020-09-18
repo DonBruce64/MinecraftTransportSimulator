@@ -67,12 +67,15 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 		}
 		
 		int currentTime = (int) ((world.getTime()/20)%Integer.MAX_VALUE);
+		int redstoneSignal = world.getRedstonePower(position.copy().add(0, -1, 0));
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
-			//Change light status based on redstone state.
-			if(lightsOn ^ world.getRedstonePower(position.copy().add(0, -1, 0)) == 0){
-				lightsOn = !lightsOn;
-				updateState(currentOpState, false);
+			if(!currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
+				//If we aren't in redstone signal mode, check lights.
+				if(lightsOn ^ redstoneSignal == 0){
+					lightsOn = !lightsOn;
+					updateState(currentOpState, false);
+				}
 			}
 			
 			//If we are in the idle op sate, check if we need to start a cycle.
@@ -110,6 +113,11 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 								break;
 							}
 						}
+					}
+				}else if(currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
+					//If redstone is active, start sequence.
+					if(redstoneSignal > 0){
+						updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
 					}
 				}else{
 					//Not a triggered signal, we must be timed.
@@ -152,6 +160,18 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 						break;
 					}
 				}
+			}
+		}else{
+			//We are remotely-controlled.  Adjust state to redstone.
+			//First three bits are the state of the controller, the last bit is the light state.
+			int stateOpCode = redstoneSignal & 7;
+			boolean lightOnSignal = redstoneSignal >> 3 > 0;
+			if(lightsOn ^ lightOnSignal){
+				lightsOn = !lightsOn;
+				updateState(currentOpState, false);
+			}
+			if(currentOpState.ordinal() != stateOpCode && stateOpCode < OpState.values().length){
+				updateState(OpState.values()[stateOpCode], false);
 			}
 		}
 	}
@@ -209,6 +229,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	public static enum OpMode{
 		TIMED_CYCLE,
 		VEHICLE_TRIGGER,
+		REDSTONE_TRIGGER,
 		REMOTE_CONTROL;
 	}
 	

@@ -124,7 +124,9 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		
 		@Override
 		public void update(){
-			((ITileEntityTickable) tileEntity).update();
+			if(tileEntity != null){
+				((ITileEntityTickable) tileEntity).update();
+			}
 		}
 	}
 }

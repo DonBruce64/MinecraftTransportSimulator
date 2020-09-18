@@ -131,9 +131,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Get braking force and apply it to the motions.
 		float brakingFactor = getBrakingForce();
 		if(brakingFactor > 0){
-			//FIXME test braking force.
 			double brakingForce = 20F*brakingFactor/currentMass;
-			//double brakingForce = 20F*brakingFactor + Math.pow(1.00033, currentMass)/currentMass;
 			if(brakingForce > velocity){
 				motion.x = 0;
 				motion.z = 0;
@@ -192,7 +190,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//how much delta the vector says we can change.
 				Point3d idealMotion = goingInReverse ? normalizedGroundHeadingVector.copy().multiply(-groundVelocity) : normalizedGroundHeadingVector.copy().multiply(groundVelocity);
 				idealMotion.multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
-				//FIXME remove this on build day.
+				//TODO remove this when we are sure turning is good.
 				//System.out.format("Dot:%f Vel:%f GroundVel:%f Turn:%f InRev:%b Client:%s Delta:%f Factor:%f IdelV:%f\n", dotProduct, motion.length(), groundVelocity, turningForce, goingInReverse, world.isClient() ? "1" : "0", vectorDelta, motionFactor, idealMotion.length());
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;

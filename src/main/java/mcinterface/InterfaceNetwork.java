@@ -16,7 +16,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerControlled;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
@@ -72,7 +71,6 @@ public class InterfaceNetwork{
 		packetMappings.put(packetIndex++, PacketTileEntityPoleChange.class);
 		packetMappings.put(packetIndex++, PacketTileEntityPumpConnection.class);
 		packetMappings.put(packetIndex++, PacketTileEntitySignalControllerChange.class);
-		packetMappings.put(packetIndex++, PacketTileEntitySignalControllerControlled.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlAnalog.class);
 		packetMappings.put(packetIndex++, PacketVehicleControlDigital.class);
 		packetMappings.put(packetIndex++, PacketVehicleInstruments.class);

@@ -73,7 +73,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 					}
 				}else if(vehicle.definition.motorized.hitchPos != null){
 					//FIXME re-enable this when we decide to do pain of trailers.
-					player.sendPacket(new PacketPlayerChatMessage("This functionality has been disabled for this release.  Please check back in V19.1.0!"));
+					player.sendPacket(new PacketPlayerChatMessage("This functionality has been disabled for this release.  Please check back later."));
 					return false;
 					/*
 					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){

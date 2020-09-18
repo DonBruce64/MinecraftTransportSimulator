@@ -166,26 +166,33 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * and custom types.  If this is not required, it may be null.
 	 */
     public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset){
-    	APart newPart = createPartFromData(partItem.definition, partData, offset, partItem);
-    	if(newPart != null){
-    		addPart(newPart, false);
+    	APart part = createPartFromData(partItem.definition, partData, offset, partItem);
+    	if(part != null){
+    		addPart(part, false);
 			
-			//If we are a new part, we need to add default parts and text.
-    		if(partData.getString("packID").isEmpty()){
-				if(newPart.definition.subParts != null){
-					addDefaultParts(newPart.definition.subParts, this, newPart.parentPart);
-				}
-				
-				if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
-					for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
-						newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+			//If we are a new part, we need to add text.
+    		boolean newPart = partData.getString("packID").isEmpty();
+    		if(newPart){
+				if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
+					for(byte i=0; i<part.definition.rendering.textObjects.size(); ++i){
+						part.textLines.set(i, part.definition.rendering.textObjects.get(i).defaultText);
 					}
 				}
-				partData = newPart.getData();
+				partData = part.getData();
     		}
 			
 			//Send packet to client with part data.
-			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, newPart.definition.packID, newPart.definition.systemName, partData, newPart.parentPart), this);
+			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, part.definition.packID, part.definition.systemName, partData, part.parentPart), this);
+			
+			//If we are a new part, add default parts.  We need to do this after we send a packet.
+			//We need to make sure to convert them to the right type as they're offset.
+			if(newPart && part.definition.subParts != null){
+				List<VehiclePart> subPartsToAdd = new ArrayList<VehiclePart>();
+				for(VehiclePart subPartPack : part.definition.subParts){
+					subPartsToAdd.add(this.getPackForSubPart(part.vehicleDefinition, subPartPack));
+				}
+				addDefaultParts(subPartsToAdd, this, part, true);
+			}
 			return true;
     	}else{
     		return false;
@@ -424,7 +431,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * This method should only be called when the vehicle or part with the
 	 * passed-in definition is first placed, not when it's being loaded from saved data.
 	 */
-	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle, APart parentPart){
+	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle, APart parentPart, boolean sendPacket){
 		for(VehiclePart packDef : partsToAdd){
 			if(packDef.defaultPart != null){
 				try{
@@ -441,10 +448,15 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 							}
 						}
 						
+						//Send a packet if required.
+						if(sendPacket){
+							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.definition.packID, newPart.definition.systemName, newPart.getData(), parentPart), vehicle);
+						}
+						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
 						if(packDef.additionalParts != null){
-							addDefaultParts(packDef.additionalParts, vehicle, newPart);
+							addDefaultParts(packDef.additionalParts, vehicle, newPart, sendPacket);
 						}
 						
 						//Check all sub-parts, if we have any.
@@ -454,7 +466,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 							for(VehiclePart subPartPack : newPart.definition.subParts){
 								subPartsToAdd.add(vehicle.getPackForSubPart(packDef, subPartPack));
 							}
-							addDefaultParts(subPartsToAdd, vehicle, newPart);
+							addDefaultParts(subPartsToAdd, vehicle, newPart, sendPacket);
 						}
 					}catch(NullPointerException e){
 						throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.genericName + " but that part doesn't exist in the pack item registry.");

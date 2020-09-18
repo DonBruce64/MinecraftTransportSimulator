@@ -73,7 +73,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	@Override
 	public void attack(Damage damage){
 		if(damage.isExplosion || Math.random() < 0.5){
-			setFlat();
+			setFlatState(true);
 		}
 	}
 	
@@ -106,7 +106,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 					}else{
 						++ticksCalcsSkipped;
 						if(Math.random()*50000 < ticksCalcsSkipped){
-							setFlat();
+							setFlatState(true);
 						}
 					}
 				}
@@ -185,21 +185,33 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		
 	}
 	
-	public void setFlat(){
-		//If we are on the client, play a sound to indicate we went flat.
+	/**
+	 * Attempts to set the ground device flat state to the passed-in state.  Checks to make
+	 * sure the ground device can actually go flat if it is being requested to do so.
+	 */
+	public void setFlatState(boolean flat){
 		if(vehicle.world.isClient()){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
-		}else{
-			//On the server, can we go flat and do the configs let us?
-			if(!isFlat && definition.ground.canGoFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
-			}else{
-				return;
+			if(flat){
+				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
 			}
+		}else{
+			//On the server, can we go flat and does the config let us?
+			//Or if we are repairing, are we flat in the first place?
+			if(flat){
+				if(isFlat || !definition.ground.canGoFlat || !ConfigSystem.configObject.damage.wheelBreakage.value){
+					return;
+				}
+			}else{
+				if(!isFlat){
+					return;
+				}
+			}
+			//Valid conditions, send packet before continuing.
+			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this, flat), vehicle);
 		}
 		
 		//Set flat state and new bounding box.
-		isFlat = true;
+		isFlat = flat;
 		boundingBox.heightRadius = getHeight()/2D;
 	}
 	

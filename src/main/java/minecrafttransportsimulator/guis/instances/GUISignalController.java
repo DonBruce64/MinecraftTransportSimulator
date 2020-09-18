@@ -137,15 +137,49 @@ public class GUISignalController extends AGUIBase{
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, BuilderGUI.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
 		
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, BuilderGUI.translate("gui.trafficsignalcontroller." + (controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER) ? "modetrigger" : (controller.currentOpMode.equals(OpMode.TIMED_CYCLE) ? "modetime" : "moderemote"))), 15, true){
+		String modeLabel = "";
+		switch(controller.currentOpMode){
+			case TIMED_CYCLE: {
+				modeLabel = BuilderGUI.translate("gui.trafficsignalcontroller.modetime");
+				break;
+			}
+			case VEHICLE_TRIGGER: {
+				modeLabel = BuilderGUI.translate("gui.trafficsignalcontroller.modetrigger");
+				break;
+			}
+			case REDSTONE_TRIGGER: {
+				modeLabel = BuilderGUI.translate("gui.trafficsignalcontroller.moderedstone");
+				break;
+			}
+			case REMOTE_CONTROL: {
+				modeLabel = BuilderGUI.translate("gui.trafficsignalcontroller.moderemote");
+				break;
+			}
+		}
+		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, modeLabel, 15, true){
 			@Override
 			public void onClicked(){
-				if(controller.currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
-					controller.currentOpMode = OpMode.TIMED_CYCLE;
-					this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetime");
-				}else{
-					controller.currentOpMode = OpMode.VEHICLE_TRIGGER;
-					this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetrigger");
+				switch(controller.currentOpMode){
+					case TIMED_CYCLE: {
+						controller.currentOpMode = OpMode.VEHICLE_TRIGGER;
+						this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetrigger");
+						break;
+					}
+					case VEHICLE_TRIGGER: {
+						controller.currentOpMode = OpMode.REDSTONE_TRIGGER;
+						this.text = BuilderGUI.translate("gui.trafficsignalcontroller.moderedstone");
+						break;
+					}
+					case REDSTONE_TRIGGER: {
+						controller.currentOpMode = OpMode.REMOTE_CONTROL;
+						this.text = BuilderGUI.translate("gui.trafficsignalcontroller.moderemote");
+						break;
+					}
+					case REMOTE_CONTROL: {
+						controller.currentOpMode = OpMode.TIMED_CYCLE;
+						this.text = BuilderGUI.translate("gui.trafficsignalcontroller.modetime");
+						break;
+					}
 				}
 			}
 		});

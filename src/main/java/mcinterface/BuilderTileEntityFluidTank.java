@@ -120,7 +120,9 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 		
 		@Override
 		public void update(){
-			((ITileEntityTickable) tileEntity).update();
+			if(tileEntity != null){
+				((ITileEntityTickable) tileEntity).update();
+			}
 		}
 	}
 }

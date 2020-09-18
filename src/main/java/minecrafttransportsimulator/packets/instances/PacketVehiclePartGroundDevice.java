@@ -14,19 +14,28 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
  * @author don_bruce
  */
 public class PacketVehiclePartGroundDevice extends APacketVehiclePart{
+	final boolean flat;
 	
-	public PacketVehiclePartGroundDevice(PartGroundDevice groundDevice){
+	public PacketVehiclePartGroundDevice(PartGroundDevice groundDevice, boolean flat){
 		super(groundDevice.vehicle, groundDevice.placementOffset);
+		this.flat = flat;
 	}
 	
 	public PacketVehiclePartGroundDevice(ByteBuf buf){
 		super(buf);
+		this.flat = buf.readBoolean();
+	}
+	
+	@Override
+	public void writeToBuffer(ByteBuf buf){
+		super.writeToBuffer(buf);
+		buf.writeBoolean(flat);
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		PartGroundDevice groundDevice = (PartGroundDevice) vehicle.getPartAtLocation(offset);
-		groundDevice.setFlat();
+		groundDevice.setFlatState(flat);
 		return true;
 	}
 }
