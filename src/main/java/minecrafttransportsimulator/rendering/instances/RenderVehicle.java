@@ -45,6 +45,7 @@ public final class RenderVehicle{
 	//VEHICLE MAPS.  Maps are keyed by generic name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
+	@Deprecated
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
 	
@@ -419,6 +420,7 @@ public final class RenderVehicle{
 	 *  Renders the treads using a manual system.  Points are defined by pack authors and are located in the
 	 *  vehicle JSON.  This method is more cumbersome for the authors, but allows for precise path control.
 	 */
+	@Deprecated
 	private static void doManualTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.definition.genericName);
 		if(deltas == null){
@@ -556,8 +558,8 @@ public final class RenderVehicle{
 	}
 	
 	/**
-	 *  Renders the treads using an automatic calculation system.  This system is good for simple treads,
-	 *  though will render oddly on complex paths.
+	 *  Renders the treads using an automatic calculation system.
+	 *  This is required to prevent the need to manually input a ton of points and reduce pack creator's work.
 	 */
 	private static void doAutomaticTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
 		List<Double[]> points = treadPoints.get(treadPart.vehicle.definition.genericName);
@@ -628,10 +630,20 @@ public final class RenderVehicle{
 			//This is the closest value to the definition's tread spacing.
 			double totalPathLength = 0;
 			for(int i=0; i<rollers.length; ++i){
+				//Get roller and add roller path contribution.
 				TransformTreadRoller roller = rollers[i];
 				totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+				
+				//Get next roller and add distance path contribution.
+				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+				//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
 				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
-				totalPathLength += Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					totalPathLength += 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+				}else{
+					totalPathLength += straightPathLength;
+				}
 			}
 			
 			double deltaDist = treadPart.definition.ground.spacing + (totalPathLength%treadPart.definition.ground.spacing)/(totalPathLength/treadPart.definition.ground.spacing);
@@ -698,30 +710,52 @@ public final class RenderVehicle{
 				//If we have any leftover roller path, account for it here to keep spacing consistent.
 				//We may also have leftover straight path length if we didn't do anything on a roller.
 				//If we have roller length, make sure to offset it to account for the curvature of the roller.
-				//If we don't do this, the line won't start at the end of the prior roller..
+				//If we don't do this, the line won't start at the end of the prior roller.
 				//If we are on the last roller, we need to get the first roller to complete the loop.
+				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+				//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
+				//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
 				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
 				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 				double extraPathLength = rollerPathLength + leftoverPathLength;
 				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
 				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
-				while(straightPathLength + extraPathLength > deltaDist){
-					//Go to and add the next point on the straight path.
-					if(extraPathLength > 0){
-						yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
-						zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
-						straightPathLength -= (deltaDist - extraPathLength);
-						extraPathLength = 0;
-					}else{
-						yPoint += normalizedY*deltaDist;
-						zPoint += normalizedZ*deltaDist;
-						straightPathLength -= deltaDist;
+				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					double hyperbolicPathLength = 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+					double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
+					double hyperbolicPathMaxY = treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant);
+					double hyperbolicFunctionCurrent = 0;
+					while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
+						//Go to and add the next point on the hyperbolic path.
+						if(extraPathLength > 0){
+							hyperbolicFunctionCurrent += extraPathLength*hyperbolicFunctionStep;
+							extraPathLength = 0;
+						}else{
+							hyperbolicFunctionCurrent += hyperbolicFunctionStep;
+						}
+						yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant) - hyperbolicPathMaxY;
+						zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
+						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant))});
 					}
-					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+					leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
+				}else{
+					while(straightPathLength + extraPathLength > deltaDist){
+						//Go to and add the next point on the straight path.
+						if(extraPathLength > 0){
+							yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
+							zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
+							straightPathLength -= (deltaDist - extraPathLength);
+							extraPathLength = 0;
+						}else{
+							yPoint += normalizedY*deltaDist;
+							zPoint += normalizedZ*deltaDist;
+							straightPathLength -= deltaDist;
+						}
+						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+					}
+					leftoverPathLength = straightPathLength;
 				}
-				leftoverPathLength = straightPathLength;
 			}
-			
 			treadPoints.put(treadPart.vehicle.definition.genericName, points);
 		}
 				

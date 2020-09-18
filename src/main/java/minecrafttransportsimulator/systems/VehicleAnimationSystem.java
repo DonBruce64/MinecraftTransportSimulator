@@ -149,9 +149,7 @@ public final class VehicleAnimationSystem{
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
-			case("speed"): return vehicle.velocity*vehicle.SPEED_FACTOR*20;
-			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
-			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
+			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/100D;
@@ -180,6 +178,8 @@ public final class VehicleAnimationSystem{
 			case("trim_rudder"): return vehicle.rudderTrim/10D;
 			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
 			case("lift_reserve"): return vehicle.trackAngle*3 + 20;
+			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
+			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);

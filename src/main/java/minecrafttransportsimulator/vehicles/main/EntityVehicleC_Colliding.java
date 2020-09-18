@@ -48,7 +48,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public double airDensity;
 	public double currentMass;
 	public double velocity;
-	public double prevVelocity;
+	public double axialVelocity;
 	public final Point3d headingVector = new Point3d(0, 0, 0);
 	public final Point3d verticalVector = new Point3d(0, 0, 0);
 	public final Point3d sideVector = new Point3d(0, 0, 0);
@@ -104,12 +104,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public void update(){
 		super.update();
 		//Set vectors to current velocity and orientation.
-		prevVelocity = velocity;
 		headingVector.set(0D, 0D, 1D).rotateFine(angles);
 		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
 		sideVector.setTo(verticalVector.crossProduct(headingVector));
 		normalizedVelocityVector.setTo(motion).normalize();
 		velocity = motion.length();
+		axialVelocity = Math.abs(motion.dotProduct(headingVector));
 		
 		//Update mass.
 		if(definition != null){
@@ -320,7 +320,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 						hardnessHitThisTick += block.getHardness();
 						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
-							world.destroyBlock(block.getPosition());
+							if(ticksExisted > 500){
+								world.destroyBlock(block.getPosition());
+							}else{
+								motion.set(0D, 0D, 0D);
+								return -1;
+							}
 						}
 					}else{
 						hardnessHitThisTick = 0;

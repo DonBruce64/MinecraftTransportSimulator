@@ -170,22 +170,19 @@ abstract class EntityVehicleA_Base extends AEntityBase{
     	if(newPart != null){
     		addPart(newPart, false);
 			
-			//If the part doesn't have NBT, it must be new and we need to add default parts.
-			//Only do this if we actually have subParts for this part.
-    		//FIXME partData will never be null, so this mucks up default parts.
-			if(partData == null && newPart.definition.subParts != null){
-				addDefaultParts(newPart.definition.subParts, this, newPart.parentPart);
-			}
-			
-			//If part data is null, we need to add default text too.
-			if(partData == null){
+			//If we are a new part, we need to add default parts and text.
+    		if(partData.getString("packID").isEmpty()){
+				if(newPart.definition.subParts != null){
+					addDefaultParts(newPart.definition.subParts, this, newPart.parentPart);
+				}
+				
 				if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
 					for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
 						newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
 					}
 				}
 				partData = newPart.getData();
-			}
+    		}
 			
 			//Send packet to client with part data.
 			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, newPart.definition.packID, newPart.definition.systemName, partData, newPart.parentPart), this);

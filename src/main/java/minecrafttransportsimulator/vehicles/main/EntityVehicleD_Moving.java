@@ -131,7 +131,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Get braking force and apply it to the motions.
 		float brakingFactor = getBrakingForce();
 		if(brakingFactor > 0){
+			//FIXME test braking force.
 			double brakingForce = 20F*brakingFactor/currentMass;
+			//double brakingForce = 20F*brakingFactor + Math.pow(1.00033, currentMass)/currentMass;
 			if(brakingForce > velocity){
 				motion.x = 0;
 				motion.z = 0;
@@ -328,7 +330,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				motion.y += groundCollisionBoost;
 				groundCollisionBoost = motion.y;
 			}else{
-				motion.y += groundCollisionBoost; 
+				motion.y += groundCollisionBoost;
+				groundCollisionBoost = 0;
 			}
 			groundDeviceBoxes.updateCollisions();
 		}
@@ -386,6 +389,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 				clientDeltaRApplied.multiply(1D/25D);
+				//TODO figure out why angles changed after spawning.
+				//if(world.isClient())System.out.format("Angle:%f Applied:%f Server:%f Client:%f\n", angles.x, clientDeltaRApplied.x, serverDeltaR.x, clientDeltaR.x);
 				rotationApplied.add(clientDeltaRApplied);
 				
 				//Add actual movement to client deltas to prevent further corrections.

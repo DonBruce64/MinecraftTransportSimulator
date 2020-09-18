@@ -399,7 +399,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				PartPropeller propeller = (PartPropeller) part;
 				havePropeller = true;
 				Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.totalRotation.copy().add(vehicle.angles));
-				propellerAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(propellerThrustAxis);
+				propellerAxialVelocity = vehicle.motion.dotProduct(propellerThrustAxis);
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
@@ -411,9 +411,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					if(currentGearRatio < 0 || propeller.currentPitch < 0){
 						propellerFeedback *= -1;
 					}
-					propellerFeedback += propellerForcePenalty*50;
 					
 					if(state.running){
+						propellerFeedback += propellerForcePenalty*50;
 						double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
 						double engineRPMDifference = engineTargetRPM - rpm;
 						
@@ -423,9 +423,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 						}else{
 							rpm += engineRPMDifference/10 - propellerFeedback;
 						}
-						//System.out.format("AxialSpeed:%f, DesiredSpeed:%f TargetRPM:%f ActualRPM:%f ForcePenalty:%f Feedback:%f NetRPMReduction:%f\n", propellerAxialVelocity, propellerDesiredSpeed, engineTargetRPM, rpm, propellerForcePenalty, propellerFeedback, engineRPMDifference/10 - propellerFeedback);
-					}else{
-						rpm -= (propellerFeedback - propellerForcePenalty*50);
+					}else if(!state.esOn && !state.hsOn){
+						rpm -= propellerFeedback*propellerGearboxRatio;
 					}
 				}
 			}
@@ -448,7 +447,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		///Update variables used for jet thrust.
 		if(definition.engine.jetPowerFactor > 0){
 			Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(vehicle.angles));
-			engineAxialVelocity = vehicle.normalizedVelocityVector.copy().multiply(vehicle.velocity).dotProduct(engineThrustAxis);
+			engineAxialVelocity = vehicle.motion.dotProduct(engineThrustAxis);
 			
 			//Check for entities forward and aft of the engine and damage them.
 			if(!vehicle.world.isClient() && rpm >= 5000){
@@ -723,7 +722,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
 		}else if(currentGear == 0){//Neutral to 1st.
 			nextGear = 1;
-			doShift = vehicle.velocity < 0.35 || wheelFriction == 0 || !vehicle.goingInReverse;
+			doShift = vehicle.axialVelocity < 0.35 || wheelFriction == 0 || !vehicle.goingInReverse;
 		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
 			doShift = !definition.engine.isAutomatic || (autoShift && !vehicle.world.isClient());
 			nextGear = (byte) (currentGear + 1);
@@ -746,7 +745,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
 		}else if(currentGear == 0){//Neutral to reverse.
 			nextGear = -1;
-			doShift = vehicle.velocity < 0.35 || wheelFriction == 0 || vehicle.goingInReverse;
+			doShift = vehicle.axialVelocity < 0.35 || wheelFriction == 0 || vehicle.goingInReverse;
 		}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
 			doShift = true;
 			nextGear = (byte) (currentGear - 1);
@@ -879,7 +878,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 						if(Math.abs(angleOfAttack) > 0.4663D){
 							thrust *= 0.4663D/Math.abs(angleOfAttack);
 						}
-						//System.out.format("Thrust:%f CurrentLV:%f DesiredLV:%f AoA:%f Gearbox:%f Velocity:%f Side:%s\n", thrust, currentLinearVelocity, desiredLinearVelocity, angleOfAttack, propellerGearboxRatio, vehicle.velocity, vehicle.world.isClient() ? "CLIENT" : "SERVER");
 						
 						//If the propeller is in the water, increase thrust.
 						if(isPropellerInLiquid){

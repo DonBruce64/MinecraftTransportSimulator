@@ -65,7 +65,7 @@ public abstract class APart implements ISoundProvider{
 		this.definition = definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
-		this.boundingBox = new BoundingBox(getPositionOffset(0).add(placementOffset), worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false);
+		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false);
 		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation.copy();
 		this.isValid = true;
@@ -115,6 +115,7 @@ public abstract class APart implements ISoundProvider{
 	
 	/**
 	 * Called when the vehicle sees this part being attacked.
+	 * Only called on the server.
 	 */
 	public void attack(Damage damage){}
 	

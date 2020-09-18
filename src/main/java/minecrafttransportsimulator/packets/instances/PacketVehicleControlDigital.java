@@ -5,10 +5,8 @@ import mcinterface.InterfaceAudio;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 

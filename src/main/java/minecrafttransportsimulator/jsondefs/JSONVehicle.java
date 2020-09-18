@@ -129,17 +129,20 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
         
         //Ground-specific variables.
         public float extraCollisionBoxOffset;
+        public float treadDroopConstant;
         
         //Tread-specific part variables.
+        @Deprecated
         public float[] treadYPoints;
+        @Deprecated
         public float[] treadZPoints;
+        @Deprecated
         public float[] treadAngles;
         
         //Seat-specific part variables.
         public Point3d dismountPos;
         
         //Engine-specific part variables.
-        //FIXME make this a set of objects.
         @Deprecated
         public float[] exhaustPos;
         @Deprecated

@@ -72,13 +72,8 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public void attack(Damage damage){
-		if(definition.ground.isWheel && !isFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
-			if(damage.isExplosion || Math.random() < 0.5){
-				if(!vehicle.world.isClient() && definition.ground.canGoFlat){
-					setFlat();
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
-				}
-			}
+		if(damage.isExplosion || Math.random() < 0.5){
+			setFlat();
 		}
 	}
 	
@@ -103,16 +98,15 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				}
 				
 				//If we have a slipping wheel, count down and possibly pop it.
-				if(!skipAngularCalcs){
-					if(ticksCalcsSkipped > 0 && !isFlat){
-						--ticksCalcsSkipped;
-					}
-				}else if(!isFlat){
-					++ticksCalcsSkipped;
-					if(Math.random()*50000 < ticksCalcsSkipped && ConfigSystem.configObject.damage.wheelBreakage.value){
-						if(!vehicle.world.isClient()){
+				if(!vehicle.world.isClient() && !isFlat){
+					if(!skipAngularCalcs){
+						if(ticksCalcsSkipped > 0){
+							--ticksCalcsSkipped;
+						}
+					}else{
+						++ticksCalcsSkipped;
+						if(Math.random()*50000 < ticksCalcsSkipped){
 							setFlat();
-							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
 						}
 					}
 				}
@@ -192,12 +186,21 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	public void setFlat(){
-		isFlat = true;
-		//Update box height to new height.
-		boundingBox.heightRadius = getHeight()/2D;
+		//If we are on the client, play a sound to indicate we went flat.
 		if(vehicle.world.isClient()){
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
+		}else{
+			//On the server, can we go flat and do the configs let us?
+			if(!isFlat && definition.ground.canGoFlat && ConfigSystem.configObject.damage.wheelBreakage.value){
+				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this), vehicle);
+			}else{
+				return;
+			}
 		}
+		
+		//Set flat state and new bounding box.
+		isFlat = true;
+		boundingBox.heightRadius = getHeight()/2D;
 	}
 	
 	public float getFrictionLoss(){
@@ -244,7 +247,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
-		if(skipAngularCalcs && this.isOnGround()){
+		if(skipAngularCalcs && isOnGround()){
 			for(byte i=0; i<4; ++i){
 				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}

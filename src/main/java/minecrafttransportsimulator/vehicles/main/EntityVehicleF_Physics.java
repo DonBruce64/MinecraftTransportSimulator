@@ -57,18 +57,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private boolean turningLeft;
 	private boolean turningRight;
 	private byte turningCooldown;
-	//private double towingDeltaYaw;
 	private double pitchDirectionFactor;
-	public double trackAngle;
 	private double currentWingArea;
-	//private Point3d hookupOffset;
-	//private Point3d hookupPos;
-	//private Point3d hitchOffset;
-	//private Point3d hitchOffset2;
-	//private Point3d hitchPos;
-	//private Point3d hitchPos2;
-	//private Point3d xzPlaneDelta;
-	//private Point3d xzPlaneHeading;
+	public double trackAngle;
 	
 	//Coefficients.
 	private double wingLiftCoeff;
@@ -121,7 +112,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//Instead, we get called to update from the vehicle we are being towed by.
 		//If we are updating from that vehicle, we'll have the flag set to not return here.
 		if(towedByVehicle != null && !updateThisCycle){
-			//TODO make this un-commented when trailers have proper physics.
 			return;
 		}else{
 			updateThisCycle = false;
@@ -234,10 +224,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					if(part instanceof PartPropeller){
 						addThrustTorque = true;
 						if(part.definition.propeller.isRotor){
-							double rollDelta = aileronAngle/10D - angles.z;
-							double pitchDelta = -elevatorAngle/10D - angles.x;
-							double yawDelta =  -5D*rudderAngle/MAX_RUDDER_ANGLE;
-							rotorRotation.add(pitchDelta, yawDelta, rollDelta);
+							rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
 						}
 					}
 				}
@@ -321,10 +308,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Get all other forces.
-			wingForce = 0.5F*airDensity*velocity*velocity*currentWingArea*wingLiftCoeff;
-			aileronForce = 0.5F*airDensity*velocity*velocity*definition.motorized.aileronArea*aileronLiftCoeff;
-			elevatorForce = 0.5F*airDensity*velocity*velocity*definition.motorized.elevatorArea*elevatorLiftCoeff;			
-			rudderForce = 0.5F*airDensity*velocity*velocity*definition.motorized.rudderArea*rudderLiftCoeff;
+			wingForce = 0.5F*airDensity*axialVelocity*axialVelocity*currentWingArea*wingLiftCoeff;
+			aileronForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.aileronArea*aileronLiftCoeff;
+			elevatorForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.elevatorArea*elevatorLiftCoeff;			
+			rudderForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.rudderArea*rudderLiftCoeff;
 			
 			//Get torques.  Point for ailerons is 0.75% to the edge of the wing.
 			aileronTorque = aileronForce*definition.motorized.wingSpan*0.5F*0.75F;
@@ -353,7 +340,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			
 			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(definition.motorized.wingArea > 0 && velocity < 0.25 && angles.x < -45 && groundedGroundDevices.isEmpty()){
+			if(definition.motorized.wingArea > 0 && axialVelocity < 0.25 && angles.x < 45 && groundedGroundDevices.isEmpty()){
 				elevatorTorque += 100;
 			}
 			
@@ -361,7 +348,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			totalAxialForce.set(0D, wingForce - elevatorForce, 0D).add(thrustForce).rotateFine(angles);
 			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocityVector);
 			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
-			totalForce.set(0D, 0D, 0D).add(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
+			totalForce.setTo(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
 			motion.add(totalForce);
 			
 			//Add all torques to the main torque matrix and apply them.
