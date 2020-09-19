@@ -5,9 +5,11 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL;
@@ -15,6 +17,7 @@ import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraftforge.event.world.WorldEvent;
@@ -186,11 +189,15 @@ public class InterfaceAudio{
 		//If the sound system was reset, blow out all saved data points.
 		if(soundSystemReset){
 			dataSourceBuffers.clear();
+			Set<ISoundProvider> providers = new HashSet<ISoundProvider>();
 			for(SoundInstance sound : playingSounds){
-				sound.provider.restartSound(sound);
+				providers.add(sound.provider);
 			}
 			playingSounds.clear();
 			sourceGetFailures = 0;
+			for(ISoundProvider provider : providers){
+				provider.startSounds();
+			}
 		}
 	}
 	

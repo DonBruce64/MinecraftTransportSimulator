@@ -78,6 +78,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		super(world, data);
 		
 		//Load simple variables.
+		this.hornOn = data.getBoolean("hornOn");
+		this.sirenOn = data.getBoolean("sirenOn");
+		this.reverseThrust = data.getBoolean("reverseThrust");
+		this.gearUpCommand = data.getBoolean("gearUpCommand");
 		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
 		this.fuelTank = new FluidTank(data, definition.motorized.fuelCapacity, world.isClient());
@@ -131,6 +135,14 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void update(){
 		super.update();
+		//Start sounds if we haven't already.  We have to do this via the update check, as some mods will create
+		//vehicles in random locations for their code.  I'm looking at YOU, The One Probe!
+		if(ticksExisted == 1 && world.isClient()){
+			startSounds();
+			for(APart part : parts){
+				part.startSounds();
+			}
+		}
 		if(fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
 			//If we have space for fuel, and we have tanks with it, transfer it.
 			for(APart part : parts){
@@ -309,6 +321,15 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	//-----START OF SOUND CODE-----
 	@Override
+	public void startSounds(){
+		if(hornOn){
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+		}else if(sirenOn){
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+		}
+	}
+	
+	@Override
 	public void updateProviderSound(SoundInstance sound){
 		if(!isValid){
 			sound.stop();
@@ -320,15 +341,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			if(!sirenOn){
 				sound.stop();
 			}
-		}
-	}
-	
-	@Override
-	public void restartSound(SoundInstance sound){
-		if(sound.soundName.equals(definition.motorized.hornSound)){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
-		}else if(sound.soundName.equals(definition.motorized.sirenSound)){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
 		}
 	}
     
@@ -355,6 +367,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
+		data.setBoolean("hornOn", hornOn);
+		data.setBoolean("sirenOn", sirenOn);
+		data.setBoolean("reverseThrust", reverseThrust);
+		data.setBoolean("gearUpCommand", gearUpCommand);
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
 		fuelTank.save(data);

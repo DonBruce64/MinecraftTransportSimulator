@@ -300,7 +300,7 @@ public abstract class APart implements ISoundProvider{
 	}
 	
 	@Override
-	public void restartSound(SoundInstance sound){}
+	public void startSounds(){}
     
 	@Override
     public FloatBuffer getProviderPosition(){

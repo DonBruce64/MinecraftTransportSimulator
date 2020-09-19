@@ -44,7 +44,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	public PartEngine linkedEngine;
 	
 	//Internal variables.
-	private boolean startSounds;
 	private boolean backfired;
 	private boolean isPropellerInLiquid;
 	private byte starterLevel;
@@ -88,7 +87,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		this.temp = data.getDouble("temp");
 		this.pressure = data.getDouble("pressure");
 		this.state = EngineStates.values()[data.getInteger("state")];
-		this.startSounds = vehicle.world.isClient();
 		for(float gear : definition.engine.gearRatios){
 			if(gear < 0){
 				++reverseGears;
@@ -134,20 +132,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Set current gear ratio based on current gear.
 		currentGearRatio = definition.engine.gearRatios[currentGear + reverseGears];
-		
-		//Start up sounds if we haven't already.  We don't do this during construction as other mods are
-		//PITA and will construct new vehicles every tick to get data.  I'm looking a YOU The One Probe!
-		if(startSounds && state.running && vehicle.world.isClient()){
-			if(definition.engine.customSoundset != null){
-				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
-				}
-			}else{
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-			}
-			startSounds = false;
-		}
 				
 		//Check to see if we are linked and need to equalize power between us and another engine.
 		if(linkedEngine != null){
@@ -755,8 +739,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			if(!vehicle.world.isClient()){
 				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, autoShift), vehicle);
 			}
-			//If the engine is running, and we are a big truck, turn on the backup beeper.
-			if(currentGear == -1 && state.running && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
+			//If we are a big truck, turn on the backup beeper.
+			if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
 				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 			}
 		}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
@@ -945,9 +929,11 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				}
 			}
 		}else if(sound.soundName.endsWith("backup_beeper")){
-			//Turn off backup beeper if we are no longer in reverse.
+			//Turn off backup beeper if we are no longer in reverse or aren't running.
 			if(currentGear >= 0){
 				sound.stop();
+			}else{
+				sound.volume = state.running ? 1 : 0;
 			}
 		}else{
 			//If we are using a custom soundset, do that logic. Otherwise, do default sound logic.
@@ -998,16 +984,21 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public void restartSound(SoundInstance sound){
-		if(definition.engine.customSoundset != null){
-			for(EngineSound soundDefinition : definition.engine.customSoundset){
-				if(sound.soundName.equals(soundDefinition.soundName)){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
+	public void startSounds(){
+		if(state.running){
+			if(definition.engine.customSoundset != null){
+				for(EngineSound soundDefinition : definition.engine.customSoundset){
+					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
+			}else{
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
-		}else if(sound.soundName.endsWith("_cranking") || sound.soundName.endsWith("_running") || sound.soundName.endsWith("_supercharger")){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, sound.soundName, true));
-		}else if(sound.soundName.endsWith("backup_beeper")){
+		}
+		if(state.esOn || state.hsOn){
+			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+		}
+		if(currentGear < 0 && vehicle.definition.motorized.isBigTruck){
 			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
 		}
 	}
