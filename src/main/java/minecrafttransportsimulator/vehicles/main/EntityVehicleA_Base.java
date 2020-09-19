@@ -86,9 +86,9 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	
 	@Override
 	public void update(){
-		super.update();
 		//Send update call down to all parts.
 		//They need to get processed first to handle hitbox logic, or removal based on damage.
+		//We call this before we call the super as they need to know the prev statuses..
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -97,6 +97,9 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				removePart(part, iterator);
 			}
 		}
+		
+		//Now call the super to update prev variables.
+		super.update();
 	}
 	
 	/**
