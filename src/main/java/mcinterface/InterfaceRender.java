@@ -492,7 +492,7 @@ public class InterfaceRender{
 		            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
 		            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
 		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
-		            	double pitchRollComponent = (1 - Math.cos(Math.toRadians(playerYawDelta)))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
+		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
 		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
 		            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
 		        	}else if(InterfaceGame.inThirdPerson()){
