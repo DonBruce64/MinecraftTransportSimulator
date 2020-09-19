@@ -67,6 +67,7 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 					if(block != null){
 						GL11.glRotatef(-block.getRotation(wrapper.tileEntity.world, wrapper.tileEntity.position), 0, 1, 0);
 					}else{
+						GL11.glPopMatrix();
 						return;
 					}
 				}
