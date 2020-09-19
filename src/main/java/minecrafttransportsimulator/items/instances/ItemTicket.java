@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.instances;
 import java.util.Iterator;
 import java.util.List;
 
-import mcinterface.BuilderGUI;
+import mcinterface.InterfaceCore;
 import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
@@ -18,7 +18,7 @@ public class ItemTicket extends AItemBase implements IItemVehicleInteractable{
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=3; ++i){
-			tooltipLines.add(BuilderGUI.translate("info.item.ticket.line" + String.valueOf(i)));
+			tooltipLines.add(InterfaceCore.translate("info.item.ticket.line" + String.valueOf(i)));
 		}
 	}
 	

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import mcinterface.BuilderGUI;
+import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -17,7 +17,7 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=5; ++i){
-			tooltipLines.add(BuilderGUI.translate("info.item.jumpercable.line" + String.valueOf(i)));
+			tooltipLines.add(InterfaceCore.translate("info.item.jumpercable.line" + String.valueOf(i)));
 		}
 	}
 	

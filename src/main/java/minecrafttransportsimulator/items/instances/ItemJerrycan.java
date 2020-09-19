@@ -2,8 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import mcinterface.BuilderGUI;
-import mcinterface.InterfaceGame;
+import mcinterface.InterfaceCore;
 import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
@@ -19,12 +18,12 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.fill"));
-		tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.drain"));
+		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.fill"));
+		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.drain"));
 		if(data.getBoolean("isFull")){
-			tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.contains") + InterfaceGame.getFluidName(data.getString("fluidName")));
+			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.contains") + InterfaceCore.getFluidName(data.getString("fluidName")));
 		}else{
-			tooltipLines.add(BuilderGUI.translate("info.item.jerrycan.empty"));
+			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.empty"));
 		}
 	}
 	

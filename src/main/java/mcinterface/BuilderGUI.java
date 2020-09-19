@@ -26,7 +26,6 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -411,15 +410,6 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	public static void renderRectangle(int x, int y, int width, int height, Color color){
 		drawRect(x, y, x + width, y + height, color.getRGB());
-	}
-	
-	/**
-	 *  Returns the translation of the passed-in text from the lang file.
-	 *  Put here to prevent the need for referencing the MC class directly, which
-	 *  may change during updates.
-	 */
-	public static String translate(String text){
-		return I18n.format(text);
 	}
 	
 	/**

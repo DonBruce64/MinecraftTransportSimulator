@@ -6,9 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mcinterface.BuilderGUI;
 import mcinterface.BuilderGUI.TextPosition;
-import mcinterface.InterfaceGame;
+import mcinterface.InterfaceCore;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
@@ -163,7 +162,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, BuilderGUI.translate("gui.vehicle_bench.color"), TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
@@ -371,7 +370,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
-		packName.text = InterfaceGame.getModName(currentPack);
+		packName.text = InterfaceCore.getModName(currentPack);
 		partName.text = currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName;
 		
 		//Create part description text.
@@ -491,18 +490,18 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
-		totalInformation += BuilderGUI.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
 		if(minFuelConsumption != 99){
-			totalInformation += BuilderGUI.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
+			totalInformation += InterfaceCore.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
 		}
 		if(minWheelSize != 99){
-			totalInformation += BuilderGUI.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
+			totalInformation += InterfaceCore.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
 		}
 		return totalInformation;
 	}

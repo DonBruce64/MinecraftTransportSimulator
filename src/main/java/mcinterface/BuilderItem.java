@@ -29,6 +29,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 /**Builder for MC items.  Constructor takes a type of {@link AItemBase}, but
  * is only visible when calling {@link #createItem(AItemBase)}.  This will automatically
@@ -39,7 +40,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class BuilderItem extends Item{
 	final AItemBase item;
 	
@@ -62,7 +63,7 @@ public class BuilderItem extends Item{
 	 */
 	@Override
 	public String getItemStackDisplayName(ItemStack stack){
-        return BuilderGUI.translate(item.getItemName());
+        return InterfaceCore.translate(item.getItemName());
 	}
 	
 	/**
@@ -146,7 +147,7 @@ public class BuilderItem extends Item{
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
 				//TODO this hard-code gets removed when the main mod correctly becomes a pack.
 				if(tabID.equals(MTS.MODID)){
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(BuilderGUI.translate("itemGroup.tabMTSCore"), item));
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(InterfaceCore.translate("itemGroup.tabMTSCore"), item));
 				}else{
 					//TODO remove this when packs define their tab names.
 					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));

@@ -8,8 +8,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.BuilderGUI;
-import mcinterface.InterfaceGame;
+import mcinterface.InterfaceCore;
 import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
@@ -50,9 +49,9 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 			//If we are a fluid tank, render text.
 			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){
 				FluidTank tank = ((IFluidTankProvider) tile).getTank();
-				String fluidName = tank.getFluidLevel() > 0 ? InterfaceGame.getFluidName(tank.getFluid()).toUpperCase() : "";
-				String fluidLevel = BuilderGUI.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
-				String fluidDispensed = BuilderGUI.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
+				String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()).toUpperCase() : "";
+				String fluidLevel = InterfaceCore.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
+				String fluidDispensed = InterfaceCore.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
 				
 				List<String> textLines = new ArrayList<String>();
 				for(byte i=0; i<tile.definition.general.textObjects.size(); ++i){

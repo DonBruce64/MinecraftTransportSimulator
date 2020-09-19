@@ -8,17 +8,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
-/**Interface for the core MC game.  This class has methods used for determining
- * which mods are loaded, getting the game status, and a few other things.
+/**Interface for the MC game instance.  This class has methods used for determining
+ * if the game is paused, the chat window status, and a few other things.
  * This interface interfaces with both Forge and MC code, so if it's something 
  * that's core to the game and doesn't need an instance of an object to access, it's likely here.
  *
@@ -26,28 +23,6 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class InterfaceGame{
-	
-	/**
-	 *  Returns true if the mod with the passed-in modID is present.
-	 */
-	public static boolean isModPresent(String modID){
-		return Loader.isModLoaded(modID);
-	}
-	
-	/**
-	 *  Returns the text-based name for the passed-in mod.
-	 */
-	public static String getModName(String modID){
-		return Loader.instance().getIndexedModList().get(modID).getName();
-	}
-	
-	/**
-	 *  Returns the text-based name for the passed-in fluid.
-	 */
-	public static String getFluidName(String fluidID){
-		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
-	}
-	
 	/**
 	 *  Returns true if the game is paused.
 	 */

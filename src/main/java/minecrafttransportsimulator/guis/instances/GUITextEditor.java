@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
 import mcinterface.BuilderGUI.TextPosition;
+import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -137,7 +138,7 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, BuilderGUI.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				if(pole != null){

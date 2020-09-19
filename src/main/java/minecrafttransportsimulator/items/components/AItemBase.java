@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.List;
 
-import mcinterface.BuilderGUI;
+import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
@@ -33,7 +33,7 @@ public abstract class AItemBase{
 	 *  set in stone, so feel free to modify it as you see fit.
 	 */
 	public String getItemName(){
-		return BuilderGUI.translate("item." + getRegistrationName() + ".name");
+		return InterfaceCore.translate("item." + getRegistrationName() + ".name");
 	}
 	
 	/**

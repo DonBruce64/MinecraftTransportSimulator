@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
 import mcinterface.BuilderGUI.TextPosition;
-import mcinterface.InterfaceGame;
+import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -135,7 +135,7 @@ public class GUIInstruments extends AGUIBase{
 		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, ""));
 
 		//Create the clear button.
-		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, BuilderGUI.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
+		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
 				InterfaceNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
@@ -144,7 +144,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the HUD selection button.
-		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, BuilderGUI.translate("gui.instruments.main")){
+		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.main")){
 			@Override
 			public void onClicked(){
 				hudSelected = true;
@@ -155,7 +155,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, BuilderGUI.translate("gui.instruments.control")){
+		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.control")){
 			@Override
 			public void onClicked(){
 				hudSelected = false;
@@ -252,7 +252,7 @@ public class GUIInstruments extends AGUIBase{
 					instrumentSlotIcons.get(i).itemName = null;
 				}
 			}
-			packName.text = InterfaceGame.getModName(currentPack);
+			packName.text = InterfaceCore.getModName(currentPack);
 		}
 		
 		//Set buttons depending on which vehicle section is selected.
@@ -260,7 +260,7 @@ public class GUIInstruments extends AGUIBase{
 		panelButton.enabled = hudSelected;
 		
 		//Set info and clear state based on if we've clicked an instrument.
-		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + BuilderGUI.translate("gui.instruments.idle") + "  \\/" : "/\\  " + BuilderGUI.translate("gui.instruments.decide") + "  /\\";
+		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + InterfaceCore.translate("gui.instruments.idle") + "  \\/" : "/\\  " + InterfaceCore.translate("gui.instruments.decide") + "  /\\";
 		clearButton.enabled = selectedInstrumentOnVehicle != null && vehicle.instruments.containsKey((byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle));
 	}
 	

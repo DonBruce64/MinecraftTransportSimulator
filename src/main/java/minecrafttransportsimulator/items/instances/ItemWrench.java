@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.instances;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
+import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.dataclasses.MTSRegistry;
@@ -20,10 +21,10 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		tooltipLines.add(BuilderGUI.translate("info.item.wrench.use"));
-		tooltipLines.add(BuilderGUI.translate("info.item.wrench.useblock"));
-		tooltipLines.add(BuilderGUI.translate("info.item.wrench.attack"));
-		tooltipLines.add(BuilderGUI.translate("info.item.wrench.sneakattack"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.use"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.useblock"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.attack"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.client.devMode.value){
 			tooltipLines.add("Use while riding a vehicle to open the devMode editor.");
 		}

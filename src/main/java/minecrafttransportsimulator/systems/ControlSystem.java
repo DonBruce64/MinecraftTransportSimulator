@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.systems;
 
 import mcinterface.BuilderGUI;
+import mcinterface.InterfaceCore;
 import mcinterface.InterfaceGame;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
@@ -425,7 +426,7 @@ public final class ControlSystem{
 			this.linkedJoystick = linkedJoystick;
 			this.isMomentary = isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = BuilderGUI.translate("input." + systemName);
+			this.translatedName = InterfaceCore.translate("input." + systemName);
 			if(ConfigSystem.configObject.controls.keyboard.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.keyboard.get(systemName);
 			}else{
@@ -532,7 +533,7 @@ public final class ControlSystem{
 			this.isAxis=isAxis;
 			this.isMomentary=isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = BuilderGUI.translate("input." + systemName);
+			this.translatedName = InterfaceCore.translate("input." + systemName);
 			if(ConfigSystem.configObject.controls.joystick.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.joystick.get(systemName);
 			}else{
@@ -615,7 +616,7 @@ public final class ControlSystem{
 		public final ControlsKeyboard modControl;
 		
 		private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl){
-			this.translatedName = BuilderGUI.translate("input." + name().toLowerCase().replaceFirst("_", "."));
+			this.translatedName = InterfaceCore.translate("input." + name().toLowerCase().replaceFirst("_", "."));
 			this.mainControl = mainControl;
 			this.modControl = modControl;
 		}

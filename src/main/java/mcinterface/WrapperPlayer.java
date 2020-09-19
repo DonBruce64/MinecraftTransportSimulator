@@ -66,7 +66,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  raw message will be displayed.
 	 */
 	public void displayChatMessage(String message){
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(BuilderGUI.translate(message)));
+		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(InterfaceCore.translate(message)));
 	}
 	
 	/**
