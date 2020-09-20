@@ -106,6 +106,7 @@ public final class PackParserSystem{
 	    			mainDefinitionCopy.car = mainDefinition.car;
 	    			mainDefinitionCopy.parts = mainDefinition.parts;
 	    			mainDefinitionCopy.collision = mainDefinition.collision;
+	    			mainDefinitionCopy.doors = mainDefinition.doors;
 	    			mainDefinitionCopy.rendering = mainDefinition.rendering;
 	    			
 	    			performLegacyCompats(mainDefinitionCopy);
