@@ -9,6 +9,7 @@ import java.util.List;
 import mcinterface.BuilderEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -313,7 +314,7 @@ public abstract class APart implements ISoundProvider{
 	}
 	
 	@Override
-    public int getProviderDimension(){
-		return vehicle.getProviderDimension();
+    public WrapperWorld getProviderWorld(){
+		return vehicle.getProviderWorld();
 	}
 }

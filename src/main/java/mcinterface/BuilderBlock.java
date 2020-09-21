@@ -181,7 +181,8 @@ public class BuilderBlock extends Block{
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
-    	//spawned during the getDrops method.
+    	//spawned during the getDrops method.  Also notify the block that it's been broken in case
+    	//it needs to do operations.
     	if(block instanceof IBlockTileEntity<?>){
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
@@ -194,6 +195,7 @@ public class BuilderBlock extends Block{
     			}
     		}
     	}
+    	super.breakBlock(world, pos, state);
     }
     
     @Override

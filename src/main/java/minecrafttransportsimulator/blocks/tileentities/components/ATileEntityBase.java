@@ -65,6 +65,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	}
 	
 	/**
+	 *  Called when this TileEntity is removed from the world.
+	 */
+	public void remove(){}
+	
+	/**
 	 *  Called when the TileEntity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */

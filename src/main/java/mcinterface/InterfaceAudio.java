@@ -18,7 +18,10 @@ import org.lwjgl.openal.AL10;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.IStreamDecoder;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
+import minecrafttransportsimulator.sound.Radio;
+import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -44,6 +47,9 @@ public class InterfaceAudio{
 	
 	/**List of playing {@link SoundInstance} objects.**/
 	private static final List<SoundInstance> playingSounds = new ArrayList<SoundInstance>();
+	
+	/**List of playing {@link RadioStation} objects.**/
+	private static final List<RadioStation> playingStations = new ArrayList<RadioStation>();
 	
 	/**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
 	private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
@@ -89,21 +95,23 @@ public class InterfaceAudio{
     		}
 		}
 		
-		//Add all queued sounds to playing sounds and start them.
-		for(SoundInstance sound : queuedSounds){
-			AL10.alSourcePlay(sound.sourceIndex);
-			playingSounds.add(sound);
+		//Start playing all queued sounds.
+		if(!queuedSounds.isEmpty()){
+			for(SoundInstance sound : queuedSounds){
+				AL10.alSourcePlay(sound.sourceIndex);
+				playingSounds.add(sound);
+			}
+			queuedSounds.clear();
 		}
-		queuedSounds.clear();
 		
 		//Get the player for further calculations.
 		WrapperPlayer player = InterfaceGame.getClientPlayer();
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
-		Iterator<SoundInstance> iterator = playingSounds.iterator();
-		while(iterator.hasNext()){
-			SoundInstance sound = iterator.next();
+		Iterator<SoundInstance> soundIterator = playingSounds.iterator();
+		while(soundIterator.hasNext()){
+			SoundInstance sound = soundIterator.next();
 			AL10.alGetError();
 			int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
 
@@ -114,7 +122,7 @@ public class InterfaceAudio{
 				break;
 			}
 			
-			if(state != AL10.AL_STOPPED){
+			if(state == AL10.AL_PLAYING){
 				sound.provider.updateProviderSound(sound);
 				if(sound.stopSound){
 					AL10.alSourceStop(sound.sourceIndex);
@@ -146,44 +154,30 @@ public class InterfaceAudio{
 
 					//Update rolloff distance, which is based on pitch.
 					AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
-
-					//If we are a radio, check for more data.  Also set the number of buffers we have.
-					if(sound.radio != null){									
-						//Do we have any processed buffers?  If so, use one to store more data.
-						if(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) > 0){										
-							//We have free buffers.  See if we have data to fill them with before we un-bind them.										
-							ByteBuffer decoderData = sound.radio.getSampleBuffer();
-		            		if(decoderData != null){
-		            			//Have data and buffers.  Remove buffer from queue and put it back in.
-								IntBuffer doneBuffer = BufferUtils.createIntBuffer(1);
-								AL10.alSourceUnqueueBuffers(sound.sourceIndex, doneBuffer);
-		            			AL10.alBufferData(doneBuffer.get(0),  AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
-		            			AL10.alSourceQueueBuffers(sound.sourceIndex, doneBuffer);
-		            		}
-						}
-						sound.radio.updateBufferCounts((byte) (AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_QUEUED) - AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED)));
-					}
 				}
 			}else{
 				//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
-				if(sound.radio != null){
-					IntBuffer usedBuffers = BufferUtils.createIntBuffer(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED));
-					AL10.alSourceUnqueueBuffers(sound.sourceIndex, usedBuffers);
-					AL10.alDeleteBuffers(usedBuffers);
-					
-					//Attempt to queue up the next song as this one is done.
-					//Only do this if the radio wasn't stopped manually.
-					if(!sound.stopSound){
-						sound.radio.queueNext();
+				if(sound.radio == null){
+					AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
+					sound.stop();
+				}else if(sound.stopSound){
+					int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
+					if(boundBuffers > 0){
+						IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
+						AL10.alSourceUnqueueBuffers(sound.sourceIndex, buffers);
 					}
 				}
-				
-				//Detach all buffers from the source, delete it, and remove the sound.
-				AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
-				IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
-				AL10.alDeleteSources(sourceBuffer);
-				iterator.remove();
+				if(sound.stopSound){
+					IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
+					AL10.alDeleteSources(sourceBuffer);
+					soundIterator.remove();
+				}
 			}
+		}
+		
+		//Now update radio stations.
+		for(RadioStation station : playingStations){
+			station.update();
 		}
 		
 		//If the sound system was reset, blow out all saved data points.
@@ -233,7 +227,140 @@ public class InterfaceAudio{
 			}
 		}
 	}
+    
+    /**
+	 *  Adds a station to be queued for updates.  This should only be done once upon station construction.
+	 */
+    public static void addRadioStation(RadioStation station){
+    	playingStations.add(station);
+    }
+    
+    /**
+	 *  Adds a new radio sound source, and queues it up with the buffer indexes passed-in.
+	 *  Unlike the quick sound, this does not queue the sound added.  This means that the
+	 *  method must be called from the main update loop somewhere at the parent call in the
+	 *  stack to avoid a CME.
+	 */
+	public static void addRadioSound(SoundInstance sound, List<Integer> buffers){
+		if(AL.isCreated() && sourceGetFailures < 10){
+    		//Set the sound's source buffer index.
+			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
+			AL10.alGetError();
+			AL10.alGenSources(sourceBuffer);
+			if(AL10.alGetError() != AL10.AL_NO_ERROR){
+				++sourceGetFailures;
+				InterfaceNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
+				return;
+			}
+			sound.sourceIndex = sourceBuffer.get(0);
+			
+			//Queue up the buffer sources to the source itself.
+			for(int bufferIndex : buffers){
+				bindBuffer(sound, bufferIndex);
+			}
+			AL10.alSourcePlay(sound.sourceIndex);
+			playingSounds.add(sound);
+    	}
+	}
 
+	/**
+	 *  Buffers a ByteBuffer's worth of data from a streaming decoder.
+	 *  Returns the index of the integer to where this buffer is stored.
+	 */
+	public static int createBuffer(ByteBuffer buffer, IStreamDecoder decoder){
+		if(decoder.isStereo()){
+			buffer = stereoToMono(buffer);
+		}
+		IntBuffer newDataBuffer = BufferUtils.createIntBuffer(1);
+		AL10.alGenBuffers(newDataBuffer);
+		AL10.alBufferData(newDataBuffer.get(0),  AL10.AL_FORMAT_MONO16, buffer, decoder.getSampleRate());
+		return newDataBuffer.get(0);
+	}
+	
+	/**
+	 *  Deletes a buffer of station data.  Used when all radios are done playing the buffer,
+	 *  or if the station switches buffers out.
+	 */
+	public static void deleteBuffer(int bufferIndex){
+		AL10.alDeleteBuffers(bufferIndex);
+	}
+	
+	/**
+	 *  Binds the passed-in buffer to the passed-in source index.
+	 */
+	public static void bindBuffer(SoundInstance sound, int bufferIndex){
+		AL10.alSourceQueueBuffers(sound.sourceIndex, bufferIndex);
+	}
+	
+	/**
+	 *  Checks if the passed-in radios all have a free buffer.  If so,
+	 *  then the free buffer index is returned, and the buffer is-unbound
+	 *  from all the sounds for all the radios.  If the radios are invalid
+	 *  or not synced, then they are turned off for safety.
+	 */
+	public static int getFreeStationBuffer(Set<Radio> playingRadios){
+		boolean freeBuffer = true;
+		Radio badRadio = null;
+		AL10.alGetError();
+		Iterator<Radio> iterator = playingRadios.iterator();
+		while(iterator.hasNext()){
+			Radio radio = iterator.next();
+			SoundInstance sound = radio.getPlayingSound();
+			if(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) == 0){
+				freeBuffer = false;
+				break;
+			}
+			if(AL10.alGetError() == AL10.AL_INVALID_NAME){
+				badRadio = radio;
+			}
+		}
+		if(badRadio != null){
+			badRadio.stop();
+			return 0;
+		}else if(freeBuffer){
+			//First get the old buffer index.
+			int freeBufferIndex = 0;
+			IntBuffer oldDataBuffer = BufferUtils.createIntBuffer(1);
+			for(Radio radio : playingRadios){
+				SoundInstance sound = radio.getPlayingSound();
+				AL10.alSourceUnqueueBuffers(sound.sourceIndex, oldDataBuffer);
+				if(freeBufferIndex == 0){
+					freeBufferIndex = oldDataBuffer.get(0);
+				}else if(freeBufferIndex != oldDataBuffer.get(0)){
+					badRadio = radio;
+					break;
+				}
+			}
+			if(badRadio != null){
+				badRadio.stop();
+				return 0;
+			}else{
+				return freeBufferIndex;
+			}
+		}else{
+			return 0;
+		}
+	}
+	
+	/**
+	 *  Combines a stereo-sampled ByteBufer into a mono-sampled one.
+	 *  This allows us to use mono-only sounds that support attenuation.
+	 */
+	private static ByteBuffer stereoToMono(ByteBuffer stereoBuffer){
+		ByteBuffer monoBuffer = ByteBuffer.allocateDirect(stereoBuffer.limit()/2);
+		while(stereoBuffer.hasRemaining()){
+			//Combine samples using little-endian ordering.
+			byte[] sampleSet = new byte[4];
+			stereoBuffer.get(sampleSet);
+			int leftSample = (sampleSet[1] << 8) | (sampleSet[0] & 0xFF);
+			int rightSample = (sampleSet[3] << 8) | (sampleSet[2] & 0xFF);
+			int combinedSample = (leftSample + rightSample)/2;
+			monoBuffer.put((byte) (combinedSample & 0xFF));
+			monoBuffer.put((byte) (combinedSample >> 8));
+		}
+		return (ByteBuffer) monoBuffer.flip();
+	}
+	
 	/**
 	 *  Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}. 
 	 *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
@@ -266,68 +393,6 @@ public class InterfaceAudio{
 			}
 		}
 	}
-    
-    /**
-	 *  Plays a streaming sound (one with a Radio attached).  This uses a buffer-based system for loading
-	 *  as it puts chunks (frames?) of the data into a buffer queue rather than loading it all into one buffer and
-	 *  binding it to the source.  As the buffer queue is used up, the audio system will release the buffers and
-	 *  parse more data.  When the source runs out of buffers, the radio will be queried for another source.
-	 */
-    public static void playStreamedSound(SoundInstance sound){
-    	if(AL.isCreated() && sourceGetFailures < 10){
-	    	//Create 5 buffers to be used as rolling storage for the stream.
-			IntBuffer dataBuffers = BufferUtils.createIntBuffer(5);
-			AL10.alGenBuffers(dataBuffers);
-			
-			//Now decode data for each dataBuffer.
-			while(dataBuffers.hasRemaining()){
-				//Get the raw decoder output and bind it to the data buffers.
-				//Note that we may not obtain this data if we haven't decoded it yet.
-				ByteBuffer decoderData = sound.radio.getSampleBuffer();
-				if(decoderData != null){
-					AL10.alBufferData(dataBuffers.get(), AL10.AL_FORMAT_MONO16, decoderData, sound.radio.getSampleRate());
-				}
-			}
-			//Flip the data buffers to prepare them for reading.
-			dataBuffers.flip();
-			
-			//Data has been buffered.  Now get source index.
-			//If we have an old source, use that index instead to allow smooth streaming.
-			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
-			AL10.alGetError();
-			AL10.alGenSources(sourceBuffer);
-			if(AL10.alGetError() != AL10.AL_NO_ERROR){
-				++sourceGetFailures;
-				AL10.alDeleteBuffers(dataBuffers);
-				InterfaceNetwork.sendToAllClients(new PacketPlayerChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play."));
-				return;
-			}
-			sound.sourceIndex = sourceBuffer.get(0);
-			
-			//Have source and data.  Queue sound to start playing.
-			AL10.alSourceQueueBuffers(sound.sourceIndex, dataBuffers);
-			queuedSounds.add(sound);
-    	}
-	}
-	
-	/**
-	 *  Combines a stereo-sampled ByteBufer into a mono-sampled one.
-	 *  This allows us to use mono-only sounds that support attenuation.
-	 */
-	public static ByteBuffer stereoToMono(ByteBuffer stereoBuffer){
-		ByteBuffer monoBuffer = ByteBuffer.allocateDirect(stereoBuffer.limit()/2);
-		while(stereoBuffer.hasRemaining()){
-			//Combine samples using little-endian ordering.
-			byte[] sampleSet = new byte[4];
-			stereoBuffer.get(sampleSet);
-			int leftSample = (sampleSet[1] << 8) | (sampleSet[0] & 0xFF);
-			int rightSample = (sampleSet[3] << 8) | (sampleSet[2] & 0xFF);
-			int combinedSample = (leftSample + rightSample)/2;
-			monoBuffer.put((byte) (combinedSample & 0xFF));
-			monoBuffer.put((byte) (combinedSample >> 8));
-		}
-		return (ByteBuffer) monoBuffer.flip();
-	}
 	
 	/**
      * Update all sounds every client tick.
@@ -340,7 +405,7 @@ public class InterfaceAudio{
 			try{
 				InterfaceAudio.update();
 			}catch(Exception e){
-				//e.printStackTrace();
+				e.printStackTrace();
 				//Do nothing.  We only get exceptions here if OpenAL isn't ready.
 			}
         }
@@ -354,13 +419,17 @@ public class InterfaceAudio{
     	if(event.getWorld().isRemote){
     		Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
-    			if(iterator.next().provider.getProviderDimension() == event.getWorld().provider.getDimension()){
+    			if(iterator.next().provider.getProviderWorld().getDimensionID() == event.getWorld().provider.getDimension()){
     				iterator.remove();
     			}
     		}
     		for(SoundInstance playingSound : playingSounds){
-    			if(playingSound.provider.getProviderDimension() == event.getWorld().provider.getDimension()){
-    				playingSound.stop();
+    			if(playingSound.provider.getProviderWorld().getDimensionID() == event.getWorld().provider.getDimension()){
+    				if(playingSound.radio != null){
+    					playingSound.radio.stop();
+    				}else{
+    					playingSound.stop();
+    				}
     			}
     		}
     		

@@ -109,7 +109,7 @@ public class MP3Decoder implements IStreamDecoder{
     }
     
     @Override
-    public void abort(){
+    public void stop(){
     	try{
 	    	bitstream.close();
 	    	dataSourceStream.close();

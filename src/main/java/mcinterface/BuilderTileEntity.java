@@ -49,6 +49,14 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     }
 	
 	@Override
+	public void invalidate(){
+		super.invalidate();
+		if(tileEntity != null){
+			tileEntity.remove();
+		}
+	}
+	
+	@Override
 	public NBTTagCompound getUpdateTag(){
 		//Gets called when the server sends this TE over as NBT data.
 		//Get the full NBT tag, not just the position!

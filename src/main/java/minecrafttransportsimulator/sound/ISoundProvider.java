@@ -2,6 +2,7 @@ package minecrafttransportsimulator.sound;
 
 import java.nio.FloatBuffer;
 
+import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 
 /**Interface for classes that need to have sounds played via the audio system.
@@ -41,7 +42,7 @@ public interface ISoundProvider{
     public Point3d getProviderVelocity();
     
     /**
-	 *  Return the dimension this sound is in.  Required for world loading/unloading.
+	 *  Return the world this sound is in.  Required for world loading/unloading.
 	 */
-    public int getProviderDimension();
+    public WrapperWorld getProviderWorld();
 }

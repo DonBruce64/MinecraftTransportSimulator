@@ -71,7 +71,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
 	
 	//Internal radio variables.
-	private final Radio radio = new Radio(this);
+	private final Radio radio;
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
@@ -130,6 +130,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				}
 			}
 		}
+		
+		//Create radio.
+		this.radio = new Radio(this, data);
 	}
 	
 	@Override
@@ -258,7 +261,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			world.spawnExplosion(this, position, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
 		
-		//Finally, if we are being towed, unhook us from our tower.
+		//If we are being towed, unhook us from our tower.
 		if(towedByVehicle != null){
 			towedByVehicle.towedVehicle = null;
 			towedByVehicle = null;
@@ -355,8 +358,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-    public int getProviderDimension(){
-		return world.getDimensionID();
+    public WrapperWorld getProviderWorld(){
+		return world;
 	}
 	
 	@Override
@@ -402,5 +405,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				data.setString("instrument" + i + "_systemName", instruments.get(i).systemName);
 			}
 		}
+		
+		radio.save(data);
 	}
 }

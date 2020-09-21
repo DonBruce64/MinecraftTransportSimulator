@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
+import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -174,6 +175,9 @@ public class BuilderEntity extends Entity{
 				AEntityBase.createdClientEntities.remove(entity.lookupID);
 			}else{
 				AEntityBase.createdServerEntities.remove(entity.lookupID);
+			}
+			if(entity instanceof IRadioProvider && world.isRemote){
+				((IRadioProvider) entity).getRadio().stop();
 			}
 		}
 	}

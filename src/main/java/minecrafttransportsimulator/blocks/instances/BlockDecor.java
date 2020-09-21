@@ -12,6 +12,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
+import minecrafttransportsimulator.guis.instances.GUIRadio;
 
 public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntityDecor>{
 	
@@ -39,6 +40,8 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntit
 			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
 			if(decor.definition.general.itemTypes != null){
 				BuilderGUI.openGUI(new GUIPartBench(decor, player));
+			}else if(decor.definition.general.type.equals("radio")){
+				BuilderGUI.openGUI(new GUIRadio(decor));
 			}
 		}
 		return true;

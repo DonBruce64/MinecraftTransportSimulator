@@ -12,7 +12,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
-import minecrafttransportsimulator.sound.Radio.RadioSources;
+import minecrafttransportsimulator.sound.RadioManager;
+import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**GUI for interfacing with radios.  Radios are stored on classes that
  * extend {@link IRadioProvider} and are obtained via {@link IRadioProvider#getRadio()}.
@@ -27,8 +28,6 @@ public class GUIRadio extends AGUIBase{
 	private GUIComponentButton localButton;
 	private GUIComponentButton remoteButton;
 	private GUIComponentButton serverButton;
-	private GUIComponentButton randomButton;
-	private GUIComponentButton orderedButton;
 	private GUIComponentButton setButton;
 	private GUIComponentButton equalizerButton;
 	private GUIComponentButton equalizerBackButton;
@@ -53,7 +52,7 @@ public class GUIRadio extends AGUIBase{
 	public GUIRadio(IRadioProvider provider){
 		this.radio = provider.getRadio();
 		this.bandsToSkip = 4;
-		this.bandsToShow = radio.equalizer.getBandCount()/bandsToSkip;
+		this.bandsToShow = 32/bandsToSkip;
 		this.bandButtonSize = 20;
 	}
 	
@@ -71,32 +70,27 @@ public class GUIRadio extends AGUIBase{
 		addButton(localButton = new GUIComponentButton(offButton.x, offButton.y + offButton.height, offButton.width, "PC", offButton.height, true){
 			@Override
 			public void onClicked(){
-				radio.changeSource(RadioSources.LOCAL);
+				radio.changeSource(RadioSources.LOCAL, true);
 				teachMode = false;
 			}
 		});
 		addButton(remoteButton = new GUIComponentButton(offButton.x, localButton.y + localButton.height, offButton.width, "INTERNET", offButton.height, true){
 			@Override
 			public void onClicked(){
-				radio.changeSource(RadioSources.INTERNET);
+				radio.changeSource(RadioSources.INTERNET, true);
 				teachMode = false;
 			}
 		});
 		addButton(serverButton = new GUIComponentButton(offButton.x, remoteButton.y + remoteButton.height, offButton.width, "SERVER", offButton.height, true){
 			@Override
 			public void onClicked(){
-				radio.changeSource(RadioSources.SERVER);
+				radio.changeSource(RadioSources.SERVER, true);
 				teachMode = false;
 			}
 		});
 		
-		//Playback order for local files.
-		addButton(randomButton = new GUIComponentButton(offButton.x + offButton.width + 15, offButton.y, offButton.width, "RANDOM", offButton.height, true){public void onClicked(){radio.sorted = false;}});
-		addLabel(new GUIComponentLabel(randomButton.x + randomButton.width/2, randomButton.y - 10, Color.BLACK, "PLAY ORDER", TextPosition.CENTERED, 0, 1.0F, false).setButton(randomButton));
-		addButton(orderedButton = new GUIComponentButton(randomButton.x, randomButton.y + randomButton.height, randomButton.width, "SORTED", randomButton.height, true){public void onClicked(){radio.sorted = true;}});
-		
 		//Internet set button.
-		addButton(setButton = new GUIComponentButton(orderedButton.x, orderedButton.y + 2*orderedButton.height, orderedButton.width, "SET URL", orderedButton.height, true){
+		addButton(setButton = new GUIComponentButton(offButton.x + offButton.width + 15, offButton.y, offButton.width, "SET URL", offButton.height, true){
 			@Override
 			public void onClicked(){
 				if(teachMode){
@@ -111,8 +105,8 @@ public class GUIRadio extends AGUIBase{
 		});
 		
 		//Volume controls.
-		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume);}});
-		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){public void onClicked(){radio.changeVolume(--radio.volume);}});
+		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume, true);}});
+		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){public void onClicked(){radio.changeVolume(--radio.volume, true);}});
 		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, Color.WHITE, Color.BLACK, 32));
 		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){public void onClicked(){equalizerMode = true;}});
 		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", TextPosition.CENTERED, 0, 1.0F, false).setButton(volUpButton));
@@ -127,15 +121,15 @@ public class GUIRadio extends AGUIBase{
 		}
 		
 		//Station display box.
-		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 100));
+		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 150));
 		
 		//Add equalizer screen buttons.
 		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){public void onClicked(){equalizerMode = false;}});
 		addButton(equalizerResetButton = new GUIComponentButton(guiLeft + getWidth() - 80 - 40, guiTop + 162, 80, "RESET"){
 			@Override
 			public void onClicked(){
-				for(int i=0; i<radio.equalizer.getBandCount(); ++i){
-					radio.equalizer.setBand(i, 0.0F);
+				for(int i=0; i<radio.currentStation.equalizer.getBandCount(); ++i){
+					radio.currentStation.equalizer.setBand(i, 0.0F);
 				}
 			}
 		});
@@ -167,27 +161,27 @@ public class GUIRadio extends AGUIBase{
 		stationDisplay.visible = !equalizerMode;
 		
 		//Off button is enabled when radio is playing.
-		offButton.enabled = radio.playing();
+		offButton.enabled = radio.currentStation != null;
 		
 		//Local-remote are toggles.
-		localButton.enabled = !radio.source.equals(RadioSources.LOCAL);
-		remoteButton.enabled = !radio.source.equals(RadioSources.INTERNET);
-		serverButton.enabled = !radio.source.equals(RadioSources.SERVER);
-		
-		//Random/ordered buttons are toggles, but only active when playing locally from folder.
-		randomButton.enabled = radio.source.equals(RadioSources.LOCAL) && radio.sorted;
-		orderedButton.enabled = radio.source.equals(RadioSources.LOCAL) && !radio.sorted;
+		localButton.enabled = !radio.getSource().equals(RadioSources.LOCAL);
+		remoteButton.enabled = !radio.getSource().equals(RadioSources.INTERNET);
+		serverButton.enabled = !radio.getSource().equals(RadioSources.SERVER);
 		
 		//Equalizer button isn't available for internet streams.
-		equalizerButton.enabled = !radio.source.equals(RadioSources.INTERNET);
+		equalizerButton.enabled = !radio.getSource().equals(RadioSources.INTERNET) && radio.currentStation != null && radio.currentStation.equalizer != null;
 		
 		//Set button only works if in Internet mode (playing from radio URL).
 		//Once button is pressed, teach mode activates and stationDisplay becomes a station entry box.
 		//Otherwise, it's just a box that displays what's playing.
-		setButton.enabled = radio.source.equals(RadioSources.INTERNET);
+		setButton.enabled = radio.getSource().equals(RadioSources.INTERNET);
 		stationDisplay.enabled = teachMode;
 		if(!teachMode){
-			stationDisplay.setText(radio.displayText);
+			if(radio.currentStation == null){
+				stationDisplay.setText(radio.displayText);
+			}else{
+				stationDisplay.setText(radio.currentStation.displayText);
+			}
 		}
 		
 		//Set volume system states to current volume settings.
@@ -198,7 +192,7 @@ public class GUIRadio extends AGUIBase{
 		
 		//Set preset button states depending on which preset the radio has selected.
 		for(byte i=0; i<6; ++i){
-			presetButtons.get(i).enabled = radio.presetIndex != i;
+			presetButtons.get(i).enabled = radio.preset - 1 != i;
 		}
 	}
 	
@@ -206,12 +200,12 @@ public class GUIRadio extends AGUIBase{
 		int presetClicked = presetButtons.indexOf(buttonClicked);
 		if(teachMode){
 			//In teach mode.  Set Internet radio stations.
-			Radio.setRadioStation(stationDisplay.getText(), presetClicked);
+			RadioManager.setLocalStationURL(stationDisplay.getText(), presetClicked);
 			stationDisplay.setText("Station set to preset " + (presetClicked + 1));
 			teachMode = false;
 		}else{
 			//Do preset press logic.
-			radio.pressPreset((byte) presetButtons.indexOf(buttonClicked));
+			radio.pressPreset(presetClicked + 1, true);
 		}
 	}
 	
@@ -227,26 +221,26 @@ public class GUIRadio extends AGUIBase{
 		public void onClicked(){
 			//Set the current band.  We use integer division as we have two buttons per band.
 			int bandIndex = bandsToSkip*(equalizerButtons.indexOf(this)/2);
-			float level = radio.equalizer.getBand(bandIndex);
+			float level = radio.currentStation.equalizer.getBand(bandIndex);
 			if(increment ? level < 0.9F : level > -0.9F){
 				level += increment ? 0.2F : -0.2F;
-				radio.equalizer.setBand(bandIndex, level);
+				radio.currentStation.equalizer.setBand(bandIndex, level);
 				
 				//Also set the 4 bands before and after this one depending on other band states.
 				//We need to do interpolation here.
-				if(bandIndex + bandsToSkip < radio.equalizer.getBandCount()){
+				if(bandIndex + bandsToSkip < radio.currentStation.equalizer.getBandCount()){
 					int nextBandIndex = bandIndex + bandsToSkip;
-					float nextBandLevel = radio.equalizer.getBand(nextBandIndex);
+					float nextBandLevel = radio.currentStation.equalizer.getBand(nextBandIndex);
 					for(int i=1; i < bandsToSkip; ++i){
-						radio.equalizer.setBand(bandIndex + i, level + i*(nextBandLevel - level)/bandsToSkip);
+						radio.currentStation.equalizer.setBand(bandIndex + i, level + i*(nextBandLevel - level)/bandsToSkip);
 					}
 				}
 
 				if(bandIndex - bandsToSkip >= 0){
 					int priorBandIndex = bandIndex - bandsToSkip;
-					float priorBandLevel = radio.equalizer.getBand(priorBandIndex);
+					float priorBandLevel = radio.currentStation.equalizer.getBand(priorBandIndex);
 					for(int i=1; i < bandsToSkip; ++i){
-						radio.equalizer.setBand(bandIndex - i, level - i*(level - priorBandLevel)/bandsToSkip);
+						radio.currentStation.equalizer.setBand(bandIndex - i, level - i*(level - priorBandLevel)/bandsToSkip);
 					}
 				}
 			}
@@ -272,7 +266,7 @@ public class GUIRadio extends AGUIBase{
 				//Now render a red square where the equalizer value is.
 				///Level is between -1.0 and 1.0, so we need to normalize it.
 				int squareSize = 8;
-				float level = (1.0F + radio.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
+				float level = (1.0F + radio.currentStation.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
 				int bandCenter = lowerBounds - squareSize + (int)(level*((upperBounds+squareSize/2) - (lowerBounds-squareSize/2)));
 				BuilderGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
 			}

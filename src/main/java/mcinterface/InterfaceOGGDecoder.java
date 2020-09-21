@@ -61,6 +61,7 @@ public class InterfaceOGGDecoder implements IStreamDecoder{
     public ByteBuffer readBlock(){
     	//See if we have a buffer in the stack.
 		SoundBuffer decodedOutputBuffer = decoderOutputBuffers.poll();
+		decodedDataBuffer.clear();
 		if(decodedOutputBuffer != null){
 			decodedDataBuffer.clear();
 			return (ByteBuffer) decodedDataBuffer.put(decodedOutputBuffer.audioData).flip();
@@ -71,7 +72,7 @@ public class InterfaceOGGDecoder implements IStreamDecoder{
     }
     
     @Override
-    public void abort(){
+    public void stop(){
     	decoderThread.radioPlaying = false;
     	//Decoder thread handles cleanup to prevent object states being invalid.
     }

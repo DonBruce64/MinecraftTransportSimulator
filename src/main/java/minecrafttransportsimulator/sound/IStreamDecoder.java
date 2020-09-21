@@ -18,11 +18,11 @@ public interface IStreamDecoder{
     public ByteBuffer readBlock();
     
     /**
-	 *  Aborts the decoding process.  This ensures all I/O
+	 *  Stops the decoding process.  This ensures all I/O
 	 *  references like streams are safely closed, allowing for
 	 *  this decoder to be stopped prior to the end of the stream.
 	 */
-    public void abort();
+    public void stop();
 
     public boolean isStereo();
 
