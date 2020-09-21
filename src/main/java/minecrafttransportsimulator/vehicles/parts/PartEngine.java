@@ -946,8 +946,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 							//Interpolate in the form of Y=A*X + B.
 							//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
 							double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
-							sound.pitch = (float) ((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle);
-							sound.volume = (float) ((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle);
+							sound.pitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);
+							sound.volume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);
 						}
 					}
 				}
