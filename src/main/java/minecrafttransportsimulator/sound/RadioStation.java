@@ -24,7 +24,7 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 */
 public class RadioStation{
 	//Public variables for checking and modifying state.
-	public String displayText;
+	public String displayText = "";
 	public final Equalizer equalizer;
 	
 	//Runtime variables.
