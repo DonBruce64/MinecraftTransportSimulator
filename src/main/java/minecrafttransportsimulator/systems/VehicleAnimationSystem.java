@@ -6,6 +6,7 @@ import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -53,6 +54,7 @@ public final class VehicleAnimationSystem{
 				case("engine"): partClass = PartEngine.class; break;
 				case("gun"): partClass = PartGun.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
+				case("ground"): partClass = PartGroundDevice.class; break;
 				
 				default: if(ConfigSystem.configObject.client.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
@@ -106,6 +108,7 @@ public final class VehicleAnimationSystem{
 					case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
+					case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
 				}
 			}else if(optionalPart instanceof PartGun){
 				PartGun gun = (PartGun) optionalPart;
@@ -130,6 +133,13 @@ public final class VehicleAnimationSystem{
 					case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 					case("propeller_pitch_in"): return propeller.currentPitch;
 					case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
+				}
+			}else if(optionalPart instanceof PartGroundDevice){
+				PartGroundDevice groundDevice = (PartGroundDevice) optionalPart;
+				switch(variable){
+					case("ground_rotation"): return groundDevice.getActionRotation(partialTicks).x;
+					case("ground_onground"): return groundDevice.isOnGround() ? 1 : 0;
+					case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
 				}
 			}
 			

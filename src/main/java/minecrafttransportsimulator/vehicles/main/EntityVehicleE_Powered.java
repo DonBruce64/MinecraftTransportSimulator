@@ -68,7 +68,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final Map<Byte, JSONInstrument> instruments = new HashMap<Byte, JSONInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
-	public final List<PartGroundDevice> groundedWheels = new ArrayList<PartGroundDevice>();
 	
 	//Internal radio variables.
 	private final Radio radio;
@@ -208,14 +207,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			++gearMovementTime;
 		}else if(!gearUpCommand && gearMovementTime > 0){
 			--gearMovementTime;
-		}
-		
-		//Populate grounded wheels.  Needs to be independent of non-wheeled ground devices.
-		groundedWheels.clear();
-		for(PartGroundDevice wheel : this.wheels){
-			if(wheel.isOnGround()){
-				groundedWheels.add(wheel);
-			}
 		}
 		
 		//Update sound variables.
