@@ -114,7 +114,13 @@ public class InterfaceNetwork{
 	 *  being far away.
 	 */
 	public static void sendToClientsTracking(APacketBase packet, AEntityBase trackingEntity){
-		network.sendToAllTracking(new WrapperPacket(packet), BuilderEntity.entitiesToBuilders.get(trackingEntity));
+		if(BuilderEntity.createdServerBuilders.get(trackingEntity) == null){
+			System.out.println(trackingEntity.lookupID);
+			System.out.println(trackingEntity.isValid);
+			System.out.println(BuilderEntity.createdServerBuilders.size());
+			System.out.println(BuilderEntity.createdServerBuilders.size());
+		}
+		network.sendToAllTracking(new WrapperPacket(packet), BuilderEntity.createdServerBuilders.get(trackingEntity));
 	}
 	
 	/**

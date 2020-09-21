@@ -67,7 +67,9 @@ public class BuilderEntity extends Entity{
 	/**Current entity we are built around.**/
 	AEntityBase entity;
 	/**Map of created entities linked to their builder instances.  Used for interface operations.**/
-	static final Map<AEntityBase, BuilderEntity> entitiesToBuilders = new HashMap<AEntityBase, BuilderEntity>();
+	public static Map<AEntityBase, BuilderEntity> createdClientBuilders = new HashMap<AEntityBase, BuilderEntity>();
+	/**Map of created entities linked to their builder instances.  Used for interface operations.**/
+	public static Map<AEntityBase, BuilderEntity> createdServerBuilders = new HashMap<AEntityBase, BuilderEntity>();
 	/**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
 	static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
@@ -338,7 +340,11 @@ public class BuilderEntity extends Entity{
 		if(entity == null && tag.hasKey("entityid")){
 			//Restore the Entity from saved state.
 			entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
-			entitiesToBuilders.put(entity, this);
+			if(world.isRemote){
+				createdClientBuilders.put(entity, this);
+			}else{
+				createdServerBuilders.put(entity, this);
+			}
 		}
 	}
     

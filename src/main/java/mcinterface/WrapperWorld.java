@@ -189,7 +189,7 @@ public class WrapperWorld{
     	BuilderEntity builder = new BuilderEntity(world);
     	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
     	builder.entity = entity;
-    	BuilderEntity.entitiesToBuilders.put(entity, builder);
+    	BuilderEntity.createdServerBuilders.put(entity, builder);
     	world.spawnEntity(builder);
     }
 	
@@ -358,7 +358,7 @@ public class WrapperWorld{
 			box.globalCenter.y + box.heightRadius,
 			box.globalCenter.z + box.depthRadius
 		);
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(BuilderEntity.entitiesToBuilders.get(vehicle), mcBox)){
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(BuilderEntity.createdServerBuilders.get(vehicle), mcBox)){
 			if(entity instanceof INpc || entity instanceof IAnimals){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
@@ -787,7 +787,7 @@ public class WrapperWorld{
 	 *  Explosion in this case is from an entity.
 	 */
 	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
-		world.newExplosion(BuilderEntity.entitiesToBuilders.get(source), location.x, location.y, location.z, (float) strength, flames, true);
+		world.newExplosion(BuilderEntity.createdServerBuilders.get(source), location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**

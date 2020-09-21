@@ -193,8 +193,8 @@ public abstract class AEntityBase{
 			
 			//Add rider to map, and send out packet if required.
 			locationRiderMap.put(riderLocation, rider);
-			rider.setRiding(this);
 			if(!world.isClient()){
+				rider.setRiding(this);
 				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, riderLocation), this);
 			}
 			return true;
@@ -213,8 +213,8 @@ public abstract class AEntityBase{
 			}else{
 				locationRiderMap.inverse().remove(rider);
 			}
-			rider.setRiding(null);
 			if(!world.isClient()){
+				rider.setRiding(null);
 				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, null), this);
 			}
 		}

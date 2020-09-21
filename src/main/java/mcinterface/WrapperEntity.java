@@ -75,7 +75,7 @@ public class WrapperEntity{
 	 */
 	public void setRiding(AEntityBase entityToRide){
 		if(entityToRide != null){
-			entity.startRiding(BuilderEntity.entitiesToBuilders.get(entityToRide), true);
+			entity.startRiding(BuilderEntity.createdServerBuilders.get(entityToRide), true);
 		}else{
 			entity.dismountRidingEntity();
 		}

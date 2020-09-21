@@ -198,7 +198,7 @@ public class InterfaceRender{
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = BuilderEntity.entitiesToBuilders.get(entity).getBrightnessForRender();
+		int lightVar = BuilderEntity.createdClientBuilders.get(entity).getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
