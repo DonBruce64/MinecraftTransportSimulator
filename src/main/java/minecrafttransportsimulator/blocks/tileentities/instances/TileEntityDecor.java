@@ -37,7 +37,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadi
 		boundingBoxes[1] = new BoundingBox(new Point3d(0, 0, 0), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
 		boundingBoxes[2] = boundingBoxes[0];
 		boundingBoxes[3] = boundingBoxes[1];
-		if(definition.general.type.equals("radio")){
+		if(definition.general.type != null && definition.general.type.equals("radio")){
 			this.soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 			soundPosition.put(position.x);
 			soundPosition.put(position.y);

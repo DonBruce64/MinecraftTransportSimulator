@@ -40,7 +40,7 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntit
 			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
 			if(decor.definition.general.itemTypes != null){
 				BuilderGUI.openGUI(new GUIPartBench(decor, player));
-			}else if(decor.definition.general.type.equals("radio")){
+			}else if(decor.definition.general.type != null && decor.definition.general.type.equals("radio")){
 				BuilderGUI.openGUI(new GUIRadio(decor));
 			}
 		}

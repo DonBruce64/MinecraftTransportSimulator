@@ -24,9 +24,9 @@ import net.minecraft.world.World;
  * Of course, one might ask, "why not just construct the TE class when we construct this one?".
  * That's a good point, but MC doesn't work like that.  MC waits to assign the world and position
  * to TEs, so if we construct our TE right away, we'll end up with TONS of NPES.  To avoid this,
- * we only construct our TE after the world and position get assigned.  At that point, we make the
- * TE if we're on the server.  If we're on the client, we always way for NBT, as we need to
- * sync with the server's data.
+ * we only construct our TE after the world and position get assigned, and if we have NBT
+ * At that point, we make the TE if we're on the server.  If we're on the client, we always way 
+ * for NBT, as we need to sync with the server's data.
  * <br><br>
  * If ticking functionality is needed, have the tile entity implement {@link ITileEntityTickable}.
  * This will make the built TE call the {@link ITileEntityTickable#update()} method

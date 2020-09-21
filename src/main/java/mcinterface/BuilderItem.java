@@ -30,6 +30,7 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**Builder for MC items.  Constructor takes a type of {@link AItemBase}, but
  * is only visible when calling {@link #createItem(AItemBase)}.  This will automatically
@@ -40,7 +41,7 @@ import net.minecraftforge.fml.relauncher.Side;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
+@Mod.EventBusSubscriber()
 public class BuilderItem extends Item{
 	final AItemBase item;
 	
@@ -74,6 +75,7 @@ public class BuilderItem extends Item{
 	 *  Also prevents us from using a MC class with a changing name. 
 	 */
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
 		item.addTooltipLines(tooltipLines, stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound()) : new WrapperNBT());
 	}

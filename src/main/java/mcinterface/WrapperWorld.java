@@ -546,7 +546,8 @@ public class WrapperWorld{
 			            		data.setString("systemName", ((AItemPack<JSONDefinition>) stack.getItem()).definition.systemName);
 	            			}
 	            		}
-	            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(new WrapperWorld(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
+	            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
+	            		
 	            	}
 	            	//Send place event to block class, and also send initial update cheeck.
 	            	block.onPlaced(this, location, player);
