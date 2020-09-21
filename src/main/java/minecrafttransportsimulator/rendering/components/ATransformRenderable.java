@@ -15,7 +15,8 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public abstract class ATransformRenderable{
 	public final VehicleAnimationDefinition definition; 
-	private final Map<EntityVehicleF_Physics, Boolean> playedSounds = new HashMap<EntityVehicleF_Physics, Boolean>();
+	private final Map<EntityVehicleF_Physics, Boolean> playedForwardsSounds = new HashMap<EntityVehicleF_Physics, Boolean>();
+	private final Map<EntityVehicleF_Physics, Boolean> playedReverseSounds = new HashMap<EntityVehicleF_Physics, Boolean>();
 	private final Map<EntityVehicleF_Physics, Long> timesCommandedForwards = new HashMap<EntityVehicleF_Physics, Long>();
 	private final Map<EntityVehicleF_Physics, Long> timesCommandedReverse = new HashMap<EntityVehicleF_Physics, Long>();
 	
@@ -58,7 +59,8 @@ public abstract class ATransformRenderable{
 			long cycleTime = definition.duration*50 + definition.forwardsDelay*50 + definition.reverseDelay*50;
 			
 			//Pull variables out of saved map for use in rendering.
-			boolean playedSound = playedSounds.containsKey(vehicle) ? playedSounds.get(vehicle) : false;
+			boolean playedForwardsSound = playedForwardsSounds.containsKey(vehicle) ? playedForwardsSounds.get(vehicle) : false;
+			boolean playedReverseSound = playedReverseSounds.containsKey(vehicle) ? playedReverseSounds.get(vehicle) : false;
 			long timeCommandedForwards = timesCommandedForwards.containsKey(vehicle) ? timesCommandedForwards.get(vehicle) : 0;
 			long timeCommandedReverse = timesCommandedReverse.containsKey(vehicle) ? timesCommandedReverse.get(vehicle) : 0;
 			
@@ -69,7 +71,8 @@ public abstract class ATransformRenderable{
 				}else{
 					timeCommandedReverse = currentTime - cycleTime;
 				}
-				playedSound = true;
+				playedForwardsSound = true;
+				playedReverseSound = true;
 			}else if(timeCommandedForwards != 0){
 				if(!commandForwards){
 					//Going forwards, need to reverse.
@@ -81,7 +84,7 @@ public abstract class ATransformRenderable{
 					}
 					if(timeForwards >= definition.duration*50 + definition.forwardsDelay*50){
 						//Made it to the end of travel, so need to play sound when we start travel back up.
-						playedSound = false;
+						playedReverseSound = false;
 					}
 					
 					timeCommandedForwards = 0;
@@ -96,7 +99,7 @@ public abstract class ATransformRenderable{
 						timeCommandedForwards += timeReverse - cycleTime;
 					}else{
 						//Made it to the end of travel, so need to play sound when we start travel back up.
-						playedSound = false;
+						playedForwardsSound = false;
 					}
 					
 					timeCommandedReverse = 0;
@@ -113,9 +116,9 @@ public abstract class ATransformRenderable{
 					}else{
 						movementFactor = 1;
 					}
-					if(!playedSound){
-						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.sound));
-						playedSound = true;
+					if(!playedForwardsSound){
+						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.forwardsSound));
+						playedForwardsSound = true;
 					}
 				}
 			}else{
@@ -127,9 +130,9 @@ public abstract class ATransformRenderable{
 					}else{
 						movementFactor = 1;
 					}
-					if(!playedSound){
-						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.sound));
-						playedSound = true;
+					if(!playedReverseSound){
+						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.reverseSound));
+						playedReverseSound = true;
 					}
 				}
 				movementFactor = 1 - movementFactor;
@@ -137,7 +140,8 @@ public abstract class ATransformRenderable{
 			
 			timesCommandedForwards.put(vehicle, timeCommandedForwards);
 			timesCommandedReverse.put(vehicle, timeCommandedReverse);
-			playedSounds.put(vehicle, playedSound);
+			playedForwardsSounds.put(vehicle, playedForwardsSound);
+			playedReverseSounds.put(vehicle, playedReverseSound);
 			return movementFactor;
 		}
 	}

@@ -254,7 +254,8 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     	public int duration;
     	public int forwardsDelay;
     	public int reverseDelay;
-    	public String sound;
+    	public String forwardsSound;
+    	public String reverseSound;
     }
     
     public class VehicleCameraObject{
