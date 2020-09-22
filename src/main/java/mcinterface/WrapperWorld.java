@@ -31,6 +31,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -359,7 +360,7 @@ public class WrapperWorld{
 			box.globalCenter.z + box.depthRadius
 		);
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(BuilderEntity.createdServerBuilders.get(vehicle), mcBox)){
-			if(entity instanceof INpc || entity instanceof IAnimals){
+			if((entity instanceof INpc || entity instanceof IAnimals) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
 						if(vehicle instanceof EntityVehicleF_Physics){
