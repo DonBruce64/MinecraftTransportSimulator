@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.CallbackType;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -111,17 +112,17 @@ public class PacketVehicleInteract extends APacketVehicle{
 				}
 				
 				//Check if we clicked a door.
-				for(Entry<BoundingBox, String> doorEntry : vehicle.doorBoxes.entrySet()){
+				for(Entry<BoundingBox, VehicleDoor> doorEntry : vehicle.doorBoxes.entrySet()){
 					if(doorEntry.getKey().localCenter.equals(hitPosition)){
 						//Can't open locked vehicles.
 						if(vehicle.locked){
 							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 						}else{
 							//Open or close the clicked door.
-							if(vehicle.doorsOpen.contains(doorEntry.getValue())){
-								vehicle.doorsOpen.remove(doorEntry.getValue());
+							if(vehicle.doorsOpen.contains(doorEntry.getValue().name)){
+								vehicle.doorsOpen.remove(doorEntry.getValue().name);
 							}else{
-								vehicle.doorsOpen.add(doorEntry.getValue());
+								vehicle.doorsOpen.add(doorEntry.getValue().name);
 							}
 							return true;
 						}

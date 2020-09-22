@@ -66,7 +66,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
 	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
-	public final Map<BoundingBox, String> doorBoxes = new HashMap<BoundingBox, String>();
+	public final Map<BoundingBox, VehicleDoor> doorBoxes = new HashMap<BoundingBox, VehicleDoor>();
 	
 	
 	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
@@ -91,7 +91,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			doorsOpen.clear();
 			for(VehicleDoor door : definition.doors){
 				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true);
-				doorBoxes.put(box, door.name);
+				doorBoxes.put(box, door);
 				collisionBoxes.add(box);
 				if(data.getBoolean("doorsOpen_" + door.name)){
 					doorsOpen.add(door.name);
@@ -129,17 +129,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		
-		//Update door collision boxes.  If the door is open, make the door global center be in the open position.
-		for(Entry<BoundingBox, String> doorEntry : doorBoxes.entrySet()){
-			BoundingBox box = doorEntry.getKey();
-			for(VehicleDoor door : definition.doors){
-				if(door.name.equals(doorEntry.getValue())){
-					if(doorsOpen.contains(door.name)){
-						box.globalCenter.setTo(door.openPos).rotateFine(angles).add(position);
-					}else{
-						box.globalCenter.setTo(door.closedPos).rotateFine(angles).add(position);
-					}
-				}
+		//Update door collision boxes.
+		for(Entry<BoundingBox, VehicleDoor> doorEntry : doorBoxes.entrySet()){
+			if(doorsOpen.contains(doorEntry.getValue().name)){
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
+			}else{
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
 			}
 		}
 		
