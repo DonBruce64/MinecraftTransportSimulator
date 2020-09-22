@@ -134,27 +134,34 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 		//Check all the bounding boxes for collision to see if we hit one of them.
 		Point3d start = new Point3d(vecA.x, vecA.y, vecA.z);
 		Point3d end = new Point3d(vecB.x, vecB.y, vecB.z);
+		Point3d intersection = null;
+		EnumFacing sideHit = null;
 		for(BoundingBox testBox : boxes){
-			Point3d intersection = testBox.getIntersectionPoint(start, end);
-			if(intersection != null){
-				EnumFacing sideHit;
-				if(intersection.x == testBox.globalCenter.x - testBox.widthRadius){
-					sideHit = EnumFacing.WEST;
-				}else if(intersection.x == testBox.globalCenter.x + testBox.widthRadius){
-					sideHit = EnumFacing.EAST;
-				}else if(intersection.y == testBox.globalCenter.y - testBox.heightRadius){
-					sideHit = EnumFacing.UP;
-				}else if(intersection.y == testBox.globalCenter.y + testBox.heightRadius){
-					sideHit = EnumFacing.DOWN;
-				}else if(intersection.z == testBox.globalCenter.z - testBox.depthRadius){
-					sideHit = EnumFacing.NORTH;
-				}else{
-					sideHit = EnumFacing.SOUTH;
+			Point3d testIntersection = testBox.getIntersectionPoint(start, end);
+			if(testIntersection != null){
+				if(intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)){
+					intersection = testIntersection;
+					if(testIntersection.x == testBox.globalCenter.x - testBox.widthRadius){
+						sideHit = EnumFacing.WEST;
+					}else if(testIntersection.x == testBox.globalCenter.x + testBox.widthRadius){
+						sideHit = EnumFacing.EAST;
+					}else if(testIntersection.y == testBox.globalCenter.y - testBox.heightRadius){
+						sideHit = EnumFacing.UP;
+					}else if(testIntersection.y == testBox.globalCenter.y + testBox.heightRadius){
+						sideHit = EnumFacing.DOWN;
+					}else if(testIntersection.z == testBox.globalCenter.z - testBox.depthRadius){
+						sideHit = EnumFacing.NORTH;
+					}else{
+						sideHit = EnumFacing.SOUTH;
+					}
+					lastBoxRayTraced = testBox;
 				}
-				lastBoxRayTraced = testBox;
-				return new RayTraceResult(new Vec3d(intersection.x, intersection.y, intersection.z), sideHit);
 			}
 		}
-		return result;
+		if(intersection != null){
+			return new RayTraceResult(new Vec3d(intersection.x, intersection.y, intersection.z), sideHit);
+		}else{
+			return result;
+		}
 	}   
 }
