@@ -83,6 +83,12 @@ public class JSONConfig{
 					if(item instanceof ItemPart){
 						ItemPart part = (ItemPart) item;
 						if(part.definition.general.type.startsWith("engine")){
+							//For old packs, if we don't have a fuelType set it to diesel.
+							//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
+							if(part.definition.engine.fuelType == null){
+								part.definition.engine.fuelType = "diesel";
+							}
+							
 							//If we don't have the fuel in the fuel map, add it.
 							//Default fuel list depends on the fuel name.
 							if(!fuels.containsKey(part.definition.engine.fuelType)){
