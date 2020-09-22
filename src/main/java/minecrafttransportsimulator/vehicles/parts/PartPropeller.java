@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -38,7 +39,7 @@ public class PartPropeller extends APart{
 	@Override
 	public void attack(Damage damage){
 		if(damage.attacker != null){
-			if(damage.attacker.getHeldItem() == null){
+			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
 					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON), vehicle);

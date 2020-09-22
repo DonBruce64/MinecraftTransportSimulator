@@ -29,6 +29,7 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
@@ -180,6 +181,22 @@ public class WrapperWorld{
 	public WrapperEntity getEntity(int id){
 		Entity entity = world.getEntityByID(id);
 		return entity instanceof EntityPlayer ? getWrapperFor((EntityPlayer) entity) : getWrapperFor(entity);
+	}
+	
+	/**
+	 *  Returns the nearest hostile entity that can be seen by the passed-in entity.
+	 */
+	public WrapperEntity getNearestHostile(WrapperEntity entityLooking){
+		int searchRadius = 48;
+		double smallestDistance = searchRadius*2;
+		Entity foundEntity = null;
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(entityLooking.entity, entityLooking.entity.getEntityBoundingBox().grow(searchRadius))){
+			float distance = entityLooking.entity.getDistance(entity);
+			if(distance < smallestDistance && entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)){
+				foundEntity = entity;
+			}
+		}
+		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
 	}
 	
 	/**

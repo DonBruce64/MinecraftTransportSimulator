@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-import mcinterface.WrapperPlayer;
+import mcinterface.WrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
  * of new damage types that prevents the need to change constructors.  The boundingBox hit is required for
@@ -21,7 +21,7 @@ public class Damage{
 	public final String name;
 	public final double amount;
 	public final BoundingBox box;
-	public final WrapperPlayer attacker;
+	public final WrapperEntity attacker;
 	
 	public boolean isFire;
 	public boolean isWater;
@@ -29,7 +29,7 @@ public class Damage{
 	public boolean ignoreArmor;
 	public boolean ignoreCooldown;
 	
-	public Damage(String name, double amount, BoundingBox box, WrapperPlayer attacker){
+	public Damage(String name, double amount, BoundingBox box, WrapperEntity attacker){
 		this.name = name;
 		this.amount = amount;
 		this.box = box;

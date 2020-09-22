@@ -1,8 +1,12 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mcinterface.InterfaceAudio;
 import mcinterface.InterfaceNetwork;
 import mcinterface.InterfaceRender;
+import mcinterface.WrapperEntity;
 import mcinterface.WrapperInventory;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
@@ -21,8 +25,9 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class PartGun extends APart implements IVehiclePartFXProvider{	
 	//Stored variables used to determine bullet firing behavior.
-	public int shotsFired;
+	public int bulletsFired;
 	public int bulletsLeft;
+	public int gunNumber;
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
 	public double vehiclePitchContribution;
@@ -30,19 +35,17 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	//These variables are used during firing and will be reset on entity loading.
 	public boolean firing;
-	public int temp;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
-	private WrapperPlayer lastController;
-	private byte gunNumber;
+	private WrapperEntity lastController;
 	private long lastTimeFired;
 	private long timeToFire;
-	
 	private final double anglePerTickSpeed;
+	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 		
 	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
-		this.shotsFired = data.getInteger("shotsFired");
+		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.currentOrientation = data.getPoint3d("currentOrientation");
 		this.prevOrientation = currentOrientation.copy();
@@ -57,19 +60,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			bulletsLeft = 0;
 		}
 		this.anglePerTickSpeed = (50/definition.gun.diameter + 1/definition.gun.length);
-		
-		//Get the gun number based on how many guns the vehicle has.
-		gunNumber = 1;
-		for(APart part : vehicle.parts){
-			if(part instanceof PartGun){
-				++gunNumber;
-			}
-		}
-		for(APart part : vehicle.partsFromNBT){
-			if(part instanceof PartGun){
-				++gunNumber;
-			}
-		}
 	}
 	
 	@Override
@@ -87,15 +77,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public void attack(Damage damage){
-		//Add shots fired when damaged.  If the damage is explosive, add more damage and jam the gun.
-		if(!damage.isExplosion){
-			shotsFired += (int) (damage.amount*2F);
-			//If the source is flammable, add temp to the gun.
-			if(damage.isFire){
-				temp += damage.amount;
-			}
-		}else{
-			shotsFired += (int) (damage.amount*10F);
+		//If we are hit, jam the gun.
+		if(damage.isExplosion){
 			reloadTimeRemaining = definition.gun.reloadTime;
 		}
 	}
@@ -105,9 +88,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		super.update();
 		prevOrientation.setTo(currentOrientation);
 		
-		//Get the current player controller for this gun.
-		//We check for child parts first, parent parts second, and finally vehicle controller seats.
-		WrapperPlayer playerController = getCurrentController();
+		//Get the current controller for this gun.
+		WrapperEntity controller = getCurrentController();
 		
 		//Adjust aim to face direction controller is facing.
 		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
@@ -115,20 +97,51 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//This allows for guns to be mounted anywhere on a vehicle and at any angle.
 		//If the controller is null, and we are firing, set us to not do so.
 		//We ain't coding sentrys here.... yet.
-		if(playerController != null){
+		if(controller != null){
+			//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
+			//We also get a flag to see if the gun is currently pointed to the hostile mob.
+			//If not, then we don't fire the gun, as that'd waste ammo.
+			boolean lockedOn = true;
+			if(!(controller instanceof WrapperPlayer)){
+				WrapperEntity hostile = vehicle.world.getNearestHostile(controller);
+				if(hostile != null){
+					//Need to aim for the middle of the mob, not their base (feet).
+					Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
+					//Make the gunner account for bullet delay and movement of the hostile.
+					//This makes them track better when the target is moving.
+					double ticksToTarget = hostilePosition.distanceTo(worldPos)/definition.gun.muzzleVelocity/20D/10D;
+					hostilePosition.add(hostile.getVelocity().copy().multiply(ticksToTarget));
+					double yawHostile = Math.toDegrees(Math.atan2(hostilePosition.x - worldPos.x, hostilePosition.z - worldPos.z));
+					double pitchHostile = -Math.toDegrees(Math.atan2(hostilePosition.y - worldPos.y, Math.hypot(hostilePosition.x - worldPos.x, hostilePosition.z - worldPos.z)));
+					controller.setYaw(yawHostile);
+					controller.setHeadYaw(yawHostile);
+					controller.setPitch(pitchHostile);
+					firing = true;
+				}else{
+					firing = false;
+				}
+			}
+			
 			//Aadjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-			double deltaYaw = playerController.getYaw() - (currentOrientation.y + totalRotation.y + vehicle.angles.y);
+			double deltaYaw = controller.getHeadYaw() - (currentOrientation.y + totalRotation.y + vehicle.angles.y);
 			while(deltaYaw > 180){
 				deltaYaw -= 360;
 			}
 			while(deltaYaw < -180){
 				deltaYaw += 360;
 			}
-			//System.out.format("Current:%f Player:%f Delta:%f Total:%f Min:%f, max:%f\n", (currentOrientation.y + totalRotation.y + vehicle.angles.y), playerController.getYaw(), deltaYaw, totalRotation.y, definition.gun.minYaw, definition.gun.maxYaw);
 			if(deltaYaw < 0){
-				currentOrientation.y += Math.max(-anglePerTickSpeed, deltaYaw); 
+				if(deltaYaw < -anglePerTickSpeed){
+					deltaYaw = -anglePerTickSpeed;
+					lockedOn = false;
+				}
+				currentOrientation.y += deltaYaw; 
 			}else if(deltaYaw > 0){
-				currentOrientation.y += Math.min(anglePerTickSpeed, deltaYaw);
+				if(deltaYaw > anglePerTickSpeed){
+					deltaYaw = anglePerTickSpeed;
+					lockedOn = false;
+				}
+				currentOrientation.y += deltaYaw;
 			}
 			//Apply yaw clamps.
 			//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
@@ -155,11 +168,19 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//When the player rotates their head, they don't do so relative to the pitch of the vehicle the gun is on, 
 			//so a yaw change can result in a pitch change.
 			vehiclePitchContribution = vehicle.angles.x*Math.cos(Math.toRadians(vehicle.angles.y - currentOrientation.y));
-			double deltaPitch = playerController.getPitch() - (currentOrientation.x + totalRotation.x + vehiclePitchContribution);
+			double deltaPitch = controller.getPitch() - (currentOrientation.x + totalRotation.x + vehiclePitchContribution);
 			if(deltaPitch < 0){
-				currentOrientation.x += Math.max(-anglePerTickSpeed, deltaPitch); 
+				if(deltaPitch < -anglePerTickSpeed){
+					deltaPitch = -anglePerTickSpeed;
+					lockedOn = false;
+				}
+				currentOrientation.x += deltaPitch; 
 			}else if(deltaPitch > 0){
-				currentOrientation.x += Math.min(anglePerTickSpeed, deltaPitch);
+				if(deltaPitch > anglePerTickSpeed){
+					deltaPitch = anglePerTickSpeed;
+					lockedOn = false;
+				}
+				currentOrientation.x += deltaPitch;
 			}
 			//Apply pitch clamps.
 			if(currentOrientation.x < -definition.gun.maxPitch){
@@ -169,6 +190,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				currentOrientation.x = -definition.gun.minPitch;
 			}
 			
+			//If we told the gun to fire becase we saw an entity, but we can't hit it due to the gun clamp don't fire.
+			//This keeps NPCs from wasting ammo.
+			if(!(controller instanceof WrapperPlayer)){
+				if(!lockedOn || currentOrientation.y == definition.gun.maxYaw || currentOrientation.y == definition.gun.minYaw || currentOrientation.x == -definition.gun.minPitch || currentOrientation.x == -definition.gun.maxPitch){
+					firing = false;
+				}
+			}
 		}else{
 			firing = false;
 		}
@@ -193,15 +221,29 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
 		if(firing && bulletsLeft > 0 && reloadTimeRemaining == 0 && cooldownTimeRemaining == 0){
+			//First update gun number so we know if we need to apply a cam offset.
+			//Get the gun number based on how many guns the vehicle has.
+			gunNumber = 1;
+			for(APart part : vehicle.parts){
+				if(part instanceof PartGun){
+					if(part.equals(this)){
+						break;
+					}else{
+						++gunNumber;
+					}
+				}
+			}
+			
 			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 			//Make sure to add-on an offset to our firing point to allow for multi-gun units.
 			long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
 			cooldownTimeRemaining = definition.gun.fireDelay;
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
-			lastController = playerController;
+			lastController = controller;
 			if(!vehicle.world.isClient()){
 				//Only remove bullets from the server.  We remove them from the client when they spawn.
 				--bulletsLeft;
+				++bulletsFired;
 			}
 		}
 		
@@ -268,16 +310,16 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	/**
 	 * Helper method to get the current controller of this gun.
 	 */
-	public WrapperPlayer getCurrentController(){
+	public WrapperEntity getCurrentController(){
 		//Check our parent part, if we have one.
 		if(parentPart instanceof PartSeat){
-			return (WrapperPlayer) vehicle.locationRiderMap.get(parentPart.placementOffset);
+			return vehicle.locationRiderMap.get(parentPart.placementOffset);
 		}
 		
 		//Check any child parts.
 		for(APart childPart : childParts){
 			if(childPart instanceof PartSeat){
-				return (WrapperPlayer) vehicle.locationRiderMap.get(childPart.placementOffset);
+				return vehicle.locationRiderMap.get(childPart.placementOffset);
 			}
 		}
 		
@@ -285,7 +327,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
 				if(vehiclePart.vehicleDefinition.isController){
-					return (WrapperPlayer) vehicle.locationRiderMap.get(vehiclePart.placementOffset);
+					return vehicle.locationRiderMap.get(vehiclePart.placementOffset);
 				}
 			}
 		}
@@ -297,7 +339,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	@Override
 	public WrapperNBT getData(){
 		WrapperNBT data = super.getData();
-		data.setInteger("shotsFired", shotsFired);
+		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setPoint3d("currentOrientation", currentOrientation);
 		if(loadedBulletDefinition != null){
@@ -343,12 +385,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(gunFactoredAngles).add(worldPos);
 	        
 			//Add the bullet as a particle.
-			InterfaceRender.spawnParticle(new ParticleBullet(vehicle.world, bulletPosition, bulletVelocity, loadedBulletDefinition, lastController, vehicle));
+			InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBulletDefinition, this, lastController));
 			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			
-			//Remove a bullet from the count.
+			//Remove a bullet from the count and add shots fired..
 			--bulletsLeft;
+			++bulletsFired;
 		}
 	}
 }

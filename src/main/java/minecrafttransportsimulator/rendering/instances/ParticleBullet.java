@@ -6,13 +6,10 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceGame;
 import mcinterface.InterfaceNetwork;
 import mcinterface.InterfaceRender;
 import mcinterface.WrapperBlock;
 import mcinterface.WrapperEntity;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -21,7 +18,7 @@ import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**This part class is special, in that it does not extend APart.
  * This is because bullets do not render as vehicle parts, and instead
@@ -37,17 +34,19 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class ParticleBullet extends AParticle{
 	private final JSONPart definition;
-	private final int playerID;
-	private final EntityVehicleF_Physics vehicle;
+	private final PartGun gun;
+	private final int bulletNumber;
+	private final WrapperEntity gunController;
 	private final BoundingBox box;
 	
 	private final Map<JSONPart, Integer> bulletDisplayLists = new HashMap<JSONPart, Integer>();
 	
-    public ParticleBullet(WrapperWorld world, Point3d position, Point3d motion, JSONPart definition, WrapperPlayer player, EntityVehicleF_Physics vehicle){
-    	super(world, position, motion);
-        this.definition = definition;
-        this.playerID = player.getID();
-        this.vehicle = vehicle;
+    public ParticleBullet(Point3d position, Point3d motion, JSONPart definition, PartGun gun, WrapperEntity gunController){
+    	super(gun.vehicle.world, position, motion);
+    	this.definition = definition;
+    	this.gun = gun;
+        this.bulletNumber = gun.bulletsFired;
+        this.gunController = gunController;
         this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
     }
 	
@@ -57,12 +56,10 @@ public final class ParticleBullet extends AParticle{
 		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
 		//Check for collided entities and attack them.
-		Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, vehicle, motion);
+		Map<WrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, gun.vehicle, motion);
 		if(!attackedEntities.isEmpty()){
-			if(playerID == InterfaceGame.getClientPlayer().getID()){
-				for(WrapperEntity entity : attackedEntities.keySet()){
-					InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, definition, entity));
-				}
+			for(WrapperEntity entity : attackedEntities.keySet()){
+				InterfaceNetwork.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, definition, gun, bulletNumber, entity, gunController));
 			}
 			age = maxAge;
 			return;
@@ -73,7 +70,7 @@ public final class ParticleBullet extends AParticle{
 		if(box.updateCollidingBlocks(world, motion)){
 			for(WrapperBlock block : box.collidingBlocks){
 				Point3d position = new Point3d(block.getPosition());
-				InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, definition, null));
+				InterfaceNetwork.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, definition, gun, bulletNumber, null, gunController));
 			}
 			age = maxAge;
 			return;

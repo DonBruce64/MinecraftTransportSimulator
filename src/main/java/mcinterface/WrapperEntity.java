@@ -155,6 +155,17 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the entity's head yaw (y-axis rotation).
+	 *  NOTE: the return value from this function is inverted
+	 *  from the normal MC standard to have it follow the RHR
+	 *  for rotations.  This is OpenGL convention, and MC doesn't
+	 *  follow it, which is why rendering is such a PITA with yaw.
+	 */
+	public float getHeadYaw(){
+		return -entity.getRotationYawHead();
+	}
+	
+	/**
 	 *  Sets the entity's yaw to the passed-in yaw.
 	 *  NOTE: the yaw value from this function is inverted
 	 *  from the normal MC standard to have it follow the RHR
@@ -163,6 +174,17 @@ public class WrapperEntity{
 	 */
 	public void setYaw(double yaw){
 		entity.rotationYaw = (float)-yaw;
+	}
+	
+	/**
+	 *  Sets the entity's head yaw to the passed-in yaw.
+	 *  NOTE: the yaw value from this function is inverted
+	 *  from the normal MC standard to have it follow the RHR
+	 *  for rotations.  This is OpenGL convention, and MC doesn't
+	 *  follow it, which is why rendering is such a PITA with yaw.
+	 */
+	public void setHeadYaw(double yaw){
+		entity.setRotationYawHead((float)-yaw);
 	}
 	
 	/**
@@ -233,7 +255,7 @@ public class WrapperEntity{
 				if(recentEntity != null){//Player engaged with another player...
 					if(damage.attacker != null){//and then was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 
-								new Object[] {player.getDisplayName(), damage.attacker.player.getDisplayName(), recentEntity.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName(), recentEntity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.player", 
 								new Object[] {player.getDisplayName(), recentEntity.getDisplayName()});
@@ -241,7 +263,7 @@ public class WrapperEntity{
 				}else{//Player was minding their own business...
 					if(damage.attacker != null){//and was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.null", 
-								new Object[] {player.getDisplayName(), damage.attacker.player.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.null", 
 								new Object[] {player.getDisplayName()});
