@@ -173,7 +173,7 @@ public final class VehicleAnimationSystem{
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
-			case("rain"): return (1.0D + Math.sin(vehicle.world.getRainStrength(new Point3i(vehicle.position))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D;
+			case("rain"): return vehicle.electricFlow < 0 ? (1.0 - Math.cos(((int)vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
 			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
