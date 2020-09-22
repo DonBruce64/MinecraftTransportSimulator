@@ -109,6 +109,7 @@ public final class VehicleAnimationSystem{
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
 					case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
+					case("engine_hours"): return engine.hours;
 				}
 			}else if(optionalPart instanceof PartGun){
 				PartGun gun = (PartGun) optionalPart;
