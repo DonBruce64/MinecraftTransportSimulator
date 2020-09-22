@@ -3,10 +3,13 @@ package minecrafttransportsimulator.items.instances;
 import java.util.List;
 
 import mcinterface.InterfaceCore;
+import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -23,48 +26,30 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 	
 	@Override
 	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
-		if(rightClick){
-			if(part instanceof PartEngine){
-				PartEngine engine = (PartEngine) part;
-				if(engine.linkedEngine == null){
-					if(lastEngineClicked == null){
-						lastEngineClicked = engine;
-						if(vehicle.world.isClient()){
-							player.displayChatMessage("interact.jumpercable.firstlink");
-						}else{
-							return CallbackType.ALL;
-						}
-					}else if(!lastEngineClicked.equals(engine)){
-						if(lastEngineClicked.vehicle.equals(engine.vehicle)){
-							lastEngineClicked = null;
-							if(vehicle.world.isClient()){
-								player.displayChatMessage("interact.jumpercable.samevehicle");
+		if(!vehicle.world.isClient()){
+			if(rightClick){
+				if(part instanceof PartEngine){
+					PartEngine engine = (PartEngine) part;
+					if(engine.linkedEngine == null){
+						if(lastEngineClicked == null){
+							lastEngineClicked = engine;
+							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.firstlink"));
+						}else if(!lastEngineClicked.equals(engine)){
+							if(lastEngineClicked.vehicle.equals(engine.vehicle)){
+								lastEngineClicked = null;
+								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.samevehicle"));
+							}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
+								InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(engine, lastEngineClicked));
+								InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(lastEngineClicked, engine));
+								lastEngineClicked = null;
+								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
 							}else{
-								return CallbackType.ALL;
-							}
-						}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
-							engine.linkedEngine = lastEngineClicked;
-							lastEngineClicked.linkedEngine = engine;
-							lastEngineClicked = null;
-							if(vehicle.world.isClient()){
-								player.displayChatMessage("interact.jumpercable.secondlink");
-							}else{
-								return CallbackType.ALL;
-							}
-						}else{
-							lastEngineClicked = null;
-							if(vehicle.world.isClient()){
-								player.displayChatMessage("interact.jumpercable.toofar");
-							}else{
-								return CallbackType.ALL;
+								lastEngineClicked = null;
+								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.toofar"));
 							}
 						}
-					}
-				}else{
-					if(vehicle.world.isClient()){
-						player.displayChatMessage("interact.jumpercable.alreadylinked");
 					}else{
-						return CallbackType.ALL;
+						player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.alreadylinked"));
 					}
 				}
 			}

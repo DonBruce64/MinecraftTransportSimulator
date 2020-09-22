@@ -8,6 +8,7 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
@@ -25,6 +26,8 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 	private final boolean oilLeak;
 	private final boolean fuelLeak;
 	private final boolean brokenStarter;
+	private final int linkedID;
+	private final Point3d linkedPos;
 	
 	public PacketVehiclePartEngine(PartEngine engine, Signal packetType){
 		super(engine.vehicle, engine.placementOffset);
@@ -33,6 +36,8 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		this.oilLeak = false;
 		this.fuelLeak = false;
 		this.brokenStarter = false;
+		this.linkedID = 0;
+		this.linkedPos = null;
 	}
 	
 	public PacketVehiclePartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak, boolean brokenStarter){
@@ -42,15 +47,19 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		this.oilLeak = oilLeak;
 		this.fuelLeak = fuelLeak;
 		this.brokenStarter = brokenStarter;
+		this.linkedID = 0;
+		this.linkedPos = null;
 	}
 	
-	public PacketVehiclePartEngine(PartEngine engine, int linkedID, Point3d linkedPos){
+	public PacketVehiclePartEngine(PartEngine engine, PartEngine linkedEngine){
 		super(engine.vehicle, engine.placementOffset);
-		this.packetType = Signal.DAMAGE;
+		this.packetType = Signal.LINK;
 		this.hours = 0;
 		this.oilLeak = false;
 		this.fuelLeak = false;
 		this.brokenStarter = false;
+		this.linkedID = linkedEngine.vehicle.lookupID;
+		this.linkedPos = linkedEngine.placementOffset;
 	}
 	
 	public PacketVehiclePartEngine(ByteBuf buf){
@@ -67,6 +76,13 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 			this.fuelLeak = false;
 			this.brokenStarter = false;
 		}
+		if(packetType.equals(Signal.LINK)){
+			this.linkedID = buf.readInt();
+			this.linkedPos = readPoint3dFromBuffer(buf);
+		}else{
+			this.linkedID = 0;
+			this.linkedPos = null;
+		}
 	}
 	
 	@Override
@@ -78,6 +94,9 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 			buf.writeBoolean(oilLeak);
 			buf.writeBoolean(fuelLeak);
 			buf.writeBoolean(brokenStarter);
+		}else if(packetType.equals(Signal.LINK)){
+			buf.writeInt(linkedID);
+			writePoint3dToBuffer(linkedPos, buf);
 		}
 	}
 	
@@ -110,6 +129,18 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 			}case BAD_SHIFT: {
 				InterfaceAudio.playQuickSound(new SoundInstance(engine, MTS.MODID + ":engine_shifting_grinding"));
 				break;
+			}case LINK: {
+				EntityVehicleF_Physics linkedVehicle = (EntityVehicleF_Physics) (world.isClient() ? AEntityBase.createdClientEntities.get(linkedID) : AEntityBase.createdServerEntities.get(linkedID));
+				if(linkedVehicle != null){
+					for(PartEngine otherEngine : linkedVehicle.engines.values()){
+						if(otherEngine.placementOffset.equals(linkedPos)){
+							otherEngine.linkedEngine = engine;
+							engine.linkedEngine = otherEngine;
+							return true;
+						}
+					}
+				}
+				return false;
 			}
 		}
 		return true;
@@ -127,6 +158,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		TOO_SLOW,
 		DROWN,
 		DAMAGE,
-		BAD_SHIFT;
+		BAD_SHIFT,
+		LINK;
 	}
 }
