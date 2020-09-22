@@ -71,8 +71,6 @@ public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
-	private static final WrapperEntity NULL_ENTITY_WRAPPER = new WrapperEntity(null);
-	private static final WrapperPlayer NULL_PLAYER_WRAPPER = new WrapperPlayer(null);
 	
 	final World world;
 
@@ -97,7 +95,7 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns a wrapper instance for the passed-in entity instance.
-	 *  Null may be passed-in to obtain a null wrapper, should this be desired.
+	 *  Null may be passed-in safely to ease function-forwarding.
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
 	 */
 	public WrapperEntity getWrapperFor(Entity entity){
@@ -112,13 +110,13 @@ public class WrapperWorld{
 			}
 			return wrapper;
 		}else{
-			return NULL_ENTITY_WRAPPER;
+			return null;
 		}
 	}
 	
 	/**
 	 *  Returns a wrapper instance for the passed-in player instance.
-	 *  Null may be passed-in to obtain a null wrapper, should this be desired.
+	 *  Null may be passed-in safely to ease function-forwarding.
 	 *  Note that the wrapped player class MAY be side-specific, so avoid casting
 	 *  the wrapped entity directly if you aren't sure what its class is.
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
@@ -135,7 +133,7 @@ public class WrapperWorld{
 			}
 			return playerWrappers.get(player);
 		}else{
-			return NULL_PLAYER_WRAPPER;
+			return null;
 		}
 	}
 	
