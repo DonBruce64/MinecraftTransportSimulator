@@ -255,8 +255,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				}
 				
 				//If the engine has high hours, give a chance for a backfire.
-				if(hours > 200 && !vehicle.world.isClient()){
-					if(Math.random() < hours/10000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(rpm+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
+				if(hours > 100 && !vehicle.world.isClient()){
+					if(Math.random() < hours/1000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(rpm+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
 						backfireEngine();
 					}
 				}
@@ -334,7 +334,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			lowestWheelVelocity = 999F;
 			desiredWheelVelocity = -999F;
 			wheelFriction = 0;
-			engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - startRPM/1.25 - hours) + startRPM/1.25 : startRPM*1.2;
+			engineTargetRPM = !state.esOn ? vehicle.throttle/100F*(definition.engine.maxRPM - startRPM/1.25 - hours*10) + startRPM/1.25 : startRPM*1.2;
 			
 			//Update wheel friction and velocity.
 			for(PartGroundDevice wheel : vehicle.wheels){
