@@ -188,7 +188,7 @@ public class GUIRadio extends AGUIBase{
 		volumeDisplay.enabled = false;
 		volumeDisplay.setText("VOL        " + String.valueOf(radio.volume));
 		volUpButton.enabled = radio.volume < 10;
-		volDnButton.enabled = radio.volume > 0;
+		volDnButton.enabled = radio.volume > 1;
 		
 		//Set preset button states depending on which preset the radio has selected.
 		for(byte i=0; i<6; ++i){

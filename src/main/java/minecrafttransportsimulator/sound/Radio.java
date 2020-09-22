@@ -104,7 +104,7 @@ public class Radio{
 	 * Changes the volume of this radio, and sets the currentSound's volume to that volume.
 	 */
 	public void changeVolume(int volume, boolean sendPacket){
-		this.volume = volume;
+		this.volume = volume == 0 ? 10 : volume;
 		if(currentSound != null){
 			currentSound.volume = volume/10F;
 		}
