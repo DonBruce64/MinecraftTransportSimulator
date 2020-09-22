@@ -62,7 +62,7 @@ public class GUIRadio extends AGUIBase{
 		addButton(offButton = new GUIComponentButton(guiLeft + 20, guiTop + 25, 55, "OFF", 15, true){
 			@Override
 			public void onClicked(){
-				radio.stop();
+				radio.pressPreset(0, true);
 				teachMode = false;
 			}
 		});

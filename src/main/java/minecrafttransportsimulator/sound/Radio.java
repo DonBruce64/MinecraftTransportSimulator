@@ -75,7 +75,6 @@ public class Radio{
 			}
 			displayText = "Radio turned off.";
 		}
-		preset = 0;
 	}
 	
 	/**
