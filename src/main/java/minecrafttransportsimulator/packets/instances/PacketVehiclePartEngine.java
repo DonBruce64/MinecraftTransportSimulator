@@ -130,7 +130,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 				InterfaceAudio.playQuickSound(new SoundInstance(engine, MTS.MODID + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
-				EntityVehicleF_Physics linkedVehicle = (EntityVehicleF_Physics) (world.isClient() ? AEntityBase.createdClientEntities.get(linkedID) : AEntityBase.createdServerEntities.get(linkedID));
+				EntityVehicleF_Physics linkedVehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(linkedID);
 				if(linkedVehicle != null){
 					for(PartEngine otherEngine : linkedVehicle.engines.values()){
 						if(otherEngine.placementOffset.equals(linkedPos)){
