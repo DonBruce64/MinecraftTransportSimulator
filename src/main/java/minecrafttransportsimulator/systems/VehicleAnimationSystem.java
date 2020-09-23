@@ -177,6 +177,7 @@ public final class VehicleAnimationSystem{
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
 			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
+			case("fueling"): return vehicle.beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.
 			case("aileron"): return vehicle.aileronAngle/10D;

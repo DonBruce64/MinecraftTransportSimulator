@@ -30,15 +30,17 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 		if(connectedVehicle != null & !world.isClient()){
 			//Don't fuel vehicles that don't exist.
 			if(!connectedVehicle.isValid){
+				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
 				return;
 			}
 			
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 20){
-				connectedVehicle = null;
-				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
+				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
 				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.toofar"), world.getDimensionID(), position, 25);
+				connectedVehicle.beingFueled = false;
+				connectedVehicle = null;
 				return;
 			}
 			//If we have room for fuel, try to add it to the vehicle.
@@ -50,13 +52,16 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
 					//No more room in the vehicle.  Disconnect.
+					InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
+					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
 					InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);	
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
+				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
+				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
-				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this));
 				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
 			}
 		}

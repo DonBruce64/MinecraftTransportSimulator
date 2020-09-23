@@ -14,33 +14,39 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  */
 public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntityFuelPump>{
 	private final int vehicleID;
+	private final boolean connect;
 	
-	public PacketTileEntityPumpConnection(TileEntityFuelPump pump){
+	public PacketTileEntityPumpConnection(TileEntityFuelPump pump, boolean connect){
 		super(pump);
-		this.vehicleID = pump.connectedVehicle != null ? pump.connectedVehicle.lookupID : -1;
+		this.vehicleID = pump.connectedVehicle.lookupID;
+		this.connect = connect;
 	}
 	
 	public PacketTileEntityPumpConnection(ByteBuf buf){
 		super(buf);
 		this.vehicleID = buf.readInt();
+		this.connect = buf.readBoolean();
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeInt(vehicleID);
+		buf.writeBoolean(connect);
 	}
 	
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFuelPump pump){
-		if(vehicleID != -1){
-			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(vehicleID); 
-			if(vehicle != null){
+		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(vehicleID); 
+		if(vehicle != null){
+			if(connect){
 				pump.connectedVehicle = vehicle;
+				vehicle.beingFueled = true;
 				pump.getTank().resetAmountDispensed();
+			}else{
+				vehicle.beingFueled = false;
+				pump.connectedVehicle = null;
 			}
-		}else{
-			pump.connectedVehicle = null;
 		}
 		return true;
 	}

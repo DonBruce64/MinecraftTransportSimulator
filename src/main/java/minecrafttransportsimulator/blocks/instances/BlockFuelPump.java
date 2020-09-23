@@ -86,8 +86,9 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     						if(part instanceof PartEngine){
     							if(ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())){
     								pump.connectedVehicle = nearestVehicle;
-    								tank.resetAmountDispensed();;
-    								InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
+    								pump.connectedVehicle.beingFueled = true;
+    								tank.resetAmountDispensed();
+    								InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump, true));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -100,8 +101,9 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
+    			InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump, false));
+    			pump.connectedVehicle.beingFueled = false;
     			pump.connectedVehicle = null;
-    			InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump));
     			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
     		}
 		}

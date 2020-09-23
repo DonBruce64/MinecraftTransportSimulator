@@ -54,6 +54,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public boolean sirenOn;
 	public boolean reverseThrust;
 	public boolean gearUpCommand;
+	public boolean beingFueled;
 	public byte throttle;
 	
 	//Internal states.
@@ -151,8 +152,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				part.startSounds();
 			}
 		}
-		if(fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
-			//If we have space for fuel, and we have tanks with it, transfer it.
+		
+		//If we have space for fuel, and we have tanks with it, transfer it.
+		if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
 			for(APart part : parts){
 				if(part instanceof PartInteractable && part.definition.interactable.feedsVehicles){
 					FluidTank tank = ((PartInteractable) part).tank;

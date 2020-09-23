@@ -122,7 +122,7 @@ public class FluidTank{
 	 *  amount drained.
 	 */
 	public double drain(String fluid, double maxAmount, boolean doDrain){
-		if(!currentFluid.isEmpty() && currentFluid.equals(fluid)){
+		if(!currentFluid.isEmpty() && (currentFluid.equals(fluid) || fluid.isEmpty())){
 			if(maxAmount >= fluidLevel){
 				maxAmount = fluidLevel;
 			}
