@@ -19,6 +19,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Class that handles all control operations.
@@ -172,9 +173,7 @@ public final class ControlSystem{
 		
 		if(!isPlayerController){
 			return;
-		}
-		controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK);
-		
+		}		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
 			if(BuilderGUI.isGUIActive(null)){
@@ -183,6 +182,9 @@ public final class ControlSystem{
 				BuilderGUI.closeGUI();
 			}
 		}
+		
+		//Check brake status.
+		controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK);
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
@@ -286,8 +288,6 @@ public final class ControlSystem{
 		if(!isPlayerController){
 			return;
 		}
-		controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK);
-		
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
 			if(BuilderGUI.isGUIActive(null)){
@@ -297,22 +297,67 @@ public final class ControlSystem{
 			}
 		}
 		
-		//Change gas to on or off.
-		if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
-			//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
-			short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
-			if(!powered.cruiseControl || powered.throttle < throttleLevel){
-				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+		//Check brake and gas.  Depends on how the controls are configured.
+		if(ConfigSystem.configObject.client.simpleThrottle.value){
+			if(!powered.engines.values().isEmpty()){
+				//If the vehicle is moving forwards, and we are pressing the brake, stop it.
+				//If we are going in reverse, and we are pressing the gas, also stop it.
+				//If we are stopped, switch gears based on if gas or brake is pressed.
+				byte currentGear = 0;
+				for(PartEngine engine : powered.engines.values()){
+					currentGear = engine.currentGear;
+				}
+				boolean brakePressed = ControlsKeyboard.CAR_BRAKE.isPressed();
+				boolean gasPressed = ControlsKeyboard.CAR_GAS.isPressed();
+				if(brakePressed){
+					if(currentGear >= 0){
+						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, brakePressed));
+						InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+						if(powered.velocity == 0 || currentGear == 0){
+							InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+						}
+					}else{
+						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, gasPressed));
+						InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (brakePressed ? 100 : 0), Byte.MAX_VALUE));
+					}
+				}else if(gasPressed){
+					if(currentGear <= 0){
+						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, gasPressed));
+						InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+						if(powered.velocity == 0 || currentGear == 0){
+							InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+						}
+					}else{
+						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, brakePressed));
+						InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (gasPressed ? 100 : 0), Byte.MAX_VALUE));
+					}
+				}else if(Math.abs(powered.velocity) > 0.3){
+					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, false));
+					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				}else{
+					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, true));
+					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				}
 			}
 		}else{
-			if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
-			}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
+			//Check brake and gas and set to on or off.
+			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK);
+			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
+				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+				if(!powered.cruiseControl || powered.throttle < throttleLevel){
+					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+				}
 			}else{
-				//Don't send gas off packet if we have cruise on.
-				if(!powered.cruiseControl){
-					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
+				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
+					InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
+				}else{
+					//Don't send gas off packet if we have cruise on.
+					if(!powered.cruiseControl){
+						InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+					}
 				}
 			}
 		}

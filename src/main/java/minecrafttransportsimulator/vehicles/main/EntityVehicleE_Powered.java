@@ -22,6 +22,7 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -233,6 +234,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					engine.startEngine();
 				}
 			}
+			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
 		return super.addRider(rider, riderLocation);
 	}
@@ -248,6 +250,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 						engine.setMagnetoStatus(false);
 						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF), this);
 					}
+					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 				}
 			}
 		}
