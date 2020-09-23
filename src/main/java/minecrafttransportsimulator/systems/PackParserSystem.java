@@ -364,6 +364,8 @@ public final class PackParserSystem{
 	    					subPartDef.types.set(i, "ground_" + subPartName);
 	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
 	    					subPartDef.types.set(i, "interactable_" + subPartName);
+	    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
+	    					subPartDef.types.set(i, "effector_" + subPartName);
 	    				}
 	    				//If we have additional parts, check those too.
 	    				if(subPartDef.additionalParts != null){
@@ -377,6 +379,8 @@ public final class PackParserSystem{
 		    	    					additionalPart.types.set(j, "ground_" + subPartName);
 		    	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
 		    	    					subPartDef.types.set(i, "interactable_" + subPartName);
+		    	    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
+		    	    					subPartDef.types.set(i, "effector_" + subPartName);
 		    	    				}
 		    	    			}
 	    					}
@@ -463,6 +467,8 @@ public final class PackParserSystem{
     					part.types.set(i, "ground_" + partName);
     				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
     					part.types.set(i, "interactable_" + partName);
+    				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
+    					part.types.set(i, "effector_" + partName);
     				}
     				//If we have additional parts, check those too.
     				if(part.additionalParts != null){
@@ -476,6 +482,8 @@ public final class PackParserSystem{
 	    	    					additionalPart.types.set(j, "ground_" + partName);
 	    	    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
 	    	    					additionalPart.types.set(i, "interactable_" + partName);
+	    	    				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
+	    	    					additionalPart.types.set(i, "effector_" + partName);
 	    	    				}
 	    	    			}
     					}
