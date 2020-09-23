@@ -767,14 +767,13 @@ public class WrapperWorld{
 			 	case COARSE_DIRT: newState = Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.DIRT); break;
 			 	default: return false;
              }
+		}else{
+			return false;
 		}
 		
-		if(!oldState.equals(newState)){
-			world.setBlockState(pos, newState);
-			world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
-			return true;
-		}
-		return false;
+		world.setBlockState(pos, newState, 11);
+		world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+		return true;
 	}
 	
 	/**
