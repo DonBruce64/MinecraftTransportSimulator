@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 import mcinterface.InterfaceAudio;
+import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
@@ -20,6 +22,8 @@ import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
@@ -30,6 +34,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -215,6 +220,38 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		soundPosition.put((float) position.y);
 		soundPosition.put((float) position.z);
 		soundPosition.flip();
+	}
+	
+	@Override
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+		if(!world.isClient()){
+			for(PartEngine engine : engines.values()){
+				if(!engine.state.running){
+					engine.setMagnetoStatus(true);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON), this);
+					engine.rpm = 2500;
+					engine.startEngine();
+				}
+			}
+		}
+		return super.addRider(rider, riderLocation);
+	}
+	
+	@Override
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+		if(!world.isClient()){
+			if(locationRiderMap.containsValue(rider)){
+				Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
+				PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
+				if(seat.vehicleDefinition.isController){
+					for(PartEngine engine : engines.values()){
+						engine.setMagnetoStatus(false);
+						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF), this);
+					}
+				}
+			}
+		}
+		super.removeRider(rider, iterator);
 	}
 	
 	@Override
