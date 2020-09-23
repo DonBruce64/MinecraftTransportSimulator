@@ -57,26 +57,28 @@ public class PartGroundEffector extends APart{
 					case("harvester"): {
 						//Harvest drops, and add to inventories.
 						List<WrapperItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
-						for(APart part : vehicle.parts){
-							if(part instanceof PartInteractable){
-								WrapperInventory inventory = ((PartInteractable) part).inventory;
-								if(inventory != null){
-									Iterator<WrapperItemStack> iterator = drops.iterator();
-									while(iterator.hasNext()){
-										WrapperItemStack stack = iterator.next();
-										if(inventory.addStack(stack, -1)){
-											iterator.remove();
-											break;
+						if(drops != null){
+							for(APart part : vehicle.parts){
+								if(part instanceof PartInteractable){
+									WrapperInventory inventory = ((PartInteractable) part).inventory;
+									if(inventory != null){
+										Iterator<WrapperItemStack> iterator = drops.iterator();
+										while(iterator.hasNext()){
+											WrapperItemStack stack = iterator.next();
+											if(inventory.addStack(stack, -1)){
+												iterator.remove();
+												break;
+											}
 										}
 									}
 								}
 							}
-						}
-						
-						//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-						for(WrapperItemStack stack : drops){
-							if(stack.getSize() > 0){
-								vehicle.world.spawnItemStack(stack, worldPos);
+							
+							//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
+							for(WrapperItemStack stack : drops){
+								if(stack.getSize() > 0){
+									vehicle.world.spawnItemStack(stack, worldPos);
+								}
 							}
 						}
 					}
