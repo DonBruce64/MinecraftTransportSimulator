@@ -233,7 +233,7 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.client.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement&& BuilderGUI.isGUIActive(null)){
+			if(EntityVehicleF_Physics.lockCameraToMovement && BuilderGUI.isGUIActive(null)){
 				long mousePosition = InterfaceInput.getTrackedMouseInfo();
 				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 				InterfaceNetwork.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));

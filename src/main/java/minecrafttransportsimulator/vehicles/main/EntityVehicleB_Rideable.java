@@ -13,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
@@ -47,14 +48,24 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			rider.setPosition(seatLocationOffset);
 			rider.setVelocity(motion);
 			
-			//If we are on the client, and the game isn't paused, and the player has lockedView selected, rotate them with the vehicle.
-			//If we aren't paused, and we have a lockedView, rotate us with the vehicle.
-            if(world.isClient() && !InterfaceGame.isGamePaused() && lockCameraToMovement){
-    			//Only change pitch in third-person.  First-person pitch changes will result in the player looking the wrong way.
+			//Rotate the player with the vehicle.
+			//This depends on camera state and what we are in.  If we are in a seat with a gun, we need to keep these changes-in sync with the server.
+			boolean controllingGun = false;
+			for(APart part : parts){
+				if(part instanceof PartGun){
+					if(((PartGun) part).getCurrentController().equals(rider)){
+						controllingGun = true;
+					}
+				}
+			}
+            if(controllingGun || !world.isClient() || InterfaceGame.inFirstPerson() || lockCameraToMovement){
+            	//Get yaw delta between entity and player from -180 to 180.
+            	double playerYawDelta = (360 + (angles.y - rider.getYaw())%360)%360;
+            	if(playerYawDelta > 180){
+            		playerYawDelta-=360;
+            	}
             	rider.setYaw(rider.getYaw() + angles.y - prevAngles.y);
-        		if(!InterfaceGame.inFirstPerson()){
-        			rider.setPitch(rider.getPitch() + angles.x - prevAngles.x);
-        		}
+        		rider.setPitch(rider.getPitch() + Math.cos(Math.toRadians(playerYawDelta))*(angles.x - prevAngles.x) + Math.sin(Math.toRadians(playerYawDelta))*(angles.z - prevAngles.z));
              }
 			
 			//If we are on the client, and the rider is the main client player, check controls.

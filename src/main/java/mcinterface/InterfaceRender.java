@@ -486,15 +486,20 @@ public class InterfaceRender{
 		            		playerYawDelta-=360;
 		            	}
 		            	
+		            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
+		            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks();
+		            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks();
+		            	while(pitchAngle > 180){pitchAngle -= 360;}
+		    			while(pitchAngle < -180){pitchAngle += 360;}
+		    			while(rollAngle > 180){rollAngle -= 360;}
+		    			while(rollAngle < -180){rollAngle += 360;}
+		            	
 		            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
 		            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
 		            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-		            	double pitchPitchComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
-		            	double rollPitchComponent = Math.sin(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
-		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks());
-		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*(vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks());
+		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
+		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
 		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
-		            	GL11.glRotated(pitchPitchComponent + rollPitchComponent, 1, 0, 0);
 		        	}else if(InterfaceGame.inThirdPerson()){
 		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
 		            }else{
