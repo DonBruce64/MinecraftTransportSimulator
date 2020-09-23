@@ -37,6 +37,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	public double rpm;
 	public double temp = 20;
 	public double pressure;
+	public float propellerGearboxRatio;
 	public EngineStates state = EngineStates.ENGINE_OFF;
 	
 	//Runtime calculated values.
@@ -51,7 +52,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private int internalFuel;
 	private long lastTimeParticleSpawned;
 	private float currentGearRatio;
-	private float propellerGearboxRatio;
 	private double lowestWheelVelocity;
 	private double desiredWheelVelocity;
 	private double propellerAxialVelocity;
@@ -64,6 +64,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
+	private final Point3d engineForce = new Point3d(0D, 0D, 0D);
 	
 	//Constants and static variables.
 	private final int startRPM;
@@ -777,9 +778,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	}
 	
 	public Point3d getForceOutput(){
-		//Get all the forces this part can output.
-		Point3d engineForce = new Point3d(0D, 0D, 0D);
-		
+		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
 		if(wheelFriction != 0){
 			double wheelForce = 0;
@@ -829,58 +828,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*30;
 			}
 			engineForce.z += wheelForce;
-		}else{
-			//No wheel force.  Check for propellers to provide force.
-			for(APart part : childParts){
-				if(part instanceof PartPropeller && state.running){
-					PartPropeller propeller = (PartPropeller) part;
-					//Get the current linear velocity of the propeller, based on our axial velocity.
-					//This is is meters per second.
-					double currentLinearVelocity = 20D*propellerAxialVelocity;
-					//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
-					//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
-					//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances
-					//here, like perhaps the propeller manufactures reporting the prop pitch to match cruise, but for physics, that don't work,
-					//because the propeller never reaches that speed during cruise due to drag.  So we add a small addition here to compensate.
-					double desiredLinearVelocity = 0.0254D*(propeller.currentPitch + 20)*20D*propeller.angularVelocity;
-					//Not sure why, but this follows given the fact cruising speed of aircraft is a bit
-					if(desiredLinearVelocity != 0){
-						//Thrust produced by the propeller is the difference between the desired linear velocity and the current linear velocity.
-						//This gets the magnitude of the initial thrust force.
-						double thrust = (desiredLinearVelocity - currentLinearVelocity);
-						//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
-						thrust *= Math.PI*Math.pow(0.0254*propeller.definition.propeller.diameter/2D, 2);
-						//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
-						thrust *= vehicle.airDensity/25D;
-	
-						//Get the angle of attack of the propeller.
-						//Note pitch velocity is in linear in meters per second, 
-						//This means we need to convert it to meters per revolution before we can move on.
-						//This gets the angle as a ratio of forward pitch to propeller circumference.
-						//If the angle of attack is greater than 25 degrees (or a ratio of 0.4663), sap power off the propeller for stalling.
-						double angleOfAttack = ((desiredLinearVelocity - currentLinearVelocity)/(rpm/propellerGearboxRatio/60D))/(propeller.definition.propeller.diameter*Math.PI*0.0254D);
-						if(Math.abs(angleOfAttack) > 0.4663D){
-							thrust *= 0.4663D/Math.abs(angleOfAttack);
-						}
-						
-						//If the propeller is in the water, increase thrust.
-						if(isPropellerInLiquid){
-							thrust *= 50;
-						}
-						
-						//Add propeller force to total engine force as a vector.
-						//Depends on propeller orientation, as upward propellers provide upwards thrust.
-						Point3d propellerThrustVector = new Point3d(0D, 0D, thrust);
-						if(propeller.definition.propeller.isRotor){
-							//Get the X and Y coords of the action rotation for thrust vectoring on rotors.
-							Point3d propellerActionRotation = propeller.getActionRotation(0);
-							propellerActionRotation.z = 0;
-							propellerThrustVector.rotateCoarse(propellerActionRotation); 
-						}
-						engineForce.add(propellerThrustVector.rotateCoarse(propeller.totalRotation));
-					}
-				}
-			}
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.

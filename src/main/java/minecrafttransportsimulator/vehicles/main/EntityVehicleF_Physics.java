@@ -213,25 +213,32 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			thrustForce.set(0D, 0D, 0D);
 			thrustTorque.set(0D, 0D, 0D);
 			rotorRotation.set(0D, 0D, 0D);
-			for(PartEngine engine : engines.values()){
-				Point3d engineForce = engine.getForceOutput();
-				boolean addThrustTorque = false;
-				thrustForce.add(engineForce);
-				
-				//If the engine has a rotor add engine torque.
-				//Torque added is relative to the engine force output, factored by the angle of the control surface.
-				for(APart part : engine.childParts){
-					if(part instanceof PartPropeller){
-						addThrustTorque = true;
-						if(part.definition.propeller.isRotor){
-							rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
-						}
-					}
+			for(APart part : parts){
+				Point3d partForce;
+				boolean isPropeller = false;
+				boolean isRotor = false;
+				double jetPower = 0;
+				if(part instanceof PartEngine){
+					partForce = ((PartEngine) part).getForceOutput();
+					jetPower = part.definition.engine.jetPowerFactor;
+				}else if(part instanceof PartPropeller){
+					partForce = ((PartPropeller) part).getForceOutput();
+					isPropeller = true;
+					isRotor = part.definition.propeller.isRotor;
+				}else{
+					continue;
 				}
 				
-				//We also need to add torque if we have jet power or if we had a propeller providing force.
-				if(addThrustTorque || engine.definition.engine.jetPowerFactor > 0){
-					thrustTorque.add(engineForce.y*-engine.placementOffset.z, engineForce.z*engine.placementOffset.x, engineForce.y*engine.placementOffset.x);
+				thrustForce.add(partForce);
+				
+				//If the part is a propeller or jet engine, we add thrust torque.
+				//If it's a rotor, we also add control surface torque.
+				//Torque added is relative to the propeller force output, factored by the angle of the control surface.
+				if(isPropeller || jetPower > 0){
+					thrustTorque.add(partForce.y*-part.placementOffset.z, partForce.z*part.placementOffset.x, partForce.y*part.placementOffset.x);
+				}
+				if(isRotor){
+					rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
 				}
 			}
 			
