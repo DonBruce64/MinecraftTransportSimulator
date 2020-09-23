@@ -227,7 +227,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
-		if(!world.isClient()){
+		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
 			for(PartEngine engine : engines.values()){
 				if(!engine.state.running){
 					engine.setMagnetoStatus(true);
@@ -243,7 +243,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
-		if(!world.isClient()){
+		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
 			if(locationRiderMap.containsValue(rider)){
 				Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
 				PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
