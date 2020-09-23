@@ -236,7 +236,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					engine.startEngine();
 				}
 			}
-			InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+			InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false), this);
 		}
 		return super.addRider(rider, riderLocation);
 	}
@@ -252,8 +252,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 						engine.setMagnetoStatus(false);
 						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF), this);
 					}
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false), this);
+					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true), this);
 				}
 			}
 		}
