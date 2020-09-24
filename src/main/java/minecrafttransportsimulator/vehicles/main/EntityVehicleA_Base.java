@@ -185,7 +185,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
     		}
 			
 			//Send packet to client with part data.
-			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, part.definition.packID, part.definition.systemName, partData, part.parentPart), this);
+			InterfaceNetwork.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, part.definition.packID, part.definition.systemName, partData, part.parentPart));
 			
 			//If we are a new part, add default parts.  We need to do this after we send a packet.
 			//We need to make sure to convert them to the right type as they're offset.
@@ -245,7 +245,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
 			}
 		}
 		
@@ -453,7 +453,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						
 						//Send a packet if required.
 						if(sendPacket){
-							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.definition.packID, newPart.definition.systemName, newPart.getData(), parentPart), vehicle);
+							InterfaceNetwork.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.definition.packID, newPart.definition.systemName, newPart.getData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.

@@ -1,10 +1,14 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
+import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
@@ -38,7 +42,11 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 20){
 				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
-				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.toofar"), world.getDimensionID(), position, 25);
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
+					}
+				}
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
 				return;
@@ -55,14 +63,22 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 					InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
-					InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.complete"), world.getDimensionID(), position, 16);	
+					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+						if(entity instanceof WrapperPlayer){
+							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.complete"));
+						}
+					}
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
 				InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
-				InterfaceNetwork.sendToClientsNear(new PacketPlayerChatMessage("interact.fuelpump.empty"), world.getDimensionID(), position, 16);
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.empty"));
+					}
+				}
 			}
 		}
 	}

@@ -43,7 +43,7 @@ public class PartPropeller extends APart{
 			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON), vehicle);
+					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
 				}
 				return;
 			}

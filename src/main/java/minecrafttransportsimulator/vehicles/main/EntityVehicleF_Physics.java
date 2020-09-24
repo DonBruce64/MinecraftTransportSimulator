@@ -431,12 +431,12 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(cruiseControl){
 			if(velocity < cruiseControlSpeed){
 				if(throttle < 100){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
 					++throttle;
 				}
 			}else if(velocity > cruiseControlSpeed){
 				if(throttle > 0){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
 					--throttle;
 				}
 			}
@@ -444,18 +444,18 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		
 		if(autopilot){
 			if(-angles.z > aileronTrim + 1){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
 				++aileronTrim;
 			}else if(-angles.z < aileronTrim - 1){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 				--aileronTrim;
 			}
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motion.z*100 > elevatorTrim + 1){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
 				++elevatorTrim;
 			}else if(-motion.y*100 < elevatorTrim - 1){
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
 				--elevatorTrim;
 			}
 		}
@@ -463,10 +463,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(aileronCooldown==0){
 			if(aileronAngle != 0){
 				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0));
 					aileronAngle = 0;
 				}else{
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0));
 					aileronAngle += aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE;
 				}
 			}
@@ -477,10 +477,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(elevatorCooldown==0){
 			if(elevatorAngle != 0){
 				if(elevatorAngle < ELEVATOR_DAMPEN_RATE && elevatorAngle > -ELEVATOR_DAMPEN_RATE){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0));
 					elevatorAngle = 0;
 				}else{
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0));
 					elevatorAngle += elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE;
 				}
 			}
@@ -491,10 +491,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		if(rudderCooldown==0){
 			if(rudderAngle != 0){
 				if(rudderAngle < RUDDER_DAMPEN_RATE && rudderAngle > -RUDDER_DAMPEN_RATE){
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0));
 					rudderAngle = 0;
 				}else{
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0));
 					rudderAngle += rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE;
 				}
 			}

@@ -231,12 +231,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			for(PartEngine engine : engines.values()){
 				if(!engine.state.running){
 					engine.setMagnetoStatus(true);
-					InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON));
 					engine.rpm = 2500;
 					engine.startEngine();
 				}
 			}
-			InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false), this);
+			InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
 		return super.addRider(rider, riderLocation);
 	}
@@ -250,10 +250,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				if(seat.vehicleDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						engine.setMagnetoStatus(false);
-						InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF), this);
+						InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 					}
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false), this);
-					InterfaceNetwork.sendToClientsTracking(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true), this);
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+					InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 				}
 			}
 		}

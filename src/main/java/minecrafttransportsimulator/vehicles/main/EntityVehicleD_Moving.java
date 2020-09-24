@@ -366,7 +366,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
-				InterfaceNetwork.sendToClientsTracking(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied), this);
+				InterfaceNetwork.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.

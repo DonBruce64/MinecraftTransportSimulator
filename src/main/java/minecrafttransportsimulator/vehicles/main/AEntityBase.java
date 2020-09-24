@@ -42,7 +42,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 public abstract class AEntityBase{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
 	private static int idCounter = 1;
-	/**Map of created entities.  Keyed by their ID.  Note: invalid entities are NOT removed from this map as IDs don't get re-used.**/
+	/**Map of created entities.  Keyed by their ID.  Note: invalid entities will be removed from this map as
+	 * there's no reason to keep a link to them and tie up resources.**/
 	public static Map<Integer, AEntityBase> createdClientEntities = new HashMap<Integer, AEntityBase>();
 	/**Like {@link #createdClientEntities}, but on the server.  Used to keep collisions away on integrated systems.**/
 	public static Map<Integer, AEntityBase> createdServerEntities = new HashMap<Integer, AEntityBase>();
@@ -117,7 +118,9 @@ public abstract class AEntityBase{
 		}
 		
 		if(world.isClient()){
-			createdClientEntities.put(lookupID, this);
+			if(!createdClientEntities.containsKey(lookupID)){
+				createdClientEntities.put(lookupID, this);
+			}
 		}else{
 			createdServerEntities.put(lookupID, this);
 		}
@@ -195,7 +198,7 @@ public abstract class AEntityBase{
 			locationRiderMap.put(riderLocation, rider);
 			if(!world.isClient()){
 				rider.setRiding(this);
-				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, riderLocation), this);
+				InterfaceNetwork.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
 			}
 			return true;
 		}
@@ -215,7 +218,7 @@ public abstract class AEntityBase{
 			}
 			if(!world.isClient()){
 				rider.setRiding(null);
-				InterfaceNetwork.sendToClientsTracking(new PacketEntityRiderChange(this, rider, null), this);
+				InterfaceNetwork.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
 			}
 		}
 	}

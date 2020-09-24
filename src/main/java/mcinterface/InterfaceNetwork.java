@@ -5,7 +5,6 @@ import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
@@ -28,11 +27,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevi
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -105,30 +102,6 @@ public class InterfaceNetwork{
 	 */
 	public static void sendToAllClients(APacketBase packet){
 		network.sendToAll(new WrapperPacket(packet));
-	}
-	
-	/**
-	 *  Sends the passed-in packet to all clients tracking the
-	 *  passed-in vehicle.  Useful for preventing packets going to
-	 *  vehicles that don't actually exist on clients due to them
-	 *  being far away.
-	 */
-	public static void sendToClientsTracking(APacketBase packet, AEntityBase trackingEntity){
-		if(BuilderEntity.createdServerBuilders.get(trackingEntity) == null){
-			System.out.println(trackingEntity.lookupID);
-			System.out.println(trackingEntity.isValid);
-			System.out.println(BuilderEntity.createdServerBuilders.size());
-			System.out.println(BuilderEntity.createdServerBuilders.size());
-		}
-		network.sendToAllTracking(new WrapperPacket(packet), BuilderEntity.createdServerBuilders.get(trackingEntity));
-	}
-	
-	/**
-	 *  Sends the passed-in packet to all clients near the passed-in
-	 *  point.  Useful for clients that are near things that output information.
-	 */
-	public static void sendToClientsNear(APacketBase packet, int dimension, Point3i point, int distance){
-		network.sendToAllTracking(new WrapperPacket(packet), new TargetPoint(dimension, point.x, point.y, point.z, distance));
 	}
 	
 	/**

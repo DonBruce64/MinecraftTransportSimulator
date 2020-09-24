@@ -207,7 +207,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGroundDevice(this, flat), vehicle);
+			InterfaceNetwork.sendToAllClients(new PacketVehiclePartGroundDevice(this, flat));
 		}
 		
 		//Set flat state and new bounding box.

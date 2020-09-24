@@ -35,7 +35,7 @@ public abstract class APacketEntity extends APacketBase{
 		AEntityBase entity = world.isClient() ? AEntityBase.createdClientEntities.get(entityID) : AEntityBase.createdServerEntities.get(entityID);
 		if(entity != null){
 			if(handle(world, player, entity) && !world.isClient()){
-				InterfaceNetwork.sendToClientsTracking(this, entity);
+				InterfaceNetwork.sendToAllClients(this);
 			}
 		}
 	}

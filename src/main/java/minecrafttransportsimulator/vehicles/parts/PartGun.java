@@ -103,7 +103,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//If not, then we don't fire the gun, as that'd waste ammo.
 			boolean lockedOn = true;
 			if(!(controller instanceof WrapperPlayer)){
-				WrapperEntity hostile = vehicle.world.getNearestHostile(controller);
+				WrapperEntity hostile = vehicle.world.getNearestHostile(controller, 48);
 				if(hostile != null){
 					//Need to aim for the middle of the mob, not their base (feet).
 					Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
@@ -297,7 +297,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 						if(vehicle.world.isClient()){
 							InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
 						}else{
-							InterfaceNetwork.sendToClientsTracking(new PacketVehiclePartGun(this, loadedBulletDefinition.packID, loadedBulletDefinition.systemName), vehicle);
+							InterfaceNetwork.sendToAllClients(new PacketVehiclePartGun(this, loadedBulletDefinition.packID, loadedBulletDefinition.systemName));
 						}
 						return true;
 					}

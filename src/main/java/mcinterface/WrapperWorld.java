@@ -97,9 +97,12 @@ public class WrapperWorld{
 	 *  Returns a wrapper instance for the passed-in entity instance.
 	 *  Null may be passed-in safely to ease function-forwarding.
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 *  If the entity is a player, then a player wrapper is returned.
 	 */
 	public WrapperEntity getWrapperFor(Entity entity){
-		if(entity != null){
+		if(entity instanceof EntityPlayer){
+			return getWrapperFor((EntityPlayer) entity);
+		}else if(entity != null){
 			if(!entityWrappers.containsKey(entity)){
 				entityWrappers.put(entity, new WrapperEntity(entity));
 			}
@@ -182,10 +185,28 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns a list of players within the specified bounds.
+	 */
+	public List<WrapperEntity> getEntitiesWithin(BoundingBox box){
+		AxisAlignedBB mcBox = new AxisAlignedBB(
+			box.globalCenter.x - box.widthRadius,
+			box.globalCenter.y - box.heightRadius,
+			box.globalCenter.z - box.depthRadius,
+			box.globalCenter.x + box.widthRadius,
+			box.globalCenter.y + box.heightRadius,
+			box.globalCenter.z + box.depthRadius
+		);
+		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
+		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, mcBox)){
+			entities.add(getWrapperFor(entity));
+		}
+		return entities;
+	}
+	
+	/**
 	 *  Returns the nearest hostile entity that can be seen by the passed-in entity.
 	 */
-	public WrapperEntity getNearestHostile(WrapperEntity entityLooking){
-		int searchRadius = 48;
+	public WrapperEntity getNearestHostile(WrapperEntity entityLooking, int searchRadius){
 		double smallestDistance = searchRadius*2;
 		Entity foundEntity = null;
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(entityLooking.entity, entityLooking.entity.getEntityBoundingBox().grow(searchRadius))){
