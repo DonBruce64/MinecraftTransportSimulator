@@ -340,10 +340,12 @@ public class BuilderEntity extends Entity{
 		if(entity == null && tag.hasKey("entityid")){
 			//Restore the Entity from saved state.
 			entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
-			if(world.isRemote){
-				createdClientBuilders.put(entity, this);
-			}else{
-				createdServerBuilders.put(entity, this);
+			if(!isDead){
+				if(world.isRemote){
+					createdClientBuilders.put(entity, this);
+				}else{
+					createdServerBuilders.put(entity, this);
+				}
 			}
 		}
 	}
