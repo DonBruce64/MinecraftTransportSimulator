@@ -130,17 +130,17 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 				InterfaceAudio.playQuickSound(new SoundInstance(engine, MTS.MODID + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
-				EntityVehicleF_Physics linkedVehicle = (EntityVehicleF_Physics) AEntityBase.createdClientEntities.get(linkedID);
-				if(linkedVehicle != null){
-					for(PartEngine otherEngine : linkedVehicle.engines.values()){
-						if(otherEngine.placementOffset.equals(linkedPos)){
-							otherEngine.linkedEngine = engine;
-							engine.linkedEngine = otherEngine;
-							return true;
+				for(AEntityBase entity : AEntityBase.createdClientEntities){
+					if(entity.lookupID == linkedID){
+						for(PartEngine otherEngine : ((EntityVehicleF_Physics) entity).engines.values()){
+							if(otherEngine.placementOffset.equals(linkedPos)){
+								otherEngine.linkedEngine = engine;
+								engine.linkedEngine = otherEngine;
+								return false;
+							}
 						}
 					}
 				}
-				return false;
 			}
 		}
 		return true;

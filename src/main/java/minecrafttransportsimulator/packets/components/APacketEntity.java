@@ -32,11 +32,16 @@ public abstract class APacketEntity extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		AEntityBase entity = world.isClient() ? AEntityBase.createdClientEntities.get(entityID) : AEntityBase.createdServerEntities.get(entityID);
-		if(entity != null){
-			if(handle(world, player, entity) && !world.isClient()){
-				InterfaceNetwork.sendToAllClients(this);
+		boolean sendReturnPacket = false;
+		for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
+			if(entity.lookupID == entityID){
+				if(handle(world, player, entity) && !world.isClient()){
+					sendReturnPacket = true;
+				}
 			}
+		}
+		if(sendReturnPacket){
+			InterfaceNetwork.sendToAllClients(this);
 		}
 	}
 	

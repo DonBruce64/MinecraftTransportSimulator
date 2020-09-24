@@ -1,11 +1,9 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,11 +40,11 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 public abstract class AEntityBase{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
 	private static int idCounter = 1;
-	/**Map of created entities.  Keyed by their ID.  Note: invalid entities will be removed from this map as
-	 * there's no reason to keep a link to them and tie up resources.**/
-	public static Map<Integer, AEntityBase> createdClientEntities = new HashMap<Integer, AEntityBase>();
-	/**Like {@link #createdClientEntities}, but on the server.  Used to keep collisions away on integrated systems.**/
-	public static Map<Integer, AEntityBase> createdServerEntities = new HashMap<Integer, AEntityBase>();
+	/**List of created entities.  This is a list as it's possible for clients to have multiple identical entities.
+	 * This happens when mods like Optifine or The One Probe do their janky hacks.**/
+	public static List<AEntityBase> createdClientEntities = new ArrayList<AEntityBase>();
+	/**Like {@link #createdClientEntities}, but on the server.**/
+	public static List<AEntityBase> createdServerEntities = new ArrayList<AEntityBase>();
 	
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
@@ -118,11 +116,9 @@ public abstract class AEntityBase{
 		}
 		
 		if(world.isClient()){
-			if(!createdClientEntities.containsKey(lookupID)){
-				createdClientEntities.put(lookupID, this);
-			}
+			createdClientEntities.add(this);
 		}else{
-			createdServerEntities.put(lookupID, this);
+			createdServerEntities.add(this);
 		}
 	}
 	

@@ -107,7 +107,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 						
 						//Now we have min-max, check for any vehicles in the area.
 						//We need to check along the non-primary axis, but we don't care about Y.
-						for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities).values()){
+						for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
 							if(entity.position.x > minX && entity.position.x < maxX && entity.position.z > minZ && entity.position.z < maxZ){
 								updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
 								break;

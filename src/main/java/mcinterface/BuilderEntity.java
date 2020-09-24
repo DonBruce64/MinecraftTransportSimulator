@@ -174,9 +174,9 @@ public class BuilderEntity extends Entity{
 		if(entity != null){
 			entity.isValid = false;
 			if(world.isRemote){
-				AEntityBase.createdClientEntities.remove(entity.lookupID);
+				AEntityBase.createdClientEntities.remove(entity);
 			}else{
-				AEntityBase.createdServerEntities.remove(entity.lookupID);
+				AEntityBase.createdServerEntities.remove(entity);
 			}
 			if(entity instanceof IRadioProvider && world.isRemote){
 				((IRadioProvider) entity).getRadio().stop();
