@@ -35,7 +35,6 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -244,17 +243,13 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
-			if(locationRiderMap.containsValue(rider)){
-				Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
-				PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
-				if(seat.vehicleDefinition.isController){
-					for(PartEngine engine : engines.values()){
-						engine.setMagnetoStatus(false);
-						InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
-					}
-					InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
-					InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+			if(locationRiderMap.containsValue(rider) && locationRiderMap.size() == 1){
+				for(PartEngine engine : engines.values()){
+					engine.setMagnetoStatus(false);
+					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 				}
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 			}
 		}
 		super.removeRider(rider, iterator);
