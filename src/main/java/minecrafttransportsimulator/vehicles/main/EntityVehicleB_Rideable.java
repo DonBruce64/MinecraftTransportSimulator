@@ -8,6 +8,7 @@ import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -53,7 +54,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			boolean controllingGun = false;
 			for(APart part : parts){
 				if(part instanceof PartGun){
-					if(((PartGun) part).getCurrentController().equals(rider)){
+					if(rider.equals(((PartGun) part).getCurrentController())){
 						controllingGun = true;
 					}
 				}
