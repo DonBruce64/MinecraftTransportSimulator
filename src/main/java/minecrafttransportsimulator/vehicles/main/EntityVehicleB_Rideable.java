@@ -8,7 +8,6 @@ import mcinterface.WrapperEntity;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
