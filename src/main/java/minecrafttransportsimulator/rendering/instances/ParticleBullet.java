@@ -137,7 +137,7 @@ public final class ParticleBullet extends AParticle{
         }
         
         //Bind the texture for this bullet.
-        InterfaceRender.bindTexture(definition.packID, "textures/items/" + definition.systemName + ".png");
+        InterfaceRender.bindTexture(definition.packID, "textures/items/parts/" + definition.systemName + ".png");
         
         //Render the parsed model.  Translation will already have been applied, 
         //so we just need to rotate ourselves based on our velocity.
