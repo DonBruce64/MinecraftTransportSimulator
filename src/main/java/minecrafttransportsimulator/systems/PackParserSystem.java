@@ -61,7 +61,7 @@ public final class PackParserSystem{
 	public static List<String> logEntries = new ArrayList<String>();
 	
 	/**Custom Gson instance for parsing packs.*/
-	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(Point3d.class, Point3d.adapter).create(); 
+	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create(); 
 	
     
     //-----START OF INIT LOGIC-----
