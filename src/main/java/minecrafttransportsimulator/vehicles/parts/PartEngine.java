@@ -95,6 +95,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				++reverseGears;
 			}
 		}
+		if (definition.engine.revResistance <= 0){
+				definition.engine.revResistance = 10;
+		}
 		this.startRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 		this.stallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
 		
@@ -365,7 +368,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				//Don't adjust it down to stall the engine, that can only be done via backfire.
 				if(wheelFriction > 0){
 					double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicle.definition.motorized.axleRatio;
-					rpm += (desiredRPM - rpm)/10D;
+					rpm += (desiredRPM - rpm)/definition.engine.revResistance;
 					if(rpm < stallRPM && state.running){
 						rpm = stallRPM;
 					}
@@ -430,9 +433,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 			if(state.running){
 				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
-				rpm += (engineTargetRPM - rpm)/10;
+				rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 				if(rpm > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
-					rpm -= Math.abs(engineTargetRPM - rpm)/5;
+					rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
 				}
 			}else if(!state.esOn && !state.hsOn){
 				rpm = Math.max(rpm - 10, 0);
