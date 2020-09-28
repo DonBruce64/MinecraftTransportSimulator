@@ -240,16 +240,18 @@ public class Point3d extends APoint3<Double, Point3d>{
      * in rendering operations).  If only a rough approximation is required, use {@link #rotateCoarse(Point3d)}
      */
 	public Point3d rotateFine(Point3d angles){
-		double cosX = Math.cos(Math.toRadians(angles.x));//A
-		double sinX = Math.sin(Math.toRadians(angles.x));//B
-		double cosY = Math.cos(Math.toRadians(angles.y));//C
-		double sinY = Math.sin(Math.toRadians(angles.y));//D
-		double cosZ = Math.cos(Math.toRadians(angles.z));//E
-		double sinZ = Math.sin(Math.toRadians(angles.z));//F
-		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
-				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
-				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
-		);
+		if(!angles.isZero()){
+			double cosX = Math.cos(Math.toRadians(angles.x));//A
+			double sinX = Math.sin(Math.toRadians(angles.x));//B
+			double cosY = Math.cos(Math.toRadians(angles.y));//C
+			double sinY = Math.sin(Math.toRadians(angles.y));//D
+			double cosZ = Math.cos(Math.toRadians(angles.z));//E
+			double sinZ = Math.sin(Math.toRadians(angles.z));//F
+			set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
+					x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
+					x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
+			);
+		}
 		return this;
 	}
 	
