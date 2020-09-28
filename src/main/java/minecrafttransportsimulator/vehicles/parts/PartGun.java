@@ -30,7 +30,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public int gunNumber;
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
-	public double vehiclePitchContribution;
 	private JSONPart loadedBulletDefinition;
 	
 	//These variables are used during firing and will be reset on entity loading.
@@ -123,7 +122,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 			
 			//Aadjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-			double deltaYaw = controller.getHeadYaw() - (currentOrientation.y + totalRotation.y + vehicle.angles.y);
+			double deltaYaw = controller.getHeadYaw() - (vehicle.angles.y + totalRotation.y + currentOrientation.y);
 			while(deltaYaw > 180){
 				deltaYaw -= 360;
 			}
@@ -167,8 +166,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//For pitch, we need to find the relative angle of the player to the vehicle's 0-pitch plane.
 			//When the player rotates their head, they don't do so relative to the pitch of the vehicle the gun is on, 
 			//so a yaw change can result in a pitch change.
-			vehiclePitchContribution = vehicle.angles.x*Math.cos(Math.toRadians(vehicle.angles.y - currentOrientation.y));
-			double deltaPitch = controller.getPitch() - (currentOrientation.x + totalRotation.x + vehiclePitchContribution);
+			double vehiclePitchContribution = (vehicle.angles.x + totalRotation.x)*Math.cos(Math.toRadians(totalRotation.y + currentOrientation.y));
+			double vehicleRollContribution = -(vehicle.angles.z + totalRotation.z)*Math.sin(Math.toRadians(totalRotation.y + currentOrientation.y));
+			double deltaPitch = controller.getPitch() - (vehiclePitchContribution + vehicleRollContribution + currentOrientation.x);
 			if(deltaPitch < 0){
 				if(deltaPitch < -anglePerTickSpeed){
 					deltaPitch = -anglePerTickSpeed;
@@ -375,14 +375,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
 			//This is based on the barrel length and shell size.
-			Point3d gunFactoredAngles = currentOrientation.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
-			gunFactoredAngles.add(totalRotation).add(vehiclePitchContribution, vehicle.angles.y, 0D);
+			Point3d vehicleFactoredAngles = vehicle.angles.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
 			
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
-			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(gunFactoredAngles));
+			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 			
 			//Get the bullet's initial position.  This is based off the gun orientation and barrel length.
-			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(gunFactoredAngles).add(worldPos);
+			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
 	        
 			//Add the bullet as a particle.
 			InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBulletDefinition, this, lastController));
