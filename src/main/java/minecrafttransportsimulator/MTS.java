@@ -75,8 +75,8 @@ public class MTS {
 			MTSLog.error(logEntry);
 		}
 		
-		//Load config file an set minecraft directory.
-		ConfigSystem.loadFromDisk(new File(event.getSuggestedConfigurationFile().getParent(), "mtsconfig.json"));
+		//Load config file and set minecraft directory.
+		ConfigSystem.loadFromDisk(event.getModConfigurationDirectory());
 		minecraftDir = new File(event.getModConfigurationDirectory().getParent());
 	}
 	

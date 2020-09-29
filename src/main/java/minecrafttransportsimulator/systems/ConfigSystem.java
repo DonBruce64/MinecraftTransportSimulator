@@ -32,9 +32,9 @@ public final class ConfigSystem{
 	 * or should reside if no file is present.  If no file is present,
 	 * one will be created at the end of the loading phase.
 	 */
-	public static void loadFromDisk(File file){
+	public static void loadFromDisk(File configDirectory){
 		//Set the current config file location to the passed-in file.
-		configFile = file;
+		configFile = new File(configDirectory, "mtsconfig.json");
 				
 	    //If we have a config file already, parse it into Java.
 		//Otherwise, make a new one.
@@ -92,6 +92,12 @@ public final class ConfigSystem{
 				System.err.println("ERROR: ConfigSystem failed to create fresh crafting overridesg file.  Report to the mod author!");
 				e.printStackTrace();
 			}
+		}
+		
+		//If we have the old config file, delete it.
+		File oldConfigFile = new File(configDirectory, "mts.cfg");
+		if(oldConfigFile.exists()){
+			oldConfigFile.delete();
 		}
 	}
 	
