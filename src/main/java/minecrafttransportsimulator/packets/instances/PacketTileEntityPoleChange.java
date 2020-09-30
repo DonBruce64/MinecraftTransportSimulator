@@ -11,12 +11,12 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the client.
  * Packet does server-side checks to see if the player could change the pole, and if so, it applies those
@@ -87,7 +87,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
-					AItemBase item = MTSRegistry.packItemMap.get(component.definition.packID).get(component.definition.systemName);
+					AItemBase item = PackParserSystem.getItem(component.definition);
 					WrapperNBT data = null;
 					if(component.getTextLines() != null){
 						data = new WrapperNBT();
@@ -117,7 +117,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				}
 			}else if(!packID.isEmpty() && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ItemPoleComponent componentItem = (ItemPoleComponent) MTSRegistry.packItemMap.get(packID).get(systemName);
+				ItemPoleComponent componentItem = PackParserSystem.getItem(packID, systemName);
 				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
 				pole.components.put(axis, newComponent);
 				if(textLines != null && newComponent.getTextLines() != null){

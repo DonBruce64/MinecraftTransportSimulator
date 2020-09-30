@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -11,7 +13,6 @@ import com.google.gson.GsonBuilder;
 import mcinterface.BuilderItem;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.items.instances.ItemDecor;
@@ -21,7 +22,6 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.AJSONCraftable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
@@ -55,13 +55,18 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  * @author don_bruce
  */
 public final class PackParserSystem{
+	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
+	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
+	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
+	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
+	private static TreeMap<String, LinkedHashMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<?>>>();
+
+	/**Custom Gson instance for parsing packs.*/
+	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create();
 	
 	/**List of log entries to be added to the log.  Saved here as the log won't be ready till preInit, which
 	 * runs after this parsing operation.*/
 	public static List<String> logEntries = new ArrayList<String>();
-	
-	/**Custom Gson instance for parsing packs.*/
-	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create(); 
 	
     
     //-----START OF INIT LOGIC-----
@@ -89,11 +94,19 @@ public final class PackParserSystem{
 	    			mainDefinitionCopy.packID = mainDefinition.packID;
 	    			mainDefinitionCopy.classification = mainDefinition.classification;
 	    			mainDefinitionCopy.genericName = mainDefinition.genericName;
+	    			
 	    			//Need to copy general too, as we need to set the name for each general section to be unique.
+	    			//For the materials we copy the strings and add the extra materials.
 	    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
 	    			mainDefinitionCopy.general.name = subDefinition.name;
 	    			mainDefinitionCopy.general.description = mainDefinition.general.description;
-	    			mainDefinitionCopy.general.materials = mainDefinition.general.materials;
+	    			mainDefinitionCopy.general.materials = new String[mainDefinition.general.materials.length + subDefinition.extraMaterials.length];
+	    			for(int i=0; i<mainDefinition.general.materials.length; ++i){
+	    				mainDefinitionCopy.general.materials[i] = mainDefinition.general.materials[i];
+	    			}
+	    			for(int i=0; i<subDefinition.extraMaterials.length; ++i){
+	    				mainDefinitionCopy.general.materials[mainDefinition.general.materials.length + i] = subDefinition.extraMaterials[i]; 
+	    			}
 	    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
 	    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
 	    			mainDefinitionCopy.general.type = mainDefinition.general.type;
@@ -110,17 +123,7 @@ public final class PackParserSystem{
 	    			mainDefinitionCopy.rendering = mainDefinition.rendering;
 	    			
 	    			performLegacyCompats(mainDefinitionCopy);
-	    			ItemVehicle vehicle = new ItemVehicle(mainDefinitionCopy, subDefinition.subName);
-	    			setupItem(vehicle, jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
-	    			List<String> materials = new ArrayList<String>();
-					for(String material : mainDefinitionCopy.general.materials){
-						materials.add(material);
-					}
-					for(String material : subDefinition.extraMaterials){
-						materials.add(material);
-					}
-					//Need to set this again to account for the extraMaterials.
-					MTSRegistry.packCraftingMap.put(vehicle, materials.toArray(new String[materials.size()]));
+	    			setupItem(new ItemVehicle(mainDefinitionCopy, subDefinition.subName), jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
 	    		}catch(Exception e){
 	    			throw new NullPointerException("Unable to parse definition #" + (mainDefinition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
 	    		}
@@ -209,15 +212,10 @@ public final class PackParserSystem{
     	BuilderItem.createItem(item);
     	
     	//Put the item in the map in the registry.
-    	if(!MTSRegistry.packItemMap.containsKey(packID)){
-    		MTSRegistry.packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>());
+    	if(!packItemMap.containsKey(packID)){
+    		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>());
     	}
-    	MTSRegistry.packItemMap.get(packID).put(item.definition.systemName, item);
-    	
-    	//If we are craftable, put us in the crafting map.
-    	if(item.definition.general instanceof AJSONCraftable.General){
-    		MTSRegistry.packCraftingMap.put(item, ((AJSONCraftable<?>.General) item.definition.general).materials);
-    	}
+    	packItemMap.get(packID).put(item.definition.systemName, item);
     }
     
     /**
@@ -625,6 +623,52 @@ public final class PackParserSystem{
 			}
     		rendering.translatableModelObjects = null;
     	}
+    }
+    
+    //--------------------START OF HELPER METHODS--------------------	
+    public static <JSONDefinition extends AJSONItem<?>> JSONDefinition getDefinition(String packID, String systemName){
+    	if(packItemMap.containsKey(packID)){
+    		if(packItemMap.get(packID).containsKey(systemName)){
+    			return (JSONDefinition) packItemMap.get(packID).get(systemName).definition;
+    		}
+    	}
+    	return null;
+    }
+    
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(JSONDefinition definition){
+    	return getItem(definition.packID, definition.systemName);
+    }
+    
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName){
+    	return getItem(packID, systemName, null);
+    }
+    
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String subName){
+    	if(packItemMap.containsKey(packID)){
+    		return (PackItem) packItemMap.get(packID).get(systemName);
+    	}
+    	return null;
+    }
+    
+    public static boolean arePacksPresent(){
+    	//We always have 1 pack: the core pack.
+    	return packItemMap.size() > 1;
+    }
+    
+    public static Set<String> getAllPackIDs(){
+    	return packItemMap.keySet();
+    }
+    
+    public static List<AItemPack<?>> getAllItemsForPack(String packID){
+    	return new ArrayList<AItemPack<?>>(packItemMap.get(packID).values());
+    }
+    
+    public static List<AItemPack<?>> getAllPackItems(){
+    	List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
+    	for(String packID : packItemMap.keySet()){
+    		packItems.addAll(getAllItemsForPack(packID));
+    	}
+    	return packItems;
     }
     
     public static APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT partData, APart parentPart){

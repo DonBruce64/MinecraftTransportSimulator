@@ -18,7 +18,6 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -30,6 +29,7 @@ import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -128,7 +128,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			String instrumentPackID = data.getString("instrument" + i + "_packID");
 			String instrumentSystemName = data.getString("instrument" + i + "_systemName");
 			if(!instrumentPackID.isEmpty()){
-				JSONInstrument instrument = (JSONInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName).definition;
+				JSONInstrument instrument = PackParserSystem.getDefinition(instrumentPackID, instrumentSystemName);
 				//Check to prevent loading of faulty instruments due to updates.
 				if(instrument != null){
 					instruments.put(i, instrument);
@@ -273,7 +273,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		super.destroyAtPosition(position);
 		//Spawn instruments in the world.
 		for(JSONInstrument instrument : instruments.values()){
-			ItemInstrument item = (ItemInstrument) MTSRegistry.packItemMap.get(instrument.packID).get(instrument.systemName);
+			ItemInstrument item = (ItemInstrument) PackParserSystem.getItem(instrument);
 			world.spawnItem(item, null, position);
 		}
 		

@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -83,11 +83,10 @@ public final class BuilderCreativeTab extends CreativeTabs{
 	
 	/**
      * Renders a warning on our tabs if there is no pack data.
-     * We always have 1 pack: the core pack.
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(MTSRegistry.packItemMap.size() <= 1){
+    	if(!PackParserSystem.arePacksPresent()){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(createdTabs.values().contains(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()])){

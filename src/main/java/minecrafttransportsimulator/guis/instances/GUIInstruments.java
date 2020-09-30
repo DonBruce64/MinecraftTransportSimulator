@@ -11,8 +11,8 @@ import mcinterface.BuilderGUI;
 import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
@@ -20,10 +20,10 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -40,7 +40,7 @@ public class GUIInstruments extends AGUIBase{
 	private final EntityVehicleF_Physics vehicle;
 	private final GUIHUD hudGUI;
 	private final AGUIPanel panelGUI;
-	private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<String, List<ItemInstrument>>();
+	private final TreeMap<String, List<WrapperItemStack>> playerInstruments = new TreeMap<String, List<WrapperItemStack>>();
 	
 	//Runtime variables.
 	private TexturelessButton prevPackButton;
@@ -67,19 +67,17 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Add all packs that have instruments in them.
 		//This depends on if the player has the instruments, or if they are in creative.
-		for(String packID : MTSRegistry.packItemMap.keySet()){
-			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> packItem : MTSRegistry.packItemMap.get(packID).values()){
-				if(packItem instanceof ItemInstrument){
-					if(player.isCreative() || player.hasItem(packItem)){
-						//Add the instrument to the list of instruments the player has.
-						if(!playerInstruments.containsKey(packID)){
-							playerInstruments.put(packID, new ArrayList<ItemInstrument>());
-							if(currentPack == null){
-								currentPack = packID;
-							}
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			if(packItem instanceof ItemInstrument){
+				if(player.isCreative() || player.hasItem(packItem)){
+					//Add the instrument to the list of instruments the player has.
+					if(!playerInstruments.containsKey(packItem.definition.packID)){
+						playerInstruments.put(packItem.definition.packID, new ArrayList<WrapperItemStack>());
+						if(currentPack == null){
+							currentPack = packItem.definition.packID;
 						}
-						playerInstruments.get(packID).add((ItemInstrument) packItem);
 					}
+					playerInstruments.get(packItem.definition.packID).add(new WrapperItemStack(packItem));
 				}
 			}
 		}
@@ -111,7 +109,7 @@ public class GUIInstruments extends AGUIBase{
 				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
-						InterfaceNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
+						InterfaceNetwork.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), (ItemInstrument) playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this)).getItem()));
 						selectedInstrumentOnVehicle = null;
 					}
 					
@@ -125,7 +123,7 @@ public class GUIInstruments extends AGUIBase{
 				instrumentSlots.add(instrumentButton);
 				
 				//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton.x, instrumentButton.y, instrumentButtonSize/16F, null, 1, -1);
+				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton.x, instrumentButton.y, instrumentButtonSize/16F, null);
 				addItem(instrumentItem);
 				instrumentSlotIcons.add(instrumentItem);
 			}
@@ -245,11 +243,11 @@ public class GUIInstruments extends AGUIBase{
 				if(playerInstruments.get(currentPack).size() > i){
 					instrumentSlots.get(i).visible = true;
 					instrumentSlots.get(i).enabled = selectedInstrumentOnVehicle != null;
-					instrumentSlotIcons.get(i).itemName = playerInstruments.get(currentPack).get(i).definition.packID + ":" + playerInstruments.get(currentPack).get(i).definition.systemName;
+					instrumentSlotIcons.get(i).stack = playerInstruments.get(currentPack).get(i);
 					
 				}else{
 					instrumentSlots.get(i).visible = false;
-					instrumentSlotIcons.get(i).itemName = null;
+					instrumentSlotIcons.get(i).stack = null;
 				}
 			}
 			packName.text = InterfaceCore.getModName(currentPack);

@@ -14,12 +14,12 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -250,7 +250,7 @@ public abstract class APart implements ISoundProvider{
 	 * (either due to damage or other reasons) make this method return null.
 	 */
 	public ItemPart getItem(){
-		return (ItemPart) MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
+		return (ItemPart) PackParserSystem.getItem(definition);
 	}
 	
 	/**

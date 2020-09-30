@@ -1,7 +1,12 @@
 package mcinterface;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -17,9 +22,33 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 public class WrapperItemStack{
 	final ItemStack stack;
 	
-	//TODO make this private when we don't have itemstacks as crafting materials.
-	public WrapperItemStack(ItemStack stack){
+	WrapperItemStack(ItemStack stack){
 		this.stack = stack;
+	}
+	
+	public WrapperItemStack(AItemBase item){
+		this.stack = new ItemStack(BuilderItem.itemWrapperMap.get(item));
+	}
+	
+	/**
+	 *  Returns a list of wrappers created from the JSON definition listing.  This is version-independent,
+	 *  so as long as the definition contains the proper formatting, this will always return the correct value.
+	 */
+	public static List<WrapperItemStack> parseFromJSON(AJSONItem<?> packDef){
+		List<WrapperItemStack> stackList = new ArrayList<WrapperItemStack>();
+		try{
+	    	for(String itemText : packDef.general.materials){
+				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				
+				int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+				stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+			}
+	    	return stackList;
+		}catch(Exception e){
+			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + packDef.packID + packDef.systemName + ".  Report this to the pack author!");
+		}
 	}
 	
 	/**

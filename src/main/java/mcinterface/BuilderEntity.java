@@ -12,12 +12,12 @@ import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.sound.IRadioProvider;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -435,11 +435,9 @@ public class BuilderEntity extends Entity{
 	@SubscribeEvent
 	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
 		//Iterate over all pack items and find those that spawn entities.
-		for(String packID : MTSRegistry.packItemMap.keySet()){
-			for(AItemPack<?> item : MTSRegistry.packItemMap.get(packID).values()){
-				if(item instanceof IItemEntityProvider<?>){
-					entityMap.put(((IItemEntityProvider<?>) item).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) item);
-				}
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			if(packItem instanceof IItemEntityProvider<?>){
+				entityMap.put(((IItemEntityProvider<?>) packItem).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) packItem);
 			}
 		}
 		

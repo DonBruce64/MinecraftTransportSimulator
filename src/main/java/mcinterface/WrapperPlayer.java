@@ -1,6 +1,5 @@
 package mcinterface;
 
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -185,10 +184,10 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public boolean hasMaterials(AItemPack<? extends AJSONItem<?>> item){
 		if(!isCreative()){
-			for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
-				int requiredMaterialCount = materialStack.getCount();
+			for(WrapperItemStack materialStack : WrapperItemStack.parseFromJSON(item.definition)){
+				int requiredMaterialCount = materialStack.getSize();
 				for(ItemStack stack : player.inventory.mainInventory){
-					if(ItemStack.areItemsEqual(stack, materialStack)){
+					if(ItemStack.areItemsEqual(stack, materialStack.stack)){
 						requiredMaterialCount -= stack.getCount();
 					}
 				}
@@ -209,8 +208,8 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  all the materials to do so.
 	 */
 	public void craftItem(AItemPack<? extends AJSONItem<?>> item){
-		for(ItemStack materialStack : MTSRegistry.getMaterials(item)){
-			removeStack(new WrapperItemStack(materialStack), materialStack.getCount());
+		for(WrapperItemStack materialStack : WrapperItemStack.parseFromJSON(item.definition)){
+			removeStack(materialStack, materialStack.getSize());
 		}
 		addItem(item, null);
 	}

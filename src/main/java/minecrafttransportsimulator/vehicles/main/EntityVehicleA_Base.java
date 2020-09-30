@@ -12,7 +12,6 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -60,7 +59,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	public EntityVehicleA_Base(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition.
-		this.definition = (JSONVehicle) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
+		this.definition = PackParserSystem.getDefinition(data.getString("packID"), data.getString("systemName"));
 		
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
@@ -70,7 +69,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			//Don't want crashes due to pack updates.
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
-				JSONPart partDefinition = (JSONPart) MTSRegistry.packItemMap.get(partData.getString("packID")).get(partData.getString("systemName")).definition;
+				JSONPart partDefinition = PackParserSystem.getDefinition(partData.getString("packID"), partData.getString("systemName"));
 				Point3d partOffset = partData.getPoint3d("offset");
 				APart part = createPartFromData(partDefinition, partData, partOffset, null);
 				partsFromNBT.add(part);
@@ -441,7 +440,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
 					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
 					try{
-						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, (JSONPart) MTSRegistry.packItemMap.get(partPackID).get(partSystemName).definition, new WrapperNBT(), parentPart);
+						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, PackParserSystem.getDefinition(partPackID, partSystemName), new WrapperNBT(), parentPart);
 						vehicle.addPart(newPart, true);
 						
 						//Set default text for the new part, if we have any.

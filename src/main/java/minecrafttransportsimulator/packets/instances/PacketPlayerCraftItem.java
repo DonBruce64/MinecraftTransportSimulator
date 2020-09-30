@@ -3,10 +3,10 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to craft items from crafting benches.  This goes to the server which verifies the
  * player has the appropriate materials.  If so, the item is crafted on the server and materials
@@ -25,7 +25,7 @@ public class PacketPlayerCraftItem extends APacketBase{
 	
 	public PacketPlayerCraftItem(ByteBuf buf){
 		super(buf);
-		this.itemToCraft = MTSRegistry.packItemMap.get(readStringFromBuffer(buf)).get(readStringFromBuffer(buf));
+		this.itemToCraft = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
 	}
 	
 	@Override

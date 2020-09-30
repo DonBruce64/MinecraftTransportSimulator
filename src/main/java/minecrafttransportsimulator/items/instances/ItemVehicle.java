@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -17,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -84,7 +84,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
 							String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
 							try{
-								JSONInstrument instrument = (JSONInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName).definition;
+								JSONInstrument instrument = PackParserSystem.getDefinition(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
 									newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
 									continue;

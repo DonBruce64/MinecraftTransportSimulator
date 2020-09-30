@@ -10,14 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -68,7 +66,7 @@ public class GUIDevEditor extends AGUIBase{
 				
 				long lastTimeModified = 0;
 				debug.setText("Export dir is: " + jsonDir.getAbsolutePath());
-				for(String packID : MTSRegistry.packItemMap.keySet()){
+				for(String packID : PackParserSystem.getAllPackIDs()){
 					File packDir = new File(jsonDir, packID);
 					if(!packDir.exists()){
 						if(!packDir.mkdir()){
@@ -76,7 +74,7 @@ public class GUIDevEditor extends AGUIBase{
 							return;
 						}	
 					}
-					for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> packItem : MTSRegistry.packItemMap.get(packID).values()){
+					for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
 						try{
 							File jsonFile;
 							if(packItem.definition instanceof JSONVehicle){
@@ -134,11 +132,11 @@ public class GUIDevEditor extends AGUIBase{
 							return;
 						}
 						
-						for(String packID : MTSRegistry.packItemMap.keySet()){
+						for(String packID : PackParserSystem.getAllPackIDs()){
 							File packDir = new File(jsonDir, packID);
 							if(packDir.exists()){
 								debug.setText(debug.getText() + "\nChecking pack: " + packID);
-								for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> packItem : MTSRegistry.packItemMap.get(packID).values()){
+								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
 									File jsonFile;
 									if(packItem.definition instanceof JSONVehicle){
 										jsonFile = new File(packDir, "vehicle_" + packItem.definition.systemName + ".json");

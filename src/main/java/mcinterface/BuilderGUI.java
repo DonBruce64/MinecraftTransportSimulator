@@ -27,8 +27,6 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -267,9 +265,8 @@ public class BuilderGUI extends GuiScreen{
 	 *  the last thing that gets rendered, as otherwise it may render
 	 *  behind other components.
 	 */
-	public void drawItemTooltip(String itemName, int qty, int metadata, int mouseX, int mouseY){
-		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
-		GuiUtils.drawHoveringText(stack, getItemToolTip(stack), mouseX, mouseY, width, height, -1, fontRenderer);
+	public void drawItemTooltip(WrapperItemStack stack, int mouseX, int mouseY){
+		GuiUtils.drawHoveringText(stack.stack, getItemToolTip(stack.stack), mouseX, mouseY, width, height, -1, fontRenderer);
 	}
 	
 	/**
@@ -364,24 +361,23 @@ public class BuilderGUI extends GuiScreen{
 	 *  renders all items from their top-left corner, so take this into account when
 	 *  choosing where to put this component in your GUI.
 	 */
-	public static void drawItem(String itemName, int qty, int metadata, int x, int y, float scale){
+	public static void drawItem(WrapperItemStack stack, int x, int y, float scale){
 		if(itemRenderer == null){
 			itemRenderer = Minecraft.getMinecraft().getRenderItem();
 		}
-		ItemStack stack = new ItemStack(Item.getByNameOrId(itemName), qty, metadata);
 		if(scale != 1.0F){
 			GL11.glPushMatrix();
 			GL11.glTranslatef(x, y, 0);
 			GL11.glScalef(scale, scale, scale);
-			itemRenderer.renderItemAndEffectIntoGUI(stack, 0, 0);
-			if(qty > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, stack, 0, 0);
+			itemRenderer.renderItemAndEffectIntoGUI(stack.stack, 0, 0);
+			if(stack.getSize() > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack.stack, 0, 0);
 			}
 			GL11.glPopMatrix();
 		}else{
-			itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
-			if(qty > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, stack, x, y);
+			itemRenderer.renderItemAndEffectIntoGUI(stack.stack, x, y);
+			if(stack.getSize() > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack.stack, x, y);
 			}
 		}
 	}

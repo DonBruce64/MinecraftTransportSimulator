@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 
-public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
+public class JSONVehicle extends AJSONItem<JSONVehicle.VehicleGeneral>{
 	/**A generic name for this vehicle.  This is simply the {@link AJSONItem#systemName}, minus
 	 * the {@link VehicleDefinition#subName}.  Set after JSON is parsed into an object and
 	 * used when we want to treat this vehicle the same based on it's other definitions, 
@@ -26,7 +26,7 @@ public class JSONVehicle extends AJSONCraftable<JSONVehicle.VehicleGeneral>{
     public List<VehicleDoor> doors;
     public VehicleRendering rendering;
     
-    public class VehicleGeneral extends AJSONCraftable<JSONVehicle.VehicleGeneral>.General{
+    public class VehicleGeneral extends AJSONItem<JSONVehicle.VehicleGeneral>.General{
     	public boolean isAircraft;
     	public boolean isBlimp;
     	public boolean openTop;

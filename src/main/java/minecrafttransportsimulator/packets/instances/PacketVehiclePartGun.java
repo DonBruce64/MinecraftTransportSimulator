@@ -4,9 +4,8 @@ import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
@@ -72,7 +71,7 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 		if(controlPulse){
 			gun.firing = triggerState;
 		}else{
-			gun.tryToReload((ItemPart) MTSRegistry.packItemMap.get(bulletPackID).get(bulletSystemName));
+			gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName));
 		}
 		return true;
 	}

@@ -3,9 +3,9 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Custom class designed to hold crafting overrides.  Split from the main config file
  * to prevent nuking the file if the config loading fails.  We can do without crafting
@@ -23,11 +23,11 @@ public class JSONCraftingOverrides{
 	private static Map<String, Map<String, String[]>> populateDefaultOverrides(){
 		Map<String, Map<String, String[]>> sampleOverrides = new HashMap<String, Map<String, String[]>>();
 		if(ConfigSystem.configObject.general.dumpCraftingConfig.value){
-			for(AItemPack<? extends AJSONItem<?>> item : MTSRegistry.packCraftingMap.keySet()){
-				if(!sampleOverrides.containsKey(item.definition.packID)){
-					sampleOverrides.put(item.definition.packID, new HashMap<String, String[]>());
+			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+				if(!sampleOverrides.containsKey(packItem.definition.packID)){
+					sampleOverrides.put(packItem.definition.packID, new HashMap<String, String[]>());
 				}
-				sampleOverrides.get(item.definition.packID).put(item.definition.systemName, MTSRegistry.packCraftingMap.get(item));
+				sampleOverrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materials);
 			}
 		}else{
 			Map<String, String[]> packSampleOverride = new HashMap<String, String[]>();

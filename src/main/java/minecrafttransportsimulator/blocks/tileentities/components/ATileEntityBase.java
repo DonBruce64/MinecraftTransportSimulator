@@ -8,10 +8,10 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base Tile Entity class.  This type is used in the constructor of {@link BuilderTileEntity} to allow us to use
  * completely custom code that is not associated with MC's standard Tile Entity code.  Allows us to only
@@ -36,11 +36,10 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
 	
-	@SuppressWarnings("unchecked")
 	public ATileEntityBase(WrapperWorld world, Point3i position, WrapperNBT data){
 		this.world = world;
 		this.position = position;
-		this.definition = (JSONDefinition) MTSRegistry.packItemMap.get(data.getString("packID")).get(data.getString("systemName")).definition;
+		this.definition = PackParserSystem.getDefinition(data.getString("packID"), data.getString("systemName"));
 		this.lightLevel = (float) data.getDouble("lightLevel");
 	}
 	
@@ -56,10 +55,10 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 *  items when broken.  Note that such items do NOT save
 	 *  their NBT state.  Middle-clicking changes this.
 	 */
-	public List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> getDrops(){
-		List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> drops = new ArrayList<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>();
+	public List<AItemPack<JSONDefinition>> getDrops(){
+		List<AItemPack<JSONDefinition>> drops = new ArrayList<AItemPack<JSONDefinition>>();
 		if(definition != null){
-			drops.add(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName));
+			drops.add(PackParserSystem.getItem(definition));
 		}
 		return drops;
 	}

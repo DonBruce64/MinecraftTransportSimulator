@@ -16,10 +16,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -152,7 +152,7 @@ public class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.definition;
     				if(definition != null){
-    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName)));
+    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(PackParserSystem.getItem(definition)));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
@@ -315,22 +315,20 @@ public class BuilderBlock extends Block{
 		//Not only does this prevent us from having to manually set the blocks
 		//we also pre-generate the block classes here.
 		List<ABlockBase> blocksRegistred = new ArrayList<ABlockBase>();
-		for(String packID : MTSRegistry.packItemMap.keySet()){
-			for(AItemPack<?> item : MTSRegistry.packItemMap.get(packID).values()){
-				if(item instanceof IItemBlock){
-					ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
-					if(!blocksRegistred.contains(itemBlockBlock)){
-						//New block class detected.  Register it and its instance.
-						BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
-						String name = itemBlockBlock.getClass().getSimpleName();
-						name = MTS.MODID + ":" + name.substring("Block".length());
-						event.getRegistry().register(wrapper.setRegistryName(name).setUnlocalizedName(name));
-						blockWrapperMap.put(itemBlockBlock, wrapper);
-						blocksRegistred.add(itemBlockBlock);
-						if(itemBlockBlock instanceof IBlockTileEntity<?>){
-							//Block makes a Tile Entity.  We need to link it to a wrapper.
-							tileEntityMap.put(((IBlockTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (IBlockTileEntity<?>) itemBlockBlock);
-						}
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			if(packItem instanceof IItemBlock){
+				ABlockBase itemBlockBlock = ((IItemBlock) packItem).getBlock();
+				if(!blocksRegistred.contains(itemBlockBlock)){
+					//New block class detected.  Register it and its instance.
+					BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
+					String name = itemBlockBlock.getClass().getSimpleName();
+					name = MTS.MODID + ":" + name.substring("Block".length());
+					event.getRegistry().register(wrapper.setRegistryName(name).setUnlocalizedName(name));
+					blockWrapperMap.put(itemBlockBlock, wrapper);
+					blocksRegistred.add(itemBlockBlock);
+					if(itemBlockBlock instanceof IBlockTileEntity<?>){
+						//Block makes a Tile Entity.  We need to link it to a wrapper.
+						tileEntityMap.put(((IBlockTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (IBlockTileEntity<?>) itemBlockBlock);
 					}
 				}
 			}

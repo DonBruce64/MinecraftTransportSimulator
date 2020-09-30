@@ -12,7 +12,6 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -21,6 +20,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class PartGun extends APart implements IVehiclePartFXProvider{	
@@ -51,7 +51,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
-			this.loadedBulletDefinition = (JSONPart) MTSRegistry.packItemMap.get(loadedBulletPack).get(loadedBulletName).definition;
+			this.loadedBulletDefinition = PackParserSystem.getDefinition(loadedBulletPack, loadedBulletName);
 		}
 		//If we didn't load the bullet due to pack changes, set the current bullet count to 0.
 		//This prevents pack changes from locking guns.

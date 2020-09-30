@@ -12,11 +12,10 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -34,9 +33,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
-				@SuppressWarnings("unchecked")
-				AItemPack<JSONPoleComponent> componentItem = (AItemPack<JSONPoleComponent>) MTSRegistry.packItemMap.get(packID).get(systemName);
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(PackParserSystem.getDefinition(packID, systemName));
 				components.put(axis, newComponent);
 				if(newComponent.getTextLines() != null){
 					newComponent.setTextLines(data.getStrings("textLines", newComponent.getTextLines().size()));
@@ -60,11 +57,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> getDrops(){
-		List<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>> drops = new ArrayList<AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>();
+	public List<AItemPack<JSONPoleComponent>> getDrops(){
+		List<AItemPack<JSONPoleComponent>> drops = new ArrayList<AItemPack<JSONPoleComponent>>();
 		for(Axis axis : Axis.values()){
 			if(components.containsKey(axis)){
-				drops.add(MTSRegistry.packItemMap.get(components.get(axis).definition.packID).get(components.get(axis).definition.systemName));
+				drops.add(PackParserSystem.getItem(components.get(axis).definition));
 			}
 		}
 		return drops;

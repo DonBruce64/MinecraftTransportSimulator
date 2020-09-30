@@ -19,7 +19,6 @@ import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemWrench;
@@ -29,7 +28,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.item.ItemStack;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,
  * and for it to do collision with other entities in the world.  This is where collision
@@ -364,11 +362,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(ItemStack craftingStack : MTSRegistry.getMaterials(MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName))){
-			for(int i=0; i<craftingStack.getCount(); ++i){
-				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
-					world.spawnItemStack(new WrapperItemStack(new ItemStack(craftingStack.getItem(), 1, craftingStack.getMetadata())), position);
-				}
+		for(WrapperItemStack craftingStack : WrapperItemStack.parseFromJSON(definition)){
+			if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
+				world.spawnItemStack(craftingStack, position);
 			}
 		}
 		

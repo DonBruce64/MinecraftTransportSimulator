@@ -7,6 +7,7 @@ import java.util.Set;
 import mcinterface.BuilderGUI;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -21,6 +22,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class GUISignalController extends AGUIBase{
 	
@@ -46,9 +48,9 @@ public class GUISignalController extends AGUIBase{
 	private GUIComponentItem trafficSignalItem;
 	private GUIComponentItem streetLightItem;
 	
-	//These are only used to save the item names until we create the item components.
-	private String trafficSignalItemNameTemp;
-	private String streetLightItemNameTemp;
+	//These are only used to save the items until we create the components.
+	private WrapperItemStack trafficSignalItemTemp;
+	private WrapperItemStack streetLightItemTemp;
 	
 	
 	//Internal controller locations point list.
@@ -67,11 +69,11 @@ public class GUISignalController extends AGUIBase{
 			if(tile instanceof TileEntityPole){
 				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 					if(component instanceof TileEntityPole_TrafficSignal){
-						trafficSignalItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
+						trafficSignalItemTemp = new WrapperItemStack(PackParserSystem.getItem(component.definition));
 						++trafficSignals;
 						componentLocations.add(location);
 					}else if(component instanceof TileEntityPole_StreetLight){
-						streetLightItemNameTemp = component.definition.packID + ":" + component.definition.systemName;
+						streetLightItemTemp = new WrapperItemStack(PackParserSystem.getItem(component.definition));
 						++streetLights;
 						componentLocations.add(location);
 					}
@@ -96,11 +98,11 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										trafficSignalItem.itemName = component.definition.packID + ":" + component.definition.systemName;
+										trafficSignalItem.stack = new WrapperItemStack(PackParserSystem.getItem(component.definition));
 										++trafficSignals;
 										componentLocations.add(location);
 									}else if(component instanceof TileEntityPole_StreetLight){
-										streetLightItem.itemName = component.definition.packID + ":" + component.definition.systemName;
+										streetLightItem.stack = new WrapperItemStack(PackParserSystem.getItem(component.definition));
 										++streetLights;
 										componentLocations.add(location);
 									}
@@ -116,11 +118,11 @@ public class GUISignalController extends AGUIBase{
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, InterfaceCore.translate("gui.trafficsignalcontroller.scanfound")));
 		
 		//Traffic signal scan results.
-		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemNameTemp, 1, -1));
+		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemTemp));
 		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + trafficSignals));
 		
 		//Street lamp scan results.
-		addItem(streetLightItem = new GUIComponentItem(guiLeft + 200, guiTop + 52, 1.0F, streetLightItemNameTemp, 1, -1));
+		addItem(streetLightItem = new GUIComponentItem(guiLeft + 200, guiTop + 52, 1.0F, streetLightItemTemp));
 		addLabel(streetLightCount = new GUIComponentLabel(guiLeft + 215, guiTop + 56, Color.WHITE, " X" + streetLights));
 		
 		

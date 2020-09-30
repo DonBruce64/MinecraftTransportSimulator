@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class JSONItem extends AJSONCraftable<JSONItem.ItemGeneral>{
+public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
 
-    public class ItemGeneral extends AJSONCraftable<JSONItem.ItemGeneral>.General{
+    public class ItemGeneral extends AJSONItem<JSONItem.ItemGeneral>.General{
     	
     }
 }

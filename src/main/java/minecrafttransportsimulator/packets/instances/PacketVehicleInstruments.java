@@ -3,12 +3,12 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet used to change instruments on vehicles.  Sent to the server
@@ -57,7 +57,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){
 			JSONInstrument definition = vehicle.instruments.get(slot);
-			ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(definition.packID).get(definition.systemName);
+			ItemInstrument instrument = (ItemInstrument) PackParserSystem.getItem(definition);
 			if(!player.addItem(instrument, null)){
 				return false;
 			}
@@ -70,7 +70,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 		}else{
 			//Check to make sure player has the instrument they are trying to put in.
 			//This is only done on the server, as checking on the client won't make any difference.
-			ItemInstrument instrument = (ItemInstrument) MTSRegistry.packItemMap.get(instrumentPackID).get(instrumentSystemName);
+			ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
 				if(player.hasItem(instrument)){
 					player.removeItem(instrument, null);

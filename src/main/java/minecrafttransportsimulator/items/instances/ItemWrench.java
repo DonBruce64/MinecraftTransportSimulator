@@ -6,7 +6,6 @@ import mcinterface.BuilderGUI;
 import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.instances.GUIDevEditor;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -60,7 +60,8 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
 					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
-						AItemBase vehicleItem = MTSRegistry.packItemMap.get(vehicle.definition.packID).get(vehicle.definition.systemName);
+						//TODO this will need to be changed when vehicles don't share common definitions.
+						AItemBase vehicleItem = PackParserSystem.getItem(vehicle.definition);
 						WrapperNBT vehicleData = new WrapperNBT();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);

@@ -10,7 +10,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import minecrafttransportsimulator.MTS;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
 
@@ -67,13 +68,13 @@ public final class ConfigSystem{
 		File craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
 		if(craftingFile.exists() && !configObject.general.dumpCraftingConfig.value){
 			try{
+				//FIXME TEST THIS LOGIC!
 				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
 				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
-					if(MTSRegistry.packItemMap.containsKey(craftingOverridePackID)){
-						for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
-							if(MTSRegistry.packItemMap.get(craftingOverridePackID).containsKey(craftingOverrideSystemName)){
-								MTSRegistry.packCraftingMap.put(MTSRegistry.packItemMap.get(craftingOverridePackID).get(craftingOverrideSystemName), craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-							}
+					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
+						AItemPack<? extends AJSONItem<?>> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);
+						if(item != null){
+							item.definition.general.materials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName);
 						}
 					}
 				}

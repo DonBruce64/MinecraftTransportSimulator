@@ -10,10 +10,10 @@ import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;
+import mcinterface.WrapperItemStack;
 import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.dataclasses.MTSRegistry;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -27,6 +27,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -90,15 +91,11 @@ public class GUIPartBench extends AGUIBase{
 			currentPack = currentItem.definition.packID;
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
-			for(String packID : MTSRegistry.packItemMap.keySet()){
-				if(currentPack == null){
-					for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packID).values()){
-						if(isJSONValid(packItem.definition)){
-							currentItem = packItem;
-							currentPack = packItem.definition.packID;
-							return;
-						}
-					}
+			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+				if(isJSONValid(packItem.definition)){
+					currentItem = packItem;
+					currentPack = packItem.definition.packID;
+					return;
 				}
 			}
 		}
@@ -169,14 +166,14 @@ public class GUIPartBench extends AGUIBase{
 		craftingItemIcons.clear();
 		final int craftingIconSize = 18;
 		for(byte i=0; i<7*2; ++i){				
-			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + craftingIconSize*(i/7), guiTop + 20 + craftingIconSize*(i%7), craftingIconSize/16F, null, 1, -1);
+			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + craftingIconSize*(i/7), guiTop + 20 + craftingIconSize*(i%7), craftingIconSize/16F, null);
 			addItem(craftingItem);
 			craftingItemIcons.add(craftingItem);
 		}
 		
 		
 		//Create both the item and OBJ renders.  We choose which to display later.
-		addItem(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null, 1, -1));
+		addItem(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null));
 		addOBJModel(modelRender = new GUIComponentOBJModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 		
 		
@@ -253,7 +250,7 @@ public class GUIPartBench extends AGUIBase{
 	 */
 	private void updateNames(){
 		//Get all pack indexes.
-		List<String> packIDs = new ArrayList<String>(MTSRegistry.packItemMap.keySet());
+		List<String> packIDs = new ArrayList<String>(PackParserSystem.getAllPackIDs());
 		int currentPackIndex = packIDs.indexOf(currentPack);
 		
 		//Loop forwards to find a pack that has the items we need and set that as the next pack.
@@ -261,7 +258,7 @@ public class GUIPartBench extends AGUIBase{
 		nextPack = null;
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
-				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
 					if(isJSONValid(packItem.definition)){
 						nextPack = packIDs.get(i);
 						break;
@@ -275,7 +272,7 @@ public class GUIPartBench extends AGUIBase{
 		prevPack = null;
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
-				for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(packIDs.get(i)).values()){
+				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
 					if(isJSONValid(packItem.definition)){
 						prevPack = packIDs.get(i);
 						break;
@@ -290,14 +287,14 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPack == null){
 			return;
 		}
-		List<AItemPack<? extends AJSONItem<?>>> packItems = new ArrayList<AItemPack<? extends AJSONItem<?>>>(MTSRegistry.packItemMap.get(currentPack).values());
+		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentPack);
 		int currentItemIndex = packItems.indexOf(currentItem);
 		//If currentItem is null, it means we switched packs and need to re-set it to the first item of the new pack.
 		//Do so now before we do looping to prevent crashes.
 		//Find a pack that has the item we are supposed to craft and set it.
 		//If we are for vehicles, make sure to set the next subItem if we can.
 		if(currentItem == null){
-			for(AItemPack<? extends AJSONItem<?>> packItem : MTSRegistry.packItemMap.get(currentPack).values()){
+			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(currentPack)){
 				if(currentItem == null || (currentItem instanceof ItemVehicle && nextSubItem == null)){
 					if(isJSONValid(packItem.definition)){
 						if(currentItem == null){
@@ -386,18 +383,13 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		String[] craftingItemTexts = MTSRegistry.packCraftingMap.get(currentItem);
+		List<WrapperItemStack> craftingMaterials = WrapperItemStack.parseFromJSON(currentItem.definition);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			try{
-		    	if(i < craftingItemTexts.length){
-		    		String itemText = craftingItemTexts[i];
-		    		craftingItemIcons.get(i).itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					craftingItemIcons.get(i).itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					craftingItemIcons.get(i).itemName = itemText;
+		    	if(i < craftingMaterials.size()){
+					craftingItemIcons.get(i).stack = craftingMaterials.get(i);
 		    	}else{
-		    		craftingItemIcons.get(i).itemName = null;
+		    		craftingItemIcons.get(i).stack = null;
 		    	}
 			}catch(Exception e){
 				throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + currentItem.definition.packID + ":" + currentItem.definition.systemName + ".  Report this to the pack author!");
@@ -412,11 +404,11 @@ public class GUIPartBench extends AGUIBase{
 			modelRender.modelLocation = modelLocation;
 			modelRender.textureDomain = currentPack;
 			modelRender.textureLocation = textureLocation;
-			itemRender.itemName = null;
+			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.
 			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
 		}else{
-			itemRender.itemName = currentItem.definition.packID + ":" + currentItem.definition.systemName;
+			itemRender.stack = new WrapperItemStack(PackParserSystem.getItem(currentItem.definition));
 			modelRender.modelDomain = null;
 		}
 		
