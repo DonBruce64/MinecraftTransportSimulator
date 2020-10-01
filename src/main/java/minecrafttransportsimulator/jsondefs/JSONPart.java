@@ -43,6 +43,7 @@ public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
     	public byte starterPower;
     	public byte shiftSpeed;
     	public int maxRPM;
+	public byte revResistance;
     	public float fuelConsumption;
     	public float jetPowerFactor;
     	public float bypassRatio;
