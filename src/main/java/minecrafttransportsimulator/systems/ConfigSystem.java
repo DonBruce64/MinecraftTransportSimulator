@@ -68,7 +68,6 @@ public final class ConfigSystem{
 		File craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
 		if(craftingFile.exists() && !configObject.general.dumpCraftingConfig.value){
 			try{
-				//FIXME TEST THIS LOGIC!
 				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
 				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
 					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
