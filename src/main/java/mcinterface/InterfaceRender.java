@@ -723,7 +723,7 @@ public class InterfaceRender{
 		
 		//Now register items for the packs.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MTS.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.assetFolder + "/" + packItem.definition.systemName, "inventory"));
+			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MTS.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.getClassificationFolder() + packItem.definition.systemName, "inventory"));
 		}
 	}
 	

@@ -5,6 +5,7 @@ import mcinterface.WrapperNBT;
 import mcinterface.WrapperPlayer;
 import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -78,8 +79,9 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		if(partPackID.isEmpty()){
 			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
 		}else{
-			VehiclePart packPart = vehicle.getPackDefForLocation(offset);
-			vehicle.addPart(PackParserSystem.createPart(vehicle, packPart, PackParserSystem.getDefinition(partPackID, partSystemName), partData, vehicle.getPartAtLocation(partClickedOffset)), false);
+			ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
+			VehiclePart packVehicleDef = vehicle.getPackDefForLocation(offset);
+			vehicle.addPart(partItem.createPart(vehicle, packVehicleDef, partData, vehicle.getPartAtLocation(partClickedOffset)), false);
 		}
 		return true;
 	}

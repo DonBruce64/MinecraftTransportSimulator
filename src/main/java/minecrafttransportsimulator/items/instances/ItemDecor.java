@@ -6,7 +6,6 @@ import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
-import minecrafttransportsimulator.items.components.IItemOBJProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 
 /**Decor item.  Note that while this item can (and does) spawn decor blocks,
@@ -16,7 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
  * 
  * @author don_bruce
  */
-public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock, IItemOBJProvider{
+public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 	
 	public ItemDecor(JSONDecor definition){
 		super(definition);
@@ -32,15 +31,5 @@ public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock, IItem
 		}
 		//Normal decor is assumed to be default per legacy systems.
 		return BlockDecor.class;
-	}
-	
-	@Override
-	public String getModelLocation(){
-		return definition.general.modelName != null ? "objmodels/decors/" + definition.general.modelName + ".obj" : "objmodels/decors/" + definition.systemName + ".obj";
-	}
-	
-	@Override
-	public String getTextureLocation(){
-		return "textures/decors/" + definition.systemName + ".png";
 	}
 }

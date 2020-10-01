@@ -252,8 +252,8 @@ public class GUIDevEditor extends AGUIBase{
 					int dataEntryBoxIndex = 0;
 					componentItemModel.modelDomain = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					String subFolder = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText()) ? "parts/" : "vehicles/";
-					componentItemModel.modelLocation = "objmodels/" + subFolder + String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText() + ".obj");
 					componentItemModel.textureDomain = componentItemModel.modelDomain;
+					componentItemModel.modelLocation = "objmodels/" + subFolder + String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText() + ".obj");
 					componentItemModel.textureLocation = "textures/" + subFolder + String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText() + ".png");
 					componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());

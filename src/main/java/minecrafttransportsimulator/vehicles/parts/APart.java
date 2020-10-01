@@ -282,7 +282,7 @@ public abstract class APart implements ISoundProvider{
 	 * Gets the location of the model for this part. 
 	 */
 	public String getModelLocation(){
-		return "objmodels/parts/" + (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + ".obj";
+		return definition.getModelLocation();
 	}
 	
 	/**
@@ -290,7 +290,7 @@ public abstract class APart implements ISoundProvider{
 	 * This can be changed for data-dependent part texture. 
 	 */
 	public String getTextureLocation(){
-		return "textures/parts/" + definition.systemName + ".png";
+		return definition.getTextureLocation();
 	}
 	
 	@Override

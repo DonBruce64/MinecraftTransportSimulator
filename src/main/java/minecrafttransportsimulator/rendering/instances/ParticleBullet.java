@@ -114,13 +114,7 @@ public final class ParticleBullet extends AParticle{
 	public void render(float partialTicks){
         //Parse the model if we haven't already.
         if(!bulletDisplayLists.containsKey(definition)){
-        	final String modelLocation;
-        	if(definition.general.modelName != null){
-				modelLocation = "objmodels/parts/" + definition.general.modelName + ".obj";
-			}else{
-				modelLocation = "objmodels/parts/" + definition.systemName + ".obj";
-			}
-        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, modelLocation);
+        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, definition.getModelLocation());
         	int displayListIndex = GL11.glGenLists(1);
     		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -137,7 +131,7 @@ public final class ParticleBullet extends AParticle{
         }
         
         //Bind the texture for this bullet.
-        InterfaceRender.bindTexture(definition.packID, "textures/items/parts/" + definition.systemName + ".png");
+        InterfaceRender.bindTexture(definition.packID, definition.getTextureLocation());
         
         //Render the parsed model.  Translation will already have been applied, 
         //so we just need to rotate ourselves based on our velocity.

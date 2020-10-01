@@ -71,7 +71,7 @@ public final class RenderVehicle{
 	/**Used to clear out the rendering caches of any parts with the passed-in definition.
 	 * Used in dev mode to allow the re-loading of models.**/
 	public static void clearPartCaches(JSONPart definition){
-		String modelName = "objmodels/parts/" + definition.systemName + ".obj";
+		String modelName = definition.getModelLocation();
 		if(partDisplayLists.containsKey(modelName)){
 			GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
 		}
@@ -215,7 +215,7 @@ public final class RenderVehicle{
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.genericName)){
 			//No distplay list for this model.  Parse and create it now.
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, "objmodels/vehicles/" + vehicle.definition.genericName + ".obj");
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, vehicle.definition.getModelLocation());
 			
 			//For anything that has a definition as an animation, add it to an animated list.
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
@@ -247,7 +247,7 @@ public final class RenderVehicle{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		InterfaceRender.setTexture(vehicle.definition.packID, "textures/vehicles/" + vehicle.definition.systemName + ".png");
+		InterfaceRender.setTexture(vehicle.definition.packID, vehicle.definition.getTextureLocation());
 		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.genericName));
 		}
@@ -315,7 +315,7 @@ public final class RenderVehicle{
 		if(!part.definition.general.useVehicleTexture){
 			InterfaceRender.setTexture(part.definition.packID, part.getTextureLocation());
 		}else{
-			InterfaceRender.setTexture(part.vehicle.definition.packID, "textures/vehicles/" + part.vehicle.definition.systemName + ".png");
+			InterfaceRender.setTexture(part.vehicle.definition.packID, part.vehicle.definition.getTextureLocation());
 		}
 		
 		//Rotate the part prior to rendering the displayList.

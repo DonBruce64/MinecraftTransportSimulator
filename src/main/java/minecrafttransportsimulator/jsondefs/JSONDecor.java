@@ -2,9 +2,9 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-public class JSONDecor extends AJSONMultiModel<JSONDecor.DecorGeneral>{
+public class JSONDecor extends AJSONModelProvider<JSONDecor.DecorGeneral>{
 
-    public class DecorGeneral extends AJSONMultiModel<JSONDecor.DecorGeneral>.General{
+    public class DecorGeneral extends AJSONModelProvider<JSONDecor.DecorGeneral>.General{
     	public String type;
     	public float width;
     	public float height;

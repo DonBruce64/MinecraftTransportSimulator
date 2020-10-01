@@ -150,7 +150,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					}
 					
 					//Part is valid.  Create it and return it.
-					return PackParserSystem.createPart((EntityVehicleF_Physics) this, packPart, partDefinition, partData != null ? partData : new WrapperNBT(), parentPart); 
+					ItemPart partItem = PackParserSystem.getItem(partDefinition);
+					return partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : new WrapperNBT(), parentPart); 
 				}
 			}
 		}
@@ -440,7 +441,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
 					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
 					try{
-						APart newPart = PackParserSystem.createPart((EntityVehicleF_Physics) vehicle, packDef, PackParserSystem.getDefinition(partPackID, partSystemName), new WrapperNBT(), parentPart);
+						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
+						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, new WrapperNBT(), parentPart);
 						vehicle.addPart(newPart, true);
 						
 						//Set default text for the new part, if we have any.

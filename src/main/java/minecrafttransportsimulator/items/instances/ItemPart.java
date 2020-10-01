@@ -5,13 +5,21 @@ import java.util.List;
 import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.IItemOBJProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartCustom;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.PartGroundEffector;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.util.text.TextFormatting;
 
-public class ItemPart extends AItemPack<JSONPart> implements IItemOBJProvider{
+public class ItemPart extends AItemPack<JSONPart>{
 	private final String partPrefix;
 	
 	public ItemPart(JSONPart definition){
@@ -45,8 +53,31 @@ public class ItemPart extends AItemPack<JSONPart> implements IItemOBJProvider{
 			case("propeller") : return customTypesValid && packVehicleDef.minValue <= definition.propeller.diameter && packVehicleDef.maxValue >= definition.propeller.diameter;
 			default : return customTypesValid;
 		}
-		
 	}
+	
+	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, WrapperNBT partData, APart parentPart){
+    	if(definition.general.type.startsWith("engine_")){
+    		return new PartEngine(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("gun_")){
+    		return new PartGun(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("ground_")){
+    		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("interactable_")){
+        	return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else if(definition.general.type.startsWith("effector_")){
+           	return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
+    	}else{
+	    	switch(definition.general.type){
+				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData, parentPart);
+				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
+				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
+				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
+			}
+    	}
+    	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
+    }
 	
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
@@ -147,15 +178,5 @@ public class ItemPart extends AItemPack<JSONPart> implements IItemOBJProvider{
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
 		}
-	}
-	
-	@Override
-	public String getModelLocation(){
-		return definition.general.modelName != null ? "objmodels/parts/" + definition.general.modelName + ".obj" : "objmodels/parts/" + definition.systemName + ".obj";
-	}
-	
-	@Override
-	public String getTextureLocation(){
-		return "textures/parts/" + definition.systemName + ".png";
 	}
 }

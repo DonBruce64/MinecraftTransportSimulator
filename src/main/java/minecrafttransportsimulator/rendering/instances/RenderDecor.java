@@ -23,8 +23,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 	public void render(ATileEntityBase<JSONDecor> tile, float partialTicks){
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(tile.definition)){
-			String optionalModelName = tile.definition.general.modelName;
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.packID, "objmodels/decors/" + (optionalModelName != null ? optionalModelName : tile.definition.systemName) + ".obj");
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.packID, tile.definition.getModelLocation());
 			int displayListIndex = GL11.glGenLists(1);
 			
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -44,7 +43,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 		//Don't do solid model rendering on the blend pass.
 		if(InterfaceRender.getRenderPass() != 1){
 			//Bind the texture and render.
-			InterfaceRender.bindTexture(tile.definition.packID, "textures/decors/" + tile.definition.systemName + ".png");
+			InterfaceRender.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
 			GL11.glCallList(displayListMap.get(tile.definition));
 			//If we are a fluid tank, render text.
 			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){

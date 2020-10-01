@@ -21,6 +21,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -66,13 +68,9 @@ public class GUITextEditor extends AGUIBase{
 			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
 			modelRender.modelDomain = sign.definition.packID;
-			if(sign.definition.general.modelName != null){
-				modelRender.modelLocation = "objmodels/poles/" + sign.definition.general.modelName + ".obj";
-			}else{
-				modelRender.modelLocation = "objmodels/poles/" + sign.definition.systemName + ".obj";
-			}
+			modelRender.modelLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.OBJ, sign.definition.general.modelName != null ? sign.definition.general.modelName : sign.definition.systemName);
 			modelRender.textureDomain = sign.definition.packID;
-			modelRender.textureLocation = "textures/poles/" + sign.definition.systemName + ".png";
+			modelRender.textureLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.PNG, sign.definition.systemName);
 			
 			//Set text and text objects.
 			textObjects = pole.components.get(axis).definition.general.textObjects;

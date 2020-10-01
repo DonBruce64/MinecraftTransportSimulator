@@ -13,6 +13,8 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -171,7 +173,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	@Override
 	public String getModelLocation(){
 		if(isFlat){
-			return "objmodels/parts/" + (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + "_flat.obj";
+			return PackResourceLoader.getPackResource(definition, ResourceType.OBJ, (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + "_flat");
 		}else{
 			return super.getModelLocation();
 		}

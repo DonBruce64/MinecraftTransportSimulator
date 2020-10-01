@@ -2,9 +2,9 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-public class JSONPoleComponent extends AJSONMultiModel<JSONPoleComponent.PoleGeneral>{
+public class JSONPoleComponent extends AJSONModelProvider<JSONPoleComponent.PoleGeneral>{
 
-    public class PoleGeneral extends AJSONMultiModel<JSONPoleComponent.PoleGeneral>.General{
+    public class PoleGeneral extends AJSONModelProvider<JSONPoleComponent.PoleGeneral>.General{
     	public String type;
     	public float radius;
     	public TextLine[] textLines;

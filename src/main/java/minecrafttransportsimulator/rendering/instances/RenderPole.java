@@ -38,7 +38,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 		if(coreComponent != null){
 			//If we don't have the model parsed, do so now.
 			if(!connectorDisplayListMap.containsKey(tile.definition)){
-				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.packID, "objmodels/poles/" + tile.definition.systemName + ".obj");
+				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.packID, tile.definition.getModelLocation());
 				
 				Map<Axis, Integer> connectorDisplayLists = new HashMap<Axis, Integer>();
 				Map<Axis, Integer> solidConncectorDisplayLists = new HashMap<Axis, Integer>();
@@ -56,7 +56,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 			
 			//Render the connectors.  Don't do this on the blending pass 1.
 			if(InterfaceRender.getRenderPass() != 1){
-				InterfaceRender.bindTexture(tile.definition.packID, "textures/poles/" + tile.definition.systemName + ".png");
+				InterfaceRender.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(axis));
@@ -111,14 +111,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					//Cache the displaylists and lights if we haven't already.
 					ATileEntityPole_Component component = tile.components.get(axis);
 					if(!componentDisplayListMap.containsKey(component.definition)){
-						Map<String, Float[][]> parsedModel;
-						if(component.definition.general.modelName != null){
-							parsedModel = OBJParser.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.general.modelName + ".obj");
-						}else{
-							parsedModel = OBJParser.parseOBJModel(component.definition.packID, "objmodels/poles/" + component.definition.systemName + ".obj");
-						}
+						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(component.definition.packID, component.definition.getModelLocation());
 						List<TransformLight> lightParts = new ArrayList<TransformLight>();
-						
 						int displayListIndex = GL11.glGenLists(1);
 						GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 						GL11.glBegin(GL11.GL_TRIANGLES);
@@ -152,7 +146,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					
 					//Don't do solid model rendering on the blend pass.
 					if(InterfaceRender.getRenderPass() != 1){
-						InterfaceRender.bindTexture(component.definition.packID, "textures/poles/" + component.definition.systemName + ".png");
+						InterfaceRender.bindTexture(component.definition.packID, component.definition.getTextureLocation());
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
 					}
 					

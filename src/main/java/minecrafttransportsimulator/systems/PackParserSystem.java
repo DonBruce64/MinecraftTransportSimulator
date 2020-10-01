@@ -11,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import mcinterface.BuilderItem;
-import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
@@ -37,16 +36,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartCustom;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGroundEffector;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.vehicles.parts.PartInteractable;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
+import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -205,6 +196,8 @@ public final class PackParserSystem{
     public static <ItemInstance extends AItemPack<? extends AJSONItem<?>>> void setupItem(AItemPack<? extends AJSONItem<?>> item, String systemName, String packID, ItemClassification classification){
     	//Set code-based definition values.
     	item.definition.packID = packID;
+    	//TODO make this be based off the new loader.
+    	item.definition.structure = PackStructure.DEFAULT;
     	item.definition.classification = classification;
     	item.definition.systemName = systemName;
     	
@@ -221,7 +214,6 @@ public final class PackParserSystem{
     /**
      * Perform legacy compats.  This is used to allow older packs to remain compatible.
      * Legacy compats may be removed ONLY when older packs have updated!
-     * 
      */
     private static <JSONDefinition extends AJSONItem<?>> void performLegacyCompats(JSONDefinition definition){
     	if(definition instanceof JSONPart){
@@ -625,7 +617,7 @@ public final class PackParserSystem{
     	}
     }
     
-    //--------------------START OF HELPER METHODS--------------------	
+    //--------------------START OF HELPER METHODS--------------------
     public static <JSONDefinition extends AJSONItem<?>> JSONDefinition getDefinition(String packID, String systemName){
     	if(packItemMap.containsKey(packID)){
     		if(packItemMap.get(packID).containsKey(systemName)){
@@ -643,7 +635,7 @@ public final class PackParserSystem{
     	return getItem(packID, systemName, null);
     }
     
-    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String subName){
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String vehicleSubName){
     	if(packItemMap.containsKey(packID)){
     		return (PackItem) packItemMap.get(packID).get(systemName);
     	}
@@ -669,53 +661,5 @@ public final class PackParserSystem{
     		packItems.addAll(getAllItemsForPack(packID));
     	}
     	return packItems;
-    }
-    
-    public static APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT partData, APart parentPart){
-    	if(definition.general.type.startsWith("engine_")){
-    		return new PartEngine(vehicle, packVehicleDef, definition, partData, parentPart);
-    	}else if(definition.general.type.startsWith("gun_")){
-    		return new PartGun(vehicle, packVehicleDef, definition, partData, parentPart);
-    	}else if(definition.general.type.startsWith("ground_")){
-    		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
-    	}else if(definition.general.type.startsWith("interactable_")){
-        	return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
-    	}else if(definition.general.type.startsWith("effector_")){
-           	return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
-    	}else{
-	    	switch(definition.general.type){
-				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
-				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData, parentPart);
-				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
-				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
-				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
-				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
-			}
-    	}
-    	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
-    }
-    
-    public enum ItemClassification{
-    	VEHICLE,
-    	PART,
-    	INSTRUMENT,
-    	POLE,
-    	DECOR,
-    	ITEM,
-    	BOOKLET;
-    	
-    	public final String assetFolder;
-    	
-    	private ItemClassification(){
-    		this.assetFolder = this.name().toLowerCase() + "s";
-    	}
-    	
-    	public static List<String> getAllTypesAsStrings(){
-        	List<String> assetTypes = new ArrayList<String>();
-        	for(ItemClassification classification : ItemClassification.values()){
-        		assetTypes.add(classification.name().toLowerCase());
-        	}
-        	return assetTypes;
-    	}
     }
 }
