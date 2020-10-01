@@ -236,8 +236,8 @@ public final class PackParserSystem{
     			if(partDef.engine.shiftSpeed == 0){
     				partDef.engine.shiftSpeed = 20;
     			}
-			//If our revResistance is 0, we are a legacy engine that didn't set a rev Resistance.
-    			if (partDef.engine.revResistance <= 0){
+    			//If our revResistance is 0, we are a legacy engine that didn't set a rev Resistance.
+    			if (partDef.engine.revResistance == 0){
     				partDef.engine.revResistance = 10;
     			}
     		}else if(partDef.gun != null){

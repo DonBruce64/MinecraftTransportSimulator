@@ -42,7 +42,7 @@ public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean isCrankingNotPitched;
     	public byte starterPower;
     	public byte shiftSpeed;
-	public byte revResistance;
+    	public byte revResistance;
     	public int maxRPM;
     	public float fuelConsumption;
     	public float jetPowerFactor;
