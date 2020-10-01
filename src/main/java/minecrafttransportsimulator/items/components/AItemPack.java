@@ -44,14 +44,4 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 	public String getCreativeTabID(){
 		return definition.packID;
 	}
-	
-	/**
-	 *  Returns the location of the OBJ model for this item, or null if we use the default item rendering system.
-	 */
-	public abstract String getModelLocation();
-	
-	/**
-	 *  Returns the location of the texture for this item, or null if we use the default item rendering system.
-	 */
-	public abstract String getTextureLocation();
 }

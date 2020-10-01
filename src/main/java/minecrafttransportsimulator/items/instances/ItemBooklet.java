@@ -22,14 +22,4 @@ public class ItemBooklet extends AItemPack<JSONBooklet>{
 		}
         return true;
     }
-	
-	@Override
-	public String getModelLocation(){
-		return null;
-	}
-	
-	@Override
-	public String getTextureLocation(){
-		return null;
-	}
 }

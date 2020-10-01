@@ -20,6 +20,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.IItemOBJProvider;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -397,9 +398,9 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Enable render based on what component we have.
-		String modelLocation = currentItem.getModelLocation();
-		if(modelLocation != null){
-			String textureLocation = currentItem.getTextureLocation();
+		if(currentItem instanceof IItemOBJProvider){
+			String modelLocation = ((IItemOBJProvider) currentItem).getModelLocation();
+			String textureLocation = ((IItemOBJProvider) currentItem).getTextureLocation();
 			modelRender.modelDomain = currentPack;
 			modelRender.modelLocation = modelLocation;
 			modelRender.textureDomain = currentPack;

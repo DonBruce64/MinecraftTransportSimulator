@@ -5,12 +5,13 @@ import java.util.List;
 import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.IItemOBJProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import net.minecraft.util.text.TextFormatting;
 
-public class ItemPart extends AItemPack<JSONPart>{
+public class ItemPart extends AItemPack<JSONPart> implements IItemOBJProvider{
 	private final String partPrefix;
 	
 	public ItemPart(JSONPart definition){

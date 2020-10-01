@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.items.components.IItemOBJProvider;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -21,7 +22,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
-public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
+public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>, IItemOBJProvider{
 	public final String subName;
 	
 	public ItemVehicle(JSONVehicle definition, String subName){
