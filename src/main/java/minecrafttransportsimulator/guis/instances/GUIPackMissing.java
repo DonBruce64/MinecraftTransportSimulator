@@ -2,8 +2,6 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
 
-import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -23,7 +21,7 @@ public class GUIPackMissing extends AGUIBase{
 
 	@Override
 	public void setStates(){
-		noticeLabel.visible = BuilderGUI.inClockPeriod(40, 20);
+		noticeLabel.visible = inClockPeriod(40, 20);
 	}
 	
 	@Override

@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import mcinterface.WrapperItemStack;
@@ -190,7 +189,7 @@ public class GUIInstruments extends AGUIBase{
 						//This happens even if there's an instrument rendered as we need to highlight it.
 						if(packInstrument.equals(selectedInstrumentOnVehicle)){
 							int instrumentRadius = (int) (64F*packInstrument.hudScale);
-							if(BuilderGUI.inClockPeriod(40, 20)){
+							if(inClockPeriod(40, 20)){
 								GL11.glPushMatrix();
 								GL11.glTranslatef(0, 0, 1.0F);
 								BuilderGUI.renderRectangle(this.x, this.y, 2*instrumentRadius, 2*instrumentRadius, Color.WHITE);

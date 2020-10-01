@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
+import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -28,6 +29,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
@@ -357,6 +359,18 @@ public class BuilderGUI extends GuiScreen{
 	}
 	
 	/**
+	 *  Returns the formatting code for the passed-in color.
+	 */
+	public static String getFormattingCode(String color){
+		for(TextFormatting format : TextFormatting.values()){
+			if(format.name().toLowerCase().equals(color)){
+				return format.toString();
+			}
+		}
+		return "";
+	}
+	
+	/**
 	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
 	 *  renders all items from their top-left corner, so take this into account when
 	 *  choosing where to put this component in your GUI.
@@ -409,15 +423,6 @@ public class BuilderGUI extends GuiScreen{
 	}
 	
 	/**
-	 *  Clock method used to make flashing text and icons on screen.  Put here
-	 *  for all GUIs to use.  Returns true if the period is active.  Both
-	 *  parameters are in ticks, or 1/20 a second.
-	 */
-	public static boolean inClockPeriod(int totalPeriod, int onPeriod){
-		return System.currentTimeMillis()*0.02D%totalPeriod <= onPeriod;
-	}
-	
-	/**
 	 *  Returns true if the passed-in GUI is currently active.
 	 *  If null is passed-in, then this method returns true if no GUI is active.
 	 */
@@ -444,14 +449,5 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	public static void openGUI(AGUIBase gui){
 		FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
-	}
-	
-	/**
-	 *  List of enums that define how text is rendered.
-	 */
-	public static enum TextPosition{
-		CENTERED,
-		LEFT_ALIGNED,
-		RIGHT_ALIGNED;
 	}
 }

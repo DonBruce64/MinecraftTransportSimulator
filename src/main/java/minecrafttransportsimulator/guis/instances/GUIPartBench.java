@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceInput;
 import mcinterface.InterfaceNetwork;

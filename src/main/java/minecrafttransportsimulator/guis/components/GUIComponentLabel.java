@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextPosition;
+import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a

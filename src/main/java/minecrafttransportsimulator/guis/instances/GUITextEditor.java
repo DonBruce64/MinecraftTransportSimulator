@@ -7,7 +7,6 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;

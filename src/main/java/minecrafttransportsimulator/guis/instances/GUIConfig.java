@@ -8,9 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import mcinterface.BuilderGUI;
-import mcinterface.InterfaceInput;
-import mcinterface.BuilderGUI.TextPosition;
 import mcinterface.InterfaceCore;
+import mcinterface.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface.BuilderGUI;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
@@ -309,7 +308,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				
 		//For every tick we have one of the trim selectors pressed, do the corresponding trim action.
 		if(selectedTrimSelector != null){
-			if(BuilderGUI.inClockPeriod(3, 1)){
+			if(inClockPeriod(3, 1)){
 				if(!appliedTrimThisRender){
 					selectedTrimSelector.selectorState = selectedTrimSelector.selectorState == 0 ? 1 : 0; 
 					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, selectedTrimType, selectedTrimDirection));

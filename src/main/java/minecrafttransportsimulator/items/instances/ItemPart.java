@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
+import mcinterface.BuilderGUI;
 import mcinterface.InterfaceCore;
 import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -17,7 +18,6 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
-import net.minecraft.util.text.TextFormatting;
 
 public class ItemPart extends AItemPack<JSONPart>{
 	private final String partPrefix;
@@ -91,8 +91,7 @@ public class ItemPart extends AItemPack<JSONPart>{
 			}
 			case("engine") : {
 				if(data.getBoolean("isCreative")){
-					//TODO make this part of the GUI builder for abstraction.
-					tooltipLines.add(TextFormatting.DARK_PURPLE + InterfaceCore.translate("info.item.engine.creative"));
+					tooltipLines.add(BuilderGUI.getFormattingCode("dark_purple") + InterfaceCore.translate("info.item.engine.creative"));
 				}
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.maxrpm") + definition.engine.maxRPM);
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.maxsaferpm") + PartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
@@ -120,13 +119,13 @@ public class ItemPart extends AItemPack<JSONPart>{
 				}
 				
 				if(data.getBoolean("oilLeak")){
-					tooltipLines.add(TextFormatting.RED + InterfaceCore.translate("info.item.engine.oilleak"));
+					tooltipLines.add(BuilderGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.oilleak"));
 				}
 				if(data.getBoolean("fuelLeak")){
-					tooltipLines.add(TextFormatting.RED + InterfaceCore.translate("info.item.engine.fuelleak"));
+					tooltipLines.add(BuilderGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.fuelleak"));
 				}
 				if(data.getBoolean("brokenStarter")){
-					tooltipLines.add(TextFormatting.RED + InterfaceCore.translate("info.item.engine.brokenstarter"));
+					tooltipLines.add(BuilderGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.brokenstarter"));
 				}
 				break;
 			}

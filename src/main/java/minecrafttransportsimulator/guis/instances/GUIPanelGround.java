@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface.BuilderGUI;
 import mcinterface.InterfaceCore;
 import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
@@ -321,7 +320,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
-			boolean halfSecondClock = BuilderGUI.inClockPeriod(20, 10);
+			boolean halfSecondClock = inClockPeriod(20, 10);
 			if(vehicle.lightsOn.contains(LightType.LEFTTURNLIGHT) && halfSecondClock){
 				if(vehicle.lightsOn.contains(LightType.RIGHTTURNLIGHT)){
 					turnSignalSelector.selectorState = 3;

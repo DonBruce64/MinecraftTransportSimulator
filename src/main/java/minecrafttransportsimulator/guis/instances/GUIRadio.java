@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mcinterface.BuilderGUI;
-import mcinterface.BuilderGUI.TextPosition;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;

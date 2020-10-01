@@ -200,6 +200,27 @@ public abstract class AGUIBase{
 		objModels.clear();
 	}
 	
+	/**
+	 *  Clock method used to make flashing text and icons on screen.  Put here
+	 *  for all GUIs to use.  Returns true if the period is active.  Both
+	 *  parameters are in ticks, or 1/20 a second.
+	 */
+	public static boolean inClockPeriod(int totalPeriod, int onPeriod){
+		return System.currentTimeMillis()*0.02D%totalPeriod <= onPeriod;
+	}
+	
+	/**
+	 *  List of enums that define how text is rendered.
+	 */
+	public static enum TextPosition{
+		CENTERED,
+		LEFT_ALIGNED,
+		RIGHT_ALIGNED;
+	}
+	
+	/**
+	 *  List of enums that define if the GUI is lit or not.
+	 */
 	public enum GUILightingMode{
 		NONE,
 		DARK,
