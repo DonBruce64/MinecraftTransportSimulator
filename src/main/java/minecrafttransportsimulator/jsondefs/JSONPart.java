@@ -60,14 +60,12 @@ public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
 			public String soundName;
 			public float pitchIdle;
 			public float pitchMax;
+			public float pitchLength;
 			public float volumeIdle;
 			public float volumeMax;
-			public float pa;
-			public float va;
-			public float pk;
-			public float vk;
-			public int ph;
-			public int vh;
+			public float volumeLength;
+			public int pitchCenter;
+			public int volumeCenter;
 			public boolean pitchAdvanced;
 			public boolean volumeAdvanced;
 		}
