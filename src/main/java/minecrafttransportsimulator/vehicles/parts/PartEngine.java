@@ -59,8 +59,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private double propellerAxialVelocity;
 	private double engineAxialVelocity;
 	private float wheelFriction;
-	private float customPitch;
-	private float customVolume;
 	private double ambientTemp;
 	private double coolingFactor;
 	private double engineTargetRPM;
@@ -905,6 +903,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//Y = A*(H^2) + K
 					//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
 					double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
+					float customPitch;
+					float customVolume;
 					if (soundDefinition.pitchAdvanced) {
 						customPitch = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/200), 0);
 					}else {
