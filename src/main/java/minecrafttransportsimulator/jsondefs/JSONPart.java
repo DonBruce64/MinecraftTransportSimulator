@@ -62,6 +62,14 @@ public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
 			public float pitchMax;
 			public float volumeIdle;
 			public float volumeMax;
+			public float pa;
+			public float va;
+			public float pk;
+			public float vk;
+			public int ph;
+			public int vh;
+			public boolean pitchAdvanced;
+			public boolean volumeAdvanced;
 		}
     }
     
