@@ -902,8 +902,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//Interpolate in the form of Y=A*X + B.
 					//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
 					//For "Advanced" = true:
-					//Y = A*(H^2) + K
-					//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
+					//This uses a "vertex" parabola: Y = A*(H^2) + K
+					//H is the very middle of the sound's "Arch shape" in RPM, K is the unit of pitch/volume when it is at, and A is how much of a bend the the arch has 
 					double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
 					if (soundDefinition.pitchAdvanced) {
 						customPitch = (float) Math.max(soundDefinition.pa * Math.pow(rpm - soundDefinition.ph, 2) + soundDefinition.pk, 0);
