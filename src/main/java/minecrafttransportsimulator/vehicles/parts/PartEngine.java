@@ -902,16 +902,16 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//Interpolate in the form of Y=A*X + B.
 					//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
 					//For "Advanced" = true:
-					//This uses a "vertex" parabola: Y = A*(H^2) + K
-					//H is the very middle of the sound's "Arch shape" in RPM, K is the unit of pitch/volume when it is at, and A is how much of a bend the the arch has 
+					//Y = A*(H^2) + K
+					//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
 					double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
 					if (soundDefinition.pitchAdvanced) {
-						customPitch = (float) Math.max(soundDefinition.pa * Math.pow(rpm - soundDefinition.ph, 2) + soundDefinition.pk, 0);
+						customPitch = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/200), 0);
 					}else {
 						customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
 					}			
 					if (soundDefinition.volumeAdvanced) {
-						customVolume = (float) Math.max(soundDefinition.va * Math.pow(rpm - soundDefinition.vh, 2) + soundDefinition.vk, 0);
+						customVolume = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/200), 0);
 					}else {
 						customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
 					}
