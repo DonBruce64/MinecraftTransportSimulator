@@ -112,12 +112,14 @@ public class BuilderEntity extends Entity{
     		//Check that riders are still present prior to updating them.
     		//This handles dismounting of riders from entities in a non-event-driven way.
     		//We do this because other mods and Sponge like to screw up the events...
-    		Iterator<IWrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
-    		while(riderIterator.hasNext()){
-    			WrapperEntity rider = (WrapperEntity) riderIterator.next();
-    			if(!this.equals(rider.entity.getRidingEntity())){
-    				entity.removeRider(rider, riderIterator);
-    			}
+    		if(!world.isRemote){
+	    		Iterator<IWrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
+	    		while(riderIterator.hasNext()){
+	    			WrapperEntity rider = (WrapperEntity) riderIterator.next();
+	    			if(!this.equals(rider.entity.getRidingEntity())){
+	    				entity.removeRider(rider, riderIterator);
+	    			}
+	    		}
     		}
     		
     		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
