@@ -379,6 +379,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				rider.attack(passengerCrashDamage);
 			}
 		}
+		
+		//Now remove all riders from the vehicle.
+		Iterator<IWrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
+		while(riderIterator.hasNext()){
+			removeRider(riderIterator.next(), riderIterator);
+		}
 	}
 	
 	@Override

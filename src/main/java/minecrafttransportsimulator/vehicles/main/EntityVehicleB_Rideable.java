@@ -124,7 +124,9 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 			rider.setPosition(dismountPosition);
 		}else{
+			//Rider left a vehicle.  Make sure they don't have their mouse locked or a GUI open.
 			MasterLoader.inputInterface.setMouseEnabled(true);
+			MasterLoader.guiInterface.closeGUI();
 		}
 	}
 	
