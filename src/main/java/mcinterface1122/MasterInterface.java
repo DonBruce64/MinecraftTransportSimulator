@@ -6,6 +6,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -34,14 +35,26 @@ public class MasterInterface{
 		FluidRegistry.enableUniversalBucket();
 		
 		//Create instances of the various interfaces and send them to the loader.
-		audioInterface = new InterfaceAudio();
-		coreInterface = new InterfaceCore();
-		gameInterface = new InterfaceGame();
-		guiInterface = new InterfaceGUI();
-		inputInterface = new InterfaceInput();
-		networkInterface = new InterfaceNetwork();
-		oggDecoderInterface = new InterfaceOGGDecoder();
-		renderInterface = new InterfaceRender();
+		//If we're on a server, don't create the client interfaces.
+		if(FMLCommonHandler.instance().getSide().isClient()){
+			audioInterface = new InterfaceAudio();
+			coreInterface = new InterfaceCore();
+			gameInterface = new InterfaceGame();
+			guiInterface = new InterfaceGUI();
+			inputInterface = new InterfaceInput();
+			networkInterface = new InterfaceNetwork();
+			oggDecoderInterface = new InterfaceOGGDecoder();
+			renderInterface = new InterfaceRender();
+		}else{
+			audioInterface = null;
+			coreInterface = new InterfaceCore();
+			gameInterface = null;
+			guiInterface = null;
+			inputInterface = null;
+			networkInterface = new InterfaceNetwork();
+			oggDecoderInterface = null;
+			renderInterface = null;
+		}
 		MasterLoader.setInterfaces(MODID, audioInterface, coreInterface, gameInterface, guiInterface, inputInterface, networkInterface, oggDecoderInterface, renderInterface);
 	}
 
