@@ -37,12 +37,12 @@ class InterfaceGUI implements IInterfaceGUI{
                 tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
             }
         }
-		GuiUtils.drawHoveringText(((WrapperItemStack) stack).stack, tooltipText, mouseX, mouseY, gui.getWidth(), gui.getHeight(), -1, fontRenderer);
+		GuiUtils.drawHoveringText(((WrapperItemStack) stack).stack, tooltipText, mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
 	}
 	
 	@Override
 	public void drawGenericTooltip(AGUIBase gui, int mouseX, int mouseY, String tooltip){
-		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, gui.getWidth(), gui.getHeight(), -1, fontRenderer);
+		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
 	}
 	
 	@Override
