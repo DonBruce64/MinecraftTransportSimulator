@@ -132,6 +132,7 @@ public class FluidTank{
 					MasterLoader.networkInterface.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
 				}
 				fluidLevel -= maxAmount;
+				fluidDispensed += maxAmount;
 				if(fluidLevel == 0){
 					currentFluid = "";
 				}
