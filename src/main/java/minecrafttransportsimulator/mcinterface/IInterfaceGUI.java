@@ -31,7 +31,7 @@ public interface IInterfaceGUI{
 	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be  the center 
 	 *  point of the string, rather that the top-left of the string like normal.  If wrapWidth is anything else but 0, 
 	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
-	 *  will be bound, so take care when calling this method in the middle  of rendering operations.
+	 *  will be bound, so take care when calling this method in the middle of rendering operations.
 	 */
 	public void drawBasicText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth);
 	

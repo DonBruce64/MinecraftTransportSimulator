@@ -1,7 +1,10 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import java.awt.Color;
+
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
@@ -25,7 +28,7 @@ public final class RenderInstrument{
      */
 	public static void drawInstrument(JSONInstrument definition, byte partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
-		MasterLoader.renderInterface.bindTexture(definition.packID, "textures/instruments.png");
+		MasterLoader.renderInterface.setTexture(definition.packID, "textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
@@ -36,10 +39,6 @@ public final class RenderInstrument{
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
 			if((!section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 1) || (section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 0)){
-				GL11.glPushMatrix();
-				//Translate to the component, but slightly away from the instrument location to prevent clipping.
-				GL11.glTranslatef(section.xCenter, section.yCenter, i*0.1F);
-				
 				//If the vehicle lights are on, disable the lightmap.
 				if(lightsOn){
 					MasterLoader.renderInterface.setInternalLightingState(false);
@@ -52,75 +51,92 @@ public final class RenderInstrument{
 				//doing a part-specific animation.
 				final boolean addRotationSuffix = section.rotationVariable != null && (section.rotationVariable.startsWith("engine_") || section.rotationVariable.startsWith("propeller_") || section.rotationVariable.startsWith("gun_"));
 				final boolean addTranslationSuffix = section.translationVariable != null && (section.translationVariable.startsWith("engine_") || section.translationVariable.startsWith("propeller_") || section.translationVariable.startsWith("gun_"));
-				if(partNumber == 0 && (addRotationSuffix || addTranslationSuffix)){
+				final boolean addTextSuffix = section.textObject != null && (section.textObject.fieldName.startsWith("engine_") || section.textObject.fieldName.startsWith("propeller_") || section.textObject.fieldName.startsWith("gun_"));
+				if(partNumber == 0 && (addRotationSuffix || addTranslationSuffix || addTextSuffix)){
 					partNumber = 1;
 				}
 				
-				
-				//Init variables.
-				float layerUStart;
-				float layerUEnd;
-				float layerVStart;
-				float layerVEnd;
-				
-				//Depending on what variables are set we do different rendering operations.
-				//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
-				//Otherwise, set the points to their normal location.
-				if(section.rotationVariable != null && section.rotateWindow){
-					double rotation = VehicleAnimationSystem.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
-					double sin = Math.sin(Math.toRadians(rotation));
-					double cos = Math.sin(Math.toRadians(rotation));
-					layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
-					layerVStart = (float) ((-section.textureWidth/2F)*sin + (-section.textureHeight/2F)*cos);
-					layerUEnd = (float) ((section.textureWidth/2F)*cos - (section.textureHeight/2F)*sin);
-					layerVEnd = (float) ((section.textureWidth/2F)*sin + (section.textureHeight/2F)*cos);
+				//If we have text, do a text render.  Otherwise, do a normal instrument render.
+				//Also translate slightly away from the instrument location to prevent clipping.
+				GL11.glPushMatrix();
+				GL11.glTranslatef(0.0F, 0.0F, i*0.1F);
+				if(section.textObject != null){
+					double textNumeric = VehicleAnimationSystem.getVariableValue(addTextSuffix ? section.textObject.fieldName + "_" + partNumber : section.textObject.fieldName, section.textFactor, 0, 0, 0, false, 0, vehicle, null);
+					String text = String.format("%0" + section.textObject.maxLength + "d", (int) textNumeric);
+					MasterLoader.guiInterface.drawScaledText(text, (int) section.textObject.pos.x, (int) section.textObject.pos.y, Color.decode(section.textObject.color), TextPosition.values()[section.textObject.renderPosition], section.textObject.wrapWidth, section.textObject.scale, section.textObject.autoScale);
+					MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+					MasterLoader.renderInterface.recallTexture();
 				}else{
-					layerUStart = section.textureXCenter - section.textureWidth/2F;
-					layerUEnd = layerUStart + section.textureWidth;
-					layerVStart = section.textureYCenter - section.textureHeight/2F;
-					layerVEnd = layerVStart + section.textureHeight;
-				}
-				
-				//If we are translating, offset the coords based on the translated amount.
-				//Adjust the window to either move or scale depending on settings.
-				if(section.translationVariable != null){
-					double translation = VehicleAnimationSystem.getVariableValue(addTranslationSuffix ? section.translationVariable + "_" + partNumber : section.translationVariable, section.translationFactor, 0, section.translationClampMin, section.translationClampMax, section.translationAbsoluteValue, 0, vehicle, null);
-					if(section.extendWindow){
-						//We need to add to the edge of the window in this case rather than move the entire window.
-						if(section.translateHorizontal){
-							layerUEnd += translation;
-						}else{
-							layerVEnd += translation;
-						}
+					//Translate to the component.
+					GL11.glTranslatef(section.xCenter, section.yCenter, 0.0F);
+					
+					//Init variables.
+					float layerUStart;
+					float layerUEnd;
+					float layerVStart;
+					float layerVEnd;
+					
+					//Depending on what variables are set we do different rendering operations.
+					//If we are rotating the window, but not the texture we should initialize the texture points to that rotated point.
+					//Otherwise, set the points to their normal location.
+					if(section.rotationVariable != null && section.rotateWindow){
+						double rotation = VehicleAnimationSystem.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
+						double sin = Math.sin(Math.toRadians(rotation));
+						double cos = Math.sin(Math.toRadians(rotation));
+						layerUStart = (float) ((-section.textureWidth/2F)*cos - (-section.textureHeight/2F)*sin);
+						layerVStart = (float) ((-section.textureWidth/2F)*sin + (-section.textureHeight/2F)*cos);
+						layerUEnd = (float) ((section.textureWidth/2F)*cos - (section.textureHeight/2F)*sin);
+						layerVEnd = (float) ((section.textureWidth/2F)*sin + (section.textureHeight/2F)*cos);
 					}else{
-						//Translate the window to the appropriate section of the texture sheet.
-						if(section.translateHorizontal){
-							layerUStart += translation;
-							layerUEnd = layerUStart + section.textureWidth;
+						layerUStart = section.textureXCenter - section.textureWidth/2F;
+						layerUEnd = layerUStart + section.textureWidth;
+						layerVStart = section.textureYCenter - section.textureHeight/2F;
+						layerVEnd = layerVStart + section.textureHeight;
+					}
+					
+					//If we are translating, offset the coords based on the translated amount.
+					//Adjust the window to either move or scale depending on settings.
+					if(section.translationVariable != null){
+						double translation = VehicleAnimationSystem.getVariableValue(addTranslationSuffix ? section.translationVariable + "_" + partNumber : section.translationVariable, section.translationFactor, 0, section.translationClampMin, section.translationClampMax, section.translationAbsoluteValue, 0, vehicle, null);
+						if(section.extendWindow){
+							//We need to add to the edge of the window in this case rather than move the entire window.
+							if(section.translateHorizontal){
+								layerUEnd += translation;
+							}else{
+								layerVEnd += translation;
+							}
 						}else{
-							layerVStart += translation;
-							layerVEnd = layerVStart + section.textureHeight;
+							//Translate the window to the appropriate section of the texture sheet.
+							if(section.translateHorizontal){
+								layerUStart += translation;
+								layerUEnd = layerUStart + section.textureWidth;
+							}else{
+								layerVStart += translation;
+								layerVEnd = layerVStart + section.textureHeight;
+							}
 						}
+					}
+					
+					//If we are rotating the texture, and not the window, apply the rotation here after the translation.
+					if(section.rotationVariable != null && !section.rotateWindow){
+						double rotation = VehicleAnimationSystem.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
+						GL11.glRotated(rotation, 0, 0, 1);
+					}
+					
+					//Now that all transforms are done, render the instrument shape.
+					//If the shape is lit, do blending.  If not, disable blending.
+					//This is required as it might already be enabled.
+					if(!section.lightOverlay){
+						GL11.glDisable(GL11.GL_BLEND);
+						renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+					}else if(lightsOn){
+						GL11.glEnable(GL11.GL_BLEND);
+						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+					    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 					}
 				}
 				
-				//If we are rotating the texture, and not the window, apply the rotation here after the translation.
-				if(section.rotationVariable != null && !section.rotateWindow){
-					double rotation = VehicleAnimationSystem.getVariableValue(addRotationSuffix ? section.rotationVariable + "_" + partNumber : section.rotationVariable, section.rotationFactor, section.rotationOffset, section.rotationClampMin, section.rotationClampMax, section.rotationAbsoluteValue, 0, vehicle, null);
-					GL11.glRotated(rotation, 0, 0, 1);
-				}
-				
-				//Now that all transforms are done, render the instrument shape.
-				//If the shape is lit, do blending.  If not, disable blending.
-				//This is required as it might already be enabled.
-				if(!section.lightOverlay){
-					GL11.glDisable(GL11.GL_BLEND);
-					renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
-				}else if(lightsOn){
-					GL11.glEnable(GL11.GL_BLEND);
-					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-				    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
-				}
+				//Done rendering.  Pop matrix.
 				GL11.glPopMatrix();
 			}
 			

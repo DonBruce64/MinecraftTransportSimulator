@@ -13,11 +13,13 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     public class Component{
     	public int xCenter;
     	public int yCenter;
-    	
     	public int textureXCenter;
     	public int textureYCenter;
     	public int textureWidth;
     	public int textureHeight;
+    	
+    	public JSONText textObject;
+    	public float textFactor;
     	
     	public String rotationVariable;
     	public boolean rotateWindow;
@@ -34,7 +36,6 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	public float translationClampMin;
     	public float translationClampMax;
     	public boolean translationAbsoluteValue;
-
     	
     	public boolean lightOverlay;
     }
