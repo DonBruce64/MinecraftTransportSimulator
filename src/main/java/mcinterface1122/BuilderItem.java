@@ -130,13 +130,8 @@ class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				//TODO this hard-code gets removed when the main mod correctly becomes a pack.
-				if(tabID.equals(MasterInterface.MODID)){
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(MasterInterface.coreInterface.translate("itemGroup.tabMTSCore"), item));
-				}else{
-					//TODO remove this when packs define their tab names.
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
-				}
+				//TODO remove this when packs define their tab names.
+				BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
 			}
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
