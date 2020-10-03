@@ -893,15 +893,31 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			//If we are using a custom soundset, do that logic. Otherwise, do default sound logic.
 			if(definition.engine.customSoundset != null){
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
+					//For "Advanced" = false:
+					//Interpolate in the form of Y=A*X + B.
+					//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
+					//For "Advanced" = true:
+					//Y = A*(H^2) + K
+					//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
+					double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
+					float customPitch;
+					float customVolume;
+					if (soundDefinition.pitchAdvanced) {
+						customPitch = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/200), 0);
+					}else {
+						customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
+					}			
+					if (soundDefinition.volumeAdvanced) {
+						customVolume = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/200), 0);
+					}else {
+						customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
+					}
 					if(sound.soundName.equals(soundDefinition.soundName)){
 						if(!state.running && internalFuel == 0){
 							sound.stop();
 						}else{
-							//Interpolate in the form of Y=A*X + B.
-							//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
-							double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
-							sound.pitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);
-							sound.volume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);
+							sound.pitch = customPitch;
+							sound.volume = customVolume;
 						}
 					}
 				}
