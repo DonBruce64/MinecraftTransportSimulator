@@ -76,7 +76,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Create initial collision boxes.  Needed to test spawn logic.
 		for(int i=0; i<definition.collision.size(); ++i){
 			VehicleCollisionBox boxDefinition = definition.collision.get(i);
-			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy(), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy(), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, boxDefinition.armorThickness);
 			vehicleCollisionBoxes.add(newBox);
 			collisionBoxes.add(newBox);
 			if(!newBox.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
@@ -88,7 +88,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(definition.doors != null){
 			doorsOpen.clear();
 			for(VehicleDoor door : definition.doors){
-				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true);
+				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, 0);
 				doorBoxes.put(box, door);
 				collisionBoxes.add(box);
 				if(data.getBoolean("doorsOpen_" + door.name)){
@@ -248,7 +248,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
 			for(VehicleCollisionBox boxDefinition : part.definition.collision){
-				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior);
+				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, boxDefinition.armorThickness);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
 				if(!newBox.isInterior){
@@ -286,7 +286,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		partSlotBoxes.clear();
 		for(Entry<Point3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false); 
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false, 0); 
 				partSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 				if(!world.isClient()){
 					activePartSlotBoxes.put(newSlotBox, packPartEntry.getValue());

@@ -81,7 +81,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
 			JSONPart bulletDefinition = PackParserSystem.getDefinition(bulletPackID, bulletSystemName);
-			BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false);
+			BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false, 0);
 			PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.

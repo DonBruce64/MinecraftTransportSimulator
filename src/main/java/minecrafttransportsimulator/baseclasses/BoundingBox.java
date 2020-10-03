@@ -35,12 +35,13 @@ public class BoundingBox{
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
 	public final boolean isInterior;
+	public final double armorThickness;
 	
 	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
-		this(center, center, widthRadius, heightRadius, depthRadius, false, false);
+		this(center, center, widthRadius, heightRadius, depthRadius, false, false, 0);
 	}
 	
-	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior){
+	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior, double armorThickness){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
@@ -50,6 +51,7 @@ public class BoundingBox{
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
 		this.isInterior = isInterior;
+		this.armorThickness = armorThickness;
 	}
 	
 	/**

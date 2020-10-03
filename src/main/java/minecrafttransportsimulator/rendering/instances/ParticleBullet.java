@@ -35,6 +35,7 @@ public final class ParticleBullet extends AParticle{
 	private final JSONPart definition;
 	private final PartGun gun;
 	private final int bulletNumber;
+	private final double initalVelocity;
 	private final IWrapperEntity gunController;
 	private final BoundingBox box;
 	
@@ -45,6 +46,7 @@ public final class ParticleBullet extends AParticle{
     	this.definition = definition;
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
+        this.initalVelocity = motion.length();
         this.gunController = gunController;
         this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
     }
@@ -58,7 +60,14 @@ public final class ParticleBullet extends AParticle{
 		Map<IWrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, gun.vehicle, motion);
 		if(!attackedEntities.isEmpty()){
 			for(IWrapperEntity entity : attackedEntities.keySet()){
-				MasterLoader.networkInterface.sendToServer(new PacketBulletHit(attackedEntities.get(entity) != null ? attackedEntities.get(entity) : box, velocity, definition, gun, bulletNumber, entity, gunController));
+				if(attackedEntities.get(entity) != null){
+					BoundingBox hitBox = attackedEntities.get(entity);
+					if(hitBox.armorThickness == 0 || hitBox.armorThickness > definition.bullet.armorPenetration*velocity/initalVelocity){
+						MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, definition, gun, bulletNumber, entity, gunController));
+					}
+				}else{
+					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, definition, gun, bulletNumber, entity, gunController));
+				}
 			}
 			age = maxAge;
 			return;

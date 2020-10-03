@@ -165,6 +165,7 @@ public class JSONVehicle extends AJSONModelProvider<JSONVehicle.VehicleGeneral>{
         public float height;
         public boolean isInterior;
         public boolean collidesWithLiquids;
+        public float armorThickness;
     }
     
     public class VehicleDoor{
