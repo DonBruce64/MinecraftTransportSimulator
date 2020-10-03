@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.BuilderGUI;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -33,7 +33,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole>{
 	private final Axis axis;
 	private final String packID;
-	private final String systemName;
+	private final String systemName;	
 	private final List<String> textLines;
 	private final boolean removal;
 	
@@ -80,7 +80,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
+	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityPole pole){
 		//Check if we can do editing.
 		if(world.isClient() || !ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
 			if(removal){
@@ -88,12 +88,12 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
 					AItemBase item = PackParserSystem.getItem(component.definition);
-					WrapperNBT data = null;
+					IWrapperNBT data = null;
 					if(component.getTextLines() != null){
-						data = new WrapperNBT();
+						data = MasterLoader.coreInterface.createNewTag();
 						data.setStrings("textLines", component.getTextLines());
 					}
-					if(world.isClient() || player.isCreative() || player.addItem(item, data)){
+					if(world.isClient() || player.isCreative() || player.getInventory().addItem(item, data)){
 						pole.components.remove(axis);
 						pole.updateLightState();
 						return true;
@@ -102,7 +102,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			}else if(packID.isEmpty() && textLines == null){
 				if(pole.components.get(axis).getTextLines() != null){
 					if(world.isClient()){
-						BuilderGUI.openGUI(new GUITextEditor(pole, axis));
+						MasterLoader.guiInterface.openGUI(new GUITextEditor(pole, axis));
 					}else{
 						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
 						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));
@@ -124,7 +124,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					newComponent.setTextLines(textLines);
 				}
 				pole.updateLightState();
-				player.removeStack(player.getHeldStack(), 1);
+				player.getInventory().removeStack(player.getHeldStack(), 1);
 				return true;
 			} 
 		}

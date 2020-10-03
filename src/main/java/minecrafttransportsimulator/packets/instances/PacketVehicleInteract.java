@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperItemStack;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -16,6 +13,9 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable.Cal
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -25,7 +25,7 @@ import net.minecraft.item.ItemStack;
  * to handle players clicking on the vehicle.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the vehicle if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
- * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(ItemStack, EntityVehicleF_Physics, APart, WrapperPlayer, PlayerOwnerState, boolean)}
+ * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(ItemStack, EntityVehicleF_Physics, APart, IWrapperPlayer, PlayerOwnerState, boolean)}
  * 
  * @author don_bruce
  */
@@ -53,10 +53,10 @@ public class PacketVehicleInteract extends APacketVehicle{
 	}
 
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		boolean canPlayerEditVehicle = player.isOP() || vehicle.ownerUUID.isEmpty() || player.getUUID().equals(vehicle.ownerUUID);
 		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
-		WrapperItemStack heldStack = player.getHeldStack();
+		IWrapperItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = heldStack.getItem();
 		APart part = vehicle.getPartAtLocation(hitPosition);
 		
@@ -103,7 +103,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 							//Attempt to add a part.  Vehicle is responsible for callback packet here.
 							if(heldItem instanceof ItemPart){
 								if(vehicle.addPartFromItem((ItemPart) heldItem, heldStack.getData(), hitPosition)){				
-									player.removeStack(heldStack, 1);
+									player.getInventory().removeStack(heldStack, 1);
 								}
 							}
 						}

@@ -1,12 +1,5 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceNetwork;
-import mcinterface.InterfaceRender;
-import mcinterface.WrapperEntity;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -15,6 +8,10 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
@@ -78,7 +75,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private static final float LOW_OIL_PRESSURE = 40F;
 	
 	
-	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
@@ -115,14 +112,14 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 					if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 				}
-				InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 			}else{
 				hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
 				if(!definition.engine.isSteamPowered){
 					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 				}
-				InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 			}
 		}
 	}
@@ -142,9 +139,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isClient()){
-					for(WrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
-						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
+					for(IWrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+						if(entity instanceof IWrapperPlayer){
+							((IWrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
 						}
 					}
 				}
@@ -158,9 +155,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isClient()){
-					for(WrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
-						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
+					for(IWrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+						if(entity instanceof IWrapperPlayer){
+							((IWrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
 						}
 					}
 				}
@@ -496,8 +493,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = super.getData();
 		data.setBoolean("isCreative", isCreative);
 		data.setBoolean("oilLeak", oilLeak);
 		data.setBoolean("fuelLeak", fuelLeak);
@@ -545,7 +542,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
 				if(vehicle.world.isClient()){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 				}
 			}
 		}
@@ -559,12 +556,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 					state = EngineStates.MAGNETO_ON_ES_ON;
 					if(vehicle.world.isClient()){
-						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 					}
 				}else if(state.equals(EngineStates.RUNNING)){
 					state =  EngineStates.RUNNING_ES_ON;
 					if(vehicle.world.isClient()){
-						InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 					}
 				}
 			}else{
@@ -598,16 +595,16 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Send off packet and start sounds.
 		if(!vehicle.world.isClient()){
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, Signal.START));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.START));
 		}else{
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			if(definition.engine.customSoundset != null){
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
 			}else if(internalFuel == 0){
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 		}
 	}
@@ -626,7 +623,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Add a small amount to the starter level from the player's hand, and play cranking sound.
 		starterLevel += 4;
 		if(vehicle.world.isClient()){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
 	}
 	
@@ -648,9 +645,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Send off packet and play stopping sound.
 		if(!vehicle.world.isClient()){
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, signal));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, signal));
 		}else{
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
 	}
 	
@@ -659,9 +656,9 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//This also causes particles to spawn and sounds to play.
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.world.isClient()){
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BACKFIRE));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BACKFIRE));
 		}else{
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
 		}
 	}
@@ -725,10 +722,10 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if(doShift || vehicle.world.isClient()){
 			currentGear = nextGear;
 			if(!vehicle.world.isClient()){
-				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, autoShift));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, autoShift));
 			}
 		}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 		}
 	}
 	
@@ -748,14 +745,14 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if(doShift || vehicle.world.isClient()){
 			currentGear = nextGear;
 			if(!vehicle.world.isClient()){
-				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, autoShift));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, autoShift));
 			}
 			//If we are a big truck, turn on the backup beeper.
 			if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
-				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
 			}
 		}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 		}
 	}
 	
@@ -945,18 +942,18 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if(state.running){
 			if(definition.engine.customSoundset != null){
 				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					InterfaceAudio.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
 				}
 			}else{
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
 			}
 		}
 		if(state.esOn || state.hsOn){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
 		if(currentGear < 0 && vehicle.definition.motorized.isBigTruck){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":backup_beeper", true));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
 		}
 	}
 
@@ -1008,14 +1005,14 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.14;
 					if(state.running){
-						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), exhaust.scale));
+						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), exhaust.scale));
 						//Also play steam chuff sound if we are a steam engine.
 						if(definition.engine.isSteamPowered){
-							InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
+							MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
 						}
 					}
 					if(definition.engine.flamesOnStartup && state.esOn){
-						InterfaceRender.spawnParticle(new ParticleFlame(vehicle.world, exhaustOffset, velocityOffset, 1.0F));
+						MasterLoader.renderInterface.spawnParticle(new ParticleFlame(vehicle.world, exhaustOffset, velocityOffset, 1.0F));
 					}
 					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 				}
@@ -1034,12 +1031,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.07 - Math.random()*0.14;
 					for(byte j=0; j<5; ++j){
-						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, exhaust.scale*2.5F));
+						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, exhaust.scale*2.5F));
 					}
 				}
 			}else{
 				for(byte i=0; i<5; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+					MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 				}
 			}
 		}
@@ -1047,20 +1044,20 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Render oil and fuel leak particles.
 		if(oilLeak){
 			if(vehicle.ticksExisted%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		if(fuelLeak){
 			if((vehicle.ticksExisted + 5)%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		
 		//Render engine smoke if we're overheating.  Only for non-steam engines.
 		if(!definition.engine.isSteamPowered && temp > OVERHEAT_TEMP_1){
-			InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
+			MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 			if(temp > OVERHEAT_TEMP_2){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 			}
 		}
 	}

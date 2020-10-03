@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface.InterfaceCore;
-import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -82,11 +81,11 @@ public class GUIPanelAircraft extends AGUIPanel{
 				default: throw new IllegalArgumentException(lightType + " has no texture assigned in the panel!");
 			}
 			if(RenderVehicle.doesVehicleHaveLight(vehicle, lightType)){
-				String lightName = InterfaceCore.translate("gui.panel." + lightType.name().toLowerCase() + "s");
+				String lightName = MasterLoader.coreInterface.translate("gui.panel." + lightType.name().toLowerCase() + "s");
 				GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, lightName, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						InterfaceNetwork.sendToServer(new PacketVehicleLightToggle(vehicle, lightType));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, lightType));
 					}
 					
 					@Override
@@ -110,10 +109,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 				xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 			}
 			
-			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.magneto"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
+					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
 				}
 				
 				@Override
@@ -122,17 +121,17 @@ public class GUIPanelAircraft extends AGUIPanel{
 			magnetoSelectors.put(engineNumber, magnetoSwitch);
 			addSelector(magnetoSwitch);
 			
-			GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.start"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(vehicle.engines.get(engineNumber).state.magnetoOn){
-						InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
+						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
 					}
 				}
 				
 				@Override
 				public void onReleased(){
-					InterfaceNetwork.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 				}
 			};
 			starterSelectors.put(engineNumber, starterSwitch);
@@ -142,7 +141,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 		
 		//Add the trim selectors first.
-		aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.trim_roll"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trim_roll"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -158,7 +157,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		};
 		addSelector(aileronTrimSelector);
 		
-		elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.trim_pitch"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trim_pitch"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -174,7 +173,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		};
 		addSelector(elevatorTrimSelector);
 		
-		rudderTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.trim_yaw"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		rudderTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trim_yaw"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE*2, SELECTOR_TEXTURE_SIZE, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
@@ -192,10 +191,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		if(haveReverseThrustOption && vehicle.definition.motorized.hasAutopilot){
 			//If we have both reverse AND Autopilot, render them side-by-side. otherwise just render one in the middle
-			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
 				}
 				
 				@Override
@@ -203,10 +202,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 			};
 			addSelector(reverseSelector);
 			
-			autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
 				}
 				
 				@Override
@@ -216,10 +215,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 		}else{
 			//If we have reverse thrust, add a selector for it.
 			if(haveReverseThrustOption){
-				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, selectorState == 0));
 					}
 					
 					@Override
@@ -230,10 +229,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 			
 			//If we have autopilot, add a selector for it.
 			if(vehicle.definition.motorized.hasAutopilot){
-				autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				autopilotSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.autopilot"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, AUTOPILOT_TEXTURE_WIDTH_OFFSET, AUTOPILOT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.AUTOPILOT, !vehicle.autopilot));
 					}
 					
 					@Override
@@ -245,10 +244,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have gear, add a selector for it.
 		if(vehicle.definition.motorized.gearSequenceDuration != 0){
-			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
 				}
 				
 				@Override
@@ -266,10 +265,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 					public void onClicked(boolean leftSide){
 						byte selectorNumber = (byte) customSelectors.indexOf(this);
 						switch(selectorNumber){
-							case(0) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_0, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(1) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_1, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(2) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_2, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(3) : InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_3, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(0) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_0, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(1) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_1, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(2) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_2, !vehicle.customsOn.contains(selectorNumber))); break;
+							case(3) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_3, !vehicle.customsOn.contains(selectorNumber))); break;
 						}
 					}
 					
@@ -311,7 +310,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			if(inClockPeriod(3, 1)){
 				if(!appliedTrimThisRender){
 					selectedTrimSelector.selectorState = selectedTrimSelector.selectorState == 0 ? 1 : 0; 
-					InterfaceNetwork.sendToServer(new PacketVehicleControlDigital(vehicle, selectedTrimType, selectedTrimDirection));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, selectedTrimType, selectedTrimDirection));
 					appliedTrimThisRender = true;
 				}
 			}else{

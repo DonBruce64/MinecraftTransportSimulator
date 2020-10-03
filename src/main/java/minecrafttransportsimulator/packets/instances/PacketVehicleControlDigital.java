@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.InterfaceAudio;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -38,27 +37,27 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
-					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, MTS.MODID + ":air_brake_activating"));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
 			case HORN : {
 				if(world.isClient() && !vehicle.hornOn && controlState){
-					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
 				}
 				vehicle.hornOn = controlState;
 				break;
 			}
 			case SIREN : {
 				if(world.isClient() && !vehicle.sirenOn && controlState){
-					InterfaceAudio.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
 				}
 				vehicle.sirenOn = controlState;
 				break;

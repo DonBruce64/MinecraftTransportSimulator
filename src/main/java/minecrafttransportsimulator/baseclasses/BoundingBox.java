@@ -3,8 +3,8 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.WrapperBlock;
-import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperBlock;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -27,7 +27,7 @@ public class BoundingBox{
 	public final Point3d localCenter;
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
-	public final List<WrapperBlock> collidingBlocks = new ArrayList<WrapperBlock>();
+	public final List<IWrapperBlock> collidingBlocks = new ArrayList<IWrapperBlock>();
 	private final Point3d tempGlobalCenter;
 	
 	public double widthRadius;
@@ -58,7 +58,7 @@ public class BoundingBox{
 	 *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
 	 *  If blocks collided with this box after this method, true is returned.
 	 */
-	public boolean updateCollidingBlocks(WrapperWorld world, Point3d offset){
+	public boolean updateCollidingBlocks(IWrapperWorld world, Point3d offset){
 		tempGlobalCenter.setTo(globalCenter);
 		globalCenter.add(offset);
 		world.updateBoundingBoxCollisions(this, offset);

@@ -1,11 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.InterfaceAudio;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -101,7 +100,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
+	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		PartEngine engine = (PartEngine) vehicle.getPartAtLocation(offset);
 		switch(packetType){
 			case MAGNETO_OFF: engine.setMagnetoStatus(false); break;
@@ -127,7 +126,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 				}
 				break;
 			}case BAD_SHIFT: {
-				InterfaceAudio.playQuickSound(new SoundInstance(engine, MTS.MODID + ":engine_shifting_grinding"));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(engine, MasterLoader.resourceDomain + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
 				for(AEntityBase entity : AEntityBase.createdClientEntities){

@@ -2,10 +2,10 @@ package minecrafttransportsimulator.rendering.instances;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -25,7 +25,7 @@ public final class RenderInstrument{
      */
 	public static void drawInstrument(JSONInstrument definition, byte partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
-		InterfaceRender.bindTexture(definition.packID, "textures/instruments.png");
+		MasterLoader.renderInterface.bindTexture(definition.packID, "textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
@@ -35,14 +35,14 @@ public final class RenderInstrument{
 			Component section = definition.components.get(i);
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if((!section.lightOverlay && InterfaceRender.getRenderPass() != 1) || (section.lightOverlay && InterfaceRender.getRenderPass() != 0)){
+			if((!section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 1) || (section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 0)){
 				GL11.glPushMatrix();
 				//Translate to the component, but slightly away from the instrument location to prevent clipping.
 				GL11.glTranslatef(section.xCenter, section.yCenter, i*0.1F);
 				
 				//If the vehicle lights are on, disable the lightmap.
 				if(lightsOn){
-					InterfaceRender.setInternalLightingState(false);
+					MasterLoader.renderInterface.setInternalLightingState(false);
 				}
 				
 				//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
@@ -126,12 +126,12 @@ public final class RenderInstrument{
 			
 			//Reset lightmap if we had previously disabled it.
 			if(lightsOn){
-				InterfaceRender.setInternalLightingState(true);
+				MasterLoader.renderInterface.setInternalLightingState(true);
 			}
 			
 			//Reset blend state.
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			if(InterfaceRender.getRenderPass() != 1){
+			if(MasterLoader.renderInterface.getRenderPass() != 1){
 				GL11.glDisable(GL11.GL_BLEND);
 			}
 		}

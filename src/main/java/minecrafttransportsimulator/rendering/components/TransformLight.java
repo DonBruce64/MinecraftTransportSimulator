@@ -4,11 +4,10 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceRender;
-import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -134,7 +133,7 @@ public class TransformLight extends ATransformRenderable{
 	/**
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
-	public void renderOnBlock(WrapperWorld world, Point3i location, boolean lightActive){
+	public void renderOnBlock(IWrapperWorld world, Point3i location, boolean lightActive){
 		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false));
 	}
 	
@@ -144,7 +143,7 @@ public class TransformLight extends ATransformRenderable{
 	 */
 	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness){
 		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
-		if(InterfaceRender.getRenderPass() != 1){
+		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
 			if(renderColor && lightOn && electricFactor > 0){
@@ -159,7 +158,7 @@ public class TransformLight extends ATransformRenderable{
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? InterfaceRender.getRenderPass() != 1 : InterfaceRender.getRenderPass() != 0); 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? MasterLoader.renderInterface.getRenderPass() != 1 : MasterLoader.renderInterface.getRenderPass() != 0); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
@@ -175,10 +174,10 @@ public class TransformLight extends ATransformRenderable{
 		
 		//Set color back to normal, turn off blending, turn on lighting, and un-bind the light textures.
 		//This resets the operations in here for other transforms.
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		InterfaceRender.setBlendState(false, false);
-		InterfaceRender.setLightingState(true);
-		InterfaceRender.recallTexture();
+		MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		MasterLoader.renderInterface.setBlendState(false, false);
+		MasterLoader.renderInterface.setLightingState(true);
+		MasterLoader.renderInterface.recallTexture();
 	}
 	
 	/**
@@ -194,8 +193,8 @@ public class TransformLight extends ATransformRenderable{
 	 *  Sets the lighting status for light-up texture rendering.  Has no effect if such rendering isn't part of this light.
 	 */
 	public void setLightupTextureState(boolean lightOn, float electricFactor){
-		if(InterfaceRender.getRenderPass() != 1 && isLightupTexture){
-			InterfaceRender.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
+		if(MasterLoader.renderInterface.getRenderPass() != 1 && isLightupTexture){
+			MasterLoader.renderInterface.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
 		}
 	}
 	
@@ -204,9 +203,9 @@ public class TransformLight extends ATransformRenderable{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderColor(float alphaValue){
-		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/light.png");
-		InterfaceRender.setLightingState(false);
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/light.png");
+		MasterLoader.renderInterface.setLightingState(false);
+		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the light coords based on the normals to make the light
@@ -223,9 +222,9 @@ public class TransformLight extends ATransformRenderable{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		InterfaceRender.bindTexture("minecraft", "textures/blocks/glass.png");
-		InterfaceRender.setLightingState(!disableLighting);
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		MasterLoader.renderInterface.bindTexture("minecraft", "textures/blocks/glass.png");
+		MasterLoader.renderInterface.setLightingState(!disableLighting);
+		MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(Float[] vertex : vertices){
 			//Add a slight translation and scaling to the cover coords based on the normals to make the light
@@ -243,10 +242,10 @@ public class TransformLight extends ATransformRenderable{
 	 *  both lighting and lightmap here to prevent the flare from being dim.
 	 */
 	private void renderFlare(float alphaValue){
-		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/lensflare.png");
-		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/lensflare.png");
+		MasterLoader.renderInterface.setLightingState(false);
+		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
+		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(int i=0; i<centerPoints.length; ++i){
 			for(byte j=0; j<6; ++j){
@@ -268,10 +267,10 @@ public class TransformLight extends ATransformRenderable{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderBeam(float alphaValue){
-		InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/lightbeam.png");
-		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
+		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/lightbeam.png");
+		MasterLoader.renderInterface.setLightingState(false);
+		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
+		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
 		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.

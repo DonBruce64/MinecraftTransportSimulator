@@ -10,13 +10,13 @@ import java.util.UUID;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperEntity;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 
 /**Base entity class.  This class contains the most basic code for entities,
@@ -59,7 +59,7 @@ public abstract class AEntityBase{
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
-	public final WrapperWorld world;
+	public final IWrapperWorld world;
 	
 	/**True as long as this entity is part of the world and being ticked.**/
 	public boolean isValid = true;
@@ -94,9 +94,9 @@ public abstract class AEntityBase{
 	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
+	public BiMap<Point3d, IWrapperEntity> locationRiderMap = HashBiMap.create();
 	
-	public AEntityBase(WrapperWorld world, WrapperNBT data){
+	public AEntityBase(IWrapperWorld world, IWrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
@@ -139,7 +139,7 @@ public abstract class AEntityBase{
 	 *  as the entity needs to move to its new position before we can know where the
 	 *  riders of said entity will be.
 	 */
-	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void updateRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
 		//Update entity position and motion.
 		if(rider.isValid()){
 			rider.setPosition(locationRiderMap.inverse().get(rider));
@@ -158,7 +158,7 @@ public abstract class AEntityBase{
 	 *  If we are re-loading a rider from saved data, pass-in null as the position
 	 *  
 	 */
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
 		if(riderLocation == null){
 			if(savedRiderLocations.isEmpty()){
 				return false;
@@ -194,7 +194,7 @@ public abstract class AEntityBase{
 			locationRiderMap.put(riderLocation, rider);
 			if(!world.isClient()){
 				rider.setRiding(this);
-				InterfaceNetwork.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
+				MasterLoader.networkInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
 			}
 			return true;
 		}
@@ -205,7 +205,7 @@ public abstract class AEntityBase{
 	 *  Passed-in iterator is optional, but MUST be included if this is called inside a loop
 	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
 	 */
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
 		if(locationRiderMap.containsValue(rider)){
 			if(iterator != null){
 				iterator.remove();
@@ -214,7 +214,7 @@ public abstract class AEntityBase{
 			}
 			if(!world.isClient()){
 				rider.setRiding(null);
-				InterfaceNetwork.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
+				MasterLoader.networkInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
 			}
 		}
 	}
@@ -244,7 +244,7 @@ public abstract class AEntityBase{
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		data.setInteger("lookupID", lookupID);
 		data.setString("uniqueUUID", uniqueUUID);
 		data.setPoint3d("position", position);

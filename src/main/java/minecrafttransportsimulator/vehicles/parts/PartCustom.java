@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartCustom extends APart{
 	
-	public PartCustom(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartCustom(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 	}
 	

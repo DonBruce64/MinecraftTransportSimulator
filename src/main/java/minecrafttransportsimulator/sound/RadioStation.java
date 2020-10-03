@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceOGGDecoder;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Radio stations are sources that radios can hook into to provide sound.  All radios share the
@@ -50,7 +49,7 @@ public class RadioStation{
 		}else{
 			musicFiles = new ArrayList<File>();
 		}
-		InterfaceAudio.addRadioStation(this);
+		MasterLoader.audioInterface.addRadioStation(this);
 	}
 	
 	/**
@@ -63,7 +62,7 @@ public class RadioStation{
 		ByteBuffer buffer = decoder.readBlock();
 		if(buffer != null){
 			//Get new buffer index from the audio system and add it to our radios.
-			int bufferIndex = InterfaceAudio.createBuffer(buffer, decoder);
+			int bufferIndex = MasterLoader.audioInterface.createBuffer(buffer, decoder);
 			activeBuffers.add(bufferIndex);
 			
 			//Update station buffer counts and return buffer index.
@@ -111,10 +110,10 @@ public class RadioStation{
 				//If we have any playing radios, do buffer logic.
 				if(!playingRadios.isEmpty()){
 					//First check if we have any buffers that are done playing that we can re-claim.
-					freeBufferIndex = InterfaceAudio.getFreeStationBuffer(playingRadios);
+					freeBufferIndex = MasterLoader.audioInterface.getFreeStationBuffer(playingRadios);
 					if(freeBufferIndex != 0){
 						activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
-						InterfaceAudio.deleteBuffer(freeBufferIndex);
+						MasterLoader.audioInterface.deleteBuffer(freeBufferIndex);
 					}
 				}
 				
@@ -123,7 +122,7 @@ public class RadioStation{
 				if((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()){
 					for(Radio radio : queuedRadios){
 						radio.start();
-						InterfaceAudio.addRadioSound(radio.getPlayingSound(), activeBuffers);
+						MasterLoader.audioInterface.addRadioSound(radio.getPlayingSound(), activeBuffers);
 						playingRadios.add(radio);
 					}
 					queuedRadios.clear();
@@ -134,7 +133,7 @@ public class RadioStation{
 					int newIndex = generateBufferIndex();
 					if(newIndex != 0){
 						for(Radio radio : playingRadios){
-							InterfaceAudio.bindBuffer(radio.getPlayingSound(), newIndex);
+							MasterLoader.audioInterface.bindBuffer(radio.getPlayingSound(), newIndex);
 						}
 					}
 				}
@@ -164,7 +163,7 @@ public class RadioStation{
 	private void startPlayback(){
 		//Delete any buffers we might still have.
 		for(int buffer : activeBuffers){
-			InterfaceAudio.deleteBuffer(buffer);
+			MasterLoader.audioInterface.deleteBuffer(buffer);
 		}
 		activeBuffers.clear();
 		
@@ -300,7 +299,7 @@ public class RadioStation{
 				if(contentURL != null){
 					switch(contentType){
 						case("audio/mpeg") : station.decoder = new MP3Decoder(contentURL.openStream(), station.equalizer); break;
-						case("application/ogg") : station.decoder = new InterfaceOGGDecoder(contentURL); break;
+						case("application/ogg") : station.decoder = MasterLoader.oggDecoderInterface.createFrom(contentURL); break;
 					}
 				}else{
 					station.decoder = new MP3Decoder(new FileInputStream(contentFile), station.equalizer);

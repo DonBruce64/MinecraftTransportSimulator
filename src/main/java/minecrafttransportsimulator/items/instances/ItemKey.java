@@ -2,12 +2,12 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import mcinterface.InterfaceCore;
-import mcinterface.WrapperItemStack;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -16,14 +16,14 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		for(byte i=1; i<=5; ++i){
-			tooltipLines.add(InterfaceCore.translate("info.item.key.line" + String.valueOf(i)));
+			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.key.line" + String.valueOf(i)));
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				if(player.isSneaking()){
@@ -42,8 +42,8 @@ public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 				}else{
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
-					WrapperItemStack stack = player.getHeldStack();
-					WrapperNBT data = stack.getData();
+					IWrapperItemStack stack = player.getHeldStack();
+					IWrapperNBT data = stack.getData();
 					String keyVehicleUUID = data.getString("vehicle");
 					if(keyVehicleUUID.isEmpty()){
 						//Check if we are the owner before making this a valid key.

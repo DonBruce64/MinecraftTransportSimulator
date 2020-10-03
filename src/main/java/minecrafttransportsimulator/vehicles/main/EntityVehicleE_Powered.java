@@ -11,16 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperEntity;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
@@ -79,7 +78,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	private final Radio radio;
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
-	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
+	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperNBT data){
 		super(world, data);
 		
 		//Load simple variables.
@@ -225,31 +224,31 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
 		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
 			for(PartEngine engine : engines.values()){
 				if(!engine.state.running){
 					engine.setMagnetoStatus(true);
-					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON));
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON));
 					engine.rpm = 2500;
 					engine.startEngine();
 				}
 			}
-			InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
 		return super.addRider(rider, riderLocation);
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
 		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
 			if(locationRiderMap.containsValue(rider) && locationRiderMap.size() == 1){
 				for(PartEngine engine : engines.values()){
 					engine.setMagnetoStatus(false);
-					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 				}
-				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
-				InterfaceNetwork.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 			}
 		}
 		super.removeRider(rider, iterator);
@@ -355,9 +354,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void startSounds(){
 		if(hornOn){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
 		}else if(sirenOn){
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
 		}
 	}
 	
@@ -387,7 +386,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-    public WrapperWorld getProviderWorld(){
+    public IWrapperWorld getProviderWorld(){
 		return world;
 	}
 	
@@ -397,7 +396,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("hornOn", hornOn);
 		data.setBoolean("sirenOn", sirenOn);

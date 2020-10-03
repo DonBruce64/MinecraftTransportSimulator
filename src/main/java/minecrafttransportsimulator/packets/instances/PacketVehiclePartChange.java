@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -20,7 +21,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 public class PacketVehiclePartChange extends APacketVehiclePart{
 	private final String partPackID;
 	private final String partSystemName;
-	private final WrapperNBT partData;
+	private final IWrapperNBT partData;
 	private boolean clickedPart;
 	private Point3d partClickedOffset;
 	
@@ -32,7 +33,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		this.partClickedOffset = null;
 	}
 	
-	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, String partPackID, String partSystemName, WrapperNBT partData, APart partClicked){
+	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, String partPackID, String partSystemName, IWrapperNBT partData, APart partClicked){
 		super(vehicle, offset);
 		this.partPackID = partPackID;
 		this.partSystemName = partSystemName;
@@ -46,7 +47,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		this.partPackID = readStringFromBuffer(buf);
 		if(!partPackID.isEmpty()){
 			this.partSystemName = readStringFromBuffer(buf);
-			this.partData = new WrapperNBT(buf);
+			this.partData = MasterLoader.networkInterface.createDataFromBuffer(buf);
 			this.clickedPart = buf.readBoolean();
 			if(clickedPart){
 				this.partClickedOffset = readPoint3dFromBuffer(buf);
@@ -75,7 +76,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
+	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		if(partPackID.isEmpty()){
 			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
 		}else{

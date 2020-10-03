@@ -2,8 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceRender;
-import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -28,15 +27,15 @@ public class TransformWindow extends ATransformRenderable{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		if(InterfaceRender.getRenderPass() != 1){
-			InterfaceRender.bindTexture(MTS.MODID, "textures/rendering/glass.png");
+		if(MasterLoader.renderInterface.getRenderPass() != 1){
+			MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/glass.png");
 		}
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		if(InterfaceRender.getRenderPass() != 1){
+		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Render inner windows, if set.
 			if(ConfigSystem.configObject.client.innerWindows.value){
 				GL11.glBegin(GL11.GL_TRIANGLES);
@@ -49,7 +48,7 @@ public class TransformWindow extends ATransformRenderable{
 			}
 			
 			//Un-bind the glass texture.
-			InterfaceRender.recallTexture();
+			MasterLoader.renderInterface.recallTexture();
 		}
 	}
 }

@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperBlock;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
+import minecrafttransportsimulator.mcinterface.IWrapperBlock;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -57,7 +57,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
 	
 	
-	public EntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
+	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperNBT data){
 		super(world, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
@@ -223,7 +223,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		for(BoundingBox box : blockCollisionBoxes){
 			if(!box.collidingBlocks.isEmpty()){
 				Point3i groundPosition = new Point3i(box.globalCenter);
-				WrapperBlock groundBlock = world.getWrapperBlock(groundPosition);
+				IWrapperBlock groundBlock = world.getWrapperBlock(groundPosition);
 				if(groundBlock != null){
 					//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 					float frictionLoss = 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
@@ -366,7 +366,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
-				InterfaceNetwork.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.
@@ -553,7 +553,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected abstract void dampenControlSurfaces();
     
 	@Override
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("locked", locked);
 		data.setBoolean("brakeOn", brakeOn);

@@ -4,15 +4,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.BuilderGUI;
-import mcinterface.InterfaceInput;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -108,8 +106,8 @@ public class GUIBooklet extends AGUIBase{
 							pageNumber = i + 1;
 						}
 					}
-					MTS.MTSLog.error("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
-					MTS.MTSLog.error(e.getMessage());
+					MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
+					MasterLoader.coreInterface.logError(e.getMessage());
 				}
 			}
 			pageTextLabels.add(pageLabels);
@@ -123,7 +121,7 @@ public class GUIBooklet extends AGUIBase{
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;
 		
 		//Check the mouse to see if it updated and we need to change pages.
-		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
+		int wheelMovement = MasterLoader.inputInterface.getTrackedMouseWheel();
 		if(wheelMovement > 0 && rightButton.visible){
 			++booklet.pageNumber;
 		}else if(wheelMovement < 0 && leftButton.visible){
@@ -196,7 +194,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		BuilderGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		MasterLoader.guiInterface.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

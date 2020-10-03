@@ -2,13 +2,13 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import mcinterface.InterfaceCore;
-import mcinterface.WrapperItemStack;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -17,22 +17,22 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.fill"));
-		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.drain"));
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.fill"));
+		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.drain"));
 		if(data.getBoolean("isFull")){
-			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.contains") + InterfaceCore.getFluidName(data.getString("fluidName")));
+			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.contains") + MasterLoader.coreInterface.getFluidName(data.getString("fluidName")));
 		}else{
-			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.empty"));
+			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.empty"));
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
-				WrapperItemStack stack = player.getHeldStack();
-				WrapperNBT data = stack.getData();
+				IWrapperItemStack stack = player.getHeldStack();
+				IWrapperNBT data = stack.getData();
 				
 				//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
 				if(part instanceof PartInteractable){

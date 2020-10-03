@@ -8,12 +8,11 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceCore;
-import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 
 public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>>{
@@ -41,16 +40,16 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 		}
 		
 		//Don't do solid model rendering on the blend pass.
-		if(InterfaceRender.getRenderPass() != 1){
+		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Bind the texture and render.
-			InterfaceRender.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
+			MasterLoader.renderInterface.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
 			GL11.glCallList(displayListMap.get(tile.definition));
 			//If we are a fluid tank, render text.
 			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){
 				FluidTank tank = ((IFluidTankProvider) tile).getTank();
-				String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()).toUpperCase() : "";
-				String fluidLevel = InterfaceCore.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
-				String fluidDispensed = InterfaceCore.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
+				String fluidName = tank.getFluidLevel() > 0 ? MasterLoader.coreInterface.getFluidName(tank.getFluid()).toUpperCase() : "";
+				String fluidLevel = MasterLoader.coreInterface.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
+				String fluidDispensed = MasterLoader.coreInterface.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
 				
 				List<String> textLines = new ArrayList<String>();
 				for(byte i=0; i<tile.definition.general.textObjects.size(); ++i){
@@ -61,8 +60,8 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 					}
 				}
 				
-				InterfaceRender.setLightingState(false);
-				InterfaceRender.renderTextMarkings(tile.definition.general.textObjects, textLines, null, true);
+				MasterLoader.renderInterface.setLightingState(false);
+				MasterLoader.renderInterface.renderTextMarkings(tile.definition.general.textObjects, textLines, null, true);
 			}
 		}
 	}

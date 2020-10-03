@@ -3,11 +3,11 @@ package minecrafttransportsimulator.items.components;
 import java.util.HashMap;
 import java.util.Map;
 
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 /**Interface that allows for this item to spawn an instance of {@link ABlockBase} into the world.
  * This interface doesn't actually spawn the item; rather, it allows such an item to be obtained.
@@ -60,7 +60,7 @@ public interface IItemBlock{
 	 *  Tries to let this player place the block for this ITtemBlock into the world.
 	 *  Returns true if the block was placed.
 	 */
-	public default boolean placeBlock(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+	public default boolean placeBlock(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
 		return world.setBlock(getBlock(), point, player, axis);
 	}
 }

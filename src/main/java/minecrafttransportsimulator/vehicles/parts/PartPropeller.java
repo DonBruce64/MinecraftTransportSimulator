@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -23,7 +23,7 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.damage = data.getDouble("damage");
 		this.currentPitch = definition.propeller.pitch;
@@ -40,10 +40,10 @@ public class PartPropeller extends APart{
 	@Override
 	public void attack(Damage damage){
 		if(damage.attacker != null){
-			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
+			if(damage.attacker instanceof IWrapperPlayer && ((IWrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
-					InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
 				}
 				return;
 			}
@@ -122,8 +122,8 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();		
+	public IWrapperNBT getData(){
+		IWrapperNBT data = super.getData();		
 		data.setDouble("damage", damage);
 		return data;
 	}

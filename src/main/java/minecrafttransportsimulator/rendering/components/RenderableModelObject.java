@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -95,7 +95,7 @@ public final class RenderableModelObject{
 		
 		//Render, caching the displayList if needed.
 		//Don't render on pass 1, as that's for transparency.
-		if(InterfaceRender.getRenderPass() != 1){
+		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
 				int displayListIndex = GL11.glGenLists(1);
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -122,12 +122,12 @@ public final class RenderableModelObject{
 		
 		//Check if we need to render text on this object.
 		if(optionalPart != null){
-			if(InterfaceRender.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, objectName, optionalPart.vehicle.areInteriorLightsOn())){
-				InterfaceRender.recallTexture();
+			if(MasterLoader.renderInterface.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, objectName, optionalPart.vehicle.areInteriorLightsOn())){
+				MasterLoader.renderInterface.recallTexture();
 			}
 		}else{
-			if(InterfaceRender.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, objectName, vehicle.areInteriorLightsOn())){
-				InterfaceRender.recallTexture();
+			if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, objectName, vehicle.areInteriorLightsOn())){
+				MasterLoader.renderInterface.recallTexture();
 			}
 		}
 		

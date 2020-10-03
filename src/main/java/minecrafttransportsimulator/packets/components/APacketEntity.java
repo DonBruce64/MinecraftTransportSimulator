@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet class that includes a default implementation for transmitting an entity
@@ -31,7 +31,7 @@ public abstract class APacketEntity extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		boolean sendReturnPacket = false;
 		for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
 			if(entity.lookupID == entityID){
@@ -41,7 +41,7 @@ public abstract class APacketEntity extends APacketBase{
 			}
 		}
 		if(sendReturnPacket){
-			InterfaceNetwork.sendToAllClients(this);
+			MasterLoader.networkInterface.sendToAllClients(this);
 		}
 	}
 	
@@ -53,5 +53,5 @@ public abstract class APacketEntity extends APacketBase{
 	 *   to an issue) return false.  Otherwise, return true to send this packet on to all clients.  
 	 *   Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity);
+	protected abstract boolean handle(IWrapperWorld world, IWrapperPlayer player, AEntityBase entity);
 }

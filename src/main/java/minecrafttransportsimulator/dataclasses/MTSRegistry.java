@@ -3,20 +3,12 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.BuilderItem;
+import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 
-/**Main registry class.  This class should be referenced by any class looking for
- * MTS items or blocks.  Adding new items and blocks is a simple as adding them
- * as a field; the init method automatically registers all items and blocks in the class
- * and orders them according to the order in which they were declared.
- * This calls the {@link PackParserSystem} to register any custom vehicles and parts
- * that were loaded by packs.
- * 
- * @author don_bruce
- */
+@Deprecated
 public final class MTSRegistry{
 	
 	/**
@@ -28,7 +20,7 @@ public final class MTSRegistry{
 	public static List<Item> getItemsForPack(String packID){
 		List<Item> items = new ArrayList<Item>();
 		for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
-			items.add(BuilderItem.itemWrapperMap.get(packItem));
+			items.add(MasterInterface.getItem(packItem));
 		}
 		return items;
 	}

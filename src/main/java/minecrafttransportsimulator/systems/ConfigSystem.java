@@ -9,11 +9,11 @@ import java.util.Map.Entry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
@@ -49,8 +49,8 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				MTS.MTSLog.error("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
-				MTS.MTSLog.error(e.getMessage());
+				MasterLoader.coreInterface.logError("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				MasterLoader.coreInterface.logError(e.getMessage());
 			}
 		}
 		
@@ -78,8 +78,8 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				MTS.MTSLog.error("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-				MTS.MTSLog.error(e.getMessage());
+				MasterLoader.coreInterface.logError("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+				MasterLoader.coreInterface.logError(e.getMessage());
 			}
 		}else{
 			//Make the default override file and save it.

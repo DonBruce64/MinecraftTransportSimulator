@@ -6,10 +6,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.BuilderEntity;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -17,6 +13,10 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -24,8 +24,8 @@ import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
- * Use {@link BuilderEntity#addPart(APart, boolean)} to add parts 
- * and {@link BuilderEntity#removePart(APart, boolean)} to remove them.
+ * Use {@link EntityVehicleF_Physics#addPart(APart, boolean)} to add parts 
+ * and {@link EntityVehicleF_Physics#removePart(APart, boolean)} to remove them.
  * You may extend {@link EntityVehicleE_Powered} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
@@ -59,7 +59,7 @@ public abstract class APart implements ISoundProvider{
 	public final BoundingBox boundingBox;
 	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		this.vehicle = vehicle;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
@@ -110,7 +110,7 @@ public abstract class APart implements ISoundProvider{
 	 * Call this ONLY from the server-side!  The server will handle the
 	 * interaction by notifying the client via packet if appropriate.
 	 */
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		return false;
 	}
 	
@@ -261,8 +261,8 @@ public abstract class APart implements ISoundProvider{
 	 * This does not include the part offsets, as those are re-calculated every time the part is attached
 	 * and are saved separately from the item NBT data in the vehicle.
 	 */
-	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = MasterLoader.coreInterface.createNewTag();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
 				data.setString("textLine" + i, textLines.get(i));
@@ -314,7 +314,7 @@ public abstract class APart implements ISoundProvider{
 	}
 	
 	@Override
-    public WrapperWorld getProviderWorld(){
+    public IWrapperWorld getProviderWorld(){
 		return vehicle.getProviderWorld();
 	}
 }

@@ -10,7 +10,7 @@ import java.util.TreeMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import mcinterface.BuilderItem;
+import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
@@ -36,6 +36,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
@@ -54,10 +55,6 @@ public final class PackParserSystem{
 
 	/**Custom Gson instance for parsing packs.*/
 	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create();
-	
-	/**List of log entries to be added to the log.  Saved here as the log won't be ready till preInit, which
-	 * runs after this parsing operation.*/
-	public static List<String> logEntries = new ArrayList<String>();
 	
     
     //-----START OF INIT LOGIC-----
@@ -120,8 +117,8 @@ public final class PackParserSystem{
 	    		}
     		}
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     		e.printStackTrace();
     	}
     }
@@ -133,8 +130,8 @@ public final class PackParserSystem{
     		performLegacyCompats(definition);
     		setupItem(new ItemPart(definition), jsonFileName, packID, ItemClassification.PART);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -143,8 +140,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -155,8 +152,8 @@ public final class PackParserSystem{
     		performLegacyCompats(definition);
 	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), jsonFileName, packID, ItemClassification.POLE);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -167,8 +164,8 @@ public final class PackParserSystem{
     		performLegacyCompats(definition);
     		setupItem(new ItemDecor(definition), jsonFileName, packID, ItemClassification.DECOR);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -177,8 +174,8 @@ public final class PackParserSystem{
     	try{
 	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -187,13 +184,13 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
     	}catch(Exception e){
-    		logEntries.add("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		logEntries.add(e.getMessage());
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
     /**Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.**/
-    public static <ItemInstance extends AItemPack<? extends AJSONItem<?>>> void setupItem(AItemPack<? extends AJSONItem<?>> item, String systemName, String packID, ItemClassification classification){
+    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String systemName, String packID, ItemClassification classification){
     	//Set code-based definition values.
     	item.definition.packID = packID;
     	//TODO make this be based off the new loader.
@@ -201,12 +198,12 @@ public final class PackParserSystem{
     	item.definition.classification = classification;
     	item.definition.systemName = systemName;
     	
-    	//Add the item to the builder system.
-    	BuilderItem.createItem(item);
+    	//Add the item to the interface system.
+    	MasterInterface.createItem(item);
     	
     	//Put the item in the map in the registry.
     	if(!packItemMap.containsKey(packID)){
-    		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>>>());
+    		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<?>>());
     	}
     	packItemMap.get(packID).put(item.definition.systemName, item);
     }

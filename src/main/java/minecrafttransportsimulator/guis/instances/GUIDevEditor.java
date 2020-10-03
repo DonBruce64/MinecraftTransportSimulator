@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -20,6 +19,7 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -56,7 +56,7 @@ public class GUIDevEditor extends AGUIBase{
 		addButton(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, "EXPORT PACKS", 20, true){
 			@Override
 			public void onClicked(){
-				File jsonDir = new File(MTS.minecraftDir, "mts_dev");
+				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
 				if(!jsonDir.exists()){
 					if(!jsonDir.mkdir()){
 						debug.setText("ERROR: Could not create dev folder: " + jsonDir.getAbsolutePath() + "\nIs this location write-protected?");
@@ -116,7 +116,7 @@ public class GUIDevEditor extends AGUIBase{
 		addButton(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, "IMPORT PACKS", 20, true){
 			@Override
 			public void onClicked(){
-				File jsonDir = new File(MTS.minecraftDir, "mts_dev");
+				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
 				if(jsonDir.exists()){
 					debug.setText("Import dir is: " + jsonDir.getAbsolutePath());
 					File lastModifiedFile = new File(jsonDir, "lastexported.txt");

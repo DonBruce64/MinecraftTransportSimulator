@@ -1,17 +1,14 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceNetwork;
-import mcinterface.InterfaceRender;
-import mcinterface.WrapperBlock;
-import mcinterface.WrapperNBT;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperBlock;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
@@ -46,7 +43,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
@@ -93,7 +90,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			if(definition.ground.isWheel){
 				if(prevAngularVelocity/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
+					IWrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
 					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
 						contactThisTick = true;
 					}
@@ -149,8 +146,8 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = super.getData();
 		data.setBoolean("isFlat", isFlat);
 		return data;
 	}
@@ -194,7 +191,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	public void setFlatState(boolean flat){
 		if(vehicle.world.isClient()){
 			if(flat){
-				InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":wheel_blowout"));
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
 			}
 		}else{
 			//On the server, can we go flat and does the config let us?
@@ -209,7 +206,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			InterfaceNetwork.sendToAllClients(new PacketVehiclePartGroundDevice(this, flat));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGroundDevice(this, flat));
 		}
 		
 		//Set flat state and new bounding box.
@@ -219,7 +216,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	
 	public float getFrictionLoss(){
 		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
-		WrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
+		IWrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
 		if(groundBlock != null){
 			//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 			return 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
@@ -256,14 +253,14 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			InterfaceAudio.playQuickSound(new SoundInstance(this, MTS.MODID + ":" + "wheel_striking"));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && isOnGround()){
 			for(byte i=0; i<4; ++i){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 		}
 	}

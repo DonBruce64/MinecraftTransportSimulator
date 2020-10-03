@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -34,7 +34,7 @@ public class PacketVehicleLightToggle extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		if(vehicle.lightsOn.contains(lightType)){
 			vehicle.lightsOn.remove(lightType);
 		}else{

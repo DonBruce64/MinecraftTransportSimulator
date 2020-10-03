@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -26,7 +26,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	public TileEntityPole(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityPole(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
 		//Load components back in.
 		for(Axis axis : Axis.values()){
@@ -73,7 +73,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-    public void save(WrapperNBT data){
+    public void save(IWrapperNBT data){
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){

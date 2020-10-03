@@ -3,8 +3,8 @@ package minecrafttransportsimulator.sound;
 import java.util.HashMap;
 import java.util.Map;
 
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
@@ -32,7 +32,7 @@ public class Radio{
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
-	public Radio(ISoundProvider provider, WrapperNBT data){
+	public Radio(ISoundProvider provider, IWrapperNBT data){
 		this.provider = provider;
 		this.radioID = provider.getProviderWorld().isClient() ? data.getInteger("radioID") : idCounter++;
 		if(provider.getProviderWorld().isClient()){
@@ -89,7 +89,7 @@ public class Radio{
 			case INTERNET : displayText = "Ready to play from internet streams.\nPress a station number to start.\nOr press SET to set a station URL."; break;
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			InterfaceNetwork.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			MasterLoader.networkInterface.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
 	
@@ -109,7 +109,7 @@ public class Radio{
 			currentSound.volume = volume/10F;
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			InterfaceNetwork.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			MasterLoader.networkInterface.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
 	
@@ -145,7 +145,7 @@ public class Radio{
 			}
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			InterfaceNetwork.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			MasterLoader.networkInterface.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
 	
@@ -162,7 +162,7 @@ public class Radio{
 	/**
 	 * Saves the radio state to NBT for creation later.
 	 */
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		data.setInteger("radioID", radioID);
 		data.setInteger("currentSource", currentSource.ordinal());
 		data.setBoolean("savedRadio", true);

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
@@ -44,7 +44,7 @@ public class PacketRadioStateChange extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		Radio radio = world.isClient() ? Radio.createdClientRadios.get(radioID) : Radio.createdServerRadios.get(radioID);
 		if(radio != null){
 			if(world.isClient()){

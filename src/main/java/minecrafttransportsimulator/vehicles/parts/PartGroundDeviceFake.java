@@ -1,9 +1,10 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**A fake ground device that will be added to the vehicle when long ground devices are present.
  * Does not render and will be removed in tandem with the ground device that's linked to it.
@@ -13,7 +14,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(masterPart.vehicle, packVehicleDef, definition, data, parentPart);
 		this.masterPart = masterPart;
 	}
@@ -30,8 +31,8 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		return new WrapperNBT();
+	public IWrapperNBT getData(){
+		return MasterLoader.coreInterface.createNewTag();
 	}
 	
 	@Override

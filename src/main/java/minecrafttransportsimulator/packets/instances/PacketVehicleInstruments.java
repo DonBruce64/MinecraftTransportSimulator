@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -52,13 +52,13 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){
 			JSONInstrument definition = vehicle.instruments.get(slot);
 			ItemInstrument instrument = (ItemInstrument) PackParserSystem.getItem(definition);
-			if(!player.addItem(instrument, null)){
+			if(!player.isCreative() && !player.getInventory().addItem(instrument, null)){
 				return false;
 			}
 		}
@@ -72,8 +72,8 @@ public class PacketVehicleInstruments extends APacketVehicle{
 			//This is only done on the server, as checking on the client won't make any difference.
 			ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
-				if(player.hasItem(instrument)){
-					player.removeItem(instrument, null);
+				if(player.isCreative() || player.getInventory().hasItem(instrument)){
+					player.getInventory().removeItem(instrument, null);
 				}else{
 					return false;
 				}

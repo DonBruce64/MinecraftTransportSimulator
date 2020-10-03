@@ -1,41 +1,39 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import mcinterface.WrapperInventory;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperTileEntity;
-import mcinterface.WrapperTileEntity.WrapperEntityBrewingStand;
-import mcinterface.WrapperTileEntity.WrapperEntityChest;
-import mcinterface.WrapperTileEntity.WrapperEntityFurnace;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartInteractable extends APart{
-	private final WrapperTileEntity interactable;
-	public final WrapperInventory inventory;
+	private final IWrapperTileEntity interactable;
+	public final IWrapperInventory inventory;
 	public final FluidTank tank;
 	
-	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		switch(definition.interactable.interactionType){
-			case("crate"): this.interactable = new WrapperEntityChest(vehicle.world, data, definition.interactable.inventoryUnits*9); break;
+			case("crate"): this.interactable = MasterLoader.coreInterface.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
 			case("barrel"): this.interactable = null; break;
 			case("crafting_table"): this.interactable = null; break;
-			case("furnace"): this.interactable = new WrapperEntityFurnace(vehicle.world, data); break;
-			case("brewing_stand"): this.interactable = new WrapperEntityBrewingStand(vehicle.world, data); break;
+			case("furnace"): this.interactable = MasterLoader.coreInterface.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
+			case("brewing_stand"): this.interactable = MasterLoader.coreInterface.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
 			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
-		this.inventory = interactable != null ? WrapperInventory.getTileEntityInventory(interactable) : null;
+		this.inventory = interactable.getInventory();
 		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		if(!vehicle.locked){
 			if(definition.interactable.interactionType.equals("crafting_table")){
 				player.openCraftingGUI();
@@ -70,8 +68,8 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = super.getData();
 		if(interactable != null){
 			interactable.save(data);
 		}else if(tank != null){

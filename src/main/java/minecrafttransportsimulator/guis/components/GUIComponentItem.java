@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.guis.components;
 
-import mcinterface.BuilderGUI;
-import mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
-/**Custom item render class.  This class is designed to render a {@link WrapperItemStack} 
+/**Custom item render class.  This class is designed to render a {@link IWrapperItemStack} 
  * into the GUI without, or calling any MC methods.  This allows us to use a simple string 
  * name for the render to prevent version changes from causing issues.
  * Note that the item parameters are not final.  This allows for switching items in GUIs.
@@ -16,9 +16,9 @@ public class GUIComponentItem{
 	public final int x;
 	public final int y;
 	public final float scale;
-	public WrapperItemStack stack;
+	public IWrapperItemStack stack;
 		    	
-	public GUIComponentItem(int x, int y, float scale, WrapperItemStack stack){
+	public GUIComponentItem(int x, int y, float scale, IWrapperItemStack stack){
 		this.x = x;
 		this.y = y;
 		this.scale = scale;
@@ -32,21 +32,20 @@ public class GUIComponentItem{
 	 */
     public void renderItem(){
     	if(stack != null){
-    		BuilderGUI.drawItem(stack, x, y, scale);
+    		MasterLoader.guiInterface.drawItem(stack, x, y, scale);
     	}
     }
     
 	/**
 	 *  Renders the tooltip for this item.  This needs to be done after the main item
 	 *  render as otherwise it will render behind other items.  This method needs an
-	 *  instance of {@link BuilderGUI} due to the MC GUI system hard-linking the
-	 *  tooltip rendering sequence to the GUI instance.
+	 *  instance of {@link AGUIBase} to ensure the tooltip doesn't render off the screen.
 	 */
-    public void renderTooltip(BuilderGUI wrapper, int mouseX, int mouseY){
+    public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
     	if(stack != null){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
-    			wrapper.drawItemTooltip(stack, mouseX, mouseY);
+    			MasterLoader.guiInterface.drawItemTooltip(gui, mouseX, mouseY, stack);
     		}
     	}
     }

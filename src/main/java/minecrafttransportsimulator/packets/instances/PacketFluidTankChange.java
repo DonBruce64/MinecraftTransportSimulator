@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**Packet sent to fluid tanks on clients to update the fluid they have in their tank.
@@ -39,7 +39,7 @@ public class PacketFluidTankChange extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		FluidTank tank = FluidTank.createdClientTanks.get(tankID);
 		//Tank may be null if the client hasn't loaded this tank yet. 
 		if(tank != null){

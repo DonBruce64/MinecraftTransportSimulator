@@ -2,8 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
@@ -105,8 +105,8 @@ public abstract class GUIComponentButton{
 			}else{
 				textureUStart = buttonSectionHeightOffset;//Disabled
 			}
-    		BuilderGUI.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
-    		BuilderGUI.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		MasterLoader.guiInterface.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		MasterLoader.guiInterface.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
 		}
     }
     
@@ -117,18 +117,18 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(){
     	if(visible){
-    		BuilderGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+    		MasterLoader.guiInterface.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
     	}
     }
     
     /**
 	 *  Renders the tooltip for this button.  This needs to be done after the main buttons
 	 *  render as otherwise it will render behind other buttons.  This method needs an
-	 *  instance of {@link BuilderGUI} due to the MC GUI system hard-linking the
-	 *  tooltip rendering sequence to the GUI instance.  Most buttons don't have tooltips,
-	 *  but buttons that have complex functionality may need them to help explain what they do.
+	 *  instance of {@link AGUIBase} to ensure the tooltip doesn't render off the screen.
+	 *  Most buttons don't have tooltips, but buttons that have complex functionality 
+	 *  may need them to help explain what they do.
 	 */
-    public void renderTooltip(BuilderGUI wrapper, int mouseX, int mouseY){
+    public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
     	//Do nothing.
     }
 }

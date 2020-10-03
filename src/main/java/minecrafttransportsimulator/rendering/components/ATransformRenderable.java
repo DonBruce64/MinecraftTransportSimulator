@@ -3,8 +3,8 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.HashMap;
 import java.util.Map;
 
-import mcinterface.InterfaceAudio;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -115,12 +115,12 @@ public abstract class ATransformRenderable{
 					}else{
 						movementFactor = 1;
 						if(!state.playedForwardsEndSound){
-							InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.forwardsEndSound));
+							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.forwardsEndSound));
 							state.playedForwardsEndSound = true;
 						}
 					}
 					if(!state.playedForwardsStartSound){
-						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.forwardsStartSound));
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.forwardsStartSound));
 						state.playedForwardsStartSound = true;
 					}
 				}
@@ -133,12 +133,12 @@ public abstract class ATransformRenderable{
 					}else{
 						movementFactor = 1;
 						if(!state.playedReverseEndSound){
-							InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.reverseEndSound));
+							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.reverseEndSound));
 							state.playedReverseEndSound = true;
 						}
 					}
 					if(!state.playedReverseStartSound){
-						InterfaceAudio.playQuickSound(new SoundInstance(vehicle, definition.reverseStartSound));
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.reverseStartSound));
 						state.playedReverseStartSound = true;
 					}
 				}

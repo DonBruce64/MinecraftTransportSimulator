@@ -1,17 +1,17 @@
 package minecrafttransportsimulator.rendering.components;
 
-import mcinterface.InterfaceRender;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IInterfaceRender;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 /**Class that is the base of all particles.
- * Particles may be spawned by calling {@link InterfaceRender#spawnParticle(AParticle)}
+ * Particles may be spawned by calling {@link IInterfaceRender#spawnParticle(AParticle)}
  *
  * @author don_bruce
  */
 public abstract class AParticle{
 	
-	public final WrapperWorld world;
+	public final IWrapperWorld world;
 	public final Point3d position;
 	public final Point3d motion;
 	public final float red;
@@ -22,11 +22,11 @@ public abstract class AParticle{
 	public final int maxAge;
 	public int age;
 	
-	public AParticle(WrapperWorld world, Point3d position, Point3d motion){
+	public AParticle(IWrapperWorld world, Point3d position, Point3d motion){
 		this(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
 	}
 	
-	public AParticle(WrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
+	public AParticle(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
 		this.world = world;
 		this.position = position;
 		this.motion = motion;

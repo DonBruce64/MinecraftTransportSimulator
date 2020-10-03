@@ -3,19 +3,17 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.InterfaceAudio;
-import mcinterface.InterfaceNetwork;
-import mcinterface.InterfaceRender;
-import mcinterface.WrapperEntity;
-import mcinterface.WrapperInventory;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
@@ -36,13 +34,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public boolean firing;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
-	private WrapperEntity lastController;
+	private IWrapperEntity lastController;
 	private long lastTimeFired;
 	private long timeToFire;
 	private final double anglePerTickSpeed;
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 		
-	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, WrapperNBT data, APart parentPart){
+	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, definition, data, parentPart);
 		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
@@ -62,13 +60,13 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		//Check to see if we have any bullets in our hands.
 		//If so, try to re-load this gun with them.
 		AItemBase heldItem = player.getHeldItem();
 		if(heldItem instanceof ItemPart){
-			if(tryToReload((ItemPart) heldItem)){
-				player.removeItem(heldItem, null);
+			if(tryToReload((ItemPart) heldItem) && !player.isCreative()){
+				player.getInventory().removeItem(heldItem, null);
 			}
 		}
 		return true;
@@ -88,7 +86,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		prevOrientation.setTo(currentOrientation);
 		
 		//Get the current controller for this gun.
-		WrapperEntity controller = getCurrentController();
+		IWrapperEntity controller = getCurrentController();
 		
 		//Adjust aim to face direction controller is facing.
 		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
@@ -101,8 +99,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//We also get a flag to see if the gun is currently pointed to the hostile mob.
 			//If not, then we don't fire the gun, as that'd waste ammo.
 			boolean lockedOn = true;
-			if(!(controller instanceof WrapperPlayer)){
-				WrapperEntity hostile = vehicle.world.getNearestHostile(controller, 48);
+			if(!(controller instanceof IWrapperPlayer)){
+				IWrapperEntity hostile = vehicle.world.getNearestHostile(controller, 48);
 				if(hostile != null){
 					//Need to aim for the middle of the mob, not their base (feet).
 					Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
@@ -192,7 +190,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			
 			//If we told the gun to fire becase we saw an entity, but we can't hit it due to the gun clamp don't fire.
 			//This keeps NPCs from wasting ammo.
-			if(!(controller instanceof WrapperPlayer)){
+			if(!(controller instanceof IWrapperPlayer)){
 				if(!lockedOn || currentOrientation.y == definition.gun.maxYaw || currentOrientation.y == definition.gun.minYaw || currentOrientation.x == -definition.gun.minPitch || currentOrientation.x == -definition.gun.maxPitch){
 					firing = false;
 				}
@@ -255,7 +253,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Iterate through all the inventory slots in crates to try to find matching ammo.
 			for(APart part : vehicle.parts){
 				if(part instanceof PartInteractable){
-					WrapperInventory inventory = ((PartInteractable) part).inventory;
+					IWrapperInventory inventory = ((PartInteractable) part).inventory;
 					if(inventory != null && part.definition.interactable.feedsVehicles){
 						for(byte i=0; i<inventory.getSize(); ++i){
 							AItemBase item = inventory.getItemInSlot(i);
@@ -263,7 +261,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 								if(tryToReload((ItemPart) item)){
 									//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 									//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-									inventory.decrement(i);
+									inventory.decrementSlot(i);
 									return;
 								}
 							}
@@ -295,9 +293,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 						bulletsLeft += part.definition.bullet.quantity;
 						reloadTimeRemaining = definition.gun.reloadTime;
 						if(vehicle.world.isClient()){
-							InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
+							MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
 						}else{
-							InterfaceNetwork.sendToAllClients(new PacketVehiclePartGun(this, loadedBulletDefinition.packID, loadedBulletDefinition.systemName));
+							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGun(this, loadedBulletDefinition.packID, loadedBulletDefinition.systemName));
 						}
 						return true;
 					}
@@ -310,7 +308,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	/**
 	 * Helper method to get the current controller of this gun.
 	 */
-	public WrapperEntity getCurrentController(){
+	public IWrapperEntity getCurrentController(){
 		//Check our parent part, if we have one.
 		if(parentPart instanceof PartSeat){
 			return vehicle.locationRiderMap.get(parentPart.placementOffset);
@@ -337,8 +335,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = super.getData();
 		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setPoint3d("currentOrientation", currentOrientation);
@@ -384,8 +382,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
 	        
 			//Add the bullet as a particle.
-			InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBulletDefinition, this, lastController));
-			InterfaceAudio.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBulletDefinition, this, lastController));
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			
 			//Remove a bullet from the count and add shots fired..

@@ -2,8 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 
-import mcinterface.BuilderGUI;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**Custom text box class.  This class is designed to remove the need to check for clicking of
  * text boxes and to manually set their text, as well as the odd getter/setter methods
@@ -147,18 +147,18 @@ public class GUIComponentTextBox{
     public void renderBox(){
     	if(visible){
     		if(backgroundColor != null){
-    			BuilderGUI.renderRectangle(x, y, width, height, backgroundColor);
+    			MasterLoader.guiInterface.renderRectangle(x, y, width, height, backgroundColor);
     		}
     		//If this box is less than 20px high, center the text.
     		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && AGUIBase.inClockPeriod(20, 10)){
-    				BuilderGUI.drawBasicText(flashText, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				MasterLoader.guiInterface.drawBasicText(flashText, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
     			}else{
-    				BuilderGUI.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				MasterLoader.guiInterface.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
     			}
     		}else{
-    			BuilderGUI.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, TextPosition.LEFT_ALIGNED, width);
+    			MasterLoader.guiInterface.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, TextPosition.LEFT_ALIGNED, width);
     		}
     	}
     }

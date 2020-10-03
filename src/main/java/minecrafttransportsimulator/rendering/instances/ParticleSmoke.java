@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleSmoke extends AParticle{
 	
-	public ParticleSmoke(WrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
+	public ParticleSmoke(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
 		super(world, position, motion, red, green, blue, alpha, scale);
 	}
 	

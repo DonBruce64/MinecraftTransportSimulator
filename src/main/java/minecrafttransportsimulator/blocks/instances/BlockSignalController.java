@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import mcinterface.BuilderGUI;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 public class BlockSignalController extends ABlockBase implements IBlockTileEntity<TileEntitySignalController>{
 	
@@ -17,15 +17,15 @@ public class BlockSignalController extends ABlockBase implements IBlockTileEntit
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
 		if(world.isClient()){
-			BuilderGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(point)));
+			MasterLoader.guiInterface.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(point)));
 		}
 		return true;
 	}
 
 	@Override
-	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+	public TileEntitySignalController createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		return new TileEntitySignalController(world, position, data);
 	}
 

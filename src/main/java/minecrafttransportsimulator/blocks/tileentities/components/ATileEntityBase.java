@@ -3,21 +3,17 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface.BuilderTileEntity;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
-/**Base Tile Entity class.  This type is used in the constructor of {@link BuilderTileEntity} to allow us to use
- * completely custom code that is not associated with MC's standard Tile Entity code.  Allows us to only
- * update the wrapper rather than the whole Tile Entity. In essence, this class holds the data and state of the
- * Tile Entity, while the wrapper ensures that the state gets saved to disk and the appropriate render gets
- * called.  Note that all TileEntities are used for making pack-based blocks, so they have JSON parameters
+/**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
+ * All TileEntities are used for making pack-based blocks, so they have JSON parameters
  * attached to them.  
  * <br><br>
  * Note that this constructor is called on the server when first creating the TE or loading it from disk,
@@ -26,9 +22,9 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  *
  * @author don_bruce
  */
-public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>>{
+public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	/**Current world for this TileEntity.**/
-	public final WrapperWorld world;
+	public final IWrapperWorld world;
 	/**Current position of this TileEntity.**/
 	public final Point3i position;
 	/**JSON definition for this tileEntity.**/
@@ -36,7 +32,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
 	
-	public ATileEntityBase(WrapperWorld world, Point3i position, WrapperNBT data){
+	public ATileEntityBase(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		this.world = world;
 		this.position = position;
 		this.definition = PackParserSystem.getDefinition(data.getString("packID"), data.getString("systemName"));
@@ -72,7 +68,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<? extends
 	 *  Called when the TileEntity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
 		data.setDouble("lightLevel", lightLevel);

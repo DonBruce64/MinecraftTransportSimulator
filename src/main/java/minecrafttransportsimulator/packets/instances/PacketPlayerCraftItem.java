@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -36,9 +37,13 @@ public class PacketPlayerCraftItem extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
-		if(player.hasMaterials(itemToCraft)){
-			player.craftItem(itemToCraft);
+	public void handle(IWrapperWorld world, IWrapperPlayer player){
+		IWrapperInventory inventory = player.getInventory();
+		if(player.isCreative() || inventory.hasMaterials(itemToCraft)){
+			if(!player.isCreative()){
+				inventory.removeMaterials(itemToCraft);
+			}
+			inventory.addItem(itemToCraft, null);
 		}
 	}
 }

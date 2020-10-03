@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperItemStack;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -26,21 +26,21 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
 			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
 			FluidTank tank = pump.getTank();
 			
 			//If we are holding an item, interact with the pump.
-			WrapperItemStack stack = player.getHeldStack();
+			IWrapperItemStack stack = player.getHeldStack();
 			if(stack.interactWithTank(tank, player) > 0){
 				return true;
 			}
 			
 			//Check if the item is a jerrycan.
 			if(stack.getItem() instanceof ItemJerrycan){
-				WrapperNBT data = stack.getData();
+				IWrapperNBT data = stack.getData();
 				if(!data.getBoolean("isFull")){
 					if(tank.getFluidLevel() >= 1000){
 						data.setBoolean("isFull", true);
@@ -88,7 +88,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     								pump.connectedVehicle = nearestVehicle;
     								pump.connectedVehicle.beingFueled = true;
     								tank.resetAmountDispensed();
-    								InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump, true));
+    								MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(pump, true));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -101,7 +101,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
-    			InterfaceNetwork.sendToAllClients(new PacketTileEntityPumpConnection(pump, false));
+    			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(pump, false));
     			pump.connectedVehicle.beingFueled = false;
     			pump.connectedVehicle = null;
     			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
@@ -111,7 +111,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
 	}
 	
     @Override
-	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data) {
+	public TileEntityFuelPump createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		return new TileEntityFuelPump(world, position, data);
 	}
 

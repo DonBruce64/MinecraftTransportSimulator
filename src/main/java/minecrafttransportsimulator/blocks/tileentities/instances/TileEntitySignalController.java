@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -14,6 +12,8 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
@@ -40,7 +40,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	//Locations of blocks.
 	public final List<Point3i> componentLocations = new ArrayList<Point3i>();
 	
-	public TileEntitySignalController(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntitySignalController(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
 		//Load state data.
 		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
@@ -211,7 +211,7 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 	}
     
 	@Override
-    public void save(WrapperNBT data){
+    public void save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("currentOpMode", currentOpMode.ordinal());
 		data.setInteger("currentOpState", currentOpState.ordinal());

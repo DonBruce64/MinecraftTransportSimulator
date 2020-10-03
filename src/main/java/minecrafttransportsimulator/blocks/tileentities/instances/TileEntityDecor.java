@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
@@ -30,7 +30,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadi
 	private final FloatBuffer soundPosition;
 	private final Point3d soundVelocity = new Point3d(0D, 0D, 0D);
 	
-	public TileEntityDecor(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityDecor(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
 		//Add a bounding box for each rotation.
 		boundingBoxes[0] = new BoundingBox(new Point3d(0, 0, 0), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
@@ -64,7 +64,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadi
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		super.save(data);
 		if(radio != null){
 			radio.save(data);
@@ -88,7 +88,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadi
 	}
 
 	@Override
-	public WrapperWorld getProviderWorld(){
+	public IWrapperWorld getProviderWorld(){
 		return world;
 	}
 

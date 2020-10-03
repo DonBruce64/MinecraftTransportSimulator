@@ -2,13 +2,12 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.List;
 
-import mcinterface.InterfaceCore;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
-import minecrafttransportsimulator.MTS;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**Base item class for all MTS items.  Contains multiple methods to define the item's behavior,
  * such as display name, additional text to add to the tooltip, how the item handles left and
@@ -33,7 +32,7 @@ public abstract class AItemBase{
 	 *  set in stone, so feel free to modify it as you see fit.
 	 */
 	public String getItemName(){
-		return InterfaceCore.translate("item." + getRegistrationName() + ".name");
+		return MasterLoader.coreInterface.translate("item." + getRegistrationName() + ".name");
 	}
 	
 	/**
@@ -43,20 +42,20 @@ public abstract class AItemBase{
 	 *  However, this does not mean the data block will be populated with values.  If the
 	 *  item is fresh from crafting, it may not have any data.
 	 */
-	public abstract void addTooltipLines(List<String> tooltipLines, WrapperNBT data);
+	public abstract void addTooltipLines(List<String> tooltipLines, IWrapperNBT data);
 	
 	/**
 	 *  Gets all item data values for the given item, and adds them to the passed-in list.
 	 *  By default, this method does nothing, which means no additional blocks are present.
 	 */
-	public void getDataBlocks(List<WrapperNBT> list){}
+	public void getDataBlocks(List<IWrapperNBT> list){}
 	
 	/**
 	 *  Called when the player clicks a block with this item.  The position of the block
 	 *  clicked and what axis it was hit at is passed-in for reference.  If this item did a thing
 	 *  due to this clicking, return true, as this prevents calling the block's clicked method. 
 	 */
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
 		if(this instanceof IItemBlock){
 			return ((IItemBlock) this).placeBlock(world, player, point, axis);
 		}else{
@@ -65,11 +64,11 @@ public abstract class AItemBase{
 	}
 	
 	/**
-	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(WrapperWorld, WrapperPlayer, Point3i, Axis)}
+	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(IWrapperWorld, IWrapperPlayer, Point3i, Axis)}
 	 *  is called before this method, and if an only if that method returns false will this method be called.
 	 *  If this item does something, return true.
 	 */
-	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
 		return false;
 	}
 	
@@ -85,6 +84,6 @@ public abstract class AItemBase{
 	 */
 	public String getCreativeTabID(){
 		///TODO make this abstract when we do pack-mods.
-		return MTS.MODID;
+		return MasterLoader.resourceDomain;
 	}
 }

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MTS;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
  * as well as giving said stations to radios when they request them.  This class also interfaces with
@@ -29,7 +29,7 @@ public class RadioManager{
 	 * Need to set up global radio variables before we can create an instance of a radio.
 	 */
 	static{
-		musicDir = new File(MTS.minecraftDir, "mts_music");
+		musicDir = new File(MasterLoader.gameDirectory, "mts_music");
 		musicDir.mkdir();
 		radioStationsFile = new File(musicDir.getAbsolutePath() + File.separator + "radio_stations.txt");
 		if(!radioStationsFile.exists()){

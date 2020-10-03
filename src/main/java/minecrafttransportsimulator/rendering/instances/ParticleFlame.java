@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleFlame extends AParticle{
 	
-	public ParticleFlame(WrapperWorld world, Point3d position, Point3d motion, float scale){
+	public ParticleFlame(IWrapperWorld world, Point3d position, Point3d motion, float scale){
 		super(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, scale);
 	}
 	

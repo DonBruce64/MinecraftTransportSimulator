@@ -6,9 +6,6 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.BuilderGUI;
-import mcinterface.InterfaceCore;
-import mcinterface.InterfaceNetwork;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
@@ -18,6 +15,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
@@ -85,7 +83,7 @@ public class GUITextEditor extends AGUIBase{
 						GL11.glPushMatrix();
 						GL11.glTranslatef(x, y, 0);
 						GL11.glScalef(64F/16F, 64F/16F, 64F/16F);
-						BuilderGUI.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
+						MasterLoader.guiInterface.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
 						GL11.glPopMatrix();
 				    }
 				};
@@ -135,7 +133,7 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, MasterLoader.coreInterface.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				if(pole != null){
@@ -144,16 +142,16 @@ public class GUITextEditor extends AGUIBase{
 					for(GUIComponentTextBox box : textBoxes){
 						textLines.add(box.getText());
 					}
-					InterfaceNetwork.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
+					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
 				}else{
 					//Copy text from boxes to string list.
 					List<String> textLines = new ArrayList<String>();
 					for(Integer textBoxIndex : vehicleTextBoxes){
 						textLines.add(textBoxes.get(textBoxIndex).getText());
 					}
-					InterfaceNetwork.sendToServer(new PacketVehicleTextChange(vehicle, textLines));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleTextChange(vehicle, textLines));
 				}
-				BuilderGUI.closeGUI();
+				MasterLoader.guiInterface.closeGUI();
 			}
 		});
 	}

@@ -2,8 +2,8 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.List;
 
-import mcinterface.WrapperNBT;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 /**Base item class for all pack-created items.  Stores information such as the
  * pack the item belongs to and the class that extends {@link AJSONItem} that
@@ -32,7 +32,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSON
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		if(definition.general.description != null){
 			for(String tooltipLine : definition.general.description.split("\n")){
 				tooltipLines.add(tooltipLine);

@@ -2,12 +2,11 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import mcinterface.InterfaceCore;
-import mcinterface.InterfaceNetwork;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -18,14 +17,14 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 	private static PartEngine lastEngineClicked;
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		for(byte i=1; i<=5; ++i){
-			tooltipLines.add(InterfaceCore.translate("info.item.jumpercable.line" + String.valueOf(i)));
+			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jumpercable.line" + String.valueOf(i)));
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				if(part instanceof PartEngine){
@@ -41,8 +40,8 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 							}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
 								engine.linkedEngine = lastEngineClicked;
 								lastEngineClicked.linkedEngine = engine;
-								InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(engine, lastEngineClicked));
-								InterfaceNetwork.sendToAllClients(new PacketVehiclePartEngine(lastEngineClicked, engine));
+								MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(engine, lastEngineClicked));
+								MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(lastEngineClicked, engine));
 								lastEngineClicked = null;
 								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
 							}else{

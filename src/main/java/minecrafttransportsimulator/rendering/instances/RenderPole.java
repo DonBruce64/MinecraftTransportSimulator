@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import mcinterface.InterfaceRender;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -20,6 +19,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.TransformLight;
@@ -55,8 +55,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 			}
 			
 			//Render the connectors.  Don't do this on the blending pass 1.
-			if(InterfaceRender.getRenderPass() != 1){
-				InterfaceRender.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
+			if(MasterLoader.renderInterface.getRenderPass() != 1){
+				MasterLoader.renderInterface.bindTexture(tile.definition.packID, tile.definition.getTextureLocation());
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(tile.definition).get(axis));
@@ -145,8 +145,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					GL11.glTranslatef(0, 0, tile.definition.general.radius + 0.001F);
 					
 					//Don't do solid model rendering on the blend pass.
-					if(InterfaceRender.getRenderPass() != 1){
-						InterfaceRender.bindTexture(component.definition.packID, component.definition.getTextureLocation());
+					if(MasterLoader.renderInterface.getRenderPass() != 1){
+						MasterLoader.renderInterface.bindTexture(component.definition.packID, component.definition.getTextureLocation());
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
 					}
 					
@@ -174,7 +174,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 						
 						//Render text, if we have any.
 						if(component.definition.general.textObjects != null){
-							InterfaceRender.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, false);
+							MasterLoader.renderInterface.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, false);
 						}
 					}
 					GL11.glPopMatrix();

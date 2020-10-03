@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import mcinterface.WrapperItemStack;
-import mcinterface.WrapperNBT;
-import mcinterface.WrapperPlayer;
-import mcinterface.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
@@ -15,6 +11,10 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -30,14 +30,14 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
 		if(!world.isClient()){
-			WrapperItemStack heldStack = player.getHeldStack();
+			IWrapperItemStack heldStack = player.getHeldStack();
 			//We want to spawn above this block.
 			++point.y;
 			
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
-			WrapperNBT data = heldStack.getData();
+			IWrapperNBT data = heldStack.getData();
 			boolean wasSaved = !data.getString("packID").isEmpty();
 			data.setString("packID", definition.packID);
 			data.setString("systemName", definition.systemName);
@@ -152,13 +152,15 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 			
 			//If we didn't collide with anything, let the vehicle remain in the world.
 			world.spawnEntity(newVehicle);
-			player.removeStack(heldStack, 1);
+			if(!player.isCreative()){
+				player.getInventory().removeStack(heldStack, 1);
+			}
 		}
 		return true;
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperNBT data){
+	public EntityVehicleF_Physics createEntity(IWrapperWorld world, IWrapperNBT data){
 		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, data);
 		//Need to wait for vehicle to load-in before we try to add saved parts.
 		for(APart part : vehicle.partsFromNBT){
