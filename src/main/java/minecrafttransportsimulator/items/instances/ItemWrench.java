@@ -59,8 +59,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					//Attacker is a sneaking player with a wrench.
 					//Remove this vehicle if possible.
 					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
-						//TODO this will need to be changed when vehicles don't share common definitions.
-						AItemBase vehicleItem = PackParserSystem.getItem(vehicle.definition);
+						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 						IWrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);

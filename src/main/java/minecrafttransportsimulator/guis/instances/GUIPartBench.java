@@ -13,9 +13,11 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -289,16 +291,16 @@ public class GUIPartBench extends AGUIBase{
 		//If currentItem is null, it means we switched packs and need to re-set it to the first item of the new pack.
 		//Do so now before we do looping to prevent crashes.
 		//Find a pack that has the item we are supposed to craft and set it.
-		//If we are for vehicles, make sure to set the next subItem if we can.
+		//If we are for a subTyped item, make sure to set the next subItem if we can.
 		if(currentItem == null){
 			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(currentPack)){
-				if(currentItem == null || (currentItem instanceof ItemVehicle && nextSubItem == null)){
+				if(currentItem == null || (currentItem.definition instanceof AJSONMultiModelProvider && nextSubItem == null)){
 					if(isJSONValid(packItem.definition)){
 						if(currentItem == null){
 							currentItem = packItem;
 							currentItemIndex = packItems.indexOf(currentItem);
-						}else if(currentItem instanceof ItemVehicle && nextSubItem == null){
-							if(((JSONVehicle) packItem.definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+						}else if(currentItem.definition instanceof AJSONMultiModelProvider && nextSubItem == null){
+							if(packItem.definition.systemName.equals(currentItem.definition.systemName)){
 								nextSubItem = packItem;
 							}
 						}
@@ -314,10 +316,10 @@ public class GUIPartBench extends AGUIBase{
 		if(currentItemIndex < packItems.size()){
 			for(int i=currentItemIndex+1; i<packItems.size() && nextItem == null; ++i){
 				if(isJSONValid(packItems.get(i).definition)){
-					//If we are for vehicles, and this item is the same sub-item classification, 
+					//If we are for subTyped item, and this item is the same sub-item classification, 
 					//set nextSubItem and continue on.
-					if(currentItem instanceof ItemVehicle){
-						if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+					if(currentItem.definition instanceof AJSONMultiModelProvider){
+						if(packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)){
 							if(nextSubItem == null){
 								nextSubItem = packItems.get(i);
 							}
@@ -335,22 +337,22 @@ public class GUIPartBench extends AGUIBase{
 		prevItem = null;
 		prevSubItem = null;
 		if(currentItemIndex > 0){
-			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || currentItem instanceof ItemVehicle); --i){
+			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || currentItem.definition instanceof AJSONMultiModelProvider); --i){
 				if(isJSONValid(packItems.get(i).definition)){
-					//If we are for vehicles, and we didn't switch items, and this item
+					//If we are for a subTyped item, and we didn't switch items, and this item
 					//is the same sub-item classification, set prevSubItem and continue on.
 					//If we did switch, we want the first subItem in the set of items to
 					//be the prevItem we pick.  This ensures when we switch we'll be on the 
 					//same subItem each time we switch items.
-					if(currentItem instanceof ItemVehicle){
-						if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) currentItem.definition).genericName)){
+					if(currentItem.definition instanceof AJSONMultiModelProvider){
+						if(packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)){
 							if(prevSubItem == null){
 								prevSubItem = packItems.get(i);
 							}
 						}else{
 							if(prevItem == null){
 								prevItem = packItems.get(i);
-							}else if(((JSONVehicle) packItems.get(i).definition).genericName.equals(((JSONVehicle) prevItem.definition).genericName)){
+							}else if(packItems.get(i).definition.systemName.equals(prevItem.definition.systemName)){
 								prevItem = packItems.get(i);
 							}
 						}
@@ -365,7 +367,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
 		packName.text = MasterLoader.coreInterface.getModName(currentPack);
-		partName.text = currentItem.definition.general.name != null ? currentItem.definition.general.name : currentItem.definition.systemName;
+		partName.text = currentItem.getItemName();
 		
 		//Create part description text.
 		List<String> descriptiveLines = new ArrayList<String>();
@@ -380,17 +382,13 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem.definition);
+		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			try{
-		    	if(i < craftingMaterials.size()){
-					craftingItemIcons.get(i).stack = craftingMaterials.get(i);
-		    	}else{
-		    		craftingItemIcons.get(i).stack = null;
-		    	}
-			}catch(Exception e){
-				throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + currentItem.definition.packID + ":" + currentItem.definition.systemName + ".  Report this to the pack author!");
-			}			
+			if(i < craftingMaterials.size()){
+				craftingItemIcons.get(i).stack = craftingMaterials.get(i);
+	    	}else{
+	    		craftingItemIcons.get(i).stack = null;
+	    	}			
 		}
 		
 		//Enable render based on what component we have.
@@ -404,8 +402,16 @@ public class GUIPartBench extends AGUIBase{
 			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.
 			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
+		}else if(currentItem instanceof AItemSubTyped){
+			String modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation();
+			String textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
+			modelRender.modelDomain = currentPack;
+			modelRender.modelLocation = modelLocation;
+			modelRender.textureDomain = currentPack;
+			modelRender.textureLocation = textureLocation;
+			itemRender.stack = null;
 		}else{
-			itemRender.stack = MasterLoader.coreInterface.getStack(PackParserSystem.getItem(currentItem.definition));
+			itemRender.stack = MasterLoader.coreInterface.getStack(currentItem);
 			modelRender.modelDomain = null;
 		}
 		

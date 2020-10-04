@@ -145,9 +145,9 @@ class BuilderBlock extends Block{
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
-    				AJSONItem<? extends AJSONItem<?>.General> definition = ((BuilderTileEntity<?>) tile).tileEntity.definition;
-    				if(definition != null){
-    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(PackParserSystem.getItem(definition)));
+    				AItemPack<?> item = ((BuilderTileEntity<?>) tile).tileEntity.item;
+    				if(item != null){
+    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(item));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -23,8 +23,8 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, definition, data, parentPart);
+	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.damage = data.getDouble("damage");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 
 /**Traffic signal component for poles.  This doesn't tick, as the state of the light
  * is by default a flashing red until changed by a {@link TileEntitySignalController}.
@@ -12,8 +12,8 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	
 	public SignalState state = SignalState.UNLINKED;
 	
-	public TileEntityPole_TrafficSignal(JSONPoleComponent definition){
-		super(definition);
+	public TileEntityPole_TrafficSignal(ItemPoleComponent item){
+		super(item);
 	}
 
 	@Override

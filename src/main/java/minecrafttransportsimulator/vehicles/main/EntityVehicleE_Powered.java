@@ -14,7 +14,6 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -70,7 +69,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final List<String> textLines = new ArrayList<String>();
 	
 	//Collision maps.
-	public final Map<Byte, JSONInstrument> instruments = new HashMap<Byte, JSONInstrument>();
+	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	
@@ -127,7 +126,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			String instrumentPackID = data.getString("instrument" + i + "_packID");
 			String instrumentSystemName = data.getString("instrument" + i + "_systemName");
 			if(!instrumentPackID.isEmpty()){
-				JSONInstrument instrument = PackParserSystem.getDefinition(instrumentPackID, instrumentSystemName);
+				ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 				//Check to prevent loading of faulty instruments due to updates.
 				if(instrument != null){
 					instruments.put(i, instrument);
@@ -271,9 +270,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public void destroyAtPosition(Point3d position){
 		super.destroyAtPosition(position);
 		//Spawn instruments in the world.
-		for(JSONInstrument instrument : instruments.values()){
-			ItemInstrument item = (ItemInstrument) PackParserSystem.getItem(instrument);
-			world.spawnItem(item, null, position);
+		for(ItemInstrument instrument : instruments.values()){
+			world.spawnItem(instrument, null, position);
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
@@ -429,8 +427,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
 		for(byte i=0; i<instrumentsInSlots.length; ++i){
 			if(instruments.containsKey(i)){
-				data.setString("instrument" + i + "_packID", instruments.get(i).packID);
-				data.setString("instrument" + i + "_systemName", instruments.get(i).systemName);
+				data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
+				data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
 			}
 		}
 		

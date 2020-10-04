@@ -11,7 +11,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
  * 
  * @author don_bruce
  */
-public abstract class AItemPack<JSONDefinition extends AJSONItem<? extends AJSONItem<?>.General>> extends AItemBase{
+public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AItemBase{
 	public final JSONDefinition definition;
 	
 	public AItemPack(JSONDefinition definition){

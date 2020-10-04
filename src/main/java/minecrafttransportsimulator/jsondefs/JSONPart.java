@@ -6,7 +6,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
-public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
+public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartEngine engine;
     public JSONPartGroundDevice ground;
     public JSONPartPropeller propeller;
@@ -28,7 +28,7 @@ public class JSONPart extends AJSONModelProvider<JSONPart.JSONPartGeneral>{
     @Deprecated
     public PartTread tread;
 
-    public class JSONPartGeneral extends AJSONModelProvider<JSONPart.JSONPartGeneral>.General{
+    public class JSONPartGeneral extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>.General{
     	public String type;
     	public String customType;
     	public boolean disableMirroring;

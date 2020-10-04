@@ -4,7 +4,6 @@ import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -156,8 +155,8 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public boolean hasMaterials(AItemPack<? extends AJSONItem<?>> item){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item.definition)){
+	public boolean hasMaterials(AItemPack<?> item){
+		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item)){
 			int requiredMaterialCount = materialStack.getSize();
 			for(int i=0; i<getSize(); ++i){
 				ItemStack stack = inventory.getStackInSlot(i);
@@ -173,8 +172,8 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public void removeMaterials(AItemPack<? extends AJSONItem<?>> item){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item.definition)){
+	public void removeMaterials(AItemPack<?> item){
+		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item)){
 			removeStack(materialStack, materialStack.getSize());
 		}
 		inventory.markDirty();

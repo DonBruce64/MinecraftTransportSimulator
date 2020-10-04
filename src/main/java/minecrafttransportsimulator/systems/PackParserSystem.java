@@ -32,7 +32,6 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
@@ -46,6 +45,7 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
  *
  * @author don_bruce
  */
+@SuppressWarnings("deprecation")
 public final class PackParserSystem{
 	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
@@ -70,50 +70,17 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONVehicle mainDefinition = packParser.fromJson(jsonReader, JSONVehicle.class);
-    		if(mainDefinition.rendering != null){
-    			doAnimationLegacyCompats(mainDefinition.rendering, mainDefinition);
-    		}
-    		mainDefinition.genericName = jsonFileName;
-	    	for(VehicleDefinition subDefinition : mainDefinition.definitions){
+    		JSONVehicle definition = packParser.fromJson(jsonReader, JSONVehicle.class);
+    		performLegacyCompats(definition);
+    		for(JSONVehicle.SubDefinition subDefinition : definition.definitions){
 	    		try{
-	    			//Need to copy the JSON into a new instance to allow differing systemNames.
-	    			JSONVehicle mainDefinitionCopy = new JSONVehicle();
-	    			mainDefinitionCopy.packID = mainDefinition.packID;
-	    			mainDefinitionCopy.classification = mainDefinition.classification;
-	    			mainDefinitionCopy.genericName = mainDefinition.genericName;
-	    			
-	    			//Need to copy general too, as we need to set the name for each general section to be unique.
-	    			//For the materials we copy the strings and add the extra materials.
-	    			mainDefinitionCopy.general = mainDefinition.new VehicleGeneral();
-	    			mainDefinitionCopy.general.name = subDefinition.name;
-	    			mainDefinitionCopy.general.description = mainDefinition.general.description;
-	    			mainDefinitionCopy.general.materials = new String[mainDefinition.general.materials.length + subDefinition.extraMaterials.length];
-	    			for(int i=0; i<mainDefinition.general.materials.length; ++i){
-	    				mainDefinitionCopy.general.materials[i] = mainDefinition.general.materials[i];
+	    			if(subDefinition.extraMaterials != null){
+	    				setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, ItemClassification.VEHICLE);
+	    			}else{
+	    				throw new NullPointerException();
 	    			}
-	    			for(int i=0; i<subDefinition.extraMaterials.length; ++i){
-	    				mainDefinitionCopy.general.materials[mainDefinition.general.materials.length + i] = subDefinition.extraMaterials[i]; 
-	    			}
-	    			mainDefinitionCopy.general.openTop = mainDefinition.general.openTop;
-	    			mainDefinitionCopy.general.emptyMass = mainDefinition.general.emptyMass;
-	    			mainDefinitionCopy.general.type = mainDefinition.general.type;
-	    			
-	    			//Copy the rest of the parameters as-is.
-	    			mainDefinitionCopy.definitions = mainDefinition.definitions;
-	    			mainDefinitionCopy.motorized = mainDefinition.motorized;
-	    			mainDefinitionCopy.plane = mainDefinition.plane;
-	    			mainDefinitionCopy.blimp = mainDefinition.blimp;
-	    			mainDefinitionCopy.car = mainDefinition.car;
-	    			mainDefinitionCopy.parts = mainDefinition.parts;
-	    			mainDefinitionCopy.collision = mainDefinition.collision;
-	    			mainDefinitionCopy.doors = mainDefinition.doors;
-	    			mainDefinitionCopy.rendering = mainDefinition.rendering;
-	    			
-	    			performLegacyCompats(mainDefinitionCopy);
-	    			setupItem(new ItemVehicle(mainDefinitionCopy, subDefinition.subName), jsonFileName + subDefinition.subName, packID, ItemClassification.VEHICLE);
 	    		}catch(Exception e){
-	    			throw new NullPointerException("Unable to parse definition #" + (mainDefinition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
 	    		}
     		}
     	}catch(Exception e){
@@ -128,7 +95,17 @@ public final class PackParserSystem{
     	try{
     		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
     		performLegacyCompats(definition);
-    		setupItem(new ItemPart(definition), jsonFileName, packID, ItemClassification.PART);
+    		for(JSONPart.SubDefinition subDefinition : definition.definitions){
+	    		try{
+	    			if(subDefinition.extraMaterials != null){
+	    				setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, ItemClassification.PART);
+		    		}else{
+	    				throw new NullPointerException();
+	    			}
+	    		}catch(Exception e){
+	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+	    		}
+    		}
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -138,7 +115,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), jsonFileName, packID, ItemClassification.INSTRUMENT);
+    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", ItemClassification.INSTRUMENT);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -150,7 +127,7 @@ public final class PackParserSystem{
     	try{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		performLegacyCompats(definition);
-	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), jsonFileName, packID, ItemClassification.POLE);
+	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", ItemClassification.POLE);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -162,7 +139,7 @@ public final class PackParserSystem{
     	try{
     		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
     		performLegacyCompats(definition);
-    		setupItem(new ItemDecor(definition), jsonFileName, packID, ItemClassification.DECOR);
+    		setupItem(new ItemDecor(definition), packID, jsonFileName, "", ItemClassification.DECOR);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -172,7 +149,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), jsonFileName, packID, ItemClassification.ITEM);
+	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", ItemClassification.ITEM);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -182,7 +159,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their booklets to the mod.**/
     public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), jsonFileName, packID, ItemClassification.BOOKLET);
+    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", ItemClassification.BOOKLET);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -190,7 +167,7 @@ public final class PackParserSystem{
     }
     
     /**Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.**/
-    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String systemName, String packID, ItemClassification classification){
+    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String packID, String systemName, String subName, ItemClassification classification){
     	//Set code-based definition values.
     	item.definition.packID = packID;
     	//TODO make this be based off the new loader.
@@ -205,7 +182,7 @@ public final class PackParserSystem{
     	if(!packItemMap.containsKey(packID)){
     		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<?>>());
     	}
-    	packItemMap.get(packID).put(item.definition.systemName, item);
+    	packItemMap.get(packID).put(item.definition.systemName + subName, item);
     }
     
     /**
@@ -215,6 +192,16 @@ public final class PackParserSystem{
     private static <JSONDefinition extends AJSONItem<?>> void performLegacyCompats(JSONDefinition definition){
     	if(definition instanceof JSONPart){
     		JSONPart partDef = (JSONPart) definition;
+    		//If we are a part without a definition, add one so we don't crash on other systems.
+    		if(partDef.definitions == null){
+    			partDef.definitions = new ArrayList<JSONPart.SubDefinition>();
+    			JSONPart.SubDefinition subDefinition = partDef.new SubDefinition();
+    			subDefinition.extraMaterials = new String[]{""};
+    			subDefinition.name = definition.systemName;
+    			subDefinition.subName = "";
+    			partDef.definitions.add(subDefinition);
+    		}
+    		
     		if(partDef.engine != null){
     			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
     			if(partDef.general.type.equals("engine_jet") && partDef.engine.jetPowerFactor == 0){
@@ -619,26 +606,14 @@ public final class PackParserSystem{
     }
     
     //--------------------START OF HELPER METHODS--------------------
-    public static <JSONDefinition extends AJSONItem<?>> JSONDefinition getDefinition(String packID, String systemName){
-    	if(packItemMap.containsKey(packID)){
-    		if(packItemMap.get(packID).containsKey(systemName)){
-    			return (JSONDefinition) packItemMap.get(packID).get(systemName).definition;
-    		}
-    	}
-    	return null;
-    }
-    
-    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(JSONDefinition definition){
-    	return getItem(definition.packID, definition.systemName);
-    }
-    
     public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName){
-    	return getItem(packID, systemName, null);
+    	return getItem(packID, systemName, "");
     }
     
-    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String vehicleSubName){
+    @SuppressWarnings("unchecked")
+	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String subName){
     	if(packItemMap.containsKey(packID)){
-    		return (PackItem) packItemMap.get(packID).get(systemName);
+    		return (PackItem) packItemMap.get(packID).get(systemName + subName);
     	}
     	return null;
     }

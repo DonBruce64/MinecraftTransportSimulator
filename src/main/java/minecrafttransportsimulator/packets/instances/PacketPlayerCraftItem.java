@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -33,7 +34,11 @@ public class PacketPlayerCraftItem extends APacketBase{
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		writeStringToBuffer(itemToCraft.definition.packID, buf);
-		writeStringToBuffer(itemToCraft.definition.systemName, buf);
+		if(itemToCraft instanceof AItemSubTyped){
+			writeStringToBuffer(itemToCraft.definition.systemName + ((AItemSubTyped<?>) itemToCraft).subName, buf);
+		}else{
+			writeStringToBuffer(itemToCraft.definition.systemName, buf);
+		}
 	}
 	
 	@Override

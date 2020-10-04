@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemWrench;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
@@ -56,8 +55,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){
-			JSONInstrument definition = vehicle.instruments.get(slot);
-			ItemInstrument instrument = (ItemInstrument) PackParserSystem.getItem(definition);
+			ItemInstrument instrument = vehicle.instruments.get(slot);
 			if(!player.isCreative() && !player.getInventory().addItem(instrument, null)){
 				return false;
 			}
@@ -78,7 +76,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 					return false;
 				}
 			}
-			vehicle.instruments.put(slot, instrument.definition);
+			vehicle.instruments.put(slot, instrument);
 		}
 		return true;
 	}

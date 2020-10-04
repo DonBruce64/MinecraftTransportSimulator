@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -28,20 +29,18 @@ public class PacketBulletHit extends APacketVehiclePart{
 	private final Point3d localCenter;
 	private final Point3d globalCenter;
 	private final double bulletVelocity;
-	private final String bulletPackID;
-	private final String bulletSystemName;
+	private final ItemPart bullet;
 	private final int gunNumber;
 	private final int bulletNumber;
 	private final int hitEntityID;
 	private final int controllerEntityID;
 
-	public PacketBulletHit(BoundingBox box, double velocity, JSONPart definition, PartGun gun, int bulletNumber, IWrapperEntity hitEntity, IWrapperEntity controllerEntity){
+	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, PartGun gun, int bulletNumber, IWrapperEntity hitEntity, IWrapperEntity controllerEntity){
 		super(gun.vehicle, gun.placementOffset);
 		this.localCenter = box.localCenter;
 		this.globalCenter = box.globalCenter;
 		this.bulletVelocity = velocity;
-		this.bulletPackID = definition.packID;
-		this.bulletSystemName = definition.systemName;
+		this.bullet = bullet;
 		this.gunNumber = gun.gunNumber;
 		this.bulletNumber = bulletNumber;
 		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
@@ -53,8 +52,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 		this.localCenter = readPoint3dFromBuffer(buf);
 		this.globalCenter = readPoint3dFromBuffer(buf);
 		this.bulletVelocity = buf.readDouble();
-		this.bulletPackID = readStringFromBuffer(buf);
-		this.bulletSystemName = readStringFromBuffer(buf);
+		this.bullet = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 		this.gunNumber = buf.readInt();
 		this.bulletNumber = buf.readInt();
 		this.hitEntityID = buf.readInt();
@@ -67,8 +65,9 @@ public class PacketBulletHit extends APacketVehiclePart{
 		writePoint3dToBuffer(localCenter, buf);
 		writePoint3dToBuffer(globalCenter, buf);
 		buf.writeDouble(bulletVelocity);
-		writeStringToBuffer(bulletPackID, buf);
-		writeStringToBuffer(bulletSystemName, buf);
+		writeStringToBuffer(bullet.definition.packID, buf);
+		writeStringToBuffer(bullet.definition.systemName, buf);
+		writeStringToBuffer(bullet.subName, buf);
 		buf.writeInt(gunNumber);
 		buf.writeInt(bulletNumber);
 		buf.writeInt(hitEntityID);
@@ -80,7 +79,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
-			JSONPart bulletDefinition = PackParserSystem.getDefinition(bulletPackID, bulletSystemName);
+			JSONPart bulletDefinition = bullet.definition;
 			BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false, 0);
 			PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
 			

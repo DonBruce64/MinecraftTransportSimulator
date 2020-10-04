@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 
 /**Sign pole component.  Renders a sign texture and text.
 *
@@ -14,8 +14,8 @@ public class TileEntityPole_Sign extends ATileEntityPole_Component{
 	
 	private final List<String> textLines = new ArrayList<String>();
 	
-	public TileEntityPole_Sign(JSONPoleComponent definition){
-		super(definition);
+	public TileEntityPole_Sign(ItemPoleComponent item){
+		super(item);
 		//Populate the textLines with blank strings at construction.
 		if(definition.general.textObjects != null){
 			for(byte i=0; i<definition.general.textObjects.size(); ++i){

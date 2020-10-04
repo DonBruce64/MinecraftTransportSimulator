@@ -87,9 +87,8 @@ public class MasterInterface{
 		//TODO remove when packs don't register their own items.  Instead, auto-register items from pack creative tabs.
 		if(item instanceof AItemPack){
 			String packID = ((AItemPack<?>) item).definition.packID;
-			String systemName = ((AItemPack<?>) item).definition.systemName;
 			if(!packID.equals(MODID)){
-				BuilderItem.itemWrapperMap.get(item).setUnlocalizedName(packID + "." + systemName);
+				BuilderItem.itemWrapperMap.get(item).setUnlocalizedName(packID + "." + item.getRegistrationName());
 			}
 		}
 	}

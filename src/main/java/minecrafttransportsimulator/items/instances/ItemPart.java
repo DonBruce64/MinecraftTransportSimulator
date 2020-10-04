@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -18,11 +18,11 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
-public class ItemPart extends AItemPack<JSONPart>{
+public class ItemPart extends AItemSubTyped<JSONPart>{
 	private final String partPrefix;
 	
-	public ItemPart(JSONPart definition){
-		super(definition);
+	public ItemPart(JSONPart definition, String subName){
+		super(definition, subName);
 		if(definition.general.type.indexOf("_") != -1){
 			this.partPrefix = definition.general.type.substring(0, definition.general.type.indexOf("_"));
 		}else{
@@ -56,23 +56,23 @@ public class ItemPart extends AItemPack<JSONPart>{
 	
 	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, IWrapperNBT partData, APart parentPart){
     	if(definition.general.type.startsWith("engine_")){
-    		return new PartEngine(vehicle, packVehicleDef, definition, partData, parentPart);
+    		return new PartEngine(vehicle, packVehicleDef, this, partData, parentPart);
     	}else if(definition.general.type.startsWith("gun_")){
-    		return new PartGun(vehicle, packVehicleDef, definition, partData, parentPart);
+    		return new PartGun(vehicle, packVehicleDef, this, partData, parentPart);
     	}else if(definition.general.type.startsWith("ground_")){
-    		return new PartGroundDevice(vehicle, packVehicleDef, definition, partData, parentPart);
+    		return new PartGroundDevice(vehicle, packVehicleDef, this, partData, parentPart);
     	}else if(definition.general.type.startsWith("interactable_")){
-        	return new PartInteractable(vehicle, packVehicleDef, definition, partData, parentPart);
+        	return new PartInteractable(vehicle, packVehicleDef, this, partData, parentPart);
     	}else if(definition.general.type.startsWith("effector_")){
-           	return new PartGroundEffector(vehicle, packVehicleDef, definition, partData, parentPart);
+           	return new PartGroundEffector(vehicle, packVehicleDef, this, partData, parentPart);
     	}else{
 	    	switch(definition.general.type){
-				case "propeller": return new PartPropeller(vehicle, packVehicleDef, definition, partData, parentPart);
-				case "seat": return new PartSeat(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "propeller": return new PartPropeller(vehicle, packVehicleDef, this, partData, parentPart);
+				case "seat": return new PartSeat(vehicle, packVehicleDef, this, partData, parentPart);
 				//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 				//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 				//case "bullet": return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
-				case "custom": return new PartCustom(vehicle, packVehicleDef, definition, partData, parentPart);
+				case "custom": return new PartCustom(vehicle, packVehicleDef, this, partData, parentPart);
 			}
     	}
     	throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");

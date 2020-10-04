@@ -8,7 +8,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -32,16 +31,14 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole>{
 	private final Axis axis;
-	private final String packID;
-	private final String systemName;	
+	private final ItemPoleComponent componentItem;
 	private final List<String> textLines;
 	private final boolean removal;
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent component, List<String> textLines, boolean removal){
+	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent componentItem, List<String> textLines, boolean removal){
 		super(pole);
 		this.axis = axis;
-		this.packID = component != null ? component.definition.packID : "";
-		this.systemName = component != null ? component.definition.systemName : "";
+		this.componentItem = componentItem;
 		this.textLines = textLines;
 		this.removal = removal;
 	}
@@ -49,8 +46,11 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	public PacketTileEntityPoleChange(ByteBuf buf){
 		super(buf);
 		this.axis = Axis.values()[buf.readByte()];
-		this.packID = readStringFromBuffer(buf);
-		this.systemName = readStringFromBuffer(buf);
+		if(buf.readBoolean()){
+			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+		}else{
+			this.componentItem = null;
+		}
 		if(buf.readBoolean()){
 			byte textLineCount = buf.readByte();
 			this.textLines = new ArrayList<String>();
@@ -67,14 +67,21 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeByte(axis.ordinal());
-		writeStringToBuffer(packID, buf);
-		writeStringToBuffer(systemName, buf);
-		buf.writeBoolean(textLines != null);
+		if(componentItem != null){
+			buf.writeBoolean(true);
+			writeStringToBuffer(componentItem.definition.packID, buf);
+			writeStringToBuffer(componentItem.definition.systemName, buf);
+		}else{
+			buf.writeBoolean(false);
+		}
 		if(textLines != null){
+			buf.writeBoolean(true);
 			buf.writeByte(textLines.size());
 			for(String textLine : textLines){
 				writeStringToBuffer(textLine, buf);
 			}
+		}else{
+			buf.writeBoolean(false);
 		}
 		buf.writeBoolean(removal);
 	}
@@ -87,19 +94,18 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
-					AItemBase item = PackParserSystem.getItem(component.definition);
 					IWrapperNBT data = null;
 					if(component.getTextLines() != null){
 						data = MasterLoader.coreInterface.createNewTag();
 						data.setStrings("textLines", component.getTextLines());
 					}
-					if(world.isClient() || player.isCreative() || player.getInventory().addItem(item, data)){
+					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.item, data)){
 						pole.components.remove(axis);
 						pole.updateLightState();
 						return true;
 					}
 				}
-			}else if(packID.isEmpty() && textLines == null){
+			}else if(componentItem == null && textLines == null){
 				if(pole.components.get(axis).getTextLines() != null){
 					if(world.isClient()){
 						MasterLoader.guiInterface.openGUI(new GUITextEditor(pole, axis));
@@ -109,16 +115,15 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					}
 				}
 				return false;
-			}if(packID.isEmpty() && textLines != null){
+			}if(componentItem == null && textLines != null){
 				//This is a packet attempting to change component text.  Do so now.
 				if(pole.components.containsKey(axis)){
 					pole.components.get(axis).setTextLines(textLines);
 					return true;
 				}
-			}else if(!packID.isEmpty() && !pole.components.containsKey(axis)){
+			}else if(componentItem != null && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ItemPoleComponent componentItem = PackParserSystem.getItem(packID, systemName);
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem.definition);
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem);
 				pole.components.put(axis, newComponent);
 				if(textLines != null && newComponent.getTextLines() != null){
 					newComponent.setTextLines(textLines);

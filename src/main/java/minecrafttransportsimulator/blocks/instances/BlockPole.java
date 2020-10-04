@@ -50,7 +50,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		IWrapperNBT data = player.getHeldStack().getData();
 		if(data.getString("packID").isEmpty()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldItem()).definition));
+			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldItem())));
 		}
 	}
 	

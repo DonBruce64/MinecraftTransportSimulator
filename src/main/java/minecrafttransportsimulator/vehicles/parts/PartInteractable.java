@@ -2,7 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -18,8 +18,8 @@ public final class PartInteractable extends APart{
 	public final IWrapperInventory inventory;
 	public final FluidTank tank;
 	
-	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, definition, data, parentPart);
+	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, item, data, parentPart);
 		switch(definition.interactable.interactionType){
 			case("crate"): this.interactable = MasterLoader.coreInterface.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
 			case("barrel"): this.interactable = null; break;

@@ -11,6 +11,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -33,7 +34,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(PackParserSystem.getDefinition(packID, systemName));
+				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(PackParserSystem.getItem(packID, systemName));
 				components.put(axis, newComponent);
 				if(newComponent.getTextLines() != null){
 					newComponent.setTextLines(data.getStrings("textLines", newComponent.getTextLines().size()));
@@ -61,7 +62,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		List<AItemPack<JSONPoleComponent>> drops = new ArrayList<AItemPack<JSONPoleComponent>>();
 		for(Axis axis : Axis.values()){
 			if(components.containsKey(axis)){
-				drops.add(PackParserSystem.getItem(components.get(axis).definition));
+				drops.add(components.get(axis).item);
 			}
 		}
 		return drops;
@@ -88,13 +89,13 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	/**
 	 *  Helper method to create a component for this TE.  Does not add the component.
 	 */
-	public static ATileEntityPole_Component createComponent(JSONPoleComponent definition){
-		switch(definition.general.type){
-			case("core") : return new TileEntityPole_Core(definition);	
-			case("traffic_signal") : return new TileEntityPole_TrafficSignal(definition);
-			case("street_light") : return new TileEntityPole_StreetLight(definition);
-			case("sign") : return new TileEntityPole_Sign(definition);
-			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (definition.general.type != null ? definition.general.type : null) + " for pole:" + definition.packID + ":" + definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
+	public static ATileEntityPole_Component createComponent(ItemPoleComponent item){
+		switch(item.definition.general.type){
+			case("core") : return new TileEntityPole_Core(item);	
+			case("traffic_signal") : return new TileEntityPole_TrafficSignal(item);
+			case("street_light") : return new TileEntityPole_StreetLight(item);
+			case("sign") : return new TileEntityPole_Sign(item);
+			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (item.definition.general.type != null ? item.definition.general.type : null) + " for pole:" + item.definition.packID + ":" + item.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
 		}
 	}
 }

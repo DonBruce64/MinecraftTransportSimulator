@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 
 /**Core component for poles.  Allows us to change the core model.
  * 
@@ -9,8 +9,8 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
  */
 public class TileEntityPole_Core extends ATileEntityPole_Component{
 		
-	public TileEntityPole_Core(JSONPoleComponent definition){
-		super(definition);
+	public TileEntityPole_Core(ItemPoleComponent item){
+		super(item);
 	}
 
 	@Override

@@ -57,18 +57,20 @@ public abstract class APart implements ISoundProvider{
 	public final Point3d totalRotation;
 	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
+	public String currentSubName;
 	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		this.vehicle = vehicle;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
-		this.definition = definition;;
+		this.definition = item.definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
 		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, 0);
 		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation.copy();
+		this.currentSubName = item.subName;
 		this.isValid = true;
 		
 		//Load text.
@@ -250,7 +252,8 @@ public abstract class APart implements ISoundProvider{
 	 * (either due to damage or other reasons) make this method return null.
 	 */
 	public ItemPart getItem(){
-		return (ItemPart) PackParserSystem.getItem(definition);
+		ItemPart item = PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName);
+		return item;
 	}
 	
 	/**
@@ -283,14 +286,6 @@ public abstract class APart implements ISoundProvider{
 	 */
 	public String getModelLocation(){
 		return definition.getModelLocation();
-	}
-	
-	/**
-	 * Gets the location of the texture for this part.
-	 * This can be changed for data-dependent part texture. 
-	 */
-	public String getTextureLocation(){
-		return definition.getTextureLocation();
 	}
 	
 	@Override

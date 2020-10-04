@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
@@ -10,10 +11,12 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
  */
 public abstract class ATileEntityPole_Component{
 	
+	public final ItemPoleComponent item;
 	public final JSONPoleComponent definition;
 	
-	public ATileEntityPole_Component(JSONPoleComponent definition){
-		this.definition = definition;
+	public ATileEntityPole_Component(ItemPoleComponent item){
+		this.item = item;
+		this.definition = item.definition;
 	}
 	
 	/**

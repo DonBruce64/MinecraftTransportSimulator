@@ -26,6 +26,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
@@ -362,7 +363,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(IWrapperItemStack craftingStack : MasterLoader.coreInterface.parseFromJSON(definition)){
+		for(IWrapperItemStack craftingStack : MasterLoader.coreInterface.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName))){
 			if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 				world.spawnItemStack(craftingStack, position);
 			}

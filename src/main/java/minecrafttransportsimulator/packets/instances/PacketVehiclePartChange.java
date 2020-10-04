@@ -19,24 +19,21 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * @author don_bruce
  */
 public class PacketVehiclePartChange extends APacketVehiclePart{
-	private final String partPackID;
-	private final String partSystemName;
+	private final ItemPart partItem;
 	private final IWrapperNBT partData;
 	private boolean clickedPart;
 	private Point3d partClickedOffset;
 	
 	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset){
 		super(vehicle, offset);
-		this.partPackID = "";
-		this.partSystemName = "";
+		this.partItem = null;
 		this.partData = null;
 		this.partClickedOffset = null;
 	}
 	
-	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, String partPackID, String partSystemName, IWrapperNBT partData, APart partClicked){
+	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, ItemPart partItem, IWrapperNBT partData, APart partClicked){
 		super(vehicle, offset);
-		this.partPackID = partPackID;
-		this.partSystemName = partSystemName;
+		this.partItem = partItem;
 		this.partData = partData;
 		this.clickedPart = partClicked != null;
 		this.partClickedOffset = clickedPart ? partClicked.placementOffset : null;
@@ -44,9 +41,8 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	
 	public PacketVehiclePartChange(ByteBuf buf){
 		super(buf);
-		this.partPackID = readStringFromBuffer(buf);
-		if(!partPackID.isEmpty()){
-			this.partSystemName = readStringFromBuffer(buf);
+		if(buf.readBoolean()){
+			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 			this.partData = MasterLoader.networkInterface.createDataFromBuffer(buf);
 			this.clickedPart = buf.readBoolean();
 			if(clickedPart){
@@ -55,7 +51,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 				this.partClickedOffset = null;
 			}
 		}else{
-			this.partSystemName = "";
+			this.partItem = null;
 			this.partData = null;
 			this.partClickedOffset = null;
 		}
@@ -64,23 +60,26 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(partPackID, buf);
-		if(!partPackID.isEmpty()){
-			writeStringToBuffer(partSystemName, buf);
+		if(partItem != null){
+			buf.writeBoolean(true);
+			writeStringToBuffer(partItem.definition.packID, buf);
+			writeStringToBuffer(partItem.definition.systemName, buf);
+			writeStringToBuffer(partItem.subName, buf);
 			partData.writeToBuffer(buf);
 			buf.writeBoolean(clickedPart);
 			if(clickedPart){
 				writePoint3dToBuffer(partClickedOffset, buf);
 			}
+		}else{
+			buf.writeBoolean(false);
 		}
 	}
 	
 	@Override
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
-		if(partPackID.isEmpty()){
+		if(partItem == null){
 			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
 		}else{
-			ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
 			VehiclePart packVehicleDef = vehicle.getPackDefForLocation(offset);
 			vehicle.addPart(partItem.createPart(vehicle, packVehicleDef, partData, vehicle.getPartAtLocation(partClickedOffset)), false);
 		}

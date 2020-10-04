@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -62,10 +63,12 @@ class InterfaceCore implements IInterfaceCore{
 	}
 	
 	@Override
-	public List<IWrapperItemStack> parseFromJSON(AJSONItem<?> packDef){
+	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item){
 		List<IWrapperItemStack> stackList = new ArrayList<IWrapperItemStack>();
+		String currentSubName = "";
 		try{
-	    	for(String itemText : packDef.general.materials){
+			//Get main materials.
+	    	for(String itemText : item.definition.general.materials){
 				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 				
@@ -73,9 +76,24 @@ class InterfaceCore implements IInterfaceCore{
 				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 				stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
 			}
+	    	
+	    	//Get subType materials, if required.
+	    	if(item instanceof AItemSubTyped){
+		    	for(String itemText : ((AItemSubTyped<?>) item).getExtraMaterials()){
+					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+					
+					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+					stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+		    	}
+	    	}
+	    	
+	    	//Return all materials.
 	    	return stackList;
 		}catch(Exception e){
-			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + packDef.packID + packDef.systemName + ".  Report this to the pack author!");
+			e.printStackTrace();
+			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + currentSubName + ".  Report this to the pack author!");
 		}
 	}
 	

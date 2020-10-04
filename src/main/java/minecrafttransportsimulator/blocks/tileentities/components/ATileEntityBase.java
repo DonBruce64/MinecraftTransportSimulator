@@ -27,7 +27,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public final IWrapperWorld world;
 	/**Current position of this TileEntity.**/
 	public final Point3i position;
-	/**JSON definition for this tileEntity.**/
+	/**Item that that was used to spawn this TileEntity.**/
+	public final AItemPack<JSONDefinition> item;
+	/**JSON definition for this TileEntity.**/
 	public final JSONDefinition definition;
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
@@ -35,7 +37,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public ATileEntityBase(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		this.world = world;
 		this.position = position;
-		this.definition = PackParserSystem.getDefinition(data.getString("packID"), data.getString("systemName"));
+		this.item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"));
+		this.definition = item.definition;
 		this.lightLevel = (float) data.getDouble("lightLevel");
 	}
 	
@@ -54,7 +57,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public List<AItemPack<JSONDefinition>> getDrops(){
 		List<AItemPack<JSONDefinition>> drops = new ArrayList<AItemPack<JSONDefinition>>();
 		if(definition != null){
-			drops.add(PackParserSystem.getItem(definition));
+			drops.add(item);
 		}
 		return drops;
 	}

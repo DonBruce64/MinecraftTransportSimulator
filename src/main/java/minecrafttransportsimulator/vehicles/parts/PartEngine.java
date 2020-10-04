@@ -4,7 +4,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
@@ -75,8 +75,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private static final float LOW_OIL_PRESSURE = 40F;
 	
 	
-	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, definition, data, parentPart);
+	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");

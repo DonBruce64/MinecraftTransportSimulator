@@ -289,9 +289,9 @@ public class GUIDevEditor extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "IsPart:";
 		dataEntryBoxes.get(labelBoxIndex++).setText("false");
 		dataEntryLabels.get(labelBoxIndex).text = "Model:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.genericName);
-		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.systemName);
+		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.systemName + vehicleClicked.currentSubName);
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.x));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";

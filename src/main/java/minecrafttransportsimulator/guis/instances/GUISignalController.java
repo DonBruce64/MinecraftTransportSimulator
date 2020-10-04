@@ -20,7 +20,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class GUISignalController extends AGUIBase{
 	
@@ -67,11 +66,11 @@ public class GUISignalController extends AGUIBase{
 			if(tile instanceof TileEntityPole){
 				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 					if(component instanceof TileEntityPole_TrafficSignal){
-						trafficSignalItemTemp = MasterLoader.coreInterface.getStack(PackParserSystem.getItem(component.definition));
+						trafficSignalItemTemp = MasterLoader.coreInterface.getStack(component.item);
 						++trafficSignals;
 						componentLocations.add(location);
 					}else if(component instanceof TileEntityPole_StreetLight){
-						streetLightItemTemp = MasterLoader.coreInterface.getStack(PackParserSystem.getItem(component.definition));
+						streetLightItemTemp = MasterLoader.coreInterface.getStack(component.item);
 						++streetLights;
 						componentLocations.add(location);
 					}
@@ -96,11 +95,11 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										trafficSignalItem.stack = MasterLoader.coreInterface.getStack(PackParserSystem.getItem(component.definition));
+										trafficSignalItem.stack = MasterLoader.coreInterface.getStack(component.item);
 										++trafficSignals;
 										componentLocations.add(location);
 									}else if(component instanceof TileEntityPole_StreetLight){
-										streetLightItem.stack = MasterLoader.coreInterface.getStack(PackParserSystem.getItem(component.definition));
+										streetLightItem.stack = MasterLoader.coreInterface.getStack(component.item);
 										++streetLights;
 										componentLocations.add(location);
 									}

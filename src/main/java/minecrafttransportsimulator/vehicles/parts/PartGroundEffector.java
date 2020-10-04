@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -16,8 +16,8 @@ public class PartGroundEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
 	protected final Point3i[] affectedBlocks;
 	
-	public PartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, definition, data, parentPart);
+	public PartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, item, data, parentPart);
 		lastBlocksModified = new Point3i[definition.effector.blocksWide];
 		affectedBlocks = new Point3i[definition.effector.blocksWide];
 	}

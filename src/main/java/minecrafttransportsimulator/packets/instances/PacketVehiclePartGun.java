@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
@@ -31,12 +32,12 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 		this.bulletSystemName = null;
 	}
 	
-	public PacketVehiclePartGun(PartGun gun, String bulletPackID, String bulletSystemName){
+	public PacketVehiclePartGun(PartGun gun, ItemPart bullet){
 		super(gun.vehicle, gun.placementOffset);
 		this.controlPulse = false;
 		this.triggerState = false;
-		this.bulletPackID = bulletPackID;
-		this.bulletSystemName = bulletSystemName;
+		this.bulletPackID = bullet.definition.packID;
+		this.bulletSystemName = bullet.definition.systemName;
 	}
 	
 	public PacketVehiclePartGun(ByteBuf buf){

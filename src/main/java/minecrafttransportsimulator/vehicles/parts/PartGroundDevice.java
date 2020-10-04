@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -43,8 +42,8 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, definition, data, parentPart);
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
@@ -56,7 +55,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			//Need to swap placement for fake part so it uses the offset.
 			Point3d actualPlacement = packVehicleDef.pos;
 			packVehicleDef.pos = packVehicleDef.pos.copy().add(0D, 0D, (double) getLongPartOffset());
-			fakePart = new PartGroundDeviceFake(this, packVehicleDef, definition, data, null);
+			fakePart = new PartGroundDeviceFake(this, packVehicleDef, item, data, null);
 			packVehicleDef.pos = actualPlacement;
 			//This hack prevents us from adding this part to the main list during vehicle construction.
 			if(vehicle.partSlotBoxes != null){

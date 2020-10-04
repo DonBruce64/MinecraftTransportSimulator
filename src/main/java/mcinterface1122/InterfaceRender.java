@@ -648,7 +648,7 @@ class InterfaceRender implements IInterfaceRender{
 		
 		//Now register items for the packs.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.getClassificationFolder() + packItem.definition.systemName, "inventory"));
+			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.getClassificationFolder() + packItem.getRegistrationName(), "inventory"));
 		}
 	}
 	

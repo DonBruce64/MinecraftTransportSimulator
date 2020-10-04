@@ -3,7 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.items.components.AItemPack;
 
 /**Interface to the core MC system.  This class has methods for registrations
  * file locations, and other core things that are common to clients and servers.
@@ -52,12 +52,12 @@ public interface IInterfaceCore{
 	public IWrapperItemStack getStack(AItemBase item);
 	
 	/**
-	 *  Returns a list of wrappers created from the JSON definition listing.
+	 *  Returns a list of wrappers required to craft the passed-in item.
 	 *  Note that while different versions of MC will reference different definition 
 	 *  sections due to the "flattening" changing item names, the end result will be
 	 *  a list of stacks needed to craft the passed-in item based on the definition. 
 	 */
-	public List<IWrapperItemStack> parseFromJSON(AJSONItem<?> packDef);
+	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item);
 	
 	/**
 	 *  Returns a fake TileEntity created to allow for such a TileEntity to be used on

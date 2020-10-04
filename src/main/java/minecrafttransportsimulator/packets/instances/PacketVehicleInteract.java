@@ -102,7 +102,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 						}else{
 							//Attempt to add a part.  Vehicle is responsible for callback packet here.
 							if(heldItem instanceof ItemPart){
-								if(vehicle.addPartFromItem((ItemPart) heldItem, heldStack.getData(), hitPosition) && !player.isCreative()){				
+								if(vehicle.addPartFromItem((ItemPart) heldItem, heldStack.getData(), hitPosition, false) && !player.isCreative()){				
 									player.getInventory().removeStack(heldStack, 1);
 								}
 							}

@@ -4,18 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.packloading.PackResourceLoader;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 
-public class JSONVehicle extends AJSONModelProvider<JSONVehicle.VehicleGeneral>{
-	/**A generic name for this vehicle.  This is simply the {@link AJSONItem#systemName}, minus
-	 * the {@link VehicleDefinition#subName}.  Set after JSON is parsed into an object and
-	 * used when we want to treat this vehicle the same based on it's other definitions, 
-	 * usually for rendering of models as those are the same for multiple vehicles.
-	 */
-	public String genericName;
-	
-	public List<VehicleDefinition> definitions;
+public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>{
     public VehicleMotorized motorized;
     @Deprecated
     public VehiclePlane plane;
@@ -28,18 +18,12 @@ public class JSONVehicle extends AJSONModelProvider<JSONVehicle.VehicleGeneral>{
     public List<VehicleDoor> doors;
     public VehicleRendering rendering;
     
-    public class VehicleGeneral extends AJSONModelProvider<JSONVehicle.VehicleGeneral>.General{
+    public class VehicleGeneral extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>.General{
     	public boolean isAircraft;
     	public boolean isBlimp;
     	public boolean openTop;
     	public int emptyMass;
     	public String type;
-    }
-    
-    public class VehicleDefinition{
-    	public String subName;
-    	public String name;
-    	public String[] extraMaterials;
     }
     
     public class VehicleMotorized{
@@ -268,9 +252,4 @@ public class JSONVehicle extends AJSONModelProvider<JSONVehicle.VehicleGeneral>{
     	public Point3d rot;
     	public List<VehicleAnimationDefinition> animations;
     }
-    
-	@Override
-	public String getModelLocation(){
-		return PackResourceLoader.getPackResource(this, ResourceType.OBJ, genericName);
-	}
 }

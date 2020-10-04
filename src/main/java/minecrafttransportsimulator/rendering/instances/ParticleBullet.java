@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -32,18 +32,18 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
  */
 
 public final class ParticleBullet extends AParticle{
-	private final JSONPart definition;
+	private final ItemPart bullet;
 	private final PartGun gun;
 	private final int bulletNumber;
 	private final double initalVelocity;
 	private final IWrapperEntity gunController;
 	private final BoundingBox box;
 	
-	private final Map<JSONPart, Integer> bulletDisplayLists = new HashMap<JSONPart, Integer>();
+	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
-    public ParticleBullet(Point3d position, Point3d motion, JSONPart definition, PartGun gun, IWrapperEntity gunController){
+    public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
-    	this.definition = definition;
+    	this.bullet = bullet;
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
         this.initalVelocity = motion.length();
@@ -54,7 +54,7 @@ public final class ParticleBullet extends AParticle{
 	@Override
 	public void update(boolean onGround){
 		double velocity = motion.length();
-		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
+		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
 		//Check for collided entities and attack them.
 		Map<IWrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, gun.vehicle, motion);
@@ -62,11 +62,11 @@ public final class ParticleBullet extends AParticle{
 			for(IWrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
 					BoundingBox hitBox = attackedEntities.get(entity);
-					if(hitBox.armorThickness == 0 || hitBox.armorThickness > definition.bullet.armorPenetration*velocity/initalVelocity){
-						MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, definition, gun, bulletNumber, entity, gunController));
+					if(hitBox.armorThickness == 0 || hitBox.armorThickness > bullet.definition.bullet.armorPenetration*velocity/initalVelocity){
+						MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
 					}
 				}else{
-					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, definition, gun, bulletNumber, entity, gunController));
+					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
 				}
 			}
 			age = maxAge;
@@ -78,7 +78,7 @@ public final class ParticleBullet extends AParticle{
 		if(box.updateCollidingBlocks(world, motion)){
 			for(IWrapperBlock block : box.collidingBlocks){
 				Point3d position = new Point3d(block.getPosition());
-				MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, definition, gun, bulletNumber, null, gunController));
+				MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
 			}
 			age = maxAge;
 			return;
@@ -100,7 +100,7 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	public float getSize(){
-		return definition.bullet.diameter/1000F;
+		return bullet.definition.bullet.diameter/1000F;
 	}
 	
 	@Override
@@ -115,14 +115,14 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	public boolean isBright(){
-		return definition.bullet.type.equals("tracer");
+		return bullet.definition.bullet.type.equals("tracer");
 	}
 	
 	@Override
 	public void render(float partialTicks){
         //Parse the model if we haven't already.
-        if(!bulletDisplayLists.containsKey(definition)){
-        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(definition.packID, definition.getModelLocation());
+        if(!bulletDisplayLists.containsKey(bullet)){
+        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(bullet.definition.packID, bullet.definition.getModelLocation());
         	int displayListIndex = GL11.glGenLists(1);
     		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
     		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -135,11 +135,11 @@ public final class ParticleBullet extends AParticle{
     		}
     		GL11.glEnd();
     		GL11.glEndList();
-        	bulletDisplayLists.put(definition, displayListIndex);
+        	bulletDisplayLists.put(bullet, displayListIndex);
         }
         
         //Bind the texture for this bullet.
-        MasterLoader.renderInterface.bindTexture(definition.packID, definition.getTextureLocation());
+        MasterLoader.renderInterface.bindTexture(bullet.definition.packID, bullet.definition.getTextureLocation(bullet.subName));
         
         //Render the parsed model.  Translation will already have been applied, 
         //so we just need to rotate ourselves based on our velocity.
@@ -147,6 +147,6 @@ public final class ParticleBullet extends AParticle{
         double pitch = -Math.toDegrees(Math.asin(motion.y/Math.sqrt(motion.x*motion.x+motion.y*motion.y+motion.z*motion.z)));
         GL11.glRotated(yaw, 0, 1, 0);
         GL11.glRotated(pitch, 1, 0, 0);
-        GL11.glCallList(bulletDisplayLists.get(definition));
+        GL11.glCallList(bulletDisplayLists.get(bullet));
 	}
 }

@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -14,8 +13,8 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, JSONPart definition, IWrapperNBT data, APart parentPart){
-		super(masterPart.vehicle, packVehicleDef, definition, data, parentPart);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+		super(masterPart.vehicle, packVehicleDef, item, data, parentPart);
 		this.masterPart = masterPart;
 	}
 	
@@ -52,11 +51,6 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	
 	@Override
 	public String getModelLocation(){
-		return null;
-	}
-	
-	@Override
-	public String getTextureLocation(){
 		return null;
 	}
 	

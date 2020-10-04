@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 
 /**Lighted pole component.  Renders a constant beam when turned on.
  * 
@@ -11,8 +11,8 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component{
 	
 	public LightState state = LightState.ON;
 	
-	public TileEntityPole_StreetLight(JSONPoleComponent definition){
-		super(definition);
+	public TileEntityPole_StreetLight(ItemPoleComponent item){
+		super(item);
 	}
 
 	@Override

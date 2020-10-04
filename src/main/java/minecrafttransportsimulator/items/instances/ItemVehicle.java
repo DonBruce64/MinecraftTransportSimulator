@@ -4,9 +4,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
@@ -21,12 +20,10 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
-public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
-	public final String subName;
+public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
 	
 	public ItemVehicle(JSONVehicle definition, String subName){
-		super(definition);
-		this.subName = subName;
+		super(definition, subName);
 	}
 	
 	@Override
@@ -41,6 +38,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 			boolean wasSaved = !data.getString("packID").isEmpty();
 			data.setString("packID", definition.packID);
 			data.setString("systemName", definition.systemName);
+			data.setString("subName", subName);
 			
 			//Make sure we don't restore any wold-based entity properties.
 			data.setInteger("lookupID", 0);
@@ -84,13 +82,13 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
 							String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
 							try{
-								JSONInstrument instrument = PackParserSystem.getDefinition(instrumentPackID, instrumentSystemName);
+								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
 									newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
 									continue;
 								}
 							}catch(NullPointerException e){}
-							throw new IllegalArgumentException("ERROR: Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.genericName + " but that instrument doesn't exist in the pack item registry.");
+							throw new IllegalArgumentException("ERROR: Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
 						}catch(IndexOutOfBoundsException e){
 							throw new IllegalArgumentException("ERROR: Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
 						}
@@ -114,7 +112,7 @@ public class ItemVehicle extends AItemPack<JSONVehicle> implements IItemEntityPr
 						}
 					}
 					if(newVehicle.fuelTank.getFluid().isEmpty()){
-						throw new IllegalArgumentException("ERROR: A defaultFuelQty was specified for: " + newVehicle.definition.genericName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
+						throw new IllegalArgumentException("ERROR: A defaultFuelQty was specified for: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
 					}
 				}
 				

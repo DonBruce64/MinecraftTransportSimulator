@@ -5,7 +5,6 @@ import java.util.Map;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 
 /**Wrapper for inventories.  This class has multiple constructors to allow for access
  * to multiple inventory containers.  However, some constructors are not visible,
@@ -68,7 +67,7 @@ public interface IWrapperInventory{
 	/**
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
-	public boolean hasMaterials(AItemPack<? extends AJSONItem<?>> item);
+	public boolean hasMaterials(AItemPack<?> item);
 	
 	/**
 	 *  Removes all materials from the inventory required to craft the passed-in item.
@@ -76,7 +75,7 @@ public interface IWrapperInventory{
 	 *  the the inventory actually has the required materials.  Failure to do so will
 	 *  result in the this method removing the incorrect number of materials.
 	 */
-	public void removeMaterials(AItemPack<? extends AJSONItem<?>> item);
+	public void removeMaterials(AItemPack<?> item);
 	
 	/**
 	 * Gets the weight of this inventory.
