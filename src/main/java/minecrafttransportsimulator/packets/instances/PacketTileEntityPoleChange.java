@@ -129,7 +129,9 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					newComponent.setTextLines(textLines);
 				}
 				pole.updateLightState();
-				player.getInventory().removeStack(player.getHeldStack(), 1);
+				if(!player.isCreative()){
+					player.getInventory().removeStack(player.getHeldStack(), 1);
+				}
 				return true;
 			} 
 		}
