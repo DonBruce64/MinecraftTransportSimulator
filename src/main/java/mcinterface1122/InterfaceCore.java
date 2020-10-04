@@ -63,22 +63,24 @@ class InterfaceCore implements IInterfaceCore{
 	}
 	
 	@Override
-	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item){
+	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub){
 		List<IWrapperItemStack> stackList = new ArrayList<IWrapperItemStack>();
 		String currentSubName = "";
 		try{
 			//Get main materials.
-	    	for(String itemText : item.definition.general.materials){
-				int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-				
-				int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-				itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-				stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+			if(includeMain){
+		    	for(String itemText : item.definition.general.materials){
+					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+					
+					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
+					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
+					stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+				}
 			}
 	    	
 	    	//Get subType materials, if required.
-	    	if(item instanceof AItemSubTyped){
+	    	if(includeSub && item instanceof AItemSubTyped){
 		    	for(String itemText : ((AItemSubTyped<?>) item).getExtraMaterials()){
 					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 					itemText = itemText.substring(0, itemText.lastIndexOf(':'));

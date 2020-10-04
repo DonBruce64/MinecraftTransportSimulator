@@ -204,9 +204,9 @@ public class GUIPartBench extends AGUIBase{
 		nextPackButton.enabled = nextPack != null;
 		prevPartButton.enabled = prevItem != null;
 		nextPartButton.enabled = nextItem != null;
-		prevColorButton.visible = currentItem instanceof ItemVehicle;
+		prevColorButton.visible = currentItem instanceof AItemSubTyped;
 		prevColorButton.enabled = prevSubItem != null;
-		nextColorButton.visible = currentItem instanceof ItemVehicle;
+		nextColorButton.visible = currentItem instanceof AItemSubTyped;
 		nextColorButton.enabled = nextSubItem != null;
 		
 		switchInfoButton.visible = currentItem instanceof ItemVehicle;
@@ -214,7 +214,7 @@ public class GUIPartBench extends AGUIBase{
 		vehicleInfo.visible = displayVehicleInfo;
 		
 		//Set confirm button based on if player has materials.
-		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem));
+		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true));
 		
 		//Check the mouse to see if it updated and we need to change items.
 		int wheelMovement = MasterLoader.inputInterface.getTrackedMouseWheel();
@@ -382,7 +382,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem);
+		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, true, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < craftingMaterials.size()){
 				craftingItemIcons.get(i).stack = craftingMaterials.get(i);

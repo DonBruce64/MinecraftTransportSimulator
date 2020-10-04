@@ -196,8 +196,8 @@ public final class PackParserSystem{
     		if(partDef.definitions == null){
     			partDef.definitions = new ArrayList<JSONPart.SubDefinition>();
     			JSONPart.SubDefinition subDefinition = partDef.new SubDefinition();
-    			subDefinition.extraMaterials = new String[]{""};
-    			subDefinition.name = definition.systemName;
+    			subDefinition.extraMaterials = new String[]{};
+    			subDefinition.name = definition.general.name;
     			subDefinition.subName = "";
     			partDef.definitions.add(subDefinition);
     		}

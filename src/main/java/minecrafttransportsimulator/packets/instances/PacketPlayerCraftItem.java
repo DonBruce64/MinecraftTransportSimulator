@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -18,9 +17,9 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public class PacketPlayerCraftItem extends APacketBase{
-	private final AItemPack<? extends AJSONItem<?>> itemToCraft;
+	private final AItemPack<?> itemToCraft;
 	
-	public PacketPlayerCraftItem(AItemPack<? extends AJSONItem<?>> itemToCraft){
+	public PacketPlayerCraftItem(AItemPack<?> itemToCraft){
 		super(null);
 		this.itemToCraft = itemToCraft;
 	}
@@ -44,9 +43,9 @@ public class PacketPlayerCraftItem extends APacketBase{
 	@Override
 	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		IWrapperInventory inventory = player.getInventory();
-		if(player.isCreative() || inventory.hasMaterials(itemToCraft)){
+		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true)){
 			if(!player.isCreative()){
-				inventory.removeMaterials(itemToCraft);
+				inventory.removeMaterials(itemToCraft, true, true);
 			}
 			inventory.addItem(itemToCraft, null);
 		}

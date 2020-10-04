@@ -67,7 +67,7 @@ public interface IWrapperInventory{
 	/**
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
-	public boolean hasMaterials(AItemPack<?> item);
+	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub);
 	
 	/**
 	 *  Removes all materials from the inventory required to craft the passed-in item.
@@ -75,7 +75,7 @@ public interface IWrapperInventory{
 	 *  the the inventory actually has the required materials.  Failure to do so will
 	 *  result in the this method removing the incorrect number of materials.
 	 */
-	public void removeMaterials(AItemPack<?> item);
+	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub);
 	
 	/**
 	 * Gets the weight of this inventory.

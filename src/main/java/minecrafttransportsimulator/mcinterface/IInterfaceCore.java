@@ -57,7 +57,7 @@ public interface IInterfaceCore{
 	 *  sections due to the "flattening" changing item names, the end result will be
 	 *  a list of stacks needed to craft the passed-in item based on the definition. 
 	 */
-	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item);
+	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub);
 	
 	/**
 	 *  Returns a fake TileEntity created to allow for such a TileEntity to be used on

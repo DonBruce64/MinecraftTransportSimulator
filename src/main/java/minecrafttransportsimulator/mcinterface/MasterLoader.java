@@ -7,6 +7,7 @@ import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
+import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
@@ -18,6 +19,7 @@ import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
+import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
@@ -75,6 +77,7 @@ public class MasterLoader{
 		MasterInterface.createItem(new ItemKey());
 		MasterInterface.createItem(new ItemJumperCable());
 		MasterInterface.createItem(new ItemJerrycan());
+		MasterInterface.createItem(new ItemPaintGun());
 		MasterInterface.createItem(new ItemTicket());
 		
 		//Manually create the internal core mod pack items.
@@ -125,6 +128,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPumpConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlDigital.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleInstruments.class);

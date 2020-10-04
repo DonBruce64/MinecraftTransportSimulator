@@ -155,8 +155,8 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public boolean hasMaterials(AItemPack<?> item){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item)){
+	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
+		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item, includeMain, includeSub)){
 			int requiredMaterialCount = materialStack.getSize();
 			for(int i=0; i<getSize(); ++i){
 				ItemStack stack = inventory.getStackInSlot(i);
@@ -172,8 +172,8 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public void removeMaterials(AItemPack<?> item){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item)){
+	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
+		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item, includeMain, includeSub)){
 			removeStack(materialStack, materialStack.getSize());
 		}
 		inventory.markDirty();
