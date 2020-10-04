@@ -903,12 +903,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					float customPitch;
 					float customVolume;
 					if (soundDefinition.pitchAdvanced) {
-						customPitch = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/200), 0);
+						customPitch = (float) Math.max((-0.000001 / (soundDefinition.pitchLength/1000)) * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/20000) + 1, 0);
 					}else {
 						customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
 					}			
 					if (soundDefinition.volumeAdvanced) {
-						customVolume = (float) Math.max(-0.00001 * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/200), 0);
+						customVolume = (float) Math.max((-0.000001 / (soundDefinition.volumeLength/1000)) * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/20000) + 1, 0);
 					}else {
 						customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
 					}
