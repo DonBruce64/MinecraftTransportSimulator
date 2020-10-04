@@ -99,7 +99,7 @@ public class GUIConfig extends AGUIBase{
 			if(field.getType().equals(ConfigBoolean.class)){
 				try{
 					ConfigBoolean config = (ConfigBoolean) field.get(ConfigSystem.configObject.client);
-					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 20*(configButtons.size()/2), 40, String.valueOf(config.value)){
+					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(config.value), 16, true){
 						@Override
 						public void onClicked(){
 							configButtons.get(this).value = !Boolean.valueOf(text);

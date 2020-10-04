@@ -146,6 +146,9 @@ public class JSONConfig{
 		public ConfigBoolean transpHUD_3P = new ConfigBoolean(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
 		public ConfigBoolean renderWindows = new ConfigBoolean(true, "Should the glass on windows be rendered on vehicles?");
 		public ConfigBoolean innerWindows = new ConfigBoolean(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
+		public ConfigBoolean vehicleBeams = new ConfigBoolean(true, "If false, beams on vehicles will not render.");
+		public ConfigBoolean blockBeams = new ConfigBoolean(true, "If false, beams on blocks (decor) will not render.");
+		public ConfigBoolean beamRender = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");
 		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");

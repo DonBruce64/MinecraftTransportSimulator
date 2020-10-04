@@ -126,7 +126,7 @@ public class TransformLight extends ATransformRenderable{
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness);
+		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness, ConfigSystem.configObject.client.vehicleBeams.value);
 	}
 	
 	
@@ -134,14 +134,14 @@ public class TransformLight extends ATransformRenderable{
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
 	public void renderOnBlock(IWrapperWorld world, Point3i location, boolean lightActive){
-		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false));
+		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), ConfigSystem.configObject.client.blockBeams.value);
 	}
 	
 	/**
 	 *  Renders this light based on the state of the lighting at the passed-in position.  This main call can be used for
-	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes, though -1 is a combination of 0 and 1..
+	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes, though -1 is a combination of 0 and 1.
 	 */
-	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness){
+	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness, boolean beamEnabled){
 		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Render the color portion of the light if required and we have power.
@@ -168,7 +168,7 @@ public class TransformLight extends ATransformRenderable{
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
-		if(renderBeam && lightOn && doBlendRenders){
+		if(beamEnabled && renderBeam && lightOn && doBlendRenders){
 			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
 		}
 		
