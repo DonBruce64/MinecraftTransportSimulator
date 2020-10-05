@@ -32,7 +32,6 @@ public class JSONConfig{
 		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean noclipVehicles = new ConfigBoolean(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
 		public ConfigBoolean creativeDamage = new ConfigBoolean(false, "If true, damage from vehicles and guns will be applied to creative players.");
-		public ConfigBoolean autostartEngines = new ConfigBoolean(true, "If true, engines will automatically start when a controller enters a vehicle, and will turn off when they leave.  Note: this bypasses the electrical system, but does not bypass the fuel system.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
@@ -138,22 +137,32 @@ public class JSONConfig{
 	public static class ConfigClient{
 		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
 		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		
+		public ConfigBoolean simpleThrottle = new ConfigBoolean(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.  Incompatible with joysticks.");
+		public ConfigBoolean autostartEng = new ConfigBoolean(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel system.");
+		
 		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
 		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
+		
 		public ConfigBoolean fullHUD_1P = new ConfigBoolean(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
 		public ConfigBoolean fullHUD_3P = new ConfigBoolean(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
+		
 		public ConfigBoolean transpHUD_1P = new ConfigBoolean(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
 		public ConfigBoolean transpHUD_3P = new ConfigBoolean(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+		
 		public ConfigBoolean renderWindows = new ConfigBoolean(true, "Should the glass on windows be rendered on vehicles?");
 		public ConfigBoolean innerWindows = new ConfigBoolean(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
+		
 		public ConfigBoolean vehicleBeams = new ConfigBoolean(true, "If false, beams on vehicles will not render.");
 		public ConfigBoolean blockBeams = new ConfigBoolean(true, "If false, beams on blocks (decor) will not render.");
-		public ConfigBoolean beamRender = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
-		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");
+		
+		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
 		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
+		
+		public ConfigBoolean beamRender = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");
+		
 		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
-		public ConfigBoolean simpleThrottle = new ConfigBoolean(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.  Incompatible with joysticks.");
 		public ConfigBoolean devMode = new ConfigBoolean(false, "If enabled, MTS will re-load all resources every time the config key (P) is pressed.  This includes textures for vehicles and parts, JSON files, and OBJ models.  This is intended for use in pack creation with pack components being placed in an un-zipped resource pack.  Note that every re-load will also re-load EVERY resource, not just MTS resources.  Make sure not to have lots of mods installed when you are doing this!");
 		
 		

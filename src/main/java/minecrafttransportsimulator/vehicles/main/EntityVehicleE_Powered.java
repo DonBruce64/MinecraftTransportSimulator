@@ -224,30 +224,26 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
-		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
+		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
 			for(PartEngine engine : engines.values()){
 				if(!engine.state.running){
-					engine.setMagnetoStatus(true);
-					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_ON));
-					engine.rpm = 2500;
-					engine.startEngine();
+					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
 				}
 			}
-			MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
 		return super.addRider(rider, riderLocation);
 	}
 	
 	@Override
 	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
-		if(!world.isClient() && ConfigSystem.configObject.general.autostartEngines.value){
+		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
 			if(locationRiderMap.containsValue(rider) && locationRiderMap.size() == 1){
 				for(PartEngine engine : engines.values()){
-					engine.setMagnetoStatus(false);
-					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 				}
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 			}
 		}
 		super.removeRider(rider, iterator);
