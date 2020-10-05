@@ -59,7 +59,7 @@ public final class PackParserSystem{
 	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
 	private static Map<String, File> packJarMap = new HashMap<String, File>();
 	
-	/**All registered pack instances are stored in this map as they are added.  Used to handle loading operations.**/
+	/**All registered pack definition are stored in this list as they are added.  Used to handle loading operations.**/
 	public static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
 	//TODO make this private when we get rid of the old loader system.
 	
@@ -121,143 +121,156 @@ public final class PackParserSystem{
     			continue;
     		}
     		
+    		//Create a listing of sub-directories we need to look in for pack definitions.
+    		//These will be modified by activators or blockers.
+    		List<String> validSubDirectories = new ArrayList<String>();
+    		
     		//If we don't have any of the activating sets, don't load the pack. 
-    		if(packDef.activatingSets != null){
-    			for(List<String> activatingSet : packDef.activatingSets){
-    				boolean haveActivatorsInSet = false;
-    				for(String activator : activatingSet){
-    					if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
-    						haveActivatorsInSet = true;
+    		if(packDef.activators != null){
+    			for(String subDirectory : packDef.activators.keySet()){
+    				if(packDef.activators.get(subDirectory).isEmpty()){
+    					validSubDirectories.add(subDirectory);
+    				}else{
+		    			for(String activator : packDef.activators.get(subDirectory)){
+		    				if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
+		    					validSubDirectories.add(subDirectory);
+	    						break;
+	    					}
+		    			}
+    				}
+    			}
+    		}
+    		
+    		//If we have a blocking set, and we were going to load the pack, don't load it.
+    		if(packDef.blockers != null){
+    			for(String subDirectory : packDef.blockers.keySet()){
+	    			for(String blocker : packDef.blockers.get(subDirectory)){
+	    				if(packIDs.contains(blocker) || MasterLoader.coreInterface.isModPresent(blocker)){
+	    					validSubDirectories.remove(subDirectory);
     						break;
     					}
-    				}
-    				if(!haveActivatorsInSet){
-    					continue;
-    				}
+	    			}
     			}
     		}
     		
     		//If we have dependent sets, make sure we log a pack fault.
-    		if(packDef.dependentSets != null){
-    			for(List<String> dependencySet : packDef.dependentSets){
-    				boolean haveDependentsInSet = false;
-    				for(String dependent : dependencySet){
-    					if(packIDs.contains(dependent) || MasterLoader.coreInterface.isModPresent(dependent)){
-    						haveDependentsInSet = true;
-    						break;
-    					}
-    				}
-    				if(!haveDependentsInSet){
-    					faultMap.put(packDef.packID, dependencySet);
-    				}
+    		if(packDef.dependents != null){
+    			for(String dependent : packDef.dependents){
+					if(packIDs.contains(dependent) || MasterLoader.coreInterface.isModPresent(dependent)){
+						faultMap.put(packDef.packID, packDef.dependents);
+						break;
+					}
     			}
     		}
     		
-    		//Didn't bail for no activators.  Load the pack components into the game.
+    		//Load the pack components into the game.
+    		//We iterate over all the sub-folders we found from the packDef checks.
     		PackStructure structure = PackStructure.values()[packDef.fileStructure];
-    		String assetPathPrefix = "assets/" + packDef.packID + "/";
-			if(packDef.assetSubFolder != null){
-				assetPathPrefix += packDef.assetSubFolder + "/";
-			}
-    		
-			try{
-	    		ZipFile jarFile = new ZipFile(packJarMap.get(packDef.packID));
-				Enumeration<? extends ZipEntry> entries = jarFile.entries();
-				while(entries.hasMoreElements()){
-					//Get next entry and path.
-					ZipEntry entry = entries.nextElement();
-					String entryFullPath = entry.getName();
-					if(entryFullPath.startsWith(assetPathPrefix) && entryFullPath.endsWith(".json")){
-						//JSON is in correct folder.  Get path properties and ensure they match our specs.
-						//Need the asset folder structure between the main prefix and the asset itself.
-						//This lets us know what asset we need to create as all assets are in their own folders.
-						String fileName = entryFullPath.substring(entryFullPath.lastIndexOf('/') + 1);
-						String assetPath = entryFullPath.substring(assetPathPrefix.length(), entryFullPath.substring(0, entryFullPath.length() - fileName.length()).lastIndexOf("/") + 1);
-						if(!structure.equals(PackStructure.MODULAR)){
-							//Need to trim the jsondefs folder to get correct sub-folder of jsondefs data.
-							//Modular structure does not have a jsondefs folder, so we don't need to trim it off for that.
-							assetPath = assetPath.substring("jsondefs/".length());
-						}
-						
-						//Check to make sure json isn't an item JSON or our pack definition.
-						if(!fileName.equals("packdefinition.json") && (structure.equals(PackStructure.MODULAR) ? !fileName.endsWith("_item.json") : entryFullPath.contains("jsondefs"))){
-							//Get JSON class type to use with GSON system.
-							String jsonType = assetPath.substring(0, assetPath.indexOf("/"));
-							Class<? extends AJSONItem<?>> jsonClass;
-							switch(jsonType){
-								case("vehicles") : jsonClass = JSONVehicle.class; break;
-								case("parts") : jsonClass = JSONPart.class; break;
-								case("instruments") : jsonClass = JSONInstrument.class; break;
-								case("poles") : jsonClass = JSONPoleComponent.class; break;
-								case("decors") : jsonClass = JSONDecor.class; break;
-								case("items") : jsonClass = JSONItem.class; break;
-								case("booklets") : jsonClass = JSONBooklet.class; break;
-								default : {
-									MasterLoader.coreInterface.logError("ERROR: Could not determine what type of JSON to create from: " + jsonType + " for asset: " + fileName);
-									continue;
-								}
+    		for(String subDirectory : validSubDirectories){
+	    		String assetPathPrefix = "assets/" + packDef.packID + "/";
+				if(!subDirectory.isEmpty()){
+					assetPathPrefix += subDirectory + "/";
+				}
+				
+				try{
+		    		ZipFile jarFile = new ZipFile(packJarMap.get(packDef.packID));
+					Enumeration<? extends ZipEntry> entries = jarFile.entries();
+					while(entries.hasMoreElements()){
+						//Get next entry and path.
+						ZipEntry entry = entries.nextElement();
+						String entryFullPath = entry.getName();
+						if(entryFullPath.startsWith(assetPathPrefix) && entryFullPath.endsWith(".json")){
+							//JSON is in correct folder.  Get path properties and ensure they match our specs.
+							//Need the asset folder structure between the main prefix and the asset itself.
+							//This lets us know what asset we need to create as all assets are in their own folders.
+							String fileName = entryFullPath.substring(entryFullPath.lastIndexOf('/') + 1);
+							String assetPath = entryFullPath.substring(assetPathPrefix.length(), entryFullPath.substring(0, entryFullPath.length() - fileName.length()).lastIndexOf("/") + 1);
+							if(!structure.equals(PackStructure.MODULAR)){
+								//Need to trim the jsondefs folder to get correct sub-folder of jsondefs data.
+								//Modular structure does not have a jsondefs folder, so we don't need to trim it off for that.
+								assetPath = assetPath.substring("jsondefs/".length());
 							}
 							
-							//Create the JSON instance.
-							AJSONItem<?> definition;
-							try{
-								definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
-								performLegacyCompats(definition);
-							}catch(Exception e){
-								MasterLoader.coreInterface.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
-					    		MasterLoader.coreInterface.logError(e.getMessage());
-					    		continue;
-							}
-							
-							//Remove any trailing path information from the assetPath if we are in default mode.
-							//This prevents us from referencing sub-folders.  Only the main classification folder will remain.
-							if(structure.equals(PackStructure.DEFAULT)){
-								assetPath = assetPath.substring(0, assetPath.indexOf("/") + 1);
-							}
-							
-							//Create all required items.
-							if(definition instanceof AJSONMultiModelProvider){
-								for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : ((AJSONMultiModelProvider<?>) definition).definitions){
-						    		try{
-						    			if(subDefinition.extraMaterials != null){
-						    				AItemPack<?> item;
-						    				switch(jsonType){
-												case("vehicles") : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
-												case("parts") : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
-												default : {
-													throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
-												}
-											}
-						    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath);
-						    			}else{
-						    				throw new NullPointerException();
-						    			}
-						    		}catch(Exception e){
-						    			throw new NullPointerException("Unable to parse definition #" + (((AJSONMultiModelProvider<?>) definition).definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-						    		}
-					    		}
-							}else{
-								AItemPack<?> item;
-			    				switch(jsonType){
-									case("instruments") : item = new ItemInstrument((JSONInstrument) definition); break;
-									case("poles") : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
-									case("decors") : item = new ItemDecor((JSONDecor) definition); break;
-									case("items") : item = new ItemItem((JSONItem) definition); break;
-									case("booklets") : item = new ItemBooklet((JSONBooklet) definition); break;
+							//Check to make sure json isn't an item JSON or our pack definition.
+							if(!fileName.equals("packdefinition.json") && (structure.equals(PackStructure.MODULAR) ? !fileName.endsWith("_item.json") : entryFullPath.contains("jsondefs"))){
+								//Get JSON class type to use with GSON system.
+								String jsonType = assetPath.substring(0, assetPath.indexOf("/"));
+								Class<? extends AJSONItem<?>> jsonClass;
+								switch(jsonType){
+									case("vehicles") : jsonClass = JSONVehicle.class; break;
+									case("parts") : jsonClass = JSONPart.class; break;
+									case("instruments") : jsonClass = JSONInstrument.class; break;
+									case("poles") : jsonClass = JSONPoleComponent.class; break;
+									case("decors") : jsonClass = JSONDecor.class; break;
+									case("items") : jsonClass = JSONItem.class; break;
+									case("booklets") : jsonClass = JSONBooklet.class; break;
 									default : {
-										throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
+										MasterLoader.coreInterface.logError("ERROR: Could not determine what type of JSON to create from: " + jsonType + " for asset: " + fileName);
+										continue;
 									}
 								}
-			    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), "", assetPath);
+								
+								//Create the JSON instance.
+								AJSONItem<?> definition;
+								try{
+									definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
+									performLegacyCompats(definition);
+								}catch(Exception e){
+									MasterLoader.coreInterface.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
+						    		MasterLoader.coreInterface.logError(e.getMessage());
+						    		continue;
+								}
+								
+								//Remove any trailing path information from the assetPath if we are in default mode.
+								//This prevents us from referencing sub-folders.  Only the main classification folder will remain.
+								if(structure.equals(PackStructure.DEFAULT)){
+									assetPath = assetPath.substring(0, assetPath.indexOf("/") + 1);
+								}
+								
+								//Create all required items.
+								if(definition instanceof AJSONMultiModelProvider){
+									for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : ((AJSONMultiModelProvider<?>) definition).definitions){
+							    		try{
+							    			if(subDefinition.extraMaterials != null){
+							    				AItemPack<?> item;
+							    				switch(jsonType){
+													case("vehicles") : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
+													case("parts") : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
+													default : {
+														throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
+													}
+												}
+							    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath);
+							    			}else{
+							    				throw new NullPointerException();
+							    			}
+							    		}catch(Exception e){
+							    			throw new NullPointerException("Unable to parse definition #" + (((AJSONMultiModelProvider<?>) definition).definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+							    		}
+						    		}
+								}else{
+									AItemPack<?> item;
+				    				switch(jsonType){
+										case("instruments") : item = new ItemInstrument((JSONInstrument) definition); break;
+										case("poles") : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
+										case("decors") : item = new ItemDecor((JSONDecor) definition); break;
+										case("items") : item = new ItemItem((JSONItem) definition); break;
+										case("booklets") : item = new ItemBooklet((JSONBooklet) definition); break;
+										default : {
+											throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
+										}
+									}
+				    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), "", assetPath);
+								}
 							}
 						}
 					}
+					jarFile.close();
+				}catch(Exception e){
+					MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
+					e.printStackTrace();
 				}
-				jarFile.close();
-			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
-				e.printStackTrace();
-			}
+    		}
     	}
     }
 	

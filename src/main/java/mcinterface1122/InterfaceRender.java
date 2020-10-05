@@ -679,33 +679,47 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
+			//Get the resource name and type.
 			String combinedPackInfo = location.getResourcePath();
-			combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
-			String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
-			String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf('.') + 1);
-			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
-			String itemJSONPath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
+			boolean itemJSON = combinedPackInfo.endsWith(".json");
 			
-			//Attempt to get a JSON file normally from the path.  If this fails, generate a default JSON.
-			InputStream stream = getClass().getResourceAsStream(itemJSONPath);
-			if(stream != null){
+			//Strip off the auto-generated prefix and suffix data.
+			if(itemJSON){
+				combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
+			}else{
+				combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
+			}
+			
+			//Get the pack information.
+			String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
+			String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('.') + 1);
+			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+			
+			//Get the actual resource path for this resource.
+			String resourcePath = PackResourceLoader.getPackResource(packItem.definition, itemJSON ? ResourceType.ITEM_JSON : ResourceType.ITEM_PNG, systemName);
+
+			//Attempt to get the file from the path.
+			//If we are an item JSON, use the actual resource, or an auto-generated one.
+			//If we are an item png, we need to use the resource even if it exists or not.
+			InputStream stream = getClass().getResourceAsStream(resourcePath);
+			if(stream != null || !itemJSON){
 				return stream;
 			}else{
-				//Get the item texture location.
-				String itemTextureLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
-				//Need to remove the .png, as it's implied in JSON.
-				itemTextureLocation = itemTextureLocation.substring(0, itemTextureLocation.length() - ".png".length());
-				//Remove the assets, packID, and texture prefixes.
-				itemTextureLocation = itemTextureLocation.substring(("/assets/" + packID + "/textures/").length()); 
-				//Create the fake JSON for the sytem to process and bind it.
-				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":" + itemTextureLocation + "\"}}";
+				//Auto-generate item JSON file.
+				//We use a temp format similar to registration to feed back into this loader.
+				String jsonParameter = MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(); 
+				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + jsonParameter + "\"}}";
 				return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 			}
 		}
 
 		@Override
 		public boolean resourceExists(ResourceLocation location){
-			return domains.contains(location.getResourceDomain()) && location.getResourcePath().startsWith("models/item/") && location.getResourcePath().endsWith(".json");
+			return domains.contains(location.getResourceDomain()) 
+					&& !location.getResourcePath().contains("blockstates") 
+					&& !location.getResourcePath().contains("armatures") 
+					&& !location.getResourcePath().contains("mcmeta")
+					&& location.getResourcePath().indexOf(".") != location.getResourcePath().lastIndexOf(".");
 		}
 
 		@Override
