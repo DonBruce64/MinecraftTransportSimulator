@@ -50,11 +50,6 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public String getModelLocation(){
-		return null;
-	}
-	
-	@Override
 	public float getLongPartOffset(){
 		return -masterPart.getLongPartOffset();
 	}

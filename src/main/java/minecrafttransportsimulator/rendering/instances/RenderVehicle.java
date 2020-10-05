@@ -93,8 +93,9 @@ public final class RenderVehicle{
 			}
 		}
 		for(APart part : vehicle.parts){
-			if(partObjectLists.containsKey(part.getModelLocation())){
-				for(RenderableModelObject modelObject : partObjectLists.get(part.getModelLocation())){
+			String partModelLocation = part.definition.getModelLocation();
+			if(partObjectLists.containsKey(partModelLocation)){
+				for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
 					for(ATransformRenderable transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
 							if(((TransformLight) transform).type.equals(light)){
@@ -277,7 +278,7 @@ public final class RenderVehicle{
 	 *  render the animated portions.  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderPart(APart part, float partialTicks){
-		String partModelLocation = part.getModelLocation();
+		String partModelLocation = part.definition.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(partModelLocation);
 			

@@ -280,15 +280,7 @@ public abstract class APart implements ISoundProvider{
 	
 
 	
-	//--------------------START OF CLIENT-SPECIFIC CODE--------------------
-	/**
-	 * Gets the location of the model for this part. 
-	 */
-	@Deprecated
-	public String getModelLocation(){
-		return definition.getModelLocation();
-	}
-	
+	//--------------------START OF SOUND CODE--------------------
 	@Override
 	public void updateProviderSound(SoundInstance sound){
 		if(!this.isValid || !vehicle.isValid){

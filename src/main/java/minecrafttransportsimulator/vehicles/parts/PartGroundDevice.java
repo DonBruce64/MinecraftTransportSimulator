@@ -9,8 +9,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
-import minecrafttransportsimulator.packloading.PackResourceLoader;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -167,15 +165,6 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public String getModelLocation(){
-		if(isFlat){
-			return PackResourceLoader.getPackResource(definition, ResourceType.OBJ, (definition.general.modelName != null ? definition.general.modelName : definition.systemName) + "_flat");
-		}else{
-			return super.getModelLocation();
-		}
-	}
-	
-	@Override
 	public Point3d getActionRotation(float partialTicks){
 		double xRotation = definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0;
 		double yRotation = vehicleDefinition.turnsWithSteer && definition.ground.extraCollisionBoxOffset == 0 ? -vehicle.rudderAngle/10D*Math.signum(totalOffset.z) : 0;
@@ -211,6 +200,10 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		//Set flat state and new bounding box.
 		isFlat = flat;
 		boundingBox.heightRadius = getHeight()/2D;
+	}
+	
+	public boolean getFlatState(){
+		return isFlat;
 	}
 	
 	public float getFrictionLoss(){
