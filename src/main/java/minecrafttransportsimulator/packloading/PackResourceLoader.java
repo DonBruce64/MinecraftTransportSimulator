@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**
  * Class responsible for loading pack resource files from pack archives.  This happens both during load
@@ -14,15 +15,15 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 public final class PackResourceLoader{
 	
     public static String getPackResource(AJSONItem<?> definition, ResourceType type, String name){
-    	switch(definition.structure){
+    	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
     		case DEFAULT : {
-    			 return type.getMainFolder() + definition.classification.getClassificationFolder() + name + type.getFileSuffix();
+    			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.prefixFolders + name + type.normalSuffix;
     		}
     		case LAYERED : {
-    			//TODO this can't happen until we load our own resources.
+    			return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.prefixFolders + name + type.normalSuffix;
     		}
     		case MODULAR : {
-    			//TODO this can't happen until we load our own resources.
+    			return "/assets/" + definition.packID + "/" + definition.prefixFolders + name + type.modularSuffix;
     		}
     	}
     	return null;
@@ -35,22 +36,19 @@ public final class PackResourceLoader{
     }
     
     public enum ResourceType{
-    	OBJ("objmodels/"),
-    	PNG("textures/"),
-    	PNG_ITEM("textures/items/");
+    	OBJ("objmodels/", ".obj", ".obj"),
+    	PNG("textures/", ".png", "_model.png"),
+    	ITEM_PNG("textures/items/", ".png", "_item.png"),
+    	ITEM_JSON("models/item/", ".json", "_item.json");
     	
-    	private final String folder;
+    	private final String prefixFolder;
+    	private final String normalSuffix;
+    	private final String modularSuffix;
     	
-    	private ResourceType(String folder){
-    		this.folder = folder;
-    	}
-    	
-    	public String getMainFolder(){
-    		return folder;
-    	}
-    	
-    	public String getFileSuffix(){
-    		return "." + this.name().toLowerCase();
+    	private ResourceType(String prefixFolder, String normalSuffix, String modularSuffix){
+    		this.prefixFolder = prefixFolder;
+    		this.normalSuffix = normalSuffix;
+    		this.modularSuffix = modularSuffix;
     	}
     }
     
@@ -62,10 +60,6 @@ public final class PackResourceLoader{
     	DECOR,
     	ITEM,
     	BOOKLET;
-    	
-    	public String getClassificationFolder(){
-    		return this.name().toLowerCase() + "s/";
-    	}
     	
     	public static List<String> getAllTypesAsStrings(){
         	List<String> assetTypes = new ArrayList<String>();

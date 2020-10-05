@@ -20,7 +20,6 @@ import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.util.ResourceLocation;
 
 /**Builder for MC GUI classes.  Created when {@link IInterfaceGUI#openGUI(AGUIBase)}
  * is called to open a GUI.  GUI instance is not saved after closed.
@@ -90,7 +89,7 @@ class BuilderGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
-		mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture()));
+		MasterInterface.renderInterface.bindTexture(gui.getTexture());
 		if(gui.renderBackground()){
 			MasterInterface.guiInterface.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 		}
@@ -108,7 +107,7 @@ class BuilderGUI extends GuiScreen{
 		//This requires a re-render of all the components to ensure the lit texture portions of said components render.
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
 			mc.entityRenderer.disableLightmap();
-			mc.getTextureManager().bindTexture(new ResourceLocation(gui.getTexture().replace(".png", "_lit.png")));
+			MasterInterface.renderInterface.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
 			MasterInterface.guiInterface.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 			for(GUIComponentButton button : gui.buttons){
 				button.renderButton(mouseX, mouseY);
@@ -121,8 +120,8 @@ class BuilderGUI extends GuiScreen{
 		//Now render any OBJModels we may have.
 		//CHeck to make sure the texture exists before binding.
 		for(GUIComponentOBJModel objModel : gui.objModels){
-			if(objModel.textureDomain != null){
-				mc.getTextureManager().bindTexture(new ResourceLocation(objModel.textureDomain, objModel.textureLocation));
+			if(objModel.textureLocation != null){
+				MasterInterface.renderInterface.bindTexture(objModel.textureLocation);
 			}
 			objModel.renderModel();
 		}

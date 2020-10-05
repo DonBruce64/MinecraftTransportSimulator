@@ -24,6 +24,11 @@ class InterfaceCore implements IInterfaceCore{
 	private final List<String> queuedLogs = new ArrayList<String>();
 	
 	@Override
+	public String getGameVersion(){
+		return Loader.instance().getMCVersionString().substring("Minecraft ".length());
+	}
+	
+	@Override
 	public boolean isModPresent(String modID){
 		return Loader.isModLoaded(modID);
 	}

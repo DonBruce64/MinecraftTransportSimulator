@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
-import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base JSON class for all pack-loaded JSONs.  All pack-loaded JSONs MUST extend this class.
@@ -11,15 +9,11 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.General>{
-	/**The structure for this pack item.  This determines the relative layout of files in
-	 * the pack and tells systems how to load said files.*/
-	public PackStructure structure;
-	/**A String containing any prefix folders for this item.  Used by some packloading systems where the location
-	 * of the item's resources is relative to the item's JSON definition file path.*/
+	/**A String containing any prefix folders for this item.  Used by the packloading system to tell
+	 * where resources are relative to the item's JSON definition file path.  This will always contain
+	 * the classification of the item, but may contain sub-folders below this classification folder
+	 * if such folders were present during load and the loading type supports it.*/
 	public String prefixFolders;
-	/**The classification of this item.  Set after JSON is parsed into an object and used to tell which 
-	 * sub-folder to look for assets in.  Note that multiple types of items may fall under a single classification.*/
-	public ItemClassification classification;
 	/**ID of the pack that this JSON was pulled from.  Set after JSON is parsed into an object and used
 	 * to tell MTS what jar to load assets from.*/
 	public String packID;

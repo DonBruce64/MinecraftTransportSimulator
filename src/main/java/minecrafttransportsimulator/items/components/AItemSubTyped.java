@@ -1,18 +1,19 @@
 package minecrafttransportsimulator.items.components;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
 	public final String subName;
 	
-	public AItemSubTyped(JSONDefinition definition, String subName){
-		super(definition);
+	public AItemSubTyped(JSONDefinition definition, ItemClassification classification, String subName){
+		super(definition, classification);
 		this.subName = subName;
 	}
 	
 	@Override
 	public String getRegistrationName(){
-		return definition.systemName + subName;
+		return super.getRegistrationName() + subName;
 	}
 	
 	@Override

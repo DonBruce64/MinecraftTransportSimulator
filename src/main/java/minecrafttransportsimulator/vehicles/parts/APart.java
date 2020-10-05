@@ -284,6 +284,7 @@ public abstract class APart implements ISoundProvider{
 	/**
 	 * Gets the location of the model for this part. 
 	 */
+	@Deprecated
 	public String getModelLocation(){
 		return definition.getModelLocation();
 	}

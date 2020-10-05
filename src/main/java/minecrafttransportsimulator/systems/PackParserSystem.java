@@ -1,11 +1,18 @@
 package minecrafttransportsimulator.systems;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -22,10 +29,12 @@ import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -47,6 +56,16 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
  */
 @SuppressWarnings("deprecation")
 public final class PackParserSystem{
+	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
+	private static Map<String, File> packJarMap = new HashMap<String, File>();
+	
+	/**All registered pack instances are stored in this map as they are added.  Used to handle loading operations.**/
+	public static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
+	//TODO make this private when we get rid of the old loader system.
+	
+	/**List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.**/
+	public static Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
+	
 	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
 	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
@@ -56,8 +75,194 @@ public final class PackParserSystem{
 	/**Custom Gson instance for parsing packs.*/
 	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create();
 	
-    
-    //-----START OF INIT LOGIC-----
+
+    //-----START OF NEW INIT LOGIC-----
+	/**
+     * Called to check if the passed-in jar file is a pack.  If so, it, and all the pack
+     * definitions, are loaded into the system.  A single jar file may contain more than
+     * one pack if there are multiple definition files in it.  Alternately, a single jar
+     * may contain a single pack, just with different directories of assets to load depending
+     * on what mods and packs have been loaded alongside it.  No packs should be loaded between
+     * the jar-checking code and the pack-loading code, as all possible packs and mods must
+     * be loaded prior to trying to load the pack in case there are dependencies.
+     */
+    public static void checkJarForPacks(File packJar){
+    	try{
+	    	ZipFile jarFile = new ZipFile(packJar);
+			Enumeration<? extends ZipEntry> entries = jarFile.entries();
+			while(entries.hasMoreElements()){
+				ZipEntry entry = entries.nextElement();
+				if(entry.getName().endsWith("packdefinition.json")){
+					JSONPack packDef = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class);
+					packJarMap.put(packDef.packID, packJar);
+					packMap.put(packDef.packID, packDef);
+				}
+			}
+			jarFile.close();
+    	}catch(Exception e){
+			MasterLoader.coreInterface.logError("ERROR: A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+			e.printStackTrace();
+		}
+    } 
+	
+	/**
+     * Called to load and parse all packs.  this must be done after the initial checking for
+     * packs to ensure we see all possible dependencies.  This method checks to make
+     * sure the pack's dependent parameters are valid and the pack can be loaded prior to
+     * performing any actual loading operations.
+     */
+    public static void parseAllPacks(){
+    	List<String> packIDs = new ArrayList<String>(packMap.keySet());
+    	Iterator<String> iterator = packMap.keySet().iterator();
+    	while(iterator.hasNext()){
+    		JSONPack packDef = packMap.get(iterator.next());
+    		//Don't parse the core pack.  THat's all internal.
+    		if(packDef.packID.equals(MasterLoader.resourceDomain)){
+    			continue;
+    		}
+    		
+    		//If we don't have any of the activating sets, don't load the pack. 
+    		if(packDef.activatingSets != null){
+    			for(List<String> activatingSet : packDef.activatingSets){
+    				boolean haveActivatorsInSet = false;
+    				for(String activator : activatingSet){
+    					if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
+    						haveActivatorsInSet = true;
+    						break;
+    					}
+    				}
+    				if(!haveActivatorsInSet){
+    					continue;
+    				}
+    			}
+    		}
+    		
+    		//If we have dependent sets, make sure we log a pack fault.
+    		if(packDef.dependentSets != null){
+    			for(List<String> dependencySet : packDef.dependentSets){
+    				boolean haveDependentsInSet = false;
+    				for(String dependent : dependencySet){
+    					if(packIDs.contains(dependent) || MasterLoader.coreInterface.isModPresent(dependent)){
+    						haveDependentsInSet = true;
+    						break;
+    					}
+    				}
+    				if(!haveDependentsInSet){
+    					faultMap.put(packDef.packID, dependencySet);
+    				}
+    			}
+    		}
+    		
+    		//Didn't bail for no activators.  Load the pack components into the game.
+    		PackStructure structure = PackStructure.values()[packDef.fileStructure];
+    		String assetPathPrefix = "assets/" + packDef.packID + "/";
+			if(packDef.assetSubFolder != null){
+				assetPathPrefix += packDef.assetSubFolder + "/";
+			}
+    		
+			try{
+	    		ZipFile jarFile = new ZipFile(packJarMap.get(packDef.packID));
+				Enumeration<? extends ZipEntry> entries = jarFile.entries();
+				while(entries.hasMoreElements()){
+					//Get next entry and path.
+					ZipEntry entry = entries.nextElement();
+					String entryFullPath = entry.getName();
+					if(entryFullPath.startsWith(assetPathPrefix) && entryFullPath.endsWith(".json")){
+						//JSON is in correct folder.  Get path properties and ensure they match our specs.
+						//Need the asset folder structure between the main prefix and the asset itself.
+						//This lets us know what asset we need to create as all assets are in their own folders.
+						String fileName = entryFullPath.substring(entryFullPath.lastIndexOf('/') + 1);
+						String assetPath = entryFullPath.substring(assetPathPrefix.length(), entryFullPath.substring(0, entryFullPath.length() - fileName.length()).lastIndexOf("/") + 1);
+						if(!structure.equals(PackStructure.MODULAR)){
+							//Need to trim the jsondefs folder to get correct sub-folder of jsondefs data.
+							//Modular structure does not have a jsondefs folder, so we don't need to trim it off for that.
+							assetPath = assetPath.substring("jsondefs/".length());
+						}
+						
+						//Check to make sure json isn't an item JSON or our pack definition.
+						if(!fileName.equals("packdefinition.json") && (structure.equals(PackStructure.MODULAR) ? !fileName.endsWith("_item.json") : entryFullPath.contains("jsondefs"))){
+							//Get JSON class type to use with GSON system.
+							String jsonType = assetPath.substring(0, assetPath.indexOf("/"));
+							Class<? extends AJSONItem<?>> jsonClass;
+							switch(jsonType){
+								case("vehicles") : jsonClass = JSONVehicle.class; break;
+								case("parts") : jsonClass = JSONPart.class; break;
+								case("instruments") : jsonClass = JSONInstrument.class; break;
+								case("poles") : jsonClass = JSONPoleComponent.class; break;
+								case("decors") : jsonClass = JSONDecor.class; break;
+								case("items") : jsonClass = JSONItem.class; break;
+								case("booklets") : jsonClass = JSONBooklet.class; break;
+								default : {
+									MasterLoader.coreInterface.logError("ERROR: Could not determine what type of JSON to create from: " + jsonType + " for asset: " + fileName);
+									continue;
+								}
+							}
+							
+							//Create the JSON instance.
+							AJSONItem<?> definition;
+							try{
+								definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
+								performLegacyCompats(definition);
+							}catch(Exception e){
+								MasterLoader.coreInterface.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
+					    		MasterLoader.coreInterface.logError(e.getMessage());
+					    		continue;
+							}
+							
+							//Remove any trailing path information from the assetPath if we are in default mode.
+							//This prevents us from referencing sub-folders.  Only the main classification folder will remain.
+							if(structure.equals(PackStructure.DEFAULT)){
+								assetPath = assetPath.substring(0, assetPath.indexOf("/") + 1);
+							}
+							
+							//Create all required items.
+							if(definition instanceof AJSONMultiModelProvider){
+								for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : ((AJSONMultiModelProvider<?>) definition).definitions){
+						    		try{
+						    			if(subDefinition.extraMaterials != null){
+						    				AItemPack<?> item;
+						    				switch(jsonType){
+												case("vehicles") : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
+												case("parts") : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
+												default : {
+													throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
+												}
+											}
+						    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath);
+						    			}else{
+						    				throw new NullPointerException();
+						    			}
+						    		}catch(Exception e){
+						    			throw new NullPointerException("Unable to parse definition #" + (((AJSONMultiModelProvider<?>) definition).definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+						    		}
+					    		}
+							}else{
+								AItemPack<?> item;
+			    				switch(jsonType){
+									case("instruments") : item = new ItemInstrument((JSONInstrument) definition); break;
+									case("poles") : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
+									case("decors") : item = new ItemDecor((JSONDecor) definition); break;
+									case("items") : item = new ItemItem((JSONItem) definition); break;
+									case("booklets") : item = new ItemBooklet((JSONBooklet) definition); break;
+									default : {
+										throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
+									}
+								}
+			    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), "", assetPath);
+							}
+						}
+					}
+				}
+				jarFile.close();
+			}catch(Exception e){
+				MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
+				e.printStackTrace();
+			}
+    	}
+    }
+	
+	
+    //-----START OF OLD INIT LOGIC-----
     /**Packs should call this upon load to add their content to the mod.
      * This will return an array of strings that correspond to content types.
      * These content types will be content that has items in the jsondefs folder
@@ -75,11 +280,12 @@ public final class PackParserSystem{
     		for(JSONVehicle.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, ItemClassification.VEHICLE);
+	    				setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "vehicles/");
 	    			}else{
 	    				throw new NullPointerException();
 	    			}
 	    		}catch(Exception e){
+	    			e.printStackTrace();
 	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
 	    		}
     		}
@@ -98,7 +304,7 @@ public final class PackParserSystem{
     		for(JSONPart.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, ItemClassification.PART);
+	    				setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "parts/");
 		    		}else{
 	    				throw new NullPointerException();
 	    			}
@@ -115,7 +321,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", ItemClassification.INSTRUMENT);
+    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", "instruments/");
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -127,7 +333,7 @@ public final class PackParserSystem{
     	try{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		performLegacyCompats(definition);
-	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", ItemClassification.POLE);
+	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "poles/");
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -139,7 +345,7 @@ public final class PackParserSystem{
     	try{
     		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
     		performLegacyCompats(definition);
-    		setupItem(new ItemDecor(definition), packID, jsonFileName, "", ItemClassification.DECOR);
+    		setupItem(new ItemDecor(definition), packID, jsonFileName, "", "decors/");
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -149,7 +355,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", ItemClassification.ITEM);
+	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "items/");
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -159,20 +365,20 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their booklets to the mod.**/
     public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", ItemClassification.BOOKLET);
+    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", "booklets/");
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
     	}
     }
     
-    /**Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.**/
-    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String packID, String systemName, String subName, ItemClassification classification){
+    /**
+     * Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.
+     */
+    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String packID, String systemName, String subName, String prefixFolders){
     	//Set code-based definition values.
     	item.definition.packID = packID;
-    	//TODO make this be based off the new loader.
-    	item.definition.structure = PackStructure.DEFAULT;
-    	item.definition.classification = classification;
+    	item.definition.prefixFolders = prefixFolders;
     	item.definition.systemName = systemName;
     	
     	//Add the item to the interface system.
@@ -468,6 +674,10 @@ public final class PackParserSystem{
     				}
     			}
     		}
+    		
+    		if(vehicleDef.rendering != null){
+    			doAnimationLegacyCompats(vehicleDef.rendering, new JSONVehicle());
+    		}
     	}else if(definition instanceof JSONPoleComponent){
     		JSONPoleComponent pole = (JSONPoleComponent) definition;
     		//If we are a sign using the old textlines, update them.
@@ -625,6 +835,10 @@ public final class PackParserSystem{
     
     public static Set<String> getAllPackIDs(){
     	return packItemMap.keySet();
+    }
+    
+    public static JSONPack getPackConfiguration(String packID){
+    	return packMap.get(packID);
     }
     
     public static List<AItemPack<?>> getAllItemsForPack(String packID){

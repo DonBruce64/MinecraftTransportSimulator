@@ -203,7 +203,7 @@ public class TransformLight extends ATransformRenderable{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderColor(float alphaValue){
-		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/light.png");
+		MasterLoader.renderInterface.bindTexture("mts:textures/rendering/light.png");
 		MasterLoader.renderInterface.setLightingState(false);
 		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -222,7 +222,7 @@ public class TransformLight extends ATransformRenderable{
 	 *  passed-in will disable lighting for the cover if true.
 	 */
 	private void renderCover(boolean disableLighting){
-		MasterLoader.renderInterface.bindTexture("minecraft", "textures/blocks/glass.png");
+		MasterLoader.renderInterface.bindTexture("minecraft:textures/blocks/glass.png");
 		MasterLoader.renderInterface.setLightingState(!disableLighting);
 		MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -242,7 +242,7 @@ public class TransformLight extends ATransformRenderable{
 	 *  both lighting and lightmap here to prevent the flare from being dim.
 	 */
 	private void renderFlare(float alphaValue){
-		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/lensflare.png");
+		MasterLoader.renderInterface.bindTexture("mts:textures/rendering/lensflare.png");
 		MasterLoader.renderInterface.setLightingState(false);
 		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
 		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
@@ -267,7 +267,7 @@ public class TransformLight extends ATransformRenderable{
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderBeam(float alphaValue){
-		MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/lightbeam.png");
+		MasterLoader.renderInterface.bindTexture("mts:textures/rendering/lightbeam.png");
 		MasterLoader.renderInterface.setLightingState(false);
 		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
 		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);

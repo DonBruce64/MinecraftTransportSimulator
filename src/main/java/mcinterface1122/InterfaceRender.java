@@ -27,6 +27,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefiniti
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCameraObject;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -44,6 +46,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
@@ -75,9 +78,8 @@ import net.minecraftforge.fml.relauncher.Side;
 
 @Mod.EventBusSubscriber(Side.CLIENT)
 class InterfaceRender implements IInterfaceRender{
-	private static final Map<String, Map<String, ResourceLocation>> textures = new HashMap<String, Map<String, ResourceLocation>>();
+	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
-	private static String pushedTextureDomain;
 	private static String pushedTextureLocation;
 	private static int zoomLevel;
 	private static int customCameraIndex;
@@ -94,37 +96,39 @@ class InterfaceRender implements IInterfaceRender{
 	}
 	
 	@Override
-	public void bindTexture(String textureDomain, String textureLocation){
-		//Bind texture if we have it.
-		ResourceLocation texture;
-		if(textures.containsKey(textureDomain)){
-			texture = textures.get(textureDomain).get(textureLocation);
-			if(texture == null){
-				//Make new texture for the domain.
-				texture = new ResourceLocation(textureDomain, textureLocation);
-				textures.get(textureDomain).put(textureLocation, texture);
-			}
-		}else{
-			//Make new domain and new texture for the domain.
-			texture = new ResourceLocation(textureDomain, textureLocation);
-			Map<String, ResourceLocation> textureMap = new HashMap<String, ResourceLocation>();
-			textureMap.put(textureLocation, texture);
-			textures.put(textureDomain, textureMap);
+	public void bindTexture(String textureLocation){
+		//If the texture has a colon, it's a short-hand form that needs to be converted.
+		if(textureLocation.indexOf(":") != -1){
+			textureLocation = "/assets/" + textureLocation.replace(":", "/");
 		}
-		Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
+		//Bind texture if we have it.
+		if(!textures.containsKey(textureLocation)){
+			//Don't have this texture created yet.  Do so now.
+			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
+			//FAR less jank than using MC's resource system.
+			try{
+				BufferedImage bufferedimage = TextureUtil.readBufferedImage(InterfaceRender.class.getResourceAsStream(textureLocation));
+				int glTexturePointer = TextureUtil.glGenTextures();
+		        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
+		        textures.put(textureLocation, glTexturePointer);
+			}catch(Exception e){
+				MasterInterface.coreInterface.logError("ERROR: Could not find texture: " + textureLocation + " Reverting to fallback texture.");
+				textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+			}
+		}
+		GlStateManager.bindTexture(textures.get(textureLocation));
 	}
 	
 	@Override
-	public void setTexture(String textureDomain, String textureLocation){
-		pushedTextureDomain = textureDomain;
+	public void setTexture(String textureLocation){
 		pushedTextureLocation = textureLocation;
-		bindTexture(textureDomain, textureLocation);
+		bindTexture(textureLocation);
 	}
 	
 	@Override
 	public void recallTexture(){
-		if(pushedTextureDomain != null){
-			Minecraft.getMinecraft().getTextureManager().bindTexture(textures.get(pushedTextureDomain).get(pushedTextureLocation));
+		if(pushedTextureLocation != null){
+			GlStateManager.bindTexture(textures.get(pushedTextureLocation));
 		}
 	}
 	
@@ -640,7 +644,10 @@ class InterfaceRender implements IInterfaceRender{
 		//First register the core items.
 		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemWrapperMap.entrySet()){
 			try{
-				registerCoreItemRender(entry.getValue());
+				//TODO remove this when we don't have non-pack items.
+				if(!(entry.getValue().item instanceof AItemPack)){
+					registerCoreItemRender(entry.getValue());
+				}
 			}catch(Exception e){
 				e.printStackTrace();
 			}
@@ -648,7 +655,7 @@ class InterfaceRender implements IInterfaceRender{
 		
 		//Now register items for the packs.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.definition.classification.getClassificationFolder() + packItem.getRegistrationName(), "inventory"));
+			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(), "inventory"));
 		}
 	}
 	
@@ -672,19 +679,26 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
-			String jsonPath = location.getResourcePath();
-			//Strip header and suffix.
-			jsonPath = jsonPath.substring("models/item/".length(), jsonPath.length() - ".json".length());
-			//Get the packID.
-			String packID = jsonPath.substring(0, jsonPath.indexOf('.'));
-			//Get the asset name by stripping off the packID.
-			String asset = jsonPath.substring(packID.length() + 1);
+			String combinedPackInfo = location.getResourcePath();
+			combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
+			String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
+			String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf('.') + 1);
+			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+			String itemJSONPath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
+			
 			//Attempt to get a JSON file normally from the path.  If this fails, generate a default JSON.
-			InputStream stream = getClass().getResourceAsStream("/assets/" + packID + "/models/item/" + asset + ".json");
+			InputStream stream = getClass().getResourceAsStream(itemJSONPath);
 			if(stream != null){
 				return stream;
 			}else{
-				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":items/" + asset + "\"}}";
+				//Get the item texture location.
+				String itemTextureLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+				//Need to remove the .png, as it's implied in JSON.
+				itemTextureLocation = itemTextureLocation.substring(0, itemTextureLocation.length() - ".png".length());
+				//Remove the assets, packID, and texture prefixes.
+				itemTextureLocation = itemTextureLocation.substring(("/assets/" + packID + "/textures/").length()); 
+				//Create the fake JSON for the sytem to process and bind it.
+				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + packID + ":" + itemTextureLocation + "\"}}";
 				return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 			}
 		}

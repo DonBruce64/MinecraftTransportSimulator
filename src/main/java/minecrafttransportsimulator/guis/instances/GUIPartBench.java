@@ -91,7 +91,7 @@ public class GUIPartBench extends AGUIBase{
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
 			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-				if(isJSONValid(packItem.definition)){
+				if(isItemValid(packItem)){
 					currentItem = packItem;
 					currentPack = packItem.definition.packID;
 					return;
@@ -258,7 +258,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
 				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
-					if(isJSONValid(packItem.definition)){
+					if(isItemValid(packItem)){
 						nextPack = packIDs.get(i);
 						break;
 					}
@@ -272,7 +272,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
 				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
-					if(isJSONValid(packItem.definition)){
+					if(isItemValid(packItem)){
 						prevPack = packIDs.get(i);
 						break;
 					}
@@ -295,7 +295,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentItem == null){
 			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(currentPack)){
 				if(currentItem == null || (currentItem.definition instanceof AJSONMultiModelProvider && nextSubItem == null)){
-					if(isJSONValid(packItem.definition)){
+					if(isItemValid(packItem)){
 						if(currentItem == null){
 							currentItem = packItem;
 							currentItemIndex = packItems.indexOf(currentItem);
@@ -315,7 +315,7 @@ public class GUIPartBench extends AGUIBase{
 		nextSubItem = null;
 		if(currentItemIndex < packItems.size()){
 			for(int i=currentItemIndex+1; i<packItems.size() && nextItem == null; ++i){
-				if(isJSONValid(packItems.get(i).definition)){
+				if(isItemValid(packItems.get(i))){
 					//If we are for subTyped item, and this item is the same sub-item classification, 
 					//set nextSubItem and continue on.
 					if(currentItem.definition instanceof AJSONMultiModelProvider){
@@ -338,7 +338,7 @@ public class GUIPartBench extends AGUIBase{
 		prevSubItem = null;
 		if(currentItemIndex > 0){
 			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || currentItem.definition instanceof AJSONMultiModelProvider); --i){
-				if(isJSONValid(packItems.get(i).definition)){
+				if(isItemValid(packItems.get(i))){
 					//If we are for a subTyped item, and we didn't switch items, and this item
 					//is the same sub-item classification, set prevSubItem and continue on.
 					//If we did switch, we want the first subItem in the set of items to
@@ -393,39 +393,31 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Enable render based on what component we have.
 		if(currentItem.definition instanceof AJSONModelProvider){
-			String modelLocation = ((AJSONModelProvider<?>) currentItem.definition).getModelLocation();
-			String textureLocation = ((AJSONModelProvider<?>) currentItem.definition).getTextureLocation();
-			modelRender.modelDomain = currentPack;
-			modelRender.modelLocation = modelLocation;
-			modelRender.textureDomain = currentPack;
-			modelRender.textureLocation = textureLocation;
+			modelRender.modelLocation = ((AJSONModelProvider<?>) currentItem.definition).getModelLocation();
+			modelRender.textureLocation = ((AJSONModelProvider<?>) currentItem.definition).getTextureLocation();
 			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.
 			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
 		}else if(currentItem instanceof AItemSubTyped){
-			String modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation();
-			String textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
-			modelRender.modelDomain = currentPack;
-			modelRender.modelLocation = modelLocation;
-			modelRender.textureDomain = currentPack;
-			modelRender.textureLocation = textureLocation;
+			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation();
+			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
 		}else{
 			itemRender.stack = MasterLoader.coreInterface.getStack(currentItem);
-			modelRender.modelDomain = null;
+			modelRender.modelLocation = null;
 		}
 		
 		//Now update the last saved item.
 		lastOpenedItem.put(decor, currentItem);
 	}
 	
-	private boolean isJSONValid(AJSONItem<?> definition){
+	private boolean isItemValid(AItemPack<?> item){
 		if(decor.definition.general.items != null){
-			return decor.definition.general.items.contains(definition.packID + ":" + definition.systemName);
-		}else if(decor.definition.general.itemTypes.contains(definition.classification.toString().toLowerCase())){
-			if(definition instanceof JSONPart && decor.definition.general.partTypes != null){
+			return decor.definition.general.items.contains(item.definition.packID + ":" + item.definition.systemName);
+		}else if(decor.definition.general.itemTypes.contains(item.classification.toString().toLowerCase())){
+			if(item.definition instanceof JSONPart && decor.definition.general.partTypes != null){
 				for(String partType : decor.definition.general.partTypes){
-					if(((JSONPart) definition).general.type.contains(partType)){
+					if(((JSONPart) item.definition).general.type.contains(partType)){
 						return true;
 					}
 				}

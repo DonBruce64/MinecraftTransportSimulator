@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -19,21 +17,13 @@ import org.lwjgl.opengl.GL11;
  * @author don_bruce
  */
 public final class OBJParser{
-	public static Map<String, Float[][]> parseOBJModel(String packID, String modelLocation){
+	public static Map<String, Float[][]> parseOBJModel(String modelLocation){
 		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
-		if(packID != null){
-			try{
-				reader = new BufferedReader(new InputStreamReader(OBJParser.class.getResourceAsStream("/assets/" + packID + "/" + modelLocation)));
-			}catch(Exception e){
-				throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + "/assets/" + packID + "/" + modelLocation + " but could not find it.  Check the path and try again.");
-			}
-		}else{
-			try{
-				reader = new BufferedReader(new FileReader(new File(modelLocation)));
-			}catch(Exception e){
-				throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
-			}
+		try{
+			reader = new BufferedReader(new InputStreamReader(OBJParser.class.getResourceAsStream(modelLocation)));
+		}catch(Exception e){
+			throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
 		}
 		
 		String partName = null;

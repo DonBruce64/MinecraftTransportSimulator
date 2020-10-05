@@ -31,7 +31,7 @@ public interface IInterfaceRender{
 	 *  cached in this class once created for later use, so feel free to not cache
 	 *  the string values that are passed-in.
 	 */
-	public void bindTexture(String textureDomain, String textureLocation);
+	public void bindTexture(String textureLocation);
 	
 	/**
 	 *  Like bindTexture, but this method also sets the texture for binding recall later via recallTexture.
@@ -39,7 +39,7 @@ public interface IInterfaceRender{
 	 *  we will render between this call and another call, but we do know that we want this texture to be
 	 *  re-bound if any other textures were bound.
 	 */
-	public void setTexture(String textureDomain, String textureLocation);
+	public void setTexture(String textureLocation);
 	
 	/**
 	 *  Re-binds the last saved texture.

@@ -214,7 +214,7 @@ public final class RenderVehicle{
 		//are the same for all models, this is more appropriate.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.systemName)){
 			//No distplay list for this model.  Parse and create it now.
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.packID, vehicle.definition.getModelLocation());
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.getModelLocation());
 			
 			//For anything that has a definition as an animation, add it to an animated list.
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
@@ -246,7 +246,7 @@ public final class RenderVehicle{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		MasterLoader.renderInterface.setTexture(vehicle.definition.packID, vehicle.definition.getTextureLocation(vehicle.currentSubName));
+		MasterLoader.renderInterface.setTexture(vehicle.definition.getTextureLocation(vehicle.currentSubName));
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.systemName));
 		}
@@ -279,7 +279,7 @@ public final class RenderVehicle{
 	private static void renderPart(APart part, float partialTicks){
 		String partModelLocation = part.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(part.definition.packID, partModelLocation);
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(partModelLocation);
 			
 			//For anything that has a definition as an animation, add it to an animated list.
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
@@ -312,9 +312,9 @@ public final class RenderVehicle{
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
 		if(!part.definition.general.useVehicleTexture){
-			MasterLoader.renderInterface.setTexture(part.definition.packID, part.definition.getTextureLocation(part.currentSubName));
+			MasterLoader.renderInterface.setTexture(part.definition.getTextureLocation(part.currentSubName));
 		}else{
-			MasterLoader.renderInterface.setTexture(part.vehicle.definition.packID, part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
+			MasterLoader.renderInterface.setTexture(part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
 		}
 		
 		//Rotate the part prior to rendering the displayList.

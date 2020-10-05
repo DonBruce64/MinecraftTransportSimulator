@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -64,7 +65,7 @@ public class MasterInterface{
 		logger = event.getModLog();
 		coreInterface.flushLogQueue();
 		
-		//Load config file and set minecraft directory.
+		//Tell the loader where we are.  This allows the loader to start it's loading operations.
 		MasterLoader.setMainDirectory(event.getModConfigurationDirectory().getParent());
 	}
 	
@@ -87,7 +88,7 @@ public class MasterInterface{
 		//TODO remove when packs don't register their own items.  Instead, auto-register items from pack creative tabs.
 		if(item instanceof AItemPack){
 			String packID = ((AItemPack<?>) item).definition.packID;
-			if(!packID.equals(MODID)){
+			if(PackParserSystem.getPackConfiguration(packID) == null){
 				BuilderItem.itemWrapperMap.get(item).setUnlocalizedName(packID + "." + item.getRegistrationName());
 			}
 		}

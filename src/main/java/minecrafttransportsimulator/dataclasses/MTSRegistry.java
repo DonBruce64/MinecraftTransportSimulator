@@ -5,6 +5,8 @@ import java.util.List;
 
 import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 
@@ -18,6 +20,16 @@ public final class MTSRegistry{
 	 * the packloader is expecting.
 	 */
 	public static List<Item> getItemsForPack(String packID){
+		//Check to make sure we have a packDef for this pack.  If not, we need to create one prior to returning the items.
+		//If we don't, then we'll have issue with loaders.
+		if(!PackParserSystem.packMap.containsKey(packID)){
+			JSONPack packDef = new JSONPack();
+			packDef.internallyGenerated = true;
+			packDef.packID = packID;
+			packDef.fileStructure = 0;
+			packDef.packName = MasterLoader.coreInterface.getModName(packID);
+			PackParserSystem.packMap.put(packID, packDef);
+		}
 		List<Item> items = new ArrayList<Item>();
 		for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
 			items.add(MasterInterface.getItem(packItem));

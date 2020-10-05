@@ -11,7 +11,9 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -130,14 +132,22 @@ class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				//TODO remove this when packs define their tab names.
-				BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
+				//TODO remove this when all packs use the new system.
+				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
+					 BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID).packName, item)); 
+				}else{
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
+				}
 			}
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
 			//TODO remove when packs don't register their own items.
 			if(tabID.equals(MasterInterface.MODID)){
 				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+			}else if(item instanceof AItemPack){
+				if(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
+					event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+				}
 			}
 		}
 	}

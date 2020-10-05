@@ -64,9 +64,7 @@ public class GUITextEditor extends AGUIBase{
 			//Add the render to render the sign.
 			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
-			modelRender.modelDomain = sign.definition.packID;
 			modelRender.modelLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.OBJ, sign.definition.general.modelName != null ? sign.definition.general.modelName : sign.definition.systemName);
-			modelRender.textureDomain = sign.definition.packID;
 			modelRender.textureLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.PNG, sign.definition.systemName);
 			
 			//Set text and text objects.

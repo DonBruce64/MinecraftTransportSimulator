@@ -250,11 +250,8 @@ public class GUIDevEditor extends AGUIBase{
 			public void onClicked(){
 				try{
 					int dataEntryBoxIndex = 0;
-					componentItemModel.modelDomain = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					String subFolder = Boolean.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText()) ? "parts/" : "vehicles/";
-					componentItemModel.textureDomain = componentItemModel.modelDomain;
-					componentItemModel.modelLocation = "objmodels/" + subFolder + String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText() + ".obj");
-					componentItemModel.textureLocation = "textures/" + subFolder + String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText() + ".png");
+					componentItemModel.modelLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.textureLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
@@ -284,14 +281,10 @@ public class GUIDevEditor extends AGUIBase{
 		
 		//Set label text and default entries.
 		int labelBoxIndex = 0;
-		dataEntryLabels.get(labelBoxIndex).text = "PackID:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.packID);
-		dataEntryLabels.get(labelBoxIndex).text = "IsPart:";
-		dataEntryBoxes.get(labelBoxIndex++).setText("false");
 		dataEntryLabels.get(labelBoxIndex).text = "Model:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.systemName);
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getModelLocation());
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.systemName + vehicleClicked.currentSubName);
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.currentSubName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.x));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";

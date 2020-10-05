@@ -174,11 +174,7 @@ public class GUIPaintGun extends AGUIBase{
 		}
 		
 		//Set model render properties.
-		String modelLocation = currentItem.definition.getModelLocation();
-		String textureLocation = currentItem.definition.getTextureLocation(currentItem.subName);
-		modelRender.modelDomain = vehicle.definition.packID;
-		modelRender.modelLocation = modelLocation;
-		modelRender.textureDomain = vehicle.definition.packID;
-		modelRender.textureLocation = textureLocation;
+		modelRender.modelLocation = currentItem.definition.getModelLocation();
+		modelRender.textureLocation = currentItem.definition.getTextureLocation(currentItem.subName);
 	}
 }

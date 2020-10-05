@@ -28,7 +28,7 @@ public class TransformWindow extends ATransformRenderable{
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
-			MasterLoader.renderInterface.bindTexture(MasterLoader.resourceDomain, "textures/rendering/glass.png");
+			MasterLoader.renderInterface.bindTexture("mts:textures/rendering/glass.png");
 		}
 		return 0;
 	}

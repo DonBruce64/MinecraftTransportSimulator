@@ -10,6 +10,7 @@ import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
@@ -84,6 +85,13 @@ public class MasterLoader{
 		//These need to be created before we do checks for block registration.
 		//If we don't, then we risk not creating and registering the blocks.
 		try{
+			JSONPack packDef = new JSONPack();
+			packDef.internallyGenerated = true;
+			packDef.packID = resourceDomain;
+			packDef.fileStructure = 0;
+			packDef.packName = MasterLoader.coreInterface.getModName(resourceDomain);
+			PackParserSystem.packMap.put(resourceDomain, packDef);
+			
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/booklets/handbook_en.json"), "UTF-8"), "handbook_en", resourceDomain);
 			PackParserSystem.addBookletDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/booklets/handbook_ru.json"), "UTF-8"), "handbook_ru", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/fuelpump.json"), "UTF-8"), "fuelpump", resourceDomain);
@@ -103,11 +111,34 @@ public class MasterLoader{
 	}
 	
 	/**
-	 *  Called when directories are ready.  This sets the main game directory.
+	 *  Called when directories are ready.  This sets the main game directory
+	 *  and loads any packs by checking for valid pack JSON files.
 	 */
 	public static void setMainDirectory(String directory){
 		gameDirectory = directory;
 		ConfigSystem.loadFromDisk(new File(directory, "config"));
+		File modDirectory = new File(directory, "mods");
+		if(modDirectory.exists()){
+			//Check main directory for packs.
+			for(File file : modDirectory.listFiles()){
+				if(file.getName().endsWith(".jar")){
+					PackParserSystem.checkJarForPacks(file);
+				}
+			}
+			
+			//Check version-specific directory for packs.
+			modDirectory = new File(modDirectory, coreInterface.getGameVersion());
+			if(modDirectory.exists()){
+				for(File file : modDirectory.listFiles()){
+					if(file.getName().endsWith(".jar")){
+						PackParserSystem.checkJarForPacks(file);
+					}
+				}
+			}
+		}else{
+			coreInterface.logError("ERROR: Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+		}
+		PackParserSystem.parseAllPacks();
 	}
 	
 	/**

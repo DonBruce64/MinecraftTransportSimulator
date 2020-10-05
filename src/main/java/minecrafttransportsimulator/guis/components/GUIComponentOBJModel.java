@@ -32,9 +32,7 @@ public class GUIComponentOBJModel{
 	public int y;
 	public boolean spin;
 	public float scale;
-	public String modelDomain;
 	public String modelLocation;
-	public String textureDomain;
 	public String textureLocation;
 	
 	public boolean visible = true;
@@ -53,10 +51,9 @@ public class GUIComponentOBJModel{
 	 */
     public void renderModel(){
     	if(visible){
-			if(modelDomain != null){
-				String modelFile = modelDomain + ":" + modelLocation;
-				if(!modelDisplayLists.containsKey(modelFile)){
-					parseModel(modelDomain, modelLocation);
+			if(modelLocation != null){
+				if(!modelDisplayLists.containsKey(modelLocation)){
+					parseModel(modelLocation);
 				}
 				GL11.glPushMatrix();
 				//Translate to position and rotate to isometric view if required.
@@ -74,10 +71,10 @@ public class GUIComponentOBJModel{
 
 				//Scale based on our scaling factor and render.
 				if(!staticScaling){
-					scale = modelScalingFactors.get(modelFile);
+					scale = modelScalingFactors.get(modelLocation);
 				}
 				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, scale*scaleFactor);
-				GL11.glCallList(modelDisplayLists.get(modelFile));
+				GL11.glCallList(modelDisplayLists.get(modelLocation));
 				GL11.glPopMatrix();
 			}
 		}
@@ -86,14 +83,14 @@ public class GUIComponentOBJModel{
     /**
 	 *  Parses the OBJ model.  This also gets centering information for rendering.
 	 */
-    private static void parseModel(String modelDomain, String modelLocation){
+    private static void parseModel(String modelLocation){
 		float minX = 999;
 		float maxX = -999;
 		float minY = 999;
 		float maxY = -999;
 		float minZ = 999;
 		float maxZ = -999;
-		Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelDomain, modelLocation);
+		Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);
@@ -113,10 +110,10 @@ public class GUIComponentOBJModel{
 			}
 		}
 		float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-		modelScalingFactors.put(modelDomain + ":" + modelLocation, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
+		modelScalingFactors.put(modelLocation, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
 		GL11.glEnd();
 		GL11.glEndList();
-		modelDisplayLists.put(modelDomain + ":" + modelLocation, displayListIndex);
+		modelDisplayLists.put(modelLocation, displayListIndex);
 	}
     
     /**

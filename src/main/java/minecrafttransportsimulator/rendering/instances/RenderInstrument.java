@@ -27,7 +27,7 @@ public final class RenderInstrument{
      */
 	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
-		MasterLoader.renderInterface.setTexture(instrument.definition.packID, "textures/instruments.png");
+		MasterLoader.renderInterface.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
 		//Check if the lights are on.  If so, disable the lightmap.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
