@@ -225,17 +225,21 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
-		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
-			if(rider instanceof IWrapperPlayer && getPartAtLocation(riderLocation).vehicleDefinition.isController){
-				for(PartEngine engine : engines.values()){
-					if(!engine.state.running){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+		if(super.addRider(rider, riderLocation)){
+			if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
+				if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
+					for(PartEngine engine : engines.values()){
+						if(!engine.state.running){
+							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+						}
 					}
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 				}
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 			}
+			return true;
+		}else{
+			return false;
 		}
-		return super.addRider(rider, riderLocation);
 	}
 	
 	@Override
