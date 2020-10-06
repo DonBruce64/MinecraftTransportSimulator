@@ -285,7 +285,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		if(part.definition.bullet != null){
 			if(reloadTimeRemaining == 0){
 				//Only fill bullets if we match the bullet already in the gun, or if our diameter matches.
-				if((loadedBullet == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(part.definition)){
+				if((loadedBullet == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(part)){
 					//Make sure we don't over-fill the gun.
 					if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
 						loadedBullet = part;
