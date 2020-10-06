@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -225,12 +226,14 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
 		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
-			for(PartEngine engine : engines.values()){
-				if(!engine.state.running){
-					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+			if(rider instanceof IWrapperPlayer && getPartAtLocation(riderLocation).vehicleDefinition.isController){
+				for(PartEngine engine : engines.values()){
+					if(!engine.state.running){
+						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+					}
 				}
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 			}
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
 		return super.addRider(rider, riderLocation);
 	}
@@ -238,7 +241,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
 		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
-			if(locationRiderMap.containsValue(rider) && locationRiderMap.size() == 1){
+			if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 				for(PartEngine engine : engines.values()){
 					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 				}
