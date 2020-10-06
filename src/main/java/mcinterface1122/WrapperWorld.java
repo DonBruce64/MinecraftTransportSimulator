@@ -370,7 +370,7 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion){
+	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
 		AxisAlignedBB mcBox = convertBox(box);
 		box.collidingBlocks.clear();
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
@@ -395,21 +395,40 @@ class WrapperWorld implements IWrapperWorld{
 		
 		//If we are in the depth bounds for this collision, set it as the collision depth.
 		box.currentCollisionDepth.set(0D, 0D, 0D);
+		double boxCollisionDepth;
 		for(AxisAlignedBB colBox : collidingAABBs){
 			if(collisionMotion.x > 0){
-				box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, mcBox.maxX - colBox.minX);
+				boxCollisionDepth = mcBox.maxX - colBox.minX;
+				if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > 0){
+					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
+				}
 			}else if(collisionMotion.x < 0){
-				box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, colBox.maxX - mcBox.minX);
+				boxCollisionDepth = colBox.maxX - mcBox.minX;
+				if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < 0){
+					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, colBox.maxX - mcBox.minX);
+				}
 			}
 			if(collisionMotion.y > 0){
-				box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, mcBox.maxY - colBox.minY);
+				boxCollisionDepth = mcBox.maxY - colBox.minY;
+				if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > 0){
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, mcBox.maxY - colBox.minY);
+				}
 			}else if(collisionMotion.y < 0){
-				box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, colBox.maxY - mcBox.minY);
+				boxCollisionDepth = colBox.maxY - mcBox.minY;
+				if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < 0){
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, colBox.maxY - mcBox.minY);
+				}
 			}
 			if(collisionMotion.z > 0){
-				box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
+				if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+				}
 			}else if(collisionMotion.z < 0){
-				box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
+				if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < 0){
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+				}
 			}
 		}
 	}

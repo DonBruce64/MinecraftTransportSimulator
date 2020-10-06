@@ -1019,7 +1019,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					Point3d velocityOffset = exhaust.velocity.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
 					velocityOffset.y = velocityOffset.y/10D;
-					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.14;
+					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
 					if(state.running){
 						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), exhaust.scale));
 						//Also play steam chuff sound if we are a steam engine.
@@ -1071,9 +1071,13 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Render engine smoke if we're overheating.  Only for non-steam engines.
 		if(!definition.engine.isSteamPowered && temp > OVERHEAT_TEMP_1){
-			MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
+			Point3d velocityOffset = vehicle.motion.copy().rotateFine(vehicle.angles);
+			velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
+			velocityOffset.y = velocityOffset.y/10D;
+			velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
+			MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 			if(temp > OVERHEAT_TEMP_2){
-				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0, 0.15, 0), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 			}
 		}
 	}

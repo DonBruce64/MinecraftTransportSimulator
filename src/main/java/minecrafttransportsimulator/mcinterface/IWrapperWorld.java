@@ -151,10 +151,12 @@ public interface IWrapperWorld{
 	 * Updates the blocks and depths of collisions for the passed-in BoundingBox to the box's internal variables.
 	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
 	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
-	 * This prevents excess calculations when trying to do movement calculations for a single axis.  Note that the
-	 * actual value of the motion does not matter for this function: only that a non-zero value be present for an axis.
+	 * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
+	 * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
+	 * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
+	 * collisionDepth be set for that axis.
 	 */
-	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion);
+	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater);
 	
 	/**
 	 *  Returns the current redstone power at the passed-in position.

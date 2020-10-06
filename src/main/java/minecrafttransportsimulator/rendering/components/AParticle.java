@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -14,12 +15,14 @@ public abstract class AParticle{
 	public final IWrapperWorld world;
 	public final Point3d position;
 	public final Point3d motion;
+	public final BoundingBox box;
 	public final float red;
 	public final float green;
 	public final float blue;
 	public final float alpha;
 	public final float scale;
 	public final int maxAge;
+	public boolean touchingBlocks;
 	public int age;
 	
 	public AParticle(IWrapperWorld world, Point3d position, Point3d motion){
@@ -30,6 +33,7 @@ public abstract class AParticle{
 		this.world = world;
 		this.position = position;
 		this.motion = motion;
+		this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
 		this.red = red;
 		this.green = green;
 		this.blue = blue;
@@ -41,14 +45,31 @@ public abstract class AParticle{
 	/**
 	 *  Called to update this particle's states.
 	 */
-	public void update(boolean onGround){
+	public void update(){
+		if(collidesWithBlocks()){
+			touchingBlocks = box.updateMovingCollisions(world, motion);
+			if(touchingBlocks){
+				motion.add(-box.currentCollisionDepth.x*Math.signum(motion.x), -box.currentCollisionDepth.y*Math.signum(motion.y), -box.currentCollisionDepth.z*Math.signum(motion.z));
+			}
+		}
 		position.add(motion);
 		++age;
 	}
 	
 	/**
+	 *  Returns true if this particle should be prevented from moving through blocks.
+	 *  This affects the particle's motion, so only use this if you don't mind the motion
+	 *  being automatically adjusted to handle block collisions.  Also note that this only
+	 *  can check in 1-block step increments, so if the particle is moving faster than
+	 *  1 block per update tick, it won't collide with some blocks.
+	 */
+	public boolean collidesWithBlocks(){
+		return true;
+	}
+	
+	/**
 	 *  Gets the current scale of the particle.
-	 *  This may ore may not be the scale parameter.
+	 *  This is for rendering, and does not reflect particle bounds.
 	 */
 	public abstract float getScale(float partialTicks);
 	

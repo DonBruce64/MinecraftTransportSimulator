@@ -37,7 +37,7 @@ public final class ParticleBullet extends AParticle{
 	private final int bulletNumber;
 	private final double initalVelocity;
 	private final IWrapperEntity gunController;
-	private final BoundingBox box;
+	private final Point3d blockMotionStep = new Point3d(0D, 0D, 0D);
 	
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
@@ -48,11 +48,11 @@ public final class ParticleBullet extends AParticle{
         this.bulletNumber = gun.bulletsFired;
         this.initalVelocity = motion.length();
         this.gunController = gunController;
-        this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
     }
 	
 	@Override
-	public void update(boolean onGround){
+	public void update(){
+		//Get current velocity and possible damage.
 		double velocity = motion.length();
 		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
@@ -66,6 +66,7 @@ public final class ParticleBullet extends AParticle{
 						MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
 					}
 				}else{
+					box.globalCenter.setTo(entity.getPosition());
 					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
 				}
 			}
@@ -75,22 +76,32 @@ public final class ParticleBullet extends AParticle{
 		
 		//Didn't hit an entity.  Check for blocks.
 		//We may hit more than one block here if we're a big bullet.  That's okay.
-		if(box.updateCollidingBlocks(world, motion)){
-			for(IWrapperBlock block : box.collidingBlocks){
-				Point3d position = new Point3d(block.getPosition());
-				MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
+		//Because blocks are checked by their size, we need to manually check in 1-block steps.
+		double maxSteps = motion.length();
+		for(int i=-1; i<maxSteps + 2; ++i){
+			blockMotionStep.setTo(motion).multiply(i/maxSteps);
+			if(box.updateCollidingBlocks(world, blockMotionStep)){
+				for(IWrapperBlock block : box.collidingBlocks){
+					Point3d position = new Point3d(block.getPosition());
+					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
+				}
+				age = maxAge;
+				return;
 			}
-			age = maxAge;
-			return;
 		}
-					
-		//We didn't collide with anything, slow down and fall down towards the ground.
+		
+		//Now that we have checked for collision, adjust motion to compensate for bullet movement.
 		motion.multiply(0.98D);
 		motion.y -= 0.0245D;
 		
-		//Send our updated position to the super.
+		//Send our updated motion to the super to update the position.
 		//Doing this last lets us damage on the first update tick.
-		super.update(onGround);
+		super.update();
+	}
+	
+	@Override
+	public boolean collidesWithBlocks(){
+		return false;
 	}
 	
 	@Override
@@ -100,7 +111,7 @@ public final class ParticleBullet extends AParticle{
 	
 	@Override
 	public float getSize(){
-		return bullet.definition.bullet.diameter/1000F;
+		return bullet != null ? bullet.definition.bullet.diameter/1000F : super.getSize();
 	}
 	
 	@Override
@@ -147,6 +158,7 @@ public final class ParticleBullet extends AParticle{
         double pitch = -Math.toDegrees(Math.asin(motion.y/Math.sqrt(motion.x*motion.x+motion.y*motion.y+motion.z*motion.z)));
         GL11.glRotated(yaw, 0, 1, 0);
         GL11.glRotated(pitch, 1, 0, 0);
+        GL11.glScaled(10, 10, 10);
         GL11.glCallList(bulletDisplayLists.get(bullet));
 	}
 }

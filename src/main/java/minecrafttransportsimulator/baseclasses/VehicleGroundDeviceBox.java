@@ -155,12 +155,12 @@ public class VehicleGroundDeviceBox{
 		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
 			solidBox.globalCenter.setTo(solidBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
-			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset);
+			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
 			isCollided = !solidBox.collidingBlocks.isEmpty();
 			collisionDepth = solidBox.currentCollisionDepth.y;
 			
 			solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
-			vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset);
+			vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
 			solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
 			isGrounded = isCollided ? true : !solidBox.collidingBlocks.isEmpty();
 			contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
@@ -168,12 +168,12 @@ public class VehicleGroundDeviceBox{
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 			liquidBox.globalCenter.setTo(liquidBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
-			vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset);
+			vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
 			isCollidedLiquid = liquidBox.collidingBlocks.isEmpty();
 			double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;
 			
 			liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
-			vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset);
+			vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
 			liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
 			isGroundedLiquid = isCollidedLiquid ? true : !liquidBox.collidingBlocks.isEmpty();
 			

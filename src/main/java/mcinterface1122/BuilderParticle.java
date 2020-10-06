@@ -38,19 +38,14 @@ class BuilderParticle extends Particle{
 			prevPosY = particle.position.y;
 			prevPosZ = particle.position.z;
 			
-			//Do particle update logic.
-			particle.update(onGround);
+			//Do particle update logic, and set new position/motion.
+			particle.update();
+			posX = particle.position.x;
+			posY = particle.position.y;
+			posZ = particle.position.z;
 			motionX = particle.motion.x;
 			motionY = particle.motion.y;
 	        motionZ = particle.motion.z;
-			
-			//Try to move the particle.
-			move(motionX, motionY, motionZ);
-			
-			//Send position and motion back to the particle class.
-			//This ensures the particle knows if it didn't move.
-			particle.position.set(posX, posY, posZ);
-			particle.motion.set(motionX, motionY, motionZ);
 		}
     }
     

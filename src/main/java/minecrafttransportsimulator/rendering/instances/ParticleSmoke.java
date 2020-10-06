@@ -11,11 +11,11 @@ public class ParticleSmoke extends AParticle{
 	}
 	
 	@Override
-	public void update(boolean onGround){
-		super.update(onGround);
+	public void update(){
+		super.update();
 		//Update the motions to make the smoke float up.
 		motion.x *= 0.9;
-		motion.x += 0.004;
+		motion.y += 0.004;
 		motion.z *= 0.9;
 	}
 	

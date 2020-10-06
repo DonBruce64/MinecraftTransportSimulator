@@ -61,9 +61,21 @@ public class BoundingBox{
 	 *  If blocks collided with this box after this method, true is returned.
 	 */
 	public boolean updateCollidingBlocks(IWrapperWorld world, Point3d offset){
+		return updateCollisions(world, offset, false);
+	}
+	
+	/**
+	 *  Like {@link #updateCollidingBlocks(IWrapperWorld, Point3d)}, but takes movement into account
+	 *  when setting collision depth.
+	 */
+	public boolean updateMovingCollisions(IWrapperWorld world, Point3d offset){
+		return updateCollisions(world, offset, true);
+	}
+	
+	private boolean updateCollisions(IWrapperWorld world, Point3d offset, boolean ignoreIfGreater){
 		tempGlobalCenter.setTo(globalCenter);
 		globalCenter.add(offset);
-		world.updateBoundingBoxCollisions(this, offset);
+		world.updateBoundingBoxCollisions(this, offset, ignoreIfGreater);
 		globalCenter.setTo(tempGlobalCenter);
 		return !collidingBlocks.isEmpty();
 	}

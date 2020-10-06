@@ -11,8 +11,8 @@ public class ParticleFlame extends AParticle{
 	}
 	
 	@Override
-	public void update(boolean onGround){
-		super.update(onGround);
+	public void update(){
+		super.update();
 		//Flame just slowly drifts in the direction it was going.
 		motion.multiply(0.96);
 	}

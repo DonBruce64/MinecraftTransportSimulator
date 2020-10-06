@@ -5,27 +5,26 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleDrip extends AParticle{
-	private boolean wasOnGround;
+	private boolean touchingBlocks;
 	
 	public ParticleDrip(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float scale){
 		super(world, position, motion, red, green, blue, 1.0F, scale);
 	}
 	
 	@Override
-	public void update(boolean onGround){
-		super.update(onGround);
-		wasOnGround = onGround;
-		//Drips go down to the ground, until the hit it, at which point they stay there for a while.
-		motion.multiply(0.96);
-		motion.add(0D, -0.06D, 0D);
-		if(onGround){
-			motion.multiply(0.02);
+	public void update(){
+		super.update();
+		//Keep moving until we touch a block, then stop.
+		if(!touchingBlocks){
+			motion.multiply(0.96).add(0D, -0.06D, 0D);
+		}else{
+			motion.multiply(0.0);
 		}
 	}
 	
 	@Override
 	public float getScale(float partialTicks){
-        return wasOnGround ? scale*3 : scale;
+        return touchingBlocks ? scale*3 : scale;
 	}
 	
 	@Override
@@ -40,6 +39,6 @@ public class ParticleDrip extends AParticle{
 	
 	@Override
 	public int getTextureIndex(){
-		return wasOnGround ? 113 : 112;
+		return touchingBlocks ? 113 : 112;
 	}
 }
