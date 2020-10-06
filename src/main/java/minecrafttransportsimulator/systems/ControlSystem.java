@@ -425,7 +425,7 @@ public final class ControlSystem{
 		AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H"),
 		AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B"),
 		AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U"),
-		AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, false, "MINUS"),
+		AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS"),
 		AIRCRAFT_GUN(ControlsJoystick.AIRCRAFT_GUN, false, "SPACE"),
 		AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR"),
 		AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT"),
