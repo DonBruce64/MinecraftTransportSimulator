@@ -652,6 +652,7 @@ public final class PackParserSystem{
     					exhaust.scale = 1.0F;
     					part.exhaustObjects.add(exhaust);
     				}
+    				part.exhaustPos = null;
     			}
     			for(byte i=0; i<part.types.size(); ++i){
     				String partName = part.types.get(i);
