@@ -288,11 +288,15 @@ public class Point3d extends APoint3<Double, Point3d>{
 				writer.nullValue();
 				return;
 			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to Point3ds.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
 				writer.beginArray();
+				writer.setIndent("");
 				writer.value(point.x);
 				writer.value(point.y);
 				writer.value(point.z);
 				writer.endArray();
+				writer.setIndent("  ");
 			}
 		}
 	};
