@@ -159,8 +159,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					ItemPart heldPart = (ItemPart) heldItem;
 					//Does the part held match this packPart?
 					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.general.type)){
-						//Does a door not exist, or is at least open?  Or are we riding this vehicle?
-						if(partSlotBoxEntry.getValue().linkedDoor == null || doorsOpen.contains(partSlotBoxEntry.getValue().linkedDoor) || this.equals(player.getEntityRiding())){
+						//Are there any doors blocking us from clicking this part?
+						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 							//special bounds of the custom part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
@@ -209,10 +209,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					continue;
 				}
 				
-				//If the part is linked to a door, and that door isn't open, and the player isn't in the vehicle, don't add it.
-				//This prevents the player from interacting with things from outside the vehicle when the door is shut, but lets
-				//them move around inside the vehicle.
-				if(part.vehicleDefinition.linkedDoor != null && !doorsOpen.contains(part.vehicleDefinition.linkedDoor) && !this.equals(clientPlayer.getEntityRiding())){
+				//If the part is linked to doors, and none are open, don't add it.
+				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
+				if(areDoorsBlocking(part.vehicleDefinition, clientPlayer)){
 					continue;
 				}
 			}
@@ -294,6 +293,23 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Returns true if any linked doors are blocking the player from
+	 * accessing the passed-in part slot.
+	 */
+	public boolean areDoorsBlocking(VehiclePart partDef, IWrapperPlayer player){
+		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
+			for(String door : partDef.linkedDoors){
+				if(doorsOpen.contains(door)){
+					return false;
+				}
+			}
+		}else{
+			return false;
+		}
+		return true;
 	}
 	
 	/**

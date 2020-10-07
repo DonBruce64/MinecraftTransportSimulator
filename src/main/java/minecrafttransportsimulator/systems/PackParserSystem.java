@@ -642,6 +642,12 @@ public final class PackParserSystem{
     			if(part.additionalPart != null){
     				part.additionalParts = new ArrayList<VehiclePart>();
     				part.additionalParts.add(part.additionalPart);
+    				part.additionalPart = null;
+    			}
+    			if(part.linkedDoor != null){
+    				part.linkedDoors = new ArrayList<String>();
+    				part.linkedDoors.add(part.linkedDoor);
+    				part.linkedDoor = null;
     			}
     			if(part.exhaustPos != null){
     				part.exhaustObjects = new ArrayList<ExhaustObject>();

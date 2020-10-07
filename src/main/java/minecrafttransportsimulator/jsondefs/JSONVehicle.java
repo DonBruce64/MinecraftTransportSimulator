@@ -97,6 +97,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         @Deprecated
         public VehiclePart additionalPart;
         public List<VehiclePart> additionalParts;
+        public List<String> linkedDoors;
         public String defaultPart;
         public String linkedDoor;
         
