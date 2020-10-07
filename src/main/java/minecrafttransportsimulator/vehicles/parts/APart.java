@@ -12,11 +12,13 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -52,6 +54,7 @@ public abstract class APart implements ISoundProvider{
 	public final List<String> textLines = new ArrayList<String>();
 	
 	//Runtime variables.
+	private final List<DurationDelayClock> animations = new ArrayList<DurationDelayClock>();
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	public final Point3d totalOffset;
 	public final Point3d totalRotation;
@@ -93,6 +96,13 @@ public abstract class APart implements ISoundProvider{
 		}else{
 			this.disableMirroring = definition.general.disableMirroring;
 			this.parentPart = null;
+		}
+		
+		//Create movement animation clocks.
+		if(vehicleDefinition.animations != null){
+			for(VehicleAnimationDefinition animation : vehicleDefinition.animations){
+				animations.add(new DurationDelayClock(animation));
+			}
 		}
 	}
 	
@@ -142,17 +152,16 @@ public abstract class APart implements ISoundProvider{
 			totalOffset.rotateFine(totalRotation);
 			
 			//Now, get the parent's action rotation, and rotate again to take that rotation into account.
+			//We also need to add this rotation to our current rotation.
 			Point3d parentActionRotation = parentPart.getActionRotation(0);
 			totalOffset.rotateFine(parentActionRotation);
-			
-			//Now that we have the proper relative offset, add our placement and position offsets.
-			//This is our final offset point.
-			totalOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
-			
-			//Now that we have our offset, add the parent's rotations with our rotations to get the total rotation. 
 			//FIXME this may be wrong, but it may also be right?
 			totalRotation.add(parentActionRotation);
 			//totalRotation.add(parentActionRotation).add(getPositionRotation(0)).add(placementRotation);
+			
+			//Now that we have the proper relative offset, add our parent's placement and position offsets.
+			//This is our final offset point.
+			totalOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
 		}else{
 			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
@@ -172,45 +181,84 @@ public abstract class APart implements ISoundProvider{
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
 	public final Point3d getPositionOffset(float partialTicks){
-		Point3d positionOffset;
-		
-		//First rotate about the rotation point and angles.
-		Point3d rotationAngles = getPositionRotation(partialTicks);
-		if(!rotationAngles.isZero()){
-			//"Translate" back to the main vehicle point, apply the rotation, then "translate" back.
-			positionOffset = vehicleDefinition.rotationPosition.copy().multiply(-1D).rotateFine(rotationAngles).add(vehicleDefinition.rotationPosition);
-		}else{
-			positionOffset = new Point3d(0D, 0D, 0D);
-		}
-		
-		//Now translate.  This may incorporate rotation angles.
-		if(vehicleDefinition.translationVariable != null){
-			double translationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.translationVariable, 1, 0, vehicleDefinition.translationClampMin, vehicleDefinition.translationClampMax, vehicleDefinition.translationAbsolute, partialTicks, vehicle, this);
-			Point3d translationOffset = vehicleDefinition.translationPosition.copy().multiply(translationValue); 
-			if(!rotationAngles.isZero()){
-				translationOffset.rotateFine(rotationAngles);
+		Point3d rollingOffset = new Point3d(0D, 0D, 0D);
+		if(!animations.isEmpty()){
+			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
+			for(DurationDelayClock animation : animations){
+				VehicleAnimationDefinition definition = animation.definition;
+				
+				if(definition.animationType.equals("rotation")){
+					//Found rotation.  Get angles that needs to be applied.
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					Point3d appliedRotation = new Point3d(0D, 0D, 0D);
+					if(definition.axis.x != 0){
+						appliedRotation.x = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+					}
+					if(definition.axis.y != 0){
+						appliedRotation.y = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					if(definition.axis.z != 0){
+						appliedRotation.z = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					
+					//Check if we need to apply a translation based on this rotation.
+					if(!definition.centerPoint.isZero()){
+						//Use the center point as a vector we rotate to get the applied offset.
+						//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
+						rollingOffset.add(definition.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(definition.centerPoint).rotateFine(rollingRotation));
+					}
+					
+					//Apply rotation.
+					rollingRotation.add(appliedRotation);
+				}else if(definition.animationType.equals("translation")){
+					//Found translation.  This gets applied in the translation axis direction directly.
+					//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					Point3d appliedTranslation = new Point3d(0D, 0D, 0D);
+					if(definition.axis.x != 0){
+						appliedTranslation.x = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+					}
+					if(definition.axis.y != 0){
+						appliedTranslation.y = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					if(definition.axis.z != 0){
+						appliedTranslation.z = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
+				}
 			}
-			positionOffset.add(translationOffset);
 		}
 		
 		//Return the net offset from rotation and translation.
-		return positionOffset;
+		return rollingOffset;
 	}
 	
 	/**
 	 * Gets the rotation angles for the part as a vector.
 	 * This rotation is used to rotate the part prior to translation.
 	 * It may be used for stacked rotations, and should return the final
-	 * rotation vector for all operations.
+	 * rotation angles for all operations.
 	 */
 	public final Point3d getPositionRotation(float partialTicks){
-		if(vehicleDefinition.rotationVariable != null){
-			double rotationValue = VehicleAnimationSystem.getVariableValue(vehicleDefinition.rotationVariable, 1, 0, vehicleDefinition.rotationClampMin, vehicleDefinition.rotationClampMax, vehicleDefinition.rotationAbsolute, partialTicks, vehicle, this);
-			if(rotationValue != 0){
-				return vehicleDefinition.rotationAngles.copy().multiply(rotationValue);
+		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
+		if(!animations.isEmpty()){
+			for(DurationDelayClock animation : animations){
+				VehicleAnimationDefinition definition = animation.definition;
+				if(definition.animationType.equals("rotation")){
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					if(definition.axis.x != 0){
+						rollingRotation.x += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					if(definition.axis.y != 0){
+						rollingRotation.y += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+					if(definition.axis.z != 0){
+						rollingRotation.z += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+					}
+				}
 			}
 		}
-		return new Point3d(0, 0, 0);
+		return rollingRotation;
 	}
 	
 	/**

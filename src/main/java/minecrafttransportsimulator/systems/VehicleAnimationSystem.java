@@ -20,25 +20,32 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 public final class VehicleAnimationSystem{
 	
 	/**
+	 *  Clamps and scales the passed-in variable value, returning it in the proper form.
+	 */
+	public static double clampAndScale(double value, double scaling, double offset, double clampMin, double clampMax, boolean absolute){
+		value = scaling*(absolute ? Math.abs(value) : value) + offset;
+		if(clampMin != 0 && value < clampMin + offset){
+			value = clampMin + offset;
+		}else if(clampMax != 0 && value > clampMax - offset){
+			value = clampMax - offset;
+		}
+		return value;
+	}
+	
+	/**
 	 *  Returns the clamped value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
 	 *  If a clamp value other than 0 is passed-in, the variable returned will be clamped to that value.
 	 */
-	public static double getVariableValue(String variable, double scaling, double offset, double minClamp, double maxClamp, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
+	public static double getVariableValue(String variable, double scaling, double offset, double clampMin, double clampMax, boolean absolute, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		double value = getVariableValue(variable, partialTicks, vehicle, optionalPart);
-		value = offset + scaling*(absolute ? Math.abs(value) : value);
-		if(minClamp != 0 && value < minClamp){
-			return minClamp;
-		}else if(maxClamp != 0 && value > maxClamp){
-			return maxClamp;
-		}else{
-			return value;
-		}
+		return clampAndScale(value, scaling, offset, clampMin, clampMax, absolute);
 	}
 	
 	/**
 	 *  Returns the raw value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
+	 *  No clamping or other operations are performed on this value, so keep this in mind.
 	 */
 	public static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass

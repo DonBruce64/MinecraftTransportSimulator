@@ -28,15 +28,8 @@ public class TransformTranslatable extends ATransformRenderable{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		double translation = getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, null));
-		
-		//Add offsets and clamp translation.
-		translation = translationMagnitude*(definition.absolute ? Math.abs(translation) : translation) + definition.offset + offset;
-		if(definition.clampMin != 0 && translation < definition.clampMin + offset){
-			translation = definition.clampMin + offset;
-		}else if(definition.clampMax != 0 && translation > definition.clampMax - offset){
-			translation = definition.clampMax - offset;
-		}
+		double translation = clock.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, null));
+		translation = VehicleAnimationSystem.clampAndScale(translation, translationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
 		
 		//Do the actual translation, if we aren't 0.
 		if(translation != 0){

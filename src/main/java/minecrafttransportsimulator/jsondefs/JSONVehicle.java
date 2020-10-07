@@ -101,16 +101,28 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public String linkedDoor;
         
         //Animation variables.
+        public List<VehicleAnimationDefinition> animations;
+        @Deprecated
         public String translationVariable;
+        @Deprecated
         public Point3d translationPosition;
+        @Deprecated
         public float translationClampMin;
+        @Deprecated
         public float translationClampMax;
+        @Deprecated
         public boolean translationAbsolute;
+        @Deprecated
         public String rotationVariable;
+        @Deprecated
         public Point3d rotationPosition;
+        @Deprecated
         public Point3d rotationAngles;
+        @Deprecated
         public float rotationClampMin;
+        @Deprecated
         public float rotationClampMax;
+        @Deprecated
         public boolean rotationAbsolute;
         
         //Ground-specific variables.

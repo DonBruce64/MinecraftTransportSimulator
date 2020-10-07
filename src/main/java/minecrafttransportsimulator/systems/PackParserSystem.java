@@ -654,6 +654,31 @@ public final class PackParserSystem{
     				}
     				part.exhaustPos = null;
     			}
+    			if(part.rotationVariable != null){
+    				part.animations = new ArrayList<VehicleAnimationDefinition>();
+    				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
+    				animation.animationType = "rotation";
+    				animation.variable = part.rotationVariable;
+    				animation.centerPoint = part.rotationPosition;
+    				animation.axis = part.rotationAngles;
+    				animation.clampMin = part.rotationClampMin;
+    				animation.clampMax = part.rotationClampMax;
+    				animation.absolute = part.rotationAbsolute;
+    				part.animations.add(animation);
+    			}
+    			if(part.translationVariable != null){
+    				if(part.animations == null){
+    					part.animations = new ArrayList<VehicleAnimationDefinition>();
+    				}
+    				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
+    				animation.animationType = "translation";
+    				animation.variable = part.translationVariable;
+    				animation.axis = part.translationPosition;
+    				animation.clampMin = part.translationClampMin;
+    				animation.clampMax = part.translationClampMax;
+    				animation.absolute = part.translationAbsolute;
+    				part.animations.add(animation);
+    			}
     			for(byte i=0; i<part.types.size(); ++i){
     				String partName = part.types.get(i);
     				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){

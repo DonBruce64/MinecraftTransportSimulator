@@ -34,15 +34,8 @@ public class TransformRotatable extends ATransformRenderable{
 		}
 		
 		//Get rotation.
-		double rotation = getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
-		
-		//Add offsets and clamp translation.
-		rotation = rotationMagnitude*(definition.absolute ? Math.abs(rotation) : rotation) + definition.offset + offset;
-		if(definition.clampMin != 0 && rotation < definition.clampMin + offset){
-			rotation = definition.clampMin + offset;
-		}else if(definition.clampMax != 0 && rotation > definition.clampMax - offset){
-			rotation = definition.clampMax - offset;
-		}
+		double rotation = clock.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
+		rotation = VehicleAnimationSystem.clampAndScale(rotation, rotationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
 		
 		//Do rotation.
 		if(rotation != 0){
