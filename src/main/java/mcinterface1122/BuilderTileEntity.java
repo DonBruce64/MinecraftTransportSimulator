@@ -121,7 +121,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     *
     * @author don_bruce
     */
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<?>>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
 	    
 		public Tickable(){
 			super();

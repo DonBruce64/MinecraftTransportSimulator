@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockDecor;
+import minecrafttransportsimulator.blocks.instances.BlockFluidLoader;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -27,6 +28,7 @@ public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 		if(definition.general.type != null){
 			switch(definition.general.type){
 				case("fuel_pump") : return BlockFuelPump.class;
+				case("fluid_loader") : return BlockFluidLoader.class;
 				case("signal_controller") : return BlockSignalController.class;
 			}
 		}

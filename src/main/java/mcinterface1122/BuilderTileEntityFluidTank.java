@@ -25,10 +25,17 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem<?>> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements ITickable, IFluidTank, IFluidHandler{
 	
 	public BuilderTileEntityFluidTank(){
 		super();
+	}
+	
+	@Override
+	public void update(){
+		if(tileEntity != null){
+			((ITileEntityTickable) tileEntity).update();
+		}
 	}
 
 	@Override
@@ -106,23 +113,4 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     	}
     	return super.getCapability(capability, facing);
     }
-    
-    
-    /**Tickable builder for {@link BuilderTileEntityFluidTank}.
-     *
-     * @author don_bruce
-     */
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> extends BuilderTileEntityFluidTank<TickableTileEntity> implements ITickable{
-		
-		public Tickable(){
-			super();
-		}
-		
-		@Override
-		public void update(){
-			if(tileEntity != null){
-				((ITileEntityTickable) tileEntity).update();
-			}
-		}
-	}
 }

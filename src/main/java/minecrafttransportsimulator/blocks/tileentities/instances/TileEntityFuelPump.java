@@ -14,12 +14,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITileEntityTickable, IFluidTankProvider{
-	public JSONDecor definition;
 	public EntityVehicleF_Physics connectedVehicle;
     private FluidTank tank;
 
@@ -31,7 +30,7 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 	@Override
 	public void update(){
 		//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
-		if(connectedVehicle != null & !world.isClient()){
+		if(connectedVehicle != null && !world.isClient()){
 			//Don't fuel vehicles that don't exist.
 			if(!connectedVehicle.isValid){
 				connectedVehicle.beingFueled = false;
@@ -41,7 +40,7 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 			
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 20){
-				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
+				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
 					if(entity instanceof IWrapperPlayer){
 						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
@@ -53,14 +52,14 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 			}
 			//If we have room for fuel, try to add it to the vehicle.
 			if(tank.getFluidLevel() > 0){
-			double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), 10, false);
+				double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), 10, false);
 				if(amountToFill > 0){
 					double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
 					connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
 					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
 					//No more room in the vehicle.  Disconnect.
-					MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
+					MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
 					for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
@@ -71,7 +70,7 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
-				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(this, false));
+				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
 				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){

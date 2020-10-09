@@ -17,8 +17,9 @@ import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
@@ -45,7 +46,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.4.0-BETA1";
+	public static final String MODVER = "19.4.0-BETA3";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -156,8 +157,9 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		networkInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
 		networkInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
+		networkInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityPumpConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);

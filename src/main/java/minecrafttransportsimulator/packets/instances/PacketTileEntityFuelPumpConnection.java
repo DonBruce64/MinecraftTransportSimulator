@@ -12,17 +12,17 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPumpConnection extends APacketTileEntity<TileEntityFuelPump>{
+public class PacketTileEntityFuelPumpConnection extends APacketTileEntity<TileEntityFuelPump>{
 	private final int vehicleID;
 	private final boolean connect;
 	
-	public PacketTileEntityPumpConnection(TileEntityFuelPump pump, boolean connect){
+	public PacketTileEntityFuelPumpConnection(TileEntityFuelPump pump, boolean connect){
 		super(pump);
 		this.vehicleID = pump.connectedVehicle.lookupID;
 		this.connect = connect;
 	}
 	
-	public PacketTileEntityPumpConnection(ByteBuf buf){
+	public PacketTileEntityFuelPumpConnection(ByteBuf buf){
 		super(buf);
 		this.vehicleID = buf.readInt();
 		this.connect = buf.readBoolean();

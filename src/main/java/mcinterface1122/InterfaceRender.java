@@ -16,6 +16,8 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
@@ -36,6 +38,8 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -59,6 +63,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -494,12 +499,33 @@ class InterfaceRender implements IInterfaceRender{
 
     private static BuilderGUI currentHUD = null;
     /**
-     * Renders the HUD on vehicles.
+     * Renders the HUD on vehicles, or the fluid in a tank if we are mousing-over a vehicle.
      */
     @SubscribeEvent
     public static void on(RenderGameOverlayEvent.Post event){
     	if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-    		if(MasterInterface.gameInterface.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
+    		if(MasterInterface.gameInterface.inFirstPerson() && Minecraft.getMinecraft().player.getRidingEntity() == null){
+    			RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
+    			if(lastHit.entityHit instanceof BuilderEntity){
+    				BuilderEntity builder = (BuilderEntity) Minecraft.getMinecraft().objectMouseOver.entityHit;
+    				if(builder.entity instanceof EntityVehicleF_Physics){
+    					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) builder.entity;
+    					for(BoundingBox box : vehicle.interactionBoxes){
+    						if(box.isPointInside(new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z))){
+    							APart part = vehicle.getPartAtLocation(box.localCenter);
+    							if(part instanceof PartInteractable){
+    								FluidTank tank = ((PartInteractable) part).tank;
+    								if(tank != null){
+    									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
+    									MasterInterface.guiInterface.drawBasicText(tankText, event.getResolution().getScaledWidth()/2 + 4, event.getResolution().getScaledHeight()/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
+    									return;
+    								}
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}else if(MasterInterface.gameInterface.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
 				if(Minecraft.getMinecraft().player.getRidingEntity() instanceof BuilderEntity){
 					AEntityBase ridingEntity = ((BuilderEntity) Minecraft.getMinecraft().player.getRidingEntity()).entity;
 					if(ridingEntity instanceof EntityVehicleF_Physics){

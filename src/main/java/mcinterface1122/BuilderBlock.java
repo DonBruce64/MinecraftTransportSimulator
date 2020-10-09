@@ -103,7 +103,7 @@ class BuilderBlock extends Block{
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
 	@SuppressWarnings("unchecked")
-	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
+	private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
 		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
 		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
        		return new BuilderTileEntity.Tickable<TileEntityType>();	
@@ -116,14 +116,8 @@ class BuilderBlock extends Block{
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	@SuppressWarnings("unchecked")
-	private static <TileEntityType extends ATileEntityBase<AJSONItem<? extends AJSONItem<?>.General>> & IFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
-		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
-		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
-	   		return new BuilderTileEntityFluidTank.Tickable<TileEntityType>();	
-	   	}else{
-	   		return new BuilderTileEntityFluidTank<TileEntityType>();
-	   	}
+	private static <TileEntityType extends ATileEntityBase<?> & IFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
+		return new BuilderTileEntityFluidTank<TileEntityType>();
 	}
 	
 	@Override
@@ -302,7 +296,6 @@ class BuilderBlock extends Block{
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
-		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.Tickable.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntityFluidTank.class.getSimpleName() + BuilderTileEntityFluidTank.Tickable.class.getSimpleName()));
 		
 		//Register the pack-based blocks.  We cheat here and
 		//iterate over all pack items and get the blocks they spawn.

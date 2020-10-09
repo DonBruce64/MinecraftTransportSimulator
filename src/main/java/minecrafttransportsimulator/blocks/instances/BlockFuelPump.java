@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPumpConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -88,7 +88,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     								pump.connectedVehicle = nearestVehicle;
     								pump.connectedVehicle.beingFueled = true;
     								tank.resetAmountDispensed();
-    								MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(pump, true));
+    								MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, true));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -101,7 +101,7 @@ public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEn
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
-    			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityPumpConnection(pump, false));
+    			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, false));
     			pump.connectedVehicle.beingFueled = false;
     			pump.connectedVehicle = null;
     			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
