@@ -265,13 +265,16 @@ public class GUIDevEditor extends AGUIBase{
 		//Create data entry boxes and labels.
 		dataEntryBoxes.clear();
 		dataEntryLabels.clear();
-		for(byte i=0; i<7; ++i){
-			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + 15 + 11*i, 140, "", 10, Color.WHITE, Color.BLACK, 100);
+		int currentRow = 15;
+		for(byte i=0; i<5; ++i){
+			int height = i < 2 ? 40 : 10;
+			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, "", height, Color.WHITE, Color.BLACK, 100);
 			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.y, Color.WHITE, "").setBox(dataEntryBox);
 			dataEntryBoxes.add(dataEntryBox);
 			dataEntryLabels.add(dataEntryLabel);
 			addTextBox(dataEntryBox);
 			addLabel(dataEntryLabel);
+			currentRow += height + 1;
 		}
 		
 		//Add item icon model component.
@@ -299,9 +302,9 @@ public class GUIDevEditor extends AGUIBase{
 	@Override
 	public void setStates(){
 		try{
-			componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(4).getText());
-			componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(5).getText());
-			componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(6).getText());
+			componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(2).getText());
+			componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(3).getText());
+			componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(4).getText());
 		}catch(Exception e){
 			
 		}
