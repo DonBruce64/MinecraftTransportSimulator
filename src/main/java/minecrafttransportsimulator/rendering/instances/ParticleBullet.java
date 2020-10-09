@@ -158,7 +158,6 @@ public final class ParticleBullet extends AParticle{
         double pitch = -Math.toDegrees(Math.asin(motion.y/Math.sqrt(motion.x*motion.x+motion.y*motion.y+motion.z*motion.z)));
         GL11.glRotated(yaw, 0, 1, 0);
         GL11.glRotated(pitch, 1, 0, 0);
-        GL11.glScaled(10, 10, 10);
         GL11.glCallList(bulletDisplayLists.get(bullet));
 	}
 }

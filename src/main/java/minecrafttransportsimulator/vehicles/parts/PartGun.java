@@ -241,6 +241,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				//Only remove bullets from the server.  We remove them from the client when they spawn.
 				--bulletsLeft;
 				++bulletsFired;
+				if(bulletsLeft == 0){
+					loadedBullet = null;
+				}
 			}
 		}
 		
@@ -283,21 +286,19 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	 */
 	public boolean tryToReload(ItemPart part){
 		if(part.definition.bullet != null){
-			if(reloadTimeRemaining == 0){
-				//Only fill bullets if we match the bullet already in the gun, or if our diameter matches.
-				if((loadedBullet == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(part)){
-					//Make sure we don't over-fill the gun.
-					if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
-						loadedBullet = part;
-						bulletsLeft += part.definition.bullet.quantity;
-						reloadTimeRemaining = definition.gun.reloadTime;
-						if(vehicle.world.isClient()){
-							MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
-						}else{
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGun(this, loadedBullet));
-						}
-						return true;
+			//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
+			if((reloadTimeRemaining == 0 && (loadedBullet == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(part)) || vehicle.world.isClient()){
+				//Make sure we don't over-fill the gun.
+				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || vehicle.world.isClient()){
+					loadedBullet = part;
+					bulletsLeft += part.definition.bullet.quantity;
+					reloadTimeRemaining = definition.gun.reloadTime;
+					if(vehicle.world.isClient()){
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
+					}else{
+						MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGun(this, loadedBullet));
 					}
+					return true;
 				}
 			}
 		}

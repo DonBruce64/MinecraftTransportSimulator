@@ -27,7 +27,7 @@ class WrapperTileEntity implements IWrapperTileEntity{
 	
 	@Override
 	public IWrapperInventory getInventory(){
-		return this instanceof IInventory ? new WrapperInventory((IInventory) this) : null;
+		return tile instanceof IInventory ? new WrapperInventory((IInventory) tile) : null;
 	}
 	
 	@Override
