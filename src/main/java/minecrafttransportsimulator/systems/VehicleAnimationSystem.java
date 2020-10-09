@@ -24,10 +24,10 @@ public final class VehicleAnimationSystem{
 	 */
 	public static double clampAndScale(double value, double scaling, double offset, double clampMin, double clampMax, boolean absolute){
 		value = scaling*(absolute ? Math.abs(value) : value) + offset;
-		if(clampMin != 0 && value < clampMin + offset){
-			value = clampMin + offset;
-		}else if(clampMax != 0 && value > clampMax - offset){
-			value = clampMax - offset;
+		if(clampMin != 0 && value < clampMin){
+			value = clampMin;
+		}else if(clampMax != 0 && value > clampMax){
+			value = clampMax;
 		}
 		return value;
 	}
