@@ -31,7 +31,7 @@ public class PartPropeller extends APart{
 		if(definition.propeller.isRotor){
 			//Rotors need different collision box bounds as they are pointed upwards.
 			boundingBox.widthRadius = getWidth()/2D;
-			boundingBox.heightRadius = 0.5D;
+			boundingBox.heightRadius = 0.25D;
 			boundingBox.depthRadius = getWidth()/2D;
 			
 		}
