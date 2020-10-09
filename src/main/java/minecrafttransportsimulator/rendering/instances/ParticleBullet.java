@@ -41,6 +41,8 @@ public final class ParticleBullet extends AParticle{
 	
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
+	private double armorPenetrated;
+	
     public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
     	this.bullet = bullet;
@@ -57,21 +59,31 @@ public final class ParticleBullet extends AParticle{
 		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
 		
 		//Check for collided entities and attack them.
+		//If we collide with an armored vehicle, try to penetrate it.
 		Map<IWrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, gun.vehicle, motion);
 		if(!attackedEntities.isEmpty()){
 			for(IWrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
 					BoundingBox hitBox = attackedEntities.get(entity);
-					if(hitBox.armorThickness == 0 || hitBox.armorThickness > bullet.definition.bullet.armorPenetration*velocity/initalVelocity){
-						MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+					if(hitBox.armorThickness != 0){
+						if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initalVelocity - armorPenetrated){
+							armorPenetrated += hitBox.armorThickness;
+							continue;
+						}
 					}
+					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+					age = maxAge;
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
 					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
+					age = maxAge;
 				}
 			}
-			age = maxAge;
-			return;
+			
+			//If we hit something, don't process anything further.
+			if(age == maxAge){
+				return;
+			}
 		}
 		
 		//Didn't hit an entity.  Check for blocks.
