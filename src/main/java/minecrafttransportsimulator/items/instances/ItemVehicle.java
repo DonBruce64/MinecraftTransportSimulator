@@ -119,7 +119,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				//Open all doors.  This lets players know we can close them and put things in slots.
 				if(definition.doors != null){
 					for(VehicleDoor door : definition.doors){
-						newVehicle.doorsOpen.add(door.name);
+                        if(!door.closedByDefault){
+						  newVehicle.doorsOpen.add(door.name);
+                        }
 					}
 				}
 			}

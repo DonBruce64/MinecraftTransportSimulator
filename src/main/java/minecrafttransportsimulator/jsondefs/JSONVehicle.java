@@ -154,6 +154,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     
     public class VehicleDoor{
         public String name;
+        public boolean closedByDefault;
     	public Point3d closedPos;
         public Point3d openPos;
         public float width;
