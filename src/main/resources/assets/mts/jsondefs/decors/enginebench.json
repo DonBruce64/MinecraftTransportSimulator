@@ -1,7 +1,7 @@
 {
 	"general": {
 		"name" : "Engine Bench",
-		"materials" : ["minecraft:ingotIron:0:4", "minecraft:iron_bars:0:1", "minecraft:dye:1:1", "minecraft:iron_block:0:2"],
+		"materials" : ["minecraft:iron_ingot:0:4", "minecraft:iron_bars:0:1", "minecraft:dye:1:1", "minecraft:iron_block:0:2"],
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,

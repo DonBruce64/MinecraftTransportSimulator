@@ -1,7 +1,7 @@
 {
 	"general": {
 		"name" : "Component Bench",
-		"materials" : ["minecraft:ingotIron:0:5", "minecraft:glass_pane:0:1", "minecraft:comparator:0:2", "minecraft:quartz:0:1"],
+		"materials" : ["minecraft:iron_ingot:0:5", "minecraft:glass_pane:0:1", "minecraft:comparator:0:2", "minecraft:quartz:0:1"],
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,

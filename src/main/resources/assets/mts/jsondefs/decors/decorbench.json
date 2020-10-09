@@ -1,7 +1,7 @@
 {
 	"general": {
 		"name" : "Decor Bench",
-		"materials" : ["minecraft:glass_pane:0:1", "minecraft:heavy_weighted_pressure_plate:0:3", "minecraft:comparator:0:1", "minecraft:ingotIron:0:1"],
+		"materials" : ["minecraft:glass_pane:0:1", "minecraft:heavy_weighted_pressure_plate:0:3", "minecraft:comparator:0:1", "minecraft:iron_ingot:0:1"],
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
