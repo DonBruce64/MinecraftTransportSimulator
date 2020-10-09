@@ -197,7 +197,7 @@ public final class VehicleAnimationSystem{
 			case("trim_elevator"): return vehicle.elevatorTrim/10D;
 			case("trim_rudder"): return vehicle.rudderTrim/10D;
 			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
-			case("lift_reserve"): return vehicle.trackAngle*3 + 20;
+			case("lift_reserve"): return -vehicle.trackAngle;
 			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
