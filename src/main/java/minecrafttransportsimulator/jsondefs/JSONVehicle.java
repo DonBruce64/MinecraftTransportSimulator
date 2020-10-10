@@ -171,6 +171,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public Point3d openPos;
         public float width;
         public float height;
+        public boolean closedByDefault;
     }
     
     public class PackInstrument{
