@@ -58,6 +58,7 @@ interact.jerrycan.success=Added 1000mb of fluid to this vehicle.
 interact.failure.seattaken=This seat is taken!
 interact.failure.vehiclelocked=This vehicle is locked!
 interact.failure.vehicleowned=You are not the owner of this vehicle and therefore cannot change it or its parts!
+interact.failure.nospace=There is not enough space to place down this vehicle here.
 
 interact.jumpercable.firstlink=Linking first engine to jumper cable.
 interact.jumpercable.secondlink=Engines linked.  Transmitting power.
