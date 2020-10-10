@@ -443,7 +443,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
 					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
 					try{
-						//FIXME need to split names.
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
 						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, MasterLoader.coreInterface.createNewTag(), parentPart);
 						vehicle.addPart(newPart, true);

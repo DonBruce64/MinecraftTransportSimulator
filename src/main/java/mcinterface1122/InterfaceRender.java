@@ -5,7 +5,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +52,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.entity.Entity;
@@ -72,8 +72,6 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.resource.VanillaResourceType;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -601,7 +599,7 @@ class InterfaceRender implements IInterfaceRender{
         }
         Minecraft.getMinecraft().world.profiler.endSection();
     }
-	
+    
 	/**
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
@@ -611,58 +609,43 @@ class InterfaceRender implements IInterfaceRender{
 		//Create the custom JSON parser class.
 		//We need to register a custom resource handler here to auto-generate JSON.
 		//FAR easier than trying to use the bloody bakery system.
-		for(Field field : Minecraft.class.getDeclaredFields()){
-			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
-				try{
-					if(!field.isAccessible()){
-						field.setAccessible(true);
-					}
-					
-					@SuppressWarnings("unchecked")
-					List<IResourcePack> defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
-					defaultPacks.add(new PackResourcePack());
-					FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
+		((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterInterface.MODID + "_packs"));
 		
 		//Register the vehicle rendering class.
 		RenderingRegistry.registerEntityRenderingHandler(BuilderEntity.class, new IRenderFactory<BuilderEntity>(){
 			@Override
 			public Render<? super BuilderEntity> createRenderFor(RenderManager manager){
-				return new Render<BuilderEntity>(manager){
-					@Override
-					protected ResourceLocation getEntityTexture(BuilderEntity builder){
-						return null;
-					}
-					
-					@Override
-					public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
-						if(builder.entity != null){
-							Minecraft.getMinecraft().world.profiler.startSection("iv_render_entity_" + builder.entity.lookupID);
-							//If we don't have render data yet, create one now.
-							if(!renderData.containsKey(builder)){
-								renderData.put(builder, new RenderTickData(builder.entity.world));
-							}
-							
-							//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-							int renderPass = MasterInterface.renderInterface.getRenderPass();
-							if(renderPass == -1){
-								renderPass = 2;
-							}
-							
-							//If we need to render, do so now.
-							if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
-								builder.entity.render(partialTicks);
-							}
-							Minecraft.getMinecraft().world.profiler.endSection();
-						}
-					}
-				};
-			}});
+			return new Render<BuilderEntity>(manager){
+				@Override
+				protected ResourceLocation getEntityTexture(BuilderEntity builder){
+					return null;
+				}
 				
+				@Override
+				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
+					if(builder.entity != null){
+						Minecraft.getMinecraft().world.profiler.startSection("iv_render_entity_" + builder.entity.lookupID);
+						//If we don't have render data yet, create one now.
+						if(!renderData.containsKey(builder)){
+							renderData.put(builder, new RenderTickData(builder.entity.world));
+						}
+						
+						//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
+						int renderPass = MasterInterface.renderInterface.getRenderPass();
+						if(renderPass == -1){
+							renderPass = 2;
+						}
+						
+						//If we need to render, do so now.
+						if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
+							builder.entity.render(partialTicks);
+						}
+						Minecraft.getMinecraft().world.profiler.endSection();
+					}
+				}
+			};
+		}});
+		
 		//Register the TESR wrapper.
 		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new BuilderTileEntityRender());
 		
@@ -680,8 +663,18 @@ class InterfaceRender implements IInterfaceRender{
 		}
 		
 		//Now register items for the packs.
+		//If we ever register a pack item from a non-external pack, we'll need to make a resource loader for it.
+		//This is done to allow MC/Forge to play nice with item textures.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(), "inventory"));
+			//TODO remove this when the internal system actually works.
+			if(PackParserSystem.getPackConfiguration(packItem.definition.packID) == null || PackParserSystem.getPackConfiguration(packItem.definition.packID).internallyGenerated){
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(), "inventory"));
+			}else{
+				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
+					((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(packItem.definition.packID));
+				}
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
+			}
 		}
 	}
 	
@@ -696,46 +689,83 @@ class InterfaceRender implements IInterfaceRender{
 	 *  Custom ResourcePack class for auto-generating item JSONs.
 	 */
 	private static class PackResourcePack implements IResourcePack{
-		private final Set<String> domains;
+	    private static final Map<String, PackResourcePack> createdLoaders = new HashMap<String, PackResourcePack>();
+		private final String packDomain;
+	    private final Set<String> domains;
 		
-		private PackResourcePack(){
-			 domains = new HashSet<String>();
-			 domains.add(MasterInterface.MODID + "_packs");
+		private PackResourcePack(String packDomain){
+			this.packDomain = packDomain;
+			domains = new HashSet<String>();
+			domains.add(packDomain);
+			createdLoaders.put(packDomain, this);
 		}
 
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
-			//Get the resource name and type.
-			String combinedPackInfo = location.getResourcePath();
-			boolean itemJSON = combinedPackInfo.endsWith(".json");
-			
-			//Strip off the auto-generated prefix and suffix data.
-			if(itemJSON){
-				combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
-			}else{
-				combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
-			}
-			
-			//Get the pack information.
-			String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
-			String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('.') + 1);
-			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
-			
-			//Get the actual resource path for this resource.
-			String resourcePath = PackResourceLoader.getPackResource(packItem.definition, itemJSON ? ResourceType.ITEM_JSON : ResourceType.ITEM_PNG, systemName);
-
-			//Attempt to get the file from the path.
-			//If we are an item JSON, use the actual resource, or an auto-generated one.
-			//If we are an item png, we need to use the resource even if it exists or not.
-			InputStream stream = getClass().getResourceAsStream(resourcePath);
-			if(stream != null || !itemJSON){
-				return stream;
-			}else{
-				//Auto-generate item JSON file.
-				//We use a temp format similar to registration to feed back into this loader.
-				String jsonParameter = MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(); 
-				String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + jsonParameter + "\"}}";
-				return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+			String rawPackInfo = location.getResourcePath();
+			try{
+				//Get the resource type.
+				boolean itemJSON = rawPackInfo.endsWith(".json");
+				
+				//If we are for an item JSON, try to find that JSON, or generate one automatically.
+				//If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
+				//Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
+				if(itemJSON){
+					//Strip off the auto-generated prefix and suffix data.
+					String combinedPackInfo = rawPackInfo;
+					combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
+					
+					//Get the pack information.
+					String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
+					String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('.') + 1);
+					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+					
+					//Get the actual resource path for this resource.
+					String resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
+					
+					//Try to load the item JSON, or create it if it doesn't exist.
+					InputStream stream = getClass().getResourceAsStream(resourcePath);
+					if(stream != null){
+						return stream;
+					}else{
+						//Get the actual texture path.
+						String itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+						
+						//Remove the "/assets/textures/" portion as it's implied with JSON.
+						itemTexturePath = itemTexturePath.substring(("/assets/"  + packID + "/textures/").length());
+						
+						//Remove the .png suffix as it's also implied.
+						itemTexturePath = itemTexturePath.substring(0, itemTexturePath.length() - ".png".length());
+						
+						//Need to add packID domain to this to comply with JSON domains.
+						itemTexturePath = packID + ":" + itemTexturePath;
+						
+						//Generate fake JSON and return as stream to MC loader.
+						String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + itemTexturePath + "\"}}";
+						return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+					}
+				}else{
+					//Strip off the auto-generated prefix and suffix data.
+					String combinedPackInfo = rawPackInfo;
+					combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
+					
+					//Get the pack information.
+					//If we are ending in _item, it means we are getting a JSON for a modular-pack's item PNG.
+					//Need to remove this suffix to get the correct systemName to look-up in the systems..
+					String packID = packDomain;
+					String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('/') + 1);
+					if(systemName.endsWith("_item")){
+						systemName = systemName.substring(0, systemName.length() - "_item".length());
+					}
+					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+					
+					//Get the actual resource path for this resource and return its stream.
+					return getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
+					//return getClass().getResourceAsStream("/assets/" + packDomain + "/" + rawPackInfo);
+				}
+			}catch(Exception e){
+				MasterInterface.coreInterface.logError("ERROR: Could not parse out item JSON or PNG from: " + rawPackInfo);
+				return null;
 			}
 		}
 
@@ -745,7 +775,7 @@ class InterfaceRender implements IInterfaceRender{
 					&& !location.getResourcePath().contains("blockstates") 
 					&& !location.getResourcePath().contains("armatures") 
 					&& !location.getResourcePath().contains("mcmeta")
-					&& location.getResourcePath().indexOf(".") != location.getResourcePath().lastIndexOf(".");
+					&& (location.getResourcePath().startsWith("models/item/") || location.getResourcePath().startsWith("textures/"));
 		}
 
 		@Override
@@ -765,10 +795,9 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public String getPackName(){
-			return MasterInterface.MODID + "_packs";
+			return "Internal:" + packDomain;
 		}
 	}
-	
 	/*
 	private static final ICustomModelLoader packModelLoader = new ICustomModelLoader(){
 
@@ -779,77 +808,112 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public boolean accepts(ResourceLocation modelLocation){
-			System.out.println(modelLocation.toString());
-			return modelLocation.getResourceDomain().equals(MTS.MODID) && modelLocation.getResourcePath().startsWith("pack_");
+			return modelLocation.getResourceDomain().equals("mts_packs");
 		}
 
 		@Override
 		public IModel loadModel(ResourceLocation modelLocation) throws Exception{
-			final List<ResourceLocation> textures = new ArrayList<ResourceLocation>();
-			textures.add(modelLocation);
+			//Get the resource from the path.  Domain is mts_packs always.
+			String resource = modelLocation.getResourcePath();
 			
-			return new IModel(){
-				
-				@Override
-				public Collection<ResourceLocation> getTextures(){
-			        return textures;
-			    }
-			    
-				@Override
-				public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter){
-					return new IBakedModel(){
-						private final Map<EnumFacing, List<BakedQuad>> quadCache = new HashMap<EnumFacing, List<BakedQuad>>();
-						
-						@Override
-						public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand){
-							if(quadCache.containsKey(side)){
-								int[] newData = Arrays.copyOf(quad.getVertexData(), quad.getVertexData().length);
-
-				                VertexFormat format = quad.getFormat();
-
-				                for (int i = 0; i < 4; ++i) {
-				                    int j = format.getIntegerSize() * i;
-				                    newData[j + 0] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 0]) * (float) scale.x + (float) transform.x);
-				                    newData[j + 1] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 1]) * (float) scale.y + (float) transform.y);
-				                    newData[j + 2] = Float.floatToRawIntBits(Float.intBitsToFloat(newData[j + 2]) * (float) scale.z + (float) transform.z);
-				                }
-
-				                quadCache.get(side).add(new BakedQuad(newData, quad.getTintIndex(), quad.getFace(), quad.getSprite(), quad.shouldApplyDiffuseLighting(), quad.getFormat()));
-							}
-							return quads;
-						}
-
-						@Override
-						public boolean isAmbientOcclusion(){
-							//Not a block, don't care.
-							return false;
-						}
-
-						@Override
-						public boolean isGui3d(){
-							//3D models just look better.
-							return true;
-						}
-
-						@Override
-						public boolean isBuiltInRenderer(){
-							//This smells like code that will go away sometime...
-							return false;
-						}
-
-						@Override
-						public TextureAtlasSprite getParticleTexture(){
-							return bakedTextureGetter.apply(textures.get(0));
-						}
-
-						@Override
-						public ItemOverrideList getOverrides(){
-							return ItemOverrideList.NONE;
-						}
-					};
-				}
-			};
+			//Strip off the mts_packs: prefix. 
+			resource.substring("mts_packs:".length());
+			
+			//Get the pack information.
+			String packID = resource.substring(0, resource.indexOf('.'));
+			String systemName = resource.substring(resource.indexOf('.') + 1);
+			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+			
+			//Add the texture to the sprite system.
+			TextureAtlasSprite itemSprite = new CustomTextureLoader(packItem.getRegistrationName());
+			//TextureMap textureMap = Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(modelLocation);
+			
+			
+			//Return the Un-baked model.
+			return packItem != null ? new UnbakedItemModelWrapper(packItem) : null;
+		}
+	};
+	
+	private static class CustomTextureLoader extends TextureAtlasSprite{
+		public CustomTextureLoader(String spriteName){
+			super(spriteName);
+		}
+	}
+	
+	private static class UnbakedItemModelWrapper implements IModel{
+		private static final List<ResourceLocation> EMPTY_TEXTURE_LIST = new ArrayList<ResourceLocation>();
+		
+		private final AItemPack<?> packItem;
+		
+		UnbakedItemModelWrapper(AItemPack<?> packItem){
+			this.packItem = packItem;
 		}
 		
+		@Override
+		public Collection<ResourceLocation> getTextures(){
+	        return EMPTY_TEXTURE_LIST;
+	    }
+	    
+		@Override
+		public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter){
+			
+			//Get the texture location.
+			final String texturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, packItem.definition.systemName);
+			
+			Minecraft.getMinecraft().getItemRenderer().renderItemInFirstPerson(partialTicks);
+		}
+	};
+	
+	private static class BakedItemModelWrapper implements IBakedModel{
+		private static final List<BakedQuad> EMPTY_QUAD_LIST = new ArrayList<BakedQuad>();
+		
+		
+		@Override
+		public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand){
+			if(side == null){
+				int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+				MasterInterface.renderInterface.bindTexture(texturePath);
+				GL11.glBegin(GL11.GL_TRIANGLES);
+                GL11.glTexCoord2f(0, 0);
+                GL11.glVertex3f(0, 0, 0);
+                GL11.glTexCoord2f(0, 1);
+                GL11.glVertex3f(0, 1, 0);
+                GL11.glTexCoord2f(1, 1);
+                GL11.glVertex3f(1, 1, 0);
+                GL11.glTexCoord2f(1, 0);
+                GL11.glVertex3f(1, 0, 0);
+                GL11.glEnd();
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, currentTexture);
+			}
+			return EMPTY_QUAD_LIST;
+		}
+
+		@Override
+		public boolean isAmbientOcclusion(){
+			//Not a block, don't care.
+			return false;
+		}
+
+		@Override
+		public boolean isGui3d(){
+			//3D models just look better.
+			return true;
+		}
+
+		@Override
+		public boolean isBuiltInRenderer(){
+			//This smells like code that will go away sometime...
+			return false;
+		}
+
+		@Override
+		public TextureAtlasSprite getParticleTexture(){
+			return null;
+		}
+
+		@Override
+		public ItemOverrideList getOverrides(){
+			return ItemOverrideList.NONE;
+		}
 	};*/
 }
