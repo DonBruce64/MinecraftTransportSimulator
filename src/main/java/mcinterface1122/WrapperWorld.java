@@ -172,10 +172,14 @@ class WrapperWorld implements IWrapperWorld{
 		double smallestDistance = searchRadius*2;
 		Entity foundEntity = null;
 		Entity mcLooker = ((WrapperEntity) entityLooking).entity;
+		Vec3d mcLookerPos = mcLooker.getPositionVector();
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
 			float distance = mcLooker.getDistance(entity);
 			if(distance < smallestDistance && entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)){
-				foundEntity = entity;
+				//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
+				if(world.rayTraceBlocks(mcLookerPos, entity.getPositionVector(), false, true, false) == null){
+					foundEntity = entity;
+				}
 			}
 		}
 		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
