@@ -11,11 +11,13 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Class that handles all control operations.
  * 
@@ -130,12 +132,19 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger){
+	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
+		boolean gunSwitchPressedThisScan = gunSwitch.isPressed();
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
 				if(MasterLoader.gameInterface.getClientPlayer().equals(gun.getCurrentController())){
 					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartGun(gun, gunTrigger.isPressed()));
+				}
+			}else if(part instanceof PartSeat){
+				if(gunSwitchPressedThisScan){
+					if(MasterLoader.gameInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
+						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
+					}
 				}
 			}
 		}
@@ -161,7 +170,7 @@ public final class ControlSystem{
 	private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
-		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN);
+		controlGun(aircraft, ControlsKeyboard.AIRCRAFT_GUN_FIRE, ControlsKeyboard.AIRCRAFT_GUN_SWITCH);
 		controlRadio(aircraft, ControlsKeyboard.AIRCRAFT_RADIO);
 		controlJoystick(aircraft, ControlsKeyboard.AIRCRAFT_JS_INHIBIT);
 		
@@ -275,7 +284,7 @@ public final class ControlSystem{
 	private static void controlGroundVehicle(EntityVehicleF_Physics powered, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.CAR_CAMLOCK, ControlsKeyboard.CAR_ZOOM_I, ControlsKeyboard.CAR_ZOOM_O, ControlsJoystick.CAR_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.CAR_LOOK_R, ControlsJoystick.CAR_LOOK_L, ControlsJoystick.CAR_LOOK_U, ControlsJoystick.CAR_LOOK_D, ControlsJoystick.CAR_LOOK_A);
-		controlGun(powered, ControlsKeyboard.CAR_GUN);
+		controlGun(powered, ControlsKeyboard.CAR_GUN_FIRE, ControlsKeyboard.CAR_GUN_SWITCH);
 		controlRadio(powered, ControlsKeyboard.CAR_RADIO);
 		controlJoystick(powered, ControlsKeyboard.CAR_JS_INHIBIT);
 		
@@ -426,7 +435,8 @@ public final class ControlSystem{
 		AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B"),
 		AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U"),
 		AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS"),
-		AIRCRAFT_GUN(ControlsJoystick.AIRCRAFT_GUN, false, "SPACE"),
+		AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE"),
+		AIRCRAFT_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V"),
 		AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR"),
 		AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT"),
 		AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL"),
@@ -442,7 +452,8 @@ public final class ControlSystem{
 		CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F"),
 		CAR_HORN(ControlsJoystick.CAR_HORN, false, "C"),
 		CAR_RADIO(ControlsJoystick.CAR_RADIO, true, "MINUS"),
-		CAR_GUN(ControlsJoystick.CAR_GUN, false, "SPACE"),
+		CAR_GUN_FIRE(ControlsJoystick.CAR_GUN_FIRE, false, "SPACE"),
+		CAR_GUN_SWITCH(ControlsJoystick.CAR_GUN_SWITCH, true, "V"),
 		CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR"),
 		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT"),
 		CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5"),
@@ -514,7 +525,8 @@ public final class ControlSystem{
 		AIRCRAFT_PANEL(false, true),
 		AIRCRAFT_PARK(false, true),
 		AIRCRAFT_RADIO(false, true),
-		AIRCRAFT_GUN(false, false),
+		AIRCRAFT_GUN_FIRE(false, false),
+		AIRCRAFT_GUN_SWITCH(false, true),
 		AIRCRAFT_ZOOM_I(false, true),
 		AIRCRAFT_ZOOM_O(false, true),
 		AIRCRAFT_CHANGEVIEW(false, true),
@@ -545,7 +557,8 @@ public final class ControlSystem{
 		CAR_HORN(false, false),
 		CAR_PARK(false, true),
 		CAR_RADIO(false, true),
-		CAR_GUN(false, false),
+		CAR_GUN_FIRE(false, false),
+		CAR_GUN_SWITCH(false, true),
 		CAR_ZOOM_I(false, true),
 		CAR_ZOOM_O(false, true),
 		CAR_CHANGEVIEW(false, true),

@@ -121,6 +121,8 @@ public final class VehicleAnimationSystem{
 			}else if(optionalPart instanceof PartGun){
 				PartGun gun = (PartGun) optionalPart;
 				switch(variable){
+					case("gun_active"): return gun.active ? 1 : 0;
+					case("gun_firing"): return gun.firing ? 1 : 0;
 					case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
 					case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
 					case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;

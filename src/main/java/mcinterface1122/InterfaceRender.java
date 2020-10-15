@@ -563,6 +563,13 @@ class InterfaceRender implements IInterfaceRender{
 						for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
 							if(MasterInterface.gameInterface.getClientPlayer().equals(rider)){
 								PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
+								//If the seat is controlling a gun, render a text line for it.
+								if(seat.activeGun != null && !MasterInterface.gameInterface.isChatOpen()){
+									MasterInterface.guiInterface.drawBasicText("Active Gun:", event.getResolution().getScaledWidth(), 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+									MasterInterface.guiInterface.drawBasicText(seat.activeGun.getItemName(), event.getResolution().getScaledWidth(), 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								}
+								
+								//If the seat is a controller, render the HUD.
 								if(seat.vehicleDefinition.isController){
 									//Make a new HUD if we need to.
 									if(currentHUD == null){

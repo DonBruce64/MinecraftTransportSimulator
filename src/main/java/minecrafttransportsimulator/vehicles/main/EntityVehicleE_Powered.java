@@ -7,13 +7,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -56,7 +59,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public byte throttle;
 	
 	//Internal states.
-	public byte totalGuns;
 	public int gearMovementTime;
 	public double electricPower;
 	public double electricUsage;
@@ -69,10 +71,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	/**List containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
 	public final List<String> textLines = new ArrayList<String>();
 	
-	//Collision maps.
+	//Part maps.
 	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
+	public final HashMap<ItemPart, List<PartGun>> guns = new LinkedHashMap<ItemPart, List<PartGun>>();
 	
 	//Internal radio variables.
 	private final Radio radio;
@@ -325,7 +328,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				wheels.add((PartGroundDevice) part);
 			}
 		}else if(part instanceof PartGun){
-			++totalGuns;
+			if(!guns.containsKey(part.getItem())){
+				guns.put(part.getItem(), new ArrayList<PartGun>());
+			}
+			guns.get(part.getItem()).add((PartGun) part);
 		}
 	}
 	
@@ -347,7 +353,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		if(wheels.contains(part)){
 			wheels.remove(part);
 		}else if(part instanceof PartGun){
-			--totalGuns;
+			for(List<PartGun> gunList : guns.values()){
+				if(gunList.contains(part)){
+					gunList.remove(part);
+				}
+			}
 		}
 	}
 	

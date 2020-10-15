@@ -31,6 +31,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	//These variables are used during firing and will be reset on entity loading.
 	public boolean firing;
+	public boolean active;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
 	private IWrapperEntity lastController;
@@ -87,13 +88,16 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//Get the current controller for this gun.
 		IWrapperEntity controller = getCurrentController();
 		
+		//Set the active state.
+		//We flag ourselves as inactive if there are no controllers or the seat isn't set to us.
+		//We aren't making sentry turrets here.... yet.
+		active = controller != null && getItem().equals(((PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller))).activeGun);
+		
 		//Adjust aim to face direction controller is facing.
 		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
 		//Pitch and yaw only depend on where the player is looking, and where the gun is pointed.
 		//This allows for guns to be mounted anywhere on a vehicle and at any angle.
-		//If the controller is null, and we are firing, set us to not do so.
-		//We ain't coding sentrys here.... yet.
-		if(controller != null){
+		if(active){
 			//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
 			//We also get a flag to see if the gun is currently pointed to the hostile mob.
 			//If not, then we don't fire the gun, as that'd waste ammo.
@@ -221,19 +225,17 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//First update gun number so we know if we need to apply a cam offset.
 			//Get the gun number based on how many guns the vehicle has.
 			gunNumber = 1;
-			for(APart part : vehicle.parts){
-				if(part instanceof PartGun){
-					if(part.equals(this)){
-						break;
-					}else{
-						++gunNumber;
-					}
+			for(PartGun gun : vehicle.guns.get(getItem())){
+				if(gun.equals(this)){
+					break;
+				}else{
+					++gunNumber;
 				}
 			}
 			
 			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 			//Make sure to add-on an offset to our firing point to allow for multi-gun units.
-			long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.totalGuns);
+			long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.guns.get(getItem()).size());
 			cooldownTimeRemaining = definition.gun.fireDelay;
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
 			lastController = controller;
@@ -287,7 +289,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public boolean tryToReload(ItemPart part){
 		if(part.definition.bullet != null){
 			//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
-			if((reloadTimeRemaining == 0 && (loadedBullet == null && part.definition.bullet.diameter == definition.gun.diameter) || loadedBullet.equals(part)) || vehicle.world.isClient()){
+			if((reloadTimeRemaining == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter : loadedBullet.equals(part))) || vehicle.world.isClient()){
 				//Make sure we don't over-fill the gun.
 				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || vehicle.world.isClient()){
 					loadedBullet = part;

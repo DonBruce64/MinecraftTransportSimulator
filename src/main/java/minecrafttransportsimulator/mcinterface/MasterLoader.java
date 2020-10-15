@@ -31,6 +31,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -171,6 +172,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartEngine.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGun.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehiclePartSeat.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleTextChange.class);
 	}
