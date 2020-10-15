@@ -169,7 +169,7 @@ public class VehicleGroundDeviceBox{
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 			liquidBox.globalCenter.setTo(liquidBox.localCenter).rotateCoarse(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
-			isCollidedLiquid = liquidBox.collidingBlocks.isEmpty();
+			isCollidedLiquid = !liquidBox.collidingBlocks.isEmpty();
 			double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;
 			
 			liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
