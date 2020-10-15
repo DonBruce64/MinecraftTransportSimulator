@@ -412,89 +412,121 @@ class InterfaceRender implements IInterfaceRender{
     			Point3d riderLocation = vehicle.locationRiderMap.inverse().get(WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor(event.getEntity()));
         		if(riderLocation != null){
 		    		if(MasterInterface.gameInterface.inFirstPerson()){
+		    			//Do custom camera, or do normal rendering.
 		    			if(runningCustomCameras){
-		    				Minecraft.getMinecraft().gameSettings.thirdPersonView = 2;
-		    				++customCameraIndex;
-		    				runningCustomCameras = false;
+		    				//Check to make sure we didn't switch vehicles and foul up our cameras.
+		    				if(vehicle.definition.rendering.cameraObjects != null && customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
+			    				//Get the camera to render.
+		    					VehicleCameraObject camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
+		    					
+		    					//Remove MC rotations before doing any of our own.
+		    					event.setPitch(0);
+		            			event.setYaw(0);
+		            			
+		            			//First rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
+		                		GL11.glRotated(180, 0, 1, 0);
+		                		
+		                		//Rotate to the camera's rotation, if it has one.
+		            			if(camera.rot != null){
+		            	    		GL11.glRotated(-camera.rot.y, 0, 1, 0);
+		            	    		GL11.glRotated(-camera.rot.x, 1, 0, 0);
+		            	    		GL11.glRotated(-camera.rot.z, 0, 0, 1);
+		            			}
+		            			
+		            			//Apply any rotations from rotation animations.
+		            			if(camera.animations != null){
+		            				for(VehicleAnimationDefinition animation : camera.animations){
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
+		            					if(animation.animationType.equals("rotation")){
+		            						if(animationValue != 0){
+		            							Point3d rotationAxis = animation.axis.copy().normalize();
+		                						if(animationValue != 0){
+		                							GL11.glTranslated(animation.centerPoint.x - camera.pos.x, animation.centerPoint.y - camera.pos.y, animation.centerPoint.z - camera.pos.z);
+		                							GL11.glRotated(animationValue, -rotationAxis.x, -rotationAxis.y, -rotationAxis.z);
+		                							GL11.glTranslated(-(animation.centerPoint.x - camera.pos.x), -(animation.centerPoint.y - camera.pos.y), -(animation.centerPoint.z - camera.pos.z));
+		                						}
+		            						}
+		            					}
+		            				}
+		            			}
+		                		
+		                		//Translate to the camera's position.
+		            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
+		            			double playerPositionToEyeOffset = 0.87;
+		            			GL11.glTranslated(-(camera.pos.x - riderLocation.x), -(camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(camera.pos.z - riderLocation.z));
+		            			
+		            			//Translate again to any camera animations.
+		            			if(camera.animations != null){
+		            				for(VehicleAnimationDefinition animation : camera.animations){
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
+		            					if(animation.animationType.equals("translation")){
+		            						if(animationValue != 0){
+		            							if(animation.animationType.equals("translation")){
+		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
+		                    						GL11.glTranslated(-translationAmount.x, -translationAmount.y, -translationAmount.z);
+		                    					}
+		            						}
+		            					}
+		            				}
+		            			}
+		                		
+		            			//Now rotate to match the vehicle's angles.
+		            			Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(event.getRenderPartialTicks()));
+		                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
+		            			GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
+		            			GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
+		    				}else{
+		    					runningCustomCameras = false;
+		    				}
 		    			}else{
-		    				customCameraIndex = 0;
+			            	//Get yaw delta between entity and player from-180 to 180.
+			            	double playerYawDelta = (360 + (vehicle.angles.y - -event.getEntity().rotationYaw)%360)%360;
+			            	if(playerYawDelta > 180){
+			            		playerYawDelta-=360;
+			            	}
+			            	
+			            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
+			            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks();
+			            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks();
+			            	while(pitchAngle > 180){pitchAngle -= 360;}
+			    			while(pitchAngle < -180){pitchAngle += 360;}
+			    			while(rollAngle > 180){rollAngle -= 360;}
+			    			while(rollAngle < -180){rollAngle += 360;}
+			            	
+			            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
+			            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
+			            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
+			            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
+			            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
+			            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
 		    			}
-		    			
-		            	//Get yaw delta between entity and player from-180 to 180.
-		            	double playerYawDelta = (360 + (vehicle.angles.y - -event.getEntity().rotationYaw)%360)%360;
-		            	if(playerYawDelta > 180){
-		            		playerYawDelta-=360;
-		            	}
-		            	
-		            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
-		            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks();
-		            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks();
-		            	while(pitchAngle > 180){pitchAngle -= 360;}
-		    			while(pitchAngle < -180){pitchAngle += 360;}
-		    			while(rollAngle > 180){rollAngle -= 360;}
-		    			while(rollAngle < -180){rollAngle += 360;}
-		            	
-		            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
-		            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
-		            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
-		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
-		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
 		        	}else if(MasterInterface.gameInterface.inThirdPerson()){
+		        		//If we were running a custom camera, and hit the switch key, increment our camera index.
+		        		//We then go back to first-person to render the proper camera.
+		        		if(runningCustomCameras){
+		        			if(vehicle.definition.rendering.cameraObjects != null && customCameraIndex < vehicle.definition.rendering.cameraObjects.size() - 1){
+		        				++customCameraIndex;
+		        			}else{
+		        				runningCustomCameras = false;
+		        			}
+		        			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+		        		}
 		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
 		            }else{
+		            	//Got to inverted third-person.  Switch to custom cameras if we have any.
+		            	//If we do, go back to first-person to render the custom camera.
 		            	if(vehicle.definition.rendering.cameraObjects != null){
-		            		if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
-		            			//Set custom camera flag and player angles to match vehicle.
-		            			runningCustomCameras = true;
-		            			VehicleCameraObject camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
-				        		player.rotationYaw = (float) -vehicle.angles.y;
-				        		player.prevRotationYaw = (float) -vehicle.prevAngles.y;
-				        		player.rotationPitch = (float) vehicle.angles.x;
-				        		player.prevRotationPitch = (float) vehicle.prevAngles.x;
-				        		
-				        		//Rotate 180 to get facing the front.
-				        		GL11.glRotated(180F, 0, 1, 0);
-				        		//Translate and rotate to vehicle center, plus the default position.  Y is inverted for some reason here...
-				        		GL11.glTranslated(-riderLocation.x + camera.pos.x, riderLocation.y - camera.pos.y, 4D - riderLocation.z + camera.pos.z);
-				        		
-				        		//Rotate to initial rotation.
-				        		if(camera.rot != null){
-				        			GL11.glTranslated(-camera.pos.x, camera.pos.y, -camera.pos.z);
-					        		GL11.glRotated(-camera.rot.y, 0, 1, 0);
-					        		GL11.glRotated(camera.rot.x, 1, 0, 0);
-					        		GL11.glRotated(camera.rot.z, 0, 0, 1);
-					        		GL11.glTranslated(camera.pos.x, -camera.pos.y, camera.pos.z);
-				        		}
-				        		//Do camera animation transforms, if we have any.
-				        		if(camera.animations != null){
-				        			for(VehicleAnimationDefinition animation : camera.animations){
-				        				double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
-				        				if(animation.animationType.equals("translation")){
-				        					Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
-				        					GL11.glTranslated(translationAmount.x, -translationAmount.y, translationAmount.z);
-				        				}else if(animation.animationType.equals("rotation")){
-				        					Point3d rotationAxis = animation.axis.copy().normalize();
-				        					if(animationValue != 0){
-				        						GL11.glTranslated(-animation.centerPoint.x, animation.centerPoint.y, -animation.centerPoint.z);
-				        						GL11.glRotated(animationValue, rotationAxis.x, rotationAxis.y, rotationAxis.z);
-				        						GL11.glTranslated(animation.centerPoint.x, -animation.centerPoint.y, animation.centerPoint.z);
-				        					}
-				        				}
-				        			}
-				        		}
-				        		return;
-		            		}else{
-		            			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-		            		}
+		            		runningCustomCameras = true;
+		            		customCameraIndex = 0;
+		            		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+		            	}else{
+		            		GL11.glTranslatef(0, 0F, zoomLevel);
 		            	}
-		            	GL11.glTranslatef(0, 0F, zoomLevel);
 		            }
         		}
     		}
         }
     }
-    
 
     private static BuilderGUI currentHUD = null;
     /**
