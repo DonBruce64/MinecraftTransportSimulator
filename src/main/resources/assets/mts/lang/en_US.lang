@@ -38,7 +38,7 @@ interact.key.failure.notowner=Only the owner of this vehicle may make new keys!
 interact.key.failure.wrongkey=This key does not go to this vehicle!
 interact.key.failure.alreadyowned=You are not the owner of this vehicle, you cannot change ownership!
 
-interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pump should be no less than 16 blocks away.
+interact.fuelpump.toofar=The fuel pump is too far away from the vehicle.  The pump should be no more than 16 blocks away.
 interact.fuelpump.nofuel=The fuel pump does not have any fuel in it.  You need fuel in the fuel pump to use it.
 interact.fuelpump.wrongtype=This pump does not contain the same liquid as what is in the vehicle.
 interact.fuelpump.wrongengines=The fuel in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.
