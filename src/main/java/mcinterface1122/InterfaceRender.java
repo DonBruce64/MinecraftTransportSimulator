@@ -456,7 +456,8 @@ class InterfaceRender implements IInterfaceRender{
 				        		//Rotate 180 to get facing the front.
 				        		GL11.glRotated(180F, 0, 1, 0);
 				        		//Translate and rotate to vehicle center, plus the default position.  Y is inverted for some reason here...
-				        		GL11.glTranslated(-riderLocation.x + camera.pos.x, -(riderLocation.y + camera.pos.y), 4D - riderLocation.z + camera.pos.z);
+				        		GL11.glTranslated(-riderLocation.x + camera.pos.x, riderLocation.y - camera.pos.y, 4D - riderLocation.z + camera.pos.z);
+				        		
 				        		//Rotate to initial rotation.
 				        		if(camera.rot != null){
 				        			GL11.glTranslated(-camera.pos.x, camera.pos.y, -camera.pos.z);
