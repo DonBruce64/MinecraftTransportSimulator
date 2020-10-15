@@ -56,6 +56,12 @@ class InterfaceGUI implements IInterfaceGUI{
 			}else{
 				x -= Math.min(wrapWidth/2, fontRenderer.getStringWidth(text)/2);
 			}
+		}else if(renderPosition.equals(TextPosition.RIGHT_ALIGNED)){
+			if(wrapWidth == 0){
+				x -= fontRenderer.getStringWidth(text);
+			}else{
+				x -= Math.min(wrapWidth, fontRenderer.getStringWidth(text));
+			}
 		}
 		
 		if(wrapWidth == 0){
