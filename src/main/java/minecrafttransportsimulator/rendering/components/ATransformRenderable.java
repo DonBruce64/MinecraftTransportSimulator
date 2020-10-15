@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -10,11 +13,10 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public abstract class ATransformRenderable{
 	public final VehicleAnimationDefinition definition; 
-	public final DurationDelayClock clock;
+	private final Map<EntityVehicleF_Physics, DurationDelayClock> clocks = new HashMap<EntityVehicleF_Physics, DurationDelayClock>();
 	
 	public ATransformRenderable(VehicleAnimationDefinition definition){
 		this.definition = definition;
-		this.clock = new DurationDelayClock(definition);
 	}
 	
 	/**
@@ -39,4 +41,15 @@ public abstract class ATransformRenderable{
 	 *  or transform clean-up (say if lighting was modified).
 	 */
 	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){};
+	
+	/**
+	 *  Returns the current animation clock for the passed-in vehicle.  Clocks are not shared between
+	 *  vehicle to allow each vehicle to have their own running clocks for each animation.
+	 */
+	public DurationDelayClock getClock(EntityVehicleF_Physics vehicle){
+		if(!clocks.containsKey(vehicle)){
+			clocks.put(vehicle, new DurationDelayClock(definition));
+		}
+		return clocks.get(vehicle);
+	}
 }

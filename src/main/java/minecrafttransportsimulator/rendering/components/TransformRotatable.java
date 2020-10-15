@@ -34,7 +34,7 @@ public class TransformRotatable extends ATransformRenderable{
 		}
 		
 		//Get rotation.
-		double rotation = clock.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
+		double rotation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
 		rotation = VehicleAnimationSystem.clampAndScale(rotation, rotationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
 		
 		//Do rotation.
