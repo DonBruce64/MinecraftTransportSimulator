@@ -57,7 +57,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			packVehicleDef.pos = actualPlacement;
 			//This hack prevents us from adding this part to the main list during vehicle construction.
 			if(vehicle.partSlotBoxes != null){
-				vehicle.addPart(fakePart, false);
+				vehicle.addPart(fakePart);
 			}else{
 				vehicle.partsFromNBT.add(fakePart);
 			}

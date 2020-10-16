@@ -306,8 +306,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		super.addPart(part, ignoreCollision);
+	public void addPart(APart part){
+		super.addPart(part);
 		if(part instanceof PartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.

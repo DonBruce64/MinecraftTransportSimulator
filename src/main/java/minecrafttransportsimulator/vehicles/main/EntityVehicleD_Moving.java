@@ -109,8 +109,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		super.addPart(part, ignoreCollision);
+	public void addPart(APart part){
+		super.addPart(part);
 		groundDeviceBoxes.updateMembers();
 		groundDeviceBoxes.updateBounds();
 	}

@@ -172,7 +172,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					ridableLocations.add(partToAdd.placementOffset);
 				}
     		}else{
-	    		addPart(partToAdd, false);
+	    		addPart(partToAdd);
 				
 				//If we are a new part, we need to add text.
 	    		boolean newPart = partData.getString("packID").isEmpty();
@@ -205,20 +205,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
     }
 	
     /**
-   	 * Adds the passed-in part to the vehicle.  May move the vehicle to prevent the part from
-   	 * spawning underground, but this may be disabled if ignoreCollision is true.
+   	 * Adds the passed-in part to the vehicle.  Also is responsible for modifying
+   	 * and lists or maps that may have changed from adding the part.
    	 */
-	public void addPart(APart part, boolean ignoreCollision){
+	public void addPart(APart part){
 		parts.add(part);
-		if(!ignoreCollision){
-			//Check for collision, and boost if needed.
-			//Need to add negative y to get boost collision depth.
-			if(part.boundingBox.updateCollidingBlocks(world, new Point3d(0D, -0.00001D, 0D))){
-				//Adjust roll first, as otherwise we could end up with a sunk vehicle.
-				angles.z = 0;
-				position.y += part.boundingBox.currentCollisionDepth.y;
-			}
-		}
 		
 		//Add a ride-able location.
 		if(part instanceof PartSeat){
@@ -445,7 +436,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					try{
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
 						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, MasterLoader.coreInterface.createNewTag(), parentPart);
-						vehicle.addPart(newPart, true);
+						vehicle.addPart(newPart);
 						
 						//Set default text for the new part, if we have any.
 						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){

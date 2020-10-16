@@ -167,7 +167,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, data);
 		//Need to wait for vehicle to load-in before we try to add saved parts.
 		for(APart part : vehicle.partsFromNBT){
-			vehicle.addPart(part, true);
+			vehicle.addPart(part);
 		}
 		vehicle.partsFromNBT.clear();
 		return vehicle;

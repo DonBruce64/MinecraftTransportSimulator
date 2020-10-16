@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -26,8 +27,8 @@ import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
- * Use {@link EntityVehicleF_Physics#addPart(APart, boolean)} to add parts 
- * and {@link EntityVehicleF_Physics#removePart(APart, boolean)} to remove them.
+ * Use {@link EntityVehicleF_Physics#addPart(APart)} to add parts 
+ * and {@link EntityVehicleF_Physics#removePart(APart, Iterator)} to remove them.
  * You may extend {@link EntityVehicleE_Powered} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.

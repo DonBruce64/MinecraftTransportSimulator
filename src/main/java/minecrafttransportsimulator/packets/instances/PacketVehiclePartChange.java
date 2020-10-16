@@ -81,7 +81,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
 		}else{
 			VehiclePart packVehicleDef = vehicle.getPackDefForLocation(offset);
-			vehicle.addPart(partItem.createPart(vehicle, packVehicleDef, partData, vehicle.getPartAtLocation(partClickedOffset)), false);
+			vehicle.addPart(partItem.createPart(vehicle, packVehicleDef, partData, vehicle.getPartAtLocation(partClickedOffset)));
 		}
 		return true;
 	}

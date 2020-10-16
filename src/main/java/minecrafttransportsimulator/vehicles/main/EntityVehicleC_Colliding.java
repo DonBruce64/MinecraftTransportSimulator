@@ -242,8 +242,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	}
 	
 	@Override
-	public void addPart(APart part, boolean ignoreCollision){
-		super.addPart(part, ignoreCollision);
+	public void addPart(APart part){
+		super.addPart(part);
 		//Add part to collision map if it has collision.
 		if(part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
