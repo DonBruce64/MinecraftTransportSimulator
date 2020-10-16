@@ -387,8 +387,11 @@ class WrapperWorld implements IWrapperWorld{
     				if(world.isBlockLoaded(pos)){
 	    				IBlockState state = world.getBlockState(pos);
 	    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
+	    					int oldCollidingBlockCount = collidingAABBs.size();
 	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
-	    					box.collidingBlocks.add(new WrapperBlock(world, pos));
+	    					if(collidingAABBs.size() > oldCollidingBlockCount){
+	    						box.collidingBlocks.add(new WrapperBlock(world, pos));
+	    					}
 	    				}
 						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
 							collidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));

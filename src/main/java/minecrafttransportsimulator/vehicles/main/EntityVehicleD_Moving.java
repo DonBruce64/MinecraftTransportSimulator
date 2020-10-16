@@ -338,7 +338,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
 		//If we hit something, however, we need to inhibit the movement so we don't do that.
 		//This prevents vehicles from phasing through walls even though they are driving on the ground.
-		//If we are being towed, don't check for collisions, as this can lead to
+		//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
 		boolean collisionBoxCollided = false;
 		if(towedByVehicle == null){
 			tempBoxAngles.setTo(rotation).add(angles);
