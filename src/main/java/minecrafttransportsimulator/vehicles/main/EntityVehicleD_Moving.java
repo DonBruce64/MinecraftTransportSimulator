@@ -56,15 +56,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
     	private double driftForce = 0;
   	private double driveTrain = 0;
   	{
-  		if (this.definition.motorized.isFrontWheelDrive && this.definition.motorized.isRearWheelDrive){
-  			driveTrain = 100;
-  		}else if (definition.motorized.isRearWheelDrive){
-  			driveTrain = 20;
-  		}else if (definition.motorized.isFrontWheelDrive){
-  			driveTrain = -20; 
-  		}else{
-  			driveTrain = 100;
-  		}
+  	if (this.definition.motorized.isFrontWheelDrive && this.definition.motorized.isRearWheelDrive){
+  		driveTrain = 100;
+  	}else if (definition.motorized.isRearWheelDrive){
+  		driveTrain = 20;
+  	}else if (definition.motorized.isFrontWheelDrive){
+  		driveTrain = -20; 
+  	}else{
+  		driveTrain = 100;
+  	}
   	}
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
