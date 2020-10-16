@@ -409,29 +409,29 @@ class WrapperWorld implements IWrapperWorld{
 			}else if(collisionMotion.x < 0){
 				boxCollisionDepth = colBox.maxX - mcBox.minX;
 				if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < 0){
-					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, colBox.maxX - mcBox.minX);
+					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
 				}
 			}
 			if(collisionMotion.y > 0){
 				boxCollisionDepth = mcBox.maxY - colBox.minY;
 				if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > 0){
-					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, mcBox.maxY - colBox.minY);
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
 				}
 			}else if(collisionMotion.y < 0){
 				boxCollisionDepth = colBox.maxY - mcBox.minY;
 				if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < 0){
-					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, colBox.maxY - mcBox.minY);
+					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
 				}
 			}
 			if(collisionMotion.z > 0){
 				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
 				if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
-					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
 				}
 			}else if(collisionMotion.z < 0){
 				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
 				if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < 0){
-					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, colBox.maxZ - mcBox.minZ);
+					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
 				}
 			}
 		}
