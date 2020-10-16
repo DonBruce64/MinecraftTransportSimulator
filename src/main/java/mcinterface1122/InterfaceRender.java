@@ -414,11 +414,35 @@ class InterfaceRender implements IInterfaceRender{
 		    		if(MasterInterface.gameInterface.inFirstPerson()){
 		    			//Do custom camera, or do normal rendering.
 		    			if(runningCustomCameras){
-		    				//Check to make sure we didn't switch vehicles and foul up our cameras.
-		    				if(vehicle.definition.rendering.cameraObjects != null && customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
-			    				//Get the camera to render.
-		    					VehicleCameraObject camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
-		    					
+		    				VehicleCameraObject camera = null;
+		    				APart optionalPart = null;
+		    				int camerasChecked = 0;
+		    				
+		    				//Get the next custom camera the vehicle has.
+		    				if(vehicle.definition.rendering.cameraObjects != null){
+		    					camerasChecked += vehicle.definition.rendering.cameraObjects.size();
+		    					if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
+		    						camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
+		    					}
+		    				}
+		    				
+		    				//If we aren't using a vehicle camera, check for part cameras.
+		    				if(camera == null){
+		    					for(APart part : vehicle.parts){
+		    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
+		    							if(customCameraIndex < camerasChecked + part.definition.rendering.cameraObjects.size()){
+		    								camera = part.definition.rendering.cameraObjects.get(customCameraIndex - camerasChecked);
+		    								optionalPart = part;
+		    								break;
+		    							}else{
+		    								camerasChecked += part.definition.rendering.cameraObjects.size();
+		    							}
+		    						}
+		    					}
+		    				}
+		    				
+		    				//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
+		    				if(camera != null){
 		    					//Remove MC rotations before doing any of our own.
 		    					event.setPitch(0);
 		            			event.setYaw(0);
@@ -427,7 +451,18 @@ class InterfaceRender implements IInterfaceRender{
 		                		GL11.glRotated(180, 0, 1, 0);
 		                		
 		                		//Rotate to the camera's rotation, if it has one.
-		            			if(camera.rot != null){
+		                		//We also need to take into account the rotation of the part if we have a part camera.
+		                		Point3d totalRotation;
+		                		if(optionalPart != null){
+		                			if(camera.rot != null){
+		                				totalRotation = optionalPart.totalRotation.copy().add(camera.rot);
+		                			}else{
+		                				totalRotation = optionalPart.totalRotation;
+		                			}
+		                		}else{
+		                			totalRotation = camera.rot;
+		                		}
+		            			if(totalRotation != null){
 		            	    		GL11.glRotated(-camera.rot.y, 0, 1, 0);
 		            	    		GL11.glRotated(-camera.rot.x, 1, 0, 0);
 		            	    		GL11.glRotated(-camera.rot.z, 0, 0, 1);
@@ -436,7 +471,7 @@ class InterfaceRender implements IInterfaceRender{
 		            			//Apply any rotations from rotation animations.
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, optionalPart);
 		            					if(animation.animationType.equals("rotation")){
 		            						if(animationValue != 0){
 		            							Point3d rotationAxis = animation.axis.copy().normalize();
@@ -452,13 +487,18 @@ class InterfaceRender implements IInterfaceRender{
 		                		
 		                		//Translate to the camera's position.
 		            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
+		            			//We also need to take into account the part's position, if we are using one.
 		            			double playerPositionToEyeOffset = 0.87;
-		            			GL11.glTranslated(-(camera.pos.x - riderLocation.x), -(camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(camera.pos.z - riderLocation.z));
+		            			if(optionalPart != null){
+		            				GL11.glTranslated(-(optionalPart.totalOffset.x + camera.pos.x - riderLocation.x), -(optionalPart.totalOffset.y + camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(optionalPart.totalOffset.z + camera.pos.z - riderLocation.z));
+		            			}else{
+		            				GL11.glTranslated(-(camera.pos.x - riderLocation.x), -(camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(camera.pos.z - riderLocation.z));
+		            			}
 		            			
 		            			//Translate again to any camera animations.
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, null);
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, optionalPart);
 		            					if(animation.animationType.equals("translation")){
 		            						if(animationValue != 0){
 		            							if(animation.animationType.equals("translation")){
@@ -504,24 +544,15 @@ class InterfaceRender implements IInterfaceRender{
 		        		//If we were running a custom camera, and hit the switch key, increment our camera index.
 		        		//We then go back to first-person to render the proper camera.
 		        		if(runningCustomCameras){
-		        			if(vehicle.definition.rendering.cameraObjects != null && customCameraIndex < vehicle.definition.rendering.cameraObjects.size() - 1){
-		        				++customCameraIndex;
-		        			}else{
-		        				runningCustomCameras = false;
-		        			}
+		        			++customCameraIndex;
 		        			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
 		        		}
 		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
 		            }else{
-		            	//Got to inverted third-person.  Switch to custom cameras if we have any.
-		            	//If we do, go back to first-person to render the custom camera.
-		            	if(vehicle.definition.rendering.cameraObjects != null){
-		            		runningCustomCameras = true;
-		            		customCameraIndex = 0;
-		            		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-		            	}else{
-		            		GL11.glTranslatef(0, 0F, zoomLevel);
-		            	}
+		            	//Got to inverted third-person.  Set custom cameras to active and go back to first-person.
+	            		runningCustomCameras = true;
+	            		customCameraIndex = 0;
+	            		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
 		            }
         		}
     		}
