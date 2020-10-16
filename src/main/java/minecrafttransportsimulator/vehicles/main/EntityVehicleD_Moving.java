@@ -38,6 +38,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Internal states.
 	public boolean goingInReverse;
 	public double groundVelocity;
+	private double driftForce;
+	private final double driveTrain;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	private final Point3d serverDeltaM;
@@ -53,19 +55,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
   	private final VehicleGroundDeviceCollection groundDeviceBoxes;
-    	private double driftForce = 0;
-  	private double driveTrain = 0;
-  	{
-  	if (this.definition.motorized.isFrontWheelDrive && this.definition.motorized.isRearWheelDrive){
-  		driveTrain = 100;
-  	}else if (definition.motorized.isRearWheelDrive){
-  		driveTrain = 20;
-  	}else if (definition.motorized.isFrontWheelDrive){
-  		driveTrain = -20; 
-  	}else{
-  		driveTrain = 100;
-  	}
-  	}
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
 	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
@@ -82,6 +71,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
 		this.groundDeviceBoxes = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
+		if(definition.motorized.isFrontWheelDrive && definition.motorized.isRearWheelDrive){
+	  		driveTrain = 100;
+	  	}else if(definition.motorized.isRearWheelDrive){
+	  		driveTrain = 20;
+	  	}else if(definition.motorized.isFrontWheelDrive){
+	  		driveTrain = -20; 
+	  	}else{
+	  		driveTrain = 100;
+	  	}
 	}
 	
 	@Override
