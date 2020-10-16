@@ -537,7 +537,7 @@ class InterfaceRender implements IInterfaceRender{
     	if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
     		if(MasterInterface.gameInterface.inFirstPerson() && Minecraft.getMinecraft().player.getRidingEntity() == null){
     			RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-    			if(lastHit.entityHit instanceof BuilderEntity){
+    			if(lastHit != null && lastHit.entityHit instanceof BuilderEntity){
     				BuilderEntity builder = (BuilderEntity) Minecraft.getMinecraft().objectMouseOver.entityHit;
     				if(builder.entity instanceof EntityVehicleF_Physics){
     					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) builder.entity;
