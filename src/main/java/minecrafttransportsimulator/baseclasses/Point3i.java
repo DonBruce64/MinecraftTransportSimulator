@@ -1,10 +1,14 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**Integer implementation of point class.
+/**Point class designed for discrete positions.  This is used by blocks, which do not allow
+ * for fractional position locations.  Allows for saving of positions in a less recourse-heavy
+ * format than Minecraft's BlockPos.  This class is mutable to allow
+ * the point to change, cause we don't need to create a new point every time we
+ * move a thing.
  *
  * @author don_bruce
  */
-public class Point3i extends APoint3<Integer, Point3i>{
+public class Point3i{
 	private static final Point3i ZERO = new Point3i(0, 0, 0);
 	
 	public int x;
@@ -12,11 +16,13 @@ public class Point3i extends APoint3<Integer, Point3i>{
 	public int z;
 	
 	public Point3i(int x, int y, int z){
-		super(x, y, z);
+		this.x = x;
+		this.y = y;
+		this.z = z;
 	}
 	
 	/**
-	 * Helper constructor for casting-down double points to integers.
+	 * Helper constructor for casting-down double points to ints.
 	 */
 	public Point3i(Point3d point){
 		this((int) point.x, (int) point.y, (int) point.z);
@@ -32,15 +38,21 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		}
 	}
 	
-	@Override
-	public Point3i set(Integer x, Integer y, Integer z){
+	/**
+	 * Sets the value of the point to the passed-in values.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3i set(int x, int y, int z){
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Sets the value of the point to the values of the passed-in point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3i setTo(Point3i point){
 		this.x = point.x;
 		this.y = point.y;
@@ -48,15 +60,21 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		return this;
 	}
 	
-	@Override
-	public Point3i add(Integer x, Integer y, Integer z){
+	/**
+	 * Adds the passed-in values to the point.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3i add(int x, int y, int z){
 		this.x += x;
 		this.y += y;
 		this.z += z;
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Adds the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3i add(Point3i point){
 		this.x += point.x;
 		this.y += point.y;
@@ -64,7 +82,10 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Subtracts the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3i subtract(Point3i point){
 		this.x -= point.x;
 		this.y -= point.y;
@@ -72,60 +93,16 @@ public class Point3i extends APoint3<Integer, Point3i>{
 		return this;
 	}
 	
-	@Override
-	public Point3i multiply(Integer scale){
-		this.x *= scale;
-		this.y *= scale;
-		this.z *= scale;
-		return this;
-	}
-
-	@Override
-	public Point3i multiply(Point3i point){
-		this.x *= point.x;
-		this.y *= point.y;
-		this.z *= point.z;
-		return this;
-	}
-	
-	@Override
-	public Integer distanceTo(Point3i point){
-		int deltaX = point.x - this.x;
-		int deltaY = point.y - this.y;
-		int deltaZ = point.z - this.z;
-		return (int) Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
-	}
-	
-	@Override
-	public Integer dotProduct(Point3i point){
-		return this.x*point.x + this.y*point.y + this.z*point.z;
-	}
-	
-	@Override
-	public Point3i crossProduct(Point3i point){
-		return new Point3i(this.y*point.z - this.z*point.y, this.z*point.x - this.x*point.z, this.x*point.y - this.y*point.x);
-	}
-	
-	@Override
-	public Integer length(){
-		return (int) Math.sqrt(x*x + y*y + z*z);
-	}
-	
-	@Override
-	public Point3i normalize(){
-		Integer length = length();
-		x /= length;
-		y /= length;
-		z /= length;
-		return this;
-	}
-	
-	@Override
+	/**
+	 * Returns a copy of this point.
+	 */
 	public Point3i copy(){
 		return new Point3i(this.x, this.y, this.z);
 	}
 	
-	@Override
+	/**
+	 * Returns true if this point is 0,0,0.
+	 */
 	public boolean isZero(){
 		return this.equals(ZERO);
 	}

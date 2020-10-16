@@ -7,11 +7,15 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
-/**Double implementation of point class.
+/**Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
+ * format than Minecraft's vectors.  This class is mutable to allow
+ * the point to change, cause we don't need to create a new point every time we
+ * move a thing.  As this point can be used for vectors, methods exist for vector
+ * operations such as dot product, cross product, and rotation.
  *
  * @author don_bruce
  */
-public class Point3d extends APoint3<Double, Point3d>{
+public class Point3d{
 	private static final Point3d ZERO = new Point3d(0D, 0D, 0D);
 	
 	public double x;
@@ -19,7 +23,9 @@ public class Point3d extends APoint3<Double, Point3d>{
 	public double z;
 	
 	public Point3d(double x, double y, double z){
-		super(x, y, z);
+		this.x = x;
+		this.y = y;
+		this.z = z;
 	}
 	
 	public Point3d(Point3i point){
@@ -41,15 +47,21 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return "[" + x + ", " + y + ", " + z + "]";
 	}
 	
-	@Override
-	public Point3d set(Double x, Double y, Double z){
+	/**
+	 * Sets the value of the point to the passed-in values.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d set(double x, double y, double z){
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Sets the value of the point to the values of the passed-in point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3d setTo(Point3d point){
 		this.x = point.x;
 		this.y = point.y;
@@ -57,15 +69,21 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this;
 	}
 	
-	@Override
-	public Point3d add(Double x, Double y, Double z){
+	/**
+	 * Adds the passed-in values to the point.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d add(double x, double y, double z){
 		this.x += x;
 		this.y += y;
 		this.z += z;
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Adds the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3d add(Point3d point){
 		this.x += point.x;
 		this.y += point.y;
@@ -73,7 +91,10 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Subtracts the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3d subtract(Point3d point){
 		this.x -= point.x;
 		this.y -= point.y;
@@ -81,15 +102,21 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this;
 	}
 	
-	@Override
-	public Point3d multiply(Double scale){
+	/**
+	 * Multiplies all values of this point by the passed-in factor.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d multiply(double scale){
 		this.x *= scale;
 		this.y *= scale;
 		this.z *= scale;
 		return this;
 	}
 
-	@Override
+	/**
+	 * Multiplies all values of this point by the values of the passed-in point.
+	 * Returns the called object for nested operations.
+	 */
 	public Point3d multiply(Point3d point){
 		this.x *= point.x;
 		this.y *= point.y;
@@ -97,39 +124,55 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this;
 	}
 	
-	@Override
-	public Double distanceTo(Point3d point){
+	/**
+	 * Returns the distance between this point and the passed-in point.
+	 */
+	public double distanceTo(Point3d point){
 		double deltaX = point.x - this.x;
 		double deltaY = point.y - this.y;
 		double deltaZ = point.z - this.z;
 		return Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
 	}
 	
-	public Double distanceTo(Point3i point){
+	/**
+	 * Like {@link #distanceTo(Point3d)}, but for use with Point3i classes.
+	 */
+	public double distanceTo(Point3i point){
 		double deltaX = point.x - this.x;
 		double deltaY = point.y - this.y;
 		double deltaZ = point.z - this.z;
 		return Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
 	}
 	
-	@Override
-	public Double dotProduct(Point3d point){
+	/**
+	 * Returns the dot product between this point and the passed-in point.
+	 */
+	public double dotProduct(Point3d point){
 		return this.x*point.x + this.y*point.y + this.z*point.z;
 	}
 	
-	@Override
+	/**
+	 * Returns the cross product between this point and the passed-in point.
+	 * Return value is a new point that is the cross product of the object
+	 * this was invoked on, and the passed-in object.  Neither object is
+	 * modified by this operation.
+	 */
 	public Point3d crossProduct(Point3d point){
 		return new Point3d(this.y*point.z - this.z*point.y, this.z*point.x - this.x*point.z, this.x*point.y - this.y*point.x);
 	}
 	
-	@Override
-	public Double length(){
+	/**
+	 * Returns the length of this point as if it was a vector.
+	 */
+	public double length(){
 		return Math.sqrt(x*x + y*y + z*z);
 	}
 	
-	@Override
+	/**
+	 * Normalizes this point to be a unit vector.  Note that the
+	 */
 	public Point3d normalize(){
-		Double length = length();
+		double length = length();
 		if(length > 1.0E-4D){
 			x /= length;
 			y /= length;
@@ -138,12 +181,16 @@ public class Point3d extends APoint3<Double, Point3d>{
 		return this;
 	}
 	
-	@Override
+	/**
+	 * Returns a copy of this point as a new object.
+	 */
 	public Point3d copy(){
 		return new Point3d(this.x, this.y, this.z);
 	}
 	
-	@Override
+	/**
+	 * Returns true if this point is 0,0,0.
+	 */
 	public boolean isZero(){
 		return this.equals(ZERO);
 	}
@@ -199,8 +246,8 @@ public class Point3d extends APoint3<Double, Point3d>{
         }
     }
 	
-	private static final Double[] sinTable = new Double[361];
-	private static final Double[] cosTable = new Double[361];
+	private static final double[] sinTable = new double[361];
+	private static final double[] cosTable = new double[361];
 	/**
      * Rotates this point about the passed-in angles.  Rotation is done using a 360-degree
      * static lookup table, so rotation is done to the nearest degree.  This is faster than
@@ -208,7 +255,7 @@ public class Point3d extends APoint3<Double, Point3d>{
      */
 	public Point3d rotateCoarse(Point3d angles){
 		//Init sin and cos tables, if they aren't ready.
-		if(sinTable[0] == null){
+		if(cosTable[0] == 0){
 			for(int i=0; i<=360; ++i){
 				sinTable[i] = Math.sin(Math.toRadians(i));
 				cosTable[i] = Math.cos(Math.toRadians(i));
