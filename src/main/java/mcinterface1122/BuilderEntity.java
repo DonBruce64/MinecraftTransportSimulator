@@ -8,8 +8,6 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import org.lwjgl.input.Keyboard;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -84,9 +82,6 @@ public class BuilderEntity extends Entity{
     public void onEntityUpdate(){
     	//If our entity isn't null, update it and our position.
     	if(entity != null){
-    		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) && world.getTotalWorldTime()%20 != 0){
-    			return;
-    		}
     		//First forward the update call.
     		entity.update();
     		
