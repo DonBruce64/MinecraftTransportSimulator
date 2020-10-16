@@ -56,15 +56,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
     	private double driftForce = 0;
   	private double driveTrain = 0;
   	{
-  	if (this.definition.motorized.isFrontWheelDrive == true && this.definition.motorized.isRearWheelDrive == true) {
-  	 	driveTrain = 100;
-  	}else if (this.definition.motorized.isRearWheelDrive == true) {
-  		driveTrain = 10;
-  	}else if (this.definition.motorized.isFrontWheelDrive == true) {
-  		driveTrain = -15; 
-  	}else{
-  		driveTrain = 100;
-  	}
+  		if (this.definition.motorized.isFrontWheelDrive && this.definition.motorized.isRearWheelDrive){
+  			driveTrain = 100;
+  		}else if (definition.motorized.isRearWheelDrive){
+  			driveTrain = 20;
+  		}else if (definition.motorized.isFrontWheelDrive){
+  			driveTrain = -20; 
+  		}else{
+  			driveTrain = 100;
+  		}
   	}
 	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
@@ -252,30 +252,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Returns rotating force for skidding, based on the vehicle drivetrain and other usual MTS calculations
 	 */
 	private double getDriveTrainSkiddingForce(){
-		//First check grounded ground devices.
-		for(PartGroundDevice groundDevice : groundedGroundDevices){
-			
-			float skiddingFactor = getSkiddingForce();
-			double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
-			//Have enough grip, get angle delta between heading and motion.
-			Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
-			double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
-			//Check if we are backwards and adjust our delta angle if so.
-			if(goingInReverse && dotProduct < 0){
-				if(vectorDelta >= 90){
-					vectorDelta = -(180 - vectorDelta);
-				}else if(vectorDelta <= -90){
-					vectorDelta = 180 + vectorDelta;
-				}
+		float skiddingFactor = getSkiddingForce();
+		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
+		//Have enough grip, get angle delta between heading and motion.
+		Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
+		double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
+		//Check if we are backwards and adjust our delta angle if so.
+		if(goingInReverse && dotProduct < 0){
+			if(vectorDelta >= 90){
+				vectorDelta = -(180 - vectorDelta);
+			}else if(vectorDelta <= -90){
+				vectorDelta = 180 + vectorDelta;
 			}
-			
-				//Get factor of how much we can "correct" our turning.
-					driftForce = vectorDelta * (skiddingFactor / driveTrain);
 		}
-		
-		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
-		driftForce += 0.5D*groundDeviceBoxes.getBoxesInLiquid();
-		return driftForce;
+		//Get factor of how much we can "correct" our turning.
+		driftForce = vectorDelta * (skiddingFactor / driveTrain);
+		return  Math.abs(driftForce) > skiddingFactor ? driftForce : 0;
 	}
 	
 	/**
