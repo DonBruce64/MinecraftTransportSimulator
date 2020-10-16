@@ -35,13 +35,14 @@ public class BoundingBox{
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
 	public final boolean isInterior;
+	public final boolean isCollision;
 	public final double armorThickness;
 	
 	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
-		this(center, center, widthRadius, heightRadius, depthRadius, false, false, 0);
+		this(center, center, widthRadius, heightRadius, depthRadius, false, false, false, 0);
 	}
 	
-	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior, double armorThickness){
+	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior, boolean isCollision, double armorThickness){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
@@ -51,6 +52,7 @@ public class BoundingBox{
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
 		this.isInterior = isInterior;
+		this.isCollision = isCollision;
 		this.armorThickness = armorThickness;
 	}
 	
@@ -88,6 +90,12 @@ public class BoundingBox{
 	 */
 	public void updateToEntity(AEntityBase entity){
 		globalCenter.setTo(localCenter).rotateFine(entity.angles).add(entity.position);
+		if(isCollision){
+			//Need to round box to nearest 0.1 unit to prevent floating-point errors.
+			globalCenter.x = ((int) (globalCenter.x*10D))/10D;
+			globalCenter.y = ((int) (globalCenter.y*10D))/10D;
+			globalCenter.z = ((int) (globalCenter.z*10D))/10D;
+		}
 	}
 	
 	/**

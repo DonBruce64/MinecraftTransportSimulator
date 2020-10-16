@@ -70,7 +70,7 @@ public abstract class APart implements ISoundProvider{
 		this.definition = item.definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
-		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, 0);
+		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
 		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation.copy();
 		this.currentSubName = item.subName;

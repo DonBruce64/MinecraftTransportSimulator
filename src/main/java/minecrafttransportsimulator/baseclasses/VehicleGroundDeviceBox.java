@@ -20,8 +20,8 @@ public class VehicleGroundDeviceBox{
 	private final EntityVehicleF_Physics vehicle;
 	private final boolean isFront;
 	private final boolean isLeft;
-	private final BoundingBox solidBox = new BoundingBox(new Point3d(0D, 0D, 0D), new Point3d(0D, 0D, 0D), 0D, 0D, 0D, false, false, 0);
-	private final BoundingBox liquidBox = new BoundingBox(new Point3d(0D, 0D, 0D), new Point3d(0D, 0D, 0D), 0D, 0D, 0D, true, false, 0);
+	private final BoundingBox solidBox = new BoundingBox(new Point3d(0D, 0D, 0D), new Point3d(0D, 0D, 0D), 0D, 0D, 0D, false, false, false, 0);
+	private final BoundingBox liquidBox = new BoundingBox(new Point3d(0D, 0D, 0D), new Point3d(0D, 0D, 0D), 0D, 0D, 0D, true, false, false, 0);
 	private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<BoundingBox>();
 	private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
 	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
