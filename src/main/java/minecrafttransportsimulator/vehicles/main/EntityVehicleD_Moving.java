@@ -370,7 +370,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.
-			if(!serverDeltaM.isZero()){
+			if(!serverDeltaM.isZero() || !serverDeltaR.isZero()){
 				//Get the delta difference, and square it.  Then divide it by 25.
 				//This gives us a good "rubberbanding correction" formula for deltas.
 				//We add this correction motion to the existing motion applied.
@@ -387,8 +387,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 				clientDeltaRApplied.multiply(1D/25D);
-				//TODO figure out why angles changed after spawning.
-				//if(world.isClient())System.out.format("Angle:%f Applied:%f Server:%f Client:%f\n", angles.x, clientDeltaRApplied.x, serverDeltaR.x, clientDeltaR.x);
 				rotationApplied.add(clientDeltaRApplied);
 				
 				//Add actual movement to client deltas to prevent further corrections.
