@@ -169,6 +169,7 @@ public class VehicleGroundDeviceCollection{
 	 */
 	public double performPitchCorrection(double groundBoost){
 		//Get the offset and test boxes for this correction.
+		boolean invertedCheck = false;
 		double side1Delta = 0;
 		double side2Delta = 0;
 		double groundedSideOffset = 0;
@@ -212,6 +213,47 @@ public class VehicleGroundDeviceCollection{
 				groundedSideOffset = Math.hypot(vehicle.definition.motorized.hookupPos.y, vehicle.definition.motorized.hookupPos.z);
 				testBox1 = rearLeftGDB;
 				testBox2 = rearRightGDB;
+			}else if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
+				//Need to do inverted logic here. In this case, we want to rotate if we DO have a collision.
+				//Get the max collision depth and rotate by that amount.
+				//This logic is similar to the global function, but has some simplifications.
+				//First populate variables.
+				side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
+				side2Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
+				groundedSideOffset = -Math.hypot(vehicle.definition.motorized.hookupPos.y, vehicle.definition.motorized.hookupPos.z);
+				side1Delta -= groundedSideOffset;
+				side2Delta -= groundedSideOffset;
+				
+				//Now get the rotation required to get the collision boxes un-collided.
+				double angularCorrection = 0;
+				if(rearLeftGDB.collisionDepth > 0){
+					angularCorrection = Math.toDegrees(Math.asin(rearLeftGDB.collisionDepth/side1Delta));
+				}
+				if(rearRightGDB.collisionDepth > 0){
+					double angularCorrection2 = Math.toDegrees(Math.asin(rearRightGDB.collisionDepth/side2Delta));
+					if(angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection){
+						angularCorrection = angularCorrection2;
+					}
+				}
+				
+				//Get the linear correction required for this angular correction.
+				//If the linear correction is larger than the max linear, factor it.
+				double linearCorrection = Math.sin(Math.toRadians(angularCorrection))*groundedSideOffset;
+				if(Math.abs(linearCorrection) > MAX_LINEAR_MOVEMENT_PER_TICK){
+					linearCorrection = Math.signum(linearCorrection)*MAX_LINEAR_MOVEMENT_PER_TICK;
+					angularCorrection = Math.toDegrees(Math.asin(linearCorrection/groundedSideOffset));
+				}
+				
+				//If the angular correction isn't NaN, apply and return it.  Otherwise, return 0.
+				if(Double.isNaN(angularCorrection)){
+					return 0;
+				}else{
+					//Apply motions, rotations, re-calculate GDB states, and return applied motion.y for further processing.
+					vehicle.rotation.x += angularCorrection;
+					vehicle.motion.y += linearCorrection;
+					updateCollisions();
+					return linearCorrection;
+				}
 			}
 		}
 		side1Delta -= groundedSideOffset;
@@ -234,7 +276,7 @@ public class VehicleGroundDeviceCollection{
 				testBox1.updateCollisionStatuses(null);
 				testBox2.updateCollisionStatuses(null);
 				
-				//Check if we collided after this movement.  If so, we need to calculate how far we need to angle to prevent collision. 
+				//Check if we collided after this movement.  If so, we need to calculate how far we need to angle to prevent collision.
 				double angularCorrection = 0;
 				double linearCorrection = 0;
 				if(testBox1.collisionDepth > 0){

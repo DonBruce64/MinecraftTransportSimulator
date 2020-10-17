@@ -1,11 +1,13 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
@@ -66,46 +68,34 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				if(vehicle.towedVehicle != null){
 					vehicle.towedVehicle.towedByVehicle = null;
 					vehicle.towedVehicle = null;
-					if(!world.isClient()){
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
-						return true;
-					}
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle));
+					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
 				}else if(vehicle.definition.motorized.hitchPos != null){
-					//FIXME re-enable this when we decide to do pain of trailers.
-					player.sendPacket(new PacketPlayerChatMessage("This functionality has been disabled for this release.  Please check back later."));
-					return false;
-					/*
-					for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities.values() : AEntityBase.createdServerEntities.values())){
+					for(AEntityBase entity : AEntityBase.createdServerEntities){
 						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookupPos != null){
-								//Make sure clients hitch vehicles that the server sees.  Little more lenient here.
 								Point3d hitchPos = vehicle.definition.motorized.hitchPos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
 								Point3d hookupPos = testVehicle.definition.motorized.hookupPos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
-								if(hitchPos.distanceTo(hookupPos) < (world.isClient() ? 3 : 2)){
+								if(hitchPos.distanceTo(hookupPos) < 2){
 									for(String hitchType : vehicle.definition.motorized.hitchTypes){
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){
 											testVehicle.towedByVehicle = vehicle;
 											vehicle.towedVehicle = testVehicle;
-											if(!world.isClient()){
-												player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect"));
-											}
-											return true;
+											MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle));
+											player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect"));
+											return false;
 										}
 									}
-									if(!world.isClient()){
-										player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
-									}
+									player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
 									break;
 								}
 							}
 						}
-					}*/
-					//player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
-				}else{
-					if(!world.isClient()){
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));
 					}
+					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
+				}else{
+					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));
 				}
 				return false;
 			}

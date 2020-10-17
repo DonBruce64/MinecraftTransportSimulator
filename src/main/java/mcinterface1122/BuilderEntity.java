@@ -37,6 +37,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
@@ -361,6 +362,25 @@ public class BuilderEntity extends Entity{
 		tag.setString("entityid", entity.getClass().getSimpleName());
 		return tag;
 	}
+	
+	/**
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+		Iterator<Entry<AEntityBase, BuilderEntity>> entityIterator = event.getWorld().isRemote ? createdClientBuilders.entrySet().iterator() : createdServerBuilders.entrySet().iterator();
+		while(entityIterator.hasNext()){
+			Entry<AEntityBase, BuilderEntity> entry = entityIterator.next();
+			if(entry.getValue().world.provider.getDimension() == event.getWorld().provider.getDimension()){
+				if(event.getWorld().isRemote){
+					AEntityBase.createdClientEntities.remove(entry.getKey());
+				}else{
+					AEntityBase.createdServerEntities.remove(entry.getKey());
+				}
+				entityIterator.remove();
+			}
+		}
+    }
 	
 	/**
 	 * We need to use explosion events here as we don't know where explosions occur in the world.

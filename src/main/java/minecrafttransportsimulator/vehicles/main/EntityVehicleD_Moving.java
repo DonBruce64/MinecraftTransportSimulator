@@ -37,6 +37,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public double groundVelocity;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
+	private String towedVehicleSavedID;
+	private String towedByVehicleSavedID;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -56,6 +58,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brakeOn = data.getBoolean("brakeOn");
+		this.towedVehicleSavedID = data.getString("towedVehicleID");
+		this.towedByVehicleSavedID = data.getString("towedByVehicleID");
 		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
@@ -66,7 +70,21 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	@Override
 	public void update(){
+		//Before calling super, see if we need to link a towed or towed by vehicle.
+		//We need to wait on this in case the vehicle didn't load at the same time.
+		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
+			for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
+				if(entity.uniqueUUID.equals(towedVehicleSavedID)){
+					towedVehicle = (EntityVehicleF_Physics) entity;
+					towedVehicleSavedID = "";
+				}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
+					towedByVehicle = (EntityVehicleF_Physics) entity;
+					towedByVehicleSavedID = "";
+				}
+			}
+		}
 		super.update();
+		
 		//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 		//This is required to move the GDBs if the GDs move.
 		for(APart part : parts){
@@ -298,21 +316,25 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
 		//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
 		//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
-		double groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
-		if(groundCollisionBoost > 0){
-			//If adding our boost would make motion.y positive, set our boost to the positive component.
-			//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
-			//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
-			//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
-			if(motion.y + groundCollisionBoost > 0){
-				groundCollisionBoost = Math.min(groundCollisionBoost, 0.125D/SPEED_FACTOR);
-				motion.y += groundCollisionBoost;
-				groundCollisionBoost = motion.y;
-			}else{
-				motion.y += groundCollisionBoost;
-				groundCollisionBoost = 0;
+		//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
+		double groundCollisionBoost = 0;
+		if(towedByVehicle == null){
+			groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
+			if(groundCollisionBoost > 0){
+				//If adding our boost would make motion.y positive, set our boost to the positive component.
+				//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
+				//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
+				//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
+				if(motion.y + groundCollisionBoost > 0){
+					groundCollisionBoost = Math.min(groundCollisionBoost, 0.125D/SPEED_FACTOR);
+					motion.y += groundCollisionBoost;
+					groundCollisionBoost = motion.y;
+				}else{
+					motion.y += groundCollisionBoost;
+					groundCollisionBoost = 0;
+				}
+				groundDeviceCollective.updateCollisions();
 			}
-			groundDeviceCollective.updateCollisions();
 		}
 		
 		//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -537,6 +559,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("locked", locked);
 		data.setBoolean("brakeOn", brakeOn);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
+		if(towedVehicle != null){
+			data.setString("towedVehicleID", towedVehicle.uniqueUUID);
+		}
+		if(towedByVehicle != null){
+			data.setString("towedByVehicleID", towedByVehicle.uniqueUUID);
+		}
 		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
