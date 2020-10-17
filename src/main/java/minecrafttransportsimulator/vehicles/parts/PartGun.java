@@ -324,10 +324,14 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		}
 		
 		//Not parent or child.  Get main vehicle controller.
+		//Check all controllers in case there's multiple controller seats.
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
 				if(vehiclePart.vehicleDefinition.isController){
-					return vehicle.locationRiderMap.get(vehiclePart.placementOffset);
+					IWrapperEntity controller = vehicle.locationRiderMap.get(vehiclePart.placementOffset);
+					if(controller != null){
+						return controller;
+					}
 				}
 			}
 		}
