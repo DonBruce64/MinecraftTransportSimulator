@@ -17,6 +17,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleMotorized;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
@@ -37,6 +38,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Internal states.
 	public boolean goingInReverse;
 	public double groundVelocity;
+	private double driftForce;
+	private final double driveTrain;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	private final Point3d serverDeltaM;
@@ -52,7 +55,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
   	private final VehicleGroundDeviceCollection groundDeviceBoxes;
-    
+	
 	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
 	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
 	
@@ -68,6 +71,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
 		this.groundDeviceBoxes = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
+		if(definition.motorized.isFrontWheelDrive && definition.motorized.isRearWheelDrive){
+	  		driveTrain = 100;
+	  	}else if(definition.motorized.isRearWheelDrive){
+	  		driveTrain = 20;
+	  	}else if(definition.motorized.isFrontWheelDrive){
+	  		driveTrain = -20; 
+	  	}else{
+	  		driveTrain = 100;
+	  	}
 	}
 	
 	@Override
@@ -148,7 +160,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundVelocity = normalizedGroundVelocityVector.length();
 		normalizedGroundVelocityVector.normalize();
 		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
-		double turningForce = getTurningForce();
+		double turningForce = getDriveTrainSkiddingForce() + getTurningForce();
 		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
 		if(!goingInReverse && dotProduct < -0.75 && turningForce == 0){
 			goingInReverse = true;
@@ -235,6 +247,28 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
+	 * Returns rotating force for skidding, based on the vehicle drivetrain and other usual MTS calculations
+	 */
+	private double getDriveTrainSkiddingForce(){
+		float skiddingFactor = getSkiddingForce();
+		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
+		//Have enough grip, get angle delta between heading and motion.
+		Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
+		double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
+		//Check if we are backwards and adjust our delta angle if so.
+		if(goingInReverse && dotProduct < 0){
+			if(vectorDelta >= 90){
+				vectorDelta = -(180 - vectorDelta);
+			}else if(vectorDelta <= -90){
+				vectorDelta = 180 + vectorDelta;
+			}
+		}
+		//Get factor of how much we can "correct" our turning.
+		driftForce = vectorDelta * (skiddingFactor / driveTrain);
+		return  Math.abs(driftForce) > skiddingFactor ? driftForce : 0;
+	}
+	
+	/**
 	 * Returns force for skidding based on lateral friction and velocity.
 	 * If the value is non-zero, it indicates that yaw changes from ground
 	 * device calculations should be applied due to said devices being in
@@ -244,7 +278,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
 		for(PartGroundDevice groundDevice : groundedGroundDevices){
-			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
+			skiddingFactor += (groundDevice.getLateralFriction() / 2) - groundDevice.getFrictionLoss();
 		}
 		
 		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
