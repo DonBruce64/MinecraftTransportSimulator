@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 
 import mcinterface1122.MasterInterface;
+import minecrafttransportsimulator.items.instances.ItemFuelHose;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
@@ -31,6 +32,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
@@ -78,6 +80,7 @@ public class MasterLoader{
 		//Create main items.
 		MasterInterface.createItem(new ItemWrench());
 		MasterInterface.createItem(new ItemKey());
+		MasterInterface.createItem(new ItemFuelHose());
 		MasterInterface.createItem(new ItemJumperCable());
 		MasterInterface.createItem(new ItemJerrycan());
 		MasterInterface.createItem(new ItemPaintGun());
@@ -172,6 +175,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartEngine.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGun.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehiclePartInteractable.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartSeat.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleTextChange.class);

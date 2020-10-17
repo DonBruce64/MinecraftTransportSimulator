@@ -68,6 +68,15 @@ interact.jumpercable.alreadylinked=This engine is already linked to another engi
 interact.jumpercable.toofar=The two engines are too far away.  They should be no further than 16 blocks apart.
 interact.jumpercable.samevehicle=The two engines are on the same vehicle.  That's not going to work well...
 
+interact.fuelhose.firstlink=Source tank linked to fuel hose.
+interact.fuelhose.secondlink=Linked to tank/vehicle.  Transfering fluid.
+interact.fuelhose.linkdropped=The linked tanks have moved too far apart from one another.  Breaking link.
+interact.fuelhose.tankempty=Source tank is empty, disconnecting.
+interact.fuelhose.tankfull=Destination tank is full, disconnecting.
+interact.fuelhose.alreadylinked=This tank is already linked to another tank and cannot be linked.
+interact.fuelhose.toofar=The two tanks are too far away.  They should be no further than 16 blocks apart.
+interact.fuelhose.differentfluids=The source and destination tanks do not contain the same fluid and cannot be linked.
+
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
 interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot tow anything.
@@ -291,6 +300,11 @@ info.item.wrench.sneakuse=Sneak-use on vehicle to change text.
 info.item.wrench.useblock=Use on pole components to remove them.
 info.item.wrench.attack=Attack a vehicle part to remove.
 info.item.wrench.sneakattack=Sneak-attack a vehicle to remove.
+info.item.fuelhose.line1=Use on a vehicle tank to select.
+info.item.fuelhose.line2=Use on second tank or vehicle to link.
+info.item.fuelhose.line3=Hose will transfer liquids from tank 1 to selected.
+info.item.fuelhose.line4=Hose will stop when tank 1 is empty, selected is full,
+info.item.fuelhose.line5=or if tank 1 and selected are too far away.
 info.item.key.line1=Use on a vehicle to lock.
 info.item.key.line2=Vehicle may only be opened with key.
 info.item.key.line3=Sneak-use to take ownership.
@@ -312,6 +326,7 @@ info.item.paintgun.use=Use on a vehicle to change its color.
 
 item.wrench.name=Wrench
 item.key.name=Key
+item.fuelhose.name=Fuel Hose
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
 item.ticket.name=Ticket
@@ -361,6 +376,8 @@ advancements.mts.vehiclebench.description=Create a Drafting Bench
 advancements.mts.wheelbench.title=Moving on the Ground (or Water)
 advancements.mts.wheelbench.description=Create a Wheel Workbench
 
+advancements.mts.fuelhose.title=Transfer Time
+advancements.mts.fuelhose.description=Create a fuel hose
 advancements.mts.fuelpump.title=Fill 'Er Up
 advancements.mts.fuelpump.description=Create a fuel pump
 advancements.mts.jerrycan.title=Just in Case...
