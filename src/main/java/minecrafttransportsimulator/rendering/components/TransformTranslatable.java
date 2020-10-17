@@ -28,7 +28,7 @@ public class TransformTranslatable extends ATransformRenderable{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		double translation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, null));
+		double translation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
 		translation = VehicleAnimationSystem.clampAndScale(translation, translationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
 		
 		//Do the actual translation, if we aren't 0.

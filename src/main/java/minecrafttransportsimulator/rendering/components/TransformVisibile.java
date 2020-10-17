@@ -18,7 +18,7 @@ public class TransformVisibile extends ATransformRenderable{
 	
 	@Override
 	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		double value = definition.offset + VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, optionalPart);
+		double value = definition.offset + getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
