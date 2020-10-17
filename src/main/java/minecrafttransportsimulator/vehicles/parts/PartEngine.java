@@ -346,10 +346,10 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			
 			//Update wheel friction and velocity.
 			for(PartGroundDevice wheel : vehicle.wheels){
-				if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
+				if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
-					if(wheel.isOnGround()){
+					if(vehicle.groundDeviceCollective.isDeviceOnGround(wheel)){
 						wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
 						desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
@@ -370,7 +370,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//No wheel force.  Adjust wheels to engine speed.
 					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
+						if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 							if(currentGearRatio != 0){
 								wheel.angularVelocity = rpm/currentGearRatio/vehicle.definition.motorized.axleRatio/1200D;
 							}else if(wheel.angularVelocity > 0){
@@ -469,7 +469,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		prevDriveshaftRotation = driveshaftRotation;
 		double driveshaftDesiredSpeed = -999;
 		for(PartGroundDevice wheel : vehicle.wheels){
-			if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
+			if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 				driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
 			}
 		}
@@ -486,7 +486,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
 		state = EngineStates.ENGINE_OFF;
 		for(PartGroundDevice wheel : vehicle.wheels){
-			if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
+			if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 				wheel.skipAngularCalcs = false;
 			}
 		}
@@ -797,7 +797,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(Math.abs(wheelForce/300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300D))){
 					wheelForce *= vehicle.currentMass/100000D*wheelFriction/Math.abs(wheelForce/300F);					
 					for(PartGroundDevice wheel : vehicle.wheels){
-						if((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive)){
+						if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 							if(currentGearRatio > 0){
 								if(wheelForce >= 0){
 									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
@@ -819,7 +819,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if(!wheel.isOnGround() && ((wheel.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (wheel.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
+						if(!vehicle.groundDeviceCollective.isDeviceOnGround(wheel) && vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 							wheel.angularVelocity = lowestWheelVelocity;
 						}
 					}

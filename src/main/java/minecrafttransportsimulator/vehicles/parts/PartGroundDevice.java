@@ -76,7 +76,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	@Override
 	public void update(){
 		super.update();
-		if(isOnGround()){
+		if(vehicle.groundDeviceCollective.isDeviceOnGround(this)){
 			//If we aren't skipping angular calcs, change our velocity accordingly.
 			if(!skipAngularCalcs){
 				prevAngularVelocity = angularVelocity;
@@ -225,10 +225,6 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		}
 	}
 	
-	public boolean isOnGround(){
-		return boundingBox.updateCollidingBlocks(vehicle.world, groundDetectionOffset);
-	}
-	
 	public float getMotiveFriction(){
 		return !isFlat ? definition.ground.motiveFriction : definition.ground.motiveFriction/10F;
 	}
@@ -250,7 +246,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
-		if(skipAngularCalcs && isOnGround()){
+		if(skipAngularCalcs && vehicle.groundDeviceCollective.isDeviceOnGround(this)){
 			for(byte i=0; i<4; ++i){
 				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}

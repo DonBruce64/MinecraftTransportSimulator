@@ -41,7 +41,7 @@ public class VehicleGroundDeviceBox{
 		//Do an initial update once constructed.
 		updateMembers();
 		updateBounds();
-		updateCollisionStatuses();
+		updateCollisionStatuses(null);
 	}
 	
 	/**
@@ -145,8 +145,9 @@ public class VehicleGroundDeviceBox{
 	
 	/**
 	 * Updates this boxes' collision properties to take into account its new position.
+	 * If the passed-in list is non-null, all grounded ground devices will be added to it.
 	 */
-	public void updateCollisionStatuses(){
+	public void updateCollisionStatuses(List<PartGroundDevice> groundedGroundDevices){
 		//Initialize all values.
 		isCollided = false;
 		isGrounded = false;
@@ -185,6 +186,11 @@ public class VehicleGroundDeviceBox{
 				collisionDepth = liquidCollisionDepth;
 				contactPoint.setTo(liquidBox.localCenter).add(0D, -liquidBox.heightRadius, 0D);
 			}
+		}
+		
+		//Add ground devices to the list.
+		if(groundedGroundDevices != null && isGrounded){
+			groundedGroundDevices.addAll(groundDevices);
 		}
 	}
 	

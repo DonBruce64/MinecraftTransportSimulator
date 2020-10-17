@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.vehicles.main;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -17,7 +15,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleMotorized;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
@@ -38,8 +35,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Internal states.
 	public boolean goingInReverse;
 	public double groundVelocity;
-	private double driftForce;
-	private final double driveTrain;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	private final Point3d serverDeltaM;
@@ -54,11 +49,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D);
 	private final Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
-  	private final VehicleGroundDeviceCollection groundDeviceBoxes;
-	
-	/**List of ground devices on the ground.  Populated after each movement to be used in turning/braking calculations.*/
-	protected final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
-	
+  	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
 	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperNBT data){
 		super(world, data);
@@ -70,47 +61,25 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
-		this.groundDeviceBoxes = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
-		if(definition.motorized.isFrontWheelDrive && definition.motorized.isRearWheelDrive){
-	  		driveTrain = 100;
-	  	}else if(definition.motorized.isRearWheelDrive){
-	  		driveTrain = 20;
-	  	}else if(definition.motorized.isFrontWheelDrive){
-	  		driveTrain = -20; 
-	  	}else{
-	  		driveTrain = 100;
-	  	}
+		this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
 	}
 	
 	@Override
 	public void update(){
 		super.update();
-		//Populate the ground device lists for use in the methods here.
-		//We need to get which ground devices are in which quadrant,
-		//as well as which ground devices are on the ground.
-		//This needs to be done before movement calculations so we can do checks during them.
-		groundedGroundDevices.clear();
-		for(APart part : parts){
-			if(part instanceof PartGroundDevice){
-				if(((PartGroundDevice) part).isOnGround()){
-					groundedGroundDevices.add((PartGroundDevice) part);
-				}
-			}
-		}
-		
 		//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 		//This is required to move the GDBs if the GDs move.
 		for(APart part : parts){
 			if(part instanceof PartGroundDevice){
 				if(!part.placementOffset.equals(part.totalOffset)){
-					groundDeviceBoxes.updateBounds();
+					groundDeviceCollective.updateBounds();
 					break;
 				}
 			}
 		}
 		
 		//Now do update calculations and logic.
-		if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceBoxes.isReady()){
+		if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
 			getForcesAndMotions();
 			performGroundOperations();
 			moveVehicle();
@@ -123,15 +92,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	@Override
 	public void addPart(APart part){
 		super.addPart(part);
-		groundDeviceBoxes.updateMembers();
-		groundDeviceBoxes.updateBounds();
+		groundDeviceCollective.updateMembers();
+		groundDeviceCollective.updateBounds();
 	}
 	
 	@Override
 	public void removePart(APart part, Iterator<APart> iterator){
 		super.removePart(part, iterator);
-		groundDeviceBoxes.updateMembers();
-		groundDeviceBoxes.updateBounds();
+		groundDeviceCollective.updateMembers();
+		groundDeviceCollective.updateBounds();
 	}
 
 	/**
@@ -160,7 +129,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundVelocity = normalizedGroundVelocityVector.length();
 		normalizedGroundVelocityVector.normalize();
 		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
-		double turningForce = getDriveTrainSkiddingForce() + getTurningForce();
+		double turningForce = getTurningForce();
 		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
 		if(!goingInReverse && dotProduct < -0.75 && turningForce == 0){
 			goingInReverse = true;
@@ -218,7 +187,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
-		for(PartGroundDevice groundDevice : groundedGroundDevices){
+		for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
 			float addedFactor = 0;
 			if(brakeOn || parkingBrakeOn){
 				addedFactor = groundDevice.getMotiveFriction();
@@ -228,7 +197,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		if(brakeOn || parkingBrakeOn){
-			brakingFactor += 0.5D*groundDeviceBoxes.getBoxesInLiquid();
+			brakingFactor += 0.5D*groundDeviceCollective.getBoxesInLiquid();
 		}
 		
 		//Now get any contributions from the colliding collision bits.
@@ -247,28 +216,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
-	 * Returns rotating force for skidding, based on the vehicle drivetrain and other usual MTS calculations
-	 */
-	private double getDriveTrainSkiddingForce(){
-		float skiddingFactor = getSkiddingForce();
-		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
-		//Have enough grip, get angle delta between heading and motion.
-		Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
-		double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
-		//Check if we are backwards and adjust our delta angle if so.
-		if(goingInReverse && dotProduct < 0){
-			if(vectorDelta >= 90){
-				vectorDelta = -(180 - vectorDelta);
-			}else if(vectorDelta <= -90){
-				vectorDelta = 180 + vectorDelta;
-			}
-		}
-		//Get factor of how much we can "correct" our turning.
-		driftForce = vectorDelta * (skiddingFactor / driveTrain);
-		return  Math.abs(driftForce) > skiddingFactor ? driftForce : 0;
-	}
-	
-	/**
 	 * Returns force for skidding based on lateral friction and velocity.
 	 * If the value is non-zero, it indicates that yaw changes from ground
 	 * device calculations should be applied due to said devices being in
@@ -277,12 +224,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private float getSkiddingForce(){
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
-		for(PartGroundDevice groundDevice : groundedGroundDevices){
-			skiddingFactor += (groundDevice.getLateralFriction() / 2) - groundDevice.getFrictionLoss();
+		for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
+			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
 		}
 		
 		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
-		skiddingFactor += 0.5D*groundDeviceBoxes.getBoxesInLiquid();
+		skiddingFactor += 0.5D*groundDeviceCollective.getBoxesInLiquid();
 		return skiddingFactor > 0 ? skiddingFactor : 0;
 	}
 	
@@ -297,7 +244,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double turningDistance = 0;
 			//Check grounded ground devices for turn contributions.
 			//Their distance from the center of the vehicle defines our turn arc.
-			for(PartGroundDevice groundDevice : groundedGroundDevices){
+			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
 				if(groundDevice.vehicleDefinition.turnsWithSteer){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
@@ -341,7 +288,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	private void moveVehicle(){
 		//First, update the vehicle ground device boxes.
-		groundDeviceBoxes.updateCollisions();
+		groundDeviceCollective.updateCollisions();
 		
 		//If any ground devices are collided after our movement, apply corrections to prevent this.
 		//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
@@ -351,7 +298,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
 		//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
 		//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
-		double groundCollisionBoost = groundDeviceBoxes.getMaxCollisionDepth()/SPEED_FACTOR;
+		double groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
 		if(groundCollisionBoost > 0){
 			//If adding our boost would make motion.y positive, set our boost to the positive component.
 			//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
@@ -365,7 +312,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				motion.y += groundCollisionBoost;
 				groundCollisionBoost = 0;
 			}
-			groundDeviceBoxes.updateCollisions();
+			groundDeviceCollective.updateCollisions();
 		}
 		
 		//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -390,8 +337,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(collisionBoxCollided){
 			correctCollidingMovement();
 		}else{
-			groundRotationBoost = groundDeviceBoxes.performPitchCorrection(groundCollisionBoost);
-			groundRotationBoost = groundDeviceBoxes.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
+			groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
 
 		//Now that that the movement has been checked, move the vehicle.

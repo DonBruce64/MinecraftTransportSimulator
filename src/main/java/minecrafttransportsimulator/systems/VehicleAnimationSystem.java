@@ -148,7 +148,7 @@ public final class VehicleAnimationSystem{
 				PartGroundDevice groundDevice = (PartGroundDevice) optionalPart;
 				switch(variable){
 					case("ground_rotation"): return groundDevice.getActionRotation(partialTicks).x;
-					case("ground_onground"): return groundDevice.isOnGround() ? 1 : 0;
+					case("ground_onground"): return vehicle.groundDeviceCollective.isDeviceOnGround(groundDevice) ? 1 : 0;
 					case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
 					case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
 				}

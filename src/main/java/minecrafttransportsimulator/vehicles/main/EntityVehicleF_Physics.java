@@ -285,7 +285,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				//If we aren't an aircraft, check for grounded ground devices.
 				//If we don't have any grounded ground devices, assume we are in the air or in water.
 				//This results in an increase in drag due to poor airflow.
-				if(groundedGroundDevices.isEmpty()){
+				if(groundDeviceCollective.groundedGroundDevices.isEmpty()){
 					dragCoeff *= 3D;
 				}
 			}
@@ -347,7 +347,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			
 			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(definition.motorized.wingArea > 0 && axialVelocity < 0.25 && angles.x < 45 && groundedGroundDevices.isEmpty()){
+			if(definition.motorized.wingArea > 0 && axialVelocity < 0.25 && angles.x < 45 && groundDeviceCollective.groundedGroundDevices.isEmpty()){
 				elevatorTorque += 100;
 			}
 			
