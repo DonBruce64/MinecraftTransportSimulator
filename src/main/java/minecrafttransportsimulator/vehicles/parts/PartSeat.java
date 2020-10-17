@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import java.util.List;
-
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -50,16 +48,25 @@ public final class PartSeat extends APart{
 						vehicle.addRider(player, placementOffset);
 						//If this seat can control a gun, and isn't controlling one, set it now.
 						//This prevents the need to select a gun when initially mounting.
+						//If we do have an active gun, validate that it's still correct.
 						if(activeGun == null){
-							for(List<PartGun> gunList : vehicle.guns.values()){
-								for(PartGun gun : gunList){
+							setNextActiveGun();
+							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartSeat(this));
+						}else{
+							for(ItemPart gunType : vehicle.guns.keySet()){
+								for(PartGun gun : vehicle.guns.get(gunType)){
 									if(player.equals(gun.getCurrentController())){
-										activeGun = gun.getItem();
-										setNextActiveGun();
-										MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartSeat(this));
+										if(gunType.equals(activeGun)){
+											return true;
+										}
 									}
 								}
 							}
+							
+							//Didn't invalid active gun detected.  Select a new one.
+							activeGun = null;
+							setNextActiveGun();
+							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartSeat(this));
 						}
 					}
 				}
