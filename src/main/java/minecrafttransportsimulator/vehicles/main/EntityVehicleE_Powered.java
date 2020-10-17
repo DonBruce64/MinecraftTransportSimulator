@@ -190,10 +190,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			}
 		}else{
 			//Turn on the DRLs if we have an engine on.
-			lightsOn.remove(LightType.DAYTIMERUNNINGLIGHT);
+			lightsOn.remove(LightType.DAYTIMELIGHT);
 			for(PartEngine engine : engines.values()){
 				if(engine.state.running){
-					lightsOn.add(LightType.DAYTIMERUNNINGLIGHT);
+					lightsOn.add(LightType.DAYTIMELIGHT);
 					break;
 				}
 			}
@@ -261,7 +261,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean isLitUp(){
-		return ConfigSystem.configObject.client.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMERUNNINGLIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
+		return ConfigSystem.configObject.client.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMELIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
 	}
 	
 	 /**
