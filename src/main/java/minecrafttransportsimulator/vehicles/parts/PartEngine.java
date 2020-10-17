@@ -165,8 +165,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		
 		//Add cooling for ambient temp.
-		ambientTemp = 25*vehicle.world.getTemperature(new Point3i(vehicle.position)) - 5*(Math.pow(2, vehicle.position.y/400) - 1);
-		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/500F;
+		ambientTemp = 25*vehicle.world.getTemperature(new Point3i(vehicle.position)) + 5;
+		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/1000F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
 		//Check to see if electric or hand starter can keep running.
