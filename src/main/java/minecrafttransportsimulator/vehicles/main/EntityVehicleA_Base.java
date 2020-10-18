@@ -60,7 +60,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public final List<VehicleEffect> effects;
+	public final List<VehicleEffect> effects = new ArrayList<VehicleEffect>();
 	
 	public EntityVehicleA_Base(IWrapperWorld world, IWrapperNBT data){
 		super(world, data);
