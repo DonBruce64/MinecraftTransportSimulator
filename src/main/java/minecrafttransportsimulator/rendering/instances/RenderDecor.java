@@ -61,7 +61,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 				}
 				
 				MasterLoader.renderInterface.setLightingState(false);
-				MasterLoader.renderInterface.renderTextMarkings(tile.definition.general.textObjects, textLines, null, true);
+				MasterLoader.renderInterface.renderTextMarkings(tile.definition.general.textObjects, textLines, null, null, true);
 			}
 		}
 	}

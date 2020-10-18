@@ -10,6 +10,7 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider.SubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -99,6 +100,19 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		//Now call the super to update prev variables.
 		super.update();
+	}
+	
+	/**
+   	 * Returns the current definition based on the vehicle's currentSubName.
+   	 */
+	public SubDefinition getSubDefinition(){
+		for(SubDefinition subDefinition : definition.definitions){
+			if(subDefinition.subName.equals(currentSubName)){
+				return subDefinition;
+			}
+		}
+		//We'll never get here, but gotta make the compiler happy.
+		return null;
 	}
     
     /**

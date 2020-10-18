@@ -132,6 +132,8 @@ public interface IInterfaceRender{
 	 *  Renders all the text markings given the passed-in parameters.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
+	 *  If inheritedColor is non-null, then the passed-in color will be rendered rather than the color in the textDefinition,
+	 *  should the textDefinition be set to use the inheritedColor.
 	 */
-	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String objectRendering, boolean lightsOn);
+	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String inheritedColor, String objectRendering, boolean lightsOn);
 }

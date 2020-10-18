@@ -260,7 +260,7 @@ class InterfaceRender implements IInterfaceRender{
 	}
 	
 	@Override
-	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String objectRendering, boolean lightsOn){
+	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String inheritedColor, String objectRendering, boolean lightsOn){
 		if(getRenderPass() != 1){
 			boolean systemLightingEnabled = true;
 			boolean internalLightingEnabled = true;
@@ -301,7 +301,8 @@ class InterfaceRender implements IInterfaceRender{
 						//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
 						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 						//Finally, render the text.
-						MasterInterface.guiInterface.drawScaledText(text, 0, 0, Color.decode(textDefinition.color), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+						String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
+						MasterInterface.guiInterface.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 						GL11.glPopMatrix();
 					}
 				}

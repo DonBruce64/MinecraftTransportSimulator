@@ -174,7 +174,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 						
 						//Render text, if we have any.
 						if(component.definition.general.textObjects != null){
-							MasterLoader.renderInterface.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, false);
+							MasterLoader.renderInterface.renderTextMarkings(component.definition.general.textObjects, ((TileEntityPole_Sign) component).getTextLines(), null, null, false);
 						}
 					}
 					GL11.glPopMatrix();

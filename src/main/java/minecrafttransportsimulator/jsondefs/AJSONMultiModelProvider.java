@@ -17,6 +17,7 @@ public abstract class AJSONMultiModelProvider<GeneralConfig extends AJSONMultiMo
     public class SubDefinition{
     	public String subName;
     	public String secondTone;
+    	public String secondColor;
     	public String name;
     	public String[] extraMaterials;
     }

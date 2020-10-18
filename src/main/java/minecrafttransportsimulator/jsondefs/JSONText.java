@@ -16,5 +16,5 @@ public class JSONText{
 	public boolean lightsUp;
 	public int renderPosition;
 	public boolean autoScale;
-	public boolean colorInheritied;
+	public boolean colorInherited;
 }
