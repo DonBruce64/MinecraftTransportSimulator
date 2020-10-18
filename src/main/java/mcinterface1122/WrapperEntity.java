@@ -6,7 +6,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -17,6 +16,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.Potion;
 
 class WrapperEntity implements IWrapperEntity{
 	final Entity entity;
@@ -166,6 +167,47 @@ class WrapperEntity implements IWrapperEntity{
 		return mutableRenderPosition;
 	}
 	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
+	
+//	@Override
+//	public void addEffect(String potionEffectName, int durationIn, int amplifierIn) {
+//		// Only instances of EntityLivingBase can receive potion effects
+//		if(!(entity instanceof EntityLivingBase)) {
+//			return;
+//		}
+//		int inPotionID;
+//		switch (potionEffectName){
+//			case "speed": inPotionID = 1;
+//			case "slowness": inPotionID = 2;
+//			case "haste": inPotionID = 3;
+//			case "mining_fatigue": inPotionID = 4;
+//			case "strength": inPotionID = 5;
+//			case "instant_health": inPotionID = 6;
+//			case "instant_damage": inPotionID = 7;
+//			case "jump_boost": inPotionID = 8;
+//			case "nausea": inPotionID = 9;
+//			case "regeneration": inPotionID = 10;
+//			case "resistance": inPotionID = 11;
+//			case "fire_resistance": inPotionID = 12;
+//			case "water_breathing": inPotionID = 13;
+//			case "invisibility": inPotionID = 14;
+//			case "blindness": inPotionID = 15;
+//			case "night_vision": inPotionID = 16;
+//			case "hunger": inPotionID = 17;
+//			case "weakness": inPotionID = 18;
+//			case "poison": inPotionID = 19;
+//			case "wither": inPotionID = 20;
+//			case "health_boost": inPotionID = 21;
+//			case "absorption": inPotionID = 22;
+//			case "saturation": inPotionID = 23;
+//			case "glowing": inPotionID = 24;
+//			case "levitation": inPotionID = 25;
+//			case "luck": inPotionID = 26;
+//			case "unluck": inPotionID = 27;
+//			default: return;
+//		}
+//		PotionEffect potionEffectIn = new PotionEffect(Potion.getPotionById(inPotionID), durationIn, amplifierIn);
+//		entity.addPotionEffect(potionEffectIn);
+//	}
 	
 	/**
 	 *  Package-private method for attacking.  Allows for direct reference

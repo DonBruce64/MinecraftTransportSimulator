@@ -155,4 +155,10 @@ public interface IWrapperEntity{
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
 	public Point3d getRenderedPosition(float partialTicks);
+	
+	/**
+	 * Adds a Minecraft PotionEffect to an EntityLivingBase.
+	 */
+	public void addEffect(String potionEffectName, int durationIn, int amplifierIn);
+	
 }

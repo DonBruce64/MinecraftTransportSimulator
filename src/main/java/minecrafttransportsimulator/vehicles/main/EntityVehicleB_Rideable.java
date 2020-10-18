@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -99,6 +100,12 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				rider.setYaw(angles.y + seat.placementRotation.y);
 			}
 		}
+		
+		//Add any vehicle effects present to the rider
+		for(VehicleEffect effect: this.effects) {
+			rider.addEffect(effect.name, effect.duration, effect.amplifier);
+		}
+		
 		return success;
 	}
 	
