@@ -15,30 +15,24 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCameraObject;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.AParticle;
+import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -84,9 +78,7 @@ class InterfaceRender implements IInterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureLocation;
-	private static int zoomLevel;
-	private static int customCameraIndex;
-	private static boolean runningCustomCameras;
+	private static BuilderGUI currentHUD = null;
 	
 	@Override
 	public int getRenderPass(){
@@ -216,15 +208,6 @@ class InterfaceRender implements IInterfaceRender{
 		}else{
 			setLightingState(false);
 			RenderHelper.disableStandardItemLighting();
-		}
-	}
-	
-	@Override
-	public void changeCameraZoom(boolean zoomIn){
-		if(zoomIn && zoomLevel > 0){
-			zoomLevel -= 2;
-		}else if(!zoomIn){
-			zoomLevel += 2;
 		}
 	}
 	
@@ -397,257 +380,66 @@ class InterfaceRender implements IInterfaceRender{
         }
     }
     
-    /**
-     * Adjusts roll, pitch, and zoom for camera.
-     * Roll and pitch only gets updated when in first-person as we use OpenGL transforms.
-     * For external rotations, we just let the entity adjust the player's pitch and yaw.
-     * This is because first-person view is for direct control, while third-person is for passive control.
-     */
     @SubscribeEvent
     public static void on(CameraSetup event){
-    	Entity player = event.getEntity();
-    	if(player.getRidingEntity() instanceof BuilderEntity){
-    		AEntityBase entity = ((BuilderEntity) player.getRidingEntity()).entity;
-    		if(entity instanceof EntityVehicleF_Physics){
-    			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-    			Point3d riderLocation = vehicle.locationRiderMap.inverse().get(WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor(event.getEntity()));
-        		if(riderLocation != null){
-		    		if(MasterInterface.gameInterface.inFirstPerson()){
-		    			//Do custom camera, or do normal rendering.
-		    			if(runningCustomCameras){
-		    				VehicleCameraObject camera = null;
-		    				APart optionalPart = null;
-		    				int camerasChecked = 0;
-		    				
-		    				//Get the next custom camera the vehicle has.
-		    				if(vehicle.definition.rendering.cameraObjects != null){
-		    					camerasChecked += vehicle.definition.rendering.cameraObjects.size();
-		    					if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
-		    						camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
-		    					}
-		    				}
-		    				
-		    				//If we aren't using a vehicle camera, check for part cameras.
-		    				if(camera == null){
-		    					for(APart part : vehicle.parts){
-		    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-		    							if(customCameraIndex < camerasChecked + part.definition.rendering.cameraObjects.size()){
-		    								camera = part.definition.rendering.cameraObjects.get(customCameraIndex - camerasChecked);
-		    								optionalPart = part;
-		    								break;
-		    							}else{
-		    								camerasChecked += part.definition.rendering.cameraObjects.size();
-		    							}
-		    						}
-		    					}
-		    				}
-		    				
-		    				//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
-		    				if(camera != null){
-		    					//Remove MC rotations before doing any of our own.
-		    					event.setPitch(0);
-		            			event.setYaw(0);
-		            			
-		            			//First rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
-		                		GL11.glRotated(180, 0, 1, 0);
-		                		
-		                		//Rotate to the camera's rotation, if it has one.
-		                		//We also need to take into account the rotation of the part if we have a part camera.
-		                		Point3d totalRotation;
-		                		if(optionalPart != null){
-		                			if(camera.rot != null){
-		                				totalRotation = optionalPart.totalRotation.copy().add(camera.rot);
-		                			}else{
-		                				totalRotation = optionalPart.totalRotation;
-		                			}
-		                		}else{
-		                			totalRotation = camera.rot;
-		                		}
-		            			if(totalRotation != null){
-		            	    		GL11.glRotated(-camera.rot.y, 0, 1, 0);
-		            	    		GL11.glRotated(-camera.rot.x, 1, 0, 0);
-		            	    		GL11.glRotated(-camera.rot.z, 0, 0, 1);
-		            			}
-		            			
-		            			//Apply any rotations from rotation animations.
-		            			if(camera.animations != null){
-		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, optionalPart);
-		            					if(animation.animationType.equals("rotation")){
-		            						if(animationValue != 0){
-		            							Point3d rotationAxis = animation.axis.copy().normalize();
-		                						if(animationValue != 0){
-		                							GL11.glTranslated(animation.centerPoint.x - camera.pos.x, animation.centerPoint.y - camera.pos.y, animation.centerPoint.z - camera.pos.z);
-		                							GL11.glRotated(animationValue, -rotationAxis.x, -rotationAxis.y, -rotationAxis.z);
-		                							GL11.glTranslated(-(animation.centerPoint.x - camera.pos.x), -(animation.centerPoint.y - camera.pos.y), -(animation.centerPoint.z - camera.pos.z));
-		                						}
-		            						}
-		            					}
-		            				}
-		            			}
-		                		
-		                		//Translate to the camera's position.
-		            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-		            			//We also need to take into account the part's position, if we are using one.
-		            			double playerPositionToEyeOffset = 0.87;
-		            			if(optionalPart != null){
-		            				GL11.glTranslated(-(optionalPart.totalOffset.x + camera.pos.x - riderLocation.x), -(optionalPart.totalOffset.y + camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(optionalPart.totalOffset.z + camera.pos.z - riderLocation.z));
-		            			}else{
-		            				GL11.glTranslated(-(camera.pos.x - riderLocation.x), -(camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(camera.pos.z - riderLocation.z));
-		            			}
-		            			
-		            			//Translate again to any camera animations.
-		            			if(camera.animations != null){
-		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, (float) event.getRenderPartialTicks(), vehicle, optionalPart);
-		            					if(animation.animationType.equals("translation")){
-		            						if(animationValue != 0){
-		            							if(animation.animationType.equals("translation")){
-		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
-		                    						GL11.glTranslated(-translationAmount.x, -translationAmount.y, -translationAmount.z);
-		                    					}
-		            						}
-		            					}
-		            				}
-		            			}
-		                		
-		            			//Now rotate to match the vehicle's angles.
-		            			Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(event.getRenderPartialTicks()));
-		                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
-		            			GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
-		            			GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
-		    				}else{
-		    					runningCustomCameras = false;
-		    				}
-		    			}else{
-			            	//Get yaw delta between entity and player from-180 to 180.
-			            	double playerYawDelta = (360 + (vehicle.angles.y - -event.getEntity().rotationYaw)%360)%360;
-			            	if(playerYawDelta > 180){
-			            		playerYawDelta-=360;
-			            	}
-			            	
-			            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
-			            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*event.getRenderPartialTicks();
-			            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*event.getRenderPartialTicks();
-			            	while(pitchAngle > 180){pitchAngle -= 360;}
-			    			while(pitchAngle < -180){pitchAngle += 360;}
-			    			while(rollAngle > 180){rollAngle -= 360;}
-			    			while(rollAngle < -180){rollAngle += 360;}
-			            	
-			            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
-			            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
-			            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-			            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
-			            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
-			            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
-		    			}
-		        	}else if(MasterInterface.gameInterface.inThirdPerson()){
-		        		//If we were running a custom camera, and hit the switch key, increment our camera index.
-		        		//We then go back to first-person to render the proper camera.
-		        		if(runningCustomCameras){
-		        			++customCameraIndex;
-		        			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-		        		}
-		        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
-		            }else{
-		            	//Got to inverted third-person.  Set custom cameras to active and go back to first-person.
-	            		runningCustomCameras = true;
-	            		customCameraIndex = 0;
-	            		Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-		            }
-        		}
-    		}
-        }
-    }
-
-    private static BuilderGUI currentHUD = null;
-    /**
-     * Renders the HUD on vehicles, or the fluid in a tank if we are mousing-over a vehicle.
-     */
-    @SubscribeEvent
-    public static void on(RenderGameOverlayEvent.Post event){
-    	if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
-    		if(MasterInterface.gameInterface.inFirstPerson() && Minecraft.getMinecraft().player.getRidingEntity() == null){
-    			RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-    			if(lastHit != null && lastHit.entityHit instanceof BuilderEntity){
-    				BuilderEntity builder = (BuilderEntity) Minecraft.getMinecraft().objectMouseOver.entityHit;
-    				if(builder.entity instanceof EntityVehicleF_Physics){
-    					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) builder.entity;
-    					for(BoundingBox box : vehicle.interactionBoxes){
-    						if(box.isPointInside(new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z))){
-    							APart part = vehicle.getPartAtLocation(box.localCenter);
-    							if(part instanceof PartInteractable){
-    								FluidTank tank = ((PartInteractable) part).tank;
-    								if(tank != null){
-    									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-    									MasterInterface.guiInterface.drawBasicText(tankText, event.getResolution().getScaledWidth()/2 + 4, event.getResolution().getScaledHeight()/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
-    									return;
-    								}
-    							}
-    						}
-    					}
-    				}
-    			}
-    		}else if(MasterInterface.gameInterface.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
-				if(Minecraft.getMinecraft().player.getRidingEntity() instanceof BuilderEntity){
-					AEntityBase ridingEntity = ((BuilderEntity) Minecraft.getMinecraft().player.getRidingEntity()).entity;
-					if(ridingEntity instanceof EntityVehicleF_Physics){
-						for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
-							if(MasterInterface.gameInterface.getClientPlayer().equals(rider)){
-								PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-								//If the seat is controlling a gun, render a text line for it.
-								if(seat.activeGun != null && !MasterInterface.gameInterface.isChatOpen()){
-									MasterInterface.guiInterface.drawBasicText("Active Gun:", event.getResolution().getScaledWidth(), 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-									MasterInterface.guiInterface.drawBasicText(seat.activeGun.getItemName(), event.getResolution().getScaledWidth(), 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-								}
-								
-								//If the seat is a controller, render the HUD.
-								if(seat.vehicleDefinition.isController){
-									//Make a new HUD if we need to.
-									if(currentHUD == null){
-										currentHUD = new BuilderGUI(new GUIHUD((EntityVehicleF_Physics) ridingEntity));
-										currentHUD.initGui();
-										currentHUD.setWorldAndResolution(Minecraft.getMinecraft(), event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
-									}
-									
-									//Translate far enough to not render behind the items.
-									//Also translate down if we are a helf-HUD.
-									GL11.glPushMatrix();
-			                		GL11.glTranslated(0, 0, 250);
-			                		if(MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value){
-			                			GL11.glTranslated(0, currentHUD.gui.getHeight()/2D, 0);
-			                		}
-			                		
-			                		//Enable alpha testing.
-			                		GL11.glEnable(GL11.GL_ALPHA_TEST);
-			                		
-			                		//Draw the HUD.
-			                		currentHUD.drawScreen(0, 0, event.getPartialTicks());
-			                		
-			                		//Disable the translating, lightmap, alpha to put it back to its old state.
-			                		GL11.glPopMatrix();
-			                		MasterInterface.renderInterface.setInternalLightingState(false);
-			                		GL11.glDisable(GL11.GL_ALPHA_TEST);
-			                		
-			                		//Return to prevent saved HUD from being wiped.
-			                		return;
-								}
-							}
-						}
-					}
-				}
-			}
+    	WrapperEntity renderEntity = WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor(event.getEntity());
+    	float currentPitch = event.getPitch();
+    	float currentYaw = event.getYaw();
+    	event.setPitch(0);
+		event.setYaw(0);
+    	if(!RenderEventHandler.onCameraSetup(renderEntity, (float) event.getRenderPartialTicks())){
+    		event.setPitch(currentPitch);
+    		event.setYaw(currentYaw);
     	}
-    	
-    	//No HUD rendered, set it to null.
-    	currentHUD = null;
+    }
+    
+    @SubscribeEvent
+    public static void on(RenderGameOverlayEvent.Pre event){
+    	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
+    		if(RenderEventHandler.disableHUDComponents()){
+    			event.setCanceled(true);
+    		}
+    	}else if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
+    		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
+    		AEntityBase mousedOverEntity = null;
+    		Point3d mousedOverPoint = null;
+			if(lastHit != null && lastHit.entityHit instanceof BuilderEntity){
+				mousedOverEntity = ((BuilderEntity) lastHit.entityHit).entity;
+				mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+			}
+    		AGUIBase requestedGUI = RenderEventHandler.onOverlayRender(event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), event.getPartialTicks(), currentHUD != null ? currentHUD.gui : null, mousedOverEntity, mousedOverPoint);
+    		
+    		//Make a new HUD if we need to, or null out the savved HUD.
+    		if(requestedGUI != null){
+				if(currentHUD == null){
+					currentHUD = new BuilderGUI(requestedGUI);
+					currentHUD.initGui();
+					currentHUD.setWorldAndResolution(Minecraft.getMinecraft(), event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
+				}
+    		}else{
+    			currentHUD = null;
+    		}
+    		
+    		//If we have a HUD, render it.
+    		if(currentHUD != null){
+    			//Translate far enough to not render behind the items.
+				//Also translate down if we are a helf-HUD.
+				GL11.glPushMatrix();
+        		GL11.glTranslated(0, 0, 250);
+        		if(MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value){
+        			GL11.glTranslated(0, currentHUD.gui.getHeight()/2D, 0);
+        		}
+        		
+        		//Draw the HUD.
+        		currentHUD.drawScreen(0, 0, event.getPartialTicks());
+        		
+        		//Disable the translating, lightmap to put it back to its old state.
+        		GL11.glPopMatrix();
+        		MasterInterface.renderInterface.setInternalLightingState(false);
+    		}
+    	}
     }
 	
-	/**
-     * Used to force rendering of entities above the world height limit, as
-     * newer versions suppress this as part of the chunk visibility
-     * feature.
-     */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
     	Minecraft.getMinecraft().world.profiler.startSection("iv_render_pass_-1");

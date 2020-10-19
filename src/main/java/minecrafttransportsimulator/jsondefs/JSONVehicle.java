@@ -264,6 +264,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     public class VehicleCameraObject{
     	public Point3d pos;
     	public Point3d rot;
+    	public String overlay;
     	public List<VehicleAnimationDefinition> animations;
     }
 }

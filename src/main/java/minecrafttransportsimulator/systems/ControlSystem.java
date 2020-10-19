@@ -13,6 +13,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -68,14 +69,14 @@ public final class ControlSystem{
 		}
 		
 		if(zoomIn.isPressed()){
-			MasterLoader.renderInterface.changeCameraZoom(true);
+			RenderEventHandler.changeCameraZoom(true);
 		}
 		if(zoomOut.isPressed()){
-			MasterLoader.renderInterface.changeCameraZoom(false);
+			RenderEventHandler.changeCameraZoom(false);
 		}
 		
 		if(changeView.isPressed()){
-			MasterLoader.gameInterface.toggleFirstPerston();
+			MasterLoader.gameInterface.toggleFirstPerson();
 		}
 	}
 	
