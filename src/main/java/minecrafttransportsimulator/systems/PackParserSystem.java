@@ -3,6 +3,7 @@ package minecrafttransportsimulator.systems;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import com.google.gson.GsonBuilder;
 import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -173,6 +175,7 @@ public final class PackParserSystem{
 				try{
 		    		ZipFile jarFile = new ZipFile(packJarMap.get(packDef.packID));
 					Enumeration<? extends ZipEntry> entries = jarFile.entries();
+					List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
 					while(entries.hasMoreElements()){
 						//Get next entry and path.
 						ZipEntry entry = entries.nextElement();
@@ -238,7 +241,7 @@ public final class PackParserSystem{
 														throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
 													}
 												}
-							    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath);
+							    				packItems.add(setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath));
 							    			}else{
 							    				throw new NullPointerException();
 							    			}
@@ -258,12 +261,32 @@ public final class PackParserSystem{
 											throw new IllegalArgumentException("ERROR: No corresponding sub-definable item class was found for: " + jsonType + " for asset: " + fileName);
 										}
 									}
-				    				setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), "", assetPath);
+				    				packItems.add(setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), "", assetPath));
 								}
 							}
 						}
 					}
+					
+					//Done parsing.  Close the jarfile, sort the items we parsed, and send the to the loader.
 					jarFile.close();
+					packItems.sort(new Comparator<AItemPack<?>>(){
+						@Override
+						public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
+							String totalAName = itemA.definition.prefixFolders + itemA.definition.systemName;
+							if(itemA instanceof AItemSubTyped){
+								totalAName += ((AItemSubTyped) itemA).subName;
+							}
+							String totalBName = itemA.definition.prefixFolders + itemB.definition.systemName;
+							if(itemB instanceof AItemSubTyped){
+								totalBName += ((AItemSubTyped) itemB).subName;
+							}
+							return totalAName.compareTo(totalBName);
+						}
+						
+					});
+					for(AItemPack<?> item : packItems){
+						MasterInterface.createItem(item);
+					}
 				}catch(Exception e){
 					MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
 					e.printStackTrace();
@@ -291,7 +314,7 @@ public final class PackParserSystem{
     		for(JSONVehicle.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "vehicles/");
+	    				MasterInterface.createItem(setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "vehicles/"));
 	    			}else{
 	    				throw new NullPointerException();
 	    			}
@@ -315,7 +338,7 @@ public final class PackParserSystem{
     		for(JSONPart.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "parts/");
+	    				MasterInterface.createItem(setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "parts/"));
 		    		}else{
 	    				throw new NullPointerException();
 	    			}
@@ -332,7 +355,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", "instruments/");
+    		MasterInterface.createItem(setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", "instruments/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -344,7 +367,7 @@ public final class PackParserSystem{
     	try{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		performLegacyCompats(definition);
-	    	setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "poles/");
+    		MasterInterface.createItem(setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "poles/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -356,7 +379,7 @@ public final class PackParserSystem{
     	try{
     		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
     		performLegacyCompats(definition);
-    		setupItem(new ItemDecor(definition), packID, jsonFileName, "", "decors/");
+    		MasterInterface.createItem(setupItem(new ItemDecor(definition), packID, jsonFileName, "", "decors/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -366,7 +389,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-	    	setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "items/");
+    		MasterInterface.createItem(setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "items/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -376,7 +399,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their booklets to the mod.**/
     public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", "booklets/");
+    		MasterInterface.createItem(setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", "booklets/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -386,20 +409,20 @@ public final class PackParserSystem{
     /**
      * Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.
      */
-    public static <ItemInstance extends AItemPack<?>> void setupItem(AItemPack<?> item, String packID, String systemName, String subName, String prefixFolders){
+    public static AItemPack<?> setupItem(AItemPack<?> item, String packID, String systemName, String subName, String prefixFolders){
     	//Set code-based definition values.
     	item.definition.packID = packID;
     	item.definition.prefixFolders = prefixFolders;
     	item.definition.systemName = systemName;
-    	
-    	//Add the item to the interface system.
-    	MasterInterface.createItem(item);
     	
     	//Put the item in the map in the registry.
     	if(!packItemMap.containsKey(packID)){
     		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<?>>());
     	}
     	packItemMap.get(packID).put(item.definition.systemName + subName, item);
+    	
+    	//Return the item for construction convenience.
+    	return item;
     }
     
     /**
