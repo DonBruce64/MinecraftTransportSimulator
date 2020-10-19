@@ -102,7 +102,10 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 		
 		//Add any vehicle effects present to the rider
+		MasterLoader.coreInterface.logError("Adding rider '" + rider.getID());
+		
 		for(VehicleEffect effect: this.effects) {
+			MasterLoader.coreInterface.logError("Adding effect '" + effect.name + "' to entity " + rider.getID());
 			rider.addEffect(effect.name, effect.duration, effect.amplifier);
 		}
 		

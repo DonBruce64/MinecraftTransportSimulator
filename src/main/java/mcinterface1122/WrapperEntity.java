@@ -174,15 +174,18 @@ class WrapperEntity implements IWrapperEntity{
 		// Only instances of EntityLivingBase can receive potion effects
 		if((entity instanceof EntityLivingBase)) {
 			int inPotionID = 0;
+			
+			// Effects that enhance or restrict movement are disabled.
+			// They are still present as comments, however, in case they are used later.
 			switch (potionEffectName){
-				case "speed": inPotionID = 1;
-				case "slowness": inPotionID = 2;
+				//case "speed": inPotionID = 1;
+				//case "slowness": inPotionID = 2;
 				case "haste": inPotionID = 3;
 				case "mining_fatigue": inPotionID = 4;
 				case "strength": inPotionID = 5;
 				case "instant_health": inPotionID = 6;
 				case "instant_damage": inPotionID = 7;
-				case "jump_boost": inPotionID = 8;
+				//case "jump_boost": inPotionID = 8;
 				case "nausea": inPotionID = 9;
 				case "regeneration": inPotionID = 10;
 				case "resistance": inPotionID = 11;
@@ -199,13 +202,16 @@ class WrapperEntity implements IWrapperEntity{
 				case "absorption": inPotionID = 22;
 				case "saturation": inPotionID = 23;
 				case "glowing": inPotionID = 24;
-				case "levitation": inPotionID = 25;
+				//case "levitation": inPotionID = 25;
 				case "luck": inPotionID = 26;
 				case "unluck": inPotionID = 27;
 			}
-			if(inPotionID != 0)// PotionEffect potionEffectIn = new PotionEffect(Potion.getPotionById(inPotionID), durationIn, amplifierIn);
-				((EntityLivingBase)entity).addPotionEffect(
-					new PotionEffect(Potion.getPotionById(inPotionID), durationIn, amplifierIn));
+			if(inPotionID != 0) {
+				((EntityLivingBase)entity).addPotionEffect(new PotionEffect(Potion.getPotionById(inPotionID), durationIn, amplifierIn));
+			}
+			else {
+				throw new NullPointerException("Potion " + " does not exist.");
+			}
 		}
 	}
 	

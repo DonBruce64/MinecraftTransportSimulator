@@ -104,11 +104,6 @@ public interface IInterfaceRender{
 	public void resetStates();
 	
 	/**
-	 *  Adjusts the camera zoom, zooming in or out depending on the flag.
-	 */
-	public void changeCameraZoom(boolean zoomIn);
-	
-	/**
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
