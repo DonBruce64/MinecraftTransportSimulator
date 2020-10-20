@@ -115,6 +115,12 @@ public interface IWrapperWorld{
 	 */
 	public ABlockBase getBlock(Point3i point);
 	
+	/**
+	 *  Returns the point where the first block along the path can be hit, or null if there are
+	 *  no blocks along the path.
+	 */
+	public Point3i getBlockHit(Point3d start, Point3d end);
+	
     /**
 	 *  Returns the rotation (in degrees) of the block at the passed-in location.
 	 *  Only valid for blocks of type {@link ABlockBase}.

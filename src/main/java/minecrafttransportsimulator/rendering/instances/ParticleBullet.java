@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
@@ -87,19 +87,11 @@ public final class ParticleBullet extends AParticle{
 		}
 		
 		//Didn't hit an entity.  Check for blocks.
-		//We may hit more than one block here if we're a big bullet.  That's okay.
-		//Because blocks are checked by their size, we need to manually check in 1-block steps.
-		double maxSteps = motion.length();
-		for(int i=-1; i<maxSteps + 2; ++i){
-			blockMotionStep.setTo(motion).multiply(i/maxSteps);
-			if(box.updateCollidingBlocks(world, blockMotionStep)){
-				for(IWrapperBlock block : box.collidingBlocks){
-					Point3d position = new Point3d(block.getPosition());
-					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(position, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
-				}
-				age = maxAge;
-				return;
-			}
+		Point3i hitPos = world.getBlockHit(position, motion);
+		if(hitPos != null){
+			MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(new Point3d(hitPos), box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
+			age = maxAge;
+			return;
 		}
 		
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement.

@@ -344,6 +344,19 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
+	public Point3i getBlockHit(Point3d position, Point3d delta){
+		Vec3d start = new Vec3d(position.x, position.y, position.z);
+		RayTraceResult trace = world.rayTraceBlocks(start, start.addVector(delta.x, delta.y, delta.z), false, true, false);
+		if(trace != null){
+			BlockPos pos = trace.getBlockPos();
+			if(pos != null){
+				 return new Point3i(pos.getX(), pos.getY(), pos.getZ());
+			}
+		}
+		return null;
+	}
+	
+	@Override
     public float getBlockRotation(Point3i point){
     	return world.getBlockState(new BlockPos(point.x, point.y, point.z)).getValue(BuilderBlock.FACING).getHorizontalAngle();
     }
