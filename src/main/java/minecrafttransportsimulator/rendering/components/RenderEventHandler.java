@@ -34,6 +34,7 @@ public class RenderEventHandler{
 	private static boolean enableCustomCameras;
 	private static boolean runningCustomCameras;
 	private static int customCameraIndex;
+	private static float currentFOV;
 	private static String customCameraOverlay;
 	
 	/**
@@ -164,6 +165,14 @@ public class RenderEventHandler{
 	                		GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
 	                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
 	                		GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
+	                		
+	                		//If the camera has an FOV override, apply it.
+	                		if(camera.fovOverride != 0){
+	                			if(currentFOV == 0){
+	                				currentFOV = MasterLoader.gameInterface.getFOV();
+	                			}
+	                			MasterLoader.gameInterface.setFOV(camera.fovOverride);
+	                		}
 	            			
 	            			//Return true to signal that we overrode the camera movement.
 	            			return true;
@@ -171,6 +180,10 @@ public class RenderEventHandler{
 	    					enableCustomCameras = false;
 	    					runningCustomCameras = false;
 	    					customCameraOverlay = null;
+	    					if(currentFOV != 0){
+	    						MasterLoader.gameInterface.setFOV(currentFOV);
+	    						currentFOV = 0;
+                			}
 	    				}
 	    			}else{
 		            	//Get yaw delta between entity and player from-180 to 180.
@@ -194,7 +207,7 @@ public class RenderEventHandler{
 		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
 		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
 	    			}
-	        	}else if(!MasterLoader.gameInterface.inFirstPerson()){
+	        	}else if(MasterLoader.gameInterface.inThirdPerson()){
 	        		//If we were running a custom camera, and hit the switch key, increment our camera index.
 	        		//We then go back to first-person to render the proper camera.
 	        		//If we weren't running a custom camera, try running one.  This will become active when we
@@ -207,10 +220,17 @@ public class RenderEventHandler{
 	            		customCameraIndex = 0;
 	        		}
 	        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
-	            }
+	            }else{
+	            	//Assuming inverted third-person mode.
+	    			GL11.glTranslated(-riderLocation.x, 0F, zoomLevel);
+	    		}
     		}
 		}
 		customCameraOverlay = null;
+		if(currentFOV != 0){
+			MasterLoader.gameInterface.setFOV(currentFOV);
+			currentFOV = 0; 
+		}
 		return false;
     }
     

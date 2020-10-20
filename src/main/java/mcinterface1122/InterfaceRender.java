@@ -3,6 +3,7 @@ package mcinterface1122;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
@@ -233,12 +235,16 @@ class InterfaceRender implements IInterfaceRender{
 	}
 	
 	@Override
-	public void spawnBlockBreakParticles(Point3i point){
+	public void spawnBlockBreakParticles(Point3i point, boolean playSound){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			BlockPos pos = new BlockPos(point.x, point.y, point.z);
-			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
-			Minecraft.getMinecraft().world.playSound(null, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
-			Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
+			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
+				Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
+				if(playSound){
+					SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
+					Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+				}
+			}
 		}
 	}
 	
@@ -532,7 +538,7 @@ class InterfaceRender implements IInterfaceRender{
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 			//TODO remove this when the internal system actually works.
 			if(PackParserSystem.getPackConfiguration(packItem.definition.packID) == null || PackParserSystem.getPackConfiguration(packItem.definition.packID).internallyGenerated){
-				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + "." + packItem.getRegistrationName(), "inventory"));
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
 			}else{
 				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
 					((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(packItem.definition.packID));
@@ -568,6 +574,9 @@ class InterfaceRender implements IInterfaceRender{
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
 			String rawPackInfo = location.getResourcePath();
 			try{
+				//Create stream return variable.
+				InputStream stream;
+				
 				//Get the resource type.
 				boolean itemJSON = rawPackInfo.endsWith(".json");
 				
@@ -580,15 +589,15 @@ class InterfaceRender implements IInterfaceRender{
 					combinedPackInfo = combinedPackInfo.substring("models/item/".length(), combinedPackInfo.length() - ".json".length());
 					
 					//Get the pack information.
-					String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf('.'));
-					String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('.') + 1);
+					String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR));
+					String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR) + 1);
 					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 					
 					//Get the actual resource path for this resource.
 					String resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 					
 					//Try to load the item JSON, or create it if it doesn't exist.
-					InputStream stream = getClass().getResourceAsStream(resourcePath);
+					stream = getClass().getResourceAsStream(resourcePath);
 					if(stream != null){
 						return stream;
 					}else{
@@ -606,7 +615,7 @@ class InterfaceRender implements IInterfaceRender{
 						
 						//Generate fake JSON and return as stream to MC loader.
 						String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + itemTexturePath + "\"}}";
-						return new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
+						stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 					}
 				}else{
 					//Strip off the auto-generated prefix and suffix data.
@@ -624,12 +633,17 @@ class InterfaceRender implements IInterfaceRender{
 					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 					
 					//Get the actual resource path for this resource and return its stream.
-					return getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
-					//return getClass().getResourceAsStream("/assets/" + packDomain + "/" + rawPackInfo);
+					stream = getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
+				}
+				
+				if(stream != null){
+					return stream;
+				}else{
+					throw new FileNotFoundException(rawPackInfo);
 				}
 			}catch(Exception e){
 				MasterInterface.coreInterface.logError("ERROR: Could not parse out item JSON or PNG from: " + rawPackInfo);
-				return null;
+				throw new FileNotFoundException(rawPackInfo);
 			}
 		}
 

@@ -149,9 +149,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
 		double turningForce = getTurningForce();
 		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
-		if(!goingInReverse && dotProduct < -0.75 && turningForce == 0){
+		//TODO having velocity in the formula here has the potential to lead to hang-ups. Use packets perhaps?
+		if(!goingInReverse && dotProduct < -0.75 && (turningForce == 0 || velocity < 0.1)){
 			goingInReverse = true;
-		}else if(goingInReverse && dotProduct > 0.75 && turningForce == 0){
+		}else if(goingInReverse && dotProduct > 0.75 && (turningForce == 0 || velocity < 0.1)){
 			goingInReverse = false;
 		}
 		if(turningForce != 0){
@@ -193,6 +194,13 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//System.out.format("Dot:%f Vel:%f GroundVel:%f Turn:%f InRev:%b Client:%s Delta:%f Factor:%f IdelV:%f\n", dotProduct, motion.length(), groundVelocity, turningForce, goingInReverse, world.isClient() ? "1" : "0", vectorDelta, motionFactor, idealMotion.length());
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
+				
+				//If we are slipping while turning, spawn block particles.
+				if(world.isClient() && motionFactor != 1 && velocity > 0.75){
+					for(byte i=0; i<4; ++i){
+						groundDeviceCollective.spawnSlippingParticles();
+					}
+				}
 			}
 		}
 	}
