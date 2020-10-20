@@ -35,6 +35,11 @@ class InterfaceGame implements IInterfaceGame{
 	}
 	
 	@Override
+	public boolean inThirdPerson(){
+		return Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+	}
+	
+	@Override
 	public void toggleFirstPerson(){
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 			Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;

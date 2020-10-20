@@ -26,6 +26,12 @@ public interface IInterfaceGame{
 	public boolean inFirstPerson();
 	
 	/**
+	 *  Returns true if the game is in third-person mode.
+	 *  Does not return true for inverted third-person mode.
+	 */
+	public boolean inThirdPerson();
+	
+	/**
 	 *  Toggles first-person mode.  This is essentially the same operation as the F5 key.
 	 */
 	public void toggleFirstPerson();
