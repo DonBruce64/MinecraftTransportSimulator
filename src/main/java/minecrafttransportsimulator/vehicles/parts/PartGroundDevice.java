@@ -85,7 +85,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			
 			//Set contact for wheel skidding effects.
 			if(definition.ground.isWheel){
-				if(prevAngularVelocity/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
+				if(Math.abs(prevAngularVelocity)/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
 					IWrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
 					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
