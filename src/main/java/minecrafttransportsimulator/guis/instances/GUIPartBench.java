@@ -366,7 +366,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
-		packName.text = MasterLoader.coreInterface.getModName(currentPack);
+		packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
 		partName.text = currentItem.getItemName();
 		
 		//Create part description text.

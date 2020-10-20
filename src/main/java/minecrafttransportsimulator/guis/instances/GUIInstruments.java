@@ -247,7 +247,7 @@ public class GUIInstruments extends AGUIBase{
 					instrumentSlotIcons.get(i).stack = null;
 				}
 			}
-			packName.text = MasterLoader.coreInterface.getModName(currentPack);
+			packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
 		}
 		
 		//Set buttons depending on which vehicle section is selected.
