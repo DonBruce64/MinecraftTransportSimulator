@@ -145,7 +145,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound and spawn some particles.
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(globalCenter));
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(globalCenter), true);
 		}
 		return false;
 	}

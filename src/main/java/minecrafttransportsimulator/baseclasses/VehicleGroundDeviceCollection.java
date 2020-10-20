@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
@@ -58,6 +59,25 @@ public class VehicleGroundDeviceCollection{
 		frontRightGDB.updateCollisionStatuses(groundedGroundDevices);
 		rearLeftGDB.updateCollisionStatuses(groundedGroundDevices);
 		rearRightGDB.updateCollisionStatuses(groundedGroundDevices);
+	}
+	
+	/**
+	 * Spawns block particles under all wheels if they are part of a collective that's on the ground.
+	 * Used for fancy slipping animations.  Only call this on the CLIENT!
+	 */
+	public void spawnSlippingParticles(){
+		if(frontLeftGDB.isGrounded){
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+		}
+		if(frontRightGDB.isGrounded){
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+		}
+		if(rearLeftGDB.isGrounded){
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+		}
+		if(rearRightGDB.isGrounded){
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+		}
 	}
 	
 	/**

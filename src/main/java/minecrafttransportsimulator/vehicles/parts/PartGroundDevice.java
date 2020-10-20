@@ -250,6 +250,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			for(byte i=0; i<4; ++i){
 				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
+			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(worldPos).add(0, -1, 0), false);
 		}
 	}
 }

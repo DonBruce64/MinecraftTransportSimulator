@@ -193,6 +193,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//System.out.format("Dot:%f Vel:%f GroundVel:%f Turn:%f InRev:%b Client:%s Delta:%f Factor:%f IdelV:%f\n", dotProduct, motion.length(), groundVelocity, turningForce, goingInReverse, world.isClient() ? "1" : "0", vectorDelta, motionFactor, idealMotion.length());
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
+				
+				//If we are slipping while turning, spawn block particles.
+				if(world.isClient() && motionFactor != 1 && velocity > 0.75){
+					groundDeviceCollective.spawnSlippingParticles();
+				}
 			}
 		}
 	}

@@ -118,10 +118,10 @@ public interface IInterfaceRender{
 	
 	/**
 	 *  Spawns the particles for the block at the passed-in position.
-	 *  This also plays the block breaking sound.  It does not actually break
-	 *  the block.  Such breakage must be done on the server.
+	 *  This also allows for playing the block breaking sound.
+	 *  It does not actually break the block.  Such breakage must be done on the server.
 	 */
-	public void spawnBlockBreakParticles(Point3i point);
+	public void spawnBlockBreakParticles(Point3i point, boolean playSound);
 	
 	/**
 	 *  Renders all the text markings given the passed-in parameters.

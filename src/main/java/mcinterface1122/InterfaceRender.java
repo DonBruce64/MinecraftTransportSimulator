@@ -36,6 +36,7 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
@@ -234,12 +235,16 @@ class InterfaceRender implements IInterfaceRender{
 	}
 	
 	@Override
-	public void spawnBlockBreakParticles(Point3i point){
+	public void spawnBlockBreakParticles(Point3i point, boolean playSound){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			BlockPos pos = new BlockPos(point.x, point.y, point.z);
-			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
-			Minecraft.getMinecraft().world.playSound(null, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
-			Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
+			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
+				Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
+				if(playSound){
+					SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
+					Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+				}
+			}
 		}
 	}
 	
