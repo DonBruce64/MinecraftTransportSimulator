@@ -149,9 +149,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
 		double turningForce = getTurningForce();
 		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
-		if(!goingInReverse && dotProduct < -0.75 && turningForce == 0){
+		//TODO having velocity in the formula here has the potential to lead to hang-ups. Use packets perhaps?
+		if(!goingInReverse && dotProduct < -0.75 && (turningForce == 0 || velocity < 0.1)){
 			goingInReverse = true;
-		}else if(goingInReverse && dotProduct > 0.75 && turningForce == 0){
+		}else if(goingInReverse && dotProduct > 0.75 && (turningForce == 0 || velocity < 0.1)){
 			goingInReverse = false;
 		}
 		if(turningForce != 0){
