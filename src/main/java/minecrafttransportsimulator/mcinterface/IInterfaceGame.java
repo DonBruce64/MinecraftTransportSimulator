@@ -37,6 +37,16 @@ public interface IInterfaceGame{
 	public void toggleFirstPerson();
 	
 	/**
+	 *  Returns the current FOV for rendering.  Useful if zoom functions are desired without actually moving the camera.
+	 */
+	public float getFOV();
+	
+	/**
+	 *  Sets the current FOV for rendering.
+	 */
+	public void setFOV(float setting);
+	
+	/**
 	 *  Returns the world.  Only valid on CLIENTs as on servers
 	 *  there are multiple worlds (dimensions) so a global reference
 	 *  isn't possible.

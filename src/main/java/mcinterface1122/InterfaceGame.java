@@ -49,6 +49,16 @@ class InterfaceGame implements IInterfaceGame{
 	}
 	
 	@Override
+	public float getFOV(){
+		return Minecraft.getMinecraft().gameSettings.fovSetting;
+	}
+	
+	@Override
+	public void setFOV(float setting){
+		Minecraft.getMinecraft().gameSettings.fovSetting = setting;
+	}
+	
+	@Override
 	public IWrapperWorld getClientWorld(){
 		return WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
 	}
