@@ -173,12 +173,12 @@ class WrapperEntity implements IWrapperEntity{
 	public void addEffect(String potionEffectName, int durationIn, int amplifierIn) {
 		// Only instances of EntityLivingBase can receive potion effects
 		if((entity instanceof EntityLivingBase)) {
-			try{
-				((EntityLivingBase)entity).addPotionEffect(new PotionEffect(
-						Potion.getPotionFromResourceLocation(potionEffectName), durationIn, amplifierIn, false, false));
-			}
-			catch (Exception e){
+			PotionEffect potionEffectIn = new PotionEffect(Potion.getPotionFromResourceLocation(potionEffectName), durationIn, amplifierIn, false, false);
+			if(potionEffectIn == null) {
 				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
+			}
+			else {
+				((EntityLivingBase)entity).addPotionEffect(potionEffectIn);
 			}
 		}
 	}
@@ -187,11 +187,13 @@ class WrapperEntity implements IWrapperEntity{
 	public void removeEffect(String potionEffectName) {
 		// Only instances of EntityLivingBase can have potion effects
 		if((entity instanceof EntityLivingBase)) {
-			try{
-				((EntityLivingBase)entity).removePotionEffect(Potion.getPotionFromResourceLocation(potionEffectName));
-			}
-			catch (Exception e){
+			// Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
+			Potion potionIn = Potion.getPotionFromResourceLocation(potionEffectName);
+			if(potionIn == null) {
 				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
+			}
+			else {
+				((EntityLivingBase)entity).removePotionEffect(potionIn);
 			}
 		}
 	}

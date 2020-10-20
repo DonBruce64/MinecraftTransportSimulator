@@ -132,20 +132,18 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				rider.removeEffect(effect.name);
 			}
 		}
-			
+		
+		//Get rid of any potion effects that were caused by the seat
+		VehiclePart packPart = getPackDefForLocation(riderLocation);
+		if(packPart.seatEffects != null) {
+			for(VehicleEffect effect: packPart.seatEffects) {
+				rider.removeEffect(effect.name);
+			}
+		}
 		
 		//Set the rider dismount position if we are on the server.
 		//If we are on the client, disable mouse-yoke blocking.
-		if(!world.isClient()){
-			VehiclePart packPart = getPackDefForLocation(riderLocation);
-			
-			//Get rid of any potion effects that were caused by the seat
-			if(packPart.seatEffects != null) {
-				for(VehicleEffect effect: packPart.seatEffects) {
-					rider.removeEffect(effect.name);
-				}
-			}
-			
+		if(!world.isClient()){			
 			Point3d dismountPosition;
 			if(packPart.dismountPos != null){
 				//We have a dismount position in the JSON.  Use it.
