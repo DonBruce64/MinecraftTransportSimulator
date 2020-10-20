@@ -141,6 +141,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         
         //Seat-specific part variables.
         public Point3d dismountPos;
+        public List<VehicleEffect> seatEffects; 
         
         //Engine-specific part variables.
         @Deprecated

@@ -40,8 +40,22 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//Update rider positions based on the location they are set to.
 		Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
 		if(rider.isValid()){
+			//Add all vehicle-wide effects to the rider
+			if(this.definition.effects != null) {
+				for(VehicleEffect effect: this.definition.effects) {
+					rider.addEffect(effect.name, effect.duration, effect.amplifier);
+				}
+			}
+			
 			//Get the part (seat) this rider is riding.
 			PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
+			
+			//Add all seat-specific effects to the rider
+			if(seat.vehicleDefinition.seatEffects != null) {
+				for(VehicleEffect effect: seat.vehicleDefinition.seatEffects) {
+					rider.addEffect(effect.name, effect.duration, effect.amplifier);
+				}
+			}
 
 			//Now set the actual position/motion for the seat.
 			Point3d seatLocationOffset = new Point3d(0D, rider.getEyeHeight() + rider.getSeatOffset(), 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
@@ -101,14 +115,6 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 		}
 		
-		//Add any vehicle effects present to the rider
-		MasterLoader.coreInterface.logError("Adding rider '" + rider.getID());
-		
-		for(VehicleEffect effect: this.effects) {
-			MasterLoader.coreInterface.logError("Adding effect '" + effect.name + "' to entity " + rider.getID());
-			rider.addEffect(effect.name, effect.duration, effect.amplifier);
-		}
-		
 		return success;
 	}
 	
@@ -119,11 +125,27 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//Get the position the rider was sitting in before we dismount them.
 		Point3d riderLocation = locationRiderMap.inverse().get(rider);
 		super.removeRider(rider, iterator);
+
+		//Get rid of any potion effects that were caused by the vehicle
+		if(this.definition.effects != null) {
+			for(VehicleEffect effect: this.definition.effects) {
+				rider.removeEffect(effect.name);
+			}
+		}
+			
 		
 		//Set the rider dismount position if we are on the server.
 		//If we are on the client, disable mouse-yoke blocking.
 		if(!world.isClient()){
 			VehiclePart packPart = getPackDefForLocation(riderLocation);
+			
+			//Get rid of any potion effects that were caused by the seat
+			if(packPart.seatEffects != null) {
+				for(VehicleEffect effect: packPart.seatEffects) {
+					rider.removeEffect(effect.name);
+				}
+			}
+			
 			Point3d dismountPosition;
 			if(packPart.dismountPos != null){
 				//We have a dismount position in the JSON.  Use it.

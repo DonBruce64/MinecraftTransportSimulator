@@ -161,4 +161,8 @@ public interface IWrapperEntity{
 	 */
 	public void addEffect(String potionEffectName, int durationIn, int amplifierIn);
 	
+	/**
+	 * Removes a Minecraft PotionEffect to an EntityLivingBase.
+	 */
+	public void removeEffect(String potionEffectName);
 }
