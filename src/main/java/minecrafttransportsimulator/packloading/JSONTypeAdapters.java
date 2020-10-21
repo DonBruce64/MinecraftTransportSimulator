@@ -166,11 +166,10 @@ public class JSONTypeAdapters{
 			}else{
 				//Setting the indent to nothing prevents GSON from applying newlines to String lists.
 				//We need to set the indent to the value afterwards though to keep pretty printing.
-				//We add an extra space after the string to allow for comma-spacing which gets removed with our overrides.
 				writer.beginArray();
 				writer.setIndent("");
 				for(String item : value){
-					writer.value(item + " ");
+					writer.value(item);
 				}
 				writer.endArray();
 				writer.setIndent("  ");
