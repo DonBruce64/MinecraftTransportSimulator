@@ -17,6 +17,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.Potion;
 
 class WrapperEntity implements IWrapperEntity{
 	final Entity entity;
@@ -166,6 +168,35 @@ class WrapperEntity implements IWrapperEntity{
 		return mutableRenderPosition;
 	}
 	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
+	
+	@Override
+	public void addEffect(String potionEffectName, int durationIn, int amplifierIn) {
+		// Only instances of EntityLivingBase can receive potion effects
+		if((entity instanceof EntityLivingBase)) {
+			PotionEffect potionEffectIn = new PotionEffect(Potion.getPotionFromResourceLocation(potionEffectName), durationIn, amplifierIn, false, false);
+			if(potionEffectIn == null) {
+				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
+			}
+			else {
+				((EntityLivingBase)entity).addPotionEffect(potionEffectIn);
+			}
+		}
+	}
+	
+	@Override
+	public void removeEffect(String potionEffectName) {
+		// Only instances of EntityLivingBase can have potion effects
+		if((entity instanceof EntityLivingBase)) {
+			// Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
+			Potion potionIn = Potion.getPotionFromResourceLocation(potionEffectName);
+			if(potionIn == null) {
+				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
+			}
+			else {
+				((EntityLivingBase)entity).removePotionEffect(potionIn);
+			}
+		}
+	}
 	
 	/**
 	 *  Package-private method for attacking.  Allows for direct reference
