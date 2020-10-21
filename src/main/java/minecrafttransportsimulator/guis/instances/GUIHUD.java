@@ -26,7 +26,7 @@ public class GUIHUD extends AGUIBase{
 	@Override
 	public final void setupComponents(int guiLeft, int guiTop){
 		//Add instruments.  These go wherever they are specified in the JSON.
-		for(Byte instrumentNumber : vehicle.instruments.keySet()){
+		for(Integer instrumentNumber : vehicle.instruments.keySet()){
 			//Only add instruments that don't have an optionalPartNumber.
 			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalPartNumber == 0){
 				addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));

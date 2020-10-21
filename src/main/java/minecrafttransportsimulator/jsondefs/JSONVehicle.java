@@ -50,7 +50,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public String hornSound;
     	public String sirenSound;
         public Point3d hitchPos;
-        public String[] hitchTypes;
+        public List<String> hitchTypes;
         public Point3d hookupPos;
         public String hookupType;
         public List<PackInstrument> instruments;
@@ -181,7 +181,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public int hudX;
         public int hudY;
         public float hudScale;
-        public byte optionalPartNumber;
+        public int optionalPartNumber;
         public String defaultInstrument;
     }
     
@@ -247,10 +247,10 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public String variable;
     	public Point3d centerPoint;
     	public Point3d axis;
-    	public double offset;
+    	public float offset;
     	public boolean addPriorOffset;
-    	public double clampMin;
-    	public double clampMax;
+    	public float clampMin;
+    	public float clampMax;
     	public boolean absolute;
     	public int duration;
     	public int forwardsDelay;

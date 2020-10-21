@@ -25,7 +25,7 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, byte partNumber, EntityVehicleF_Physics vehicle){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
 		MasterLoader.renderInterface.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		

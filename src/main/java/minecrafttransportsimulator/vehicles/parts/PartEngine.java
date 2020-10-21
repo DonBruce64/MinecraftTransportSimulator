@@ -46,8 +46,8 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	//Internal variables.
 	private boolean backfired;
 	private boolean isPropellerInLiquid;
-	private byte starterLevel;
-	private byte shiftCooldown;
+	private int starterLevel;
+	private int shiftCooldown;
 	private int internalFuel;
 	private long lastTimeParticleSpawned;
 	private float currentGearRatio;

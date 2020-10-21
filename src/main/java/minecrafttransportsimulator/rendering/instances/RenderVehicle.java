@@ -837,7 +837,7 @@ public final class RenderVehicle{
 	 */
 	private static void renderInstruments(EntityVehicleF_Physics vehicle){
 		GL11.glEnable(GL11.GL_NORMALIZE);
-		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
+		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 			GL11.glPushMatrix();
 			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);

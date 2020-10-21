@@ -16,7 +16,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -47,6 +46,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packloading.JSONTypeAdapters;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
@@ -75,7 +75,7 @@ public final class PackParserSystem{
 	private static TreeMap<String, LinkedHashMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<?>>>();
 
 	/**Custom Gson instance for parsing packs.*/
-	public static final Gson packParser = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(Point3d.class, Point3d.adapter).create();
+	public static final Gson packParser = JSONTypeAdapters.getParserWithAdapters();
 	
 
     //-----START OF NEW INIT LOGIC-----
@@ -436,7 +436,7 @@ public final class PackParserSystem{
     		if(partDef.definitions == null){
     			partDef.definitions = new ArrayList<JSONPart.SubDefinition>();
     			JSONPart.SubDefinition subDefinition = partDef.new SubDefinition();
-    			subDefinition.extraMaterials = new String[]{};
+    			subDefinition.extraMaterials = new ArrayList<String>();
     			subDefinition.name = definition.general.name;
     			subDefinition.subName = "";
     			partDef.definitions.add(subDefinition);

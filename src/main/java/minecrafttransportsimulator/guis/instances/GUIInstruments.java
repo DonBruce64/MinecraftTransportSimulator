@@ -106,7 +106,7 @@ public class GUIInstruments extends AGUIBase{
 				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), (ItemInstrument) playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this)).getItem()));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), (ItemInstrument) playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this)).getItem()));
 						selectedInstrumentOnVehicle = null;
 					}
 					
@@ -133,7 +133,7 @@ public class GUIInstruments extends AGUIBase{
 		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, MasterLoader.coreInterface.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, (byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
 				selectedInstrumentOnVehicle = null;
 			}
 		});
@@ -179,7 +179,7 @@ public class GUIInstruments extends AGUIBase{
 					public void renderButton(int mouseX, int mouseY){
 						//Don't render the button texture.  Instead, render a blank square if the instrument doesn't exist.
 						//Otherwise, don't render anything at all as the instrument will be here instead.
-						if(!vehicle.instruments.containsKey((byte) vehicle.definition.motorized.instruments.indexOf(packInstrument))){
+						if(!vehicle.instruments.containsKey(vehicle.definition.motorized.instruments.indexOf(packInstrument))){
 							super.renderButton(mouseX, mouseY);
 						}
 						
@@ -213,11 +213,11 @@ public class GUIInstruments extends AGUIBase{
 					@Override
 					public void renderInstrument(){
 						//Only render this instrument if it exits in the vehicle.
-						if(vehicle.instruments.containsKey(this.instrumentPackIndex)){
+						if(vehicle.instruments.containsKey(instrumentPackIndex)){
 							GL11.glPushMatrix();
 							GL11.glTranslated(x, y, 0);
 							GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-							RenderInstrument.drawInstrument(vehicle.instruments.get(this.instrumentPackIndex), packInstrument.optionalPartNumber, vehicle);
+							RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, vehicle);
 							GL11.glPopMatrix();
 						}
 					}
@@ -256,7 +256,7 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Set info and clear state based on if we've clicked an instrument.
 		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + MasterLoader.coreInterface.translate("gui.instruments.idle") + "  \\/" : "/\\  " + MasterLoader.coreInterface.translate("gui.instruments.decide") + "  /\\";
-		clearButton.enabled = selectedInstrumentOnVehicle != null && vehicle.instruments.containsKey((byte) vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle));
+		clearButton.enabled = selectedInstrumentOnVehicle != null && vehicle.instruments.containsKey(vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle));
 	}
 	
 	@Override

@@ -19,11 +19,11 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public class PacketVehicleInstruments extends APacketVehicle{
-	private final byte slot;
+	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, byte slot, ItemInstrument instrument){
+	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, int slot, ItemInstrument instrument){
 		super(vehicle);
 		this.slot = slot;
 		if(instrument != null){
@@ -37,7 +37,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	
 	public PacketVehicleInstruments(ByteBuf buf){
 		super(buf);
-		this.slot = buf.readByte();
+		this.slot = buf.readInt();
 		this.instrumentPackID = readStringFromBuffer(buf);
 		this.instrumentSystemName = readStringFromBuffer(buf);
 	}
@@ -45,7 +45,7 @@ public class PacketVehicleInstruments extends APacketVehicle{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeByte(slot);
+		buf.writeInt(slot);
 		writeStringToBuffer(instrumentPackID, buf);
 		writeStringToBuffer(instrumentSystemName, buf);
 	}

@@ -13,7 +13,7 @@ public class JSONPoleComponent extends AJSONModelProvider<JSONPoleComponent.Pole
     
     @Deprecated
     public class TextLine{
-    	public byte characters;
+    	public int characters;
     	public float xPos;
     	public float yPos;
     	public float zPos;

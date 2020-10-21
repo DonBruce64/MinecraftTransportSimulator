@@ -86,7 +86,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 							try{
 								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
-									newVehicle.instruments.put((byte) newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
+									newVehicle.instruments.put(newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
 									continue;
 								}
 							}catch(NullPointerException e){}

@@ -40,9 +40,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean isSteamPowered;
     	public boolean flamesOnStartup;
     	public boolean isCrankingNotPitched;
-    	public byte starterPower;
-    	public byte shiftSpeed;
-    	public byte revResistance;
+    	public int starterPower;
+    	public int shiftSpeed;
+    	public int revResistance;
     	public int maxRPM;
     	public float fuelConsumption;
     	public float jetPowerFactor;
@@ -117,7 +117,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public class JSONPartInteractable{
     	public String interactionType;
     	public boolean feedsVehicles;
-    	public byte inventoryUnits;
+    	public int inventoryUnits;
     }
     
     public class JSONPartEffector{

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base JSON class for all pack-loaded JSONs.  All pack-loaded JSONs MUST extend this class.
@@ -28,6 +30,6 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
     public class General{    	
     	public String name;
     	public String description;
-    	public String[] materials;
+    	public List<String> materials;
     }
 }

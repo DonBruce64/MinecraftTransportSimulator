@@ -72,7 +72,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final List<String> textLines = new ArrayList<String>();
 	
 	//Part maps.
-	public final Map<Byte, ItemInstrument> instruments = new HashMap<Byte, ItemInstrument>();
+	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	public final HashMap<ItemPart, List<PartGun>> guns = new LinkedHashMap<ItemPart, List<PartGun>>();
@@ -126,7 +126,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}
 		
 		//Load instruments.
-		for(byte i = 0; i<definition.motorized.instruments.size(); ++i){
+		for(int i = 0; i<definition.motorized.instruments.size(); ++i){
 			String instrumentPackID = data.getString("instrument" + i + "_packID");
 			String instrumentSystemName = data.getString("instrument" + i + "_systemName");
 			if(!instrumentPackID.isEmpty()){
@@ -438,7 +438,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}
 		
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
-		for(byte i=0; i<instrumentsInSlots.length; ++i){
+		for(int i=0; i<instrumentsInSlots.length; ++i){
 			if(instruments.containsKey(i)){
 				data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
 				data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);

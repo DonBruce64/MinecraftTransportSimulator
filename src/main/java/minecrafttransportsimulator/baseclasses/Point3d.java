@@ -1,12 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.io.IOException;
-
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
-
 /**Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
  * format than Minecraft's vectors.  This class is mutable to allow
  * the point to change, cause we don't need to create a new point every time we
@@ -309,42 +302,4 @@ public class Point3d{
 	 * Rz=[[cos(R),-sin(R),0],[sin(R),cos(R),0],[0,0,1]]
 	 * {[C,0,-D],[0,1,0],[D,0,C]}*{[1,0,0],[0,A,-B],[0,B,A]}*{[E,-F,0],[F,E,0],[0,0,1]}
 	 */
-	
-	/**Class for use in JSON operations.
-	 *
-	 * @author don_bruce
-	 */
-	public static final TypeAdapter<Point3d> adapter = new TypeAdapter<Point3d>(){
-		
-		@Override
-		public Point3d read(JsonReader reader) throws IOException{
-			if(reader.peek() == JsonToken.NULL){
-				reader.nextNull();
-				return null;
-			}else{
-				reader.beginArray();
-				Point3d point = new Point3d(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
-				reader.endArray();
-				return point;
-			}
-		}
-		
-		@Override
-		public void write(JsonWriter writer, Point3d point) throws IOException{
-			if(point == null){
-				writer.nullValue();
-				return;
-			}else{
-				//Setting the indent to nothing prevents GSON from applying newlines to Point3ds.
-				//We need to set the indent to the value afterwards though to keep pretty printing.
-				writer.beginArray();
-				writer.setIndent("");
-				writer.value(point.x);
-				writer.value(point.y);
-				writer.value(point.z);
-				writer.endArray();
-				writer.setIndent("  ");
-			}
-		}
-	};
 }

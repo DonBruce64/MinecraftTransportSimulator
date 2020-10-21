@@ -16,13 +16,13 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 public class GUIComponentInstrument{
 	public final int x;
 	public final int y;
-	public final byte instrumentPackIndex;
+	public final int instrumentPackIndex;
 	public final PackInstrument packInstrument;
 	public final ItemInstrument instrument;
 	public final EntityVehicleF_Physics vehicle;
 	
 	    	
-	public GUIComponentInstrument(int guiLeft, int guiTop, byte instrumentPackIndex, EntityVehicleF_Physics vehicle){
+	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, EntityVehicleF_Physics vehicle){
 		this.packInstrument = vehicle.definition.motorized.instruments.get(instrumentPackIndex);
 		this.instrument = vehicle.instruments.get(instrumentPackIndex);
 		this.x = guiLeft + packInstrument.hudX;

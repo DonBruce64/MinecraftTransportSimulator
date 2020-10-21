@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 
@@ -26,7 +28,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 		return "";
 	}
 	
-	public String[] getExtraMaterials(){
+	public List<String> getExtraMaterials(){
 		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.extraMaterials;
