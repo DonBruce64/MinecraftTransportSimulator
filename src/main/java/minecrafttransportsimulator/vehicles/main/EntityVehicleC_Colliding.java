@@ -125,6 +125,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		for(APart part : partCollisionBoxes.keySet()){
 			for(BoundingBox box : partCollisionBoxes.get(part)){
 				box.updateToEntity(this);
+				box.globalCenter.add(part.worldPos).subtract(position);
 			}
 		}
 		
