@@ -436,14 +436,16 @@ class InterfaceRender implements IInterfaceRender{
         			GL11.glTranslated(0, currentHUD.gui.getHeight()/2D, 0);
         		}
         		
-        		//Enable alpha testing.  This can be disabled by mods doing bad state managmeent during their event calls.
+        		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
+        		//We don't want to enable blending though, as that's on-demand.
         		GL11.glEnable(GL11.GL_ALPHA_TEST);
         		
         		//Draw the HUD.
         		currentHUD.drawScreen(0, 0, event.getPartialTicks());
         		
-        		//Disable the translating, lightmap to put it back to its old state.
+        		//Pop the matrix, and set blending and lighting back to normal.
         		GL11.glPopMatrix();
+        		GL11.glEnable(GL11.GL_BLEND);
         		MasterInterface.renderInterface.setInternalLightingState(false);
     		}
     	}
