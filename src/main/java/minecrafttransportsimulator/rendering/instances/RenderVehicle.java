@@ -262,9 +262,6 @@ public final class RenderVehicle{
 		for(RenderableModelObject modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, null, partialTicks, modelObjects);
-				if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, vehicle.getSubDefinition().secondColor, modelObject.objectName, vehicle.areInteriorLightsOn())){
-					MasterLoader.renderInterface.recallTexture();
-				}
 			}
 		}
 	}
@@ -355,9 +352,6 @@ public final class RenderVehicle{
 			for(RenderableModelObject modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
 					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
-					if(MasterLoader.renderInterface.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, part.vehicle.getSubDefinition().secondColor, modelObject.objectName, part.vehicle.areInteriorLightsOn())){
-						MasterLoader.renderInterface.recallTexture();
-					}
 				}
 			}
 			
