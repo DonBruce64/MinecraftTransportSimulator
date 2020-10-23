@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +37,6 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
@@ -68,6 +68,8 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.resource.VanillaResourceType;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -481,11 +483,6 @@ class InterfaceRender implements IInterfaceRender{
 	 */
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
-		//Create the custom JSON parser class.
-		//We need to register a custom resource handler here to auto-generate JSON.
-		//FAR easier than trying to use the bloody bakery system.
-		((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterInterface.MODID + "_packs"));
-		
 		//Register the vehicle rendering class.
 		RenderingRegistry.registerEntityRenderingHandler(BuilderEntity.class, new IRenderFactory<BuilderEntity>(){
 			@Override
@@ -499,7 +496,6 @@ class InterfaceRender implements IInterfaceRender{
 				@Override
 				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
 					if(builder.entity != null){
-						Minecraft.getMinecraft().world.profiler.startSection("iv_render_entity_" + builder.entity.lookupID);
 						//If we don't have render data yet, create one now.
 						if(!renderData.containsKey(builder)){
 							renderData.put(builder, new RenderTickData(builder.entity.world));
@@ -515,7 +511,6 @@ class InterfaceRender implements IInterfaceRender{
 						if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
 							builder.entity.render(partialTicks);
 						}
-						Minecraft.getMinecraft().world.profiler.endSection();
 					}
 				}
 			};
@@ -524,8 +519,38 @@ class InterfaceRender implements IInterfaceRender{
 		//Register the TESR wrapper.
 		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new BuilderTileEntityRender());
 		
-		//Register the item models.
-		//First register the core items.
+		//Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
+		//FAR easier than trying to use the bloody bakery system.
+		//Normally we'd add our pack to the current loader, but this gets wiped out during reloads and unless we add our pack to the main list, it won't stick.
+		//To do this, we use reflection to get the field from the main MC class that holds the master list to add our custom ones.
+		//((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterInterface.MODID + "_packs"));
+		List<IResourcePack> defaultPacks = null;
+		for(Field field : Minecraft.class.getDeclaredFields()){
+			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
+				try{
+					if(!field.isAccessible()){
+						field.setAccessible(true);
+					}
+					
+					defaultPacks = (List<IResourcePack>) field.get(Minecraft.getMinecraft());
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		//Check to make sure we have the pack list before continuing.
+		if(defaultPacks == null){
+			MasterInterface.coreInterface.logError("ERROR: Could not get default pack list. Item icons will be disabled.");
+			return;
+		}
+		
+		//Now that we have the custom resource pack location, add our built-in loader.
+		//This one auto-generates item JSONs.
+		defaultPacks.add(new PackResourcePack(MasterInterface.MODID + "_packs"));
+		
+		//Register the core item models.  Some of these are pack-based.
+		//Don't add those as they get added during the pack registration processing. 
 		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemWrapperMap.entrySet()){
 			try{
 				//TODO remove this when we don't have non-pack items.
@@ -546,11 +571,14 @@ class InterfaceRender implements IInterfaceRender{
 				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
 			}else{
 				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
-					((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(packItem.definition.packID));
+					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
 				}
 				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 			}
 		}
+		
+		//Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
+		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
 	}
 	
 	/**
