@@ -157,12 +157,14 @@ public interface IWrapperEntity{
 	public Point3d getRenderedPosition(float partialTicks);
 	
 	/**
-	 * Adds a Minecraft PotionEffect to an EntityLivingBase.
+	 * Adds the potion effect with the specified name to the entity.  Only valid for living entities that
+	 * are effected by potions.
 	 */
-	public void addEffect(String potionEffectName, int durationIn, int amplifierIn);
+	public void addPotionEffect(String name, int duration, int amplifier);
 	
 	/**
-	 * Removes a Minecraft PotionEffect to an EntityLivingBase.
+	 * Removes the potion effect with the specified name from the entity.  Only valid for living entities that
+	 * are effected by potions.
 	 */
-	public void removeEffect(String potionEffectName);
+	public void removePotionEffect(String name);
 }

@@ -43,7 +43,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			//Add all vehicle-wide effects to the rider
 			if(this.definition.effects != null) {
 				for(VehicleEffect effect: this.definition.effects) {
-					rider.addEffect(effect.name, effect.duration, effect.amplifier);
+					rider.addPotionEffect(effect.name, effect.duration, effect.amplifier);
 				}
 			}
 			
@@ -53,7 +53,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			//Add all seat-specific effects to the rider
 			if(seat.vehicleDefinition.seatEffects != null) {
 				for(VehicleEffect effect: seat.vehicleDefinition.seatEffects) {
-					rider.addEffect(effect.name, effect.duration, effect.amplifier);
+					rider.addPotionEffect(effect.name, effect.duration, effect.amplifier);
 				}
 			}
 
@@ -129,7 +129,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//Get rid of any potion effects that were caused by the vehicle
 		if(this.definition.effects != null) {
 			for(VehicleEffect effect: this.definition.effects) {
-				rider.removeEffect(effect.name);
+				rider.removePotionEffect(effect.name);
 			}
 		}
 		
@@ -137,7 +137,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		VehiclePart packPart = getPackDefForLocation(riderLocation);
 		if(packPart.seatEffects != null) {
 			for(VehicleEffect effect: packPart.seatEffects) {
-				rider.removeEffect(effect.name);
+				rider.removePotionEffect(effect.name);
 			}
 		}
 		

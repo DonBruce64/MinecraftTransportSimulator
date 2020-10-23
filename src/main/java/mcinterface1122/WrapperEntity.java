@@ -14,11 +14,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.potion.Potion;
 
 class WrapperEntity implements IWrapperEntity{
 	final Entity entity;
@@ -170,30 +170,28 @@ class WrapperEntity implements IWrapperEntity{
 	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
 	
 	@Override
-	public void addEffect(String potionEffectName, int durationIn, int amplifierIn) {
+	public void addPotionEffect(String name, int duration, int amplifier){
 		// Only instances of EntityLivingBase can receive potion effects
-		if((entity instanceof EntityLivingBase)) {
-			PotionEffect potionEffectIn = new PotionEffect(Potion.getPotionFromResourceLocation(potionEffectName), durationIn, amplifierIn, false, false);
-			if(potionEffectIn == null) {
-				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
-			}
-			else {
-				((EntityLivingBase)entity).addPotionEffect(potionEffectIn);
+		if((entity instanceof EntityLivingBase)){
+			Potion potion = Potion.getPotionFromResourceLocation(name);
+			if(potion != null){
+				((EntityLivingBase)entity).addPotionEffect(new PotionEffect(potion, duration, amplifier, false, false));
+			}else{
+				throw new NullPointerException("Potion " + name + " does not exist.");
 			}
 		}
 	}
 	
 	@Override
-	public void removeEffect(String potionEffectName) {
+	public void removePotionEffect(String name){
 		// Only instances of EntityLivingBase can have potion effects
-		if((entity instanceof EntityLivingBase)) {
-			// Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
-			Potion potionIn = Potion.getPotionFromResourceLocation(potionEffectName);
-			if(potionIn == null) {
-				throw new NullPointerException("Potion " + potionEffectName + " does not exist.");
-			}
-			else {
-				((EntityLivingBase)entity).removePotionEffect(potionIn);
+		if((entity instanceof EntityLivingBase)){
+			//Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
+			Potion potion = Potion.getPotionFromResourceLocation(name);
+			if(potion != null){
+				((EntityLivingBase)entity).removePotionEffect(potion);
+			}else{
+				throw new NullPointerException("Potion " + name + " does not exist.");
 			}
 		}
 	}
