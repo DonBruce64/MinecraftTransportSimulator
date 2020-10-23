@@ -205,7 +205,7 @@ class WrapperWorld implements IWrapperWorld{
 			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
 			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
 			Vec3d start = new Vec3d(damage.box.globalCenter.x, damage.box.globalCenter.y, damage.box.globalCenter.z);
-			Vec3d end = start.addVector(motion.x, motion.y, motion.z);
+			Vec3d end = start.add(motion.x, motion.y, motion.z);
 			Iterator<Entity> iterator = collidedEntities.iterator();
 			while(iterator.hasNext()){
 				Entity entity = iterator.next();
@@ -346,7 +346,7 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public Point3i getBlockHit(Point3d position, Point3d delta){
 		Vec3d start = new Vec3d(position.x, position.y, position.z);
-		RayTraceResult trace = world.rayTraceBlocks(start, start.addVector(delta.x, delta.y, delta.z), false, true, false);
+		RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
 		if(trace != null){
 			BlockPos pos = trace.getBlockPos();
 			if(pos != null){
@@ -482,7 +482,7 @@ class WrapperWorld implements IWrapperWorld{
 	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
 	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
 	            pos = pos.offset(facing);
-	            location.add(facing.getFrontOffsetX(), facing.getFrontOffsetY(), facing.getFrontOffsetZ());
+	            location.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
 	        }
 	    	if(stack.getItem() != null && player.player.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)){
 	            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);

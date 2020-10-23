@@ -48,7 +48,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.entity.Entity;
@@ -467,7 +466,7 @@ class InterfaceRender implements IInterfaceRender{
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
         for(TileEntity tile : Minecraft.getMinecraft().world.loadedTileEntityList){
         	if(tile instanceof BuilderTileEntity){
-        		Vec3d delta = new Vec3d(tile.getPos()).addVector(-playerX, -playerY, -playerZ);
+        		Vec3d delta = new Vec3d(tile.getPos()).add(-playerX, -playerY, -playerZ);
         		//Prevent crashing on corrupted TEs.
         		if(TileEntityRendererDispatcher.instance.getRenderer(tile) != null){
         			TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
@@ -585,7 +584,7 @@ class InterfaceRender implements IInterfaceRender{
 	 *  Helper method to register renders.
 	 */
 	private static void registerCoreItemRender(Item item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MasterInterface.MODID + ":" + item.getRegistryName().getResourcePath(), "inventory"));
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MasterInterface.MODID + ":" + item.getRegistryName().getPath(), "inventory"));
 	}
 	
 	/**
@@ -605,7 +604,7 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
-			String rawPackInfo = location.getResourcePath();
+			String rawPackInfo = location.getPath();
 			try{
 				//Create stream return variable.
 				InputStream stream;
@@ -682,11 +681,11 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public boolean resourceExists(ResourceLocation location){
-			return domains.contains(location.getResourceDomain()) 
-					&& !location.getResourcePath().contains("blockstates") 
-					&& !location.getResourcePath().contains("armatures") 
-					&& !location.getResourcePath().contains("mcmeta")
-					&& (location.getResourcePath().startsWith("models/item/") || location.getResourcePath().startsWith("textures/"));
+			return domains.contains(location.getNamespace()) 
+					&& !location.getPath().contains("blockstates") 
+					&& !location.getPath().contains("armatures") 
+					&& !location.getPath().contains("mcmeta")
+					&& (location.getPath().startsWith("models/item/") || location.getPath().startsWith("textures/"));
 		}
 
 		@Override

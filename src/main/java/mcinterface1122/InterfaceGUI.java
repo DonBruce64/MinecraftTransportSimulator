@@ -32,7 +32,7 @@ class InterfaceGUI implements IInterfaceGUI{
 		List<String> tooltipText = ((WrapperItemStack) stack).stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         for(int i = 0; i < tooltipText.size(); ++i){
             if(i == 0){
-                tooltipText.set(i, ((WrapperItemStack) stack).stack.getRarity().rarityColor + tooltipText.get(i));
+                tooltipText.set(i, ((WrapperItemStack) stack).stack.getRarity().rarityName + tooltipText.get(i));
             }else{
                 tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
             }

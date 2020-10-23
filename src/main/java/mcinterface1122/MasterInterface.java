@@ -89,7 +89,7 @@ public class MasterInterface{
 		if(item instanceof AItemPack){
 			String packID = ((AItemPack<?>) item).definition.packID;
 			if(PackParserSystem.getPackConfiguration(packID) == null){
-				BuilderItem.itemWrapperMap.get(item).setUnlocalizedName(packID + "." + item.getRegistrationName());
+				BuilderItem.itemWrapperMap.get(item).setTranslationKey(packID + "." + item.getRegistrationName());
 			}
 		}
 	}

@@ -48,19 +48,19 @@ class BuilderCreativeTab extends CreativeTabs{
     }
 	
 	@Override
-	public String getTranslatedTabLabel(){
+	public String getTranslationKey(){
 		return getTabLabel();
     }
 	
 	@Override
-	public ItemStack getTabIconItem(){
+	public ItemStack getIcon(){
 		return itemIcon != null ? new ItemStack(itemIcon) : null;
 	}
 	
 	@Override
-	public ItemStack getIconItemStack(){
+	public ItemStack createIcon(){
 		if(itemIcon != null){
-			return super.getIconItemStack();
+			return super.getIcon();
 		}else{
 			return new ItemStack(items.get((int) (MasterInterface.gameInterface.getClientWorld().getTime()/20%items.size())));
 		}

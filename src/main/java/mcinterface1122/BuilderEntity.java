@@ -220,7 +220,7 @@ public class BuilderEntity extends Entity{
 					//Check the theoretical position of the entity should it have moved.
 					//Some projectiles may call their attacking code before updating their positions.
 					//We do raytracing here to catch this movement.
-					RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().addVector(attacker.motionX, attacker.motionY, attacker.motionZ));
+					RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().add(attacker.motionX, attacker.motionY, attacker.motionZ));
 					if(hitRaytrace != null){
 						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, playerSource);
 					}
