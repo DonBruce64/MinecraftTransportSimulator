@@ -143,10 +143,10 @@ class BuilderItem extends Item{
 			
 			//TODO remove when packs don't register their own items.
 			if(tabID.equals(MasterInterface.MODID)){
-				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
 			}else if(item instanceof AItemPack){
 				if(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
-					event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setUnlocalizedName(item.getRegistrationName()));
+					event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
 				}
 			}
 		}

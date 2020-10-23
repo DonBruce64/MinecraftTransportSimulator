@@ -218,7 +218,7 @@ class BuilderBlock extends Block{
 	@SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta){
 		//Restores the sate from meta.
-        return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
+        return this.getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
     }
 
     @Override
@@ -269,7 +269,7 @@ class BuilderBlock extends Block{
     }
     
   	@Override
-  	public BlockRenderLayer getBlockLayer(){
+  	public BlockRenderLayer getRenderLayer(){
   		//Gets the block layer.  Needs to be CUTOUT so textures with alpha in them render.
   		return BlockRenderLayer.CUTOUT;
   	}
@@ -310,7 +310,7 @@ class BuilderBlock extends Block{
 					BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
 					String name = itemBlockBlock.getClass().getSimpleName();
 					name = MasterInterface.MODID + ":" + name.substring("Block".length());
-					event.getRegistry().register(wrapper.setRegistryName(name).setUnlocalizedName(name));
+					event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
 					blockWrapperMap.put(itemBlockBlock, wrapper);
 					blocksRegistred.add(itemBlockBlock);
 					if(itemBlockBlock instanceof IBlockTileEntity<?>){
