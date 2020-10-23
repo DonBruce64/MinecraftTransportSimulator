@@ -28,6 +28,8 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemRoad;
+import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -38,6 +40,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
@@ -368,6 +371,18 @@ public final class PackParserSystem{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		performLegacyCompats(definition);
     		MasterInterface.createItem(setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "poles/"));
+    	}catch(Exception e){
+    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		MasterLoader.coreInterface.logError(e.getMessage());
+    	}
+    }
+    
+    /**Packs should call this upon load to add their road components to the mod.**/
+    public static void addRoadDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
+    	try{
+    		JSONRoadComponent definition = packParser.fromJson(jsonReader, JSONRoadComponent.class);
+    		performLegacyCompats(definition);
+    		MasterInterface.createItem(setupItem(definition.general.type.equals("core") ? new ItemRoad(definition) : new ItemRoadComponent(definition), packID, jsonFileName, "", "roads/"));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());

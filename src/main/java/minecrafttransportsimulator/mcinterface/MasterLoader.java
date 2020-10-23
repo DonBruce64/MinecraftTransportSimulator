@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
@@ -165,6 +166,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);

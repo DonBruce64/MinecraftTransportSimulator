@@ -495,6 +495,7 @@ class WrapperWorld implements IWrapperWorld{
 	            			data = new WrapperNBT(stack.stack.getTagCompound());
 	            		}else{
 	            			data = new WrapperNBT(new NBTTagCompound());
+	            			data.setDouble("rotation", player.getHeadYaw()%360);
 	            			if(stack.getItem() instanceof AItemPack){
 		            			data.setString("packID", ((AItemPack<?>) stack.getItem()).definition.packID);
 			            		data.setString("systemName", ((AItemPack<?>) stack.getItem()).definition.systemName);

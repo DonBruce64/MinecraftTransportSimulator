@@ -57,6 +57,7 @@ public final class PackResourceLoader{
     	PART,
     	INSTRUMENT,
     	POLE,
+    	ROAD,
     	DECOR,
     	ITEM,
     	BOOKLET;

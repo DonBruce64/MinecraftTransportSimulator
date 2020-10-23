@@ -27,6 +27,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public final IWrapperWorld world;
 	/**Current position of this TileEntity.**/
 	public final Point3i position;
+	/**Y-axis rotation of this TileEntity when it was placed.**/
+	public final double rotation;
 	/**Item that that was used to spawn this TileEntity.**/
 	public final AItemPack<JSONDefinition> item;
 	/**JSON definition for this TileEntity.**/
@@ -37,6 +39,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public ATileEntityBase(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		this.world = world;
 		this.position = position;
+		this.rotation = data.getDouble("rotation");
 		this.item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"));
 		this.definition = item.definition;
 		this.lightLevel = (float) data.getDouble("lightLevel");
@@ -72,6 +75,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	 *  should be written to at this point with any data needing to be saved.
 	 */
 	public void save(IWrapperNBT data){
+		data.setDouble("rotation", rotation);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
 		data.setDouble("lightLevel", lightLevel);
