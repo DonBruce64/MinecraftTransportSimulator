@@ -146,7 +146,7 @@ public final class RenderableModelObject{
 	 *  Used to reset the display list in dev mode to allow the re-loading of models.
 	 */
 	public void resetDisplayList(){
-		if(displayLists.containsKey(modelName)){
+		if(displayLists.containsKey(modelName) && displayLists.get(modelName).containsKey(objectName)){
 			GL11.glDeleteLists(displayLists.get(modelName).remove(objectName), 1);
 		}
 	}
