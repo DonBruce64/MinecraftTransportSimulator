@@ -11,7 +11,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	
 	@Override
 	public void render(TileEntityRoad tile, float partialTicks){
-		//FIXME Render all connections.  These are based on the path of the road and what components it has.
 		/*
 		TileEntityRoad_Core coreComponent = (TileEntityPole_Core) tile.components.get(Axis.NONE);
 		if(coreComponent != null){

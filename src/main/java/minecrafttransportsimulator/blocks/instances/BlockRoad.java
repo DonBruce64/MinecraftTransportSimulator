@@ -35,7 +35,6 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 			AItemBase heldItem = heldStack.getItem();
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerHoldingComponent = heldItem instanceof ItemRoadComponent && !(heldItem instanceof ItemRoad);
-			//FIXME find which component type the player clicked.
 			RoadComponent componentType = null;
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){

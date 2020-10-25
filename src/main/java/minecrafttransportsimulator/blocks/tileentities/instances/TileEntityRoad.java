@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.RoadCurve;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.TileEntityRoad_Component;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -31,11 +32,14 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public final Map<RoadComponent, TileEntityRoad_Component> components = new HashMap<RoadComponent, TileEntityRoad_Component>();
-	//public final Point3d[] curveConnectionPoints;
-	//public final Point3i[][] backwardsBlockPosition;
-	//public final Point3i[][] forwardsBlockPosition;
-	//public final RoadCurve[][] curves;
+	public final Point3d centerOffset;
+	public final Point3d[] curveConnectionPoints;
+	public final Point3i[][] backwardsBlockPositions;
+	public final Point3i[][] forwardsBlockPositions;
+	public final RoadCurve[][] curves;
 	public final BoundingBox boundingBox;
+	
+	private static final int MAX_CURVE_CONNECTIONS = 3;
 	
 	public TileEntityRoad(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
@@ -49,13 +53,39 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			}
 		}
 		
-		//FIXME Generate the curve connection points.
+		//Get the centerOffset.  For blocks placed directly, this will be 0,0,0.
+		//For blocks placed as connectors to existing curves, or those as midpoints, it will be non-zero.
+		//Offset may be positive or negative for any point, but is assured to be between -0.5 and 0.5 for each axis.
+		centerOffset = data.getPoint3d("centerOffset");
 		
-		//FIXME Get saved curve connections that go to the generated points.
+		//Create a Point3d for rotation operations.
+		Point3d totalRotation = new Point3d(0, rotation, 0);
 		
+		//Now generate the curve connection points.  These come from our definition and our current rotation.
+		curveConnectionPoints = new Point3d[definition.general.numberLanes];
+		for(int i=0; i<definition.general.numberLanes; ++i){
+			curveConnectionPoints[i] = new Point3d(position).add(definition.general.firstLaneOffset + i*definition.general.laneWidth, 0, 0).rotateFine(totalRotation);
+		}
+		
+		//Get saved curve connections that go to the generated points.
+		this.backwardsBlockPositions = new Point3i[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
+		this.forwardsBlockPositions = new Point3i[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
+		this.curves = new RoadCurve[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
+		for(int i=0; i<curveConnectionPoints.length; ++i){
+			for(int j=0; j<MAX_CURVE_CONNECTIONS; ++j){
+				Point3i loadedBackwardsPosition = data.getPoint3i("backwardsBlockPosition" + String.valueOf(i) + String.valueOf(j));
+				Point3i loadedForwardsPosition = data.getPoint3i("forwardsBlockPosition" + String.valueOf(i) + String.valueOf(j));
+				if(!loadedBackwardsPosition.isZero()){
+					backwardsBlockPositions[i][j] = loadedBackwardsPosition;
+				}
+				if(!loadedForwardsPosition.isZero()){
+					forwardsBlockPositions[i][j] = loadedForwardsPosition;
+				}
+			}
+		}
 		
 		//Set the bounding box.
-		this.boundingBox = new BoundingBox(new Point3d(0, 0, 0), definition.general.width/2D, definition.general.collisionHeight/2D, definition.general.width/2D);
+		this.boundingBox = new BoundingBox(new Point3d(0, 0, 0), 0.5D, definition.general.collisionHeight/2D, 0.5D);
 	}
 	
 	@Override
@@ -84,7 +114,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		
 		//Save curve connection data.
-		
+		for(int i=0; i<curveConnectionPoints.length; ++i){
+			for(int j=0; j<MAX_CURVE_CONNECTIONS; ++j){
+				data.setPoint3i("backwardsBlockPosition" + String.valueOf(i) + String.valueOf(j), backwardsBlockPositions[i][j]);
+				data.setPoint3i("forwardsBlockPosition" + String.valueOf(i) + String.valueOf(j), forwardsBlockPositions[i][j]);
+			}
+		}
     }
 	
 	/**
