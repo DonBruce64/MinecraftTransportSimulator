@@ -178,7 +178,7 @@ class WrapperWorld implements IWrapperWorld{
 			float distance = mcLooker.getDistance(entity);
 			if(distance < smallestDistance && entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)){
 				//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
-				if(world.rayTraceBlocks(mcLookerPos, entity.getPositionVector(), false, true, false) == null){
+				if(world.rayTraceBlocks(mcLookerPos, entity.getPositionVector().add(0, entity.getEyeHeight(), 0), false, true, false) == null){
 					foundEntity = entity;
 				}
 			}
