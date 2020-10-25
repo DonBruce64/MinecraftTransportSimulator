@@ -36,6 +36,15 @@ public class RenderEventHandler{
 	private static int customCameraIndex;
 	private static float currentFOV;
 	private static String customCameraOverlay;
+	private static AGUIBase currentGUI;
+	
+	/**
+	 *  Resets the overlay GUI by nulling it out.  This will cause it to re-create itself next tick.
+	 *  Useful if something on it has changed and you need it to re-create itself.
+	 */
+	public static void resetGUI(){
+		currentGUI = null;
+	}
 	
 	/**
 	 *  Adjusts the camera zoom, zooming in or out depending on the flag.
@@ -246,11 +255,11 @@ public class RenderEventHandler{
     }
     
     /**
-     * Renders the HUD on vehicles, or the fluid in a tank if we are mousing-over a vehicle.
+     * Renders an overlay GUI, or other overlay components like the fluid in a tank if we are mousing-over a vehicle.
      * Also responsible for rendering overlays on custom cameras.  If we need to render a GUI,
      * it should be returned.  Otherwise, return null.
      */
-    public static AGUIBase onOverlayRender(int screenWidth, int screenHeight, float partialTicks, AGUIBase currentGUI, AEntityBase mousedOverEntity, Point3d mousedOverPoint){
+    public static AGUIBase onOverlayRender(int screenWidth, int screenHeight, float partialTicks, AEntityBase mousedOverEntity, Point3d mousedOverPoint){
     	IWrapperPlayer player = MasterLoader.gameInterface.getClientPlayer();
     	AEntityBase ridingEntity = player.getEntityRiding();
     	if(MasterLoader.gameInterface.inFirstPerson() && ridingEntity == null){
@@ -289,7 +298,10 @@ public class RenderEventHandler{
 						
 						//If the seat is a controller, render the HUD.
 						if(seat.vehicleDefinition.isController){
-							return currentGUI != null ? currentGUI : new GUIHUD((EntityVehicleF_Physics) ridingEntity);
+							if(currentGUI == null){
+								currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);
+							}
+							return currentGUI; 
 						}
 					}
 				}

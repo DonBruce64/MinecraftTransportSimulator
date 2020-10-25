@@ -21,6 +21,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -81,7 +82,7 @@ class InterfaceRender implements IInterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureLocation;
-	private static BuilderGUI currentHUD = null;
+	private static BuilderGUI currentGUI = null;
 	
 	@Override
 	public int getRenderPass(){
@@ -414,35 +415,35 @@ class InterfaceRender implements IInterfaceRender{
 				mousedOverEntity = ((BuilderEntity) lastHit.entityHit).entity;
 				mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
 			}
-    		AGUIBase requestedGUI = RenderEventHandler.onOverlayRender(event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), event.getPartialTicks(), currentHUD != null ? currentHUD.gui : null, mousedOverEntity, mousedOverPoint);
+    		AGUIBase requestedGUI = RenderEventHandler.onOverlayRender(event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight(), event.getPartialTicks(), mousedOverEntity, mousedOverPoint);
     		
-    		//Make a new HUD if we need to, or null out the savved HUD.
+    		//Make a new overlay GUI if we need to, or null out the savved GUI.
     		if(requestedGUI != null){
-				if(currentHUD == null){
-					currentHUD = new BuilderGUI(requestedGUI);
-					currentHUD.initGui();
-					currentHUD.setWorldAndResolution(Minecraft.getMinecraft(), event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
+				if(currentGUI == null || !currentGUI.gui.equals(requestedGUI)){
+					currentGUI = new BuilderGUI(requestedGUI);
+					currentGUI.initGui();
+					currentGUI.setWorldAndResolution(Minecraft.getMinecraft(), event.getResolution().getScaledWidth(), event.getResolution().getScaledHeight());
 				}
     		}else{
-    			currentHUD = null;
+    			currentGUI = null;
     		}
     		
-    		//If we have a HUD, render it.
-    		if(currentHUD != null){
+    		//If we have a GUI, render it.
+    		if(currentGUI != null){
     			//Translate far enough to not render behind the items.
-				//Also translate down if we are a helf-HUD.
+				//Also translate down if we are a half-HUD.
 				GL11.glPushMatrix();
         		GL11.glTranslated(0, 0, 250);
-        		if(MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value){
-        			GL11.glTranslated(0, currentHUD.gui.getHeight()/2D, 0);
+        		if(currentGUI.gui instanceof GUIHUD && (MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value)){
+        			GL11.glTranslated(0, currentGUI.gui.getHeight()/2D, 0);
         		}
         		
         		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
         		//We don't want to enable blending though, as that's on-demand.
         		GL11.glEnable(GL11.GL_ALPHA_TEST);
         		
-        		//Draw the HUD.
-        		currentHUD.drawScreen(0, 0, event.getPartialTicks());
+        		//Draw the GUI.
+        		currentGUI.drawScreen(0, 0, event.getPartialTicks());
         		
         		//Pop the matrix, and set blending and lighting back to normal.
         		GL11.glPopMatrix();

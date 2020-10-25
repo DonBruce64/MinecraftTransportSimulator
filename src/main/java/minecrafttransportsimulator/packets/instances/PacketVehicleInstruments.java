@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -77,6 +78,11 @@ public class PacketVehicleInstruments extends APacketVehicle{
 				}
 			}
 			vehicle.instruments.put(slot, instrument);
+		}
+		
+		//If we are on the client, reset the current HUD.  This prevents load-syncinig issues.
+		if(world.isClient()){
+			RenderEventHandler.resetGUI();
 		}
 		return true;
 	}
