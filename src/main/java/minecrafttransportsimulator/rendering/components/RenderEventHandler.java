@@ -59,170 +59,173 @@ public class RenderEventHandler{
 		AEntityBase entity = renderEntity.getEntityRiding();
 		if(entity instanceof EntityVehicleF_Physics){
 			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-			Point3d riderLocation = vehicle.locationRiderMap.inverse().get(renderEntity);
-    		if(riderLocation != null){
-	    		if(MasterLoader.gameInterface.inFirstPerson()){
-	    			//Do custom camera, or do normal rendering.
-	    			if(enableCustomCameras){
-	    				runningCustomCameras = true;
-	    				VehicleCameraObject camera = null;
-	    				APart optionalPart = null;
-	    				int camerasChecked = 0;
-	    				
-	    				//Get the next custom camera the vehicle has.
-	    				if(vehicle.definition.rendering.cameraObjects != null){
-	    					camerasChecked += vehicle.definition.rendering.cameraObjects.size();
-	    					if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
-	    						camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
-	    					}
-	    				}
-	    				
-	    				//If we aren't using a vehicle camera, check for part cameras.
-	    				if(camera == null){
-	    					for(APart part : vehicle.parts){
-	    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-	    							if(customCameraIndex < camerasChecked + part.definition.rendering.cameraObjects.size()){
-	    								camera = part.definition.rendering.cameraObjects.get(customCameraIndex - camerasChecked);
-	    								optionalPart = part;
-	    								break;
-	    							}else{
-	    								camerasChecked += part.definition.rendering.cameraObjects.size();
-	    							}
-	    						}
-	    					}
-	    				}
-	    				
-	    				//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
-	    				if(camera != null){
-	    					//Set current overlay for future calls.
-	    					customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
-	            			
-	            			//First rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
-	                		GL11.glRotated(180, 0, 1, 0);
-	                		
-	                		//Rotate to the camera's rotation, if it has one.
-	                		//We also need to take into account the rotation of the part if we have a part camera.
-	                		Point3d totalRotation;
-	                		if(optionalPart != null){
-	                			if(camera.rot != null){
-	                				totalRotation = optionalPart.totalRotation.copy().add(camera.rot);
-	                			}else{
-	                				totalRotation = optionalPart.totalRotation;
+			Point3d riderOffset = vehicle.locationRiderMap.inverse().get(renderEntity);
+			if(riderOffset != null){
+				PartSeat seat = (PartSeat) vehicle.getPartAtLocation(riderOffset);
+	    		if(seat != null){
+		    		if(MasterLoader.gameInterface.inFirstPerson()){
+		    			//Do custom camera, or do normal rendering.
+		    			if(enableCustomCameras){
+		    				runningCustomCameras = true;
+		    				VehicleCameraObject camera = null;
+		    				APart optionalPart = null;
+		    				int camerasChecked = 0;
+		    				
+		    				//Get the next custom camera the vehicle has.
+		    				if(vehicle.definition.rendering.cameraObjects != null){
+		    					camerasChecked += vehicle.definition.rendering.cameraObjects.size();
+		    					if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
+		    						camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
+		    					}
+		    				}
+		    				
+		    				//If we aren't using a vehicle camera, check for part cameras.
+		    				if(camera == null){
+		    					for(APart part : vehicle.parts){
+		    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
+		    							if(customCameraIndex < camerasChecked + part.definition.rendering.cameraObjects.size()){
+		    								camera = part.definition.rendering.cameraObjects.get(customCameraIndex - camerasChecked);
+		    								optionalPart = part;
+		    								break;
+		    							}else{
+		    								camerasChecked += part.definition.rendering.cameraObjects.size();
+		    							}
+		    						}
+		    					}
+		    				}
+		    				
+		    				//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
+		    				if(camera != null){
+		    					//Set current overlay for future calls.
+		    					customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
+		            			
+		            			//First rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
+		                		GL11.glRotated(180, 0, 1, 0);
+		                		
+		                		//Rotate to the camera's rotation, if it has one.
+		                		//We also need to take into account the rotation of the part if we have a part camera.
+		                		Point3d totalRotation;
+		                		if(optionalPart != null){
+		                			if(camera.rot != null){
+		                				totalRotation = optionalPart.totalRotation.copy().add(camera.rot);
+		                			}else{
+		                				totalRotation = optionalPart.totalRotation;
+		                			}
+		                		}else{
+		                			totalRotation = camera.rot;
+		                		}
+		            			if(totalRotation != null){
+		            	    		GL11.glRotated(-totalRotation.y, 0, 1, 0);
+		            	    		GL11.glRotated(-totalRotation.x, 1, 0, 0);
+		            	    		GL11.glRotated(-totalRotation.z, 0, 0, 1);
+		            			}
+		            			
+		            			//Apply any rotations from rotation animations.
+		            			if(camera.animations != null){
+		            				for(VehicleAnimationDefinition animation : camera.animations){
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+		            					if(animation.animationType.equals("rotation")){
+		            						if(animationValue != 0){
+		            							Point3d rotationAxis = animation.axis.copy().normalize();
+		                						if(animationValue != 0){
+		                							GL11.glTranslated(animation.centerPoint.x - camera.pos.x, animation.centerPoint.y - camera.pos.y, animation.centerPoint.z - camera.pos.z);
+		                							GL11.glRotated(animationValue, -rotationAxis.x, -rotationAxis.y, -rotationAxis.z);
+		                							GL11.glTranslated(-(animation.centerPoint.x - camera.pos.x), -(animation.centerPoint.y - camera.pos.y), -(animation.centerPoint.z - camera.pos.z));
+		                						}
+		            						}
+		            					}
+		            				}
+		            			}
+		                		
+		                		//Translate to the camera's position.
+		            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
+		            			//We also need to take into account the part's position, if we are using one.
+		            			double playerPositionToEyeOffset = 0.87;
+		            			if(optionalPart != null){
+		            				GL11.glTranslated(-(optionalPart.totalOffset.x + camera.pos.x - seat.totalOffset.x), -(optionalPart.totalOffset.y + camera.pos.y - playerPositionToEyeOffset - seat.totalOffset.y), -(optionalPart.totalOffset.z + camera.pos.z - seat.totalOffset.z));
+		            			}else{
+		            				GL11.glTranslated(-(camera.pos.x - seat.totalOffset.x), -(camera.pos.y - playerPositionToEyeOffset - seat.totalOffset.y), -(camera.pos.z - seat.totalOffset.z));
+		            			}
+		            			
+		            			//Translate again to any camera animations.
+		            			if(camera.animations != null){
+		            				for(VehicleAnimationDefinition animation : camera.animations){
+		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+		            					if(animation.animationType.equals("translation")){
+		            						if(animationValue != 0){
+		            							if(animation.animationType.equals("translation")){
+		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
+		                    						GL11.glTranslated(-translationAmount.x, -translationAmount.y, -translationAmount.z);
+		                    					}
+		            						}
+		            					}
+		            				}
+		            			}
+		                		
+		            			//Now rotate to match the vehicle's angles.
+		            			Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(partialTicks));
+		                		GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
+		                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
+		                		GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
+		                		
+		                		//If the camera has an FOV override, apply it.
+		                		if(camera.fovOverride != 0){
+		                			if(currentFOV == 0){
+		                				currentFOV = MasterLoader.gameInterface.getFOV();
+		                			}
+		                			MasterLoader.gameInterface.setFOV(camera.fovOverride);
+		                		}
+		            			
+		            			//Return true to signal that we overrode the camera movement.
+		            			return true;
+		    				}else{
+		    					enableCustomCameras = false;
+		    					runningCustomCameras = false;
+		    					customCameraOverlay = null;
+		    					if(currentFOV != 0){
+		    						MasterLoader.gameInterface.setFOV(currentFOV);
+		    						currentFOV = 0;
 	                			}
-	                		}else{
-	                			totalRotation = camera.rot;
-	                		}
-	            			if(totalRotation != null){
-	            	    		GL11.glRotated(-camera.rot.y, 0, 1, 0);
-	            	    		GL11.glRotated(-camera.rot.x, 1, 0, 0);
-	            	    		GL11.glRotated(-camera.rot.z, 0, 0, 1);
-	            			}
-	            			
-	            			//Apply any rotations from rotation animations.
-	            			if(camera.animations != null){
-	            				for(VehicleAnimationDefinition animation : camera.animations){
-	            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-	            					if(animation.animationType.equals("rotation")){
-	            						if(animationValue != 0){
-	            							Point3d rotationAxis = animation.axis.copy().normalize();
-	                						if(animationValue != 0){
-	                							GL11.glTranslated(animation.centerPoint.x - camera.pos.x, animation.centerPoint.y - camera.pos.y, animation.centerPoint.z - camera.pos.z);
-	                							GL11.glRotated(animationValue, -rotationAxis.x, -rotationAxis.y, -rotationAxis.z);
-	                							GL11.glTranslated(-(animation.centerPoint.x - camera.pos.x), -(animation.centerPoint.y - camera.pos.y), -(animation.centerPoint.z - camera.pos.z));
-	                						}
-	            						}
-	            					}
-	            				}
-	            			}
-	                		
-	                		//Translate to the camera's position.
-	            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-	            			//We also need to take into account the part's position, if we are using one.
-	            			double playerPositionToEyeOffset = 0.87;
-	            			if(optionalPart != null){
-	            				GL11.glTranslated(-(optionalPart.totalOffset.x + camera.pos.x - riderLocation.x), -(optionalPart.totalOffset.y + camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(optionalPart.totalOffset.z + camera.pos.z - riderLocation.z));
-	            			}else{
-	            				GL11.glTranslated(-(camera.pos.x - riderLocation.x), -(camera.pos.y - playerPositionToEyeOffset - riderLocation.y), -(camera.pos.z - riderLocation.z));
-	            			}
-	            			
-	            			//Translate again to any camera animations.
-	            			if(camera.animations != null){
-	            				for(VehicleAnimationDefinition animation : camera.animations){
-	            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-	            					if(animation.animationType.equals("translation")){
-	            						if(animationValue != 0){
-	            							if(animation.animationType.equals("translation")){
-	                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
-	                    						GL11.glTranslated(-translationAmount.x, -translationAmount.y, -translationAmount.z);
-	                    					}
-	            						}
-	            					}
-	            				}
-	            			}
-	                		
-	            			//Now rotate to match the vehicle's angles.
-	            			Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(partialTicks));
-	                		GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
-	                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
-	                		GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
-	                		
-	                		//If the camera has an FOV override, apply it.
-	                		if(camera.fovOverride != 0){
-	                			if(currentFOV == 0){
-	                				currentFOV = MasterLoader.gameInterface.getFOV();
-	                			}
-	                			MasterLoader.gameInterface.setFOV(camera.fovOverride);
-	                		}
-	            			
-	            			//Return true to signal that we overrode the camera movement.
-	            			return true;
-	    				}else{
-	    					enableCustomCameras = false;
-	    					runningCustomCameras = false;
-	    					customCameraOverlay = null;
-	    					if(currentFOV != 0){
-	    						MasterLoader.gameInterface.setFOV(currentFOV);
-	    						currentFOV = 0;
-                			}
-	    				}
-	    			}else{
-		            	//Get yaw delta between entity and player from-180 to 180.
-		            	double playerYawDelta = (360 + (vehicle.angles.y - renderEntity.getHeadYaw())%360)%360;
-		            	if(playerYawDelta > 180){
-		            		playerYawDelta-=360;
-		            	}
-		            	
-		            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
-		            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*partialTicks;
-		            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*partialTicks;
-		            	while(pitchAngle > 180){pitchAngle -= 360;}
-		    			while(pitchAngle < -180){pitchAngle += 360;}
-		    			while(rollAngle > 180){rollAngle -= 360;}
-		    			while(rollAngle < -180){rollAngle += 360;}
-		            	
-		            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
-		            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
-		            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
-		            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
-		            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
-		            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
-	    			}
-	        	}else if(MasterLoader.gameInterface.inThirdPerson()){
-	        		//If we were running a custom camera, and hit the switch key, increment our camera index.
-	        		//We then go back to first-person to render the proper camera.
-	        		//If we weren't running a custom camera, try running one.  This will become active when we
-	        		//go back into first-oerson mode.
-	        		if(runningCustomCameras){
-	        			++customCameraIndex;
-	        			MasterLoader.gameInterface.toggleFirstPerson();
-	        		}else{
-	        			enableCustomCameras = true;
-	            		customCameraIndex = 0;
-	        		}
-	        		GL11.glTranslated(-riderLocation.x, 0F, -zoomLevel);
-	            }else{
-	            	//Assuming inverted third-person mode.
-	    			GL11.glTranslated(-riderLocation.x, 0F, zoomLevel);
+		    				}
+		    			}else{
+			            	//Get yaw delta between entity and player from-180 to 180.
+			            	double playerYawDelta = (360 + (vehicle.angles.y - renderEntity.getHeadYaw())%360)%360;
+			            	if(playerYawDelta > 180){
+			            		playerYawDelta-=360;
+			            	}
+			            	
+			            	//Get the angles from -180 to 180 for use by the component system for calculating roll and pitch angles.
+			            	double pitchAngle = vehicle.prevAngles.x + (vehicle.angles.x - vehicle.prevAngles.x)*partialTicks;
+			            	double rollAngle = vehicle.prevAngles.z + (vehicle.angles.z - vehicle.prevAngles.z)*partialTicks;
+			            	while(pitchAngle > 180){pitchAngle -= 360;}
+			    			while(pitchAngle < -180){pitchAngle += 360;}
+			    			while(rollAngle > 180){rollAngle -= 360;}
+			    			while(rollAngle < -180){rollAngle += 360;}
+			            	
+			            	//Get the component of the pitch and roll that should be applied based on the yaw delta.
+			            	//This is based on where the player is looking.  If the player is looking straight forwards, then we want 100% of the
+			            	//pitch to be applied as pitch.  But, if they are looking to the side, then we need to apply that as roll, not pitch.
+			            	double rollRollComponent = Math.cos(Math.toRadians(playerYawDelta))*rollAngle;
+			            	double pitchRollComponent = -Math.sin(Math.toRadians(playerYawDelta))*pitchAngle;
+			            	GL11.glRotated(rollRollComponent + pitchRollComponent, 0, 0, 1);
+		    			}
+		        	}else if(MasterLoader.gameInterface.inThirdPerson()){
+		        		//If we were running a custom camera, and hit the switch key, increment our camera index.
+		        		//We then go back to first-person to render the proper camera.
+		        		//If we weren't running a custom camera, try running one.  This will become active when we
+		        		//go back into first-oerson mode.
+		        		if(runningCustomCameras){
+		        			++customCameraIndex;
+		        			MasterLoader.gameInterface.toggleFirstPerson();
+		        		}else{
+		        			enableCustomCameras = true;
+		            		customCameraIndex = 0;
+		        		}
+		        		GL11.glTranslated(-seat.totalOffset.x, 0F, -zoomLevel);
+		            }else{
+		            	//Assuming inverted third-person mode.
+		    			GL11.glTranslated(-seat.totalOffset.x, 0F, zoomLevel);
+		    		}
 	    		}
     		}
 		}
