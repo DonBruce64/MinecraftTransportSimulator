@@ -188,8 +188,6 @@ public class VehicleGroundDeviceCollection{
 	 * 
 	 */
 	public double performPitchCorrection(double groundBoost){
-		//Get the offset and test boxes for this correction.
-		boolean invertedCheck = false;
 		double side1Delta = 0;
 		double side2Delta = 0;
 		double groundedSideOffset = 0;
@@ -278,7 +276,64 @@ public class VehicleGroundDeviceCollection{
 		}
 		side1Delta -= groundedSideOffset;
 		side2Delta -= groundedSideOffset;
-		
+		return adjustAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost, true);
+	}
+	
+	/**
+	 * Corrects roll for the GDBs, returning the amount of motion.y that the system had to apply to perform the correction.
+	 * This amount is determined by checking which GDBs are on the ground, and which are free. 
+	 * Angles are applied internally and then motion.y is added to level everything out.
+	 * If no GDBs are on the ground, 0 is returned.  If alternate GDBs are on the ground,
+	 * such as the front-left and rear-right, 0 is also returned, as there is no way to apply
+	 * rotation in this situation to make any others GDBs be on the ground without removing the ones currently on the ground.
+	 * 
+	 */
+	public double performRollCorrection(double groundBoost){
+		double side1Delta = 0;
+		double side2Delta = 0;
+		double groundedSideOffset = 0;
+		VehicleGroundDeviceBox testBox1 = null;
+		VehicleGroundDeviceBox testBox2 = null;
+		if(rearLeftGDB.isGrounded || frontLeftGDB.isGrounded){
+			if(!rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
+				side1Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
+				side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
+				if(rearLeftGDB.isGrounded && !frontRightGDB.isGrounded){
+					groundedSideOffset = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
+				}else if(!rearLeftGDB.isGrounded && frontLeftGDB.isGrounded){
+					groundedSideOffset = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
+				}else{
+					groundedSideOffset = -Math.max(Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x), Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x));
+				}
+				testBox1 = rearLeftGDB;
+				testBox2 = rearRightGDB;
+			}
+		}
+		if(rearRightGDB.isGrounded || frontRightGDB.isGrounded){
+			if(!rearLeftGDB.isGrounded && !frontLeftGDB.isGrounded){
+				side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
+				side2Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
+				if(rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
+					groundedSideOffset = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
+				}else if(!rearRightGDB.isGrounded && frontRightGDB.isGrounded){
+					groundedSideOffset = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
+				}else{
+					groundedSideOffset = Math.max(Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x), Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x));
+				}
+				testBox1 = frontLeftGDB;
+				testBox2 = frontRightGDB;
+			}
+		}
+		side1Delta -= groundedSideOffset;
+		side2Delta -= groundedSideOffset;
+		return adjustAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost, false);
+	}
+	
+	/**
+	 * Helper function to adjust angles in a common manner for pitch and roll calculations.
+	 * Returns the y-motion added to adjust the angles.
+	 */
+	private double adjustAngles(VehicleGroundDeviceBox testBox1, VehicleGroundDeviceBox testBox2, double side1Delta, double side2Delta, double groundedSideOffset, double groundBoost, boolean pitch){
 		//Only apply corrections if we have grounded offsets and the boxes are ready.
 		if((side1Delta != 0 || side2Delta != 0) && testBox1.isReady() && testBox2.isReady()){
 			//Now that we know we can rotate, get the angle required to put the boxes on the ground.
@@ -288,10 +343,14 @@ public class VehicleGroundDeviceCollection{
 			
 			//If we have negative motion.y, or our sign of our rotation matches the desired rotation of the vehicle apply it.
 			//We need to take into account the ground boost here, as we might have some fake motion.y from prior GDB collisions.
-			if((vehicle.motion.y - groundBoost*vehicle.SPEED_FACTOR <= 0 || testRotation*vehicle.rotation.x >= 0) && Math.abs(vehicle.angles.x + testRotation) < 85){
+			if((vehicle.motion.y - groundBoost*vehicle.SPEED_FACTOR <= 0 || testRotation*vehicle.rotation.x >= 0) && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
 				//Add rotation and motion, and check for box collisions.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
-				vehicle.rotation.x += testRotation;
+				if(pitch){
+					vehicle.rotation.x += testRotation;
+				}else{
+					vehicle.rotation.z += testRotation;
+				}
 				vehicle.motion.y += intialLinearMovement;
 				testBox1.updateCollisionStatuses(null);
 				testBox2.updateCollisionStatuses(null);
@@ -311,113 +370,39 @@ public class VehicleGroundDeviceCollection{
 				//If the angular correction is greater than our initial angle, don't change movement.
 				//This can happen if we rotate via an angle into a block.
 				if(Math.abs(angularCorrection) > Math.abs(testRotation) || Double.isNaN(angularCorrection)){
-					vehicle.rotation.x -= testRotation;
-					vehicle.motion.y -= intialLinearMovement;
-					return 0;
-				}else{
-					//Apply motions, rotations, re-calculate GDB states, and return applied motion.y for further processing.
-					linearCorrection = -intialLinearMovement*(angularCorrection/testRotation);
-					vehicle.rotation.x -= angularCorrection;
-					vehicle.motion.y += linearCorrection;
-					updateCollisions();
-					return intialLinearMovement + linearCorrection;
-				}
-			}
-		}
-		return 0;
-	}
-	
-	/**
-	 * Corrects roll for the GDBs, returning the amount of motion.y that the system had to apply to perform the correction.
-	 * This amount is determined by checking which GDBs are on the ground, and which are free. 
-	 * Angles are applied internally and then motion.y is added to level everything out.
-	 * If no GDBs are on the ground, 0 is returned.  If alternate GDBs are on the ground,
-	 * such as the front-left and rear-right, 0 is also returned, as there is no way to apply
-	 * rotation in this situation to make any others GDBs be on the ground without removing the ones currently on the ground.
-	 * 
-	 */
-	public double performRollCorrection(double groundBoost){
-		//Get the offset and test boxes for this correction.
-		double side1Delta = 0;
-		double side2Delta = 0;
-		double groundedSideOffset = 0;
-		VehicleGroundDeviceBox testBox1 = null;
-		VehicleGroundDeviceBox testBox2 = null;
-		if(rearRightGDB.isGrounded || frontRightGDB.isGrounded){
-			if(!rearLeftGDB.isGrounded && !frontLeftGDB.isGrounded){
-				side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
-				side2Delta = Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
-				if(rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
-					groundedSideOffset = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
-				}else if(!rearRightGDB.isGrounded && frontRightGDB.isGrounded){
-					groundedSideOffset = -Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
-				}else{
-					groundedSideOffset = -Math.max(Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x), Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x));
-				}
-				testBox1 = frontLeftGDB;
-				testBox2 = frontRightGDB;
-			}
-		}
-		if(rearLeftGDB.isGrounded || frontLeftGDB.isGrounded){
-			if(!rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
-				side1Delta = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
-				side2Delta = -Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
-				if(rearLeftGDB.isGrounded && !frontRightGDB.isGrounded){
-					groundedSideOffset = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
-				}else if(!rearLeftGDB.isGrounded && frontLeftGDB.isGrounded){
-					groundedSideOffset = Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
-				}else{
-					groundedSideOffset = Math.max(Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x), Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x));
-				}
-				testBox1 = rearLeftGDB;
-				testBox2 = rearRightGDB;
-			}
-		}
-		side1Delta -= groundedSideOffset;
-		side2Delta -= groundedSideOffset;
-		
-		//Only apply corrections if we have grounded offsets and the boxes are ready.
-		if((side1Delta != 0 || side2Delta != 0) && testBox1.isReady() && testBox2.isReady()){
-			//Now that we know we can rotate, get the angle required to put the boxes on the ground.
-			//We first try to rotate the boxes by the max angle defined by the linear movement, if this doesn't ground
-			//them, we return 0.  If it does ground them, then we inverse-calculate the exact angle required to ground them.
-			double testRotation = -Math.toDegrees(Math.asin(Math.min(MAX_LINEAR_MOVEMENT_PER_TICK/Math.max(side1Delta, side2Delta), 1)));
-			
-			//If we have negative motion.y, or our sign of our rotation matches the desired rotation of the vehicle apply it.
-			//We need to take into account the ground boost here, as we might have some fake motion.y from prior GDB collisions.
-			if(vehicle.motion.y - groundBoost*vehicle.SPEED_FACTOR <= 0 || testRotation*vehicle.rotation.z >= 0){
-				//Add rotation and motion, and check for box collisions.
-				double intialLinearMovement = -Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
-				vehicle.rotation.z += testRotation;
-				vehicle.motion.y += intialLinearMovement;
-				testBox1.updateCollisionStatuses(null);
-				testBox2.updateCollisionStatuses(null);
-				
-				//Check if we collided after this movement.  If so, we need to calculate how far we need to angle to prevent collision. 
-				double angularCorrection = 0;
-				double linearCorrection = 0;
-				if(testBox1.collisionDepth > 0){
-					angularCorrection = Math.toDegrees(Math.asin(testBox1.collisionDepth/side1Delta));
-				}
-				if(testBox2.collisionDepth > 0){
-					double angularCorrection2 = Math.toDegrees(Math.asin(testBox2.collisionDepth/side2Delta));
-					if(angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection){
-						angularCorrection = angularCorrection2;
+					if(pitch){
+						vehicle.rotation.x -= testRotation;
+					}else{
+						vehicle.rotation.z -= testRotation;
 					}
-				}
-				//If the angular correction is greater than our initial angle, don't change movement.
-				//This can happen if we rotate via an angle into a block.
-				if(Math.abs(angularCorrection) > Math.abs(testRotation) || Double.isNaN(angularCorrection)){
-					vehicle.rotation.z -= testRotation;
 					vehicle.motion.y -= intialLinearMovement;
 					return 0;
 				}else{
 					//Apply motions, rotations, re-calculate GDB states, and return applied motion.y for further processing.
-					linearCorrection = -intialLinearMovement*(-angularCorrection/testRotation);
-					vehicle.rotation.z += angularCorrection;
-					vehicle.motion.y += linearCorrection;
+					linearCorrection = intialLinearMovement*(angularCorrection/testRotation);
+					if(pitch){
+						vehicle.rotation.x -= angularCorrection;
+					}else{
+						vehicle.rotation.z -= angularCorrection;
+					}
+					vehicle.motion.y -= linearCorrection;
 					updateCollisions();
-					return intialLinearMovement + linearCorrection;
+					if(testBox1.isCollided || testBox2.isCollided){
+						//We have bad math here.  Likely due to tilting ground devices.
+						//Add only 5% of the rotation and just call it good.
+						double finalAngularMovement = (testRotation - angularCorrection)*0.05;
+						double finalLinearMovement = (intialLinearMovement - linearCorrection)*0.05;
+						if(pitch){
+							vehicle.rotation.x -= (testRotation - angularCorrection - finalAngularMovement);
+						}else{
+							vehicle.rotation.z -= (testRotation - angularCorrection - finalAngularMovement);
+						}
+						vehicle.motion.y -= (intialLinearMovement - linearCorrection - finalLinearMovement);
+						updateCollisions();
+						return finalLinearMovement;
+					}else{
+						return intialLinearMovement - linearCorrection;
+					}
 				}
 			}
 		}
