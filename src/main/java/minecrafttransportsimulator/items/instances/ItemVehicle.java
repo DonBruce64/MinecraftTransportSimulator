@@ -130,23 +130,27 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
 			//First boost Y based on collision boxes.
-			double minHeight = 0;
+			double furthestDownPoint = 0;
 			for(VehicleCollisionBox collisionBox : newVehicle.definition.collision){
-				minHeight = Math.min(collisionBox.pos.y - collisionBox.height/2F, minHeight);
+				furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
 			}
 			
 			//Next, boost based on parts.
 			for(APart part : newVehicle.parts){
-				minHeight = Math.min(part.placementOffset.y - part.getHeight()/2F, minHeight);
+				furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
 			}
+			
+			//Add on -0.1 blocks for the default collision clamping.
+			//This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
+			furthestDownPoint += -0.1;
 			
 			//Apply the boost, and check collisions.
 			//If the core collisions are colliding, set the vehicle as dead and abort.
 			//We need to update the boxes first, however, as they haven't been updated yet.
-			newVehicle.position.y += -minHeight;
+			newVehicle.position.y += -furthestDownPoint;
 			for(BoundingBox coreBox : newVehicle.blockCollisionBoxes){
 				coreBox.updateToEntity(newVehicle);
-				if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -minHeight, 0D))){
+				if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't be spawned.  Bail out.
 					player.sendPacket(new PacketPlayerChatMessage("interact.failure.nospace"));
 					return false;
