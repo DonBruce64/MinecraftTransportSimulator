@@ -233,6 +233,17 @@ public class RenderEventHandler{
 		        		GL11.glTranslated(-seat.totalOffset.x, 0F, -zoomLevel);
 		            }else{
 		            	//Assuming inverted third-person mode.
+		            	//If we get here, and don't have any custom cameras, stay here.
+		            	//If we do have custom cameras, use them instead.
+		            	if(vehicle.definition.rendering.cameraObjects != null){
+		            		MasterLoader.gameInterface.toggleFirstPerson();
+	    				}else{
+	    					for(APart part : vehicle.parts){
+	    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
+	    							MasterLoader.gameInterface.toggleFirstPerson();
+	    						}
+	    					}
+    					}
 		    			GL11.glTranslated(-seat.totalOffset.x, 0F, zoomLevel);
 		    		}
 	    		}
