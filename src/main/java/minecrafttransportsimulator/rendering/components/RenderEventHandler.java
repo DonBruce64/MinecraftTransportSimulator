@@ -273,18 +273,19 @@ public class RenderEventHandler{
 							if(tank != null){
 								String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
 								MasterLoader.guiInterface.drawBasicText(tankText, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
-								return null;
+								break;
 							}
 						}
 					}
 				}
 			}
+			currentGUI = null;
 		}else if(customCameraOverlay != null){
 			MasterLoader.renderInterface.bindTexture(customCameraOverlay);
 			MasterLoader.renderInterface.setBlendState(true, false);
 			MasterLoader.guiInterface.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
 			MasterLoader.renderInterface.setBlendState(false, false);
-    		return null;
+			currentGUI = null;
 		}else if(MasterLoader.gameInterface.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
 			if(ridingEntity instanceof EntityVehicleF_Physics){
 				for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
@@ -301,14 +302,15 @@ public class RenderEventHandler{
 							if(currentGUI == null){
 								currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);
 							}
-							return currentGUI; 
+							return currentGUI;
 						}
 					}
 				}
 			}
+			currentGUI = null;
 		}
     	
-    	//No HUD rendered, return null.
-    	return null;
+    	//Return the current GUI to render as an overlay.
+    	return currentGUI;
     }
 }
