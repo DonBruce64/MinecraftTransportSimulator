@@ -192,7 +192,12 @@ public final class PackParserSystem{
 							if(!structure.equals(PackStructure.MODULAR)){
 								//Need to trim the jsondefs folder to get correct sub-folder of jsondefs data.
 								//Modular structure does not have a jsondefs folder, so we don't need to trim it off for that.
-								assetPath = assetPath.substring("jsondefs/".length());
+								//If we aren't in a jsondefs folder, skip this entry.
+								if(assetPath.contains("jsondefs/")){
+									assetPath = assetPath.substring("jsondefs/".length());
+								}else{
+									continue;
+								}
 							}
 							
 							//Check to make sure json isn't an item JSON or our pack definition.
