@@ -3,13 +3,12 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
 	public final String subName;
 	
-	public AItemSubTyped(JSONDefinition definition, ItemClassification classification, String subName){
-		super(definition, classification);
+	public AItemSubTyped(JSONDefinition definition, String subName){
+		super(definition);
 		this.subName = subName;
 	}
 	

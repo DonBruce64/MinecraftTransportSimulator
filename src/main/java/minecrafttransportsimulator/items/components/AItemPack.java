@@ -16,12 +16,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AItemBase{
 	public static final String PACKID_SEPARATOR = ".";
 	public final JSONDefinition definition;
-	public final ItemClassification classification;
 	
-	public AItemPack(JSONDefinition definition, ItemClassification classification){
+	public AItemPack(JSONDefinition definition){
 		super();
 		this.definition = definition;
-		this.classification = classification;
 	}
 	
 	@Override

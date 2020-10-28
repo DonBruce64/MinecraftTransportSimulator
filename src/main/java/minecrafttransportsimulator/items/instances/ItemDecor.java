@@ -8,7 +8,6 @@ import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 
 /**Decor item.  Note that while this item can (and does) spawn decor blocks,
  * it can also spawn traffic signal controllers and fuel pumps depending on
@@ -20,7 +19,7 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassifica
 public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
 	
 	public ItemDecor(JSONDecor definition){
-		super(definition, ItemClassification.DECOR);
+		super(definition);
 	}
 	
 	@Override

@@ -414,7 +414,7 @@ public class GUIPartBench extends AGUIBase{
 	private boolean isItemValid(AItemPack<?> item){
 		if(decor.definition.general.items != null){
 			return decor.definition.general.items.contains(item.definition.packID + ":" + item.definition.systemName);
-		}else if(decor.definition.general.itemTypes.contains(item.classification.toString().toLowerCase())){
+		}else if(decor.definition.general.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
 			if(item.definition instanceof JSONPart && decor.definition.general.partTypes != null){
 				for(String partType : decor.definition.general.partTypes){
 					if(((JSONPart) item.definition).general.type.contains(partType)){

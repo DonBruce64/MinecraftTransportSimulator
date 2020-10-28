@@ -7,7 +7,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartCustom;
@@ -23,7 +22,7 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 	private final String partPrefix;
 	
 	public ItemPart(JSONPart definition, String subName){
-		super(definition, ItemClassification.PART, subName);
+		super(definition, subName);
 		if(definition.general.type.indexOf("_") != -1){
 			this.partPrefix = definition.general.type.substring(0, definition.general.type.indexOf("_"));
 		}else{

@@ -17,13 +17,13 @@ public final class PackResourceLoader{
     public static String getPackResource(AJSONItem<?> definition, ResourceType type, String name){
     	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
     		case DEFAULT : {
-    			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.prefixFolders + name + type.normalSuffix;
+    			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + name + type.normalSuffix;
     		}
     		case LAYERED : {
-    			return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.prefixFolders + name + type.normalSuffix;
+    			return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + definition.prefixFolders + name + type.normalSuffix;
     		}
     		case MODULAR : {
-    			return "/assets/" + definition.packID + "/" + definition.prefixFolders + name + type.modularSuffix;
+    			return "/assets/" + definition.packID + "/" + definition.classification.toDirectory() + definition.prefixFolders + name + type.modularSuffix;
     		}
     	}
     	return null;
@@ -68,6 +68,18 @@ public final class PackResourceLoader{
         		assetTypes.add(classification.name().toLowerCase());
         	}
         	return assetTypes;
+    	}
+    	
+    	public String toDirectory(){
+    		return this.name().toLowerCase() + "s/";
+    	}
+    	
+    	public static ItemClassification fromDirectory(String directory){
+    		try{
+    			return ItemClassification.valueOf(directory.substring(0, directory.length() - "s/".length()).toUpperCase());
+    		}catch(Exception e){
+    			throw new IllegalArgumentException("ERROR: Was told to get classification for directory: " + directory + " but none exists.  Contact the mod author!");
+    		}
     	}
     }
 }
