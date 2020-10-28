@@ -8,6 +8,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -128,7 +129,7 @@ public final class RenderInstrument{
 					if(!section.lightOverlay){
 						GL11.glDisable(GL11.GL_BLEND);
 						renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
-					}else if(lightsOn){
+					}else if(lightsOn && ConfigSystem.configObject.clientRendering.instBlending.value){
 						GL11.glEnable(GL11.GL_BLEND);
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 					    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);

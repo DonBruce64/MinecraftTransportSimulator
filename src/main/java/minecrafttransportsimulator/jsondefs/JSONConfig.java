@@ -151,10 +151,12 @@ public class JSONConfig{
 		public ConfigBoolean vehicleBeams = new ConfigBoolean(true, "If false, beams on vehicles will not render.");
 		public ConfigBoolean blockBeams = new ConfigBoolean(true, "If false, beams on blocks (decor) will not render.");
 		
-		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
+		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If false, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
 		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		
+		public ConfigBoolean instBlending = new ConfigBoolean(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  They will still have bright textures.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
 		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");
+		
 		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
 		
 		
