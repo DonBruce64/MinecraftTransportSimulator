@@ -651,6 +651,7 @@ public final class PackParserSystem{
     			if(vehicleDef.general.type.equals("plane") || vehicleDef.general.type.equals("blimp") || vehicleDef.general.type.equals("helicopter")){
     				vehicleDef.general.isAircraft = true;
     			}
+    			vehicleDef.general.type = null;
     		}
     		
     		if(vehicleDef.plane != null){
@@ -717,6 +718,12 @@ public final class PackParserSystem{
     				animation.clampMax = part.rotationClampMax;
     				animation.absolute = part.rotationAbsolute;
     				part.animations.add(animation);
+    				part.rotationVariable = null;
+    				part.rotationPosition = null;
+    				part.rotationAngles = null;
+    				part.rotationClampMin = 0;
+    				part.rotationClampMax = 0;
+    				part.rotationAbsolute = false;
     			}
     			if(part.translationVariable != null){
     				if(part.animations == null){
@@ -730,6 +737,11 @@ public final class PackParserSystem{
     				animation.clampMax = part.translationClampMax;
     				animation.absolute = part.translationAbsolute;
     				part.animations.add(animation);
+    				part.translationVariable = null;
+    				part.translationPosition = null;
+    				part.translationClampMin = 0;
+    				part.translationClampMax = 0;
+    				part.translationAbsolute = false;
     			}
     			for(byte i=0; i<part.types.size(); ++i){
     				String partName = part.types.get(i);

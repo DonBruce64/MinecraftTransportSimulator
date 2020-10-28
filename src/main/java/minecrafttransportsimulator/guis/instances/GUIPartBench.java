@@ -477,7 +477,6 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += MasterLoader.coreInterface.translate("gui.vehicle_bench.type") + ": " + String.valueOf(vehicleDefinition.general.type) + "\n";
 		totalInformation += MasterLoader.coreInterface.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
 		totalInformation += MasterLoader.coreInterface.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
 		totalInformation += MasterLoader.coreInterface.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";

@@ -170,7 +170,6 @@ gui.trafficsignalcontroller.yellowcrosstime=Time cross signal is Yellow:
 gui.trafficsignalcontroller.allredtime=Time all signals are Red:
 gui.trafficsignalcontroller.confirm=CONFIRM 
 
-gui.vehicle_bench.type=Type
 gui.vehicle_bench.weight=Weight (kg)
 gui.vehicle_bench.fuel=Fuel Cap. (mb)
 gui.vehicle_bench.controllers=Drivers/Pilots

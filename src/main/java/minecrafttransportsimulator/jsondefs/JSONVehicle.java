@@ -24,6 +24,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public boolean isBlimp;
     	public boolean openTop;
     	public int emptyMass;
+    	@Deprecated
     	public String type;
     }
     
@@ -100,6 +101,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public List<VehiclePart> additionalParts;
         public List<String> linkedDoors;
         public String defaultPart;
+        @Deprecated
         public String linkedDoor;
         
         //Animation variables.
