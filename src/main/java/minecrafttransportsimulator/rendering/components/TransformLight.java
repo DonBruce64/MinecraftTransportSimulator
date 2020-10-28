@@ -274,16 +274,18 @@ public class TransformLight extends ATransformRenderable{
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
 		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
-		for(int i=0; i<centerPoints.length; ++i){
-			GL11.glPushMatrix();
-			//Translate light to the center of the cone beam.
-			GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);
-			//Rotate beam to the normal face.
-			GL11.glRotatef((float) Math.toDegrees(Math.atan2(vertices[i*6][6], vertices[i*6][5])), 0, 0, 1);
-			GL11.glRotatef((float) Math.toDegrees(Math.acos(vertices[i*6][7])), 0, 1, 0);
-			//Now draw the beam
-			drawLightCone(size[i]);
-			GL11.glPopMatrix();
+		for(byte pass=0; pass<=1; ++pass){
+			for(int i=0; i<centerPoints.length; ++i){
+				GL11.glPushMatrix();
+				//Translate light to the center of the cone beam.
+				GL11.glTranslated(centerPoints[i].x - vertices[i*6][5]*0.15F, centerPoints[i].y - vertices[i*6][6]*0.15F, centerPoints[i].z - vertices[i*6][7]*0.15F);
+				//Rotate beam to the normal face.
+				GL11.glRotatef((float) Math.toDegrees(Math.atan2(vertices[i*6][6], vertices[i*6][5])), 0, 0, 1);
+				GL11.glRotatef((float) Math.toDegrees(Math.acos(vertices[i*6][7])), 0, 1, 0);
+				//Now draw the beam
+				drawLightCone(size[i]);
+				GL11.glPopMatrix();
+			}
 		}
 	}
 	
