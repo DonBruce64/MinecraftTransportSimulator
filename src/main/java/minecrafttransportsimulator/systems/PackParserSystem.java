@@ -133,12 +133,16 @@ public final class PackParserSystem{
     		//If we don't have any of the activating sets, don't load the pack. 
     		if(packDef.activators != null){
     			for(String subDirectory : packDef.activators.keySet()){
-	    			for(String activator : packDef.activators.get(subDirectory)){
-	    				if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
-	    					validSubDirectories.add(subDirectory);
-    						break;
-    					}
-	    			}
+    				if(!packDef.activators.get(subDirectory).isEmpty()){
+    					for(String activator : packDef.activators.get(subDirectory)){
+    	    				if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
+    	    					validSubDirectories.add(subDirectory);
+        						break;
+        					}
+    	    			}
+    				}else{
+    					validSubDirectories.add(subDirectory);
+    				}
     			}
     		}else{
     			validSubDirectories.add("");
