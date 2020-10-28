@@ -63,7 +63,7 @@ public final class VehicleAnimationSystem{
 				case("propeller"): partClass = PartPropeller.class; break;
 				case("ground"): partClass = PartGroundDevice.class; break;
 				
-				default: if(ConfigSystem.configObject.client.devMode.value){
+				default: if(ConfigSystem.configObject.clientControls.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
 				}else{
 					//Don't crash if we have a fault here.  It could be that we have an old pack that has a bad name.

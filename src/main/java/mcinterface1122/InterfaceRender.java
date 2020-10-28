@@ -434,7 +434,7 @@ class InterfaceRender implements IInterfaceRender{
 				//Also translate down if we are a half-HUD.
 				GL11.glPushMatrix();
         		GL11.glTranslated(0, 0, 250);
-        		if(currentGUI.gui instanceof GUIHUD && (MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.fullHUD_1P.value : !ConfigSystem.configObject.client.fullHUD_3P.value)){
+        		if(currentGUI.gui instanceof GUIHUD && (MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
         			GL11.glTranslated(0, currentGUI.gui.getHeight()/2D, 0);
         		}
         		

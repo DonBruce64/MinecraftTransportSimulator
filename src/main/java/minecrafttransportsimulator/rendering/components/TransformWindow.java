@@ -22,7 +22,7 @@ public class TransformWindow extends ATransformRenderable{
 	
 	@Override
 	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
-		return ConfigSystem.configObject.client.renderWindows.value;
+		return ConfigSystem.configObject.clientRendering.renderWindows.value;
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class TransformWindow extends ATransformRenderable{
 	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Render inner windows, if set.
-			if(ConfigSystem.configObject.client.innerWindows.value){
+			if(ConfigSystem.configObject.clientRendering.innerWindows.value){
 				GL11.glBegin(GL11.GL_TRIANGLES);
 				for(int j=vertices.length - 1; j>=0; --j){
 					GL11.glTexCoord2f(vertices[j][3], vertices[j][4]);

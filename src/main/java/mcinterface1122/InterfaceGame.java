@@ -98,10 +98,10 @@ class InterfaceGame implements IInterfaceGame{
             			//If the player is above the configured renderReductionHeight, reduce render.
             			//Once the player drops 10 blocks below it, put the render back to the value it was before.
             			//We don't want to set this every tick as it'll confuse the server.
-        	    		if(event.player.posY > ConfigSystem.configObject.client.renderReductionHeight.value && currentRenderDistance != 1){
+        	    		if(event.player.posY > ConfigSystem.configObject.clientRendering.renderReductionHeight.value && currentRenderDistance != 1){
         	    			currentRenderDistance = 1;
         	    			serverWorld.getPlayerChunkMap().setPlayerViewRadius(1);
-        	    		}else if(event.player.posY < ConfigSystem.configObject.client.renderReductionHeight.value - 10 && currentRenderDistance == 1){
+        	    		}else if(event.player.posY < ConfigSystem.configObject.clientRendering.renderReductionHeight.value - 10 && currentRenderDistance == 1){
         	    			currentRenderDistance = defaultRenderDistance;
         	    			serverWorld.getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
         	    		}

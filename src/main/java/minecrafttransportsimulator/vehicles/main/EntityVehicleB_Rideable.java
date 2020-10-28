@@ -88,7 +88,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !MasterLoader.gameInterface.isChatOpen() && rider.equals(MasterLoader.gameInterface.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			MasterLoader.inputInterface.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.client.mouseYoke.value && lockCameraToMovement));
+    			MasterLoader.inputInterface.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.

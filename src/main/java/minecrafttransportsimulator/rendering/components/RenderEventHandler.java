@@ -297,7 +297,7 @@ public class RenderEventHandler{
 			MasterLoader.guiInterface.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
 			MasterLoader.renderInterface.setBlendState(false, false);
 			currentGUI = null;
-		}else if(MasterLoader.gameInterface.inFirstPerson() ? ConfigSystem.configObject.client.renderHUD_1P.value : ConfigSystem.configObject.client.renderHUD_3P.value){
+		}else if(MasterLoader.gameInterface.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value){
 			if(ridingEntity instanceof EntityVehicleF_Physics){
 				for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
 					if(rider.equals(player)){

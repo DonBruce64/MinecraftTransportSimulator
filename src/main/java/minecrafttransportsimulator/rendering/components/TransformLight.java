@@ -126,7 +126,7 @@ public class TransformLight extends ATransformRenderable{
 		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
 		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness, ConfigSystem.configObject.client.vehicleBeams.value);
+		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness, ConfigSystem.configObject.clientRendering.vehicleBeams.value);
 	}
 	
 	
@@ -134,7 +134,7 @@ public class TransformLight extends ATransformRenderable{
 	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
 	 */
 	public void renderOnBlock(IWrapperWorld world, Point3i location, boolean lightActive){
-		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), ConfigSystem.configObject.client.blockBeams.value);
+		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), ConfigSystem.configObject.clientRendering.blockBeams.value);
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class TransformLight extends ATransformRenderable{
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.client.lightsPass0.value ? MasterLoader.renderInterface.getRenderPass() != 1 : MasterLoader.renderInterface.getRenderPass() != 0); 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsPass0.value ? MasterLoader.renderInterface.getRenderPass() != 1 : MasterLoader.renderInterface.getRenderPass() != 0); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
@@ -244,7 +244,7 @@ public class TransformLight extends ATransformRenderable{
 	private void renderFlare(float alphaValue){
 		MasterLoader.renderInterface.bindTexture("mts:textures/rendering/lensflare.png");
 		MasterLoader.renderInterface.setLightingState(false);
-		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.flareBlending.value);
+		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.clientRendering.flareBlending.value);
 		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(int i=0; i<centerPoints.length; ++i){
@@ -269,7 +269,7 @@ public class TransformLight extends ATransformRenderable{
 	private void renderBeam(float alphaValue){
 		MasterLoader.renderInterface.bindTexture("mts:textures/rendering/lightbeam.png");
 		MasterLoader.renderInterface.setLightingState(false);
-		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.client.beamBlending.value);
+		MasterLoader.renderInterface.setBlendState(true, ConfigSystem.configObject.clientRendering.beamBlending.value);
 		MasterLoader.renderInterface.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.

@@ -39,7 +39,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	public boolean renderBackground(){
-		return MasterLoader.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.client.transpHUD_1P.value : !ConfigSystem.configObject.client.transpHUD_3P.value;
+		return MasterLoader.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.transpHUD_1P.value : !ConfigSystem.configObject.clientRendering.transpHUD_3P.value;
 	}
 	
 	@Override

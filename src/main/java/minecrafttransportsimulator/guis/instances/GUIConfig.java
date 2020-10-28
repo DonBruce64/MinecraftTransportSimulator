@@ -21,12 +21,15 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic
 
 public class GUIConfig extends AGUIBase{
 	//Global variables.
-	private GUIComponentButton configScreenButton;
+	private GUIComponentButton renderConfigScreenButton;
+	private GUIComponentButton controlConfigScreenButton;
 	private GUIComponentButton controlScreenButton;
 	
 	//Config variables.
 	private boolean configuringControls = true;
-	private Map<GUIComponentButton, ConfigBoolean> configButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
+	private boolean configuringRendering = false;
+	private Map<GUIComponentButton, ConfigBoolean> renderConfigButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
+	private Map<GUIComponentButton, ConfigBoolean> controlConfigButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
 	
 	//Keybind selection variables.
 	private String vehicleConfiguring = "";
@@ -79,9 +82,10 @@ public class GUIConfig extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		//Global header buttons.
-		addButton(configScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 128, MasterLoader.coreInterface.translate("gui.config.header.config")){
+		addButton(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.config.rendering")){
 			public void onClicked(){
-				configuringControls = false; 
+				configuringControls = false;
+				configuringRendering = true;
 				vehicleConfiguring = "";
 				selectedJoystick = null;
 				scrollSpot = 0;
@@ -89,41 +93,25 @@ public class GUIConfig extends AGUIBase{
 				calibrating = false;
 			}
 		});
-		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 128, guiTop - 20, 128, MasterLoader.coreInterface.translate("gui.config.header.controls")){public void onClicked(){configuringControls = true;}});
-		
+		addButton(controlConfigScreenButton = new GUIComponentButton(guiLeft + 85, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.config.controls")){
+			public void onClicked(){
+				configuringControls = false;
+				configuringRendering = false; 
+				vehicleConfiguring = "";
+				selectedJoystick = null;
+				scrollSpot = 0;
+				joystickComponentId = -1;
+				calibrating = false;
+			}
+		});
+		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 171, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.controls")){public void onClicked(){configuringControls = true;}});
 		
 		
 		//Config buttons and text.
-		configButtons.clear();
-		for(Field field : ConfigSystem.configObject.client.getClass().getFields()){
-			if(field.getType().equals(ConfigBoolean.class)){
-				try{
-					ConfigBoolean config = (ConfigBoolean) field.get(ConfigSystem.configObject.client);
-					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(config.value), 16, true){
-						@Override
-						public void onClicked(){
-							configButtons.get(this).value = !Boolean.valueOf(text);
-							ConfigSystem.saveToDisk();
-							text = String.valueOf(configButtons.get(this).value);
-						}
-						
-						@Override
-						public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
-							if(visible){
-								if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-									MasterLoader.guiInterface.drawGenericTooltip(gui, mouseX, mouseY, config.comment);
-								}
-							}
-						}
-					};
-					addButton(button);
-					configButtons.put(button, config);
-					addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
-				}catch(Exception e){
-					//How the heck does this even happen?
-				}
-			}
-		}
+		//We have two sets here.  One for rendering, one for controls.
+		populateConfigButtonList(guiLeft, guiTop, renderConfigButtons, ConfigSystem.configObject.clientRendering);
+		populateConfigButtonList(guiLeft, guiTop, controlConfigButtons, ConfigSystem.configObject.clientControls);
+		
 		
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
@@ -235,8 +223,8 @@ public class GUIConfig extends AGUIBase{
 		}
 		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, "/\\"){public void onClicked(){scrollSpot -= 9;}});
 		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, "\\/"){public void onClicked(){scrollSpot += 9;}});
-		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){public void onClicked(){ConfigSystem.configObject.client.joystickDeadZone.value = ((ConfigSystem.configObject.client.joystickDeadZone.value*100 - 1)/100F);}});
-		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){public void onClicked(){ConfigSystem.configObject.client.joystickDeadZone.value = ((ConfigSystem.configObject.client.joystickDeadZone.value*100 + 1)/100F);}});
+		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 - 1)/100F);}});
+		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 + 1)/100F);}});
 		addTextBox(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 		
 		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+20, Color.BLACK, MasterLoader.coreInterface.translate("gui.config.joystick.mapping")).setButton(componentListUpButton));
@@ -341,16 +329,18 @@ public class GUIConfig extends AGUIBase{
 	@Override
 	public void setStates(){
 		//Global headers are just toggles depending on operation.
-		configScreenButton.enabled = configuringControls;
-		controlScreenButton.enabled = !configScreenButton.enabled;
+		renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);
+		controlConfigScreenButton.enabled = configuringControls || (!configuringControls && configuringRendering);
+		controlScreenButton.enabled = !configuringControls;
 		
 		
-		
-		//If we are not configuring controls, render the config buttons and labels.
-		for(GUIComponentButton button : configButtons.keySet()){
-			button.visible = !configuringControls;
+		//If we are not configuring controls, render the appropriate config buttons and labels.
+		for(GUIComponentButton button : renderConfigButtons.keySet()){
+			button.visible = !renderConfigScreenButton.enabled;
 		}
-		
+		for(GUIComponentButton button : controlConfigButtons.keySet()){
+			button.visible = !controlConfigScreenButton.enabled;
+		}
 		
 		
 		//If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
@@ -418,10 +408,10 @@ public class GUIConfig extends AGUIBase{
 		if(onComponentSelectScreen){
 			componentListUpButton.enabled = scrollSpot - 9 >= 0;
 			componentListDownButton.enabled = scrollSpot + 9 < MasterLoader.inputInterface.getJoystickInputCount(selectedJoystick);
-			deadzone_lessButton.enabled = ConfigSystem.configObject.client.joystickDeadZone.value > 0;
-			deadzone_moreButton.enabled = ConfigSystem.configObject.client.joystickDeadZone.value < 1;
+			deadzone_lessButton.enabled = ConfigSystem.configObject.clientControls.joystickDeadZone.value > 0;
+			deadzone_moreButton.enabled = ConfigSystem.configObject.clientControls.joystickDeadZone.value < 1;
 			deadzone_text.enabled = false;
-			deadzone_text.setText(MasterLoader.coreInterface.translate("gui.config.joystick.deadzone") + " " + String.valueOf(ConfigSystem.configObject.client.joystickDeadZone.value));
+			deadzone_text.setText(MasterLoader.coreInterface.translate("gui.config.joystick.deadzone") + " " + String.valueOf(ConfigSystem.configObject.clientControls.joystickDeadZone.value));
 		}
 		
 		
@@ -466,6 +456,39 @@ public class GUIConfig extends AGUIBase{
 		}
 	}
 	
+	private void populateConfigButtonList(int guiLeft, int guiTop, Map<GUIComponentButton, ConfigBoolean> configButtons, Object configObject){
+		configButtons.clear();
+		for(Field field : configObject.getClass().getFields()){
+			if(field.getType().equals(ConfigBoolean.class)){
+				try{
+					ConfigBoolean config = (ConfigBoolean) field.get(configObject);
+					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(config.value), 16, true){
+						@Override
+						public void onClicked(){
+							configButtons.get(this).value = !Boolean.valueOf(text);
+							ConfigSystem.saveToDisk();
+							text = String.valueOf(configButtons.get(this).value);
+						}
+						
+						@Override
+						public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
+							if(visible){
+								if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
+									MasterLoader.guiInterface.drawGenericTooltip(gui, mouseX, mouseY, config.comment);
+								}
+							}
+						}
+					};
+					addButton(button);
+					configButtons.put(button, config);
+					addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
+				}catch(Exception e){
+					//How the heck does this even happen?
+				}
+			}
+		}
+	}
+	
 	
 	/**Custom button class.  We use this here to render the state of the joystick polled
 	 * on top of the button after after we render the button.
@@ -494,7 +517,7 @@ public class GUIConfig extends AGUIBase{
 				float pollData = MasterLoader.inputInterface.getJoystickInputValue(selectedJoystick, buttonIndex+scrollSpot);
 				if(MasterLoader.inputInterface.isJoystickInputAnalog(selectedJoystick, buttonIndex+scrollSpot)){
 					MasterLoader.guiInterface.renderRectangle(x + 85, y + 2, 40, height - 4, Color.BLACK);
-					if(Math.abs(pollData) > ConfigSystem.configObject.client.joystickDeadZone.value){
+					if(Math.abs(pollData) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
 						MasterLoader.guiInterface.renderRectangle(x + 85 + 20, y + 2, (int) (pollData*20), height - 4, Color.RED);
 					}
 				}else{

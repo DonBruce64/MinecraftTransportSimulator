@@ -21,7 +21,8 @@ public class JSONConfig{
 	public ConfigGeneral general = new ConfigGeneral();
 	public ConfigDamage damage = new ConfigDamage();
 	public ConfigFuel fuel = new ConfigFuel();
-	public ConfigClient client = new ConfigClient();
+	public ConfigClientRendering clientRendering = new ConfigClientRendering();
+	public ConfigClientControls clientControls = new ConfigClientControls();
 	public ConfigControls controls = new ConfigControls();
 	
 	public static class ConfigGeneral{
@@ -134,13 +135,7 @@ public class JSONConfig{
 		}
 	}
 	
-	public static class ConfigClient{
-		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
-		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
-		
-		public ConfigBoolean simpleThrottle = new ConfigBoolean(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.  Incompatible with joysticks.");
-		public ConfigBoolean autostartEng = new ConfigBoolean(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel system.");
-		
+	public static class ConfigClientRendering{
 		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
 		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
 		
@@ -159,14 +154,26 @@ public class JSONConfig{
 		public ConfigBoolean flareBlending = new ConfigBoolean(false, "If true, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
 		public ConfigBoolean beamBlending = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		
-		public ConfigBoolean beamRender = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		public ConfigBoolean lightsPass0 = new ConfigBoolean(false, "If true, light rendering (and possibly blending) will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true to get proper light blending with shaders.");
-		
 		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
-		public ConfigBoolean devMode = new ConfigBoolean(false, "If enabled, MTS will re-load all resources every time the config key (P) is pressed.  This includes textures for vehicles and parts, JSON files, and OBJ models.  This is intended for use in pack creation with pack components being placed in an un-zipped resource pack.  Note that every re-load will also re-load EVERY resource, not just MTS resources.  Make sure not to have lots of mods installed when you are doing this!");
+		
 		
 		
 		public ConfigInteger renderReductionHeight = new ConfigInteger(250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  This provides a significant speedup for worldgen and render lag.  Note that this is only active on Singleplayer.");
+	}
+	
+	public static class ConfigClientControls{
+		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
+		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		
+		public ConfigBoolean simpleThrottle = new ConfigBoolean(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.  Incompatible with joysticks.");
+		public ConfigBoolean halfThrottle = new ConfigBoolean(false, "If true, then the gas key will only be a half-throttle, with the MOD+Throttle key becoming the full-speed control.  Useful if you want a more controlled vehicle experience.  Only valid on car/boat types with on-off throttles, and does not work in conjunction with simpleThrottle as that changes how the MOD key works with gas and brake keys.");
+		
+		public ConfigBoolean autostartEng = new ConfigBoolean(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel system.");
+		public ConfigBoolean autoTrnSignals = new ConfigBoolean(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
+		
+		public ConfigBoolean devMode = new ConfigBoolean(false, "If enabled, MTS will re-load all resources every time the config key (P) is pressed.  This includes textures for vehicles and parts, JSON files, and OBJ models.  This is intended for use in pack creation with pack components being placed in an un-zipped resource pack.  Note that every re-load will also re-load EVERY resource, not just MTS resources.  Make sure not to have lots of mods installed when you are doing this!");
+		
 		public ConfigInteger controlSurfaceCooldown = new ConfigInteger(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
 		public ConfigInteger steeringIncrement = new ConfigInteger(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
 		public ConfigInteger flightIncrement = new ConfigInteger(6, "How many units (1/10 of a degree) to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");

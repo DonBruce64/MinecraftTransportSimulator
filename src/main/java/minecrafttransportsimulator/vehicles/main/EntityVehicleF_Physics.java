@@ -53,13 +53,13 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	//External state control.
 	public boolean autopilot;
 	public boolean cruiseControl;
+	public boolean turningLeft;
+	public boolean turningRight;
+	public byte turningCooldown;
 	public double cruiseControlSpeed;
 	
 	//Internal states.
 	private boolean updateThisCycle;
-	private boolean turningLeft;
-	private boolean turningRight;
-	private byte turningCooldown;
 	private double pitchDirectionFactor;
 	private double currentWingArea;
 	public double trackAngle;
@@ -123,30 +123,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		
 		//Do movement and all other updates.
 		super.update();
-		
-		//Change turn signal status depending on turning status.
-		//Keep signals on until we have been moving without turning in the
-		//pressed direction for 2 seconds, or if we turn in the other direction.
-		if(rudderAngle < -200){
-			turningLeft = true;
-			turningCooldown = 40;
-			lightsOn.add(LightType.LEFTTURNLIGHT);
-		}else if(rudderAngle > 200){
-			turningRight = true;
-			turningCooldown = 40;
-			lightsOn.add(LightType.RIGHTTURNLIGHT);
-		}
-		if(turningLeft && (rudderAngle > 0 || turningCooldown == 0)){
-			turningLeft = false;
-			lightsOn.remove(LightType.LEFTTURNLIGHT);
-		}
-		if(turningRight && (rudderAngle < 0 || turningCooldown == 0)){
-			turningRight = false;
-			lightsOn.remove(LightType.RIGHTTURNLIGHT);
-		}
-		if(velocity != 0 && turningCooldown > 0 && rudderAngle == 0){
-			--turningCooldown;
-		}
 		
 		//Turn on brake lights and indicator lights.
 		if(brakeOn){

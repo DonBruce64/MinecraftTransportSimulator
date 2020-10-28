@@ -229,7 +229,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
-			if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
+			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
 				if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
@@ -247,7 +247,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
-		if(world.isClient() && ConfigSystem.configObject.client.autostartEng.value){
+		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
 			if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 				for(PartEngine engine : engines.values()){
 					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
@@ -261,7 +261,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean isLitUp(){
-		return ConfigSystem.configObject.client.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMELIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMELIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
 	}
 	
 	 /**

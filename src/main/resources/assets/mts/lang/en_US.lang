@@ -208,7 +208,8 @@ gui.instruments.clear=CLEAR
 gui.instruments.idle=Select an instrument.
 gui.instruments.decide=Click an instrument to add, or CLEAR to remove.
 
-gui.config.header.config=CONFIG
+gui.config.header.config.rendering=RENDERING
+gui.config.header.config.controls=CONFIG
 gui.config.header.controls=CONTROLS
 gui.config.controls.title=Chose a configuration to change:
 gui.config.controls.aircraft.keyboard=AIRCRAFT KEYBOARD
