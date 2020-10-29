@@ -6,6 +6,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+
 public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartEngine engine;
     public JSONPartGroundDevice ground;
@@ -99,12 +101,17 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public int fireDelay;
     	public int reloadTime;
     	public int muzzleVelocity;
+    	public List<MuzzleObject> muzzleObjects;
     	public float minPitch;
     	public float maxPitch;
     	public float minYaw;
     	public float maxYaw;
     	public float diameter;
     	public float length;
+    	
+    	public class MuzzleObject{
+    		public Point3d pos;
+    	}
     }
     
     public class JSONPartBullet{
