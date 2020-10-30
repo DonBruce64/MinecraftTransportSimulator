@@ -29,7 +29,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
 	private ItemPart loadedBullet;
-	private boolean uniqueMuzzles;
 	
 	//These variables are used during firing and will be reset on entity loading.
 	public boolean firing;
@@ -48,7 +47,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.currentOrientation = data.getPoint3d("currentOrientation");
 		this.prevOrientation = currentOrientation.copy();
-		this.uniqueMuzzles = (definition.gun.muzzleObjects != null) && definition.gun.muzzleObjects.size() == definition.gun.capacity;
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -405,11 +403,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		if (definition.gun.muzzleObjects != null) {
 			//If muzzle count is the same as capacity, use the muzzles in order
 			//Otherwise, iterate through the available muzzles
-			int muzzleIndex = this.uniqueMuzzles ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzleObjects.size();
-			MuzzleObject currentMuzzle = definition.gun.muzzleObjects.get(muzzleIndex);
-			if(currentMuzzle != null) {
-				return currentMuzzle.pos.copy();
-			}
+			int muzzleIndex = definition.gun.muzzleObjects.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzleObjects.size();
+			return definition.gun.muzzleObjects.get(muzzleIndex).pos.copy();
 		}
 		
 		//If no muzzleObjects are defined, determine firing position from gun length
