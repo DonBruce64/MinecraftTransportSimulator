@@ -218,9 +218,9 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Check the mouse to see if it updated and we need to change items.
 		int wheelMovement = MasterLoader.inputInterface.getTrackedMouseWheel();
-		if(wheelMovement > 0 && nextPartButton.enabled){
+		if(wheelMovement < 0 && nextPartButton.enabled){
 			nextPartButton.onClicked();
-		}else if(wheelMovement < 0 && prevPartButton.enabled){
+		}else if(wheelMovement > 0 && prevPartButton.enabled){
 			prevPartButton.onClicked();
 		}
 	}

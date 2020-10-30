@@ -122,9 +122,9 @@ public class GUIBooklet extends AGUIBase{
 		
 		//Check the mouse to see if it updated and we need to change pages.
 		int wheelMovement = MasterLoader.inputInterface.getTrackedMouseWheel();
-		if(wheelMovement > 0 && rightButton.visible){
+		if(wheelMovement < 0 && rightButton.visible){
 			++booklet.pageNumber;
-		}else if(wheelMovement < 0 && leftButton.visible){
+		}else if(wheelMovement > 0 && leftButton.visible){
 			--booklet.pageNumber;
 		}
 		
