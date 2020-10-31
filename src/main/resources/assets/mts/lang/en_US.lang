@@ -321,10 +321,14 @@ info.item.jerrycan.fill=Fill can by right-clicking a fuel pump.
 info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
+info.item.paintgun.use=Use on a vehicle to change its color.
 info.item.ticket.line1=Right-click on a vehicle to load nearby entities.
 info.item.ticket.line2=Sneak-click on a vehicle to unload all entities.
 info.item.ticket.line3=Note: Will not unload players.
-info.item.paintgun.use=Use on a vehicle to change its color.
+info.item.y2kbutton.line1=Use in a world to turn off all vehicle engines.
+info.item.y2kbutton.line2=This will also turn off all of their lights,
+info.item.y2kbutton.line3=as well as engaging their parking brakes.
+info.item.y2kbutton.line4=Only usable by admins.
 
 item.wrench.name=Wrench
 item.partscanner.name=Part Scanner
@@ -332,8 +336,9 @@ item.key.name=Key
 item.fuelhose.name=Fuel Hose
 item.jumpercable.name=Jumper Cables
 item.jerrycan.name=Jerrycan
-item.ticket.name=Ticket
 item.paintgun.name=Paint Gun
+item.ticket.name=Ticket
+item.y2kbutton.name=Y2K Button
 
 tile.vehiclebench.name=Drafting Table (Vehicles)
 tile.propellerbench.name=Propeller Bench

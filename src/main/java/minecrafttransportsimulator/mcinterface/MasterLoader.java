@@ -12,6 +12,7 @@ import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
+import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
@@ -89,6 +90,7 @@ public class MasterLoader{
 		MasterInterface.createItem(new ItemJerrycan());
 		MasterInterface.createItem(new ItemPaintGun());
 		MasterInterface.createItem(new ItemTicket());
+		MasterInterface.createItem(new ItemY2KButton());
 		
 		//Manually create the internal core mod pack items.
 		//These need to be created before we do checks for block registration.
