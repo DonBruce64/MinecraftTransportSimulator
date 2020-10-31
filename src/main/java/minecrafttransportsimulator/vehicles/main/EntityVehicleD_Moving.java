@@ -270,8 +270,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			double turningDistance = 0;
 			//Check grounded ground devices for turn contributions.
 			//Their distance from the center of the vehicle defines our turn arc.
+			//Don't use fake ground devices here as it'll mess up math for vehicles.
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-				if(groundDevice.vehicleDefinition.turnsWithSteer){
+				if(groundDevice.vehicleDefinition.turnsWithSteer && !groundDevice.isFake()){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 				}
 			}
