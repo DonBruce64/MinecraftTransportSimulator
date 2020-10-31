@@ -609,23 +609,27 @@ public final class PackParserSystem{
 	    					subPartDef.types.set(i, "ground_" + subPartName);
 	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
 	    					subPartDef.types.set(i, "interactable_" + subPartName);
+	    					subPartDef.minValue = 0;
+	    					subPartDef.maxValue = 1;
 	    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
 	    					subPartDef.types.set(i, "effector_" + subPartName);
 	    				}
 	    				//If we have additional parts, check those too.
 	    				if(subPartDef.additionalParts != null){
-	    					for(VehiclePart additionalPart : subPartDef.additionalParts){
-		    					for(byte j=0; j<additionalPart.types.size(); ++j){
-		    	    				subPartName = additionalPart.types.get(j);
-		    	    				if(subPartName.equals("wheel") || subPartName.equals("skid") || subPartName.equals("pontoon") || subPartName.equals("tread")){
-		    	    					if(subPartName.equals("tread")){
-		    	    						additionalPart.turnsWithSteer = true;
+	    					for(VehiclePart additionalPartDef : subPartDef.additionalParts){
+		    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
+		    	    				String additionalPartName = additionalPartDef.types.get(j);
+		    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
+		    	    					if(additionalPartName.equals("tread")){
+		    	    						additionalPartDef.turnsWithSteer = true;
 		    	    					}
-		    	    					additionalPart.types.set(j, "ground_" + subPartName);
-		    	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
-		    	    					subPartDef.types.set(i, "interactable_" + subPartName);
-		    	    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
-		    	    					subPartDef.types.set(i, "effector_" + subPartName);
+		    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
+		    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
+		    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
+		    	    					additionalPartDef.minValue = 0;
+		    	    					additionalPartDef.maxValue = 1;
+		    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
+		    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
 		    	    				}
 		    	    			}
 	    					}
@@ -689,90 +693,94 @@ public final class PackParserSystem{
     		//Check all part slots for ground device names and update them.
     		//Also check if we define an additional part, and make it a list instead.
     		//Finally, switch all crates and barrels to effectors with the appropriate type.
-    		for(VehiclePart part : vehicleDef.parts){
-    			if(part.additionalPart != null){
-    				part.additionalParts = new ArrayList<VehiclePart>();
-    				part.additionalParts.add(part.additionalPart);
-    				part.additionalPart = null;
+    		for(VehiclePart partDef : vehicleDef.parts){
+    			if(partDef.additionalPart != null){
+    				partDef.additionalParts = new ArrayList<VehiclePart>();
+    				partDef.additionalParts.add(partDef.additionalPart);
+    				partDef.additionalPart = null;
     			}
-    			if(part.linkedDoor != null){
-    				part.linkedDoors = new ArrayList<String>();
-    				part.linkedDoors.add(part.linkedDoor);
-    				part.linkedDoor = null;
+    			if(partDef.linkedDoor != null){
+    				partDef.linkedDoors = new ArrayList<String>();
+    				partDef.linkedDoors.add(partDef.linkedDoor);
+    				partDef.linkedDoor = null;
     			}
-    			if(part.exhaustPos != null){
-    				part.exhaustObjects = new ArrayList<ExhaustObject>();
-    				for(int i=0; i<part.exhaustPos.length; i+=3){
-    					ExhaustObject exhaust = part.new ExhaustObject();
-    					exhaust.pos = new Point3d(part.exhaustPos[i], part.exhaustPos[i+1], part.exhaustPos[i+2]);
-    					exhaust.velocity = new Point3d(part.exhaustVelocity[i], part.exhaustVelocity[i+1], part.exhaustVelocity[i+2]);
+    			if(partDef.exhaustPos != null){
+    				partDef.exhaustObjects = new ArrayList<ExhaustObject>();
+    				for(int i=0; i<partDef.exhaustPos.length; i+=3){
+    					ExhaustObject exhaust = partDef.new ExhaustObject();
+    					exhaust.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
+    					exhaust.velocity = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
     					exhaust.scale = 1.0F;
-    					part.exhaustObjects.add(exhaust);
+    					partDef.exhaustObjects.add(exhaust);
     				}
-    				part.exhaustPos = null;
+    				partDef.exhaustPos = null;
     			}
-    			if(part.rotationVariable != null){
-    				part.animations = new ArrayList<VehicleAnimationDefinition>();
+    			if(partDef.rotationVariable != null){
+    				partDef.animations = new ArrayList<VehicleAnimationDefinition>();
     				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
     				animation.animationType = "rotation";
-    				animation.variable = part.rotationVariable;
-    				animation.centerPoint = part.rotationPosition;
-    				animation.axis = part.rotationAngles;
-    				animation.clampMin = part.rotationClampMin;
-    				animation.clampMax = part.rotationClampMax;
-    				animation.absolute = part.rotationAbsolute;
-    				part.animations.add(animation);
-    				part.rotationVariable = null;
-    				part.rotationPosition = null;
-    				part.rotationAngles = null;
-    				part.rotationClampMin = 0;
-    				part.rotationClampMax = 0;
-    				part.rotationAbsolute = false;
+    				animation.variable = partDef.rotationVariable;
+    				animation.centerPoint = partDef.rotationPosition;
+    				animation.axis = partDef.rotationAngles;
+    				animation.clampMin = partDef.rotationClampMin;
+    				animation.clampMax = partDef.rotationClampMax;
+    				animation.absolute = partDef.rotationAbsolute;
+    				partDef.animations.add(animation);
+    				partDef.rotationVariable = null;
+    				partDef.rotationPosition = null;
+    				partDef.rotationAngles = null;
+    				partDef.rotationClampMin = 0;
+    				partDef.rotationClampMax = 0;
+    				partDef.rotationAbsolute = false;
     			}
-    			if(part.translationVariable != null){
-    				if(part.animations == null){
-    					part.animations = new ArrayList<VehicleAnimationDefinition>();
+    			if(partDef.translationVariable != null){
+    				if(partDef.animations == null){
+    					partDef.animations = new ArrayList<VehicleAnimationDefinition>();
     				}
     				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
     				animation.animationType = "translation";
-    				animation.variable = part.translationVariable;
-    				animation.axis = part.translationPosition;
-    				animation.clampMin = part.translationClampMin;
-    				animation.clampMax = part.translationClampMax;
-    				animation.absolute = part.translationAbsolute;
-    				part.animations.add(animation);
-    				part.translationVariable = null;
-    				part.translationPosition = null;
-    				part.translationClampMin = 0;
-    				part.translationClampMax = 0;
-    				part.translationAbsolute = false;
+    				animation.variable = partDef.translationVariable;
+    				animation.axis = partDef.translationPosition;
+    				animation.clampMin = partDef.translationClampMin;
+    				animation.clampMax = partDef.translationClampMax;
+    				animation.absolute = partDef.translationAbsolute;
+    				partDef.animations.add(animation);
+    				partDef.translationVariable = null;
+    				partDef.translationPosition = null;
+    				partDef.translationClampMin = 0;
+    				partDef.translationClampMax = 0;
+    				partDef.translationAbsolute = false;
     			}
-    			for(byte i=0; i<part.types.size(); ++i){
-    				String partName = part.types.get(i);
+    			for(byte i=0; i<partDef.types.size(); ++i){
+    				String partName = partDef.types.get(i);
     				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
     					if(partName.equals("tread")){
-    						part.turnsWithSteer = true;
+    						partDef.turnsWithSteer = true;
     					}
-    					part.types.set(i, "ground_" + partName);
+    					partDef.types.set(i, "ground_" + partName);
     				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
-    					part.types.set(i, "interactable_" + partName);
+    					partDef.types.set(i, "interactable_" + partName);
+    					partDef.minValue = 0;
+    					partDef.maxValue = 1;
     				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
-    					part.types.set(i, "effector_" + partName);
+    					partDef.types.set(i, "effector_" + partName);
     				}
     				//If we have additional parts, check those too.
-    				if(part.additionalParts != null){
-    					for(VehiclePart additionalPart : part.additionalParts){
-	    					for(byte j=0; j<additionalPart.types.size(); ++j){
-	    	    				partName = additionalPart.types.get(j);
-	    	    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
-	    	    					if(partName.equals("tread")){
-	    	    						additionalPart.turnsWithSteer = true;
+    				if(partDef.additionalParts != null){
+    					for(VehiclePart additionalPartDef : partDef.additionalParts){
+	    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
+	    	    				String additionalPartName = additionalPartDef.types.get(j);
+	    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
+	    	    					if(additionalPartName.equals("tread")){
+	    	    						additionalPartDef.turnsWithSteer = true;
 	    	    					}
-	    	    					additionalPart.types.set(j, "ground_" + partName);
-	    	    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
-	    	    					additionalPart.types.set(i, "interactable_" + partName);
-	    	    				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
-	    	    					additionalPart.types.set(i, "effector_" + partName);
+	    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
+	    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
+	    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
+	    	    					additionalPartDef.minValue = 0;
+	    	    					additionalPartDef.maxValue = 1;
+	    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
+	    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
 	    	    				}
 	    	    			}
     					}
