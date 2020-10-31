@@ -909,6 +909,9 @@ public final class RenderVehicle{
 				}
 				
 				if(highlightedBox != null){
+					//Get the definition for this box.
+					VehiclePart packVehicleDef = vehicle.partSlotBoxes.get(highlightedBox);
+					
 					//Set blending back to false and re-enable 2D texture before rendering item and text.
 					MasterLoader.renderInterface.setBlendState(false, false);
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -918,39 +921,55 @@ public final class RenderVehicle{
 					for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 						if(packItem instanceof ItemPart){
 							ItemPart part = (ItemPart) packItem;
-							if(part.isPartValidForPackDef(vehicle.partSlotBoxes.get(highlightedBox))){
+							if(part.isPartValidForPackDef(packVehicleDef)){
 								validParts.add(part);
 							}
 						}
 					}
 					
-					//Get current part to render based on the cycle.
-					int cycle = player.isSneaking() ? 30 : 15;
-					ItemPart partToRender = validParts.get((int) (vehicle.world.getTime()/cycle)%validParts.size());
-					
-					//If we are on the start of the cycle, beep.
-					if(vehicle.world.getTime()%cycle == 0){
-						MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
-					}
-					
+					//Render the type, min/max, and customTypes info.
+					//To do this, we first need to translate to the top-center of the bounding box.
+					//We also rotate to face the player.
 					GL11.glPushMatrix();
-					
-					//Translate to the top center of the box.
 					GL11.glTranslated(highlightedBox.globalCenter.x, highlightedBox.globalCenter.y + highlightedBox.heightRadius, highlightedBox.globalCenter.z);
 					GL11.glRotated(player.getHeadYaw(), 0, 1, 0);
 					
 					//Rotate by 180 on the z-axis.  This changes the X and Y coords from GUI to world coords. 
 					GL11.glRotated(180, 0, 0, 1);
 					
-					//Translate to the spot above where the item would render and render the text.
-					GL11.glTranslated(0, -1.25F, 0);
-					MasterLoader.guiInterface.drawScaledText(partToRender.getItemName(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					//Translate to the spot above where the item would render and render the standard text.
+					GL11.glTranslated(0, -1.75F, 0);
+					MasterLoader.guiInterface.drawScaledText("Types: " + packVehicleDef.types.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					GL11.glTranslated(0, 0.15F, 0);
+					MasterLoader.guiInterface.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					GL11.glTranslated(0, 0.15F, 0);
+					if(packVehicleDef.customTypes != null){
+						MasterLoader.guiInterface.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					}else{
+						MasterLoader.guiInterface.drawScaledText("CustomTypes: None", 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					}
+					GL11.glTranslated(0, 0.25F, 0);
 					
-					//Do translations to get to the center of where the item will render and render it.
-					//Items also need to be offset by -150 units due to how MC does rendering.
-					//Also need to translate to the center as items are rendered from the top-left corner.
-					GL11.glTranslated(-0.5D, 0.25F, -150D/16D);
-					MasterLoader.guiInterface.drawItem(MasterLoader.coreInterface.getStack(partToRender), 0, 0, 1F/16F);
+					//If we have valid parts, render one of them.
+					if(!validParts.isEmpty()){
+						//Get current part to render based on the cycle.
+						int cycle = player.isSneaking() ? 30 : 15;
+						ItemPart partToRender = validParts.get((int) ((vehicle.world.getTime()/cycle)%validParts.size()));
+						
+						//If we are on the start of the cycle, beep.
+						if(vehicle.world.getTime()%cycle == 0){
+							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
+						}
+						
+						//Render the part's name.
+						MasterLoader.guiInterface.drawScaledText(partToRender.getItemName(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+						
+						//Do translations to get to the center of where the item will render and render it.
+						//Items also need to be offset by -150 units due to how MC does rendering.
+						//Also need to translate to the center as items are rendered from the top-left corner.
+						GL11.glTranslated(-0.5D, 0.25F, -150D/16D);
+						MasterLoader.guiInterface.drawItem(MasterLoader.coreInterface.getStack(partToRender), 0, 0, 1F/16F);
+					}
 					GL11.glPopMatrix();
 				}
 			}
