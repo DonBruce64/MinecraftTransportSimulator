@@ -20,7 +20,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-public class PartGun extends APart implements IVehiclePartFXProvider{	
+public class PartGun extends APart implements IVehiclePartFXProvider{
 	//Stored variables used to determine bullet firing behavior.
 	public int bulletsFired;
 	public int bulletsLeft;
@@ -384,9 +384,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
 			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 			
-			//Get the bullet's initial position.  This is based off the gun orientation and barrel length.
+			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
+			//Then move the bullet to the appropriate firing position.
 			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
-	        
+			bulletPosition.add(getFiringPosition().rotateFine(getActionRotation(0)).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
+
 			//Add the bullet as a particle.
 			MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
@@ -396,5 +398,18 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			--bulletsLeft;
 			++bulletsFired;
 		}
+	}
+	
+	public Point3d getFiringPosition() {
+		if (definition.gun.muzzlePositions != null) {
+			//If muzzle count is the same as capacity, use the muzzles in order
+			//Otherwise, iterate through the available muzzles
+			int muzzleIndex = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
+			return definition.gun.muzzlePositions.get(muzzleIndex).copy();
+		}
+		
+		//If no muzzlePositions are defined, no offset will be used
+		//This will also be returned if there was an issue finding the muzzle
+		return new Point3d(0D, 0D, 0D);
 	}
 }
