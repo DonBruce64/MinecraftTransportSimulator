@@ -132,47 +132,44 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		//Check to make sure the spot is free.
 		if(getPartAtLocation(offset) == null){
 			//Check to make sure the part is valid.
-			if(packPart.types.contains(partItem.definition.general.type)){
-				//Check to make sure the part is in parameter ranges.
-				if(partItem.isPartValidForPackDef(packPart)){
-					//Try to find the parent part, if this part would have one.
-					for(VehiclePart packVehicleDef : definition.parts){
-						if(packVehicleDef.additionalParts != null){
-							for(VehiclePart packAdditionalDef : packVehicleDef.additionalParts){
-								if(offset.equals(packAdditionalDef.pos)){
-									parentPart = getPartAtLocation(packVehicleDef.pos);
-									break;
-								}
+			if(partItem.isPartValidForPackDef(packPart)){
+				//Try to find the parent part, if this part would have one.
+				for(VehiclePart packVehicleDef : definition.parts){
+					if(packVehicleDef.additionalParts != null){
+						for(VehiclePart packAdditionalDef : packVehicleDef.additionalParts){
+							if(offset.equals(packAdditionalDef.pos)){
+								parentPart = getPartAtLocation(packVehicleDef.pos);
+								break;
+							}
+						}
+					}
+					if(parentPart != null){
+						break;
+					}
+				}
+				
+				//If we aren't an additional part, see if we are a sub-part.
+				//This consists of both existing and NBT parts.
+				List<APart> partsToCheck = new ArrayList<APart>();
+				partsToCheck.addAll(parts);
+				partsToCheck.addAll(partsFromNBT);
+				for(APart part : partsToCheck){
+					if(part.definition.subParts != null){
+						for(VehiclePart partSubPartPack : part.definition.subParts){
+							VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, partSubPartPack);
+							if(offset.equals(correctedPack.pos)){
+								parentPart = part;
+								break;
 							}
 						}
 						if(parentPart != null){
 							break;
 						}
 					}
-					
-					//If we aren't an additional part, see if we are a sub-part.
-					//This consists of both existing and NBT parts.
-					List<APart> partsToCheck = new ArrayList<APart>();
-					partsToCheck.addAll(parts);
-					partsToCheck.addAll(partsFromNBT);
-					for(APart part : partsToCheck){
-						if(part.definition.subParts != null){
-							for(VehiclePart partSubPartPack : part.definition.subParts){
-								VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, partSubPartPack);
-								if(offset.equals(correctedPack.pos)){
-									parentPart = part;
-									break;
-								}
-							}
-							if(parentPart != null){
-								break;
-							}
-						}
-					}
-					
-					//Part is valid.  Create it.
-					partToAdd = partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : MasterLoader.coreInterface.createNewTag(), parentPart); 
 				}
+				
+				//Part is valid.  Create it.
+				partToAdd = partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : MasterLoader.coreInterface.createNewTag(), parentPart); 
 			}
 		}
     	

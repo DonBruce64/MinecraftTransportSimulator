@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
+import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.JSONPack;
@@ -81,6 +82,7 @@ public class MasterLoader{
 		
 		//Create main items.
 		MasterInterface.createItem(new ItemWrench());
+		MasterInterface.createItem(new ItemPartScanner());
 		MasterInterface.createItem(new ItemKey());
 		MasterInterface.createItem(new ItemFuelHose());
 		MasterInterface.createItem(new ItemJumperCable());

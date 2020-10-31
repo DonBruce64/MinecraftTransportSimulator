@@ -25,6 +25,7 @@
 	},
 	"rewards": {
 		"recipes": [
+			"mts:partscanner",
 			"mts:custombench",
 			"mts:decorbench",
 			"mts:enginebench",

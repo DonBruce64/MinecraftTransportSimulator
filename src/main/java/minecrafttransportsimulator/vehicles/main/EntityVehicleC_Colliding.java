@@ -291,6 +291,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				partSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 				if(!world.isClient()){
 					activePartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
+				}else{
+					newSlotBox.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
+					newSlotBox.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;
+					newSlotBox.depthRadius = PART_SLOT_HITBOX_WIDTH/2D;
 				}
 			}
 		}
