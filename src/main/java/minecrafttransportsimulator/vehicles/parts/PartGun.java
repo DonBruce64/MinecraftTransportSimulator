@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.MuzzleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -385,8 +384,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
 			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 			
-			//Get the bullet's initial position, adjusted for gun orientation.
-			Point3d bulletPosition = this.getFiringPosition().rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
+			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
+			//Then move the bullet to the appropriate firing position.
+			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
+			bulletPosition.add(getFiringPosition().rotateFine(getActionRotation(0)).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 
 			//Add the bullet as a particle.
 			MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
@@ -400,15 +401,15 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	}
 	
 	public Point3d getFiringPosition() {
-		if (definition.gun.muzzleObjects != null) {
+		if (definition.gun.muzzlePositions != null) {
 			//If muzzle count is the same as capacity, use the muzzles in order
 			//Otherwise, iterate through the available muzzles
-			int muzzleIndex = definition.gun.muzzleObjects.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzleObjects.size();
-			return definition.gun.muzzleObjects.get(muzzleIndex).pos.copy();
+			int muzzleIndex = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
+			return definition.gun.muzzlePositions.get(muzzleIndex).copy();
 		}
 		
-		//If no muzzleObjects are defined, determine firing position from gun length
+		//If no muzzlePositions are defined, no offset will be used
 		//This will also be returned if there was an issue finding the muzzle
-		return new Point3d(0D, 0D, definition.gun.length);
+		return new Point3d(0D, 0D, 0D);
 	}
 }
