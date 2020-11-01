@@ -25,9 +25,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -114,6 +118,22 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(definition != null){
 			currentMass = getCurrentMass();
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+		}
+		
+		//Auto-close any open doors that should be closed.
+		if(velocity > 0.5 && !doorsOpen.isEmpty()){
+			Iterator<String> doorIterator = doorsOpen.iterator();
+			while(doorIterator.hasNext()){
+				String openDoorName = doorIterator.next();
+				for(VehicleDoor doorDef : definition.doors){
+					if(doorDef.name.equals(openDoorName)){
+						if(doorDef.closeOnMovement){
+							doorIterator.remove();
+						}
+						break;
+					}
+				}
+			}
 		}
 		
 		//Update vehicle collision boxes.
@@ -229,6 +249,50 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Set hardness hit this tick to 0 to reset collision force calculations.
 		hardnessHitThisTick = 0;
+	}
+	
+	@Override
+	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
+		if(super.addRider(rider, riderLocation)){
+			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+			if(seat.vehicleDefinition.linkedDoors != null){
+				for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
+					if(doorsOpen.contains(linkedDoor)){
+						for(VehicleDoor doorDef : definition.doors){
+							if(doorDef.name.equals(linkedDoor)){
+								if(doorDef.activateOnSeated){
+									doorsOpen.remove(linkedDoor);
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	@Override
+	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+		if(seat.vehicleDefinition.linkedDoors != null){
+			for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
+				if(!doorsOpen.contains(linkedDoor)){
+					for(VehicleDoor doorDef : definition.doors){
+						if(doorDef.name.equals(linkedDoor)){
+							if(doorDef.activateOnSeated){
+								doorsOpen.add(linkedDoor);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		super.removeRider(rider, iterator);
 	}
 	
 	@Override

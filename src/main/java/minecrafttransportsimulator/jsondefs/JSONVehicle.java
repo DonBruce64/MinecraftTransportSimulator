@@ -176,6 +176,8 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float width;
         public float height;
         public boolean closedByDefault;
+        public boolean closeOnMovement;
+        public boolean activateOnSeated;
     }
     
     public class VehicleEffect{
