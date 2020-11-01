@@ -15,10 +15,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -297,14 +297,14 @@ class BuilderBlock extends Block{
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MasterInterface.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
 		
-		//Register the pack-based blocks.  We cheat here and
-		//iterate over all pack items and get the blocks they spawn.
+		//Register the IItemBlock blocks.  We cheat here and
+		//iterate over all items and get the blocks they spawn.
 		//Not only does this prevent us from having to manually set the blocks
 		//we also pre-generate the block classes here.
 		List<ABlockBase> blocksRegistred = new ArrayList<ABlockBase>();
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			if(packItem instanceof IItemBlock){
-				ABlockBase itemBlockBlock = ((IItemBlock) packItem).getBlock();
+		for(AItemBase item : BuilderItem.itemWrapperMap.keySet()){
+			if(item instanceof IItemBlock){
+				ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
 				if(!blocksRegistred.contains(itemBlockBlock)){
 					//New block class detected.  Register it and its instance.
 					BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
