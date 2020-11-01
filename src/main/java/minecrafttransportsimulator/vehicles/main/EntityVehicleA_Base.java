@@ -389,43 +389,31 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		VehiclePart correctedPack = SUBPACK_MAPPINGS.get(parentPack).get(subPack);
 		if(correctedPack == null){
-			correctedPack = definition.new VehiclePart();
+			//Use GSON to make a deep copy of the current pack definition.
+			//Set the sub-part flag to ensure we know this is a subPart for rendering operations.
+			correctedPack = PackParserSystem.packParser.fromJson(PackParserSystem.packParser.toJson(subPack, VehiclePart.class), VehiclePart.class);
 			correctedPack.isSubPart = true;
 			
-			//Get the offset position for this part.
-			//If we will be mirrored, make sure to invert the x-coords of any sub-parts.
-			correctedPack.pos = new Point3d(
-				parentPack.pos.x + (parentPack.pos.x < 0 ^ parentPack.inverseMirroring ? -subPack.pos.x : subPack.pos.x),
-				parentPack.pos.y + subPack.pos.y,
-				parentPack.pos.z + subPack.pos.z
-			);
-			
-			//Add parent and part rotation to make a total rotation for this sub-part.
-			correctedPack.rot = new Point3d(0D, 0D, 0D);
+			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
+			//First add the parent pack's position and rotation to the sub-pack.
+			correctedPack.pos.add(parentPack.pos);
 			if(parentPack.rot != null){
-				correctedPack.rot = parentPack.rot.copy();
-				if(subPack.rot != null){
-					correctedPack.rot.add(subPack.rot);
+				if(correctedPack.rot != null){
+					correctedPack.rot.add(parentPack.rot);
+				}else{
+					correctedPack.rot = parentPack.rot.copy();
 				}
-			}else if(subPack.rot != null){
-				correctedPack.rot = subPack.rot.copy();
 			}
 			
+			//If the parent pack is mirrored, we need to invert our X-position to match.
+			if(parentPack.pos.x < 0 ^ parentPack.inverseMirroring){
+				correctedPack.pos.x -= 2*subPack.pos.x;
+			}
+			
+			//Use the parent's turnsWithSteer variable, as that's based on the vehicle, not the part.
 			correctedPack.turnsWithSteer = parentPack.turnsWithSteer;
-			correctedPack.isController = subPack.isController;
-			correctedPack.inverseMirroring = subPack.inverseMirroring;
-			correctedPack.types = subPack.types;
-			correctedPack.customTypes = subPack.customTypes;
-			correctedPack.minValue = subPack.minValue;
-			correctedPack.maxValue = subPack.maxValue;
-			correctedPack.dismountPos = subPack.dismountPos;
-	        correctedPack.exhaustObjects = subPack.exhaustObjects;
-	        correctedPack.intakeOffset = subPack.intakeOffset;
-	        correctedPack.additionalParts = subPack.additionalParts;
-	        correctedPack.treadYPoints = subPack.treadYPoints;
-	        correctedPack.treadZPoints = subPack.treadZPoints;
-	        correctedPack.treadAngles = subPack.treadAngles;
-	        correctedPack.defaultPart = subPack.defaultPart;
+			
+			//Save the corrected pack into the mappings for later use.
 	        SUBPACK_MAPPINGS.get(parentPack).put(subPack, correctedPack);
 		}
 		return correctedPack;
