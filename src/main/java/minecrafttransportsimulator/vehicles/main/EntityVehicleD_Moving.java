@@ -34,6 +34,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	//Internal states.
 	public boolean goingInReverse;
+	public boolean slipping;
 	public double groundVelocity;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
@@ -190,16 +191,18 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//how much delta the vector says we can change.
 				Point3d idealMotion = goingInReverse ? normalizedGroundHeadingVector.copy().multiply(-groundVelocity) : normalizedGroundHeadingVector.copy().multiply(groundVelocity);
 				idealMotion.multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
-				//TODO remove this when we are sure turning is good.
-				//System.out.format("Dot:%f Vel:%f GroundVel:%f Turn:%f InRev:%b Client:%s Delta:%f Factor:%f IdelV:%f\n", dotProduct, motion.length(), groundVelocity, turningForce, goingInReverse, world.isClient() ? "1" : "0", vectorDelta, motionFactor, idealMotion.length());
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
 				
 				//If we are slipping while turning, spawn block particles.
-				if(world.isClient() && motionFactor != 1 && velocity > 0.75){
+				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is.
+				if(towedByVehicle == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : towedByVehicle.slipping){
+					slipping = true;
 					for(byte i=0; i<4; ++i){
 						groundDeviceCollective.spawnSlippingParticles();
 					}
+				}else{
+					slipping = false;
 				}
 			}
 		}
