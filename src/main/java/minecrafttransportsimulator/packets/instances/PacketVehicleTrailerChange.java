@@ -38,12 +38,14 @@ public class PacketVehicleTrailerChange extends APacketVehicle{
 				if(entity.lookupID == linkedID){
 					vehicle.towedVehicle = (EntityVehicleF_Physics) entity;
 					((EntityVehicleF_Physics) entity).towedByVehicle = vehicle;
+					vehicle.towedVehicle.parkingBrakeOn = false;
 					break;
 				}
 			}
 		}else{
 			if(vehicle.towedVehicle != null){
 				vehicle.towedVehicle.towedByVehicle = null;
+				vehicle.towedVehicle.parkingBrakeOn = true;
 				vehicle.towedVehicle = null;
 			}
 		}

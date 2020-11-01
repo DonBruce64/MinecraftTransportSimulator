@@ -67,6 +67,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case TRAILER : {
 				if(vehicle.towedVehicle != null){
 					vehicle.towedVehicle.towedByVehicle = null;
+					vehicle.towedVehicle.parkingBrakeOn = true;
 					vehicle.towedVehicle = null;
 					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle));
 					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
@@ -82,6 +83,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 										if(hitchType.equals(testVehicle.definition.motorized.hookupType)){
 											testVehicle.towedByVehicle = vehicle;
 											vehicle.towedVehicle = testVehicle;
+											vehicle.towedVehicle.parkingBrakeOn = false;
 											MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle));
 											player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect"));
 											return false;
