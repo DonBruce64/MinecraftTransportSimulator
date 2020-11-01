@@ -65,7 +65,7 @@ public abstract class AItemBase{
 	
 	/**
 	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(IWrapperWorld, IWrapperPlayer, Point3i, Axis)}
-	 *  is called before this method, and if an only if that method returns false will this method be called.
+	 *  is called before this method, and if and only if that method returns false will this method be called.
 	 *  If this item does something, return true.
 	 */
 	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){

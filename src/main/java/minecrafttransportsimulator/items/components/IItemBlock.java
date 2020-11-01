@@ -57,7 +57,7 @@ public interface IItemBlock{
 	}
 	
 	/**
-	 *  Tries to let this player place the block for this ITtemBlock into the world.
+	 *  Tries to let this player place the block for this IItemBlock into the world.
 	 *  Returns true if the block was placed.
 	 */
 	public default boolean placeBlock(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
