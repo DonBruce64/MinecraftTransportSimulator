@@ -38,8 +38,8 @@ public class RoadCurve{
 		this.startPoint = new float[]{0, 0, 0};
 		this.endPoint = new float[]{(float)endPos.x, (float)endPos.y, (float)endPos.z};
 		float midPointDistance = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/3F;
-		this.startCurvePoint = new float[]{(float) (startPoint[0] - Math.sin(Math.toRadians(startAngle))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*midPointDistance)};
-		this.endCurvePoint = new float[]{(float) (endPoint[0] - Math.sin(Math.toRadians(endAngle))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*midPointDistance)};
+		this.startCurvePoint = new float[]{(float) (startPoint[0] + Math.sin(Math.toRadians(startAngle))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*midPointDistance)};
+		this.endCurvePoint = new float[]{(float) (endPoint[0] + Math.sin(Math.toRadians(endAngle))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*midPointDistance)};
 
 		this.pathLength = getPathLength(startPoint, endPoint, startCurvePoint, endCurvePoint, midPointDistance);
 		float[] pathPointsX = getCachedPathPoints(startPoint[0], endPoint[0], startCurvePoint[0], endCurvePoint[0], pathLength);
@@ -57,7 +57,7 @@ public class RoadCurve{
 	/**
 	 * Returns the actual point at the passed-in segment location.
 	 * This calculates the exact point position on the curve, so only use this if you
-	 * need exact data.  If you can, use {@link #getCachedPitchAngleAt(float)} for efficiency.
+	 * need exact data.  If you can, use {@link #getPointAt(float)} for efficiency.
 	 */
 	public Point3d getActualPointAt(float segmentPoint){
 		float segmentPercentage = segmentPoint/pathLength;
