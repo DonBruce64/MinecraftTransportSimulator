@@ -115,6 +115,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public int quantity;
     	public float diameter;
     	public float armorPenetration;
+    	public int burnTime;
+    	public String guidanceType;
+    	public float maxOffAxis;
     }
     
     public class JSONPartInteractable{

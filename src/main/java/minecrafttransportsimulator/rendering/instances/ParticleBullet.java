@@ -42,6 +42,7 @@ public final class ParticleBullet extends AParticle{
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
 	private double armorPenetrated;
+	private double burnTimeLeft;
 	
     public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
@@ -49,6 +50,7 @@ public final class ParticleBullet extends AParticle{
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
         this.initalVelocity = motion.length();
+        this.burnTimeLeft = (double)bullet.definition.bullet.burnTime;
         this.gunController = gunController;
     }
 	
@@ -94,9 +96,13 @@ public final class ParticleBullet extends AParticle{
 			return;
 		}
 		
-		//Now that we have checked for collision, adjust motion to compensate for bullet movement.
-		motion.multiply(0.98D);
-		motion.y -= 0.0245D;
+		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
+		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired
+		if (this.burnTimeLeft > 0) {
+			motion.multiply(0.98D);
+			motion.y -= 0.0245D;
+			--this.burnTimeLeft;
+		}
 		
 		//Send our updated motion to the super to update the position.
 		//Doing this last lets us damage on the first update tick.
