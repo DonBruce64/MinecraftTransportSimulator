@@ -82,9 +82,27 @@ public class RenderEventHandler{
 		    				
 		    				//Get the next custom camera the vehicle has.
 		    				if(vehicle.definition.rendering.cameraObjects != null){
-		    					camerasChecked += vehicle.definition.rendering.cameraObjects.size();
-		    					if(customCameraIndex < vehicle.definition.rendering.cameraObjects.size()){
-		    						camera = vehicle.definition.rendering.cameraObjects.get(customCameraIndex);
+		    					//Iterate over all vehicle cameras.  If they are deactivated, don't try to use them.
+		    					for(VehicleCameraObject testCamera : vehicle.definition.rendering.cameraObjects){
+		    						boolean cameraActive = true;
+		    						for(VehicleAnimationDefinition animation : testCamera.animations){
+		            					if(animation.animationType.equals("visibility")){
+		            						double value = VehicleAnimationSystem.getVariableValue(animation.variable, partialTicks, vehicle, null); 
+		            						if(value < animation.clampMin || value > animation.clampMax){
+		            							//Encountered an inactive camera.  Skip it.
+		            							cameraActive = false;
+		            							break;
+		            						}
+		            					}
+		    						}
+		    						if(cameraActive){
+		    							if(customCameraIndex <= camerasChecked){
+				    						camera = testCamera;
+				    						break;
+				    					}else{
+				    						++camerasChecked;
+				    					}
+		    						}
 		    					}
 		    				}
 		    				
@@ -92,13 +110,29 @@ public class RenderEventHandler{
 		    				if(camera == null){
 		    					for(APart part : vehicle.parts){
 		    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-		    							if(customCameraIndex < camerasChecked + part.definition.rendering.cameraObjects.size()){
-		    								camera = part.definition.rendering.cameraObjects.get(customCameraIndex - camerasChecked);
-		    								optionalPart = part;
-		    								break;
-		    							}else{
-		    								camerasChecked += part.definition.rendering.cameraObjects.size();
-		    							}
+		    							//Iterate over all part cameras.  If they are deactivated, don't try to use them.
+				    					for(VehicleCameraObject testCamera : part.definition.rendering.cameraObjects){
+				    						boolean cameraActive = true;
+				    						for(VehicleAnimationDefinition animation : testCamera.animations){
+				            					if(animation.animationType.equals("visibility")){
+				            						double value = VehicleAnimationSystem.getVariableValue(animation.variable, partialTicks, vehicle, part); 
+				            						if(value < animation.clampMin || value > animation.clampMax){
+				            							//Encountered an inactive camera.  Skip it.
+				            							cameraActive = false;
+				            							break;
+				            						}
+				            					}
+				    						}
+				    						if(cameraActive){
+				    							if(customCameraIndex <= camerasChecked){
+						    						camera = testCamera;
+						    						optionalPart = part;
+						    						break;
+						    					}else{
+						    						++camerasChecked;
+						    					}
+				    						}
+				    					}
 		    						}
 		    					}
 		    				}
@@ -132,8 +166,8 @@ public class RenderEventHandler{
 		            			//Apply any rotations from rotation animations.
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            					if(animation.animationType.equals("rotation")){
+		            						double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            						if(animationValue != 0){
 		            							Point3d rotationAxis = animation.axis.copy().normalize();
 		                						if(animationValue != 0){
@@ -159,8 +193,8 @@ public class RenderEventHandler{
 		            			//Translate again to any camera animations.
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
-		            					double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            					if(animation.animationType.equals("translation")){
+		            						double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            						if(animationValue != 0){
 		            							if(animation.animationType.equals("translation")){
 		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
