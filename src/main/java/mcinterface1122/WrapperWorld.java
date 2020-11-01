@@ -127,7 +127,7 @@ class WrapperWorld implements IWrapperWorld{
 				wrapper = new WrapperPlayer(player);
 				playerWrappers.put(player, wrapper);
 			}
-			return playerWrappers.get(player);
+			return wrapper;
 		}else{
 			return null;
 		}
