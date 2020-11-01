@@ -38,6 +38,11 @@ public class Point3i{
 		}
 	}
 	
+	@Override
+	public String toString(){
+		return "[" + x + ", " + y + ", " + z + "]";
+	}
+	
 	/**
 	 * Sets the value of the point to the passed-in values.
 	 * Returns the called object for nested operations.
@@ -91,6 +96,16 @@ public class Point3i{
 		this.y -= point.y;
 		this.z -= point.z;
 		return this;
+	}
+	
+	/**
+	 * Returns the distance between this point and the passed-in point.
+	 */
+	public double distanceTo(Point3i point){
+		int deltaX = point.x - this.x;
+		int deltaY = point.y - this.y;
+		int deltaZ = point.z - this.z;
+		return Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
 	}
 	
 	/**
