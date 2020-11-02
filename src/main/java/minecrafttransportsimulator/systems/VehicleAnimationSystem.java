@@ -122,6 +122,12 @@ public final class VehicleAnimationSystem{
 				}
 			}else if(optionalPart instanceof PartGun){
 				PartGun gun = (PartGun) optionalPart;
+				//Check for an instance of the gun_muzzle_#_firing variable, since this requires additional parsing
+				if (variable.length() >= 19 && variable.substring(0,10).equals("gun_muzzle") && variable.substring(variable.length() - 6).equals("firing")) {
+					//Parse one or more digits, then take off one because we are zero-indexed
+					int muzzleNumber = Integer.parseInt(variable.substring(11, variable.length() - 18)) - 1;
+					return (muzzleNumber == gun.currentMuzzle ? 1 : 0) * gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+				}
 				switch(variable){
 					case("gun_active"): return gun.active ? 1 : 0;
 					case("gun_firing"): return gun.firing ? 1 : 0;
