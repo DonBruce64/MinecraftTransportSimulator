@@ -313,7 +313,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		if(part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
 			for(VehicleCollisionBox boxDefinition : part.definition.collision){
-				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width, boxDefinition.height, boxDefinition.width, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
+				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
 				if(!newBox.isInterior){
