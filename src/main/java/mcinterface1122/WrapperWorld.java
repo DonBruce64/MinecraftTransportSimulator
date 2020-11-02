@@ -302,6 +302,7 @@ class WrapperWorld implements IWrapperWorld{
 							
 							//Apply motions to move entity, and add them to the moved entity list.
 							entity.move(MoverType.SELF, vehicleBoxMovement.x, vehicleBoxMovement.y + entityBottomDelta, vehicleBoxMovement.z);
+							entity.rotationYaw += -angularMovement.y;
 							movedEntities.add(entity);
 							
 							//Set entity as on ground to allow them to jump on the collision box.
