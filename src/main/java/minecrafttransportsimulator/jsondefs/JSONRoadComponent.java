@@ -6,9 +6,12 @@ public class JSONRoadComponent extends AJSONModelProvider<JSONRoadComponent.Road
 
     public class RoadGeneral extends AJSONModelProvider<JSONRoadComponent.RoadGeneral>.General{
     	public String type;
-    	public float firstLaneOffset;
-    	public float laneWidth;
-    	public int numberLanes;
+    	
+    	public float[] laneOffsets;
+    	public float[] markingOffsets;
+    	public float[] borderOffsets;
     	public int collisionHeight;
+    	
+    	public boolean onlyAtJoints;
     }
 }

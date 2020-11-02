@@ -3,7 +3,13 @@ package minecrafttransportsimulator.rendering.instances;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.lwjgl.opengl.GL11;
+
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.RoadCurve;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
+import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
@@ -11,8 +17,46 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	
 	@Override
 	public void render(TileEntityRoad tile, float partialTicks){
+		ItemRoadComponent coreComponent = tile.components.get(RoadComponent.CORE);
+		if(coreComponent != null){
+			
+			//Render connector points.
+			for(Point3d connectionPoint : tile.curveConnectionPoints){
+				GL11.glColor3f(1, 0, 0);
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				GL11.glLineWidth(5);
+				GL11.glBegin(GL11.GL_LINES);
+				GL11.glVertex3d(connectionPoint.x, connectionPoint.y, connectionPoint.z);
+				GL11.glVertex3d(connectionPoint.x, connectionPoint.y + 2, connectionPoint.z);
+				GL11.glEnd();
+				GL11.glLineWidth(1);
+				GL11.glEnable(GL11.GL_TEXTURE_2D);
+			}
+			for(int laneNumber=0; laneNumber<tile.curves.length; ++laneNumber){
+				RoadCurve curve = tile.curves[laneNumber];
+				if(curve != null){
+					GL11.glPushMatrix();
+					GL11.glTranslated(tile.curveConnectionPoints[laneNumber].x, tile.curveConnectionPoints[laneNumber].y, tile.curveConnectionPoints[laneNumber].z);
+					GL11.glDisable(GL11.GL_LIGHTING);
+					GL11.glColor3f(1, 1, 0);
+					GL11.glDisable(GL11.GL_TEXTURE_2D);
+					GL11.glBegin(GL11.GL_LINES);
+					for(float f=0; f<curve.pathLength; f+=0.1){
+						Point3d point = curve.getPointAt(f);
+						GL11.glVertex3d(point.x, point.y, point.z);
+						GL11.glVertex3d(point.x, point.y + 2, point.z);
+					}
+					GL11.glEnd();
+					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					GL11.glEnable(GL11.GL_LIGHTING);
+					GL11.glPopMatrix();
+				}
+			}
+		}
+		
+		
 		/*
-		TileEntityRoad_Core coreComponent = (TileEntityPole_Core) tile.components.get(Axis.NONE);
+		TileEntityRoad_Core coreComponent = (TileEntityRoad_Core) tile.components.get(Axis.NONE);
 		if(coreComponent != null){
 			//If we don't have the model parsed, do so now.
 			if(!connectorDisplayListMap.containsKey(tile.definition)){

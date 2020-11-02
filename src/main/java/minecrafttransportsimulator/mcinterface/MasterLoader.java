@@ -10,6 +10,7 @@ import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
+import minecrafttransportsimulator.items.instances.ItemRoadTool;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
@@ -53,7 +54,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.8.0";
+	public static final String MODVER = "19.9.0-BETA3";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -89,6 +90,7 @@ public class MasterLoader{
 		MasterInterface.createItem(new ItemJumperCable());
 		MasterInterface.createItem(new ItemJerrycan());
 		MasterInterface.createItem(new ItemPaintGun());
+		//MasterInterface.createItem(new ItemRoadTool());
 		MasterInterface.createItem(new ItemTicket());
 		MasterInterface.createItem(new ItemY2KButton());
 		
