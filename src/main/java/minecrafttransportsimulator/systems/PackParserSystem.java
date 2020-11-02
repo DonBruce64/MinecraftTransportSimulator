@@ -28,7 +28,6 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
-import minecrafttransportsimulator.items.instances.ItemRoad;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -267,7 +266,7 @@ public final class PackParserSystem{
 				    				switch(classification){
 										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
 										case POLE : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
-										case ROAD : item = ((JSONRoadComponent) definition).general.type.equals("core") ? new ItemRoad((JSONRoadComponent) definition) : new ItemRoadComponent((JSONRoadComponent) definition); break;
+										case ROAD : item = new ItemRoadComponent((JSONRoadComponent) definition); break;
 										case DECOR : item = new ItemDecor((JSONDecor) definition); break;
 										case ITEM : item = new ItemItem((JSONItem) definition); break;
 										case BOOKLET : item = new ItemBooklet((JSONBooklet) definition); break;
@@ -393,7 +392,7 @@ public final class PackParserSystem{
     	try{
     		JSONRoadComponent definition = packParser.fromJson(jsonReader, JSONRoadComponent.class);
     		performLegacyCompats(definition);
-    		MasterInterface.createItem(setupItem(definition.general.type.equals("core") ? new ItemRoad(definition) : new ItemRoadComponent(definition), packID, jsonFileName, "", "", ItemClassification.ROAD));
+    		MasterInterface.createItem(setupItem(new ItemRoadComponent(definition), packID, jsonFileName, "", "", ItemClassification.ROAD));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());

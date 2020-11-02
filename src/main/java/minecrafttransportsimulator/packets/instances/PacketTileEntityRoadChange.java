@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.tileentities.components.TileEntityRoad_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
@@ -54,8 +53,7 @@ public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad
 	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityRoad road){
 		if(componentItem != null){
 			//Player clicked with a component.  Add/change it.
-			TileEntityRoad_Component newComponent = TileEntityRoad.createComponent(componentItem);
-			road.components.put(componentType, newComponent);
+			road.components.put(componentType, componentItem);
 			if(!player.isCreative()){
 				player.getInventory().removeStack(player.getHeldStack(), 1);
 			}
@@ -63,9 +61,9 @@ public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad
 		}else{
 			//Player clicked with a wrench, try to remove the component.
 			if(road.components.containsKey(componentType)){
-				TileEntityRoad_Component component = road.components.get(componentType);
+				ItemRoadComponent component = road.components.get(componentType);
 				IWrapperNBT data = null;
-				if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.item, data)){
+				if(world.isClient() || player.isCreative() || player.getInventory().addItem(component, data)){
 					road.components.remove(component);
 					return true;
 				}

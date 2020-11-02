@@ -11,7 +11,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.RoadCurve;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.TileEntityRoad_Component;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -26,20 +25,30 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * Optionally stores the next and prior road in the segment, if one exists.
  * This can be used to create smooth road segments.
  * Note that while the number of connection points is finite, there may be multiple
- * curves connected to and from each point.  This is why the arrays are two-dimensional.
+ * curves connected to and from each point.  However, each road segment can only have
+ * one curve from any one lane connection.  Therefore, to make junctions you will have
+ * multiple segments connected to the same point, but each of those segments will only be
+ * connected to that junction and nowhere else.
+ * Also note that all points and positions are relative.  This is done for simpler
+ * math operations.  Should the world-based point be needed, simply offset any relative
+ * point by the position of this TE.
  *
  * @author don_bruce
  */
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
-	public final Map<RoadComponent, TileEntityRoad_Component> components = new HashMap<RoadComponent, TileEntityRoad_Component>();
-	public final Point3d centerOffset;
+	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
 	public final Point3d[] curveConnectionPoints;
-	public final Point3i[][] backwardsBlockPositions;
-	public final Point3i[][] forwardsBlockPositions;
-	public final RoadCurve[][] curves;
+	public final Point3i[] backwardsBlockPositions;
+	public final Point3i[] forwardsBlockPositions;
+	public final Point3d[] forwardsCurveConnectionPoints;
+	public final Double[] forwardsCurveRotations;
+	public final RoadCurve[] curves;
 	public final BoundingBox boundingBox;
 	
-	private static final int MAX_CURVE_CONNECTIONS = 3;
+	public static final int MAX_CURVE_CONNECTIONS = 3;
+	public static final int MAX_SEGMENT_LENGTH = 32;
+	
+	public boolean holographic;
 	
 	public TileEntityRoad(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
@@ -48,44 +57,55 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			String packID = data.getString("packID" + componentType.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + componentType.ordinal());
-				TileEntityRoad_Component newComponent = createComponent(PackParserSystem.getItem(packID, systemName));
+				ItemRoadComponent newComponent = PackParserSystem.getItem(packID, systemName);
 				components.put(componentType, newComponent);
 			}
 		}
-		
-		//Get the centerOffset.  For blocks placed directly, this will be 0,0,0.
-		//For blocks placed as connectors to existing curves, or those as midpoints, it will be non-zero.
-		//Offset may be positive or negative for any point, but is assured to be between -0.5 and 0.5 for each axis.
-		centerOffset = data.getPoint3d("centerOffset");
 		
 		//Create a Point3d for rotation operations.
 		Point3d totalRotation = new Point3d(0, rotation, 0);
 		
 		//Now generate the curve connection points.  These come from our definition and our current rotation.
-		curveConnectionPoints = new Point3d[definition.general.numberLanes];
-		for(int i=0; i<definition.general.numberLanes; ++i){
-			curveConnectionPoints[i] = new Point3d(position).add(definition.general.firstLaneOffset + i*definition.general.laneWidth, 0, 0).rotateFine(totalRotation);
+		curveConnectionPoints = new Point3d[definition.general.laneOffsets.length];
+		for(int laneNumber=0; laneNumber<definition.general.laneOffsets.length; ++laneNumber){
+			curveConnectionPoints[laneNumber] = new Point3d(definition.general.laneOffsets[laneNumber], 0, 0).rotateFine(totalRotation);
 		}
 		
 		//Get saved curve connections that go to the generated points.
-		this.backwardsBlockPositions = new Point3i[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
-		this.forwardsBlockPositions = new Point3i[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
-		this.curves = new RoadCurve[curveConnectionPoints.length][MAX_CURVE_CONNECTIONS];
-		for(int i=0; i<curveConnectionPoints.length; ++i){
-			for(int j=0; j<MAX_CURVE_CONNECTIONS; ++j){
-				Point3i loadedBackwardsPosition = data.getPoint3i("backwardsBlockPosition" + String.valueOf(i) + String.valueOf(j));
-				Point3i loadedForwardsPosition = data.getPoint3i("forwardsBlockPosition" + String.valueOf(i) + String.valueOf(j));
-				if(!loadedBackwardsPosition.isZero()){
-					backwardsBlockPositions[i][j] = loadedBackwardsPosition;
-				}
-				if(!loadedForwardsPosition.isZero()){
-					forwardsBlockPositions[i][j] = loadedForwardsPosition;
-				}
+		//For blocks, we just store them until needed.  For curves, we use the points to generate them.
+		//The reason we store the points and the block positions is because the blocks for the curves may not
+		//get loaded in-order, but we need to know where the curve points are on construction. 
+		this.backwardsBlockPositions = new Point3i[curveConnectionPoints.length];
+		this.forwardsBlockPositions = new Point3i[curveConnectionPoints.length];
+		this.forwardsCurveConnectionPoints = new Point3d[curveConnectionPoints.length];
+		this.forwardsCurveRotations = new Double[curveConnectionPoints.length];
+		this.curves = new RoadCurve[curveConnectionPoints.length];
+		for(int laneNumber=0; laneNumber<curveConnectionPoints.length; ++laneNumber){
+			Point3i loadedBackwardsPosition = data.getPoint3i("backwardsBlockPosition" + laneNumber);
+			Point3i loadedForwardsPosition = data.getPoint3i("forwardsBlockPosition" + laneNumber);
+			if(!loadedBackwardsPosition.isZero()){
+				backwardsBlockPositions[laneNumber] = loadedBackwardsPosition;
+			}
+			if(!loadedForwardsPosition.isZero()){
+				forwardsBlockPositions[laneNumber] = loadedForwardsPosition;
+				forwardsCurveConnectionPoints[laneNumber] = data.getPoint3d("forwardsCurveConnectionPoint" + laneNumber);
+				forwardsCurveRotations[laneNumber] = data.getDouble("forwardsCurveRotation" + laneNumber);
+				curves[laneNumber] = new RoadCurve(forwardsCurveConnectionPoints[laneNumber].copy().subtract(curveConnectionPoints[laneNumber]), (float) rotation, forwardsCurveRotations[laneNumber].floatValue());
 			}
 		}
 		
 		//Set the bounding box.
-		this.boundingBox = new BoundingBox(new Point3d(0, 0, 0), 0.5D, definition.general.collisionHeight/2D, 0.5D);
+		this.boundingBox = new BoundingBox(new Point3d(0, (definition.general.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.general.collisionHeight/16D/2D, 0.5D);
+		
+		//Get the holographic state.
+		this.holographic = data.getBoolean("holographic");
+	}
+	
+	public void setCurve(int laneNumber, TileEntityRoad endTile, int endLaneNumber, boolean reversed){
+		forwardsBlockPositions[laneNumber] = endTile.position;
+		forwardsCurveConnectionPoints[laneNumber] = endTile.curveConnectionPoints[endLaneNumber].copy().add(endTile.position.x, endTile.position.y, endTile.position.z).add(-position.x, -position.y, -position.z);
+		forwardsCurveRotations[laneNumber] = reversed ? endTile.rotation : endTile.rotation + 180;
+		curves[laneNumber] = new RoadCurve(forwardsCurveConnectionPoints[laneNumber], (float) rotation, forwardsCurveRotations[laneNumber].floatValue());
 	}
 	
 	@Override
@@ -93,7 +113,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		List<AItemPack<JSONRoadComponent>> drops = new ArrayList<AItemPack<JSONRoadComponent>>();
 		for(RoadComponent componentType : RoadComponent.values()){
 			if(components.containsKey(componentType)){
-				drops.add(components.get(componentType).item);
+				drops.add(components.get(componentType));
 			}
 		}
 		return drops;
@@ -108,31 +128,26 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
     public void save(IWrapperNBT data){
 		super.save(data);
 		//Save all components.
-		for(Entry<RoadComponent, TileEntityRoad_Component> connectedObjectEntry : components.entrySet()){
+		for(Entry<RoadComponent, ItemRoadComponent> connectedObjectEntry : components.entrySet()){
 			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
 			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
 		}
 		
 		//Save curve connection data.
-		for(int i=0; i<curveConnectionPoints.length; ++i){
-			for(int j=0; j<MAX_CURVE_CONNECTIONS; ++j){
-				data.setPoint3i("backwardsBlockPosition" + String.valueOf(i) + String.valueOf(j), backwardsBlockPositions[i][j]);
-				data.setPoint3i("forwardsBlockPosition" + String.valueOf(i) + String.valueOf(j), forwardsBlockPositions[i][j]);
+		for(int laneNumber=0; laneNumber<curveConnectionPoints.length; ++laneNumber){
+			if(backwardsBlockPositions[laneNumber] != null){
+				data.setPoint3i("backwardsBlockPosition" + laneNumber, backwardsBlockPositions[laneNumber]);
+			}
+			if(forwardsBlockPositions[laneNumber] != null){
+				TileEntityRoad connectedRoad = world.getTileEntity(forwardsBlockPositions[laneNumber]);
+				if(connectedRoad != null){
+					data.setPoint3i("forwardsBlockPosition" + laneNumber, forwardsBlockPositions[laneNumber]);
+					data.setPoint3d("forwardsCurveConnectionPoint" + laneNumber, forwardsCurveConnectionPoints[laneNumber]);
+					data.setDouble("forwardsCurveRotation" + laneNumber, forwardsCurveRotations[laneNumber]);
+				}
 			}
 		}
     }
-	
-	/**
-	 *  Helper method to create a component for this TE.  Does not add the component.
-	 */
-	public static TileEntityRoad_Component createComponent(ItemRoadComponent item){
-		for(RoadComponent component : RoadComponent.values()){
-			if(component.name().toLowerCase().endsWith(item.definition.general.type)){
-				return new TileEntityRoad_Component(item);
-			}
-		}
-		throw new IllegalArgumentException("ERROR: Wanted type: " + (item.definition.general.type != null ? item.definition.general.type : null) + " for road component:" + item.definition.packID + ":" + item.definition.systemName +", but such a type is not a valid road component.  Contact the pack author." );
-	}
 	
 	/**
 	 *  Enums for part-specific stuff.
@@ -141,7 +156,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		CORE,
 		LEFT_MARKING,
 		RIGHT_MARKING,
-		CENER_MARKING,
+		CENTER_MARKING,
 		LEFT_BORDER,
 		RIGHT_BORDER,
 		UNDERLAYMENT,
