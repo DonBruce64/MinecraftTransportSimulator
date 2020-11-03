@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemWrench;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -137,15 +138,29 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Update vehicle collision boxes.
-		for(int i=0; i<definition.collision.size(); ++i){
-			vehicleCollisionBoxes.get(i).updateToEntity(this);
+		for(BoundingBox box : vehicleCollisionBoxes){
+			box.updateToEntity(this);
 		}
 		
 		//Update part collision boxes.
+		//We need to manually set the collision here as part boxes rotate with the part.
 		for(APart part : partCollisionBoxes.keySet()){
 			for(BoundingBox box : partCollisionBoxes.get(part)){
-				box.updateToEntity(this);
-				box.globalCenter.add(part.worldPos).subtract(position);
+				//First rotate the boxes based on the part's rotation.
+				box.globalCenter.setTo(box.localCenter).rotateFine(part.totalRotation);
+				//Now translate the box to it's actual position relative to the vehicle.
+				box.globalCenter.add(part.totalOffset);
+				//Now rotate the collision box by the vehicle's rotation.
+				box.globalCenter.rotateFine(angles);
+				//Add the worldOffset based on the vehicle's current position.
+				box.globalCenter.add(position);
+				//Clamp the box's points if required.
+				if(box.isCollision){
+					//Need to round box to nearest 0.1 unit to prevent floating-point errors.
+					box.globalCenter.x = ((int) (box.globalCenter.x*10D))/10D;
+					box.globalCenter.y = ((int) (box.globalCenter.y*10D))/10D;
+					box.globalCenter.z = ((int) (box.globalCenter.z*10D))/10D;
+				}
 			}
 		}
 		
