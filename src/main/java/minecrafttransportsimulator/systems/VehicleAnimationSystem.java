@@ -198,7 +198,13 @@ public final class VehicleAnimationSystem{
 			case("rain"): return vehicle.electricFlow < 0 ? (1.0 - Math.cos(((int)vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
+			case("trailer_pitch"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.x - vehicle.angles.x : 0;
+			case("trailer_yaw"): return vehicle.towedVehicle != null ?  vehicle.towedVehicle.angles.y - vehicle.angles.y : 0;
+			case("trailer_roll"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.z - vehicle.angles.z : 0;
 			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
+			case("hookup_pitch"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.x - vehicle.angles.x : 0;
+			case("hookup_yaw"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.y - vehicle.angles.y : 0;
+			case("hookup_roll"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.z - vehicle.angles.z : 0;
 			case("fueling"): return vehicle.beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.
