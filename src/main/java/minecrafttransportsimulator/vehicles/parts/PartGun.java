@@ -25,6 +25,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public int bulletsFired;
 	public int bulletsLeft;
 	public int gunNumber;
+	public int currentMuzzle;
 	public Point3d currentOrientation;
 	public Point3d prevOrientation;
 	private ItemPart loadedBullet;
@@ -401,11 +402,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	}
 	
 	public Point3d getFiringPosition() {
+		//If muzzle count is the same as capacity, use the muzzles in order
+		//Otherwise, iterate through the available muzzles
 		if (definition.gun.muzzlePositions != null) {
-			//If muzzle count is the same as capacity, use the muzzles in order
-			//Otherwise, iterate through the available muzzles
-			int muzzleIndex = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
-			return definition.gun.muzzlePositions.get(muzzleIndex).copy();
+			currentMuzzle = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
+			return definition.gun.muzzlePositions.get(currentMuzzle).copy();
 		}
 		
 		//If no muzzlePositions are defined, no offset will be used
