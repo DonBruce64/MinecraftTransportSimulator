@@ -47,13 +47,16 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 				}
 			}else if(!vehicle.world.isClient()){
 				if(part != null && !player.isSneaking()){
-					//Player can remove part.  Spawn item in the world and remove part.
+					//Player can remove part.  Check that the part isn't permanent.
+					//If not, spawn item in the world and remove part.
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
-					vehicle.removePart(part, null);
-					ItemPart droppedItem = part.getItem();
-					if(droppedItem != null){
-						vehicle.world.spawnItem(droppedItem, part.getData(), part.worldPos);
+					if(!part.vehicleDefinition.isPermanent){
+						vehicle.removePart(part, null);
+						ItemPart droppedItem = part.getItem();
+						if(droppedItem != null){
+							vehicle.world.spawnItem(droppedItem, part.getData(), part.worldPos);
+						}
 					}
 				}else if(player.isSneaking()){
 					//Attacker is a sneaking player with a wrench.
