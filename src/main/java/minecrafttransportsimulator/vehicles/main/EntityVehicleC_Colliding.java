@@ -239,6 +239,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 						continue;
 					}
 				}
+				
 				//If the player is holding a wrench, and the part has children, don't add it.
 				//Player shouldn't be able to wrench parts with children.
 				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){

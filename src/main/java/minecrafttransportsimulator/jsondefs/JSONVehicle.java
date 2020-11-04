@@ -91,6 +91,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public Point3d rot;
         public boolean turnsWithSteer;
         public boolean isController;
+        public boolean isPermanent;
         public boolean inverseMirroring;
         public List<String> types;
         public List<String> customTypes;
