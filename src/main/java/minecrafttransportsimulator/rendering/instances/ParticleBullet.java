@@ -31,7 +31,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
  * @author don_bruce
  */
 
-public final class ParticleBullet extends AParticle{
+public class ParticleBullet extends AParticle{
 	private final ItemPart bullet;
 	private final PartGun gun;
 	private final int bulletNumber;

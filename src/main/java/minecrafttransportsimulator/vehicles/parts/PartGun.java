@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -16,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
+import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -390,7 +392,15 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			bulletPosition.add(getFiringPosition().rotateFine(getActionRotation(0)).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 
 			//Add the bullet as a particle.
-			MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
+			//If the bullet is guided, give it a target
+			if (loadedBullet.definition.bullet.guided) {
+				Point3d lineOfSight = (new Point3d(0D, 0D, 500D)).rotateFine(new Point3d(lastController.getPitch(), 0D, 0D)).rotateFine(new Point3d(0D, lastController.getYaw(), 0));
+				Point3i bulletTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+				MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, bulletTarget));
+			}
+			else {
+				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
+			}
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			
