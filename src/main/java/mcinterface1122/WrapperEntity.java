@@ -113,6 +113,11 @@ class WrapperEntity implements IWrapperEntity{
 	}
 	
 	@Override
+	public Point3d getLineOfSight(float distance) {
+		return (new Point3d(0D, 0D, distance)).rotateFine(new Point3d(entity.rotationPitch, 0D, 0D)).rotateFine(new Point3d(0D, -entity.rotationYaw, 0));
+	}
+	
+	@Override
 	public void setYaw(double yaw){
 		entity.rotationYaw = (float)-yaw;
 	}

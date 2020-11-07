@@ -8,14 +8,24 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public final class ParticleMissile extends ParticleBullet {
 	
-	private final Point3i blockTarget;
+	private Point3d targetPosition;
+	
+	private final IWrapperEntity entityTarget;
 	private final double anglePerTickSpeed;
 
+	//Constructor for when an entity could not be found, so a block position will be the target
 	public ParticleMissile(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController, Point3i target) {
 		super(position, motion, bullet, gun, gunController);
-		
-		this.blockTarget = target;
-		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 100/bullet.definition.bullet.diameter;		
+		this.targetPosition = new Point3d(target.x, target.y, target.z);
+		this.entityTarget = null;
+		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;		
+	}
+	
+	//Passes in an entity to be used as the target
+	public ParticleMissile(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController, IWrapperEntity target) {
+		super(position, motion, bullet, gun, gunController);
+		this.entityTarget = target;
+		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;		
 	}
 	
 	@Override
@@ -23,8 +33,18 @@ public final class ParticleMissile extends ParticleBullet {
 		double currentYaw = Math.toDegrees(Math.atan2(motion.x, motion.z));
 		double currentPitch = -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
 		
-		double yawTarget = Math.toDegrees(Math.atan2(blockTarget.x - position.x, blockTarget.z - position.z));
-		double pitchTarget = -Math.toDegrees(Math.atan2(blockTarget.y - position.y, Math.hypot(blockTarget.x - position.x, blockTarget.z - position.z)));
+		double yawTarget = currentYaw;
+		double pitchTarget = currentPitch;
+		
+		//If the target is a valid entity, update target position
+		//Otherwise, use the last position
+		if (entityTarget != null && entityTarget.isValid()) {
+			targetPosition = entityTarget.getPosition();
+		}
+		if (targetPosition != null) {
+			yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
+			pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
+		}
 		double deltaYaw = yawTarget - currentYaw;
 		double deltaPitch = pitchTarget - currentPitch;
 		

@@ -187,6 +187,27 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
+	public WrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius){
+		double smallestDistance = searchRadius*2;
+		Entity foundEntity = null;
+		Entity mcLooker = ((WrapperEntity) entityLooking).entity;
+		Vec3d mcLookerPos = mcLooker.getPositionVector();
+		Point3d lookerLos = entityLooking.getLineOfSight(searchRadius);
+		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
+			float distance = mcLooker.getDistance(entity);
+			if(distance < 10f) continue;
+			if(distance < smallestDistance){
+				RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(mcLookerPos, losVector);
+				if(rayTrace != null){
+					foundEntity = entity;
+				}
+			}
+		}
+		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
+	}
+	
+	@Override
 	public void spawnEntity(AEntityBase entity){
     	BuilderEntity builder = new BuilderEntity(world);
     	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);

@@ -69,6 +69,12 @@ public interface IWrapperWorld{
 	public IWrapperEntity getNearestHostile(IWrapperEntity entityLooking, int searchRadius);
 	
 	/**
+	 *  Returns the closest entity whose collision boxes are intercepted by the
+	 *  passed-in entity's line of sight.
+	 */
+	public IWrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius);
+	
+	/**
 	 *  Spawns the passed-in entity into the world.
 	 *  Position and rotation is set initially to match the entity.
 	 */

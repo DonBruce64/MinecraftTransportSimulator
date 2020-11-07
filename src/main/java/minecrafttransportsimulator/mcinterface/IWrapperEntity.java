@@ -105,6 +105,12 @@ public interface IWrapperEntity{
 	public float getHeadYaw();
 	
 	/**
+	 *  Returns a vector in the direction of the entity's line of sight,
+	 *  with a magnitude equal to the passed-in distance. 
+	 */
+	public Point3d getLineOfSight(float distance);
+	
+	/**
 	 *  Sets the entity's yaw to the passed-in yaw.
 	 *  NOTE: the yaw value from this function is inverted
 	 *  from the normal MC standard to have it follow the RHR

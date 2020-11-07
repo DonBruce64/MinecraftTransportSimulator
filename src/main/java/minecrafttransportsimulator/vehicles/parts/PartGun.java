@@ -394,9 +394,25 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Add the bullet as a particle.
 			//If the bullet is guided, give it a target
 			if (loadedBullet.definition.bullet.guided) {
-				Point3d lineOfSight = (new Point3d(0D, 0D, 500D)).rotateFine(new Point3d(lastController.getPitch(), 0D, 0D)).rotateFine(new Point3d(0D, lastController.getYaw(), 0));
-				Point3i bulletTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
-				MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, bulletTarget));
+				//First find the block the controller is looking at, if possible
+				double maxDistance = 1000D;
+				Point3d lineOfSight = lastController.getLineOfSight((float) maxDistance);
+				Point3i blockTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+				
+				//Try to find the closest entity between the controller and the block
+				if(blockTarget != null) {
+					maxDistance = lastController.getPosition().distanceTo(blockTarget);
+				}
+				IWrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
+				
+				//Fire a missile with the found entity as its target, if valid
+				//Otherwise, fall back to the block target
+				if(entityTarget != null) {
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, entityTarget));
+				}
+				else {
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, blockTarget));
+				}
 			}
 			else {
 				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
