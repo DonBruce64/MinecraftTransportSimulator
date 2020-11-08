@@ -122,6 +122,17 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float angleOfAttack;
     	public float proximityFuze;
     	public int airBurstDelay;
+    	public List<ParticleObject> particleObjects;
+    	
+    	public class ParticleObject{
+    		public String type;
+    		public String color;
+    		public float transparency;
+    		public float scale;
+        	public Point3d pos;
+        	public float velocity;
+        	public int quantity;
+    	}
     }
     
     public class JSONPartInteractable{

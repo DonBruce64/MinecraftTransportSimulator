@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public final class ParticleMissile extends ParticleBullet {
@@ -15,7 +14,6 @@ public final class ParticleMissile extends ParticleBullet {
 	private final IWrapperEntity entityTarget;
 	private final double anglePerTickSpeed;
 	private final float desiredAngleOfAttack;
-	private final IWrapperWorld world;
 	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
@@ -25,7 +23,6 @@ public final class ParticleMissile extends ParticleBullet {
 		this.entityTarget = null;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
 		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
-		this.world = gun.vehicle.world;
 		this.proximityFuzeDistance = bullet.definition.bullet.proximityFuze;
 	}
 	
@@ -35,7 +32,6 @@ public final class ParticleMissile extends ParticleBullet {
 		this.entityTarget = target;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
 		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
-		this.world = gun.vehicle.world;
 		this.proximityFuzeDistance = bullet.definition.bullet.proximityFuze;
 	}
 	
@@ -50,12 +46,8 @@ public final class ParticleMissile extends ParticleBullet {
 			}
 		}
 		
-		//Need everything in degrees to help with math later
-		double currentYaw = Math.toDegrees(Math.atan2(motion.x, motion.z));
-		double currentPitch = -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
-		
-		double yawTarget = currentYaw;
-		double pitchTarget = currentPitch;
+		double yawTarget = this.getYaw();
+		double pitchTarget = this.getPitch();
 		
 		//If the target is a valid entity, update target position
 		//Otherwise, use the last target position
@@ -71,8 +63,8 @@ public final class ParticleMissile extends ParticleBullet {
 				pitchTarget = 0D;
 			}
 		}
-		double deltaYaw = yawTarget - currentYaw;
-		double deltaPitch = pitchTarget - currentPitch;
+		double deltaYaw = yawTarget - this.getYaw();
+		double deltaPitch = pitchTarget - this.getPitch();
 		
 		//Adjust deltaYaw as necessary, then apply it
 		while(deltaYaw > 180){

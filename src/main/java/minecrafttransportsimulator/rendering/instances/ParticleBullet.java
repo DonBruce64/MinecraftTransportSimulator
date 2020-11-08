@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
@@ -11,10 +12,13 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartBullet.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
+import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
+import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -125,6 +129,11 @@ public class ParticleBullet extends AParticle{
 			--this.burnTimeLeft;
 		}
 		
+		//Create trail particles, if defined
+		if (bullet.definition.bullet.particleObjects != null) {
+			spawnParticles();
+		}
+		
 		//Send our updated motion to the super to update the position.
 		//Doing this last lets us damage on the first update tick.
 		super.update();
@@ -137,6 +146,50 @@ public class ParticleBullet extends AParticle{
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
 		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
+	}
+	
+	private void spawnParticles() {
+		for(ParticleObject particle : this.bullet.definition.bullet.particleObjects) {
+			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity
+			//Add a little variation to this
+			Point3d particleVelocity = motion.copy().normalize().multiply(-particle.velocity/20D/10D);
+			
+			//Get the particle's initial position
+			Point3d particlePosition = this.position.copy();
+			if(particle.pos == null) {
+				particlePosition.add(particle.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
+			}
+
+			//Spawn the appropriate type and amount of particles
+			if(particle.quantity == 0) particle.quantity = 1;
+			switch(particle.type) {
+				case "smoke": {
+					Color color = Color.decode(particle.color);
+					for(int i=0; i<particle.quantity; i++) {
+						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, particle.transparency, particle.scale));
+					}
+					break;
+				}
+				case "flame": {
+					for(int i=0; i<particle.quantity; i++) {
+						MasterLoader.renderInterface.spawnParticle(new ParticleFlame(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particle.scale));
+					}
+					break;
+				}
+			}
+		}
+	}
+	
+	protected double getYaw() {
+		return Math.toDegrees(Math.atan2(motion.x, motion.z));
+	}
+	
+	protected double getPitch() {
+		return -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
+	}
+	
+	protected void rotatePointByOrientation(Point3d point) {
+		point.rotateFine(new Point3d(0D, this.getYaw(), 0D)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
 	}
 	
 	@Override
