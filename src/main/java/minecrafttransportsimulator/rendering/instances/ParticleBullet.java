@@ -55,6 +55,7 @@ public class ParticleBullet extends AParticle{
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
         if(this.timeUntilAirBurst == 0) this.timeUntilAirBurst = -1;
+        if(bullet.definition.bullet.blastStrength == 0F) bullet.definition.bullet.blastStrength = 1F;
     }
 	
 	@Override

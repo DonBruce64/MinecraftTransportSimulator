@@ -80,7 +80,8 @@ public class PacketBulletHit extends APacketVehiclePart{
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
 			JSONPart bulletDefinition = bullet.definition;
-			BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false, false, 0);
+			float blastSize = bulletDefinition.bullet.diameter * bulletDefinition.bullet.blastStrength;
+			BoundingBox box = new BoundingBox(localCenter, globalCenter, blastSize/1000F, blastSize/1000F, blastSize/1000F, false, false, false, 0);
 			PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.
@@ -89,7 +90,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 				//If we are an explosive bullet, just blow up at our current position.
 				//Otherwise do attack logic.
 				if(bulletDefinition.bullet.type.equals("explosive")){
-					world.spawnExplosion(vehicle, box.globalCenter, bulletDefinition.bullet.diameter/10F, false);
+					world.spawnExplosion(vehicle, box.globalCenter, blastSize/10F, false);
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){

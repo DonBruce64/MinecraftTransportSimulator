@@ -393,7 +393,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 
 			//Add the bullet as a particle.
 			//If the bullet is guided, give it a target
-			if (loadedBullet.definition.bullet.guided) {
+			if (loadedBullet.definition.bullet.turnFactor > 0) {
 				//First find the block the controller is looking at, if possible
 				double maxDistance = 1000D;
 				Point3d lineOfSight = lastController.getLineOfSight((float) maxDistance);
