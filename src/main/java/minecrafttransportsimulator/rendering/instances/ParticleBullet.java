@@ -42,7 +42,8 @@ public class ParticleBullet extends AParticle{
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
 	private double armorPenetrated;
-	private double burnTimeLeft;
+	private int burnTimeLeft;
+	private int timeUntilAirBurst;
 	
     public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
@@ -50,8 +51,9 @@ public class ParticleBullet extends AParticle{
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
         this.initalVelocity = motion.length();
-        this.burnTimeLeft = (double)bullet.definition.bullet.burnTime;
+        this.burnTimeLeft = bullet.definition.bullet.burnTime;
         this.gunController = gunController;
+        this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
     }
 	
 	@Override
@@ -95,6 +97,15 @@ public class ParticleBullet extends AParticle{
 			return;
 		}
 		
+		//Didn't hit a block either. Check the air-burst time.
+		if(this.timeUntilAirBurst == 0) {
+			doBulletHit(this.position, velocity);
+			return;
+		}
+		else if (this.timeUntilAirBurst > 0) {
+			--this.timeUntilAirBurst;
+		}
+		
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
 		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired
 		if (this.burnTimeLeft > 0) {
@@ -109,7 +120,11 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	protected void doBulletHit(Point3d hitPos, double velocity) {
-		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(hitPos, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
+		doBulletHit(new BoundingBox(hitPos, box.widthRadius, box.heightRadius, box.depthRadius), velocity);
+	}
+	
+	protected void doBulletHit(BoundingBox hitBox, double velocity) {
+		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
 	}
 	
