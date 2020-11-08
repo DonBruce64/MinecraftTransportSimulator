@@ -41,6 +41,7 @@ public final class ParticleMissile extends ParticleBullet {
 	
 	@Override
 	public void update() {
+		//Check proximity fuze against the distance to the target
 		if(this.proximityFuzeDistance != 0) {
 			float distanceUntilImpact = (float)this.position.distanceTo(this.targetPosition);
 			if (distanceUntilImpact <= this.proximityFuzeDistance) {
@@ -49,7 +50,7 @@ public final class ParticleMissile extends ParticleBullet {
 			}
 		}
 		
-		
+		//Need everything in degrees to help with math later
 		double currentYaw = Math.toDegrees(Math.atan2(motion.x, motion.z));
 		double currentPitch = -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
 		
@@ -57,7 +58,8 @@ public final class ParticleMissile extends ParticleBullet {
 		double pitchTarget = currentPitch;
 		
 		//If the target is a valid entity, update target position
-		//Otherwise, use the last position
+		//Otherwise, use the last target position
+		//If there is no valid target position, just continue forward
 		if (entityTarget != null && entityTarget.isValid()) {
 			targetPosition = entityTarget.getPosition();
 		}
@@ -82,13 +84,11 @@ public final class ParticleMissile extends ParticleBullet {
 		if(deltaYaw < 0){
 			if(deltaYaw < -anglePerTickSpeed){
 				deltaYaw = -anglePerTickSpeed;
-				//lockedOn = false;
 			}
 			motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
 		}else if(deltaYaw > 0){
 			if(deltaYaw > anglePerTickSpeed){
 				deltaYaw = anglePerTickSpeed;
-				//lockedOn = false;
 			}
 			motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
 		}
@@ -97,13 +97,11 @@ public final class ParticleMissile extends ParticleBullet {
 		if(deltaPitch < 0){
 			if(deltaPitch < -anglePerTickSpeed){
 				deltaPitch = -anglePerTickSpeed;
-				//lockedOn = false;
 			}
 			motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
 		}else if(deltaPitch > 0){
 			if(deltaPitch > anglePerTickSpeed){
 				deltaPitch = anglePerTickSpeed;
-				//lockedOn = false;
 			}
 			motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
 		}

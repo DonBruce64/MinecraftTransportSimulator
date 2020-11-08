@@ -54,6 +54,7 @@ public class ParticleBullet extends AParticle{
         this.burnTimeLeft = bullet.definition.bullet.burnTime;
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
+        if(this.timeUntilAirBurst == 0) this.timeUntilAirBurst = -1;
     }
 	
 	@Override
@@ -104,6 +105,15 @@ public class ParticleBullet extends AParticle{
 		}
 		else if (this.timeUntilAirBurst > 0) {
 			--this.timeUntilAirBurst;
+		}
+		
+		//Check proximity fuze against any blocks that might be out front
+		if(bullet.definition.bullet.proximityFuze != 0) {
+			Point3i projectedImpactPoint = gun.vehicle.world.getBlockHit(this.position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
+			if(projectedImpactPoint != null) {
+				this.doBulletHit(this.position, velocity);
+				return;
+			}
 		}
 		
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
