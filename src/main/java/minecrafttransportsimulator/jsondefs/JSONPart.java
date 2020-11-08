@@ -120,6 +120,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float maxOffAxis;
     	public float turnFactor;
     	public float angleOfAttack;
+    	public float proximityFuze;
     }
     
     public class JSONPartInteractable{

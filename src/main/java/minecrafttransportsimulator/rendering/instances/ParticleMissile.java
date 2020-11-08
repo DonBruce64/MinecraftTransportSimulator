@@ -4,6 +4,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public final class ParticleMissile extends ParticleBullet {
@@ -13,14 +15,18 @@ public final class ParticleMissile extends ParticleBullet {
 	private final IWrapperEntity entityTarget;
 	private final double anglePerTickSpeed;
 	private final float desiredAngleOfAttack;
+	private final IWrapperWorld world;
+	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
 	public ParticleMissile(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController, Point3i target) {
 		super(position, motion, bullet, gun, gunController);
-		this.targetPosition = new Point3d(target.x, target.y, target.z);
+		this.targetPosition = new Point3d(target);
 		this.entityTarget = null;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
 		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
+		this.world = gun.vehicle.world;
+		this.proximityFuzeDistance = bullet.definition.bullet.proximityFuze;
 	}
 	
 	//Passes in an entity to be used as the target
@@ -28,11 +34,22 @@ public final class ParticleMissile extends ParticleBullet {
 		super(position, motion, bullet, gun, gunController);
 		this.entityTarget = target;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
-		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;	
+		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
+		this.world = gun.vehicle.world;
+		this.proximityFuzeDistance = bullet.definition.bullet.proximityFuze;
 	}
 	
 	@Override
 	public void update() {
+		if(this.proximityFuzeDistance != 0) {
+			float distanceUntilImpact = (float)this.position.distanceTo(this.targetPosition);
+			if (distanceUntilImpact <= this.proximityFuzeDistance) {
+				this.doBulletHit(this.position, motion.length());
+				return;
+			}
+		}
+		
+		
 		double currentYaw = Math.toDegrees(Math.atan2(motion.x, motion.z));
 		double currentPitch = -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
 		
@@ -48,7 +65,7 @@ public final class ParticleMissile extends ParticleBullet {
 			yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
 			pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
 			//Remain flat if not yet at desired angle of attack
-			if (pitchTarget < desiredAngleOfAttack) {
+			if (pitchTarget > 0 && pitchTarget < desiredAngleOfAttack) {
 				pitchTarget = 0D;
 			}
 		}

@@ -91,8 +91,7 @@ public class ParticleBullet extends AParticle{
 		//Didn't hit an entity.  Check for blocks.
 		Point3i hitPos = world.getBlockHit(position, motion);
 		if(hitPos != null){
-			MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(new Point3d(hitPos), box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
-			age = maxAge;
+			doBulletHit(new Point3d(hitPos), velocity);
 			return;
 		}
 		
@@ -107,6 +106,11 @@ public class ParticleBullet extends AParticle{
 		//Send our updated motion to the super to update the position.
 		//Doing this last lets us damage on the first update tick.
 		super.update();
+	}
+	
+	protected void doBulletHit(Point3d hitPos, double velocity) {
+		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(new BoundingBox(hitPos, box.widthRadius, box.heightRadius, box.depthRadius), velocity, bullet, gun, bulletNumber, null, gunController));
+		age = maxAge;
 	}
 	
 	@Override
