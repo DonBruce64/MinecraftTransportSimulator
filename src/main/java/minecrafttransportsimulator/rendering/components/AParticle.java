@@ -16,14 +16,21 @@ public abstract class AParticle{
 	public final Point3d position;
 	public final Point3d motion;
 	public final BoundingBox box;
-	public final float red;
-	public final float green;
-	public final float blue;
-	public final float alpha;
-	public final float scale;
 	public final int maxAge;
+
+	public float red;
+	public float green;
+	public float blue;
+	public float alpha;
 	public boolean touchingBlocks;
+	public float scale;
 	public int age;
+	
+	public float deltaRed;
+	public float deltaGreen;
+	public float deltaBlue;
+	public float deltaAlpha;
+	public float deltaScale;
 	
 	public AParticle(IWrapperWorld world, Point3d position, Point3d motion){
 		this(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
@@ -53,8 +60,32 @@ public abstract class AParticle{
 			}
 		}
 		position.add(motion);
+		
+		//Change color, alpha, and scale if necessary.
+		//This is proportional to its point in its life cycle.
+		this.red += this.deltaRed;
+		this.green += this.deltaGreen;
+		this.blue += this.deltaBlue;
+		this.alpha += this.deltaAlpha;
+		this.scale += this.deltaScale;
+		
 		++age;
 	}
+	
+	/**
+	 *  Sets values for incrementally changing color, transparency, and scale later on.
+	 *  It takes the desired end-states of these values, and calculates how much the
+	 *  values need to change each tick to reach the given value at maxAge.
+	 */
+	public void setDeltas(float toRed, float toGreen, float toBlue, float toAlpha, float toScale) {
+		//Establish how much to change each tick.
+		float deltaAmount = 1f/(this.maxAge - this.age);
+		this.deltaRed = (toRed - this.red) * deltaAmount;
+		this.deltaGreen = (toGreen - this.green) * deltaAmount;
+		this.deltaBlue = (toBlue - this.blue) * deltaAmount;
+		this.deltaAlpha = (toAlpha - this.alpha) * deltaAmount;
+		this.deltaScale = (toScale - this.scale) * deltaAmount;
+	};
 	
 	/**
 	 *  Returns true if this particle should be prevented from moving through blocks.

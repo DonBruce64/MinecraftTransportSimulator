@@ -58,7 +58,6 @@ public class ParticleBullet extends AParticle{
         this.burnTimeLeft = bullet.definition.bullet.burnTime;
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
-        if(this.timeUntilAirBurst == 0) this.timeUntilAirBurst = -1;
         if(bullet.definition.bullet.blastStrength == 0F) bullet.definition.bullet.blastStrength = 1F;
     }
 	
@@ -103,13 +102,15 @@ public class ParticleBullet extends AParticle{
 			return;
 		}
 		
-		//Didn't hit a block either. Check the air-burst time.
-		if(this.timeUntilAirBurst == 0) {
-			doBulletHit(this.position, velocity);
-			return;
-		}
-		else if (this.timeUntilAirBurst > 0) {
-			--this.timeUntilAirBurst;
+		//Didn't hit a block either. Check the air-burst time, if it was used.
+		if(bullet.definition.bullet.airBurstDelay != 0) {
+			if(this.timeUntilAirBurst == 0) {
+				doBulletHit(this.position, velocity);
+				return;
+			}
+			else {
+				--this.timeUntilAirBurst;
+			}
 		}
 		
 		//Check proximity fuze against any blocks that might be out front
@@ -123,9 +124,11 @@ public class ParticleBullet extends AParticle{
 		
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
 		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired
-		if (this.burnTimeLeft > 0) {
+		if (this.burnTimeLeft == 0) {
 			motion.multiply(0.98D);
 			motion.y -= 0.0245D;
+		}
+		else {
 			--this.burnTimeLeft;
 		}
 		
@@ -149,30 +152,39 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	private void spawnParticles() {
-		for(ParticleObject particle : this.bullet.definition.bullet.particleObjects) {
-			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity
-			//Add a little variation to this
-			Point3d particleVelocity = motion.copy().normalize().multiply(-particle.velocity/20D/10D);
+		for(ParticleObject particleObject : this.bullet.definition.bullet.particleObjects) {
+			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
+			//Add a little variation to this.
+			Point3d particleVelocity = motion.copy().normalize().multiply(-particleObject.velocity/20D/10D);
 			
-			//Get the particle's initial position
+			//Get the particle's initial position.
 			Point3d particlePosition = this.position.copy();
-			if(particle.pos == null) {
-				particlePosition.add(particle.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
+			if(particleObject.pos != null) {
+				particlePosition.add(particleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
 			}
 
-			//Spawn the appropriate type and amount of particles
-			if(particle.quantity == 0) particle.quantity = 1;
-			switch(particle.type) {
+			//Spawn the appropriate type and amount of particles.
+			//Change default values from 0 to 1.
+			AParticle currentParticle;
+			if(particleObject.quantity == 0) particleObject.quantity = 1;
+			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
+			switch(particleObject.type) {
 				case "smoke": {
-					Color color = Color.decode(particle.color);
-					for(int i=0; i<particle.quantity; i++) {
-						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, particle.transparency, particle.scale));
+					Color color = particleObject.color != null ? Color.decode(particleObject.color) : Color.decode("#FFFFFF");
+					Color toColor = particleObject.toColor != null ? Color.decode(particleObject.toColor) : color;
+					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, particleObject.transparency, particleObject.scale);
+						currentParticle.setDeltas(toColor.getRed()/255F, toColor.getGreen()/255F, toColor.getBlue()/255F, particleObject.toTransparency, particleObject.toScale);
+						MasterLoader.renderInterface.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
-					for(int i=0; i<particle.quantity; i++) {
-						MasterLoader.renderInterface.spawnParticle(new ParticleFlame(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particle.scale));
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleFlame(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
+						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+						MasterLoader.renderInterface.spawnParticle(currentParticle);
 					}
 					break;
 				}

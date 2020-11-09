@@ -392,16 +392,20 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			bulletPosition.add(getFiringPosition().rotateFine(getActionRotation(0)).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 
 			//Add the bullet as a particle.
-			//If the bullet is guided, give it a target
+			//If the bullet is a missile, give it a target.
 			if (loadedBullet.definition.bullet.turnFactor > 0) {
 				//First find the block the controller is looking at, if possible
-				double maxDistance = 1000D;
+				double maxDistance = 2000D;
 				Point3d lineOfSight = lastController.getLineOfSight((float) maxDistance);
 				Point3i blockTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 				
 				//Try to find the closest entity between the controller and the block
+				//If no block was found, set target position to maxDistance in the direction of the line of sight
 				if(blockTarget != null) {
 					maxDistance = lastController.getPosition().distanceTo(blockTarget);
+				}
+				else {
+					blockTarget = new Point3i(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight));
 				}
 				IWrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
 				
