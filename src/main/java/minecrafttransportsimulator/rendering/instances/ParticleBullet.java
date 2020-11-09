@@ -231,7 +231,7 @@ public class ParticleBullet extends AParticle{
 	
 	@Override
 	public boolean isBright(){
-		return bullet.definition.bullet.type.equals("tracer");
+		return bullet.definition.bullet.types.contains("tracer");
 	}
 	
 	@Override

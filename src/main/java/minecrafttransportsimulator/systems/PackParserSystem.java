@@ -496,6 +496,11 @@ public final class PackParserSystem{
     			if(partDef.general.type.equals("gun_turret")){
     				partDef.gun.isTurret = true;
     			}
+    		}else if(partDef.bullet != null) {
+    			if (partDef.bullet.type != null) {
+    				partDef.bullet.types = new ArrayList<String>();
+    				partDef.bullet.types.add(partDef.bullet.type);
+    			}
     		}else{
     			//Check for old ground devices, crates, barrels, and effectors.
     			switch(partDef.general.type){

@@ -111,7 +111,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartBullet{
+    	@Deprecated
     	public String type;
+    	public List<String> types;
     	public int quantity;
     	public float diameter;
     	public float blastStrength;
