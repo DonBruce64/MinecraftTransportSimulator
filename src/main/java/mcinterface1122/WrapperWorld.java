@@ -189,7 +189,7 @@ class WrapperWorld implements IWrapperWorld{
 	
 	/*
 	 *  Finds the closest entity that the looker's line of sight intersects,
-	 *  the passed-in searchRadius.
+	 *  within the passed-in searchRadius.
 	 */
 	@Override
 	public WrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius){
