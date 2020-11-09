@@ -37,15 +37,6 @@ public final class ParticleMissile extends ParticleBullet {
 	
 	@Override
 	public void update() {
-		//Check proximity fuze against the distance to the target
-		if(this.proximityFuzeDistance != 0) {
-			float distanceUntilImpact = (float)this.position.distanceTo(this.targetPosition);
-			if (distanceUntilImpact <= this.proximityFuzeDistance) {
-				this.doBulletHit(this.position, motion.length());
-				return;
-			}
-		}
-		
 		double yawTarget = this.getYaw();
 		double pitchTarget = this.getPitch();
 		
@@ -63,6 +54,16 @@ public final class ParticleMissile extends ParticleBullet {
 				pitchTarget = 0D;
 			}
 		}
+
+		//Check proximity fuze against the distance to the target
+		if(this.proximityFuzeDistance != 0 && this.targetPosition != null) {
+			float distanceUntilImpact = (float)this.position.distanceTo(this.targetPosition);
+			if (distanceUntilImpact <= this.proximityFuzeDistance) {
+				this.doBulletHit(this.position, motion.length());
+				return;
+			}
+		}
+		
 		double deltaYaw = yawTarget - this.getYaw();
 		double deltaPitch = pitchTarget - this.getPitch();
 		

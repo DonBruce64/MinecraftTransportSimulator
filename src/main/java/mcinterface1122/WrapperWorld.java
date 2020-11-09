@@ -22,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
@@ -186,13 +187,17 @@ class WrapperWorld implements IWrapperWorld{
 		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
 	}
 	
+	/*
+	 *  Finds the closest entity that the looker's line of sight intersects,
+	 *  the passed-in searchRadius.
+	 */
 	@Override
 	public WrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius){
 		double smallestDistance = searchRadius*2;
 		Entity foundEntity = null;
 		Entity mcLooker = ((WrapperEntity) entityLooking).entity;
 		Vec3d mcLookerPos = mcLooker.getPositionVector();
-		Point3d lookerLos = entityLooking.getLineOfSight(searchRadius);
+		Point3d lookerLos = entityLooking.getLineOfSight(searchRadius).add(entityLooking.getPosition());
 		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
 			float distance = mcLooker.getDistance(entity);
