@@ -79,8 +79,14 @@ public final class ParticleMissile extends ParticleBullet {
 			yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
 			pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
 			//Remain flat if not yet at desired angle of attack
+			//Or climb up if needed to get above the target
 			if (pitchTarget > 0 && pitchTarget < desiredAngleOfAttack) {
-				pitchTarget = 0D;
+				if(this.position.y < targetPosition.y + 0.5*desiredAngleOfAttack) {
+					pitchTarget = -desiredAngleOfAttack;
+				}
+				else {
+					pitchTarget = 0D;
+				}
 			}
 		}
 
