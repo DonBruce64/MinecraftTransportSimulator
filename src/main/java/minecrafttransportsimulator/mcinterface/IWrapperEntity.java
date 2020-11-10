@@ -41,6 +41,12 @@ public interface IWrapperEntity{
 	public void setRiding(AEntityBase entityToRide);
 	
 	/**
+	 *  If the wrapped entity is an AEntityBase, return that
+	 *  base entity. Otherwise return null.
+	 */
+	public AEntityBase getBaseEntity();
+	
+	/**
 	 *  Returns a Y-offset for where this entity should sit in a seat.
 	 *  This is based on how far down the axis drawn on the seat's y-axis
 	 *  the position for the entity should be set.  Required as entities

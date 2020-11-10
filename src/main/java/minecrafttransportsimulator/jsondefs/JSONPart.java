@@ -108,6 +108,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float maxYaw;
     	public float diameter;
     	public float length;
+    	public boolean fireSolo;
     }
     
     public class JSONPartBullet{

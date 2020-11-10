@@ -13,6 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartSeat extends APart{
 	public ItemPart activeGun;
+	public int gunIndex;
 	
 	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
@@ -90,6 +91,7 @@ public final class PartSeat extends APart{
 				for(PartGun gun : vehicle.guns.get(gunType)){
 					if(rider.equals(gun.getCurrentController())){
 						activeGun = gunType;
+						gunIndex = 0;
 						return;
 					}
 				}
@@ -110,7 +112,19 @@ public final class PartSeat extends APart{
 								firstPossibleGun = gunType;
 							}
 							if(gunType.equals(currentGun)){
-								pastActiveGun = true;
+								if (gunType.definition.gun.fireSolo) {
+									//If this type of gun can't be grouped, iterate through the different instances.
+									//Once we run out of this type, move onto the next type.
+									if(vehicle.guns.get(gunType).size() <= ++gunIndex) {
+										pastActiveGun = true;
+									}
+									else {
+										activeGun = gunType;
+									}
+								}
+								else {
+									pastActiveGun = true;
+								}
 							}
 						}
 						break;
@@ -120,6 +134,7 @@ public final class PartSeat extends APart{
 			//If the active gun is null, we just set it to the first possible gun as we've gone around.
 			if(activeGun == null){
 				activeGun = firstPossibleGun;
+				gunIndex = 0;
 			}
 		}
 	}

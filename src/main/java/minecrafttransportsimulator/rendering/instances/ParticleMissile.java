@@ -4,11 +4,17 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class ParticleMissile extends ParticleBullet {
 	
 	private Point3d targetPosition;
+	private PartEngine engineTarget;
 	
 	private final IWrapperEntity entityTarget;
 	private final double anglePerTickSpeed;
@@ -43,7 +49,32 @@ public final class ParticleMissile extends ParticleBullet {
 		//Otherwise, use the last target position
 		//If there is no valid target position, just continue forward
 		if (entityTarget != null && entityTarget.isValid()) {
-			targetPosition = entityTarget.getPosition();
+			//If the target is a vehicle, and we're not currently locked onto an engine,
+			//Try to find a valid, warm engine to track.
+			//If we were tracking an engine, but it is no longer valid or is cold, find a new one.
+			AEntityBase entityTargetBase = entityTarget.getBaseEntity();
+			if(entityTargetBase != null && entityTargetBase instanceof EntityVehicleF_Physics && (engineTarget == null || !engineTarget.isValid || engineTarget.temp < 30f)) {
+				EntityVehicleF_Physics vehicleTarget = (EntityVehicleF_Physics) entityTargetBase;
+				PartEngine nearestEngine = null;
+				float smallestDistance = 0f;
+				for (APart part : vehicleTarget.parts) {
+					if(part instanceof PartEngine) {
+						PartEngine currentEngine = (PartEngine) part;
+						//Can't see the engine if it's cold
+						if(currentEngine.temp < 30f) {
+							continue;
+						}
+						float distanceToEngine = (float)position.distanceTo(currentEngine.worldPos);
+						if (nearestEngine == null || distanceToEngine < smallestDistance) {
+							nearestEngine = currentEngine;
+							smallestDistance = distanceToEngine;
+						}
+					}
+				}
+				engineTarget = nearestEngine != null ? nearestEngine : null;
+			}
+			//If there isn't a valid engine, just track the entity
+			targetPosition = engineTarget == null ? entityTarget.getPosition() : engineTarget.worldPos;
 		}
 		if (targetPosition != null) {
 			yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));

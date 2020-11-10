@@ -60,6 +60,13 @@ class WrapperEntity implements IWrapperEntity{
 			entity.dismountRidingEntity();
 		}
 	}
+	@Override
+	public AEntityBase getBaseEntity() {
+		if (entity != null && entity instanceof BuilderEntity) {
+			return ((BuilderEntity) entity).entity;
+		}
+		return null;
+	}
 	
 	@Override
 	public double getSeatOffset(){
