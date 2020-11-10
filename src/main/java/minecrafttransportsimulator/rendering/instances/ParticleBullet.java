@@ -39,7 +39,8 @@ public class ParticleBullet extends AParticle{
 	private final ItemPart bullet;
 	private final PartGun gun;
 	private final int bulletNumber;
-	private final double initalVelocity;
+	private final double initialVelocity;
+	private final double deltaVelocity;
 	private final IWrapperEntity gunController;
 	private final Point3d blockMotionStep = new Point3d(0D, 0D, 0D);
 	
@@ -47,6 +48,7 @@ public class ParticleBullet extends AParticle{
 	
 	private double armorPenetrated;
 	private int burnTimeLeft;
+	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
     public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
@@ -54,8 +56,10 @@ public class ParticleBullet extends AParticle{
     	this.bullet = bullet;
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
-        this.initalVelocity = motion.length();
+        this.initialVelocity = motion.length();
         this.burnTimeLeft = bullet.definition.bullet.burnTime;
+        this.accelerationLeft = bullet.definition.bullet.accelerationTime;
+        this.deltaVelocity = accelerationLeft != 0 ? (bullet.definition.bullet.maxVelocity/20D/10D - initialVelocity) / accelerationLeft : 0D;
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
         if(bullet.definition.bullet.blastStrength == 0F) bullet.definition.bullet.blastStrength = 1F;
@@ -75,7 +79,7 @@ public class ParticleBullet extends AParticle{
 				if(attackedEntities.get(entity) != null){
 					BoundingBox hitBox = attackedEntities.get(entity);
 					if(hitBox.armorThickness != 0){
-						if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initalVelocity - armorPenetrated){
+						if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
 							armorPenetrated += hitBox.armorThickness;
 							continue;
 						}
@@ -123,12 +127,22 @@ public class ParticleBullet extends AParticle{
 		}
 		
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
-		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired
+		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
+		//And if the bullet is still accelerating, increase the velocity appropriately.
 		if (this.burnTimeLeft == 0) {
+			MasterLoader.coreInterface.logError("Slowing down and falling");
 			motion.multiply(0.98D);
 			motion.y -= 0.0245D;
 		}
+		else if(this.accelerationLeft > 0) {
+			MasterLoader.coreInterface.logError("Current velocity " + velocity + ", " + motion);
+			--this.burnTimeLeft;
+			--this.accelerationLeft;
+			motion.multiply((deltaVelocity + velocity)/velocity);
+			MasterLoader.coreInterface.logError("New velocity: " + motion.length() + ", " + motion);
+		}
 		else {
+			MasterLoader.coreInterface.logError("Burning but not accelerating");
 			--this.burnTimeLeft;
 		}
 		

@@ -120,6 +120,8 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float blastStrength;
     	public float armorPenetration;
     	public int burnTime;
+    	public int accelerationTime;
+    	public int maxVelocity;
     	public float maxOffAxis;
     	public float turnFactor;
     	public float angleOfAttack;
