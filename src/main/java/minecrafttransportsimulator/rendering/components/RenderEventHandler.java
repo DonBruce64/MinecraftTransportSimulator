@@ -338,8 +338,9 @@ public class RenderEventHandler{
 						PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 						//If the seat is controlling a gun, render a text line for it.
 						if(seat.activeGun != null && !MasterLoader.gameInterface.isChatOpen()){
+							String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
 							MasterLoader.guiInterface.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-							MasterLoader.guiInterface.drawBasicText(seat.activeGun.getItemName(), screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							MasterLoader.guiInterface.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 						}
 						
 						//If the seat is a controller, render the HUD.

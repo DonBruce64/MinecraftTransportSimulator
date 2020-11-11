@@ -60,6 +60,10 @@ class WrapperEntity implements IWrapperEntity{
 			entity.dismountRidingEntity();
 		}
 	}
+	@Override
+	public AEntityBase getBaseEntity() {
+		return entity instanceof BuilderEntity ? ((BuilderEntity) entity).entity : null;
+	}
 	
 	@Override
 	public double getSeatOffset(){
@@ -110,6 +114,11 @@ class WrapperEntity implements IWrapperEntity{
 	@Override
 	public float getHeadYaw(){
 		return -entity.getRotationYawHead();
+	}
+	
+	@Override
+	public Point3d getLineOfSight(float distance) {
+		return (new Point3d(0D, 0D, distance)).rotateFine(new Point3d(entity.rotationPitch, 0D, 0D)).rotateFine(new Point3d(0D, -entity.rotationYaw, 0));
 	}
 	
 	@Override

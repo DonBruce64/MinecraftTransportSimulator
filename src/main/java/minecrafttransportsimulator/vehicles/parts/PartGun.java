@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -16,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
+import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -92,7 +94,10 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//Set the active state.
 		//We flag ourselves as inactive if there are no controllers or the seat isn't set to us.
 		//We aren't making sentry turrets here.... yet.
-		active = controller != null && getItem().equals(((PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller))).activeGun);
+		//If this gun type can only have one selected at a time, check that this has the selected index.
+		PartSeat controllerSeat = (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller));
+		active = controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
+		
 		
 		//Adjust aim to face direction controller is facing.
 		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
@@ -236,7 +241,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			
 			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 			//Make sure to add-on an offset to our firing point to allow for multi-gun units.
-			long millisecondCamOffset = (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.guns.get(getItem()).size());
+			long millisecondCamOffset = definition.gun.fireSolo ? 0 : (long) (definition.gun.fireDelay*(1000D/20D)*(gunNumber - 1D)/vehicle.guns.get(getItem()).size());
 			cooldownTimeRemaining = definition.gun.fireDelay;
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
 			lastController = controller;
@@ -391,7 +396,35 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			bulletPosition.add(getFiringPosition().rotateFine(getActionRotation(0)).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
 
 			//Add the bullet as a particle.
-			MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
+			//If the bullet is a missile, give it a target.
+			if (loadedBullet.definition.bullet.turnFactor > 0) {
+				//First find the block the controller is looking at, if possible
+				double maxDistance = 2000D;
+				Point3d lineOfSight = lastController.getLineOfSight((float) maxDistance);
+				Point3i blockTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+				
+				//Try to find the closest entity between the controller and the block
+				//If no block was found, set target position to maxDistance in the direction of the line of sight
+				if(blockTarget != null) {
+					maxDistance = lastController.getPosition().distanceTo(blockTarget);
+				}
+				else {
+					blockTarget = new Point3i(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight));
+				}
+				IWrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
+				
+				//Fire a missile with the found entity as its target, if valid
+				//Otherwise, fall back to the block target
+				if(entityTarget != null) {
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, entityTarget));
+				}
+				else {
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, blockTarget));
+				}
+			}
+			else {
+				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
+			}
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			

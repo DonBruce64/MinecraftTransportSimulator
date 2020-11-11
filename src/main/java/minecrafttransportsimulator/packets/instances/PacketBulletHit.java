@@ -80,16 +80,17 @@ public class PacketBulletHit extends APacketVehiclePart{
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
 			JSONPart bulletDefinition = bullet.definition;
-			BoundingBox box = new BoundingBox(localCenter, globalCenter, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, bulletDefinition.bullet.diameter/1000F, false, false, false, 0);
+			float blastSize = bulletDefinition.bullet.blastStrength == 0f ? bulletDefinition.bullet.diameter/10f : bulletDefinition.bullet.blastStrength;
+			BoundingBox box = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false, false, false, 0);
 			PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
 				gun.bulletsHitOnServer.add(bulletNumber);
-				//If we are an explosive bullet, just blow up at our current position.
+				//If we are an explosive bullet, blow up at our current position.
 				//Otherwise do attack logic.
-				if(bulletDefinition.bullet.type.equals("explosive")){
-					world.spawnExplosion(vehicle, box.globalCenter, bulletDefinition.bullet.diameter/10F, false);
+				if(bulletDefinition.bullet.types.contains("explosive")){
+					world.spawnExplosion(vehicle, box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
@@ -99,13 +100,13 @@ public class PacketBulletHit extends APacketVehiclePart{
 							IWrapperEntity attacker = world.getEntity(controllerEntityID);
 							double damageAmount = bulletVelocity*bulletDefinition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
 							Damage damage = new Damage("bullet", damageAmount, box, attacker).ignoreCooldown();
-							if(bulletDefinition.bullet.type.equals("water")){
+							if(bulletDefinition.bullet.types.contains("water")){
 								damage.isWater = true;
 							}
-							if(bulletDefinition.bullet.type.equals("incendiary")){
+							if(bulletDefinition.bullet.types.contains("incendiary")){
 								damage.isFire = true;
 							}
-							if(bulletDefinition.bullet.type.equals("armor_piercing")){
+							if(bulletDefinition.bullet.types.contains("armor_piercing")){
 								damage.ignoreArmor = true;
 							}
 							entityHit.attack(damage);
@@ -118,7 +119,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 						//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
 						//In this case, we need to simply spawn a few block particles to alert the player of a hit.
 						Point3i hitPosition = new Point3i(box.globalCenter);
-						if(bulletDefinition.bullet.type.equals("water")){
+						if(bulletDefinition.bullet.types.contains("water")){
 							hitPosition.add(0, 1, 0);
 							if(world.isFire(hitPosition)){
 								world.destroyBlock(hitPosition);
@@ -128,7 +129,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 							IWrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
 							if(hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
-							}else if(bulletDefinition.bullet.type.equals("incendiary")){
+							}else if(bulletDefinition.bullet.types.contains("incendiary")){
 								//Couldn't break block, but we might be able to set it on fire.
 								hitPosition.add(0, 1, 0);
 								if(world.isAir(hitPosition)){

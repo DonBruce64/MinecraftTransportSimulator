@@ -108,13 +108,39 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float maxYaw;
     	public float diameter;
     	public float length;
+    	public boolean fireSolo;
     }
     
     public class JSONPartBullet{
+    	@Deprecated
     	public String type;
+    	public List<String> types;
     	public int quantity;
     	public float diameter;
+    	public float blastStrength;
     	public float armorPenetration;
+    	public int burnTime;
+    	public int accelerationTime;
+    	public int maxVelocity;
+    	public float maxOffAxis;
+    	public float turnFactor;
+    	public float angleOfAttack;
+    	public float proximityFuze;
+    	public int airBurstDelay;
+    	public List<ParticleObject> particleObjects;
+    	
+    	public class ParticleObject{
+    		public String type;
+    		public String color;
+    		public String toColor;
+    		public float transparency;
+    		public float toTransparency;
+    		public float scale;
+    		public float toScale;
+        	public Point3d pos;
+        	public float velocity;
+        	public int quantity;
+    	}
     }
     
     public class JSONPartInteractable{

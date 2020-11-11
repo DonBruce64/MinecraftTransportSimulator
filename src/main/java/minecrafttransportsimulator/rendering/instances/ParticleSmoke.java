@@ -37,6 +37,6 @@ public class ParticleSmoke extends AParticle{
 	@Override
 	public int getTextureIndex(){
 		//Smoke gets smaller as it ages.
-		return 7 - 8*age/maxAge;
+		return (int)(7 - 8F*age/maxAge);
 	}
 }
