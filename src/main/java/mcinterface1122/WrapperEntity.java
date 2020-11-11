@@ -62,10 +62,7 @@ class WrapperEntity implements IWrapperEntity{
 	}
 	@Override
 	public AEntityBase getBaseEntity() {
-		if (entity != null && entity instanceof BuilderEntity) {
-			return ((BuilderEntity) entity).entity;
-		}
-		return null;
+		return entity instanceof BuilderEntity ? ((BuilderEntity) entity).entity : null;
 	}
 	
 	@Override

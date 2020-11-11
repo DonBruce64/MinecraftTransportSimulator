@@ -130,19 +130,15 @@ public class ParticleBullet extends AParticle{
 		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
 		//And if the bullet is still accelerating, increase the velocity appropriately.
 		if (this.burnTimeLeft == 0) {
-			MasterLoader.coreInterface.logError("Slowing down and falling");
 			motion.multiply(0.98D);
 			motion.y -= 0.0245D;
 		}
 		else if(this.accelerationLeft > 0) {
-			MasterLoader.coreInterface.logError("Current velocity " + velocity + ", " + motion);
 			--this.burnTimeLeft;
 			--this.accelerationLeft;
 			motion.multiply((deltaVelocity + velocity)/velocity);
-			MasterLoader.coreInterface.logError("New velocity: " + motion.length() + ", " + motion);
 		}
 		else {
-			MasterLoader.coreInterface.logError("Burning but not accelerating");
 			--this.burnTimeLeft;
 		}
 		

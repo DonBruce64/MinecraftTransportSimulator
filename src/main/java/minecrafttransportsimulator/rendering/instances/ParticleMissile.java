@@ -15,7 +15,7 @@ public final class ParticleMissile extends ParticleBullet {
 	private Point3d targetPosition;
 	private PartEngine engineTarget;
 	
-	private final IWrapperEntity entityTarget;
+	private IWrapperEntity entityTarget;
 	private final double anglePerTickSpeed;
 	private final float desiredAngleOfAttack;
 	private final float proximityFuzeDistance;
@@ -52,29 +52,43 @@ public final class ParticleMissile extends ParticleBullet {
 			//Try to find a valid, warm engine to track.
 			//If we were tracking an engine, but it is no longer valid or is cold, find a new one.
 			AEntityBase entityTargetBase = entityTarget.getBaseEntity();
-			if(entityTargetBase != null && entityTargetBase instanceof EntityVehicleF_Physics && (engineTarget == null || !engineTarget.isValid || engineTarget.temp < 30f)) {
-				EntityVehicleF_Physics vehicleTarget = (EntityVehicleF_Physics) entityTargetBase;
-				PartEngine nearestEngine = null;
-				float smallestDistance = 0f;
-				for (APart part : vehicleTarget.parts) {
-					if(part instanceof PartEngine) {
-						PartEngine currentEngine = (PartEngine) part;
-						//Can't see the engine if it's cold
-						if(currentEngine.temp < 30f) {
-							continue;
-						}
-						float distanceToEngine = (float)position.distanceTo(currentEngine.worldPos);
-						if (nearestEngine == null || distanceToEngine < smallestDistance) {
-							nearestEngine = currentEngine;
-							smallestDistance = distanceToEngine;
+			if(entityTargetBase instanceof EntityVehicleF_Physics) {
+				if (engineTarget == null || !engineTarget.isValid || engineTarget.temp < 30f) {
+					EntityVehicleF_Physics vehicleTarget = (EntityVehicleF_Physics) entityTargetBase;
+					PartEngine nearestEngine = null;
+					float smallestDistance = 0f;
+					for (APart part : vehicleTarget.parts) {
+						if(part instanceof PartEngine) {
+							PartEngine currentEngine = (PartEngine) part;
+							//Can't see the engine if it's cold
+							if(currentEngine.temp < 30f) {
+								continue;
+							}
+							float distanceToEngine = (float)position.distanceTo(currentEngine.worldPos);
+							if (nearestEngine == null || distanceToEngine < smallestDistance) {
+								nearestEngine = currentEngine;
+								smallestDistance = distanceToEngine;
+							}
 						}
 					}
+					//If we found a valid, warm engine, track it.
+					//Otherwise, forget about this vehicle.
+					if (nearestEngine != null) {
+						engineTarget = nearestEngine;
+						targetPosition = engineTarget.worldPos;
+					}
+					else {
+						engineTarget = null;
+						entityTarget = null;
+					}
 				}
-				engineTarget = nearestEngine != null ? nearestEngine : null;
 			}
-			//If there isn't a valid engine, just track the entity
-			targetPosition = engineTarget == null ? entityTarget.getPosition() : engineTarget.worldPos;
+			//Not a vehicle, so just track its position
+			else {
+				targetPosition = entityTarget.getPosition();
+			}
 		}
+		
 		if (targetPosition != null) {
 			yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
 			pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
