@@ -40,6 +40,7 @@ public class ParticleBullet extends AParticle{
 	private final PartGun gun;
 	private final int bulletNumber;
 	private final double initialVelocity;
+	private final Point3d initialDirection;
 	private final double deltaVelocity;
 	private final IWrapperEntity gunController;
 	private final Point3d blockMotionStep = new Point3d(0D, 0D, 0D);
@@ -51,7 +52,7 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
-    public ParticleBullet(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
+    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
     	this.bullet = bullet;
     	this.gun = gun;
@@ -62,7 +63,7 @@ public class ParticleBullet extends AParticle{
         this.deltaVelocity = accelerationLeft != 0 ? (bullet.definition.bullet.maxVelocity/20D/10D - initialVelocity) / accelerationLeft : 0D;
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
-        if(bullet.definition.bullet.blastStrength == 0F) bullet.definition.bullet.blastStrength = 1F;
+        this.initialDirection = direction;
     }
 	
 	@Override
@@ -134,9 +135,17 @@ public class ParticleBullet extends AParticle{
 			motion.y -= 0.0245D;
 		}
 		else if(this.accelerationLeft > 0) {
+			//Missiles should behave like a rocket in the first tick only.
+			if (bullet.definition.bullet.turnFactor > 0 && bullet.definition.bullet.accelerationTime - this.accelerationLeft > 0) {
+				motion.multiply((deltaVelocity + velocity)/velocity);
+			}
+			//Make sure that rockets don't go the wrong way due to vehicle motion.
+			//They should accelerate straight in the direction they were pointing.
+			else {
+				motion.add(initialDirection.multiply((deltaVelocity + velocity)/velocity));
+			}
 			--this.burnTimeLeft;
 			--this.accelerationLeft;
-			motion.multiply((deltaVelocity + velocity)/velocity);
 		}
 		else {
 			--this.burnTimeLeft;

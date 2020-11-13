@@ -21,8 +21,8 @@ public final class ParticleMissile extends ParticleBullet {
 	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
-	public ParticleMissile(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController, Point3i target) {
-		super(position, motion, bullet, gun, gunController);
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController, Point3i target) {
+		super(position, motion, direction, bullet, gun, gunController);
 		this.targetPosition = new Point3d(target);
 		this.entityTarget = null;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
@@ -31,8 +31,8 @@ public final class ParticleMissile extends ParticleBullet {
 	}
 	
 	//Passes in an entity to be used as the target
-	public ParticleMissile(Point3d position, Point3d motion, ItemPart bullet, PartGun gun, IWrapperEntity gunController, IWrapperEntity target) {
-		super(position, motion, bullet, gun, gunController);
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController, IWrapperEntity target) {
+		super(position, motion, direction, bullet, gun, gunController);
 		this.entityTarget = target;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
 		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
