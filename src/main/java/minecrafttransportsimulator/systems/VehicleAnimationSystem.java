@@ -179,11 +179,7 @@ public final class VehicleAnimationSystem{
 						while(riderYaw > 180) riderYaw -= 360;
 						return riderYaw;
 					}
-					case("seat_rider_pitch"): {
-						double vehiclePitchContribution = vehicle.angles.x*Math.cos(Math.toRadians(vehicle.angles.y));
-						double vehicleRollContribution = -vehicle.angles.z*Math.sin(Math.toRadians(vehicle.angles.y));
-						return riderForSeat.getPitch() - (vehiclePitchContribution + vehicleRollContribution);
-					}
+					case("seat_rider_pitch"): return riderForSeat.getPitch() - vehicle.angles.x;
 				}
 			}
 			
