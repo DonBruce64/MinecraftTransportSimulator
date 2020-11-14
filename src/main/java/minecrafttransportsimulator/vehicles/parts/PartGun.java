@@ -388,7 +388,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			Point3d vehicleFactoredAngles = vehicle.angles.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
 			
 			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
-			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(new Point3d(0D, 0D, definition.gun.muzzleVelocity/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
+			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles);
+			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(bulletDirection.multiply(definition.gun.muzzleVelocity/20D/10D));
 			
 			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
 			//Then move the bullet to the appropriate firing position.
@@ -416,14 +417,14 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				//Fire a missile with the found entity as its target, if valid
 				//Otherwise, fall back to the block target
 				if(entityTarget != null) {
-					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, entityTarget));
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, entityTarget));
 				}
 				else {
-					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, loadedBullet, this, lastController, blockTarget));
+					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, blockTarget));
 				}
 			}
 			else {
-				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, loadedBullet, this, lastController));
+				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
 			}
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
