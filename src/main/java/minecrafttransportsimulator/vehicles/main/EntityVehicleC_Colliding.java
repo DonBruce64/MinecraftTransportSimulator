@@ -240,12 +240,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					}
 				}
 				
-				//If the player is holding a wrench, and the part has children, don't add it.
-				//Player shouldn't be able to wrench parts with children.
-				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){
-					continue;
-				}
-				
 				//If the part is linked to doors, and none are open, don't add it.
 				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
 				if(areDoorsBlocking(part.vehicleDefinition, clientPlayer)){
