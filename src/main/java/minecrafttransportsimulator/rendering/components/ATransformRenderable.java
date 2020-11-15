@@ -28,6 +28,15 @@ public abstract class ATransformRenderable{
 		return true;
 	}
 	
+	/*
+	 *  This method should return true if this transform should stop other transforms
+	 *  from being rendered. This allows disabling certain animations if this animation's
+	 *  criteria are met.
+	 */
+	public boolean shouldInhibit(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
+		return false;
+	}
+	
 	/**
 	 *  This method applies any transforms this object has prior to rendering.
 	 *  Vehicle and part (if this model is on a part) is passed-in for state-based transform logic.
