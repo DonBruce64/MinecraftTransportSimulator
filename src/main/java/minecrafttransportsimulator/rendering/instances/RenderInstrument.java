@@ -49,9 +49,10 @@ public final class RenderInstrument{
 				//Otherwise, as we don't pass-in the part, it will assume it's a vehicle variable.
 				//We also need to set the partNumber to 1 if we have a part number of 0 and we're
 				//doing a part-specific animation.
-				final boolean addRotationSuffix = section.rotationVariable != null && (section.rotationVariable.startsWith("engine_") || section.rotationVariable.startsWith("propeller_") || section.rotationVariable.startsWith("gun_"));
-				final boolean addTranslationSuffix = section.translationVariable != null && (section.translationVariable.startsWith("engine_") || section.translationVariable.startsWith("propeller_") || section.translationVariable.startsWith("gun_"));
-				final boolean addTextSuffix = section.textObject != null && (section.textObject.fieldName.startsWith("engine_") || section.textObject.fieldName.startsWith("propeller_") || section.textObject.fieldName.startsWith("gun_"));
+				//Skip adding a suffix if one already exists.
+				final boolean addRotationSuffix = section.rotationVariable != null && !section.rotationVariable.substring(section.rotationVariable.length() - 1).matches("[0-9]+") && (section.rotationVariable.startsWith("engine_") || section.rotationVariable.startsWith("propeller_") || section.rotationVariable.startsWith("gun_"));
+				final boolean addTranslationSuffix = section.translationVariable != null && !section.translationVariable.substring(section.translationVariable.length() - 1).matches("[0-9]+") && (section.translationVariable.startsWith("engine_") || section.translationVariable.startsWith("propeller_") || section.translationVariable.startsWith("gun_"));
+				final boolean addTextSuffix = section.textObject != null && !section.textObject.fieldName.substring(section.textObject.fieldName.length() - 1).matches("[0-9]+") && (section.textObject.fieldName.startsWith("engine_") || section.textObject.fieldName.startsWith("propeller_") || section.textObject.fieldName.startsWith("gun_"));
 				if(partNumber == 0 && (addRotationSuffix || addTranslationSuffix || addTextSuffix)){
 					partNumber = 1;
 				}
