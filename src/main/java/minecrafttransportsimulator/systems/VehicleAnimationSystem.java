@@ -2,6 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -10,6 +11,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**This class contains static methods for vehicle animations.  These are used to animate
  * the vehicle and its parts, as well as instruments.  All methods are designed to be as
@@ -62,6 +64,7 @@ public final class VehicleAnimationSystem{
 				case("gun"): partClass = PartGun.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
 				case("ground"): partClass = PartGroundDevice.class; break;
+				case("seat"): partClass = PartSeat.class; break;
 				
 				default: if(ConfigSystem.configObject.clientControls.devMode.value){
 					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
@@ -164,6 +167,20 @@ public final class VehicleAnimationSystem{
 					case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
 					case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
 				}
+			}else if(optionalPart instanceof PartSeat){
+				PartSeat seat = (PartSeat) optionalPart;
+				IWrapperEntity riderForSeat = vehicle.locationRiderMap.get(seat.placementOffset);
+				if(riderForSeat == null || !riderForSeat.isValid()) return 0;
+				switch(variable){
+					case("seat_occupied"): return 1;
+					case("seat_rider_yaw"): {
+						double riderYaw = riderForSeat.getHeadYaw() - vehicle.angles.y;
+						while(riderYaw < -180) riderYaw += 360;
+						while(riderYaw > 180) riderYaw -= 360;
+						return riderYaw;
+					}
+					case("seat_rider_pitch"): return riderForSeat.getPitch() - vehicle.angles.x;
+				}
 			}
 			
 			//We didn't find any part-specific animations.
@@ -179,6 +196,7 @@ public final class VehicleAnimationSystem{
 		switch(variable){
 			//Vehicle world position cases.	
 			case("yaw"): return vehicle.angles.y;
+			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.general.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
