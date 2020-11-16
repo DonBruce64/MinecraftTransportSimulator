@@ -70,7 +70,7 @@ public class PacketVehiclePartGun extends APacketVehiclePart{
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
 		PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
 		if(controlPulse){
-			gun.firing = triggerState;
+			gun.firing = triggerState && gun.active;
 		}else{
 			gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName));
 		}

@@ -196,7 +196,7 @@ public final class VehicleAnimationSystem{
 		switch(variable){
 			//Vehicle world position cases.	
 			case("yaw"): return vehicle.angles.y;
-			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.general.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
+			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;

@@ -55,6 +55,10 @@ public final class RenderableModelObject{
 						transforms.add(new TransformVisibile(animation));
 						break;
 					}
+					case("inhibitor") :{
+						transforms.add(new TransformInhibitor(animation));
+						break;
+					}
 				}
 			}
 		}else{
@@ -79,6 +83,9 @@ public final class RenderableModelObject{
 		GL11.glPushMatrix();
 		double priorOffset = 0;
 		for(ATransformRenderable transform : transforms){
+			if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
+				break;
+			}
 			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
 				//Found a transform that told us not to render.
 				//Return to prevent rendering.
