@@ -63,9 +63,12 @@ public final class PackParserSystem{
 	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
 	private static Map<String, File> packJarMap = new HashMap<String, File>();
 	
-	/**All registered pack definition are stored in this list as they are added.  Used to handle loading operations.**/
+	/**All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.**/
 	public static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
 	//TODO make this private when we get rid of the old loader system.
+
+	/**All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.**/
+	private static Map<String, Map<String, JSONSkin>> skinMap = new HashMap<String, Map<String, JSONSkin>>();
 	
 	/**List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.**/
 	public static Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
@@ -82,6 +85,30 @@ public final class PackParserSystem{
 
     //-----START OF NEW INIT LOGIC-----
 	/**
+     * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
+     * for pack definitions.  After this, they will be created and loaded into the main mod.
+     */
+    public static void parsePacks(List<File> packDirectories){
+    	//First get all pack definitions from the passed-in directories.
+    	for(File directory : packDirectories){
+    		for(File file : directory.listFiles()){
+    			if(file.getName().endsWith(".jar")){
+					checkJarForPacks(file);
+				}
+    		}
+    	}
+    	
+    	//Next, parse all packs in those definitions.
+    	parseAllPacks();
+    	
+    	//Check for custom skins.
+    	parseAllSkins();
+    	
+    	//Now that all the items and skins are parsed, create them.
+    	createAllItems();
+    } 
+
+	/**
      * Called to check if the passed-in jar file is a pack.  If so, it, and all the pack
      * definitions, are loaded into the system.  A single jar file may contain more than
      * one pack if there are multiple definition files in it.  Alternately, a single jar
@@ -90,7 +117,7 @@ public final class PackParserSystem{
      * the jar-checking code and the pack-loading code, as all possible packs and mods must
      * be loaded prior to trying to load the pack in case there are dependencies.
      */
-    public static void checkJarForPacks(File packJar){
+    private static void checkJarForPacks(File packJar){
     	try{
 	    	ZipFile jarFile = new ZipFile(packJar);
 			Enumeration<? extends ZipEntry> entries = jarFile.entries();
@@ -115,7 +142,7 @@ public final class PackParserSystem{
      * sure the pack's dependent parameters are valid and the pack can be loaded prior to
      * performing any actual loading operations.
      */
-    public static void parseAllPacks(){
+    private static void parseAllPacks(){
     	List<String> packIDs = new ArrayList<String>(packMap.keySet());
     	Iterator<String> iterator = packMap.keySet().iterator();
     	while(iterator.hasNext()){
@@ -218,6 +245,7 @@ public final class PackParserSystem{
 										case DECOR : jsonClass = JSONDecor.class; break;
 										case ITEM : jsonClass = JSONItem.class; break;
 										case BOOKLET : jsonClass = JSONBooklet.class; break;
+										case SKIN : jsonClass = JSONSkin.class; break;
 									}
 								}else{
 									MasterLoader.coreInterface.logError("ERROR: Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
@@ -242,25 +270,15 @@ public final class PackParserSystem{
 								
 								//Create all required items.
 								if(definition instanceof AJSONMultiModelProvider){
-									for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : ((AJSONMultiModelProvider<?>) definition).definitions){
-							    		try{
-							    			if(subDefinition.extraMaterials != null){
-							    				AItemPack<?> item;
-							    				switch(classification){
-													case VEHICLE : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
-													case PART : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
-													default : {
-														throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + fileName);
-													}
-												}
-							    				packItems.add(setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath, classification));
-							    			}else{
-							    				throw new NullPointerException();
-							    			}
-							    		}catch(Exception e){
-							    			throw new NullPointerException("Unable to parse definition #" + (((AJSONMultiModelProvider<?>) definition).definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-							    		}
-						    		}
+									//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
+									//We don't create skin items right away as the pack they go to might not yet be loaded.
+									if(definition instanceof JSONSkin){
+										if(!skinMap.containsKey(((JSONSkin) definition.general).packID){
+											skinMap.put(((JSONSkin) definition.general).packID, new HashMap<String, JSONSkin>());
+										}
+										skinMap.get(((JSONSkin) definition.general).packID).put(((JSONSkin) definition.general).systemName, definition);
+									}else{
+										parseAllDefinitions(((AJSONMultiModelProvider<?>) definition), packItems);
 								}else{
 									AItemPack<?> item;
 				    				switch(classification){
@@ -280,26 +298,8 @@ public final class PackParserSystem{
 						}
 					}
 					
-					//Done parsing.  Close the jarfile, sort the items we parsed, and send the to the loader.
+					//Done parsing.  Close the jarfile.
 					jarFile.close();
-					packItems.sort(new Comparator<AItemPack<?>>(){
-						@Override
-						public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
-							String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
-							if(itemA instanceof AItemSubTyped){
-								totalAName += ((AItemSubTyped) itemA).subName;
-							}
-							String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
-							if(itemB instanceof AItemSubTyped){
-								totalBName += ((AItemSubTyped) itemB).subName;
-							}
-							return totalAName.compareTo(totalBName);
-						}
-						
-					});
-					for(AItemPack<?> item : packItems){
-						MasterInterface.createItem(item);
-					}
 				}catch(Exception e){
 					MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
 					e.printStackTrace();
@@ -307,7 +307,78 @@ public final class PackParserSystem{
     		}
     	}
     }
-	
+    
+    /**
+     * Called to load and parse all skins.  Skins are applied to existing pack vehicles in other packs if those
+     * packs are loaded.  This is run after all packs are parsed to ensure that all pack definitions are loaded
+     * prior to attempting to add skin definitions.
+     */
+    private static void parseAllSkins(){
+    	for(String packID : skinMap.keySet()){
+    		//Is the pack for this skin loaded?
+    		if(packItemMap.containsKey(packID)){
+    			//Check all skin items for the pack, and add them if they exist.
+    			LinkedHashMap<String, AItemPack<?>> parsedPackItemMap = packItemMap.get(packID);
+    			List<AItemPack<?>> newPackItems = new ArrayList<AItemPack<?>>();
+    			for(String systemName : skinMap.get(packID)){
+    				if(parsedPackItemMap.containsKey(systemName){
+    					parseAllDefinitions(skinMap.get(packID).get(systemName), newPackItems);
+    					((AJSONMultiModelProvider<?>) parsedPackItemMap.get(systemName).definition).definitions.addAll(skinMap.get(packID).get(systemName));
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    /**
+     * Called to sort and create all pack items.  This must be called after all pack item processing to ensure proper sorting order.
+     */
+    private static void createAllItems(){
+		packItems.sort(new Comparator<AItemPack<?>>(){
+			@Override
+			public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
+				String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
+				if(itemA instanceof AItemSubTyped){
+					totalAName += ((AItemSubTyped) itemA).subName;
+				}
+				String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
+				if(itemB instanceof AItemSubTyped){
+					totalBName += ((AItemSubTyped) itemB).subName;
+				}
+				return totalAName.compareTo(totalBName);
+			}
+			
+		});
+		for(AItemPack<?> item : packItems){
+			MasterInterface.createItem(item);
+		}
+    }
+    
+    /**
+     * Helper method to parse multi-definition pack items.
+     * Generated items are added to the passed-in list.
+     */
+    private static void parseAllDefinitions(AJSONMultiModelProvider<?> definition, List<AItemPack<?>> packItems){
+    	for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+			try{
+				if(subDefinition.extraMaterials != null){
+					AItemPack<?> item;
+					switch(classification){
+						case VEHICLE : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
+						case PART : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
+						default : {
+							throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + fileName);
+						}
+					}
+					packItems.add(setupItem(item, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()), subDefinition.subName, assetPath, classification));
+				}else{
+					throw new NullPointerException();
+				}
+			}catch(Exception e){
+				throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+			}
+		}
+    }
 	
     //-----START OF OLD INIT LOGIC-----
     /**Packs should call this upon load to add their content to the mod.
@@ -429,6 +500,10 @@ public final class PackParserSystem{
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
     	}
+    }
+
+	/**Skins aren't supported by the old packloader.  This section is here simply to prevent the old loader from crashing.**/
+    public static void addSkinDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     }
     
     /**

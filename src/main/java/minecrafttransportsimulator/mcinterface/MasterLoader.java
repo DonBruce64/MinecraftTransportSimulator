@@ -130,28 +130,22 @@ public class MasterLoader{
 	public static void setMainDirectory(String directory){
 		gameDirectory = directory;
 		ConfigSystem.loadFromDisk(new File(directory, "config"));
+		List<File> packDirectories = new ArrayList<File>();
 		File modDirectory = new File(directory, "mods");
 		if(modDirectory.exists()){
-			//Check main directory for packs.
-			for(File file : modDirectory.listFiles()){
-				if(file.getName().endsWith(".jar")){
-					PackParserSystem.checkJarForPacks(file);
-				}
+			packDirectories.add(modDirectory);
+			
+			//Also add version-specific directory.
+			File versionedModDirectory = new File(modDirectory, coreInterface.getGameVersion());
+			if(versionedModDirectory.exists()){
+				packDirectories.add(versionedModDirectory);
 			}
 			
-			//Check version-specific directory for packs.
-			modDirectory = new File(modDirectory, coreInterface.getGameVersion());
-			if(modDirectory.exists()){
-				for(File file : modDirectory.listFiles()){
-					if(file.getName().endsWith(".jar")){
-						PackParserSystem.checkJarForPacks(file);
-					}
-				}
-			}
+			//Parse the packs.
+			PackParserSystem.parsePacks(packDirectories);
 		}else{
 			coreInterface.logError("ERROR: Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
 		}
-		PackParserSystem.parseAllPacks();
 	}
 	
 	/**
