@@ -7,7 +7,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a pseudo-animation that disables other animations.
  * This transform will disable the other animations of this
- * object if the returned value of the variable is not within the min and max clamps.
+ * object if the returned value of the variable is within the min and max clamps.
  *
  * @author gyro_hero
  */
