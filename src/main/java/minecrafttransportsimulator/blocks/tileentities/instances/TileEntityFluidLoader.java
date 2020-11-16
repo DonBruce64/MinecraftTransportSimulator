@@ -44,8 +44,10 @@ public class TileEntityFluidLoader extends ATileEntityBase<JSONDecor>implements 
 				if(!connectedPart.vehicle.isValid || !connectedPart.isValid || connectedPart.worldPos.distanceTo(position) > 10){
 					updateNearestPart();
 				}
-				
-				//Do load or unload operations depending on our state.
+			}
+
+			//If we have a connected part, try to load or unload from it depending on our state.
+			if(connectedPart != null){
 				if(unloadMode){
 					String fluidToUnload = connectedPart.tank.getFluid();
 					double amountToUnload = connectedPart.tank.drain(fluidToUnload, 100, false);
