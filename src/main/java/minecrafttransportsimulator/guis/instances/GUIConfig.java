@@ -344,7 +344,7 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		//If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
-		vehicleSelectionFaultLabel.visible = !MasterLoader.inputInterface.isJoystickSupportEnabled() && configuringControls;
+		vehicleSelectionFaultLabel.visible = !MasterLoader.inputInterface.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
 		for(GUIComponentButton button : vehicleSelectionButtons.keySet()){
 			button.visible = configuringControls && vehicleConfiguring.isEmpty();
 		}
