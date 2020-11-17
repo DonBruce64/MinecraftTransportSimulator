@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import net.minecraft.util.math.BlockPos;
-
 /**Curve class used for roads.
  * Start point is at 0,0,0.  Offset as needed in whatever class encloses this curve.
  * Needs an end point, a start angle, and an end angle to calculate the curve.
