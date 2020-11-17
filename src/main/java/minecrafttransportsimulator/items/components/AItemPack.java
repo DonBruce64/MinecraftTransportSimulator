@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base item class for all pack-created items.  Stores information such as the
