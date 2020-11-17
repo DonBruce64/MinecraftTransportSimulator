@@ -465,8 +465,10 @@ class InterfaceRender implements IInterfaceRender{
 		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
 		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
 		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
-        for(TileEntity tile : Minecraft.getMinecraft().world.loadedTileEntityList){
-        	if(tile instanceof BuilderTileEntity){
+        List<TileEntity> teList = Minecraft.getMinecraft().world.loadedTileEntityList; 
+		for(int i=0; i<teList.size(); ++i){
+			TileEntity tile = teList.get(i);
+			if(tile instanceof BuilderTileEntity){
         		Vec3d delta = new Vec3d(tile.getPos()).add(-playerX, -playerY, -playerZ);
         		//Prevent crashing on corrupted TEs.
         		if(TileEntityRendererDispatcher.instance.getRenderer(tile) != null){
@@ -481,6 +483,7 @@ class InterfaceRender implements IInterfaceRender{
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */
+	@SuppressWarnings("unchecked")
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the vehicle rendering class.
