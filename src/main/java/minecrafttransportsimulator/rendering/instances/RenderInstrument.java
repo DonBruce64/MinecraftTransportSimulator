@@ -30,8 +30,9 @@ public final class RenderInstrument{
 		//First bind the texture file for this insturment's pack.
 		MasterLoader.renderInterface.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
-		//Check if the lights are on.  If so, disable the lightmap.
+		//Check if the lights are on.  If so, render the overlays.
 		boolean lightsOn = vehicle.areInteriorLightsOn();
+		boolean renderedOverlay = false;
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
@@ -39,11 +40,6 @@ public final class RenderInstrument{
 			
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
 			if((!section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 1) || (section.lightOverlay && MasterLoader.renderInterface.getRenderPass() != 0)){
-				//If the vehicle lights are on, disable the lightmap.
-				if(lightsOn){
-					MasterLoader.renderInterface.setInternalLightingState(false);
-				}
-				
 				//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
 				//If so, we need to let the animation system know by adding a suffix to the variable.
 				//Otherwise, as we don't pass-in the part, it will assume it's a vehicle variable.
@@ -127,29 +123,30 @@ public final class RenderInstrument{
 					//Now that all transforms are done, render the instrument shape.
 					//If the shape is lit, do blending.  If not, disable blending.
 					//This is required as it might already be enabled.
+					//If the vehicle lights are on, disable the lightmap.
 					if(!section.lightOverlay){
-						GL11.glDisable(GL11.GL_BLEND);
 						renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 					}else if(lightsOn && ConfigSystem.configObject.clientRendering.instBlending.value){
-						GL11.glEnable(GL11.GL_BLEND);
+						renderedOverlay = true;
+						MasterLoader.renderInterface.setLightingState(false);
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+						GL11.glEnable(GL11.GL_BLEND);
 					    renderSquareUV(section.textureWidth, section.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+					}
+					
+					//Reset lightmap and blend state if we had previously disabled it.
+					if(renderedOverlay){
+						MasterLoader.renderInterface.setLightingState(true);
+						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+						if(MasterLoader.renderInterface.getRenderPass() != 1){
+							GL11.glDisable(GL11.GL_BLEND);
+						}
+						renderedOverlay = false;
 					}
 				}
 				
 				//Done rendering.  Pop matrix.
 				GL11.glPopMatrix();
-			}
-			
-			//Reset lightmap if we had previously disabled it.
-			if(lightsOn){
-				MasterLoader.renderInterface.setInternalLightingState(true);
-			}
-			
-			//Reset blend state.
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			if(MasterLoader.renderInterface.getRenderPass() != 1){
-				GL11.glDisable(GL11.GL_BLEND);
 			}
 		}
 	}

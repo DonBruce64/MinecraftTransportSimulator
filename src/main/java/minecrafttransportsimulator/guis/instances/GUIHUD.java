@@ -5,6 +5,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
@@ -45,6 +46,11 @@ public class GUIHUD extends AGUIBase{
 	@Override
 	public GUILightingMode getGUILightMode(){
 		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
+	}
+	
+	@Override
+	public AEntityBase getGUILightSource(){
+		return vehicle;
 	}
 	
 	@Override

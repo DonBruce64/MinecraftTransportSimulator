@@ -16,6 +16,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.mcinterface.IInterfaceGUI;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
@@ -72,7 +73,7 @@ class BuilderGUI extends GuiScreen{
 	@Override
     public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
 		super.drawScreen(mouseX, mouseY, renderPartialTicks);
-		//First set the states for things in thie GUI.
+		//First set the states for things in this GUI.
 		gui.setStates();
 		
 		//Set color to default in case some other rendering was being done prior and didn't clean up.
@@ -83,9 +84,10 @@ class BuilderGUI extends GuiScreen{
 			drawDefaultBackground();
 		}
 		
-		//If we are light-sensitive, enable the lightmap.
+		//If we are light-sensitive, enable lighting.
 		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
-			mc.entityRenderer.enableLightmap();
+			MasterInterface.renderInterface.setLightingState(true);
+			MasterInterface.renderInterface.setLightingToEntity(gui.getGUILightSource());
 		}
 		
 		//Bind the standard texture and render the background.
@@ -106,7 +108,7 @@ class BuilderGUI extends GuiScreen{
 		//This allows all text to be lit up if required.  We also render the lit texture now.
 		//This requires a re-render of all the components to ensure the lit texture portions of said components render.
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
-			mc.entityRenderer.disableLightmap();
+			MasterInterface.renderInterface.setLightingState(false);
 			MasterInterface.renderInterface.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
 			MasterInterface.guiInterface.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 			for(GUIComponentButton button : gui.buttons){
@@ -144,8 +146,11 @@ class BuilderGUI extends GuiScreen{
         	textBox.renderBox();
         }
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-				
-		//Now render the instruments.  These use their own texture.
+		
+		//Re-enable lighting for instrument rendering,
+		//then render the instruments.  These use their own texture,
+		//so the text texture will be overridden at this point.
+		MasterInterface.renderInterface.setLightingState(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
 			instrument.renderInstrument();
 		}

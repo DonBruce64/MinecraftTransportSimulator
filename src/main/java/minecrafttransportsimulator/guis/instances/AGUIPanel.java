@@ -2,6 +2,7 @@ package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -76,6 +77,11 @@ public abstract class AGUIPanel extends AGUIBase{
 	@Override
 	public GUILightingMode getGUILightMode(){
 		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
+	}
+	
+	@Override
+	public AEntityBase getGUILightSource(){
+		return vehicle;
 	}
 	
 	@Override
