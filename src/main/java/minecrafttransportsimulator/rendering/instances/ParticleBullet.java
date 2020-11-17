@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
@@ -17,8 +17,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
-import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -43,7 +41,6 @@ public class ParticleBullet extends AParticle{
 	private final Point3d initialDirection;
 	private final double deltaVelocity;
 	private final IWrapperEntity gunController;
-	private final Point3d blockMotionStep = new Point3d(0D, 0D, 0D);
 	
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
