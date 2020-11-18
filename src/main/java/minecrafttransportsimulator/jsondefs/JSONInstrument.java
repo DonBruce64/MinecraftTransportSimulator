@@ -3,6 +3,8 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+
 public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     public List<Component> components = new ArrayList<Component>();
 
@@ -21,22 +23,36 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	public JSONText textObject;
     	public float textFactor;
     	
-    	public String rotationVariable;
     	public boolean rotateWindow;
-    	public float rotationOffset;
-    	public float rotationFactor;
-    	public float rotationClampMin;
-    	public float rotationClampMax;
-    	public boolean rotationAbsoluteValue;
-    	
-    	public String translationVariable;
     	public boolean extendWindow;
-    	public boolean translateHorizontal;
-    	public float translationFactor;
-    	public float translationClampMin;
-    	public float translationClampMax;
-    	public boolean translationAbsoluteValue;
+    	public List<VehicleAnimationDefinition> animations;
     	
     	public boolean lightOverlay;
+    	
+    	@Deprecated
+    	public String rotationVariable;
+    	@Deprecated
+    	public float rotationOffset;
+    	@Deprecated
+    	public float rotationFactor;
+    	@Deprecated
+    	public float rotationClampMin;
+    	@Deprecated
+    	public float rotationClampMax;
+    	@Deprecated
+    	public boolean rotationAbsoluteValue;
+    	
+    	@Deprecated
+    	public String translationVariable;
+    	@Deprecated
+    	public boolean translateHorizontal;
+    	@Deprecated
+    	public float translationFactor;
+    	@Deprecated
+    	public float translationClampMin;
+    	@Deprecated
+    	public float translationClampMax;
+    	@Deprecated
+    	public boolean translationAbsoluteValue;
     }
 }

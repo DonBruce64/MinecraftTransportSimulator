@@ -18,7 +18,6 @@ import java.util.zip.ZipFile;
 import com.google.gson.Gson;
 
 import mcinterface1122.MasterInterface;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemBooklet;
@@ -40,15 +39,10 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packloading.JSONTypeAdapters;
+import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
@@ -58,7 +52,6 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
  *
  * @author don_bruce
  */
-@SuppressWarnings("deprecation")
 public final class PackParserSystem{
 	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
 	private static Map<String, File> packJarMap = new HashMap<String, File>();
@@ -228,7 +221,7 @@ public final class PackParserSystem{
 								AJSONItem<?> definition;
 								try{
 									definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
-									performLegacyCompats(definition);
+									LegacyCompatSystem.performLegacyCompats(definition);
 								}catch(Exception e){
 									MasterLoader.coreInterface.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
 						    		MasterLoader.coreInterface.logError(e.getMessage());
@@ -287,11 +280,11 @@ public final class PackParserSystem{
 						public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
 							String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
 							if(itemA instanceof AItemSubTyped){
-								totalAName += ((AItemSubTyped) itemA).subName;
+								totalAName += ((AItemSubTyped<?>) itemA).subName;
 							}
 							String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
 							if(itemB instanceof AItemSubTyped){
-								totalBName += ((AItemSubTyped) itemB).subName;
+								totalBName += ((AItemSubTyped<?>) itemB).subName;
 							}
 							return totalAName.compareTo(totalBName);
 						}
@@ -323,7 +316,7 @@ public final class PackParserSystem{
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONVehicle definition = packParser.fromJson(jsonReader, JSONVehicle.class);
-    		performLegacyCompats(definition);
+    		LegacyCompatSystem.performLegacyCompats(definition);
     		for(JSONVehicle.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
@@ -347,7 +340,7 @@ public final class PackParserSystem{
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
-    		performLegacyCompats(definition);
+    		LegacyCompatSystem.performLegacyCompats(definition);
     		for(JSONPart.SubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
@@ -368,7 +361,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		MasterInterface.createItem(setupItem(new ItemInstrument(packParser.fromJson(jsonReader, JSONInstrument.class)), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT));
+    		JSONInstrument definition = packParser.fromJson(jsonReader, JSONInstrument.class);
+    		LegacyCompatSystem.performLegacyCompats(definition);
+    		MasterInterface.createItem(setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -379,7 +374,7 @@ public final class PackParserSystem{
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
-    		performLegacyCompats(definition);
+    		LegacyCompatSystem.performLegacyCompats(definition);
     		MasterInterface.createItem(setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "", ItemClassification.POLE));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -391,7 +386,7 @@ public final class PackParserSystem{
     public static void addRoadDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONRoadComponent definition = packParser.fromJson(jsonReader, JSONRoadComponent.class);
-    		performLegacyCompats(definition);
+    		LegacyCompatSystem.performLegacyCompats(definition);
     		MasterInterface.createItem(setupItem(new ItemRoadComponent(definition), packID, jsonFileName, "", "", ItemClassification.ROAD));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -403,7 +398,7 @@ public final class PackParserSystem{
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
-    		performLegacyCompats(definition);
+    		LegacyCompatSystem.performLegacyCompats(definition);
     		MasterInterface.createItem(setupItem(new ItemDecor(definition), packID, jsonFileName, "", "", ItemClassification.DECOR));
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -449,487 +444,6 @@ public final class PackParserSystem{
     	
     	//Return the item for construction convenience.
     	return item;
-    }
-    
-    /**
-     * Perform legacy compats.  This is used to allow older packs to remain compatible.
-     * Legacy compats may be removed ONLY when older packs have updated!
-     */
-    private static <JSONDefinition extends AJSONItem<?>> void performLegacyCompats(JSONDefinition definition){
-    	if(definition instanceof JSONPart){
-    		JSONPart partDef = (JSONPart) definition;
-    		//If we are a part without a definition, add one so we don't crash on other systems.
-    		if(partDef.definitions == null){
-    			partDef.definitions = new ArrayList<JSONPart.SubDefinition>();
-    			JSONPart.SubDefinition subDefinition = partDef.new SubDefinition();
-    			subDefinition.extraMaterials = new ArrayList<String>();
-    			subDefinition.name = definition.general.name;
-    			subDefinition.subName = "";
-    			partDef.definitions.add(subDefinition);
-    		}
-    		
-    		if(partDef.engine != null){
-    			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
-    			if(partDef.general.type.equals("engine_jet") && partDef.engine.jetPowerFactor == 0){
-    				partDef.engine.jetPowerFactor = 1.0F;
-    				partDef.engine.bypassRatio = partDef.engine.gearRatios[0];
-    				partDef.engine.gearRatios[0] = 1.0F;
-    			}
-    			
-    			//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine.
-    			if(partDef.engine.gearRatios.length == 1){
-    				partDef.engine.propellerRatio = 1/partDef.engine.gearRatios[0];
-    				partDef.engine.gearRatios = new float[]{-1, 0, 1};
-    			}
-    			
-    			//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.
-    			if(partDef.engine.shiftSpeed == 0){
-    				partDef.engine.shiftSpeed = 20;
-    			}
-    			//If our revResistance is 0, we are a legacy engine that didn't set a rev Resistance.
-    			if (partDef.engine.revResistance == 0){
-    				partDef.engine.revResistance = 10;
-    			}
-    		}else if(partDef.gun != null){
-    			//Make sure turrets are set as turrets.
-    			if(partDef.general.type.equals("gun_turret")){
-    				partDef.gun.isTurret = true;
-    			}
-    		}else if(partDef.bullet != null) {
-    			if (partDef.bullet.type != null) {
-    				partDef.bullet.types = new ArrayList<String>();
-    				partDef.bullet.types.add(partDef.bullet.type);
-    			}
-    		}else{
-    			//Check for old ground devices, crates, barrels, and effectors.
-    			switch(partDef.general.type){
-    				case("wheel"):{
-    					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new JSONPartGroundDevice();
-    					partDef.ground.isWheel = true;
-    					partDef.ground.width = partDef.wheel.diameter/2F;
-    					partDef.ground.height = partDef.wheel.diameter;
-    					partDef.ground.lateralFriction = partDef.wheel.lateralFriction;
-    					partDef.ground.motiveFriction = partDef.wheel.motiveFriction;
-    					break;
-    				}case("skid"):{
-    					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new JSONPartGroundDevice();
-    					partDef.ground.width = partDef.skid.width;
-    					partDef.ground.height = partDef.skid.width;
-    					partDef.ground.lateralFriction = partDef.skid.lateralFriction;
-    					break;
-    				}case("pontoon"):{
-    					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new JSONPartGroundDevice();
-    					partDef.ground.canFloat = true;
-    					partDef.ground.width = partDef.pontoon.width;
-    					partDef.ground.height = partDef.pontoon.width;
-    					partDef.ground.lateralFriction = partDef.pontoon.lateralFriction;
-    					partDef.ground.extraCollisionBoxOffset = partDef.pontoon.extraCollisionBoxOffset;
-    					break;
-    				}case("tread"):{
-    					partDef.general.type = "ground_" + partDef.general.type;
-    					partDef.ground = partDef.new JSONPartGroundDevice();
-    					partDef.ground.isTread = true;
-    					partDef.ground.width = partDef.tread.width;
-    					partDef.ground.height = partDef.tread.width;
-    					partDef.ground.lateralFriction = partDef.tread.lateralFriction;
-    					partDef.ground.motiveFriction = partDef.tread.motiveFriction;
-    					partDef.ground.extraCollisionBoxOffset = partDef.tread.extraCollisionBoxOffset;
-    					partDef.ground.spacing = partDef.tread.spacing;
-    					break;
-    				}case("crate"):{
-    					partDef.general.type = "interactable_crate";
-    					partDef.interactable = partDef.new JSONPartInteractable();
-    					partDef.interactable.interactionType = "crate";
-    					partDef.interactable.inventoryUnits = 1;
-    					partDef.interactable.feedsVehicles = true;
-    					break;
-    				}case("barrel"):{
-    					partDef.general.type = "interactable_barrel";
-    					partDef.interactable = partDef.new JSONPartInteractable();
-    					partDef.interactable.interactionType = "barrel";
-    					partDef.interactable.inventoryUnits = 1;
-    					break;
-    				}case("crafting_table"):{
-    					partDef.general.type = "interactable_crafting_table";
-    					partDef.interactable = partDef.new JSONPartInteractable();
-    					partDef.interactable.interactionType = "crafting_table";
-    					break;
-    				}case("furnace"):{
-    					partDef.general.type = "interactable_furnace";
-    					partDef.interactable = partDef.new JSONPartInteractable();
-    					partDef.interactable.interactionType = "furnace";
-    					break;
-    				}case("brewing_stand"):{
-    					partDef.general.type = "interactable_brewing_stand";
-    					partDef.interactable = partDef.new JSONPartInteractable();
-    					partDef.interactable.interactionType = "brewing_stand";
-    					break;
-    				}case("fertilizer"):{
-    					partDef.general.type = "effector_fertilizer";
-    					partDef.effector = partDef.new JSONPartEffector();
-    					partDef.effector.type = "fertilizer";
-    					partDef.effector.blocksWide = 1;
-    					break;
-    				}case("harvester"):{
-    					partDef.general.type = "effector_harvester";
-    					partDef.effector = partDef.new JSONPartEffector();
-    					partDef.effector.type = "harvester";
-    					partDef.effector.blocksWide = 1;
-    					break;
-    				}case("planter"):{
-    					partDef.general.type = "effector_planter";
-    					partDef.effector = partDef.new JSONPartEffector();
-    					partDef.effector.type = "planter";
-    					partDef.effector.blocksWide = 1;
-    					break;
-    				}case("plow"):{
-    					partDef.general.type = "effector_plow";
-    					partDef.effector = partDef.new JSONPartEffector();
-    					partDef.effector.type = "plow";
-    					partDef.effector.blocksWide = 1;
-    					break;
-    				}
-    			}
-    		}
-    		
-    		if(partDef.subParts != null){
-	    		//Check all part slots for ground device names and update them.
-	    		//Also check if we define an additional part, and make it a list instead.
-	    		//Finally, switch all crates and barrels to effectors with the appropriate type.
-	    		for(VehiclePart subPartDef : partDef.subParts){
-	    			if(subPartDef.additionalPart != null){
-	    				subPartDef.additionalParts = new ArrayList<VehiclePart>();
-	    				subPartDef.additionalParts.add(subPartDef.additionalPart);
-	    			}
-	    			for(byte i=0; i<subPartDef.types.size(); ++i){
-	    				String subPartName = subPartDef.types.get(i);
-	    				if(subPartName.equals("wheel") || subPartName.equals("skid") || subPartName.equals("pontoon") || subPartName.equals("tread")){
-	    					if(subPartName.equals("tread")){
-	    						subPartDef.turnsWithSteer = true;
-	    					}
-	    					subPartDef.types.set(i, "ground_" + subPartName);
-	    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
-	    					subPartDef.types.set(i, "interactable_" + subPartName);
-	    					subPartDef.minValue = 0;
-	    					subPartDef.maxValue = 1;
-	    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
-	    					subPartDef.types.set(i, "effector_" + subPartName);
-	    				}
-	    				//If we have additional parts, check those too.
-	    				if(subPartDef.additionalParts != null){
-	    					for(VehiclePart additionalPartDef : subPartDef.additionalParts){
-		    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
-		    	    				String additionalPartName = additionalPartDef.types.get(j);
-		    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
-		    	    					if(additionalPartName.equals("tread")){
-		    	    						additionalPartDef.turnsWithSteer = true;
-		    	    					}
-		    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
-		    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
-		    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
-		    	    					additionalPartDef.minValue = 0;
-		    	    					additionalPartDef.maxValue = 1;
-		    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
-		    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
-		    	    				}
-		    	    			}
-	    					}
-	    				}
-	    			}
-	    		}
-    		}
-    		
-    		if(partDef.rendering != null){
-    			doAnimationLegacyCompats(partDef.rendering, new JSONVehicle());
-    		}
-    	}else if(definition instanceof JSONVehicle){
-    		JSONVehicle vehicleDef = (JSONVehicle) definition;
-    		//Move vehicle parameters to the motorized section.
-    		if(vehicleDef.car != null){
-    			vehicleDef.motorized.isBigTruck = vehicleDef.car.isBigTruck;
-    			vehicleDef.motorized.isFrontWheelDrive = vehicleDef.car.isFrontWheelDrive;
-    			vehicleDef.motorized.isRearWheelDrive = vehicleDef.car.isRearWheelDrive;
-    			vehicleDef.motorized.hasCruiseControl = vehicleDef.car.hasCruiseControl;
-    			vehicleDef.motorized.axleRatio = vehicleDef.car.axleRatio;
-    			vehicleDef.motorized.dragCoefficient = vehicleDef.car.dragCoefficient;
-    			vehicleDef.car = null;
-    		}
-    		
-    		//If we still have the old type parameter and are an aircraft, set the flag to true.
-    		if(vehicleDef.general.type != null){
-    			if(vehicleDef.general.type.equals("plane") || vehicleDef.general.type.equals("blimp") || vehicleDef.general.type.equals("helicopter")){
-    				vehicleDef.general.isAircraft = true;
-    			}
-    			vehicleDef.general.type = null;
-    		}
-    		
-    		if(vehicleDef.plane != null){
-    			vehicleDef.general.isAircraft = true;
-    			vehicleDef.motorized.hasFlaps = vehicleDef.plane.hasFlaps;
-    			vehicleDef.motorized.hasAutopilot = vehicleDef.plane.hasAutopilot;
-    			vehicleDef.motorized.wingSpan = vehicleDef.plane.wingSpan;
-    			vehicleDef.motorized.wingArea = vehicleDef.plane.wingArea;
-    			vehicleDef.motorized.tailDistance = vehicleDef.plane.tailDistance;
-    			vehicleDef.motorized.aileronArea = vehicleDef.plane.aileronArea;
-    			vehicleDef.motorized.elevatorArea = vehicleDef.plane.elevatorArea;
-    			vehicleDef.motorized.rudderArea = vehicleDef.plane.rudderArea;
-    			vehicleDef.plane = null;
-    			
-    			//If aileronArea is 0, we're a legacy plane and need to adjust.
-    			if(vehicleDef.motorized.aileronArea == 0){
-    				vehicleDef.motorized.aileronArea = vehicleDef.motorized.wingArea/5F;
-    			}
-    		}
-    		
-    		if(vehicleDef.blimp != null){
-    			vehicleDef.general.isAircraft = true;
-    			vehicleDef.general.isBlimp = true;
-    			vehicleDef.motorized.crossSectionalArea = vehicleDef.blimp.crossSectionalArea;
-    			vehicleDef.motorized.tailDistance = vehicleDef.blimp.tailDistance;
-    			vehicleDef.motorized.rudderArea = vehicleDef.blimp.rudderArea;
-    			vehicleDef.motorized.ballastVolume = vehicleDef.blimp.ballastVolume;
-    			vehicleDef.blimp = null;
-    		}
-    		
-    		//Check all part slots for ground device names and update them.
-    		//Also check if we define an additional part, and make it a list instead.
-    		//Finally, switch all crates and barrels to effectors with the appropriate type.
-    		for(VehiclePart partDef : vehicleDef.parts){
-    			if(partDef.additionalPart != null){
-    				partDef.additionalParts = new ArrayList<VehiclePart>();
-    				partDef.additionalParts.add(partDef.additionalPart);
-    				partDef.additionalPart = null;
-    			}
-    			if(partDef.linkedDoor != null){
-    				partDef.linkedDoors = new ArrayList<String>();
-    				partDef.linkedDoors.add(partDef.linkedDoor);
-    				partDef.linkedDoor = null;
-    			}
-    			if(partDef.exhaustPos != null){
-    				partDef.exhaustObjects = new ArrayList<ExhaustObject>();
-    				for(int i=0; i<partDef.exhaustPos.length; i+=3){
-    					ExhaustObject exhaust = partDef.new ExhaustObject();
-    					exhaust.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
-    					exhaust.velocity = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
-    					exhaust.scale = 1.0F;
-    					partDef.exhaustObjects.add(exhaust);
-    				}
-    				partDef.exhaustPos = null;
-    			}
-    			if(partDef.rotationVariable != null){
-    				partDef.animations = new ArrayList<VehicleAnimationDefinition>();
-    				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
-    				animation.animationType = "rotation";
-    				animation.variable = partDef.rotationVariable;
-    				animation.centerPoint = partDef.rotationPosition;
-    				animation.axis = partDef.rotationAngles;
-    				animation.clampMin = partDef.rotationClampMin;
-    				animation.clampMax = partDef.rotationClampMax;
-    				animation.absolute = partDef.rotationAbsolute;
-    				partDef.animations.add(animation);
-    				partDef.rotationVariable = null;
-    				partDef.rotationPosition = null;
-    				partDef.rotationAngles = null;
-    				partDef.rotationClampMin = 0;
-    				partDef.rotationClampMax = 0;
-    				partDef.rotationAbsolute = false;
-    			}
-    			if(partDef.translationVariable != null){
-    				if(partDef.animations == null){
-    					partDef.animations = new ArrayList<VehicleAnimationDefinition>();
-    				}
-    				VehicleAnimationDefinition animation = vehicleDef.new VehicleAnimationDefinition();
-    				animation.animationType = "translation";
-    				animation.variable = partDef.translationVariable;
-    				animation.axis = partDef.translationPosition;
-    				animation.clampMin = partDef.translationClampMin;
-    				animation.clampMax = partDef.translationClampMax;
-    				animation.absolute = partDef.translationAbsolute;
-    				partDef.animations.add(animation);
-    				partDef.translationVariable = null;
-    				partDef.translationPosition = null;
-    				partDef.translationClampMin = 0;
-    				partDef.translationClampMax = 0;
-    				partDef.translationAbsolute = false;
-    			}
-    			for(byte i=0; i<partDef.types.size(); ++i){
-    				String partName = partDef.types.get(i);
-    				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
-    					if(partName.equals("tread")){
-    						partDef.turnsWithSteer = true;
-    					}
-    					partDef.types.set(i, "ground_" + partName);
-    				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
-    					partDef.types.set(i, "interactable_" + partName);
-    					partDef.minValue = 0;
-    					partDef.maxValue = 1;
-    				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
-    					partDef.types.set(i, "effector_" + partName);
-    				}
-    				//If we have additional parts, check those too.
-    				if(partDef.additionalParts != null){
-    					for(VehiclePart additionalPartDef : partDef.additionalParts){
-	    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
-	    	    				String additionalPartName = additionalPartDef.types.get(j);
-	    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
-	    	    					if(additionalPartName.equals("tread")){
-	    	    						additionalPartDef.turnsWithSteer = true;
-	    	    					}
-	    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
-	    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
-	    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
-	    	    					additionalPartDef.minValue = 0;
-	    	    					additionalPartDef.maxValue = 1;
-	    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
-	    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
-	    	    				}
-	    	    			}
-    					}
-    				}
-    			}
-    		}
-    		
-    		if(vehicleDef.rendering != null){
-    			doAnimationLegacyCompats(vehicleDef.rendering, new JSONVehicle());
-    		}
-    	}else if(definition instanceof JSONPoleComponent){
-    		JSONPoleComponent pole = (JSONPoleComponent) definition;
-    		//If we are a sign using the old textlines, update them.
-    		if(pole.general.textLines != null){
-    			pole.general.textObjects = new ArrayList<JSONText>();
-    			for(minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine line : pole.general.textLines){
-    				JSONText object = new JSONText();
-    				object.color = line.color;
-    				object.scale = line.scale;
-    				object.maxLength = line.characters;
-    				object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.01D);
-    				object.rot = new Point3d(0, 0, 0);
-    				object.fieldName = "TextLine #" + (pole.general.textObjects.size() + 1);
-    				pole.general.textObjects.add(object);
-    			}
-    			pole.general.textLines = null;
-    		}
-    	}else if(definition instanceof JSONDecor){
-    		JSONDecor decor = (JSONDecor) definition;
-    		//If we are a decor using the old textlines, update them.
-    		if(decor.general.textLines != null){
-    			decor.general.textObjects = new ArrayList<JSONText>();
-    			int lineNumber = 0;
-    			for(minecrafttransportsimulator.jsondefs.JSONDecor.TextLine line : decor.general.textLines){
-    				JSONText object = new JSONText();
-    				object.lightsUp = true;
-    				object.color = line.color;
-    				object.scale = line.scale;
-    				if(lineNumber++ < 3){
-    					object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.0001D);
-    					object.rot = new Point3d(0, 0, 0);
-    				}else{
-    					object.pos = new Point3d(line.xPos, line.yPos, line.zPos - 0.0001D);
-    					object.rot = new Point3d(0, 180, 0);
-    				}
-    				object.fieldName = "TextLine #" + (decor.general.textObjects.size() + 1);
-    				decor.general.textObjects.add(object);
-    			}
-    			 decor.general.textLines = null;
-    		}
-    	}
-    }
-    
-    private static void doAnimationLegacyCompats(VehicleRendering rendering, JSONVehicle jsonInstance){
-    	if(rendering.textMarkings != null){
-    		rendering.textObjects = new ArrayList<JSONText>();
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText marking : rendering.textMarkings){
-				JSONText object = new JSONText();
-				object.lightsUp = rendering.textLighted;
-				object.color = marking.color;
-				object.scale = marking.scale;
-				object.maxLength = rendering.displayTextMaxLength;
-				object.pos = marking.pos;
-				object.rot = marking.rot;
-				object.fieldName = "Text";
-				object.defaultText = rendering.defaultDisplayText;
-				rendering.textObjects.add(object);
-			}
-    		rendering.textMarkings = null;
-    	}
-    	if(rendering.rotatableModelObjects != null){
-    		if(rendering.animatedObjects == null){
-    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
-    		}
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects){
-    			VehicleAnimatedObject object = null;
-    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
-    				if(testObject.objectName.equals(rotatable.partName)){
-    					object = testObject;
-    					break;
-    				}
-    			}
-    			if(object == null){
-    				object = jsonInstance.new VehicleAnimatedObject();
-    				object.objectName = rotatable.partName;
-    				object.animations = new ArrayList<VehicleAnimationDefinition>();
-    				rendering.animatedObjects.add(object);
-    			}
-    			
-    			VehicleAnimationDefinition animation = jsonInstance.new VehicleAnimationDefinition();
-    			animation.animationType = "rotation";
-    	    	animation.variable = rotatable.rotationVariable;
-    	    	animation.centerPoint = rotatable.rotationPoint;
-    	    	animation.axis = rotatable.rotationAxis;
-    	    	animation.clampMin = rotatable.rotationClampMin;
-    	    	animation.clampMax = rotatable.rotationClampMax;
-    	    	animation.absolute = rotatable.absoluteValue;
-    	    	if(rotatable.rotationVariable.equals("steering_wheel")){
-    	    		animation.variable = "rudder";
-    	    		animation.axis.multiply(-1D);
-    	    	}
-    	    	if(rotatable.rotationVariable.equals("door")){
-    	    		animation.duration = 30;
-    	    	}
-    	    	object.animations.add(animation);
-			}
-    		rendering.rotatableModelObjects = null;
-    	}
-    	if(rendering.translatableModelObjects != null){
-    		if(rendering.animatedObjects == null){
-    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
-    		}
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects){
-    			VehicleAnimatedObject object = null;
-    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
-    				if(testObject.objectName.equals(translatable.partName)){
-    					object = testObject;
-    					break;
-    				}
-    			}
-    			if(object == null){
-    				object = jsonInstance.new VehicleAnimatedObject();
-    				object.objectName = translatable.partName;
-    				object.animations = new ArrayList<VehicleAnimationDefinition>();
-    				rendering.animatedObjects.add(object);
-    			}
-    			
-    			VehicleAnimationDefinition animation = jsonInstance.new VehicleAnimationDefinition();
-    			animation.animationType = "translation";
-    	    	animation.variable = translatable.translationVariable;
-    	    	animation.axis = translatable.translationAxis;
-    	    	animation.clampMin = translatable.translationClampMin;
-    	    	animation.clampMax = translatable.translationClampMax;
-    	    	animation.absolute = translatable.absoluteValue;
-    	    	if(translatable.translationVariable.equals("steering_wheel")){
-    	    		animation.variable = "rudder";
-    	    		animation.axis.multiply(-1D);
-    	    	}
-    	    	if(translatable.translationVariable.equals("door")){
-    	    		animation.duration = 30;
-    	    	}
-    	    	object.animations.add(animation);
-			}
-    		rendering.translatableModelObjects = null;
-    	}
     }
     
     //--------------------START OF HELPER METHODS--------------------
