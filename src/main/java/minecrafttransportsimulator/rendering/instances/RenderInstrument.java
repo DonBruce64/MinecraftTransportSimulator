@@ -167,14 +167,18 @@ public final class RenderInstrument{
 						
 						//If the shape is lit, do blending.  If not, just render normally.
 						if(!component.lightOverlay){
-							renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+							if(component.lightUpTexture && lightsOn){
+								MasterLoader.renderInterface.setLightingState(false);
+								renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+								MasterLoader.renderInterface.setLightingState(true);
+							}else{
+								renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+							}
 						}else if(lightsOn && ConfigSystem.configObject.clientRendering.instBlending.value){
-							MasterLoader.renderInterface.setLightingState(false);
-							GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 							GL11.glEnable(GL11.GL_BLEND);
+							MasterLoader.renderInterface.setLightingState(false);
 						    renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
 						    MasterLoader.renderInterface.setLightingState(true);
-							GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 							if(MasterLoader.renderInterface.getRenderPass() != 1){
 								GL11.glDisable(GL11.GL_BLEND);
 							}

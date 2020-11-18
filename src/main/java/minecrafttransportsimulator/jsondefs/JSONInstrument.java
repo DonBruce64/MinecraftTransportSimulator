@@ -27,6 +27,7 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	public boolean extendWindow;
     	public List<VehicleAnimationDefinition> animations;
     	
+    	public boolean lightUpTexture;
     	public boolean lightOverlay;
     	
     	@Deprecated

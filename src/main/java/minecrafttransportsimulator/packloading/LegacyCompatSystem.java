@@ -383,8 +383,19 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performInstrumentLegacyCompats(JSONInstrument definition){
+		//Check if we have any old component definitions.  If so, we need
+		//to make all textures light-up.
+		boolean oldDefinition = false;
+		for(JSONInstrument.Component component : definition.components){
+			if(component.rotationVariable != null || component.translationVariable != null){
+				oldDefinition = true;
+			}
+		}
 		//Convert any old component definitions to the new style.
 		for(JSONInstrument.Component component : definition.components){
+			if(oldDefinition){
+				component.lightUpTexture = !component.lightOverlay;
+			}
 			if(component.rotationVariable != null){
 				component.animations = new ArrayList<VehicleAnimationDefinition>();
 				VehicleAnimationDefinition animation = vehicleJSONinstance.new VehicleAnimationDefinition();
