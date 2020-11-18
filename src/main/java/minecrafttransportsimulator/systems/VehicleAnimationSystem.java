@@ -241,6 +241,10 @@ public final class VehicleAnimationSystem{
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
+			
+			//Missile incoming variables.
+			case("missile_incoming"): return vehicle.missilesIncoming.isEmpty()? 0 : 1;
+			case("missile_distance"): return vehicle.missilesIncoming.isEmpty()? 0 : vehicle.missilesIncoming.firstKey();
 		}
 		
 		//Check if this is a light variable.

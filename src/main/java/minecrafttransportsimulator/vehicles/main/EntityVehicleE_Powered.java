@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -26,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -75,6 +77,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	public final HashMap<ItemPart, List<PartGun>> guns = new LinkedHashMap<ItemPart, List<PartGun>>();
+	
+	//Map containing incoming missiles, sorted by distance.
+	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
 	
 	//Internal radio variables.
 	private final Radio radio;
@@ -215,6 +220,16 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			++gearMovementTime;
 		}else if(!gearUpCommand && gearMovementTime > 0){
 			--gearMovementTime;
+		}
+		
+		//Check that missiles are still valid.
+		//If they are, update their distances. Otherwise, remove them.
+		ParticleMissile missile;
+		for(double dist : missilesIncoming.keySet()) {
+			missile = missilesIncoming.remove(dist);
+			if (missile != null) {
+				missilesIncoming.put(position.distanceTo(missile.position), missile);
+			}
 		}
 		
 		//Update sound variables.
@@ -358,6 +373,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				}
 			}
 		}
+	}
+	
+	public void acquireMissile(ParticleMissile missile) {
+		//Add this missile with its current distance
+		missilesIncoming.put(position.distanceTo(missile.position), missile);
 	}
 	
 	//-----START OF SOUND CODE-----
