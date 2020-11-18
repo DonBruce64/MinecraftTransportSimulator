@@ -354,6 +354,8 @@ public class RenderEventHandler{
 				}
 			}
 			currentGUI = null;
+		}else{
+			currentGUI = null;
 		}
     	
     	//Return the current GUI to render as an overlay.
