@@ -153,8 +153,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);	
 			}
 			rider.setPosition(dismountPosition);
-		}else{
-			//Rider left a vehicle.  Make sure they don't have their mouse locked or a GUI open.
+		}else if(MasterLoader.gameInterface.getClientPlayer().equals(rider)){
+			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
 			MasterLoader.inputInterface.setMouseEnabled(true);
 			MasterLoader.guiInterface.closeGUI();
 		}
