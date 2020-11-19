@@ -113,6 +113,7 @@ public final class LegacyCompatSystem{
 					partDef.exhaustObjects.add(exhaust);
 				}
 				partDef.exhaustPos = null;
+				partDef.exhaustVelocity = null;
 			}
 			if(partDef.rotationVariable != null){
 				partDef.animations = new ArrayList<VehicleAnimationDefinition>();
