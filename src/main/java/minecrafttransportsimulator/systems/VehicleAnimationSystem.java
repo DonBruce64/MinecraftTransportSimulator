@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -243,8 +245,29 @@ public final class VehicleAnimationSystem{
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 			
 			//Missile incoming variables.
-			case("missile_incoming"): return vehicle.missilesIncoming.isEmpty()? 0 : 1;
-			case("missile_distance"): return vehicle.missilesIncoming.isEmpty()? 0 : vehicle.missilesIncoming.firstKey();
+			default: {
+				if(variable.startsWith("missile_")){
+					//Get everything after missile_.
+					//Check for a number first.
+					String missileVariable = variable.substring(8);
+					if(missileVariable.contains("_") && missileVariable.substring(0,missileVariable.indexOf('_')).matches("[0-9]+")){
+						//Parse one or more digits, then take off one because we are zero-indexed
+						int missileNumber = Integer.parseInt(missileVariable.substring(0, missileVariable.indexOf('_'))) - 1;
+						if (vehicle.missilesIncoming.size() <= missileNumber) return 0;
+						switch(missileVariable.substring(missileVariable.indexOf('_') + 1)) {
+							case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+							case("direction"): {
+								double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+								Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
+								return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
+							}
+						}
+					}
+					else if(missileVariable.equals("incoming")) {
+						return vehicle.missilesIncoming.isEmpty() ? 0 : 1;
+					}
+				}
+			}
 		}
 		
 		//Check if this is a light variable.

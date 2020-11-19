@@ -225,12 +225,18 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		//Check that missiles are still valid.
 		//If they are, update their distances. Otherwise, remove them.
 		ParticleMissile missile;
-		for(double dist : missilesIncoming.keySet()) {
-			missile = missilesIncoming.remove(dist);
-			if (missile != null) {
-				missilesIncoming.put(position.distanceTo(missile.position), missile);
+		Iterator<Double> iterator = missilesIncoming.keySet().iterator();
+		final TreeMap<Double, ParticleMissile> tempMap = new TreeMap<Double, ParticleMissile>();
+		while(iterator.hasNext()) {
+			double dist = iterator.next();
+			missile = missilesIncoming.get(dist);
+			iterator.remove();
+			if(missile != null && missile.isValid) {
+				tempMap.put(position.distanceTo(missile.position), missile);
 			}
 		}
+		missilesIncoming.putAll(tempMap);
+		MasterLoader.coreInterface.logError("All missiles in. Total: " + missilesIncoming.keySet().size());
 		
 		//Update sound variables.
 		soundPosition.rewind();
@@ -377,7 +383,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	public void acquireMissile(ParticleMissile missile) {
 		//Add this missile with its current distance
-		missilesIncoming.put(position.distanceTo(missile.position), missile);
+		if(!missilesIncoming.containsValue(missile)) {
+			missilesIncoming.put(position.distanceTo(missile.position), missile);
+		}
 	}
 	
 	//-----START OF SOUND CODE-----

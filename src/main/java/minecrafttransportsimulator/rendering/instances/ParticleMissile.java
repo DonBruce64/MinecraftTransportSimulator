@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -41,6 +42,14 @@ public final class ParticleMissile extends ParticleBullet {
 	
 	@Override
 	public void update() {
+		//If this missile is no longer valid,
+		//no need to update.
+		if(!isValid) {
+			return;
+		}
+		else if(age > 0 && motion.length() == 0D) {
+			isValid = false;
+		}
 		double yawTarget = this.getYaw();
 		double pitchTarget = this.getPitch();
 		
@@ -76,6 +85,7 @@ public final class ParticleMissile extends ParticleBullet {
 					if (nearestEngine != null) {
 						engineTarget = nearestEngine;
 						targetPosition = engineTarget.worldPos;
+						vehicleTarget.acquireMissile(this);
 					}
 					else {
 						engineTarget = null;

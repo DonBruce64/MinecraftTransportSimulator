@@ -49,6 +49,8 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
+	public boolean isValid;
+	
     public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
     	this.bullet = bullet;
@@ -61,6 +63,7 @@ public class ParticleBullet extends AParticle{
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
         this.initialDirection = direction;
+        this.isValid = true;
     }
 	
 	@Override
@@ -93,6 +96,7 @@ public class ParticleBullet extends AParticle{
 			
 			//If we hit something, don't process anything further.
 			if(age == maxAge){
+				isValid = false;
 				return;
 			}
 		}
@@ -163,6 +167,7 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
+		isValid = false;
 		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
 	}
