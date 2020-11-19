@@ -25,6 +25,7 @@ public abstract class AParticle{
 	public boolean touchingBlocks;
 	public float scale;
 	public int age;
+	public boolean isValid;
 	
 	public float deltaRed;
 	public float deltaGreen;
@@ -47,12 +48,16 @@ public abstract class AParticle{
 		this.alpha = alpha;
 		this.scale = scale;
 		this.maxAge = generateMaxAge();
+		this.isValid = true;
 	}
 	
 	/**
 	 *  Called to update this particle's states.
 	 */
 	public void update(){
+		if(!isValid) {
+			return;
+		}
 		if(collidesWithBlocks()){
 			touchingBlocks = box.updateMovingCollisions(world, motion);
 			if(touchingBlocks){
@@ -69,7 +74,9 @@ public abstract class AParticle{
 		this.alpha += this.deltaAlpha;
 		this.scale += this.deltaScale;
 		
-		++age;
+		if(++age == maxAge) {
+			isValid = false;
+		}
 	}
 	
 	/**

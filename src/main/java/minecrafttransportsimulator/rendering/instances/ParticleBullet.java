@@ -49,8 +49,6 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
-	public boolean isValid;
-	
     public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
     	super(gun.vehicle.world, position, motion);
     	this.bullet = bullet;
@@ -63,7 +61,6 @@ public class ParticleBullet extends AParticle{
         this.gunController = gunController;
         this.timeUntilAirBurst = bullet.definition.bullet.airBurstDelay;
         this.initialDirection = direction;
-        this.isValid = true;
     }
 	
 	@Override

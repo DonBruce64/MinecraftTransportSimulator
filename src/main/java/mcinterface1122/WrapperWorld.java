@@ -200,7 +200,7 @@ class WrapperWorld implements IWrapperWorld{
 		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
 			float distance = mcLooker.getDistance(entity);
-			//if(distance < 10f) continue;
+			if(entity.equals(mcLooker.getRidingEntity())) continue;
 			if(distance < smallestDistance){
 				RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(mcLookerPos, losVector);
 				if(rayTrace != null){

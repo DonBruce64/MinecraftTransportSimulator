@@ -236,7 +236,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			}
 		}
 		missilesIncoming.putAll(tempMap);
-		MasterLoader.coreInterface.logError("All missiles in. Total: " + missilesIncoming.keySet().size());
 		
 		//Update sound variables.
 		soundPosition.rewind();
