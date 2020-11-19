@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
@@ -23,7 +24,12 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public final class RenderInstrument{
-	private final static Map<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>> clocks = new HashMap<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>>();
+	private static final Map<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>> clocks = new HashMap<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>>();
+	private static final Point3d p1 = new Point3d(0, 0, 0);
+	private static final Point3d p2 = new Point3d(0, 0, 0);
+	private static final Point3d p3 = new Point3d(0, 0, 0);
+	private static final Point3d p4 = new Point3d(0, 0, 0);
+	private static final Point3d r = new Point3d(0, 0, 0);
 	
 	/**
      * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 
@@ -57,10 +63,10 @@ public final class RenderInstrument{
 					MasterLoader.renderInterface.recallTexture();
 				}else{
 					//Init variables.
-					float layerUStart = -component.textureWidth/2F;
-					float layerUEnd = component.textureWidth/2F;
-					float layerVStart = -component.textureHeight/2F;
-					float layerVEnd = component.textureHeight/2F;
+					p1.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
+					p2.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
+					p3.set(component.textureWidth/2D, component.textureHeight/2D, 0);
+					p4.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
 					boolean skipRender = false;
 					boolean skipFurtherTransforms = false;
 					if(component.animations != null){
@@ -86,16 +92,28 @@ public final class RenderInstrument{
 									double rotation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable, 0, vehicle, null));
 									rotation = VehicleAnimationSystem.clampAndScale(rotation, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
 									if(component.rotateWindow){
-										double sin = Math.sin(Math.toRadians(rotation));
-										double cos = Math.cos(Math.toRadians(rotation));
-										layerUStart = (float) (layerUStart*cos + layerVStart*sin);
-										layerVStart = (float) (layerVStart*cos - layerUStart*sin);
-										layerUEnd = (float) (layerUEnd*cos + layerVEnd*sin);
-										layerVEnd = (float) (layerVEnd*cos - layerUEnd*sin);
+										//Add rotation offset to the points.
+										p1.add(animation.centerPoint);
+										p2.add(animation.centerPoint);
+										p3.add(animation.centerPoint);
+										p4.add(animation.centerPoint);
+										
+										//Rotate the points by the rotation.
+										r.set(0, 0, rotation);
+										p1.rotateFine(r);
+										p2.rotateFine(r);
+										p3.rotateFine(r);
+										p4.rotateFine(r);
+										
+										//Remove the rotation offsets.
+										p1.subtract(animation.centerPoint);
+										p2.subtract(animation.centerPoint);
+										p3.subtract(animation.centerPoint);
+										p4.subtract(animation.centerPoint);
 									}else{
-										GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
+										GL11.glTranslated(component.xCenter + animation.centerPoint.x, component.yCenter + animation.centerPoint.y, 0.0F);
 										GL11.glRotated(rotation, 0, 0, 1);
-										GL11.glTranslatef(-component.xCenter, -component.yCenter, 0.0F);
+										GL11.glTranslated(-component.xCenter - animation.centerPoint.x, -component.yCenter - animation.centerPoint.y, 0.0F);
 									}
 									break;
 								}
@@ -105,29 +123,39 @@ public final class RenderInstrument{
 									double axisLength = animation.axis.length();
 									double translation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable,  0, vehicle, null));
 									translation = VehicleAnimationSystem.clampAndScale(translation, axisLength, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
+									double xTranslation = translation*animation.axis.x/axisLength;
+									double yTranslation = translation*animation.axis.y/axisLength;
 									if(component.extendWindow){
 										//We need to add to the edge of the window in this case rather than move the entire window.
 										if(animation.axis.x < 0){
-											layerUStart += translation*animation.axis.x/axisLength;
+											p1.x += xTranslation;
+											p2.x += xTranslation;
 										}else if(animation.axis.x > 0){
-											layerUEnd += translation*animation.axis.x/axisLength;
+											p3.x += xTranslation;
+											p4.x += xTranslation;
 										}
 										if(animation.axis.y < 0){
-											layerVStart -= translation*animation.axis.y/axisLength;
+											p1.y += yTranslation;
+											p4.y += yTranslation;
 										}else if(animation.axis.y > 0){
-											layerVEnd += translation*animation.axis.y/axisLength;
+											p2.y += yTranslation;
+											p3.y += yTranslation;
 										}
 									}else{
 										//Offset the window coords to the appropriate section of the texture sheet.
 										//We don't want to do an OpenGL translation here as that would move the texture's
 										//rendered position on the instrument rather than change what texture is rendered.
 										if(animation.axis.x != 0){
-											layerUStart += translation*animation.axis.x/axisLength;
-											layerUEnd += translation*animation.axis.x/axisLength;
+											p1.x += xTranslation;
+											p2.x += xTranslation;
+											p3.x += xTranslation;
+											p4.x += xTranslation;
 										}
 										if(animation.axis.y != 0){
-											layerVStart += translation*animation.axis.y/axisLength;
-											layerVEnd += translation*animation.axis.y/axisLength;
+											p1.y += yTranslation;
+											p2.y += yTranslation;
+											p3.y += yTranslation;
+											p4.y += yTranslation;
 										}
 									}
 									break;
@@ -157,10 +185,16 @@ public final class RenderInstrument{
 					if(!skipRender){
 						//Add the instrument UV-map offsets.
 						//These don't get added to the initial points to allow for rotation.
-						layerUStart += component.textureXCenter;
-						layerUEnd += component.textureXCenter;
-						layerVStart += component.textureYCenter;
-						layerVEnd += component.textureYCenter;
+						p1.add(component.textureXCenter, component.textureYCenter, 0);
+						p2.add(component.textureXCenter, component.textureYCenter, 0);
+						p3.add(component.textureXCenter, component.textureYCenter, 0);
+						p4.add(component.textureXCenter, component.textureYCenter, 0);
+						
+						//Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
+						p1.multiply(1D/1024D);
+						p2.multiply(1D/1024D);
+						p3.multiply(1D/1024D);
+						p4.multiply(1D/1024D);
 						
 						//Translate to the component.
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
@@ -169,15 +203,15 @@ public final class RenderInstrument{
 						if(!component.lightOverlay){
 							if(component.lightUpTexture && lightsOn){
 								MasterLoader.renderInterface.setLightingState(false);
-								renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+								renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
 								MasterLoader.renderInterface.setLightingState(true);
 							}else{
-								renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+								renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
 							}
 						}else if(lightsOn && ConfigSystem.configObject.clientRendering.instBlending.value){
 							GL11.glEnable(GL11.GL_BLEND);
 							MasterLoader.renderInterface.setLightingState(false);
-						    renderSquareUV(component.textureWidth, component.textureHeight, layerUStart/1024F, layerUEnd/1024F, layerVStart/1024F, layerVEnd/1024F);
+						    renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
 						    MasterLoader.renderInterface.setLightingState(true);
 							if(MasterLoader.renderInterface.getRenderPass() != 1){
 								GL11.glDisable(GL11.GL_BLEND);
@@ -220,18 +254,18 @@ public final class RenderInstrument{
      * Renders a textured quad from the current bound texture of a specific width and height.
      * Used for rendering instrument textures off their texture sheets.
      */
-	private static void renderSquareUV(float width, float height, float u, float U, float v, float V){
+	private static void renderSquareUV(float width, float height, Point3d p1, Point3d p2, Point3d p3, Point3d p4){
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(u, v);
+		GL11.glTexCoord2d(p1.x, p1.y);
 		GL11.glNormal3f(0, 0, 1);
 		GL11.glVertex3f(-width/2, -height/2, 0);
-		GL11.glTexCoord2f(u, V);
+		GL11.glTexCoord2d(p2.x, p2.y);
 		GL11.glNormal3f(0, 0, 1);
 		GL11.glVertex3f(-width/2, height/2, 0);
-		GL11.glTexCoord2f(U, V);
+		GL11.glTexCoord2d(p3.x, p3.y);
 		GL11.glNormal3f(0, 0, 1);
 		GL11.glVertex3f(width/2, height/2, 0);
-		GL11.glTexCoord2f(U, v);
+		GL11.glTexCoord2d(p4.x, p4.y);
 		GL11.glNormal3f(0, 0, 1);
 		GL11.glVertex3f(width/2, -height/2, 0);
 		GL11.glEnd();
