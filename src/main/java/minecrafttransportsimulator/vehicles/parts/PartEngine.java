@@ -481,6 +481,11 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
+	public boolean isInLiquid(){
+		return vehicle.world.isBlockLiquid(new Point3i(worldPos.copy().add(0, vehicleDefinition.intakeOffset, 0)));
+	}
+	
+	@Override
 	public void remove(){
 		super.remove();
 		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
