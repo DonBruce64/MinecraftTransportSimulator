@@ -247,12 +247,29 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
 		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
-			if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
-				for(PartEngine engine : engines.values()){
-					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+			if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider)){
+				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
+				boolean otherController = false;
+				if(riddenPart.vehicleDefinition.isController){
+					//Check if another player is in a controller seat.  If so, don't stop the engines.
+					for(APart part : parts){
+						if(!part.equals(riddenPart)){
+							if(locationRiderMap.containsKey(part.placementOffset)){
+								if(part.vehicleDefinition.isController){
+									otherController = true;
+									break;
+								}
+							}
+						}
+					}
+					if(!otherController){
+						for(PartEngine engine : engines.values()){
+							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+						}
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+					}
 				}
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 			}
 		}
 		super.removeRider(rider, iterator);
