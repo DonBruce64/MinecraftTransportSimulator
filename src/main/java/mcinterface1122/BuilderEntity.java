@@ -66,6 +66,11 @@ public class BuilderEntity extends Entity{
 	AEntityBase entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
+	/**The data on or from the server for this entity.  If this is present on a tick, then the entity that was stored in this
+	 * data will be created, and the data will then be discarded..  This is only done on the update() tick to prevent created 
+	 * builders from loading their entities if they aren't actually in the world.  Used to combat mods making duplicate
+	 * entities on clients.**/
+	private NBTTagCompound serverNBTData;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
 	/**Position where we have spawned a fake light.  Used for shader compatibility.**/
@@ -77,6 +82,9 @@ public class BuilderEntity extends Entity{
 	
 	public BuilderEntity(World world){
 		super(world);
+		if(world.isRemote){
+			requestDataFromServer = true;
+		}
 	}
     
     @Override
@@ -163,6 +171,16 @@ public class BuilderEntity extends Entity{
     		if(requestDataFromServer){
     			MasterInterface.networkInterface.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
     			requestDataFromServer = false;
+    		}
+    		
+    		if(serverNBTData != null){
+    			//Restore the Entity from saved state.
+    			entity = entityMap.get(serverNBTData.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(serverNBTData));
+				if(world.isRemote){
+					createdClientBuilders.put(entity, this);
+				}else{
+					createdServerBuilders.put(entity, this);
+				}
     		}
     	}
     }
@@ -303,14 +321,6 @@ public class BuilderEntity extends Entity{
 	}
     
     @Override
-    public void setEntityId(int id){
-    	super.setEntityId(id);
-    	//If we are setting our ID on a client, request NBT data from the server to load the rest of our properties.
-    	//We do this on our next update tick, as we may not yet be spawned at this point.
-    	requestDataFromServer = world.isRemote;
-    }
-    
-    @Override
 	public boolean canBeCollidedWith(){
 		//This gets overridden to allow players to interact with this entity.
 		return true;
@@ -340,15 +350,8 @@ public class BuilderEntity extends Entity{
 	public void readFromNBT(NBTTagCompound tag){
     	super.readFromNBT(tag);
 		if(entity == null && tag.hasKey("entityid")){
-			//Restore the Entity from saved state.
-			entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
-			if(!isDead){
-				if(world.isRemote){
-					createdClientBuilders.put(entity, this);
-				}else{
-					createdServerBuilders.put(entity, this);
-				}
-			}
+			//Save the NBT to the reference for use in the update() call.
+			serverNBTData = tag;
 		}
 	}
     
