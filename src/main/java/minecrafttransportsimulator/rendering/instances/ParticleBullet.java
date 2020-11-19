@@ -83,16 +83,16 @@ public class ParticleBullet extends AParticle{
 						}
 					}
 					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
-					age = maxAge;
+					isValid = false;
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
 					MasterLoader.networkInterface.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
-					age = maxAge;
+					isValid = false;
 				}
 			}
 			
 			//If we hit something, don't process anything further.
-			if(age == maxAge){
+			if(!isValid){
 				return;
 			}
 		}
@@ -163,6 +163,7 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
+		isValid = false;
 		MasterLoader.networkInterface.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
 	}

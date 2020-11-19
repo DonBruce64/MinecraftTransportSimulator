@@ -30,7 +30,7 @@ class BuilderParticle extends Particle{
     
     @Override
 	public void onUpdate(){
-    	if(particle.age == particle.maxAge){
+    	if(particle.age == particle.maxAge || !particle.isValid){
     		setExpired();
     	}else{			
 			//First, update the prev position variables.

@@ -76,6 +76,7 @@ public final class ParticleMissile extends ParticleBullet {
 					if (nearestEngine != null) {
 						engineTarget = nearestEngine;
 						targetPosition = engineTarget.worldPos;
+						vehicleTarget.acquireMissile(this);
 					}
 					else {
 						engineTarget = null;
