@@ -100,7 +100,7 @@ class WrapperWorld implements IWrapperWorld{
 				entityWrappers.put(entity, new WrapperEntity(entity));
 			}
 			WrapperEntity wrapper = entityWrappers.get(entity);
-			if(!wrapper.isValid() || !entity.equals(wrapper.entity)){
+			if(!wrapper.isValid() || entity != wrapper.entity){
 				wrapper = new WrapperEntity(entity);
 				entityWrappers.put(entity, wrapper);
 			}
@@ -123,7 +123,7 @@ class WrapperWorld implements IWrapperWorld{
 				playerWrappers.put(player, new WrapperPlayer(player));
 			}
 			WrapperPlayer wrapper = playerWrappers.get(player);
-			if(!wrapper.isValid() || !player.equals(wrapper.player)){
+			if(!wrapper.isValid() || player != wrapper.player){
 				wrapper = new WrapperPlayer(player);
 				playerWrappers.put(player, wrapper);
 			}
