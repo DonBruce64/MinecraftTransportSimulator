@@ -15,6 +15,7 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     public class Component{
     	public int xCenter;
     	public int yCenter;
+    	public float scale;
     	public int textureXCenter;
     	public int textureYCenter;
     	public int textureWidth;

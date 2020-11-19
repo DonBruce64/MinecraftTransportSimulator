@@ -54,6 +54,9 @@ public final class RenderInstrument{
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0.0F, 0.0F, i*0.1F);
+				if(component.scale != 0){
+					GL11.glScalef(component.scale, component.scale, component.scale);
+				}
 				if(component.textObject != null){
 					final boolean addSuffix = !component.textObject.fieldName.substring(component.textObject.fieldName.length() - 1).matches("[0-9]+") && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
 					double textNumeric = VehicleAnimationSystem.getVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, component.textFactor, 0, 0, 0, false, 0, vehicle, null);
