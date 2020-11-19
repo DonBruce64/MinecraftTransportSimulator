@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
