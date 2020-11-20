@@ -195,6 +195,7 @@ public final class VehicleAnimationSystem{
 		//Either we don't have a part, or we have a part and we don't want a part-specific variable.
 		//Try vehicle variables now.
 		switch(variable){
+			case("time"): return vehicle.world.getTime();
 			//Vehicle world position cases.	
 			case("yaw"): return vehicle.angles.y;
 			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
