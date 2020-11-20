@@ -88,7 +88,9 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 		super.addTooltipLines(tooltipLines, data);
 		switch(partPrefix){
 			case("bullet") : {
-				tooltipLines.add(MasterLoader.coreInterface.translate("info.item.bullet.type." + definition.bullet.type));
+				for(String type : definition.bullet.types) {
+  					tooltipLines.add(MasterLoader.coreInterface.translate("info.item.bullet.type." + type));
+				}
 				tooltipLines.add(MasterLoader.coreInterface.translate("info.item.bullet.diameter") + definition.bullet.diameter);
 				tooltipLines.add(MasterLoader.coreInterface.translate("info.item.bullet.quantity") + definition.bullet.quantity);
 				break;
