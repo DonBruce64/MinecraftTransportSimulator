@@ -93,7 +93,7 @@ public final class RenderInstrument{
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
 									double rotation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable, 0, vehicle, null));
-									rotation = VehicleAnimationSystem.clampAndScale(rotation, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
+									rotation = VehicleAnimationSystem.clampAndScale(rotation, animation.axis.z, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
 									if(component.rotateWindow){
 										//Add rotation offset to the points.
 										p1.add(animation.centerPoint);
