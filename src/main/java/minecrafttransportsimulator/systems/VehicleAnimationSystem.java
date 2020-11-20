@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -241,6 +242,31 @@ public final class VehicleAnimationSystem{
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
+			
+			//Missile incoming variables.
+			default: {
+				if(variable.startsWith("missile_")){
+					//Get everything after missile_.
+					//Check for a number first.
+					String missileVariable = variable.substring(8);
+					if(missileVariable.contains("_") && missileVariable.substring(0,missileVariable.indexOf('_')).matches("[0-9]+")){
+						//Parse one or more digits, then take off one because we are zero-indexed
+						int missileNumber = Integer.parseInt(missileVariable.substring(0, missileVariable.indexOf('_'))) - 1;
+						if (vehicle.missilesIncoming.size() <= missileNumber) return 0;
+						switch(missileVariable.substring(missileVariable.indexOf('_') + 1)) {
+							case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+							case("direction"): {
+								double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+								Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
+								return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
+							}
+						}
+					}
+					else if(missileVariable.equals("incoming")) {
+						return vehicle.missilesIncoming.isEmpty() ? 0 : 1;
+					}
+				}
+			}
 		}
 		
 		//Check if this is a light variable.

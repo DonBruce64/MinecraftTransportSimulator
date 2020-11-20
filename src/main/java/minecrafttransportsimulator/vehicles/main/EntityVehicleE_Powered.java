@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -26,6 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -75,6 +77,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	public final HashMap<ItemPart, List<PartGun>> guns = new LinkedHashMap<ItemPart, List<PartGun>>();
+	
+	//Map containing incoming missiles, sorted by distance.
+	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
 	
 	//Internal radio variables.
 	private final Radio radio;
@@ -216,6 +221,21 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}else if(!gearUpCommand && gearMovementTime > 0){
 			--gearMovementTime;
 		}
+		
+		//Check that missiles are still valid.
+		//If they are, update their distances. Otherwise, remove them.
+		ParticleMissile missile;
+		Iterator<Double> iterator = missilesIncoming.keySet().iterator();
+		final TreeMap<Double, ParticleMissile> tempMap = new TreeMap<Double, ParticleMissile>();
+		while(iterator.hasNext()) {
+			double dist = iterator.next();
+			missile = missilesIncoming.get(dist);
+			iterator.remove();
+			if(missile != null && missile.isValid) {
+				tempMap.put(position.distanceTo(missile.position), missile);
+			}
+		}
+		missilesIncoming.putAll(tempMap);
 		
 		//Update sound variables.
 		soundPosition.rewind();
@@ -374,6 +394,13 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					gunList.remove(part);
 				}
 			}
+		}
+	}
+	
+	public void acquireMissile(ParticleMissile missile) {
+		//Add this missile with its current distance
+		if(!missilesIncoming.containsValue(missile)) {
+			missilesIncoming.put(position.distanceTo(missile.position), missile);
 		}
 	}
 	
