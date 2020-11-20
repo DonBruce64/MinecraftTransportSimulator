@@ -143,9 +143,9 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				break;
 			}
 			case FLAPS : vehicle.flapDesiredAngle = (short) clampAngle(0, EntityVehicleF_Physics.MAX_FLAP_ANGLE, vehicle.flapDesiredAngle + (controlState ? 50 : -50)); break;
-			case TRIM_ROLL : vehicle.aileronTrim = (short) clampAngle(-100, 100, vehicle.aileronTrim + (controlState ? 1 : -1)); break;
-			case TRIM_PITCH : vehicle.elevatorTrim = (short) clampAngle(-100, 100, vehicle.elevatorTrim + (controlState ? 1 : -1)); break;
-			case TRIM_YAW : vehicle.rudderTrim = (short) clampAngle(-100, 100, vehicle.rudderTrim + (controlState ? 1 : -1)); break;
+			case TRIM_ROLL : vehicle.aileronTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.MAX_AILERON_TRIM, vehicle.aileronTrim + (controlState ? 1 : -1)); break;
+			case TRIM_PITCH : vehicle.elevatorTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, vehicle.elevatorTrim + (controlState ? 1 : -1)); break;
+			case TRIM_YAW : vehicle.rudderTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.MAX_RUDDER_TRIM, vehicle.rudderTrim + (controlState ? 1 : -1)); break;
 			case CUSTOM_0 : if(controlState){vehicle.customsOn.add((byte)0);}else{vehicle.customsOn.remove((byte)0);}; break;
 			case CUSTOM_1 : if(controlState){vehicle.customsOn.add((byte)1);}else{vehicle.customsOn.remove((byte)1);}; break;
 			case CUSTOM_2 : if(controlState){vehicle.customsOn.add((byte)2);}else{vehicle.customsOn.remove((byte)2);}; break;

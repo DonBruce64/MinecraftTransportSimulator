@@ -26,6 +26,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	//Aileron.
 	public static final short MAX_AILERON_ANGLE = 250;
+	public static final short MAX_AILERON_TRIM = 100;
 	public static final short AILERON_DAMPEN_RATE = 6;
 	public short aileronAngle;
 	public short aileronTrim;
@@ -33,6 +34,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	//Elevator.
 	public static final short MAX_ELEVATOR_ANGLE = 250;
+	public static final short MAX_ELEVATOR_TRIM = 100;
 	public static final short ELEVATOR_DAMPEN_RATE = 6;
 	public short elevatorAngle;
 	public short elevatorTrim;
@@ -40,6 +42,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	//Rudder.
 	public static final short MAX_RUDDER_ANGLE = 450;
+	public static final short MAX_RUDDER_TRIM = 100;
 	public static final short RUDDER_DAMPEN_RATE = 20;
 	public short rudderAngle;
 	public short rudderTrim;
@@ -60,6 +63,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	//Internal states.
 	private boolean updateThisCycle;
+	public boolean isVTOL;
 	private double pitchDirectionFactor;
 	private double currentWingArea;
 	public double trackAngle;
@@ -194,6 +198,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getForcesAndMotions(){
+		definition.motorized.hasAutopilot = true;
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
@@ -231,7 +236,26 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					thrustTorque.add(partForce.y*-part.placementOffset.z, partForce.z*part.placementOffset.x, partForce.y*part.placementOffset.x);
 				}
 				if(isRotor){
-					rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
+					isVTOL = true;
+					if(!autopilot){
+						rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
+					}else{
+						if(angles.x < -1){
+							rotorRotation.x = 1;
+						}else if(angles.x > 1){
+							rotorRotation.x = -1;
+						}else{
+							rotorRotation.x = -angles.x;
+						}
+						if(angles.z < -1){
+							rotorRotation.z = 1;
+						}else if(angles.z > 1){
+							rotorRotation.z = -1;
+						}else{
+							rotorRotation.z = -angles.z;
+						}
+						rotorRotation.y = -5D*rudderAngle/MAX_RUDDER_ANGLE;
+					}
 				}
 			}
 			
@@ -360,7 +384,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			rotation.z = totalTorque.z/momentRoll;
 			rotation.add(rotorRotation);
 		}else{
-			///START OF NEW CODE.
 			//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 			//Yaw is applied based on the current and next position of the truck's hookup.
 			//Motion is applied after yaw corrections to ensure the trailer follows the truck.
@@ -413,21 +436,71 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 		}
 		
-		if(autopilot){
-			if(-angles.z > aileronTrim + 1){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
-				++aileronTrim;
-			}else if(-angles.z < aileronTrim - 1){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
-				--aileronTrim;
+		if(isVTOL){
+			//VTOL craft.  Do auto-hover code if required.
+			if(autopilot){
+				//Change throttle to maintain altitude.
+				//Only do this once every 1/2 second to allow for thrust changes.
+				if(world.getTime()%10 == 0){
+					if(motion.y < 0 && throttle < 100){
+						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, (byte) 0));
+					}else if(motion.y > 0 && throttle < 100){
+						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, --throttle, (byte) 0));
+					}
+				}
+				//Change pitch/roll based on movement.
+				double forwardsVelocity = motion.dotProduct(headingVector);
+				double sidewaysVelocity = motion.dotProduct(sideVector);
+				if(forwardsVelocity < 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
+					++elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+				}else if(forwardsVelocity > 0 && elevatorTrim > -MAX_ELEVATOR_TRIM){
+					--elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+				}
+				if(sidewaysVelocity < 0 && aileronTrim < MAX_AILERON_TRIM){
+					++aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+				}else if(sidewaysVelocity > 0 && aileronTrim > -MAX_AILERON_TRIM){
+					--aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+				}
+			}else{
+				//Reset trim to prevent directional surges.
+				if(elevatorTrim < 0){
+					++elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+				}else if(elevatorTrim > 0){
+					--elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+				}
+				if(aileronTrim < 0){
+					++aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+				}else if(aileronTrim > 0){
+					--aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+				}
 			}
-			//If we are not flying at a steady elevation, angle the elevator to compensate
-			if(-motion.z*100 > elevatorTrim + 1){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
-				++elevatorTrim;
-			}else if(-motion.y*100 < elevatorTrim - 1){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
-				--elevatorTrim;
+		}else{
+			//Normal aircraft.  Do autopilot operations if required.
+			if(autopilot){
+				//If we are not flying at a steady elevation, angle the elevator to compensate
+				if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
+					++elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+				}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
+					--elevatorTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+				}
+				//Keep the roll angle at 0.
+				if(-angles.z > aileronTrim + 1 && aileronTrim < MAX_AILERON_TRIM){
+					++aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+				}else if(-angles.z < aileronTrim - 1 && aileronTrim > -MAX_AILERON_TRIM){
+					--aileronTrim;
+					MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+				}
 			}
 		}
 		

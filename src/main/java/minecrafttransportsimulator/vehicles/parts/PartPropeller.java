@@ -141,7 +141,11 @@ public class PartPropeller extends APart{
 	@Override
 	public Point3d getActionRotation(float partialTicks){
 		if(definition.propeller.isRotor){
-			return new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+			Point3d rotations = new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+			if(vehicle.isVTOL){
+				rotations.add(vehicle.elevatorTrim*20D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronTrim*20D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, 0);
+			}
+			return rotations;
 		}else{
 			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 		}
