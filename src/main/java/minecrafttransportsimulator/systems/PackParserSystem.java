@@ -40,6 +40,7 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
@@ -269,16 +270,18 @@ public final class PackParserSystem{
 								assetPath = assetPath.substring(classification.toDirectory().length());
 								
 								//Create all required items.
-								if(definition instanceof AJSONMultiModelProvider){
+								if(definition instanceof AJSONMultiModelProvider) {
 									//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
 									//We don't create skin items right away as the pack they go to might not yet be loaded.
 									if(definition instanceof JSONSkin){
-										if(!skinMap.containsKey(((JSONSkin) definition.general).packID){
-											skinMap.put(((JSONSkin) definition.general).packID, new HashMap<String, JSONSkin>());
+										if(!skinMap.containsKey(((JSONSkin) definition).packID)){
+											skinMap.put(((JSONSkin) definition).packID, new HashMap<String, JSONSkin>());
+										}else {
+										skinMap.get(((JSONSkin) definition).packID).put(((JSONSkin) definition).systemName, (JSONSkin) definition);
 										}
-										skinMap.get(((JSONSkin) definition.general).packID).put(((JSONSkin) definition.general).systemName, definition);
 									}else{
 										parseAllDefinitions(((AJSONMultiModelProvider<?>) definition), packItems);
+									}
 								}else{
 									AItemPack<?> item;
 				    				switch(classification){
@@ -320,10 +323,10 @@ public final class PackParserSystem{
     			//Check all skin items for the pack, and add them if they exist.
     			LinkedHashMap<String, AItemPack<?>> parsedPackItemMap = packItemMap.get(packID);
     			List<AItemPack<?>> newPackItems = new ArrayList<AItemPack<?>>();
-    			for(String systemName : skinMap.get(packID)){
-    				if(parsedPackItemMap.containsKey(systemName){
+    			for(String systemName : skinMap.get(packID).keySet()){	
+    				if(parsedPackItemMap.containsKey(systemName)){
     					parseAllDefinitions(skinMap.get(packID).get(systemName), newPackItems);
-    					((AJSONMultiModelProvider<?>) parsedPackItemMap.get(systemName).definition).definitions.addAll(skinMap.get(packID).get(systemName));
+    					((AJSONMultiModelProvider<?>) parsedPackItemMap.get(systemName).definition).definitions.addAll(skinMap.get(packID).get(systemName).definitions);
     				}
     			}
     		}
@@ -334,6 +337,8 @@ public final class PackParserSystem{
      * Called to sort and create all pack items.  This must be called after all pack item processing to ensure proper sorting order.
      */
     private static void createAllItems(){
+    	List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
+    	
 		packItems.sort(new Comparator<AItemPack<?>>(){
 			@Override
 			public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
