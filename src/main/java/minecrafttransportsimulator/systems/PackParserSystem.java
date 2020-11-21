@@ -41,6 +41,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
@@ -364,10 +365,11 @@ public final class PackParserSystem{
      * Generated items are added to the passed-in list.
      */
     private static void parseAllDefinitions(AJSONMultiModelProvider<?> definition, List<AItemPack<?>> packItems){
-    	for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+    	for(JSONSubDefinition subDefinition : definition.definitions){
 			try{
 				if(subDefinition.extraMaterials != null){
 					AItemPack<?> item;
+					//FIXME can't use classification here as it's not ready at this point.  Use class instance.
 					switch(classification){
 						case VEHICLE : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
 						case PART : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
@@ -400,7 +402,7 @@ public final class PackParserSystem{
     	try{
     		JSONVehicle definition = packParser.fromJson(jsonReader, JSONVehicle.class);
     		performLegacyCompats(definition);
-    		for(JSONVehicle.SubDefinition subDefinition : definition.definitions){
+    		for(JSONSubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
 	    				MasterInterface.createItem(setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE));
@@ -424,7 +426,7 @@ public final class PackParserSystem{
     	try{
     		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
     		performLegacyCompats(definition);
-    		for(JSONPart.SubDefinition subDefinition : definition.definitions){
+    		for(JSONSubDefinition subDefinition : definition.definitions){
 	    		try{
 	    			if(subDefinition.extraMaterials != null){
 	    				MasterInterface.createItem(setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART));
@@ -540,8 +542,8 @@ public final class PackParserSystem{
     		JSONPart partDef = (JSONPart) definition;
     		//If we are a part without a definition, add one so we don't crash on other systems.
     		if(partDef.definitions == null){
-    			partDef.definitions = new ArrayList<JSONPart.SubDefinition>();
-    			JSONPart.SubDefinition subDefinition = partDef.new SubDefinition();
+    			partDef.definitions = new ArrayList<JSONSubDefinition>();
+    			JSONSubDefinition subDefinition = new JSONSubDefinition();
     			subDefinition.extraMaterials = new ArrayList<String>();
     			subDefinition.name = definition.general.name;
     			subDefinition.subName = "";

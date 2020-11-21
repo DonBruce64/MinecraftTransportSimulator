@@ -2,6 +2,8 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.io.File;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.instances.ItemFuelHose;
@@ -10,7 +12,6 @@ import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
-import minecrafttransportsimulator.items.instances.ItemRoadTool;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;

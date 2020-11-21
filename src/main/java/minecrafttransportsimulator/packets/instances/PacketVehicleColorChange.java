@@ -2,8 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -51,14 +50,14 @@ public class PacketVehicleColorChange extends APacketVehicle{
 			
 			//If we have a secondTone, change parts to match if possible.
 			String secondTone = null;
-			for(JSONVehicle.SubDefinition subDefinition : vehicle.definition.definitions){
+			for(JSONSubDefinition subDefinition : vehicle.definition.definitions){
 				if(subDefinition.subName.equals(vehicle.currentSubName)){
 					secondTone = subDefinition.secondTone;
 				}
 			}
 			if(secondTone != null){
 				for(APart part : vehicle.parts){
-					for(JSONPart.SubDefinition subDefinition : part.definition.definitions){
+					for(JSONSubDefinition subDefinition : part.definition.definitions){
 						if(subDefinition.subName.equals(secondTone)){
 							part.currentSubName = secondTone;
 							break;

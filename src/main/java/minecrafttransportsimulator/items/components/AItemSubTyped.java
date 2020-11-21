@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
 	public final String subName;
@@ -19,7 +20,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	
 	@Override
 	public String getItemName(){
-		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.name;
 			}
@@ -28,7 +29,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	}
 	
 	public List<String> getExtraMaterials(){
-		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.extraMaterials;
 			}
