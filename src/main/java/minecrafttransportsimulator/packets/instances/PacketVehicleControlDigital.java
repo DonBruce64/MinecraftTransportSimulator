@@ -132,7 +132,15 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				break;
 			}
 			case GEAR : vehicle.gearUpCommand = controlState; break;
-			case AUTOPILOT : vehicle.autopilot = controlState; break;
+			case AUTOPILOT : {
+				if(controlState){
+					vehicle.autopilot = true;
+					vehicle.altitudeSetting = vehicle.position.y;
+				}else{
+					vehicle.autopilot = false;
+				}
+				break;
+			}
 			case CRUISECONTROL : {
 				if(controlState){
 					vehicle.cruiseControl = true;

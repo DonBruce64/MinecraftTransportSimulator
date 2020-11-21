@@ -60,6 +60,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	public boolean turningRight;
 	public byte turningCooldown;
 	public double cruiseControlSpeed;
+	public double altitudeSetting;
 	
 	//Internal states.
 	private boolean updateThisCycle;
@@ -198,7 +199,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	protected void getForcesAndMotions(){
-		definition.motorized.hasAutopilot = true;
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
