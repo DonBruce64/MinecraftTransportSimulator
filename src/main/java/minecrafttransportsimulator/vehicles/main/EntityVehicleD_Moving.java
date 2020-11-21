@@ -338,7 +338,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
 				//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
 				if(motion.y + groundCollisionBoost > 0){
-					groundCollisionBoost = Math.min(groundCollisionBoost, 0.125D/SPEED_FACTOR);
+					groundCollisionBoost = Math.min(groundCollisionBoost, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
 					motion.y += groundCollisionBoost;
 					groundCollisionBoost = motion.y;
 				}else{
