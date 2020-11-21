@@ -37,6 +37,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public boolean active;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
+	public int windupTimeCurrent;
+	public int windupRotation;
 	private IWrapperEntity lastController;
 	private long lastTimeFired;
 	private long timeToFire;
@@ -221,13 +223,21 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			return;
 		}
 		
+		//Increment or decrement windup.
+		if(firing && windupTimeCurrent < definition.gun.windupTime){
+			++windupTimeCurrent;
+		}else if(!firing && windupTimeCurrent > 0){
+			--windupTimeCurrent;
+		}
+		windupRotation += windupTimeCurrent;
+		
 		//If this gun is being told to fire, and we have bullets, and are not reloading, fire.
 		//Don't spawn bullets on the server, as they will cause lots of lag and network traffic.
 		//Instead, spawn them on the clients, and then send back hit data to the server.
 		//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
-		if(firing && bulletsLeft > 0 && reloadTimeRemaining == 0 && cooldownTimeRemaining == 0){
+		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && reloadTimeRemaining == 0 && cooldownTimeRemaining == 0){
 			//First update gun number so we know if we need to apply a cam offset.
 			//Get the gun number based on how many guns the vehicle has.
 			gunNumber = 1;

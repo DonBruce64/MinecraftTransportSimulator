@@ -100,6 +100,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public int capacity;
     	public int fireDelay;
     	public int reloadTime;
+    	public int windupTime;
     	public int muzzleVelocity;
     	public List<Point3d> muzzlePositions;
     	public float minPitch;
