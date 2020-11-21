@@ -8,6 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
@@ -196,8 +197,8 @@ public final class LegacyCompatSystem{
 	private static void performPartLegacyCompats(JSONPart definition){
 		//If we are a part without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
-			definition.definitions = new ArrayList<JSONPart.SubDefinition>();
-			JSONPart.SubDefinition subDefinition = definition.new SubDefinition();
+			definition.definitions = new ArrayList<JSONSubDefinition>();
+			JSONSubDefinition subDefinition = new JSONSubDefinition();
 			subDefinition.extraMaterials = new ArrayList<String>();
 			subDefinition.name = definition.general.name;
 			subDefinition.subName = "";

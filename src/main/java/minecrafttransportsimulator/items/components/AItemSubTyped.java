@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
@@ -20,7 +21,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	
 	@Override
 	public String getItemName(){
-		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.name;
 			}
@@ -31,17 +32,19 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
-		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
-				for(String tooltipLine : subDefinition.description.split("\n")){
-					tooltipLines.add(tooltipLine);
+				if(subDefinition.description != null){
+					for(String tooltipLine : subDefinition.description.split("\n")){
+						tooltipLines.add(tooltipLine);
+					}
 				}
 			}
 		}
 	}
 	
 	public List<String> getExtraMaterials(){
-		for(AJSONMultiModelProvider<?>.SubDefinition subDefinition : definition.definitions){
+		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.extraMaterials;
 			}
