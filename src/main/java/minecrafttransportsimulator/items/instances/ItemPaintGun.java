@@ -2,11 +2,16 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUIPaintGun;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -34,5 +39,17 @@ public class ItemPaintGun extends AItemBase implements IItemVehicleInteractable{
 			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
 		}
 		return CallbackType.NONE;
+	}
+	
+	@Override
+	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
+		if(world.isClient()){
+			ATileEntityBase<?> tile = world.getTileEntity(point);
+			if(tile instanceof TileEntityDecor){
+				MasterLoader.guiInterface.openGUI(new GUIPaintGun((TileEntityDecor) tile, player));
+				return true;
+			}
+		}
+		return false;
 	}
 }

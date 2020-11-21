@@ -29,6 +29,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public final Point3i position;
 	/**Y-axis rotation of this TileEntity when it was placed.**/
 	public final double rotation;
+	/**Current subName for this TileEntity.**/
+	public String currentSubName;
 	/**Item that that was used to spawn this TileEntity.**/
 	public final AItemPack<JSONDefinition> item;
 	/**JSON definition for this TileEntity.**/
@@ -40,7 +42,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 		this.world = world;
 		this.position = position;
 		this.rotation = data.getDouble("rotation");
-		this.item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"));
+		this.currentSubName = data.getString("currentSubName");
+		this.item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), currentSubName);
 		this.definition = item.definition;
 		this.lightLevel = (float) data.getDouble("lightLevel");
 	}
@@ -78,6 +81,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 		data.setDouble("rotation", rotation);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
+		data.setString("currentSubName", currentSubName);
 		data.setDouble("lightLevel", lightLevel);
 	}
 

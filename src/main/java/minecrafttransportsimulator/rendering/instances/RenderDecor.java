@@ -10,16 +10,16 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 
-public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>>{
+public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
 		
 	@Override
-	public void render(ATileEntityBase<JSONDecor> tile, float partialTicks){
+	public void render(TileEntityDecor tile, float partialTicks){
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(tile.definition)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.getModelLocation());
@@ -42,7 +42,7 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 		//Don't do solid model rendering on the blend pass.
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Bind the texture and render.
-			MasterLoader.renderInterface.bindTexture(tile.definition.getTextureLocation());
+			MasterLoader.renderInterface.bindTexture(tile.definition.getTextureLocation(tile.currentSubName));
 			GL11.glCallList(displayListMap.get(tile.definition));
 			//If we are a fluid tank, render text.
 			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){

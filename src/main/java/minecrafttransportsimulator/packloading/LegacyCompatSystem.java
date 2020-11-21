@@ -468,6 +468,16 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performDecorLegacyCompats(JSONDecor definition){
+		//If we are a decor without a definition, add one so we don't crash on other systems.
+		if(definition.definitions == null){
+			definition.definitions = new ArrayList<JSONSubDefinition>();
+			JSONSubDefinition subDefinition = new JSONSubDefinition();
+			subDefinition.extraMaterials = new ArrayList<String>();
+			subDefinition.name = definition.general.name;
+			subDefinition.subName = "";
+			definition.definitions.add(subDefinition);
+		}
+				
 		//If we are a decor using the old textlines, update them.
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();

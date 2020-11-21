@@ -5,7 +5,7 @@ import minecrafttransportsimulator.blocks.instances.BlockDecor;
 import minecrafttransportsimulator.blocks.instances.BlockFluidLoader;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockSignalController;
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 
@@ -16,10 +16,10 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
  * 
  * @author don_bruce
  */
-public class ItemDecor extends AItemPack<JSONDecor> implements IItemBlock{
+public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	
-	public ItemDecor(JSONDecor definition){
-		super(definition);
+	public ItemDecor(JSONDecor definition, String subName){
+		super(definition, subName);
 	}
 	
 	@Override

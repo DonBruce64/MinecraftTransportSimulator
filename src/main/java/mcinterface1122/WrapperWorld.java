@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -526,6 +527,9 @@ class WrapperWorld implements IWrapperWorld{
 	            			if(stack.getItem() instanceof AItemPack){
 		            			data.setString("packID", ((AItemPack<?>) stack.getItem()).definition.packID);
 			            		data.setString("systemName", ((AItemPack<?>) stack.getItem()).definition.systemName);
+			            		if(stack.getItem() instanceof AItemSubTyped){
+			            			data.setString("currentSubName", ((AItemSubTyped<?>) stack.getItem()).subName);
+			            		}
 	            			}
 	            		}
 	            		data.setDouble("rotation", player.getHeadYaw()%360);

@@ -9,6 +9,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
+import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -38,7 +39,10 @@ public class BlockDecor extends ABlockBase implements IBlockTileEntity<TileEntit
 	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
 		if(world.isClient()){
 			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
-			if(decor.definition.general.itemTypes != null){
+			if(player.getHeldItem() instanceof ItemPaintGun){
+				//Let the paint gun open the GUI.  To do this, we return false to allow item interaction.
+				return false;
+			}if(decor.definition.general.itemTypes != null){
 				MasterLoader.guiInterface.openGUI(new GUIPartBench(decor, player));
 			}else if(decor.definition.general.type != null && decor.definition.general.type.equals("radio")){
 				MasterLoader.guiInterface.openGUI(new GUIRadio(decor));

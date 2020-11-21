@@ -286,7 +286,6 @@ public final class PackParserSystem{
 										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
 										case POLE : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
 										case ROAD : item = new ItemRoadComponent((JSONRoadComponent) definition); break;
-										case DECOR : item = new ItemDecor((JSONDecor) definition); break;
 										case ITEM : item = new ItemItem((JSONItem) definition); break;
 										case BOOKLET : item = new ItemBooklet((JSONBooklet) definition); break;
 										default : {
@@ -391,6 +390,7 @@ public final class PackParserSystem{
 					switch(definition.classification){
 						case VEHICLE : item = new ItemVehicle((JSONVehicle) definition, subDefinition.subName); break;
 						case PART : item = new ItemPart((JSONPart) definition, subDefinition.subName); break;
+						case DECOR : item = new ItemDecor((JSONDecor) definition, subDefinition.subName); break;
 						default : {
 							throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + definition.packID + ":" + definition.systemName);
 						}
@@ -507,7 +507,17 @@ public final class PackParserSystem{
     	try{
     		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
     		LegacyCompatSystem.performLegacyCompats(definition);
-    		MasterInterface.createItem(setupItem(new ItemDecor(definition), packID, jsonFileName, "", "", ItemClassification.DECOR));
+    		for(JSONSubDefinition subDefinition : definition.definitions){
+	    		try{
+	    			if(subDefinition.extraMaterials != null){
+	    				MasterInterface.createItem(setupItem(new ItemDecor(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR));
+		    		}else{
+	    				throw new NullPointerException();
+	    			}
+	    		}catch(Exception e){
+	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+	    		}
+    		}
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
