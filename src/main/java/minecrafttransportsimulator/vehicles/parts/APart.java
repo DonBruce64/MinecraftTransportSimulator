@@ -20,10 +20,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.VehicleAnimations;
 import minecrafttransportsimulator.sound.ISoundProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This class is the base for all parts and should be extended for any vehicle-compatible parts.
@@ -190,16 +190,16 @@ public abstract class APart implements ISoundProvider{
 				
 				if(definition.animationType.equals("rotation")){
 					//Found rotation.  Get angles that needs to be applied.
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					Point3d appliedRotation = new Point3d(0D, 0D, 0D);
 					if(definition.axis.x != 0){
-						appliedRotation.x = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+						appliedRotation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
 					}
 					if(definition.axis.y != 0){
-						appliedRotation.y = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						appliedRotation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					if(definition.axis.z != 0){
-						appliedRotation.z = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						appliedRotation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					
 					//Check if we need to apply a translation based on this rotation.
@@ -214,16 +214,16 @@ public abstract class APart implements ISoundProvider{
 				}else if(definition.animationType.equals("translation")){
 					//Found translation.  This gets applied in the translation axis direction directly.
 					//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					Point3d appliedTranslation = new Point3d(0D, 0D, 0D);
 					if(definition.axis.x != 0){
-						appliedTranslation.x = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+						appliedTranslation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
 					}
 					if(definition.axis.y != 0){
-						appliedTranslation.y = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						appliedTranslation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					if(definition.axis.z != 0){
-						appliedTranslation.z = VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						appliedTranslation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 				}
@@ -246,15 +246,15 @@ public abstract class APart implements ISoundProvider{
 			for(DurationDelayClock animation : animations){
 				VehicleAnimationDefinition definition = animation.definition;
 				if(definition.animationType.equals("rotation")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					if(definition.axis.x != 0){
-						rollingRotation.x += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						rollingRotation.x += VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					if(definition.axis.y != 0){
-						rollingRotation.y += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						rollingRotation.y += VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 					if(definition.axis.z != 0){
-						rollingRotation.z += VehicleAnimationSystem.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						rollingRotation.z += VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
 					}
 				}
 			}

@@ -4,7 +4,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -34,8 +33,8 @@ public class TransformRotatable extends ATransformRenderable{
 		}
 		
 		//Get rotation.
-		double rotation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
-		rotation = VehicleAnimationSystem.clampAndScale(rotation, rotationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
+		double rotation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
+		rotation = VehicleAnimations.clampAndScale(rotation, rotationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
 		
 		//Do rotation.
 		if(rotation != 0){

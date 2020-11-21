@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.systems;
+package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -20,7 +20,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  *
  * @author don_bruce
  */
-public final class VehicleAnimationSystem{
+public final class VehicleAnimations{
 	
 	/**
 	 *  Clamps and scales the passed-in variable value, returning it in the proper form.

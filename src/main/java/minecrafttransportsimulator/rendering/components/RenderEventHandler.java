@@ -16,7 +16,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -87,7 +86,7 @@ public class RenderEventHandler{
 		    						boolean cameraActive = true;
 		    						for(VehicleAnimationDefinition animation : testCamera.animations){
 		            					if(animation.animationType.equals("visibility")){
-		            						double value = VehicleAnimationSystem.getVariableValue(animation.variable, partialTicks, vehicle, null); 
+		            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, null); 
 		            						if(value < animation.clampMin || value > animation.clampMax){
 		            							//Encountered an inactive camera.  Skip it.
 		            							cameraActive = false;
@@ -115,7 +114,7 @@ public class RenderEventHandler{
 				    						boolean cameraActive = true;
 				    						for(VehicleAnimationDefinition animation : testCamera.animations){
 				            					if(animation.animationType.equals("visibility")){
-				            						double value = VehicleAnimationSystem.getVariableValue(animation.variable, partialTicks, vehicle, part); 
+				            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, part); 
 				            						if(value < animation.clampMin || value > animation.clampMax){
 				            							//Encountered an inactive camera.  Skip it.
 				            							cameraActive = false;
@@ -167,7 +166,7 @@ public class RenderEventHandler{
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
 		            					if(animation.animationType.equals("rotation")){
-		            						double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+		            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            						if(animationValue != 0){
 		            							Point3d rotationAxis = animation.axis.copy().normalize();
 		                						if(animationValue != 0){
@@ -194,7 +193,7 @@ public class RenderEventHandler{
 		            			if(camera.animations != null){
 		            				for(VehicleAnimationDefinition animation : camera.animations){
 		            					if(animation.animationType.equals("translation")){
-		            						double animationValue = VehicleAnimationSystem.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+		            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
 		            						if(animationValue != 0){
 		            							if(animation.animationType.equals("translation")){
 		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);

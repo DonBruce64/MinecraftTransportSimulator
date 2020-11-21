@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -19,7 +18,7 @@ public class TransformInhibitor extends ATransformRenderable{
 	
 	@Override
 	public boolean shouldInhibit(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
-		double value = definition.offset + getClock(vehicle).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
+		double value = definition.offset + getClock(vehicle).getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 

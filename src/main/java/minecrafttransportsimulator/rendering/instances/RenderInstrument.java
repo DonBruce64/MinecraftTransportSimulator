@@ -13,8 +13,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.VehicleAnimations;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.VehicleAnimationSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
@@ -59,7 +59,7 @@ public final class RenderInstrument{
 				}
 				if(component.textObject != null){
 					final boolean addSuffix = !component.textObject.fieldName.substring(component.textObject.fieldName.length() - 1).matches("[0-9]+") && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
-					double textNumeric = VehicleAnimationSystem.getVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, component.textFactor, 0, 0, 0, false, 0, vehicle, null);
+					double textNumeric = VehicleAnimations.getVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, component.textFactor, 0, 0, 0, false, 0, vehicle, null);
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
 						MasterLoader.renderInterface.setLightingState(false);
@@ -98,8 +98,8 @@ public final class RenderInstrument{
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
-									double rotation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable, 0, vehicle, null));
-									rotation = VehicleAnimationSystem.clampAndScale(rotation, animation.axis.z, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
+									double rotation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimations.getVariableValue(variable, 0, vehicle, null));
+									rotation = VehicleAnimations.clampAndScale(rotation, animation.axis.z, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
 									if(component.rotateWindow){
 										//Add rotation offset to the points.
 										p1.add(animation.centerPoint);
@@ -130,8 +130,8 @@ public final class RenderInstrument{
 									//Offset the coords based on the translated amount.
 									//Adjust the window to either move or scale depending on settings.
 									double axisLength = animation.axis.length();
-									double translation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable,  0, vehicle, null));
-									translation = VehicleAnimationSystem.clampAndScale(translation, axisLength, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
+									double translation = getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimations.getVariableValue(variable,  0, vehicle, null));
+									translation = VehicleAnimations.clampAndScale(translation, axisLength, animation.offset, animation.clampMin, animation.clampMax, animation.absolute);
 									double xTranslation = translation*animation.axis.x/axisLength;
 									double yTranslation = translation*animation.axis.y/axisLength;
 									if(component.extendWindow){
@@ -171,14 +171,14 @@ public final class RenderInstrument{
 								}
 								case("visibility"):{
 									//Skip rendering this component if this is false.
-									double value = animation.offset + getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable, 0, vehicle, null));
+									double value = animation.offset + getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimations.getVariableValue(variable, 0, vehicle, null));
 									skipRender = value < animation.clampMin || value > animation.clampMax;
 									skipFurtherTransforms = skipRender;
 									break;
 								}
 								case("inhibitor"):{
 									//Skip further operations if this is false.
-									double value = animation.offset + getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimationSystem.getVariableValue(variable, 0, vehicle, null));
+									double value = animation.offset + getClock(vehicle, instrument, clockAnimationMapIndex).getFactoredState(vehicle, VehicleAnimations.getVariableValue(variable, 0, vehicle, null));
 									skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
 									break;
 								}
