@@ -61,7 +61,13 @@ public final class RenderInstrument{
 					final boolean addSuffix = !component.textObject.fieldName.substring(component.textObject.fieldName.length() - 1).matches("[0-9]+") && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
 					double textNumeric = VehicleAnimationSystem.getVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, component.textFactor, 0, 0, 0, false, 0, vehicle, null);
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					MasterLoader.guiInterface.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+					if(component.lightUpTexture && lightsOn){
+						MasterLoader.renderInterface.setLightingState(false);
+						MasterLoader.guiInterface.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						MasterLoader.renderInterface.setLightingState(true);
+					}else{
+						MasterLoader.guiInterface.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+					}
 					MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 					MasterLoader.renderInterface.recallTexture();
 				}else{
