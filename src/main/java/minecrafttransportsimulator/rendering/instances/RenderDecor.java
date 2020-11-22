@@ -10,16 +10,16 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 
-public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
+public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
 		
 	@Override
-	public void render(TileEntityDecor tile, float partialTicks){
+	public void render(ATileEntityBase<JSONDecor> tile, float partialTicks){
 		//If we don't have the displaylist and texture cached, do it now.
 		if(!displayListMap.containsKey(tile.definition)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.getModelLocation());
