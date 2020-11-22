@@ -162,12 +162,11 @@ public class BuilderEntity extends Entity{
     		if(!entity.isValid || entity.position.y < -5){
     			setDead();
     		}
-    	}else{
+    	}else if(world.isRemote){
     		//No entity.  Wait for NBT to be loaded to create it.
-    		//If we are on a client, ensure we sent a packet to the server to request it.
+    		//As we are on a client we need to send a packet to the server to request NBT data.
     		///Although we could call this in the constructor, Minecraft changes the
     		//entity IDs after spawning and that fouls things up.
-    		//To accommodate this, we request a packet whenever the entityID changes.
     		if(requestDataFromServer){
     			MasterInterface.networkInterface.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
     			requestDataFromServer = false;
@@ -176,11 +175,7 @@ public class BuilderEntity extends Entity{
     		if(serverNBTData != null){
     			//Restore the Entity from saved state.
     			entity = entityMap.get(serverNBTData.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(serverNBTData));
-				if(world.isRemote){
-					createdClientBuilders.put(entity, this);
-				}else{
-					createdServerBuilders.put(entity, this);
-				}
+				createdClientBuilders.put(entity, this);
     		}
     	}
     }
@@ -350,8 +345,16 @@ public class BuilderEntity extends Entity{
 	public void readFromNBT(NBTTagCompound tag){
     	super.readFromNBT(tag);
 		if(entity == null && tag.hasKey("entityid")){
-			//Save the NBT to the reference for use in the update() call.
-			serverNBTData = tag;
+			//If we are on a server, restore the entity from saved state.
+			//If we are on a client, set the data tag.
+			//This prevents loading duplicate client entities that don't update. 
+			//For the clients, we use the NBT reference to create the entity in the update() call.
+			if(world.isRemote){
+				serverNBTData = tag;
+			}else{
+				entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
+				createdServerBuilders.put(entity, this);
+			}
 		}
 	}
     
