@@ -260,7 +260,7 @@ public class BuilderEntity extends Entity{
     		Iterator<IWrapperEntity> iterator = entity.locationRiderMap.inverse().keySet().iterator();
     		while(iterator.hasNext()){
     			IWrapperEntity rider = iterator.next();
-    			if(rider.equals(passenger)){
+    			if(((WrapperEntity) rider).entity.equals(passenger)){
     				entity.updateRider(rider, iterator);
     				return;
     			}
