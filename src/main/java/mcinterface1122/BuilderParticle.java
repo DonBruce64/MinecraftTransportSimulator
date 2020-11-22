@@ -85,14 +85,15 @@ class BuilderParticle extends Particle{
         		prevPosZ + (posZ - prevPosZ) * partialTicks - interpPosZ
         	);
             
-            //Set brightness.
+            //Set brightness and render.
     	    MasterInterface.renderInterface.setLightingToBlock(new Point3i(particle.position));
     	    if(particle.isBright()){
     	    	MasterInterface.renderInterface.setLightingState(false);
+    	    	particle.render(partialTicks);
+    	    	MasterInterface.renderInterface.setLightingState(true);
+    	    }else{
+    	    	particle.render(partialTicks);
     	    }
-    	    
-    	    //Render.
-    		particle.render(partialTicks);
     		
     		//Pop the matrix.
     		GL11.glPopMatrix();
