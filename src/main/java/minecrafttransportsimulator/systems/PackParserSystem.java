@@ -383,6 +383,7 @@ public final class PackParserSystem{
      * Generated items are added to the passed-in list.
      */
     private static void parseAllDefinitions(AJSONMultiModelProvider<?> definition){
+    	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : definition.definitions){
 			try{
 				if(subDefinition.extraMaterials != null){
@@ -396,11 +397,9 @@ public final class PackParserSystem{
 						}
 					}
 					
-    		    	//Put the item in the map in the registry.
-    		    	if(!packItemMap.containsKey(item.definition.packID)){
-    		    		packItemMap.put(item.definition.packID, new LinkedHashMap<String, AItemPack<?>>());
-    		    	}
-    		    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
+					//Add the pack item to the map.  We need to make sure all subDefinitions
+					//are okay before adding the entire definition.
+					packItems.put(item.definition.systemName + subDefinition.subName, item);
 				}else{
 					throw new NullPointerException();
 				}
@@ -408,6 +407,12 @@ public final class PackParserSystem{
 				throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
 			}
 		}
+    	
+    	//All definitions were okay.  Add items to the registry.
+    	if(!packItemMap.containsKey(definition.packID)){
+    		packItemMap.put(definition.packID, new LinkedHashMap<String, AItemPack<?>>());
+    	}
+    	packItemMap.get(definition.packID).putAll(packItems);
     }
 	
     //-----START OF OLD INIT LOGIC-----
@@ -425,17 +430,15 @@ public final class PackParserSystem{
     	try{
     		JSONVehicle definition = packParser.fromJson(jsonReader, JSONVehicle.class);
     		LegacyCompatSystem.performLegacyCompats(definition);
-    		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		try{
-	    			if(subDefinition.extraMaterials != null){
-	    				MasterInterface.createItem(setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE));
-	    			}else{
-	    				throw new NullPointerException();
-	    			}
-	    		}catch(Exception e){
-	    			e.printStackTrace();
-	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-	    		}
+    		Iterator <JSONSubDefinition> iterator = definition.definitions.iterator();
+    		while(iterator.hasNext()){
+    			JSONSubDefinition subDefinition = iterator.next();
+    			if(subDefinition == null || subDefinition.extraMaterials == null){
+    				iterator.remove();
+    				throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+    			}else{
+	    			MasterInterface.createItem(setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE));
+    			}
     		}
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
