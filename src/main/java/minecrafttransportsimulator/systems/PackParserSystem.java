@@ -267,10 +267,11 @@ public final class PackParserSystem{
 									//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
 									//We don't create skin items right away as the pack they go to might not yet be loaded.
 									if(definition instanceof JSONSkin){
-										if(!skinMap.containsKey(((JSONSkin) definition).packID)){
-											skinMap.put(((JSONSkin) definition).packID, new HashMap<String, JSONSkin>());
+										JSONSkin skinDef = (JSONSkin) definition;
+										if(!skinMap.containsKey(skinDef.general.packID)){
+											skinMap.put(skinDef.general.packID, new HashMap<String, JSONSkin>());
 										}else {
-										skinMap.get(((JSONSkin) definition).packID).put(((JSONSkin) definition).systemName, (JSONSkin) definition);
+										skinMap.get(skinDef.general.packID).put(skinDef.general.systemName, skinDef);
 										}
 									}else{
 										//Set code-based definition values prior to parsing all definitions out.
@@ -329,21 +330,25 @@ public final class PackParserSystem{
     		//Is the pack for this skin loaded?
     		if(packItemMap.containsKey(packID)){
     			//Check all skin items for the pack, and add them if they exist.
-    			LinkedHashMap<String, AItemPack<?>> parsedPackItemMap = packItemMap.get(packID);
-    			for(String systemName : skinMap.get(packID).keySet()){	
-    				if(parsedPackItemMap.containsKey(systemName)){
-    					AJSONItem<?> existingDefinition = parsedPackItemMap.get(systemName).definition;
-    					JSONSkin newDefinition = skinMap.get(packID).get(systemName);
-    					//Copy code-based definition values prior to parsing all definitions out.
-	    		    	newDefinition.packID = existingDefinition.packID;
-	    		    	newDefinition.systemName = existingDefinition.systemName;
-	    		    	newDefinition.prefixFolders = existingDefinition.prefixFolders;
-	    		    	newDefinition.classification = existingDefinition.classification;
-    					parseAllDefinitions(skinMap.get(packID).get(systemName));
-    					
-    					//Add the new definitions to the existing definitions of the existing item.
-    					//This ensures the skins appear in the same tab as the existing item.
-    					newDefinition.definitions.addAll(newDefinition.definitions);
+    			//The pack item map is keyed by the systemName plus the subName, so we can't
+    			//just get the pack item with the systemName from that map.
+    			//Since all items share the same definition file, if we change one definition
+    			//we change all definitions, so only add the skins to the definition once.
+    			for(String systemName : skinMap.get(packID).keySet()){
+    				for(AItemPack<?> packItem : packItemMap.get(packID).values()){
+    					if(packItem.definition.systemName.equals(systemName)){
+        					JSONSkin newDefinition = skinMap.get(packID).get(systemName);
+        					//Copy code-based definition values to the skin JSON prior to adding it.
+    	    		    	newDefinition.packID = packItem.definition.packID;
+    	    		    	newDefinition.systemName = packItem.definition.systemName;
+    	    		    	newDefinition.prefixFolders = packItem.definition.prefixFolders;
+    	    		    	newDefinition.classification = packItem.definition.classification;
+        					parseAllDefinitions(skinMap.get(packID).get(systemName));
+        					
+        					//Add the new definitions to the existing definitions of the existing item.
+        					//This ensures the skins appear in the same tab as the existing item.
+        					((AJSONMultiModelProvider<?>) packItem.definition).definitions.addAll(newDefinition.definitions);
+    					}
     				}
     			}
     		}
