@@ -225,6 +225,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
+			if(windupTimeCurrent == 0 && vehicle.world.isClient()){
+				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+			}
 			++windupTimeCurrent;
 		}else if(!firing && windupTimeCurrent > 0){
 			--windupTimeCurrent;
@@ -356,6 +359,19 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		return null;
 	}
 	
+	public Point3d getFiringPosition() {
+		//If muzzle count is the same as capacity, use the muzzles in order
+		//Otherwise, iterate through the available muzzles
+		if (definition.gun.muzzlePositions != null) {
+			currentMuzzle = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
+			return definition.gun.muzzlePositions.get(currentMuzzle).copy();
+		}
+		
+		//If no muzzlePositions are defined, no offset will be used
+		//This will also be returned if there was an issue finding the muzzle
+		return new Point3d(0D, 0D, 0D);
+	}
+	
 	@Override
 	public IWrapperNBT getData(){
 		IWrapperNBT data = super.getData();
@@ -387,6 +403,29 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			rotation.x = 0;
 		}
 		return rotation;
+	}
+	
+	//--------------------START OF GUN SOUND METHODS--------------------	
+	@Override
+	public void updateProviderSound(SoundInstance sound){
+		super.updateProviderSound(sound);
+		//Adjust winding sound pitch to match winding value and stop looping if we aren't winding.
+		if(sound.soundName.endsWith("_winding")){
+			if(windupTimeCurrent == 0){
+				sound.stop();
+			}else{
+				float windupPercent = windupTimeCurrent/(float)definition.gun.windupTime;
+				sound.pitch = (float) 0.25F + 0.75F*windupPercent;
+				sound.volume = 0.25F + 0.75F*windupPercent;
+			}
+		}
+	}
+	
+	@Override
+	public void startSounds(){
+		if(windupTimeCurrent > 0){
+			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+		}
 	}
 		
 	@Override
@@ -443,18 +482,5 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			--bulletsLeft;
 			++bulletsFired;
 		}
-	}
-	
-	public Point3d getFiringPosition() {
-		//If muzzle count is the same as capacity, use the muzzles in order
-		//Otherwise, iterate through the available muzzles
-		if (definition.gun.muzzlePositions != null) {
-			currentMuzzle = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - this.bulletsLeft : this.bulletsFired % definition.gun.muzzlePositions.size();
-			return definition.gun.muzzlePositions.get(currentMuzzle).copy();
-		}
-		
-		//If no muzzlePositions are defined, no offset will be used
-		//This will also be returned if there was an issue finding the muzzle
-		return new Point3d(0D, 0D, 0D);
 	}
 }
