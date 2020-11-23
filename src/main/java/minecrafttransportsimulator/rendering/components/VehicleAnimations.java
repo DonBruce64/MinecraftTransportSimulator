@@ -174,16 +174,20 @@ public final class VehicleAnimations{
 			}else if(optionalPart instanceof PartSeat){
 				PartSeat seat = (PartSeat) optionalPart;
 				IWrapperEntity riderForSeat = vehicle.locationRiderMap.get(seat.placementOffset);
-				if(riderForSeat == null || !riderForSeat.isValid()) return 0;
+				boolean riderPresent = riderForSeat != null && riderForSeat.isValid();
 				switch(variable){
-					case("seat_occupied"): return 1;
+					case("seat_occupied"): return riderPresent ? 1 : 0;
 					case("seat_rider_yaw"): {
-						double riderYaw = riderForSeat.getHeadYaw() - vehicle.angles.y;
-						while(riderYaw < -180) riderYaw += 360;
-						while(riderYaw > 180) riderYaw -= 360;
-						return riderYaw;
+						if(riderPresent){
+							double riderYaw = riderForSeat.getHeadYaw() - vehicle.angles.y;
+							while(riderYaw < -180) riderYaw += 360;
+							while(riderYaw > 180) riderYaw -= 360;
+							return riderYaw;
+						}else{
+							return 0;
+						}
 					}
-					case("seat_rider_pitch"): return riderForSeat.getPitch() - vehicle.angles.x;
+					case("seat_rider_pitch"): return riderPresent ? riderForSeat.getPitch() - vehicle.angles.x : 0;
 				}
 			}
 			
@@ -289,7 +293,9 @@ public final class VehicleAnimations{
 		
 		//Check if this is a custom variable.
 		if(vehicle.definition.rendering.customVariables != null){
-			return vehicle.customsOn.contains((byte)vehicle.definition.rendering.customVariables.indexOf(variable)) ? 1 : 0;
+			if(vehicle.definition.rendering.customVariables.contains(variable)){
+				return vehicle.customsOn.contains((byte)vehicle.definition.rendering.customVariables.indexOf(variable)) ? 1 : 0;
+			}
 		}
 		
 		//No variable found for anything.  We could have an error, but likely we have an older pack or are a closed door.
