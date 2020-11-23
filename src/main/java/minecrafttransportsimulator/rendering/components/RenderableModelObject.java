@@ -82,9 +82,15 @@ public final class RenderableModelObject{
 	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, List<RenderableModelObject> allObjects){
 		GL11.glPushMatrix();
 		double priorOffset = 0;
+		boolean inhibitAnimations = false;
 		for(ATransformRenderable transform : transforms){
 			if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
-				break;
+				inhibitAnimations = true;
+				continue;
+			}
+			else if (inhibitAnimations == true && transform.shouldActivate(vehicle, optionalPart, partialTicks)) {
+				inhibitAnimations = false;
+				continue;
 			}
 			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
 				//Found a transform that told us not to render.

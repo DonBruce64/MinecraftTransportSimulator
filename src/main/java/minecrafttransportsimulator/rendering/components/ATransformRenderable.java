@@ -37,6 +37,13 @@ public abstract class ATransformRenderable{
 		return false;
 	}
 	
+	/*
+	 *  This method should return true if this transform should negate a previous inhibitor.
+	 */
+	public boolean shouldActivate(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
+		return false;
+	}
+	
 	/**
 	 *  This method applies any transforms this object has prior to rendering.
 	 *  Vehicle and part (if this model is on a part) is passed-in for state-based transform logic.
