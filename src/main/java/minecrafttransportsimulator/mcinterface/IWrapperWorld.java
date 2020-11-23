@@ -75,8 +75,15 @@ public interface IWrapperWorld{
 	public IWrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius);
 	
 	/**
-	 *  Spawns the passed-in entity into the world.
-	 *  Position and rotation is set initially to match the entity.
+	 *  Generates a new wrapper to be used for entity tracking.
+	 *  This should be fed into the constructor of {@link AEntityBase}
+	 *  at construction time to allow it to interface with the world.
+	 */
+	public IWrapperEntity generateEntity();
+	
+	/**
+	 *  Spawns the entity into the world.  Only valid for entities that
+	 *  have had their wrapper set from {@link #generateEntity()}
 	 */
 	public void spawnEntity(AEntityBase entity);
 	

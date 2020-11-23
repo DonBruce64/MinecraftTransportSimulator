@@ -85,8 +85,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	private final Radio radio;
 	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
-	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 		
 		//Load simple variables.
 		this.hornOn = data.getBoolean("hornOn");

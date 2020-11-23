@@ -67,8 +67,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<BoundingBox, VehicleDoor> doorBoxes = new HashMap<BoundingBox, VehicleDoor>();
 	
 	
-	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 		
 		//Create the initial part slots.
 		recalculatePartSlots();

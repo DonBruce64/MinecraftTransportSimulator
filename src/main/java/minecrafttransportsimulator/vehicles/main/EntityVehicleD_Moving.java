@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -54,8 +55,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brakeOn = data.getBoolean("brakeOn");

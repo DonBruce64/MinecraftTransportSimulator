@@ -35,14 +35,14 @@ class BuilderCreativeTab extends CreativeTabs{
 	
 	BuilderCreativeTab(String name, AItemBase itemIcon){
 		super(name);
-		this.itemIcon = BuilderItem.itemWrapperMap.get(itemIcon);
+		this.itemIcon = BuilderItem.itemMap.get(itemIcon);
 	}
 	
 	/**
      * Adds the passed-in item to this tab.
      */
 	public void addItem(AItemBase item){
-		Item mcItem = BuilderItem.itemWrapperMap.get(item);
+		Item mcItem = BuilderItem.itemMap.get(item);
 		items.add(mcItem);
 		mcItem.setCreativeTab(this);
     }

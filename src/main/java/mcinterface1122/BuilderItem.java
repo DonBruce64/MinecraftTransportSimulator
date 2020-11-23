@@ -12,6 +12,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.util.ITooltipFlag;
@@ -46,7 +47,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber()
 class BuilderItem extends Item{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
-	static final Map<AItemBase, BuilderItem> itemWrapperMap = new LinkedHashMap<AItemBase, BuilderItem>();
+	static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
 	/**Current entity we are built around.**/
 	final AItemBase item;
@@ -127,7 +128,7 @@ class BuilderItem extends Item{
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
 		//Register all items in our wrapper map.
-		for(Entry<AItemBase, BuilderItem> entry : itemWrapperMap.entrySet()){
+		for(Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()){
 			AItemBase item = entry.getKey();
 			BuilderItem mcItem = entry.getValue();
 			String tabID = item.getCreativeTabID();

@@ -28,8 +28,8 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	public static boolean lockCameraToMovement = true;
 	
-	public EntityVehicleB_Rideable(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleB_Rideable(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 	}
 	
 	@Override

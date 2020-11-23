@@ -215,12 +215,18 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public void spawnEntity(AEntityBase entity){
+	public IWrapperEntity generateEntity(){
+		//Generate a new builder to hold the entity and return the wrapper for it.
     	BuilderEntity builder = new BuilderEntity(world);
-    	builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
-    	builder.entity = entity;
-    	BuilderEntity.createdServerBuilders.put(entity, builder);
-    	world.spawnEntity(builder);
+    	return getWrapperFor(builder);
+    }
+	
+	@Override
+	public void spawnEntity(AEntityBase entity){
+		BuilderEntity builder = (BuilderEntity) ((WrapperEntity) entity.wrapper).entity;
+		builder.entity = entity;
+		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
+		world.spawnEntity(builder);
     }
 	
 	@Override
@@ -344,7 +350,7 @@ class WrapperWorld implements IWrapperWorld{
 	
 	@Override
 	public void loadEntities(BoundingBox box, AEntityBase vehicle){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(BuilderEntity.createdServerBuilders.get(vehicle), convertBox(box))){
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(((WrapperEntity) vehicle.wrapper).entity, convertBox(box))){
 			if((entity instanceof INpc || entity instanceof IAnimals) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
@@ -504,7 +510,7 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, IWrapperPlayer playerWrapper, Axis axis){
     	if(!world.isRemote){
-	    	BuilderBlock wrapper = BuilderBlock.blockWrapperMap.get(block);
+	    	BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
 	    	WrapperPlayer player = (WrapperPlayer) playerWrapper;
 	    	WrapperItemStack stack = (WrapperItemStack) ((WrapperPlayer) playerWrapper).getHeldStack();
 	    	BlockPos pos = new BlockPos(location.x, location.y, location.z);
@@ -711,7 +717,7 @@ class WrapperWorld implements IWrapperWorld{
 	
 	@Override
 	public void spawnItem(AItemBase item, IWrapperNBT data, Point3d point){
-		ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(item));
+		ItemStack stack = new ItemStack(BuilderItem.itemMap.get(item));
 		if(data != null){
 			stack.setTagCompound(((WrapperNBT) data).tag);
 		}
@@ -725,7 +731,7 @@ class WrapperWorld implements IWrapperWorld{
 	
 	@Override
 	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
-		world.newExplosion(BuilderEntity.createdServerBuilders.get(source), location.x, location.y, location.z, (float) strength, flames, true);
+		world.newExplosion(((WrapperEntity) source.wrapper).entity, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	@Override

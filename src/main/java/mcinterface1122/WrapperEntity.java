@@ -55,7 +55,7 @@ class WrapperEntity implements IWrapperEntity{
 	@Override
 	public void setRiding(AEntityBase entityToRide){
 		if(entityToRide != null){
-			entity.startRiding(BuilderEntity.createdServerBuilders.get(entityToRide), true);
+			entity.startRiding(((WrapperEntity) entityToRide.wrapper).entity, true);
 		}else{
 			entity.dismountRidingEntity();
 		}

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -102,8 +103,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 	private Point3d rotorRotation = new Point3d(0D, 0D, 0D);//degrees
 
-	public EntityVehicleF_Physics(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleF_Physics(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");

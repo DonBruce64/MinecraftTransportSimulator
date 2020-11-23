@@ -10,6 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -53,7 +54,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
-			EntityVehicleF_Physics newVehicle = createEntity(world, data);
+			//Prior to creating this class we need to create a new entity wrapper to hold it.
+			//Get one, and then create the class with it.
+			EntityVehicleF_Physics newVehicle = createEntity(world, world.generateEntity(), data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -66,7 +69,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				//Set initial electrical power.
 				newVehicle.electricPower = 12;
 				
-				//Add default parts via the vehicle's recusion.
+				//Add default parts via the vehicle's recursion.
 				EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null, false);
 
 				//Set default vehicle text.
@@ -156,8 +159,10 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				}
 			}
 			
-			//If we didn't collide with anything, let the vehicle remain in the world.
-			world.spawnEntity(newVehicle);
+			//Entity is valid.  Spawn it into the world.
+			newVehicle.world.spawnEntity(newVehicle);
+			
+			//Decrement stack if we are not in creative.
 			if(!player.isCreative()){
 				player.getInventory().removeStack(heldStack, 1);
 			}
@@ -166,8 +171,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(IWrapperWorld world, IWrapperNBT data){
-		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, data);
+	public EntityVehicleF_Physics createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, wrapper, data);
 		//Need to wait for vehicle to load-in before we try to add saved parts.
 		for(APart part : vehicle.partsFromNBT){
 			vehicle.addPart(part);
