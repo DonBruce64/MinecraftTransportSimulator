@@ -60,7 +60,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 @EventBusSubscriber
 class BuilderBlock extends Block{
 	/**Map of created blocks linked to their builder instances.  Used for interface operations.**/
-	static final Map<ABlockBase, BuilderBlock> blockWrapperMap = new HashMap<ABlockBase, BuilderBlock>();
+	static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
 	/**Maps TE class names to instances of the IBlockTileEntity class that creates them.**/
 	static final Map<String, IBlockTileEntity<?>> tileEntityMap = new HashMap<String, IBlockTileEntity<?>>();
 	
@@ -141,7 +141,7 @@ class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				AItemPack<?> item = ((BuilderTileEntity<?>) tile).tileEntity.item;
     				if(item != null){
-    					ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(item));
+    					ItemStack stack = new ItemStack(BuilderItem.itemMap.get(item));
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
@@ -178,7 +178,7 @@ class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
         			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
-        				drops.add(new ItemStack(BuilderItem.itemWrapperMap.get(item)));
+        				drops.add(new ItemStack(BuilderItem.itemMap.get(item)));
         			}
         			dropsAtPositions.put(pos, drops);
     			}
@@ -302,7 +302,7 @@ class BuilderBlock extends Block{
 		//Not only does this prevent us from having to manually set the blocks
 		//we also pre-generate the block classes here.
 		List<ABlockBase> blocksRegistred = new ArrayList<ABlockBase>();
-		for(AItemBase item : BuilderItem.itemWrapperMap.keySet()){
+		for(AItemBase item : BuilderItem.itemMap.keySet()){
 			if(item instanceof IItemBlock){
 				ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
 				if(!blocksRegistred.contains(itemBlockBlock)){
@@ -311,7 +311,7 @@ class BuilderBlock extends Block{
 					String name = itemBlockBlock.getClass().getSimpleName();
 					name = MasterInterface.MODID + ":" + name.substring("Block".length());
 					event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
-					blockWrapperMap.put(itemBlockBlock, wrapper);
+					blockMap.put(itemBlockBlock, wrapper);
 					blocksRegistred.add(itemBlockBlock);
 					if(itemBlockBlock instanceof IBlockTileEntity<?>){
 						//Block makes a Tile Entity.  We need to link it to a wrapper.

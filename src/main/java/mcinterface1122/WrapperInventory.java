@@ -46,7 +46,7 @@ class WrapperInventory implements IWrapperInventory{
 	public boolean hasItem(AItemBase itemToFind){
 		for(int i=0; i<getSize(); ++i){
 			ItemStack currentStack = inventory.getStackInSlot(i);
-			if(BuilderItem.itemWrapperMap.get(itemToFind).equals(currentStack.getItem())){
+			if(BuilderItem.itemMap.get(itemToFind).equals(currentStack.getItem())){
 				return true;
 			}
 		}
@@ -112,7 +112,7 @@ class WrapperInventory implements IWrapperInventory{
 	
 	@Override
 	public boolean addItem(AItemBase item, IWrapperNBT data){
-		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemWrapperMap.get(item)));
+		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
 		if(data != null){
 			stack.setData(data);
 		}
@@ -147,7 +147,7 @@ class WrapperInventory implements IWrapperInventory{
 	
 	@Override
 	public boolean removeItem(AItemBase item, IWrapperNBT data){
-		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemWrapperMap.get(item)));
+		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
 		if(data != null){
 			stack.setData(data);
 		}

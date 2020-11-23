@@ -61,6 +61,9 @@ public abstract class AEntityBase{
 	public final Point3d prevRotation;
 	public final IWrapperWorld world;
 	
+	/**Wrapper reference for interfacing with wrapper systems.**/
+	public final IWrapperEntity wrapper;
+	
 	/**True as long as this entity is part of the world and being ticked.**/
 	public boolean isValid = true;
 	
@@ -96,10 +99,11 @@ public abstract class AEntityBase{
 	 **/
 	public BiMap<Point3d, IWrapperEntity> locationRiderMap = HashBiMap.create();
 	
-	public AEntityBase(IWrapperWorld world, IWrapperNBT data){
+	public AEntityBase(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
+		this.wrapper = wrapper;
 		this.position = data.getPoint3d("position");
 		this.prevPosition = position.copy();
 		this.motion = data.getPoint3d("motion");

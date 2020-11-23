@@ -64,7 +64,7 @@ class InterfaceCore implements IInterfaceCore{
 	
 	@Override
 	public IWrapperItemStack getStack(AItemBase item){
-		return new WrapperItemStack(new ItemStack(BuilderItem.itemWrapperMap.get(item)));
+		return new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
 	}
 	
 	@Override

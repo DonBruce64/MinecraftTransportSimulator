@@ -161,7 +161,7 @@ class InterfaceRender implements IInterfaceRender{
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = BuilderEntity.createdClientBuilders.get(entity).getBrightnessForRender();
+		int lightVar = ((WrapperEntity) entity.wrapper).entity.getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
@@ -554,7 +554,7 @@ class InterfaceRender implements IInterfaceRender{
 		
 		//Register the core item models.  Some of these are pack-based.
 		//Don't add those as they get added during the pack registration processing. 
-		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemWrapperMap.entrySet()){
+		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()){
 			try{
 				//TODO remove this when we don't have non-pack items.
 				if(!(entry.getValue().item instanceof AItemPack)){
@@ -571,12 +571,12 @@ class InterfaceRender implements IInterfaceRender{
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 			//TODO remove this when the internal system actually works.
 			if(PackParserSystem.getPackConfiguration(packItem.definition.packID) == null || PackParserSystem.getPackConfiguration(packItem.definition.packID).internallyGenerated){
-				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
 			}else{
 				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
 					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
 				}
-				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemWrapperMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemMap.get(packItem), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 			}
 		}
 		

@@ -84,12 +84,12 @@ public class MasterInterface{
 	 *  This wrapper instance will interact with all MC code via passthrough of the item's methods.
 	 */
 	public static void createItem(AItemBase item){
-		BuilderItem.itemWrapperMap.put(item, new BuilderItem(item));
+		BuilderItem.itemMap.put(item, new BuilderItem(item));
 		//TODO remove when packs don't register their own items.  Instead, auto-register items from pack creative tabs.
 		if(item instanceof AItemPack){
 			String packID = ((AItemPack<?>) item).definition.packID;
 			if(PackParserSystem.getPackConfiguration(packID) == null){
-				BuilderItem.itemWrapperMap.get(item).setTranslationKey(packID + "." + item.getRegistrationName());
+				BuilderItem.itemMap.get(item).setTranslationKey(packID + "." + item.getRegistrationName());
 			}
 		}
 	}
@@ -99,6 +99,6 @@ public class MasterInterface{
 	 *  Only present because packs still load their own items.
 	 */
 	public static BuilderItem getItem(AItemBase item){
-		return BuilderItem.itemWrapperMap.get(item);
+		return BuilderItem.itemMap.get(item);
 	}
 }

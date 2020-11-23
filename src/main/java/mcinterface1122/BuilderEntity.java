@@ -55,14 +55,10 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  */
 @Mod.EventBusSubscriber
 public class BuilderEntity extends Entity{
-	/**Map of created entities linked to their builder instances.  Used for interface operations.**/
-	public static Map<AEntityBase, BuilderEntity> createdClientBuilders = new HashMap<AEntityBase, BuilderEntity>();
-	/**Map of created entities linked to their builder instances.  Used for interface operations.**/
-	public static Map<AEntityBase, BuilderEntity> createdServerBuilders = new HashMap<AEntityBase, BuilderEntity>();
 	/**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
 	static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
-	/**Current entity we are built around.**/
+	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
 	AEntityBase entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
@@ -174,9 +170,13 @@ public class BuilderEntity extends Entity{
     		
     		if(serverNBTData != null){
     			//Restore the Entity from saved state.
-    			entity = entityMap.get(serverNBTData.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(serverNBTData));
-				createdClientBuilders.put(entity, this);
+    			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+    			entity = entityMap.get(serverNBTData.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), new WrapperNBT(serverNBTData));
     		}
+    	}else{
+    		//Builder with no entity on the server.  Likely due to a bad creation routine.
+    		//Remove the builder from the world.
+    		setDead();
     	}
     }
     
@@ -305,7 +305,7 @@ public class BuilderEntity extends Entity{
 					
 					//If we found a part, return it as an item.
 					if(part != null){
-						ItemStack stack = new ItemStack(BuilderItem.itemWrapperMap.get(part.getItem()));
+						ItemStack stack = new ItemStack(BuilderItem.itemMap.get(part.getItem()));
 						stack.setTagCompound(((WrapperNBT) part.getData()).tag);
 						return stack;
 					}
@@ -352,8 +352,8 @@ public class BuilderEntity extends Entity{
 			if(world.isRemote){
 				serverNBTData = tag;
 			}else{
-				entity = entityMap.get(tag.getString("entityid")).createEntity(WrapperWorld.getWrapperFor(world), new WrapperNBT(tag));
-				createdServerBuilders.put(entity, this);
+				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), new WrapperNBT(tag));
 			}
 		}
 	}
@@ -377,15 +377,10 @@ public class BuilderEntity extends Entity{
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
-		Iterator<Entry<AEntityBase, BuilderEntity>> entityIterator = event.getWorld().isRemote ? createdClientBuilders.entrySet().iterator() : createdServerBuilders.entrySet().iterator();
+		Iterator<AEntityBase> entityIterator = event.getWorld().isRemote ? AEntityBase.createdClientEntities.iterator() : AEntityBase.createdServerEntities.iterator();
 		while(entityIterator.hasNext()){
-			Entry<AEntityBase, BuilderEntity> entry = entityIterator.next();
-			if(entry.getValue().world.provider.getDimension() == event.getWorld().provider.getDimension()){
-				if(event.getWorld().isRemote){
-					AEntityBase.createdClientEntities.remove(entry.getKey());
-				}else{
-					AEntityBase.createdServerEntities.remove(entry.getKey());
-				}
+			AEntityBase entity = entityIterator.next();
+			if(entity.world.getDimensionID() == event.getWorld().provider.getDimension()){
 				entityIterator.remove();
 			}
 		}

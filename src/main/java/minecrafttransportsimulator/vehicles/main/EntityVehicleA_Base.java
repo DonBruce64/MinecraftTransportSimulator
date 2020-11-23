@@ -13,6 +13,7 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -59,8 +60,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleA_Base(IWrapperWorld world, IWrapperNBT data){
-		super(world, data);
+	public EntityVehicleA_Base(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+		super(world, wrapper, data);
 		//Set definition and current subName.
 		ItemVehicle item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName")); 
 		this.definition = item.definition;
