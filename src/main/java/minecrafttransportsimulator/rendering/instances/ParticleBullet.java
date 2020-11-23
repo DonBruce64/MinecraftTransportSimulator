@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -188,17 +187,14 @@ public class ParticleBullet extends AParticle{
 
 			//Spawn the appropriate type and amount of particles.
 			//Change default values from 0 to 1.
-			AParticle currentParticle;
 			if(particleObject.quantity == 0) particleObject.quantity = 1;
 			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
+			AParticle currentParticle;
 			switch(particleObject.type) {
 				case "smoke": {
-					Color color = particleObject.color != null ? Color.decode(particleObject.color) : Color.decode("#FFFFFF");
-					Color toColor = particleObject.toColor != null ? Color.decode(particleObject.toColor) : color;
 					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
 					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, particleObject.transparency, particleObject.scale);
-						currentParticle.setDeltas(toColor.getRed()/255F, toColor.getGreen()/255F, toColor.getBlue()/255F, particleObject.toTransparency, particleObject.toScale);
+						currentParticle = new ParticleSuspendedSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy(), particleObject);
 						MasterLoader.renderInterface.spawnParticle(currentParticle);
 					}
 					break;

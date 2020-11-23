@@ -1,7 +1,10 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.awt.Color;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartBullet.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
@@ -16,7 +19,8 @@ public abstract class AParticle{
 	public final Point3d position;
 	public final Point3d motion;
 	public final BoundingBox box;
-	public final int maxAge;
+	public int maxAge;
+	public final ParticleObject particleObject;
 
 	public float red;
 	public float green;
@@ -25,7 +29,6 @@ public abstract class AParticle{
 	public boolean touchingBlocks;
 	public float scale;
 	public int age;
-	//public float ageFactor;
 	public boolean isValid;
 	
 	public float deltaRed;
@@ -36,6 +39,24 @@ public abstract class AParticle{
 	
 	public AParticle(IWrapperWorld world, Point3d position, Point3d motion){
 		this(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
+	}
+
+	public AParticle(IWrapperWorld world, Point3d position, Point3d motion, ParticleObject particleObject){
+		this.world = world;
+		this.position = position;
+		this.motion = motion;
+		this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
+
+		Color color = particleObject.color != null ? Color.decode(particleObject.color) : Color.decode("#FFFFFF");
+		this.red = color.getRed()/255F;
+		this.green = color.getGreen()/255F;
+		this.blue = color.getBlue()/255F;
+		this.alpha = particleObject.transparency;
+		this.scale = particleObject.scale;
+		this.particleObject = particleObject;
+		this.maxAge = generateMaxAge();
+		this.setDeltas();
+		this.isValid = true;
 	}
 	
 	public AParticle(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
@@ -48,6 +69,7 @@ public abstract class AParticle{
 		this.blue = blue;
 		this.alpha = alpha;
 		this.scale = scale;
+		this.particleObject = null;
 		this.maxAge = generateMaxAge();
 		this.isValid = true;
 	}
@@ -85,14 +107,17 @@ public abstract class AParticle{
 	 *  It takes the desired end-states of these values, and calculates how much the
 	 *  values need to change each tick to reach the given value at maxAge.
 	 */
-	public void setDeltas(float toRed, float toGreen, float toBlue, float toAlpha, float toScale) {
+	public void setDeltas() {
 		//Establish how much to change each tick.
 		float deltaAmount = 1f/(this.maxAge - this.age);
-		this.deltaRed = (toRed - this.red) * deltaAmount;
-		this.deltaGreen = (toGreen - this.green) * deltaAmount;
-		this.deltaBlue = (toBlue - this.blue) * deltaAmount;
-		this.deltaAlpha = (toAlpha - this.alpha) * deltaAmount;
-		this.deltaScale = (toScale - this.scale) * deltaAmount;
+		
+		Color toColor = particleObject.toColor != null ? Color.decode(particleObject.toColor) : Color.decode(particleObject.color);
+		this.deltaRed = (toColor.getRed()/255F - this.red) * deltaAmount;
+		this.deltaGreen = (toColor.getGreen()/255F - this.green) * deltaAmount;
+		this.deltaBlue = (toColor.getBlue()/255F - this.blue) * deltaAmount;
+			
+		this.deltaAlpha = (particleObject.toTransparency - this.alpha) * deltaAmount;
+		this.deltaScale = (particleObject.toScale - this.scale) * deltaAmount;
 	};
 	
 	/**
