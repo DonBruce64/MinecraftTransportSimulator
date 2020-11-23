@@ -65,6 +65,12 @@ public class ParticleBullet extends AParticle{
 	
 	@Override
 	public void update(){
+		//If this is a smoke canister, create particles and then go away.
+		if (bullet.definition.bullet.types.contains("smoke")) {
+			spawnParticles();
+			isValid = false;
+			return;
+		}
 		//Get current velocity and possible damage.
 		double velocity = motion.length();
 		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
@@ -253,6 +259,11 @@ public class ParticleBullet extends AParticle{
 	
 	@Override
 	public void render(float partialTicks){
+		//The smoke bullet shouldn't render, it's just there to
+		//spawn smoke particles.
+		if(bullet.definition.bullet.types.contains("smoke")) {
+			return;
+		}
         //Parse the model if we haven't already.
         if(!bulletDisplayLists.containsKey(bullet)){
         	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(bullet.definition.getModelLocation());

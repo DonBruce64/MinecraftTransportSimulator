@@ -59,6 +59,10 @@ public final class RenderableModelObject{
 						transforms.add(new TransformInhibitor(animation));
 						break;
 					}
+					case("activator") :{
+						transforms.add(new TransformActivator(animation));
+						break;
+					}
 				}
 			}
 		}else{
@@ -84,12 +88,19 @@ public final class RenderableModelObject{
 		double priorOffset = 0;
 		boolean inhibitAnimations = false;
 		for(ATransformRenderable transform : transforms){
-			if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
-				inhibitAnimations = true;
-				continue;
+			if(!inhibitAnimations) {
+				if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
+					inhibitAnimations = true;
+					continue;
+				}
+				else if(transform instanceof TransformInhibitor || transform instanceof TransformActivator) {
+					continue;
+				}
 			}
-			else if (inhibitAnimations == true && transform.shouldActivate(vehicle, optionalPart, partialTicks)) {
-				inhibitAnimations = false;
+			else {
+				if(transform.shouldActivate(vehicle, optionalPart, partialTicks)) {
+					inhibitAnimations = false;
+				}
 				continue;
 			}
 			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){

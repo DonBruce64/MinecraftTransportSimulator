@@ -25,6 +25,7 @@ public abstract class AParticle{
 	public boolean touchingBlocks;
 	public float scale;
 	public int age;
+	//public float ageFactor;
 	public boolean isValid;
 	
 	public float deltaRed;
