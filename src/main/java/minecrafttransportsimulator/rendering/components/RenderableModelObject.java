@@ -59,6 +59,10 @@ public final class RenderableModelObject{
 						transforms.add(new TransformInhibitor(animation));
 						break;
 					}
+					case("activator") :{
+						transforms.add(new TransformActivator(animation));
+						break;
+					}
 				}
 			}
 		}else{
@@ -82,9 +86,22 @@ public final class RenderableModelObject{
 	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, List<RenderableModelObject> allObjects){
 		GL11.glPushMatrix();
 		double priorOffset = 0;
+		boolean inhibitAnimations = false;
 		for(ATransformRenderable transform : transforms){
-			if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
-				break;
+			if(!inhibitAnimations) {
+				if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
+					inhibitAnimations = true;
+					continue;
+				}
+				else if(transform instanceof TransformInhibitor || transform instanceof TransformActivator) {
+					continue;
+				}
+			}
+			else {
+				if(transform.shouldActivate(vehicle, optionalPart, partialTicks)) {
+					inhibitAnimations = false;
+				}
+				continue;
 			}
 			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
 				//Found a transform that told us not to render.

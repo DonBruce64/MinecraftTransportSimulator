@@ -141,6 +141,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
         	public Point3d pos;
         	public float velocity;
         	public int quantity;
+        	public int duration;
     	}
     }
     
