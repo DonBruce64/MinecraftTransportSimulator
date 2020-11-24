@@ -68,6 +68,7 @@ class WrapperNBT implements IWrapperNBT{
 	
 	@Override
 	public void setStrings(String name, List<String> values){
+		setInteger(name + "count", values.size());
 		for(int i=0; i<values.size(); ++i){
 			setString(name + i, values.get(i));
 		}
@@ -128,6 +129,11 @@ class WrapperNBT implements IWrapperNBT{
 	@Override
 	public void setData(String name, IWrapperNBT value){
 		tag.setTag(name, ((WrapperNBT) value).tag);
+	}
+	
+	@Override
+	public void deleteData(String name){
+		tag.removeTag(name);
 	}
 
 	@Override

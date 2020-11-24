@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -10,10 +9,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 
-public class BlockSignalController extends ABlockBase implements IBlockTileEntity<TileEntitySignalController>{
+public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalController>{
 	
 	public BlockSignalController(){
-		super(10.0F, 5.0F);
+		super();
 	}
 	
 	@Override

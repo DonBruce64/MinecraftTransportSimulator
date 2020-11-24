@@ -2,8 +2,7 @@ package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -19,10 +18,10 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
-public class BlockFuelPump extends ABlockBase implements IBlockTileEntity<TileEntityFuelPump>{
+public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 	
 	public BlockFuelPump(){
-		super(10.0F, 5.0F);
+		super();
 	}
 	
 	@Override

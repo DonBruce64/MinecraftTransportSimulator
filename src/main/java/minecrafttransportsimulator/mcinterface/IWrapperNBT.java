@@ -57,6 +57,9 @@ public interface IWrapperNBT{
 	public IWrapperNBT getData(String name);
 	
 	public void setData(String name, IWrapperNBT value);
+	
+	//Generic.
+	public void deleteData(String name);
 
 	//Packet handling.
 	public void writeToBuffer(ByteBuf buf);

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntityRoad>{
@@ -25,6 +26,11 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
     	}else{
 			super.addCollisionBoxes(world, location, collidingBoxes);
 		}
+	}
+
+	@Override
+	public boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player){
+		return false;
 	}
     
     @Override

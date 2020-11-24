@@ -76,6 +76,7 @@ public class MasterInterface{
 		networkInterface.init();
 		byte packetIndex = 0;
 		networkInterface.registerPacket(packetIndex++, PacketEntityCSHandshake.class);
+		networkInterface.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
 		MasterLoader.registerPackets(packetIndex);
 	}
 	

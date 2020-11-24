@@ -39,9 +39,7 @@ public abstract class ABlockBase{
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player){
-		return false;
-	}
+	public abstract boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player);
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.

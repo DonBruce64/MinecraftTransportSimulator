@@ -59,6 +59,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
 
 class WrapperWorld implements IWrapperWorld{
@@ -67,6 +68,9 @@ class WrapperWorld implements IWrapperWorld{
 	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
 	final World world;
+	InterfaceWorldSavedData savedData;
+	private boolean requestDataFromServer = true;
+	static final String dataID = MasterInterface.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -152,6 +156,60 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public long getMaxHeight(){
 		return world.getHeight();
+	}
+	
+	@Override
+	public IWrapperNBT getData(){
+		if(!world.isRemote){
+			if(savedData == null){
+				savedData = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, dataID);
+				if(savedData == null){
+					savedData = new InterfaceWorldSavedData(dataID);
+				}
+			}
+		}else if(savedData == null){
+			if(requestDataFromServer){
+				MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
+				requestDataFromServer = false;
+			}
+			return null;
+		}
+		IWrapperNBT data = MasterInterface.coreInterface.createNewTag();
+		savedData.writeToNBT(((WrapperNBT) data).tag);
+		return data;
+	}
+	
+	@Override
+	public void setData(IWrapperNBT data){
+		if(!world.isRemote){
+			savedData.readFromNBT(((WrapperNBT) data).tag);
+			savedData.markDirty();
+			world.getPerWorldStorage().setData(savedData.mapName, savedData);
+		}else{
+			MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
+		}
+	}
+	
+	/**
+	 *  Class used to interface with world saved data methods.
+	 */
+	public class InterfaceWorldSavedData extends WorldSavedData{
+	private NBTTagCompound internalData = new NBTTagCompound(); 
+		
+		public InterfaceWorldSavedData(String name){
+			super(name);
+		}
+
+		@Override
+		public void readFromNBT(NBTTagCompound tag){
+			internalData = tag.getCompoundTag("internalData");
+		}
+
+		@Override
+		public NBTTagCompound writeToNBT(NBTTagCompound tag){
+			tag.setTag("internalData", internalData);
+			return tag;
+		}
 	}
 	
 	@Override
