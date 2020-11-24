@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
+import java.awt.Color;
 import java.util.ArrayList;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -15,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
 /**
@@ -105,16 +107,39 @@ public final class LegacyCompatSystem{
 				partDef.linkedDoor = null;
 			}
 			if(partDef.exhaustPos != null){
-				partDef.exhaustObjects = new ArrayList<ExhaustObject>();
+				partDef.particleObjects = new ArrayList<ParticleObject>();
 				for(int i=0; i<partDef.exhaustPos.length; i+=3){
-					ExhaustObject exhaust = partDef.new ExhaustObject();
-					exhaust.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
-					exhaust.velocity = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
-					exhaust.scale = 1.0F;
-					partDef.exhaustObjects.add(exhaust);
+					ParticleObject particle = partDef.new ParticleObject();
+					particle.type = "smoke";
+					particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
+					particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
+					particle.scale = 1.0F;
+					particle.quantity = 1;
+					particle.color = "#D9D9D9";
+					particle.toColor = "#D9D9D9";
+					particle.transparency = 0.25F;
+					particle.toTransparency = 0.25F;
+					partDef.particleObjects.add(particle);
 				}
 				partDef.exhaustPos = null;
 				partDef.exhaustVelocity = null;
+			}
+			if(partDef.exhaustObjects != null) {
+				partDef.particleObjects = new ArrayList<ParticleObject>();
+				for(ExhaustObject exhaust : partDef.exhaustObjects) {
+					ParticleObject particle = partDef.new ParticleObject();
+					particle.type = "smoke";
+					particle.pos = exhaust.pos;
+					particle.velocityVector = exhaust.velocity;
+					particle.scale = exhaust.scale;
+					particle.quantity = 1;
+					particle.color = "#D9D9D9";
+					particle.toColor = "#D9D9D9";
+					particle.transparency = 0.25F;
+					particle.toTransparency = 0.25F;
+					partDef.particleObjects.add(particle);
+				}
+				partDef.exhaustObjects = null;
 			}
 			if(partDef.rotationVariable != null){
 				partDef.animations = new ArrayList<VehicleAnimationDefinition>();
@@ -236,6 +261,13 @@ public final class LegacyCompatSystem{
 			if (definition.bullet.type != null) {
 				definition.bullet.types = new ArrayList<String>();
 				definition.bullet.types.add(definition.bullet.type);
+			}
+			if (definition.bullet.particleObjects != null) {
+				for (ParticleObject particle : definition.bullet.particleObjects) {
+					if(particle.velocityVector == null) {
+						particle.velocityVector = new Point3d(0, 0, -particle.velocity);
+					}
+				}
 			}
 		}else{
 			//Check for old ground devices, crates, barrels, and effectors.

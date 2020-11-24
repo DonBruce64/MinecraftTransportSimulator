@@ -11,7 +11,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartBullet.ParticleObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
@@ -177,7 +177,7 @@ public class ParticleBullet extends AParticle{
 		for(ParticleObject particleObject : this.bullet.definition.bullet.particleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
-			Point3d particleVelocity = motion.copy().normalize().multiply(-particleObject.velocity/20D/10D);
+			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = this.position.copy();
