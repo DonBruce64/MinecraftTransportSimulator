@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -129,20 +130,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float proximityFuze;
     	public int airBurstDelay;
     	public List<ParticleObject> particleObjects;
-    	
-    	public class ParticleObject{
-    		public String type;
-    		public String color;
-    		public String toColor;
-    		public float transparency;
-    		public float toTransparency;
-    		public float scale;
-    		public float toScale;
-        	public Point3d pos;
-        	public float velocity;
-        	public int quantity;
-        	public int duration;
-    	}
     }
     
     public class JSONPartInteractable{

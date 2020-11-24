@@ -151,14 +151,33 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float[] exhaustPos;
         @Deprecated
         public float[] exhaustVelocity;
+        @Deprecated
         public List<ExhaustObject> exhaustObjects;
+        public List<ParticleObject> particleObjects;
         public float intakeOffset;
         
-        public class ExhaustObject{
+        @Deprecated
+    	public class ExhaustObject{
         	public Point3d pos;
         	public Point3d velocity;
         	public float scale;
         }
+        
+    	public class ParticleObject{
+    		public String type;
+    		public String color;
+    		public String toColor;
+    		public float transparency;
+    		public float toTransparency;
+    		public float scale;
+    		public float toScale;
+        	public Point3d pos;
+        	@Deprecated
+        	public float velocity;
+        	public Point3d velocityVector;
+        	public int quantity;
+        	public int duration;
+    	}
     }
     
     public class VehicleCollisionBox{

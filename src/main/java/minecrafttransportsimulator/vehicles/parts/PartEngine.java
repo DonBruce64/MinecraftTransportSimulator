@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import java.awt.Color;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -7,7 +9,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -986,7 +988,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	public void spawnParticles(){
 		//Render exhaust smoke if we have any exhausts and are running.
 		//If we are starting and have flames set, render those instead.
-		if(vehicleDefinition.exhaustObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+		if(vehicleDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 			//Render a smoke for every cycle the exhaust makes.
 			//Depending on the number of positions we have, render an exhaust for every one.
 			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1000,33 +1002,35 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			if(engineCycleTimeMills != 0){
 				long camTime = currentTime%engineCycleTimeMills;
 				
-				float particleColor = definition.engine.isSteamPowered ? 0.0F : (float) Math.max(1 - temp/COLD_TEMP, 0);
-				boolean singleExhaust = vehicleDefinition.exhaustObjects.size() == 1;
+				boolean singleExhaust = vehicleDefinition.particleObjects.size() == 1;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(ExhaustObject exhaust : vehicleDefinition.exhaustObjects){
+				for(ParticleObject particle : vehicleDefinition.particleObjects){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills/vehicleDefinition.exhaustObjects.size();
-						long camMin = vehicleDefinition.exhaustObjects.indexOf(exhaust)*camOffset;
+						long camOffset = engineCycleTimeMills/vehicleDefinition.particleObjects.size();
+						long camMin = vehicleDefinition.particleObjects.indexOf(particle)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
 							continue;
 						}
 					}
 					
-					Point3d exhaustOffset = exhaust.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
-					Point3d velocityOffset = exhaust.velocity.copy().rotateFine(vehicle.angles);
+					Point3d exhaustOffset = particle.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
+					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
+					
+					Color particleColor = Color.decode(particle.color);
+					
 					if(state.running){
-						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor, particleColor, particleColor, (float) Math.min((50 + hours)/500, 1), exhaust.scale));
+						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor.getRed()/255F, particleColor.getGreen()/255F, particleColor.getBlue()/255F, particle.transparency, particle.scale));
 						//Also play steam chuff sound if we are a steam engine.
 						if(definition.engine.isSteamPowered){
 							MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
@@ -1044,15 +1048,15 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		//Will be from the engine or the exhaust if we have any.
 		if(backfired){
 			backfired = false;
-			if(vehicleDefinition.exhaustObjects != null){
-				for(ExhaustObject exhaust : vehicleDefinition.exhaustObjects){
-					Point3d exhaustOffset = exhaust.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
-					Point3d velocityOffset = exhaust.velocity.copy().rotateFine(vehicle.angles);
+			if(vehicleDefinition.particleObjects != null){
+				for(ParticleObject particle : vehicleDefinition.particleObjects){
+					Point3d exhaustOffset = particle.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
+					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.07 - Math.random()*0.14;
 					for(byte j=0; j<5; ++j){
-						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, exhaust.scale*2.5F));
+						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, particle.scale*2.5F));
 					}
 				}
 			}else{
