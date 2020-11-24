@@ -112,10 +112,10 @@ public class RenderableModelObject extends RenderableTransform{
 					modelObject.render(vehicle, optionalPart, partialTicks, allObjects);
 				}
 			}
-			
-			//Pop state.
-			GL11.glPopMatrix();
 		}
+		
+		//Pop state.
+		GL11.glPopMatrix();
 	}
 	
 	/**

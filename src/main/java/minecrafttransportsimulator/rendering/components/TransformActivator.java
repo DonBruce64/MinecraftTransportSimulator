@@ -24,6 +24,7 @@ public class TransformActivator extends ATransform{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		return offset;
+		//Do nothing.
+		return 0;
 	}
 }
