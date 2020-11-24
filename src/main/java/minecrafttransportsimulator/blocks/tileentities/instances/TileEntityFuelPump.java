@@ -5,9 +5,7 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -15,10 +13,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITileEntityTickable, IFluidTankProvider{
+public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTickable, IFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;
     private FluidTank tank;
 
@@ -29,6 +26,22 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 	
 	@Override
 	public void update(){
+		//Update text lines to the current tank status if required.
+		//Only do this on clients, as servers don't render any text.
+		if(world.isClient() && definition.general.textObjects != null){
+			textLines.clear();
+			String fluidName = tank.getFluidLevel() > 0 ? MasterLoader.coreInterface.getFluidName(tank.getFluid()).toUpperCase() : "";
+			String fluidLevel = MasterLoader.coreInterface.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
+			String fluidDispensed = MasterLoader.coreInterface.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
+			for(int i=0; i<definition.general.textObjects.size(); ++i){
+				switch(i%3){
+					case(0) : textLines.add(fluidName); break;
+					case(1) : textLines.add(fluidLevel); break;
+					case(2) : textLines.add(fluidDispensed); break;
+				}
+			}
+		}
+		
 		//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
 		if(connectedVehicle != null && !world.isClient()){
 			//Don't fuel vehicles that don't exist.
@@ -85,11 +98,6 @@ public class TileEntityFuelPump extends ATileEntityBase<JSONDecor>implements ITi
 	@Override
 	public FluidTank getTank(){
 		return tank;
-	}
-
-	@Override
-	public RenderDecor getRenderer(){
-		return new RenderDecor();
 	}
 	
 	@Override

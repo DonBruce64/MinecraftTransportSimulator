@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockBeacon;
 import minecrafttransportsimulator.blocks.instances.BlockDecor;
 import minecrafttransportsimulator.blocks.instances.BlockFluidLoader;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
+import minecrafttransportsimulator.blocks.instances.BlockRadio;
 import minecrafttransportsimulator.blocks.instances.BlockSignalController;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -26,9 +28,11 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	public Class<? extends ABlockBase> getBlockClass(){
 		if(definition.general.type != null){
 			switch(definition.general.type){
+				case("beacon") : return BlockBeacon.class;	
 				case("fuel_pump") : return BlockFuelPump.class;
 				case("fluid_loader") : return BlockFluidLoader.class;
 				case("signal_controller") : return BlockSignalController.class;
+				case("radio") : return BlockRadio.class;
 			}
 		}
 		//Normal decor is assumed to be default per legacy systems.

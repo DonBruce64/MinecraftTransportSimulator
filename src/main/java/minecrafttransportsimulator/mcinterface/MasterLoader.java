@@ -23,6 +23,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
@@ -56,7 +57,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.11.0-BETA6";
+	public static final String MODVER = "19.11.0-BETA8";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -166,6 +167,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
 		networkInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);

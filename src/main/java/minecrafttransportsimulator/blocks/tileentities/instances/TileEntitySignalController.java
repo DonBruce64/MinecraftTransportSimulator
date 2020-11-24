@@ -6,15 +6,12 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -22,7 +19,7 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
 *
 * @author don_bruce
 */
-public class TileEntitySignalController extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{	
+public class TileEntitySignalController extends TileEntityDecor implements ITileEntityTickable{	
 	//Mode state.
 	public OpMode currentOpMode = OpMode.TIMED_CYCLE;
 	
@@ -203,11 +200,6 @@ public class TileEntitySignalController extends ATileEntityBase<JSONDecor> imple
 				}
 			}
 		}
-	}
-	
-	@Override
-	public RenderDecor getRenderer(){
-		return new RenderDecor();
 	}
     
 	@Override

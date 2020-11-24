@@ -1,28 +1,24 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 
-public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor>>{
+public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 	private static final Map<JSONDecor, Integer> displayListMap = new HashMap<JSONDecor, Integer>();
 		
 	@Override
-	public void render(ATileEntityBase<JSONDecor> tile, float partialTicks){
+	public void render(TileEntityDecor decor, float partialTicks){
 		//If we don't have the displaylist and texture cached, do it now.
-		if(!displayListMap.containsKey(tile.definition)){
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tile.definition.getModelLocation());
+		if(!displayListMap.containsKey(decor.definition)){
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(decor.definition.getModelLocation());
 			int displayListIndex = GL11.glGenLists(1);
 			
 			GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
@@ -36,32 +32,19 @@ public class RenderDecor extends ARenderTileEntityBase<ATileEntityBase<JSONDecor
 			}
 			GL11.glEnd();
 			GL11.glEndList();
-			displayListMap.put(tile.definition, displayListIndex);
+			displayListMap.put(decor.definition, displayListIndex);
 		}
 		
 		//Don't do solid model rendering on the blend pass.
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Bind the texture and render.
-			MasterLoader.renderInterface.bindTexture(tile.definition.getTextureLocation(tile.currentSubName));
-			GL11.glCallList(displayListMap.get(tile.definition));
-			//If we are a fluid tank, render text.
-			if(tile.definition.general.textObjects != null && tile instanceof IFluidTankProvider){
-				FluidTank tank = ((IFluidTankProvider) tile).getTank();
-				String fluidName = tank.getFluidLevel() > 0 ? MasterLoader.coreInterface.getFluidName(tank.getFluid()).toUpperCase() : "";
-				String fluidLevel = MasterLoader.coreInterface.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
-				String fluidDispensed = MasterLoader.coreInterface.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
-				
-				List<String> textLines = new ArrayList<String>();
-				for(byte i=0; i<tile.definition.general.textObjects.size(); ++i){
-					switch(i%3){
-						case(0) :textLines.add(fluidName); break;
-						case(1) :textLines.add(fluidLevel); break;
-						case(2) :textLines.add(fluidDispensed); break;
-					}
-				}
-				
+			MasterLoader.renderInterface.bindTexture(decor.definition.getTextureLocation(decor.currentSubName));
+			GL11.glCallList(displayListMap.get(decor.definition));
+			//If we have text objects, render them now.
+			if(decor.definition.general.textObjects != null){
 				MasterLoader.renderInterface.setLightingState(false);
-				MasterLoader.renderInterface.renderTextMarkings(tile.definition.general.textObjects, textLines, null, null, true);
+				MasterLoader.renderInterface.renderTextMarkings(decor.definition.general.textObjects, decor.getTextLines(), null, null, true);
+				MasterLoader.renderInterface.setLightingState(true);
 			}
 		}
 	}

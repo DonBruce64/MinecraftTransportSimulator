@@ -64,7 +64,7 @@ public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad
 				ItemRoadComponent component = road.components.get(componentType);
 				IWrapperNBT data = null;
 				if(world.isClient() || player.isCreative() || player.getInventory().addItem(component, data)){
-					road.components.remove(component);
+					road.components.remove(componentType);
 					return true;
 				}
 			}

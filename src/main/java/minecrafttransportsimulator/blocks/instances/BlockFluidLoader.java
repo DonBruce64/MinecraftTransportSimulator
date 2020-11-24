@@ -1,18 +1,17 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
-public class BlockFluidLoader extends ABlockBase implements IBlockTileEntity<TileEntityFluidLoader>{
+public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	
 	public BlockFluidLoader(){
-		super(10.0F, 5.0F);
+		super();
 	}
 	
 	@Override

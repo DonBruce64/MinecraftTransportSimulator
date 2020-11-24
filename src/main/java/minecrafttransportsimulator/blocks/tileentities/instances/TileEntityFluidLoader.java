@@ -3,20 +3,17 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
-import minecrafttransportsimulator.rendering.instances.RenderDecor;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 
-public class TileEntityFluidLoader extends ATileEntityBase<JSONDecor>implements ITileEntityTickable, IFluidTankProvider{
+public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntityTickable, IFluidTankProvider{
 	public PartInteractable connectedPart;
 	public boolean unloadMode;
 	public boolean loading;
@@ -117,11 +114,6 @@ public class TileEntityFluidLoader extends ATileEntityBase<JSONDecor>implements 
 	@Override
 	public FluidTank getTank(){
 		return tank;
-	}
-
-	@Override
-	public RenderDecor getRenderer(){
-		return new RenderDecor();
 	}
 	
 	@Override

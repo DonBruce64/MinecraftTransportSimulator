@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -12,9 +11,6 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
-import minecrafttransportsimulator.sound.IRadioProvider;
-import minecrafttransportsimulator.sound.Radio;
-import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
@@ -22,40 +18,33 @@ import minecrafttransportsimulator.sound.SoundInstance;
  *
  * @author don_bruce
  */
-public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadioProvider{
+public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
-	
-	//Internal radio variables.
-	private final Radio radio;
-	private final FloatBuffer soundPosition;
-	private final Point3d soundVelocity = new Point3d(0D, 0D, 0D);
+
+	//Generic text variables.
+	protected final List<String> textLines;
 	
 	public TileEntityDecor(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
 		//Add a bounding box for each rotation.
-		boundingBoxes[0] = new BoundingBox(new Point3d(0, 0, 0), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
-		boundingBoxes[1] = new BoundingBox(new Point3d(0, 0, 0), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
-		boundingBoxes[2] = boundingBoxes[0];
-		boundingBoxes[3] = boundingBoxes[1];
-		if(definition.general.type != null && definition.general.type.equals("radio")){
-			this.soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
-			soundPosition.put(position.x);
-			soundPosition.put(position.y);
-			soundPosition.put(position.z);
-			soundPosition.flip();
-			this.radio = new Radio(this, data);
+		this.boundingBoxes[0] = new BoundingBox(new Point3d(0, 0, 0), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
+		this.boundingBoxes[1] = new BoundingBox(new Point3d(0, 0, 0), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
+		this.boundingBoxes[2] = boundingBoxes[0];
+		this.boundingBoxes[3] = boundingBoxes[1];
+		if(definition.general.textObjects != null){
+			this.textLines = data.getStrings("textLines", definition.general.textObjects.size());
 		}else{
-			this.soundPosition = null;
-			this.radio = null;
+			this.textLines = new ArrayList<String>();
 		}
 	}
 	
-	@Override
-	public void remove(){
-		super.remove();
-		if(radio != null){
-			radio.stop();
-		}
+	public List<String> getTextLines(){
+		return textLines;
+	}
+	
+	public void setTextLines(List<String> textLines){
+		this.textLines.clear();
+		this.textLines.addAll(textLines);
 	}
 	
 	@Override
@@ -66,34 +55,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IRadi
 	@Override
 	public void save(IWrapperNBT data){
 		super.save(data);
-		if(radio != null){
-			radio.save(data);
-		}
-	}
-
-	@Override
-	public void startSounds(){}
-
-	@Override
-	public void updateProviderSound(SoundInstance sound){}
-
-	@Override
-	public FloatBuffer getProviderPosition(){
-		return soundPosition;
-	}
-
-	@Override
-	public Point3d getProviderVelocity(){
-		return soundVelocity;
-	}
-
-	@Override
-	public IWrapperWorld getProviderWorld(){
-		return world;
-	}
-
-	@Override
-	public Radio getRadio(){
-		return radio;
+		data.setStrings("textLines", textLines);
 	}
 }
