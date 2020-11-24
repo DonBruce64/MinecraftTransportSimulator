@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartBullet.ParticleObject;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
