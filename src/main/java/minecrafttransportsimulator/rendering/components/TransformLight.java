@@ -17,7 +17,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 *
 * @author don_bruce
 */
-public class TransformLight extends ATransformRenderable{
+public class TransformLight extends ATransform{
 	public final LightType type;
 	public final boolean isLightupTexture;
 	

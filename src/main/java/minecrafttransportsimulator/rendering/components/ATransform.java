@@ -7,15 +7,19 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefiniti
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
-/**Class that when extended allows for {@link RenderableModelObject}s.
+/**Class that when extended allows for a common method of applying
+ * transforms.  Transforms are a way to modify the rendering routines
+ * that are designed to be universal across all systems and routines.
+ * Transforms require a definition of what they are, but other than that
+ * the implementation is left up to the specific transform.
  *
  * @author don_bruce
  */
-public abstract class ATransformRenderable{
+public abstract class ATransform{
 	public final VehicleAnimationDefinition definition; 
 	private final Map<EntityVehicleF_Physics, DurationDelayClock> clocks = new HashMap<EntityVehicleF_Physics, DurationDelayClock>();
 	
-	public ATransformRenderable(VehicleAnimationDefinition definition){
+	public ATransform(VehicleAnimationDefinition definition){
 		this.definition = definition;
 	}
 	

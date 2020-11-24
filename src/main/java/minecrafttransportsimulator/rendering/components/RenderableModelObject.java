@@ -21,51 +21,35 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public final class RenderableModelObject{
+public class RenderableModelObject extends RenderableTransform{
 	private final String modelName;
 	public final String objectName;
 	private final Float[][] vertices;
 	public final String applyAfter;
-	public final List<ATransformRenderable> transforms = new ArrayList<ATransformRenderable>();
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
 	public RenderableModelObject(String modelName, String objectName, VehicleAnimatedObject definition, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
+		super(definition != null ? definition.animations : new ArrayList<VehicleAnimationDefinition>());
 		this.modelName = modelName;
 		this.objectName = objectName;
 		this.vertices = vertices;
 		
 		if(definition != null){
 			this.applyAfter = definition.applyAfter;
+			//Remove all rotatable transforms and re-create them if we have any tread rollers.
+			//Rollers are special and require special transform constructors.
+			//This happens if a pack has rollers in their JSON manually defined.
+			//TODO should this be removed to force auto-calculation?
 			for(VehicleAnimationDefinition animation : definition.animations){
-				switch(animation.animationType){
-					case("translation") :{
-						transforms.add(new TransformTranslatable(animation));
-						break;
-					}
-					case("rotation") :{
-						if(objectName.toLowerCase().contains("roller")){
-							transforms.add(TransformTreadRoller.create(objectName, animation, vehicle, vertices));
-						}else{
-							transforms.add(new TransformRotatable(animation));
-						}
-						break;
-					}
-					case("visibility") :{
-						transforms.add(new TransformVisibile(animation));
-						break;
-					}
-					case("inhibitor") :{
-						transforms.add(new TransformInhibitor(animation));
-						break;
-					}
-					case("activator") :{
-						transforms.add(new TransformActivator(animation));
-						break;
-					}
+				if(animation.animationType.equals("animations") && objectName.toLowerCase().contains("roller")){
+					TransformTreadRoller rollerTransform = TransformTreadRoller.create(objectName, animation, vehicle, vertices);
+					int transformIndex = definition.animations.indexOf(animation);
+					transforms.set(transformIndex, rollerTransform);
 				}
 			}
 		}else{
+			//Roller not in JSON file found.  Create a transform for it.
 			this.applyAfter = null;
 			if(objectName.toLowerCase().contains("roller")){
 				transforms.add(TransformTreadRoller.create(objectName, null, vehicle, vertices));
@@ -85,85 +69,53 @@ public final class RenderableModelObject{
 	 */
 	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, List<RenderableModelObject> allObjects){
 		GL11.glPushMatrix();
-		double priorOffset = 0;
-		boolean inhibitAnimations = false;
-		for(ATransformRenderable transform : transforms){
-			if(!inhibitAnimations) {
-				if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
-					inhibitAnimations = true;
-					continue;
+		if(doPreRenderTransforms(vehicle, optionalPart, partialTicks)){
+			//Render, caching the displayList if needed.
+			//Don't render on pass 1, as that's for transparency.
+			if(MasterLoader.renderInterface.getRenderPass() != 1){
+				if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
+					int displayListIndex = GL11.glGenLists(1);
+					GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+					GL11.glBegin(GL11.GL_TRIANGLES);
+					for(Float[] vertex : vertices){
+						GL11.glTexCoord2f(vertex[3], vertex[4]);
+						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+					}
+					GL11.glEnd();
+					GL11.glEndList();
+					if(!displayLists.containsKey(modelName)){
+						displayLists.put(modelName, new HashMap<String, Integer>());
+					}
+					displayLists.get(modelName).put(objectName, displayListIndex);
 				}
-				else if(transform instanceof TransformInhibitor || transform instanceof TransformActivator) {
-					continue;
+				GL11.glCallList(displayLists.get(modelName).get(objectName));
+			}
+			
+			//Do post-render logic.
+			doPostRenderTransforms(vehicle, optionalPart, partialTicks);
+			
+			//Check if we need to render text on this object.
+			if(optionalPart != null){
+				if(MasterLoader.renderInterface.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, vehicle.getSubDefinition().secondColor, objectName, optionalPart.vehicle.areInteriorLightsOn())){
+					MasterLoader.renderInterface.recallTexture();
 				}
-			}
-			else {
-				if(transform.shouldActivate(vehicle, optionalPart, partialTicks)) {
-					inhibitAnimations = false;
-				}
-				continue;
-			}
-			if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
-				//Found a transform that told us not to render.
-				//Return to prevent rendering.
-				GL11.glPopMatrix();
-				return;
-			}
-			//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
-			if(transform.definition != null && transform.definition.addPriorOffset){
-				priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, priorOffset);
 			}else{
-				priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, 0);
-			}
-		}
-		
-		//Render, caching the displayList if needed.
-		//Don't render on pass 1, as that's for transparency.
-		if(MasterLoader.renderInterface.getRenderPass() != 1){
-			if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
-				int displayListIndex = GL11.glGenLists(1);
-				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				for(Float[] vertex : vertices){
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+				if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, vehicle.getSubDefinition().secondColor, objectName, vehicle.areInteriorLightsOn())){
+					MasterLoader.renderInterface.recallTexture();
 				}
-				GL11.glEnd();
-				GL11.glEndList();
-				if(!displayLists.containsKey(modelName)){
-					displayLists.put(modelName, new HashMap<String, Integer>());
+			}
+			
+			//Render any parts that depend on us before we pop our state.
+			for(RenderableModelObject modelObject : allObjects){
+				if(objectName.equals(modelObject.applyAfter)){
+					modelObject.render(vehicle, optionalPart, partialTicks, allObjects);
 				}
-				displayLists.get(modelName).put(objectName, displayListIndex);
 			}
-			GL11.glCallList(displayLists.get(modelName).get(objectName));
+			
+			//Pop state.
+			GL11.glPopMatrix();
 		}
-		
-		//Do post-render logic.
-		for(ATransformRenderable transform : transforms){
-			transform.doPostRenderLogic(vehicle, optionalPart, partialTicks);
-		}
-		
-		//Check if we need to render text on this object.
-		if(optionalPart != null){
-			if(MasterLoader.renderInterface.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, vehicle.getSubDefinition().secondColor, objectName, optionalPart.vehicle.areInteriorLightsOn())){
-				MasterLoader.renderInterface.recallTexture();
-			}
-		}else{
-			if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, vehicle.getSubDefinition().secondColor, objectName, vehicle.areInteriorLightsOn())){
-				MasterLoader.renderInterface.recallTexture();
-			}
-		}
-		
-		//Render any parts that depend on us before we pop our state.
-		for(RenderableModelObject modelObject : allObjects){
-			if(objectName.equals(modelObject.applyAfter)){
-				modelObject.render(vehicle, optionalPart, partialTicks, allObjects);
-			}
-		}
-		
-		//Pop state.
-		GL11.glPopMatrix();
 	}
 	
 	/**

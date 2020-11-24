@@ -12,7 +12,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public class TransformWindow extends ATransformRenderable{
+public class TransformWindow extends ATransform{
 	private final Float[][] vertices;
 	
 	public TransformWindow(Float[][] vertices){

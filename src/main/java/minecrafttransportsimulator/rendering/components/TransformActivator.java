@@ -10,7 +10,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author gyro_hero
  */
-public class TransformActivator extends ATransformRenderable{
+public class TransformActivator extends ATransform{
 	
 	public TransformActivator(VehicleAnimationDefinition definition){
 		super(definition);
@@ -24,6 +24,6 @@ public class TransformActivator extends ATransformRenderable{
 
 	@Override
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
-		return 0;
+		return offset;
 	}
 }

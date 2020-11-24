@@ -11,7 +11,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public class TransformRotatable extends ATransformRenderable{
+public class TransformRotatable extends ATransform{
 	private final Point3d rotationAxis;
 	private double rotationMagnitude;
 	

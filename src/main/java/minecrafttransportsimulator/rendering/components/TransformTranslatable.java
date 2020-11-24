@@ -11,7 +11,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public class TransformTranslatable extends ATransformRenderable{
+public class TransformTranslatable extends ATransform{
 	private final Point3d translationAxis;
 	private final double translationMagnitude;
 	

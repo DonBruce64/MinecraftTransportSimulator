@@ -215,6 +215,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float hudScale;
         public int optionalPartNumber;
         public String defaultInstrument;
+        public List<VehicleAnimationDefinition> animations;
     }
     
     public class VehicleRendering{

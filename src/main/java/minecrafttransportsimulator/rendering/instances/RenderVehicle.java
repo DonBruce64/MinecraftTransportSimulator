@@ -24,11 +24,12 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.rendering.components.ATransformRenderable;
+import minecrafttransportsimulator.rendering.components.ATransform;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
+import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
@@ -50,6 +51,7 @@ public final class RenderVehicle{
 	//VEHICLE MAPS.  Maps are keyed by system name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
+	private static final Map<String, Map<Integer, RenderableTransform>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform>>();
 	@Deprecated
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
@@ -70,6 +72,7 @@ public final class RenderVehicle{
 			vehicleObjectLists.remove(definition.systemName);
 			treadDeltas.remove(definition.systemName);
 			treadPoints.remove(definition.systemName);
+			vehicleInstrumentTransforms.remove(definition.systemName);
 		}
 	}
 	
@@ -90,7 +93,7 @@ public final class RenderVehicle{
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
 		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.systemName)){
-			for(ATransformRenderable transform : modelObject.transforms){
+			for(ATransform transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
 					if(((TransformLight) transform).type.equals(light)){
 						return true;
@@ -102,7 +105,7 @@ public final class RenderVehicle{
 			String partModelLocation = part.definition.getModelLocation();
 			if(partObjectLists.containsKey(partModelLocation)){
 				for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
-					for(ATransformRenderable transform : modelObject.transforms){
+					for(ATransform transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
 							if(((TransformLight) transform).type.equals(light)){
 								return true;
@@ -246,9 +249,19 @@ public final class RenderVehicle{
 				}
 			}
 			
+			//Now check for any animated instruments.
+			Map<Integer, RenderableTransform> instrumentTransforms = new HashMap<Integer, RenderableTransform>();
+			for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
+				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
+				if(packInstrument.animations != null){
+					instrumentTransforms.put(i, new RenderableTransform(packInstrument.animations));
+				}
+			}
+			
 			//Now finalize the maps.
 			vehicleDisplayLists.put(vehicle.definition.systemName, OBJParser.generateDisplayList(parsedModel));
 			vehicleObjectLists.put(vehicle.definition.systemName, modelObjects);
+			vehicleInstrumentTransforms.put(vehicle.definition.systemName, instrumentTransforms);
 		}
 		
 		//Bind the texture and render.
@@ -568,7 +581,7 @@ public final class RenderVehicle{
 			//Search through rotatable parts on the vehicle and grab the rollers.
 			Map<Integer, TransformTreadRoller> parsedRollers = new HashMap<Integer, TransformTreadRoller>();
 			for(RenderableModelObject modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.systemName)){
-				for(ATransformRenderable transform : modelObject.transforms){
+				for(ATransform transform : modelObject.transforms){
 					if(transform instanceof TransformTreadRoller){
 						TransformTreadRoller treadTransform = (TransformTreadRoller) transform;
 						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
@@ -838,18 +851,33 @@ public final class RenderVehicle{
 	private static void renderInstruments(EntityVehicleF_Physics vehicle){
 		GL11.glEnable(GL11.GL_NORMALIZE);
 		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
-			GL11.glPushMatrix();
-			GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
-			GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
-			GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
-			GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
-			//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
-			GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 			if(vehicle.instruments.containsKey(i)){
+				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
+				
+				//Translate and rotate to standard position.
+				GL11.glPushMatrix();
+				GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
+				GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
+				GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
+				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
+				
+				//Do transforms if required.
+				RenderableTransform transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i); 
+				if(transform != null){
+					transform.doPreRenderTransforms(vehicle, null, 0);
+				}
+				
+				//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
+				GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
+				
+				//Render instrument.
 				RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalPartNumber, vehicle);
+				
+				if(transform != null){
+					transform.doPostRenderTransforms(vehicle, null, 0);
+				}
+				GL11.glPopMatrix();
 			}
-			GL11.glPopMatrix();
 		}
 		GL11.glDisable(GL11.GL_NORMALIZE);
 	}

@@ -9,7 +9,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  *
  * @author don_bruce
  */
-public class TransformVisibile extends ATransformRenderable{
+public class TransformVisibile extends ATransform{
 	
 	public TransformVisibile(VehicleAnimationDefinition definition){
 		super(definition);
