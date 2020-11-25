@@ -862,16 +862,19 @@ public final class RenderVehicle{
 				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 				
 				//Do transforms if required.
-				RenderableTransform transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i); 
+				RenderableTransform transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i);
+				boolean doRender = true;
 				if(transform != null){
-					transform.doPreRenderTransforms(vehicle, null, 0);
+					doRender = transform.doPreRenderTransforms(vehicle, null, 0);
 				}
 				
-				//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
-				GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
-				
-				//Render instrument.
-				RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalPartNumber, vehicle);
+				if(doRender){
+					//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
+					GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
+					
+					//Render instrument.
+					RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalPartNumber, vehicle);
+				}
 				
 				if(transform != null){
 					transform.doPostRenderTransforms(vehicle, null, 0);
