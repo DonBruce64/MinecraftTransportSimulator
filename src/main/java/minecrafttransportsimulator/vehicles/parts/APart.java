@@ -182,50 +182,63 @@ public abstract class APart implements ISoundProvider{
 	 * This offset is an addition to the main placement offset defined by the JSON.
 	 */
 	public final Point3d getPositionOffset(float partialTicks){
+		boolean inhibitAnimations = false;
 		Point3d rollingOffset = new Point3d(0D, 0D, 0D);
 		if(!animations.isEmpty()){
 			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 			for(DurationDelayClock animation : animations){
 				VehicleAnimationDefinition definition = animation.definition;
-				
-				if(definition.animationType.equals("rotation")){
-					//Found rotation.  Get angles that needs to be applied.
+				if(definition.animationType.equals("inhibitor")){
 					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					Point3d appliedRotation = new Point3d(0D, 0D, 0D);
-					if(definition.axis.x != 0){
-						appliedRotation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+						inhibitAnimations = true;
 					}
-					if(definition.axis.y != 0){
-						appliedRotation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
-					if(definition.axis.z != 0){
-						appliedRotation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
-					
-					//Check if we need to apply a translation based on this rotation.
-					if(!definition.centerPoint.isZero()){
-						//Use the center point as a vector we rotate to get the applied offset.
-						//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-						rollingOffset.add(definition.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(definition.centerPoint).rotateFine(rollingRotation));
-					}
-					
-					//Apply rotation.
-					rollingRotation.add(appliedRotation);
-				}else if(definition.animationType.equals("translation")){
-					//Found translation.  This gets applied in the translation axis direction directly.
-					//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
+				}else if(definition.animationType.equals("activator")){
 					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					Point3d appliedTranslation = new Point3d(0D, 0D, 0D);
-					if(definition.axis.x != 0){
-						appliedTranslation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+						inhibitAnimations = false;
 					}
-					if(definition.axis.y != 0){
-						appliedTranslation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+				}
+				if(!inhibitAnimations){
+					if(definition.animationType.equals("rotation")){
+						//Found rotation.  Get angles that needs to be applied.
+						double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
+						Point3d appliedRotation = new Point3d(0D, 0D, 0D);
+						if(definition.axis.x != 0){
+							appliedRotation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+						}
+						if(definition.axis.y != 0){
+							appliedRotation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						}
+						if(definition.axis.z != 0){
+							appliedRotation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						}
+						
+						//Check if we need to apply a translation based on this rotation.
+						if(!definition.centerPoint.isZero()){
+							//Use the center point as a vector we rotate to get the applied offset.
+							//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
+							rollingOffset.add(definition.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(definition.centerPoint).rotateFine(rollingRotation));
+						}
+						
+						//Apply rotation.
+						rollingRotation.add(appliedRotation);
+					}else if(definition.animationType.equals("translation")){
+						//Found translation.  This gets applied in the translation axis direction directly.
+						//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
+						double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
+						Point3d appliedTranslation = new Point3d(0D, 0D, 0D);
+						if(definition.axis.x != 0){
+							appliedTranslation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
+						}
+						if(definition.axis.y != 0){
+							appliedTranslation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						}
+						if(definition.axis.z != 0){
+							appliedTranslation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
+						}
+						rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 					}
-					if(definition.axis.z != 0){
-						appliedTranslation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
-					rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 				}
 			}
 		}
@@ -241,11 +254,23 @@ public abstract class APart implements ISoundProvider{
 	 * rotation angles for all operations.
 	 */
 	public final Point3d getPositionRotation(float partialTicks){
+		boolean inhibitAnimations = false;
 		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 		if(!animations.isEmpty()){
 			for(DurationDelayClock animation : animations){
 				VehicleAnimationDefinition definition = animation.definition;
-				if(definition.animationType.equals("rotation")){
+				if(definition.animationType.equals("inhibitor")){
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+						inhibitAnimations = true;
+					}
+				}else if(definition.animationType.equals("activator")){
+					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
+					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+						inhibitAnimations = false;
+					}
+				}
+				if(!inhibitAnimations && definition.animationType.equals("rotation")){
 					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					if(definition.axis.x != 0){
 						rollingRotation.x += VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
