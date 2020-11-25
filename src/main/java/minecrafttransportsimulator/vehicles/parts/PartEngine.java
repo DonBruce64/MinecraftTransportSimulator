@@ -167,7 +167,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		
 		//Add cooling for ambient temp.
-		ambientTemp = 25*vehicle.world.getTemperature(new Point3i(vehicle.position)) + 5;
+		ambientTemp = (25*vehicle.world.getTemperature(new Point3i(vehicle.position)) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
 		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/1000F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
@@ -240,7 +240,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				}
 				
 				//Add temp based on engine speed.
-				temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20);
+				temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 				
 				//Adjust oil pressure based on RPM and leak status.
 				pressure = Math.min(90 - temp/10, pressure + rpm/startRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
