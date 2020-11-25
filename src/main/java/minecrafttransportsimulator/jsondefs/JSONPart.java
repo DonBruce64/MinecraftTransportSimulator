@@ -78,9 +78,11 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean isWheel;
     	public boolean isTread;
     	public boolean canFloat;
+    	@Deprecated
 		public boolean canGoFlat;
     	public float width;
     	public float height;
+    	public float flatHeight;
     	public float motiveFriction;
         public float lateralFriction;
         public float extraCollisionBoxOffset;

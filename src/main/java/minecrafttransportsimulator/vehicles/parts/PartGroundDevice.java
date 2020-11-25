@@ -161,7 +161,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public float getHeight(){
-		return isFlat ? definition.ground.height/2F : definition.ground.height;
+		return isFlat ? definition.ground.flatHeight : definition.ground.height;
 	}
 	
 	@Override
@@ -176,16 +176,16 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	 * Attempts to set the ground device flat state to the passed-in state.  Checks to make
 	 * sure the ground device can actually go flat if it is being requested to do so.
 	 */
-	public void setFlatState(boolean flat){
+	public void setFlatState(boolean setFlat){
 		if(vehicle.world.isClient()){
-			if(flat){
+			if(setFlat){
 				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
 			}
 		}else{
 			//On the server, can we go flat and does the config let us?
 			//Or if we are repairing, are we flat in the first place?
-			if(flat){
-				if(isFlat || !definition.ground.canGoFlat || !ConfigSystem.configObject.damage.wheelBreakage.value){
+			if(setFlat){
+				if(isFlat || definition.ground.flatHeight != 0 || !ConfigSystem.configObject.damage.wheelBreakage.value){
 					return;
 				}
 			}else{
@@ -194,12 +194,12 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGroundDevice(this, flat));
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
 		}
 		
 		//Set flat state and new bounding box.
-		isFlat = flat;
-		boundingBox.heightRadius = getHeight()/2D;
+		isFlat = setFlat;
+		boundingBox.heightRadius = getHeight();
 	}
 	
 	public boolean getFlatState(){

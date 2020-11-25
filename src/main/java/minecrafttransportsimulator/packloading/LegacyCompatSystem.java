@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.packloading;
 
-import java.awt.Color;
 import java.util.ArrayList;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -361,6 +360,11 @@ public final class LegacyCompatSystem{
 					definition.effector.blocksWide = 1;
 					break;
 				}
+			}
+			
+			//If the part is a ground_ type, and canGoFlat, auto-set flat height.
+			if(definition.general.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
+				definition.ground.flatHeight = definition.ground.flatHeight/2F;
 			}
 		}
 		
