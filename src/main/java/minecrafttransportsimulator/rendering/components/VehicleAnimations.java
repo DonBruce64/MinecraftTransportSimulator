@@ -46,6 +46,18 @@ public final class VehicleAnimations{
 	}
 	
 	/**
+	 *  Returns the part number for the passed-in variable, or -1 if there is no part number for the variable.
+	 *  Part number is 0-indexed to conform to the list indexes internal to vehicle parts.
+	 */
+	public static int getPartNumber(String variable){
+		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
+			return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+		}else{
+			return -1;
+		}
+	}
+	
+	/**
 	 *  Returns the raw value for the passed-in variable on the passed-in vehicle.  A part may or
 	 *  may not be passed in to allow for part-specific animations (such as a specific engine's RPM).
 	 *  No clamping or other operations are performed on this value, so keep this in mind.
@@ -53,10 +65,9 @@ public final class VehicleAnimations{
 	public static double getVariableValue(String variable, float partialTicks, EntityVehicleF_Physics vehicle, APart optionalPart){
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
-		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
-			//Get the part number and the type from the variable.
-			//Take off one because we are zero-indexed.
-			int partNumber = Integer.parseInt(variable.substring(variable.length() - 1)) - 1;
+		int partNumber = getPartNumber(variable);
+		if(partNumber != -1){
+			//Get the part type from the variable.
 			String partType = variable.substring(0, variable.indexOf('_'));
 			final Class<?> partClass;
 			switch(partType){
@@ -129,7 +140,7 @@ public final class VehicleAnimations{
 				//Check for an instance of a gun_muzzle_# variable, since these requires additional parsing
 				if (variable.startsWith("gun_muzzle_")){
 					//Get the rest of the variable after gun_muzzle_
-					String muzzleVariable = variable.substring(11);
+					String muzzleVariable = variable.substring("gun_muzzle_".length());
 					//Parse one or more digits, then take off one because we are zero-indexed
 					int muzzleNumber = Integer.parseInt(muzzleVariable.substring(0, muzzleVariable.indexOf('_'))) - 1;
 					switch(muzzleVariable.substring(muzzleVariable.indexOf('_') + 1)) {
@@ -252,25 +263,25 @@ public final class VehicleAnimations{
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 			
 			//Missile incoming variables.
+			//Variable is in the form of missile_X_variablename.
 			default: {
 				if(variable.startsWith("missile_")){
-					//Get everything after missile_.
-					//Check for a number first.
-					String missileVariable = variable.substring(8);
-					if(missileVariable.contains("_") && missileVariable.substring(0,missileVariable.indexOf('_')).matches("[0-9]+")){
-						//Parse one or more digits, then take off one because we are zero-indexed
-						int missileNumber = Integer.parseInt(missileVariable.substring(0, missileVariable.indexOf('_'))) - 1;
-						if (vehicle.missilesIncoming.size() <= missileNumber) return 0;
-						switch(missileVariable.substring(missileVariable.indexOf('_') + 1)) {
-							case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
-							case("direction"): {
-								double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
-								Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
-								return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
+					String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
+					int missileNumber = getPartNumber(variable.substring(0, variable.lastIndexOf('_')));
+					if(missileNumber != -1){
+						if(vehicle.missilesIncoming.size() <= missileNumber){
+							return 0;
+						}else{
+							switch(missileVariable){
+								case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+								case("direction"): {
+									double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+									Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
+									return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
+								}
 							}
 						}
-					}
-					else if(missileVariable.equals("incoming")) {
+					}else if(missileVariable.equals("incoming")){
 						return vehicle.missilesIncoming.isEmpty() ? 0 : 1;
 					}
 				}

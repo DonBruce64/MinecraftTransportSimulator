@@ -58,7 +58,8 @@ public final class RenderInstrument{
 					GL11.glScalef(component.scale, component.scale, component.scale);
 				}
 				if(component.textObject != null){
-					final boolean addSuffix = !component.textObject.fieldName.substring(component.textObject.fieldName.length() - 1).matches("[0-9]+") && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
+					int variablePartNumber = VehicleAnimations.getPartNumber(component.textObject.fieldName);
+					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
 					double textNumeric = VehicleAnimations.getVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, component.textFactor, 0, 0, 0, false, 0, vehicle, null);
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
@@ -86,7 +87,8 @@ public final class RenderInstrument{
 							//We also need to set the partNumber to 1 if we have a part number of 0 and we're
 							//doing a part-specific animation.
 							//Skip adding a suffix if one already exists.
-							final boolean addSuffix = !animation.variable.substring(animation.variable.length() - 1).matches("[0-9]+") && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
+							int variablePartNumber = VehicleAnimations.getPartNumber(animation.variable);
+							final boolean addSuffix = variablePartNumber == -1 && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
 							if(partNumber == 0 && addSuffix){
 								partNumber = 1;
 							}
