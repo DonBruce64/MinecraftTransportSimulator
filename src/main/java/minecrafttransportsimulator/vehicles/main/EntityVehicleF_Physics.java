@@ -343,6 +343,13 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			elevatorTorque = elevatorForce*definition.motorized.tailDistance;
 			rudderTorque = rudderForce*definition.motorized.tailDistance;
 			
+			//If the elevator torque is low, don't apply it.  This prevents elevators from
+			//having effects at slow speeds.  We use a faux-torque here from the main plane
+			//body to check if we are below this point.
+			if(Math.abs(elevatorTorque) < 2D*currentMass/400D){
+				elevatorTorque = 0;
+			}
+			
 			//Do more blimp-specific things for the forces.
 			if(definition.general.isBlimp){
 				//Roll and pitch are applied only if we aren't level.

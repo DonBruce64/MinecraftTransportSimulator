@@ -341,9 +341,11 @@ public class VehicleGroundDeviceCollection{
 			//them, we return 0.  If it does ground them, then we inverse-calculate the exact angle required to ground them.
 			double testRotation = Math.toDegrees(Math.asin(Math.min(MAX_LINEAR_MOVEMENT_PER_TICK/Math.max(side1Delta, side2Delta), 1)));
 			
-			//If we have negative motion.y, or our sign of our rotation matches the desired rotation of the vehicle apply it.
+			//If we are moving towards the ground, apply corrections.
 			//We need to take into account the ground boost here, as we might have some fake motion.y from prior GDB collisions.
-			if((vehicle.motion.y - groundBoost*vehicle.SPEED_FACTOR <= 0 || testRotation*vehicle.rotation.x >= 0) && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
+			//We also don't want to apply correction if it would cause us to pitch in excess of 85 degrees.
+			//This prevents wall-climbing and other odd physics.
+			if(vehicle.motion.y - groundBoost <= 0 && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
 				//Add rotation and motion, and check for box collisions.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
 				if(pitch){
