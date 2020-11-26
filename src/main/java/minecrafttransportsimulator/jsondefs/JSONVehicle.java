@@ -39,6 +39,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public int fuelCapacity;
     	public int defaultFuelQty;
     	public int gearSequenceDuration;
+        public float downForce;
     	public float axleRatio;
     	public float dragCoefficient;
     	public float tailDistance;
