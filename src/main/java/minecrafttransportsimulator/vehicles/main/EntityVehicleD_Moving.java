@@ -16,6 +16,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleMotorized;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
@@ -301,7 +302,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double turningForce = steeringAngle/turningDistance;
 				//Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
 				if(groundVelocity > 0.35D){
-					turningForce *= Math.pow(0.25F, groundVelocity - 0.35D);
+					turningForce *= Math.pow(0.25F, (groundVelocity - 0.35D)) + (groundVelocity * (definition.motorized.downForce / 100));
 				}
 				//Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
 				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
