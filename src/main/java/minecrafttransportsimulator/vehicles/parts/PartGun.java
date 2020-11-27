@@ -3,7 +3,6 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -26,6 +25,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	//Stored variables used to determine bullet firing behavior.
 	public int bulletsFired;
 	public int bulletsLeft;
+	public int bulletsReloading;
 	public int gunNumber;
 	public int currentMuzzle;
 	public Point3d currentOrientation;
@@ -76,14 +76,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		}
 		return true;
     }
-	
-	@Override
-	public void attack(Damage damage){
-		//If we are hit, jam the gun.
-		if(damage.isExplosion){
-			reloadTimeRemaining = definition.gun.reloadTime;
-		}
-	}
 	
 	@Override
 	public void update(){
@@ -215,14 +207,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			--cooldownTimeRemaining;
 		}
 		
-		//If we are reloading, decrement the reloading timer.
-		//This timer is also used for jams, which are essentially reloads without getting more bullets.
-		//In either case, we can't fire until the reload is done.
-		if(reloadTimeRemaining > 0){
-			--reloadTimeRemaining;
-			return;
-		}
-		
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
 			if(windupTimeCurrent == 0 && vehicle.world.isClient()){
@@ -234,13 +218,22 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		}
 		windupRotation += windupTimeCurrent;
 		
-		//If this gun is being told to fire, and we have bullets, and are not reloading, fire.
+		//If we are reloading, decrement the reloading timer.
+		//If we are done reloading, add the new bullets.
+		if(reloadTimeRemaining > 0){
+			--reloadTimeRemaining;
+		}else if(bulletsReloading != 0){
+			bulletsLeft += bulletsReloading;
+			bulletsReloading = 0;
+		}
+		
+		//If this gun is being told to fire, and we have bullets and are wound up, fire.
 		//Don't spawn bullets on the server, as they will cause lots of lag and network traffic.
 		//Instead, spawn them on the clients, and then send back hit data to the server.
 		//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
-		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && reloadTimeRemaining == 0 && cooldownTimeRemaining == 0){
+		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0){
 			//First update gun number so we know if we need to apply a cam offset.
 			//Get the gun number based on how many guns the vehicle has.
 			gunNumber = 1;
@@ -268,11 +261,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 		}
 		
-		//If we are out of bullets, and aren't cooling down from firing, re-load ourselves from any vehicle inventories.
+		//If we are out of bullets, and aren't currently loading any, re-load ourselves from any vehicle inventories.
 		//This only works if the gun is set to auto-reload.
 		//While the reload method checks for reload time, we check here to save on code processing.
 		//No sense in looking for bullets if we can't load them anyways.
-		if(bulletsLeft == 0 && definition.gun.autoReload && reloadTimeRemaining == 0){
+		if(!vehicle.world.isClient() && definition.gun.autoReload && bulletsLeft == 0 && bulletsReloading == 0){
 			//Iterate through all the inventory slots in crates to try to find matching ammo.
 			for(APart part : vehicle.parts){
 				if(part instanceof PartInteractable){
@@ -294,7 +287,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 			//If we are on the server, we need to set the bullet as null to allow for new bullets to be loaded.
 			//If we are on the client, we need to leave this here, as the client might still be processing bullet firing.
-			//IF we set it null during that time, the bullet would be fired and not know what it was.
+			//If we set it null during that time, the bullet would be fired and not know what it was.
 			if(!vehicle.world.isClient()){
 				loadedBullet = null;
 			}
@@ -308,11 +301,12 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public boolean tryToReload(ItemPart part){
 		if(part.definition.bullet != null){
 			//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
-			if((reloadTimeRemaining == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter : loadedBullet.equals(part))) || vehicle.world.isClient()){
+			//Also don't fill bullets if we are currently reloading bullets.
+			if((bulletsReloading == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter : loadedBullet.equals(part))) || vehicle.world.isClient()){
 				//Make sure we don't over-fill the gun.
 				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || vehicle.world.isClient()){
 					loadedBullet = part;
-					bulletsLeft += part.definition.bullet.quantity;
+					bulletsReloading = part.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
 					if(vehicle.world.isClient()){
 						MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_reloading"));
@@ -478,7 +472,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			lastTimeFired = timeToFire;
 			
-			//Remove a bullet from the count and add shots fired..
+			//Remove a bullet from the count and add shots fired.
 			--bulletsLeft;
 			++bulletsFired;
 		}
