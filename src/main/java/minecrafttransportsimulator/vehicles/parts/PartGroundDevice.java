@@ -185,7 +185,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 			//On the server, can we go flat and does the config let us?
 			//Or if we are repairing, are we flat in the first place?
 			if(setFlat){
-				if(isFlat || definition.ground.flatHeight != 0 || !ConfigSystem.configObject.damage.wheelBreakage.value){
+				if(isFlat || definition.ground.flatHeight == 0 || !ConfigSystem.configObject.damage.wheelBreakage.value){
 					return;
 				}
 			}else{
@@ -200,6 +200,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		//Set flat state and new bounding box.
 		isFlat = setFlat;
 		boundingBox.heightRadius = getHeight();
+		vehicle.groundDeviceCollective.updateBounds();
 	}
 	
 	public boolean getFlatState(){
