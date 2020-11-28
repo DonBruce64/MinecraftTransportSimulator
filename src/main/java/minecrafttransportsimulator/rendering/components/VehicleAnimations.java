@@ -198,7 +198,24 @@ public final class VehicleAnimations{
 							return 0;
 						}
 					}
-					case("seat_rider_pitch"): return riderPresent ? riderForSeat.getPitch() - vehicle.angles.x : 0;
+					case("seat_rider_pitch"): {
+						if(riderPresent) {
+							double pitch = vehicle.angles.x;
+			            	double roll = vehicle.angles.z;
+			            	double riderYaw = riderForSeat.getHeadYaw() - vehicle.angles.y;
+			            	while(pitch > 180){pitch -= 360;}
+			    			while(pitch < -180){pitch += 360;}
+			    			while(roll > 180){roll -= 360;}
+			    			while(roll < -180){roll += 360;}
+	
+			            	double rollRollComponent = -Math.sin(Math.toRadians(riderYaw))*roll;
+			            	double pitchRollComponent = Math.cos(Math.toRadians(riderYaw))*pitch;
+			            	return riderForSeat.getPitch() - (rollRollComponent + pitchRollComponent);
+		            	}
+						else {
+							return 0;
+						}
+					}
 				}
 			}
 			
