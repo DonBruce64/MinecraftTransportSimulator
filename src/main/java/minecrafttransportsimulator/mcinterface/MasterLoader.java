@@ -16,6 +16,7 @@ import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
@@ -57,7 +58,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.11.0-BETA18";
+	public static final String MODVER = "19.11.0-BETA20";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -121,6 +122,7 @@ public class MasterLoader{
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/instrumentbench.json"), "UTF-8"), "instrumentbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/decorbench.json"), "UTF-8"), "decorbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/itembench.json"), "UTF-8"), "itembench", resourceDomain);
+			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon.json"), "UTF-8"), "beacon", resourceDomain);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -160,6 +162,7 @@ public class MasterLoader{
 	public static void registerPackets(byte packetIndex){
 		//Register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
+		networkInterface.registerPacket(packetIndex++, PacketBeaconListingChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketBulletHit.class);
 		networkInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketFluidTankChange.class);

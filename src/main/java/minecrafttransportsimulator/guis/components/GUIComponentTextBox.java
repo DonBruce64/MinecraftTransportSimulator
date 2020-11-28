@@ -20,7 +20,7 @@ public class GUIComponentTextBox{
 	public final int y;
 	public final int width;
 	public final int height;
-	public final Color fontColor;
+	public Color fontColor;
 	public final Color backgroundColor;
 	
 	public boolean visible = true;

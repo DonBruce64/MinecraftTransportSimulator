@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:beacon" },
+        "facing=north": { "model": "mts:beacon", "y": 180 },
+        "facing=east":  { "model": "mts:beacon", "y": 270 },
+        "facing=west":  { "model": "mts:beacon", "y": 90 }
+    }
+}

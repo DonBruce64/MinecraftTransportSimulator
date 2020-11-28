@@ -230,8 +230,8 @@ public final class VehicleAnimations{
 		//Either we don't have a part, or we have a part and we don't want a part-specific variable.
 		//Try vehicle variables now.
 		switch(variable){
+			//Vehicle world state cases.
 			case("time"): return vehicle.world.getTime();
-			//Vehicle world position cases.	
 			case("yaw"): return vehicle.angles.y;
 			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
 			case("pitch"): return vehicle.angles.x;
@@ -278,6 +278,7 @@ public final class VehicleAnimations{
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
+			case("beacon_ndb"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.atan2(vehicle.position.z - vehicle.selectedBeacon.location.z, vehicle.position.x - vehicle.selectedBeacon.location.z)) : 0;
 			
 			//Missile incoming variables.
 			//Variable is in the form of missile_X_variablename.

@@ -15,6 +15,8 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
+import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -64,6 +66,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public double electricPower;
 	public double electricUsage;
 	public double electricFlow;
+	public RadioBeacon selectedBeacon;
 	public FluidTank fuelTank;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
@@ -95,6 +98,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		this.gearUpCommand = data.getBoolean("gearUpCommand");
 		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
+		this.selectedBeacon = BeaconManager.getBeacon(world, data.getString("selectedBeacon"));
 		this.fuelTank = new FluidTank(data, definition.motorized.fuelCapacity, world.isClient());
 		
 		//Load lights.
@@ -458,6 +462,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		data.setBoolean("gearUpCommand", gearUpCommand);
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
+		if(selectedBeacon != null){
+			data.setString("selectedBeacon", selectedBeacon.name);
+		}
 		fuelTank.save(data);
 		
 		String lightsOnString = "";

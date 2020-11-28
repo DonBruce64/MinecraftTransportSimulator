@@ -201,6 +201,7 @@ gui.panel.trim_pitch=PITCH TRIM
 gui.panel.trim_yaw=YAW TRIM
 gui.panel.reverse=REV
 gui.panel.gear=GEAR
+gui.panel.beacon=BEACON
 gui.panel.autopilot=AUTO
 gui.panel.cruisecontrol=CRUISE
 gui.panel.headlights=LIGHTS

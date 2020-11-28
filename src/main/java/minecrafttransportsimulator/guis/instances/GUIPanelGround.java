@@ -61,7 +61,7 @@ public class GUIPanelGround extends AGUIPanel{
 	}
 	
 	@Override
-	protected int setupLightComponents(int guiLeft, int guiTop, int xOffset){
+	protected void setupLightComponents(int guiLeft, int guiTop){
 		//Create a tri-state selector for the running lights and headlights.
 		//For the tri-state we need to make sure we don't try to turn on running lights if we don't have any.
 		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, LightType.HEADLIGHT)){
@@ -138,11 +138,10 @@ public class GUIPanelGround extends AGUIPanel{
 			};
 			addSelector(sirenSelector);
 		}
-		return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 	}
 	
 	@Override
-	protected int setupEngineComponents(int guiLeft, int guiTop, int xOffset){
+	protected void setupEngineComponents(int guiLeft, int guiTop){
 		engineSelectors.clear();
 		//Create the engine selectors for this vehicle.
 		for(Byte engineNumber : vehicle.engines.keySet()){
@@ -176,6 +175,7 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//If we have reverse thrust, add a selector for it.
+		//This goes in the 4th row of the engine section.
 		if(haveReverseThrustOption){
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
@@ -189,9 +189,8 @@ public class GUIPanelGround extends AGUIPanel{
 			addSelector(reverseSelector);
 		}
 		
-		
+		//If we have both reverse AND cruise control, render them side-by-side. Otherwise just render one in the middle
 		if(haveReverseThrustOption && vehicle.definition.motorized.hasCruiseControl){
-			//If we have both reverse AND cruise control, render them side-by-side. otherwise just render one in the middle
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -213,58 +212,35 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onReleased(){}
 			};
 			addSelector(cruiseControlSelector);
-		}else{
-			//If we have reverse thrust, add a selector for it.
-			if(haveReverseThrustOption){
-				reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-					@Override
-					public void onClicked(boolean leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
-					}
-					
-					@Override
-					public void onReleased(){}
-				};
-				addSelector(reverseSelector);
-			}
-			
-			//If we have cruise control, add a selector for it.
-			if(vehicle.definition.motorized.hasCruiseControl){
-				cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-					@Override
-					public void onClicked(boolean leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
-					}
-					
-					@Override
-					public void onReleased(){}
-				};
-				addSelector(cruiseControlSelector);
-			}
-		}
-		
-		//If we have gear, add a selector for it.
-		if(vehicle.definition.motorized.gearSequenceDuration != 0){
-			gearSelector = new GUIComponentSelector(guiLeft + xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE*2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		}else if(haveReverseThrustOption){
+			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
 				}
 				
 				@Override
 				public void onReleased(){}
 			};
-			addSelector(gearSelector);
+			addSelector(reverseSelector);
+		}else if(vehicle.definition.motorized.hasCruiseControl){
+			cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(cruiseControlSelector);
 		}
-		
+	}
+	
+	@Override
+	protected void setupGeneralComponents(int guiLeft, int guiTop){
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
-		for(int i=0; i<8; ++i){
-			//Go to next column if we are on our 4th row.
-			//Note that this happens on the 0 (first) row, so we don't need to add this value prior to this loop.
-			if(i%4 == 0){
-				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS*1.25;
-			}
-			
+		for(int i=0; i<8; ++i){			
 			GUIComponentSelector trailerSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trailer") + "#" + i, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -281,11 +257,33 @@ public class GUIPanelGround extends AGUIPanel{
 			};
 			trailerSelectors.add(trailerSelector);
 			addSelector(trailerSelector);
+			//Go to next column if we are on our 4th trailer selector.
+			if(i == 4){
+				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
+			}
 		}
 		
-		//Create any custom slots, if we have any.
+		//If we have gear, add a selector for it.
+		//This is rendered on the 4th row.  It is assumed that this will never be combined with 8 trailers...
+		if(vehicle.definition.motorized.gearSequenceDuration != 0){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(gearSelector);
+		}
+	}
+	
+	@Override
+	public void setupCustomComponents(int guiLeft, int guiTop){
+		//Add custom selectors if we have any.
+		//These are the right-most selector and are vehicle-specific.
 		if(vehicle.definition.rendering.customVariables != null && vehicle.definition.rendering.customVariables.size() > 0){
-			xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 			for(int i=0; i<vehicle.definition.rendering.customVariables.size(); ++i){
 				GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, vehicle.definition.rendering.customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
@@ -306,8 +304,6 @@ public class GUIPanelGround extends AGUIPanel{
 				addSelector(customSelector);
 			}
 		}
-		
-		return xOffset + GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 	}
 	
 	@Override

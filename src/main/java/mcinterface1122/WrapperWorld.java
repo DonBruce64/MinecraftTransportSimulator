@@ -69,11 +69,13 @@ class WrapperWorld implements IWrapperWorld{
 	
 	final World world;
 	InterfaceWorldSavedData savedData;
-	private boolean requestDataFromServer = true;
 	static final String dataID = MasterInterface.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
+		if(world.isRemote){
+			MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
+		}
 	}
 	
 	/**
@@ -168,10 +170,6 @@ class WrapperWorld implements IWrapperWorld{
 				}
 			}
 		}else if(savedData == null){
-			if(requestDataFromServer){
-				MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
-				requestDataFromServer = false;
-			}
 			return null;
 		}
 		IWrapperNBT data = MasterInterface.coreInterface.createNewTag();

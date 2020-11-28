@@ -55,11 +55,11 @@ public interface IWrapperWorld{
 	 *  Returns the saved world data for this world.  As servers save data, while clients don't,
 	 *  this method will only ensure valid return values on the server.  On clients, there will
 	 *  be some delay in obtaining the data from the server due to packets.  As such, this method
-	 *  will return an empty data object until the data arrives from the server.  After this, the
-	 *  object will contain all the server data, and will remain updated with data changes from the
-	 *  server.  Do NOT attempt to modify the data object on the client, as it will result in a
-	 *  de-synchronized state.  Instead, send a packet to the server to modify its copy, and then
-	 *  wait for the synchronizing packet.
+	 *  may return null if the data hasn't arrived from the server.  After this, the object will 
+	 *  contain all the server data, and will remain updated with data changes from the server.  
+	 *  Do NOT attempt to modify the data object on the client, as it will result in a
+	 *  de-synchronized state.  Instead, send a packet to the server to modify its copy, 
+	 *  and then wait for the synchronizing packet.
 	 */
 	public IWrapperNBT getData();
 	

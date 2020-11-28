@@ -10,7 +10,7 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
- *  all vehicles, such as lights and engines.  Other things may be added as needed.
+ * all vehicles, such as lights and engines.  Other things may be added as needed.
  * 
  * @author don_bruce
  */
@@ -53,13 +53,23 @@ public abstract class AGUIPanel extends AGUIBase{
 		//This allows for things to be on different columns depending on vehicle configuration.
 		//We make this method final and create an abstract method to use instead of this one for
 		//setting up any extra components.
-		int xOffset  = (int) 1.25D*GAP_BETWEEN_SELECTORS;
+		xOffset  = (int) 1.25D*GAP_BETWEEN_SELECTORS;
 		
 		//Add light selectors.  These are on the left-most side of the panel.
-		xOffset = setupLightComponents(guiLeft, guiTop, xOffset);
+		setupLightComponents(guiLeft, guiTop);
+		xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 		
 		//Add engine selectors.  These are to the right of the light switches.
-		xOffset = setupEngineComponents(guiLeft, guiTop, xOffset);
+		setupEngineComponents(guiLeft, guiTop);
+		xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
+		
+		//Add general selectors.  These are panel-specific, and to the right of the engine selectors.
+		setupGeneralComponents(guiLeft, guiTop);
+		xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
+		
+		//Add custom selectors.  These are vehicle-specific, and their placement is panel-specific.
+		//These are rendered to the right of the general selectors.
+		setupCustomComponents(guiLeft, guiTop);
 		
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Integer instrumentNumber : vehicle.instruments.keySet()){
@@ -70,9 +80,13 @@ public abstract class AGUIPanel extends AGUIBase{
 		}
 	}
 	
-	protected abstract int setupLightComponents(int guiLeft, int guiTop, int xOffset);
+	protected abstract void setupLightComponents(int guiLeft, int guiTop);
 	
-	protected abstract int setupEngineComponents(int guiLeft, int guiTop, int xOffset);
+	protected abstract void setupEngineComponents(int guiLeft, int guiTop);
+	
+	protected abstract void setupGeneralComponents(int guiLeft, int guiTop);
+	
+	protected abstract void setupCustomComponents(int guiLeft, int guiTop);
 	
 	@Override
 	public GUILightingMode getGUILightMode(){

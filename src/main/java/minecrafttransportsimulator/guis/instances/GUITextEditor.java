@@ -109,7 +109,7 @@ public class GUITextEditor extends AGUIBase{
 				textObjects = new ArrayList<JSONText>();
 				JSONText text = new JSONText();
 				text.fieldName = "Beacon Name";
-				text.maxLength = 20;
+				text.maxLength = 5;
 				textObjects.add(text);
 				text = new JSONText();
 				text.fieldName = "Glide Slope";

@@ -40,6 +40,13 @@ public abstract class ABlockBase{
 	 *  on the client, so watch your actions and packets!
 	 */
 	public abstract boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player);
+	
+	/**
+	 *  Called when this block is removed from the world.  This occurs when the block is broken
+	 *  by a player, explosion, vehicle, etc.  This method is called prior to the Tile Entity being
+	 *  removed, as logic may be needed to be performed that requires the data from the TE.
+	 */
+	public void onBroken(IWrapperWorld world, Point3i location){}
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.
