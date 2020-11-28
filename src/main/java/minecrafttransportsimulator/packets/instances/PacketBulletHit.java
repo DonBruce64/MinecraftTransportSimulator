@@ -112,7 +112,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 							entityHit.attack(damage);
 						}
 					}else{
-						//We didn't hit an entity, so we must have hit a block.
+						//We didn't hit an entity, so check to see if we hit a block.
 						//If the bullet is big, and the block is soft, then break the block.
 						//If we are an incendiary bullet, set the block on fire.
 						//If we are a water bullet, and we hit fire, put it out. 
@@ -125,9 +125,10 @@ public class PacketBulletHit extends APacketVehiclePart{
 								world.destroyBlock(hitPosition);
 							}
 						}else{
+							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
 							IWrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
-							if(hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
+							if(hitBlock != null && hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
 							}else if(bulletDefinition.bullet.types.contains("incendiary")){
 								//Couldn't break block, but we might be able to set it on fire.
