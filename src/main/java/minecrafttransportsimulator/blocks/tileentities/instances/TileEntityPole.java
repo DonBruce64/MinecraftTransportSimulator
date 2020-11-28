@@ -36,7 +36,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				String systemName = data.getString("systemName" + axis.ordinal());
 				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(PackParserSystem.getItem(packID, systemName));
 				components.put(axis, newComponent);
-				if(newComponent.getTextLines() != null){
+				if(newComponent.definition.general.textObjects != null){
 					newComponent.setTextLines(data.getStrings("textLines", newComponent.definition.general.textObjects.size()));
 				}
 			}
