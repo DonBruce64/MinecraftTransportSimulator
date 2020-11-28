@@ -353,34 +353,6 @@ public final class PackParserSystem{
     }
     
     /**
-     * Called to sort and create all pack items.  This must be called after all pack item processing to ensure proper sorting order.
-     */
-    private static void createAllItems(){
-    	for(String packID : packItemMap.keySet()){
-    		List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
-    		packItems.addAll(packItemMap.get(packID).values());
-    		packItems.sort(new Comparator<AItemPack<?>>(){
-    			@Override
-    			public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
-    				String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
-    				if(itemA instanceof AItemSubTyped){
-    					totalAName += ((AItemSubTyped<?>) itemA).subName;
-    				}
-    				String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
-    				if(itemB instanceof AItemSubTyped){
-    					totalBName += ((AItemSubTyped<?>) itemB).subName;
-    				}
-    				return totalAName.compareTo(totalBName);
-    			}
-    			
-    		});
-    		for(AItemPack<?> item : packItems){
-    			MasterInterface.createItem(item);
-    		}
-    	}
-    }
-    
-    /**
      * Helper method to parse multi-definition pack items.
      * Generated items are added to the passed-in list.
      */
@@ -416,6 +388,34 @@ public final class PackParserSystem{
     	}
     	packItemMap.get(mainDefinition.packID).putAll(packItems);
     }
+    
+    /**
+     * Called to sort and create all pack items.  This must be called after all pack item processing to ensure proper sorting order.
+     */
+    private static void createAllItems(){
+    	for(String packID : packItemMap.keySet()){
+    		List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
+    		packItems.addAll(packItemMap.get(packID).values());
+    		packItems.sort(new Comparator<AItemPack<?>>(){
+    			@Override
+    			public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
+    				String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
+    				if(itemA instanceof AItemSubTyped){
+    					totalAName += ((AItemSubTyped<?>) itemA).subName;
+    				}
+    				String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
+    				if(itemB instanceof AItemSubTyped){
+    					totalBName += ((AItemSubTyped<?>) itemB).subName;
+    				}
+    				return totalAName.compareTo(totalBName);
+    			}
+    			
+    		});
+    		for(AItemPack<?> item : packItems){
+    			MasterInterface.createItem(item);
+    		}
+    	}
+    }
 	
     //-----START OF OLD INIT LOGIC-----
     /**Packs should call this upon load to add their content to the mod.
@@ -445,7 +445,6 @@ public final class PackParserSystem{
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
-    		e.printStackTrace();
     	}
     }
     
