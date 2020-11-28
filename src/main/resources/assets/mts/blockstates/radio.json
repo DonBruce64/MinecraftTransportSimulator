@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:radio" },
+        "facing=north": { "model": "mts:radio", "y": 180 },
+        "facing=east":  { "model": "mts:radio", "y": 270 },
+        "facing=west":  { "model": "mts:radio", "y": 90 }
+    }
+}
