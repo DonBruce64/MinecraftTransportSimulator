@@ -30,6 +30,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpCon
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
+import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -122,7 +123,9 @@ public class MasterLoader{
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/instrumentbench.json"), "UTF-8"), "instrumentbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/decorbench.json"), "UTF-8"), "decorbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/itembench.json"), "UTF-8"), "itembench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon.json"), "UTF-8"), "beacon", resourceDomain);
+			//FIXME add these when OBJ models are ready.
+			//PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon_top.json"), "UTF-8"), "beacon_top", resourceDomain);
+			//PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon_tower.json"), "UTF-8"), "beacon_tower", resourceDomain);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -176,6 +179,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlDigital.class);

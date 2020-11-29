@@ -42,9 +42,9 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		return textLines;
 	}
 	
-	public void setTextLines(List<String> textLines){
+	public void setTextLines(List<String> textLinesToSet){
 		this.textLines.clear();
-		this.textLines.addAll(textLines);
+		this.textLines.addAll(textLinesToSet);
 	}
 	
 	@Override

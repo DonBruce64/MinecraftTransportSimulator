@@ -1,6 +1,7 @@
 package mcinterface1122;
 
 import io.netty.buffer.ByteBuf;
+import mcinterface1122.WrapperWorld.InterfaceWorldSavedData;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -48,8 +49,8 @@ class PacketWorldSavedDataCSHandshake extends APacketBase{
 	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		if(world.isClient()){
 			//Set the world saved data.
-			((WrapperWorld) world).savedData = ((WrapperWorld) world).new InterfaceWorldSavedData(WrapperWorld.dataID);
-			((WrapperWorld) world).savedData.readFromNBT(((WrapperNBT) data).tag);
+			((WrapperWorld) world).savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.dataID);
+			((WrapperWorld) world).savedDataAccessor.readFromNBT(((WrapperNBT) data).tag);
 		}else{
 			//Send back a packet to the player who requested it.
 			player.sendPacket(new PacketWorldSavedDataCSHandshake(world.getDimensionID(), world.getData()));

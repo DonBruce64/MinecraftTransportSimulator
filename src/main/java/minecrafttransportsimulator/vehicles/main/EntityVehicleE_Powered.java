@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import minecrafttransportsimulator.baseclasses.BeaconManager;
+import minecrafttransportsimulator.baseclasses.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
@@ -66,6 +66,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public double electricPower;
 	public double electricUsage;
 	public double electricFlow;
+	public String selectedBeaconName;
 	public RadioBeacon selectedBeacon;
 	public FluidTank fuelTank;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
@@ -98,7 +99,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		this.gearUpCommand = data.getBoolean("gearUpCommand");
 		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
-		this.selectedBeacon = BeaconManager.getBeacon(world, data.getString("selectedBeacon"));
+		this.selectedBeaconName = data.getString("selectedBeaconName");
+		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new FluidTank(data, definition.motorized.fuelCapacity, world.isClient());
 		
 		//Load lights.
@@ -175,6 +177,13 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					}
 				}
 			}
+		}
+		
+		//Check to make sure the selected beacon is still correct.
+		//It might not be valid if it has been removed from the world,
+		//or one might have been placed that matches our selection.
+		if(definition.general.isAircraft && ticksExisted%20 == 0){
+			selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
 		}
 		
 		//Do trailer-specific logic, if we are one and towed.
@@ -462,9 +471,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		data.setBoolean("gearUpCommand", gearUpCommand);
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
-		if(selectedBeacon != null){
-			data.setString("selectedBeacon", selectedBeacon.name);
-		}
+		data.setString("selectedBeaconName", selectedBeaconName);
 		fuelTank.save(data);
 		
 		String lightsOnString = "";

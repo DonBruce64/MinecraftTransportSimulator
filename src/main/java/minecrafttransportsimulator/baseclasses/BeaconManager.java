@@ -1,12 +1,12 @@
-package minecrafttransportsimulator.blocks.tileentities.components;
+package minecrafttransportsimulator.baseclasses;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 
 /**Class responsible for managing beacons in the world.  Handles access to beacons,
  * querying of beacon states, and saving/loading beacons from the world.
@@ -21,8 +21,10 @@ public final class BeaconManager{
 	 */
 	public static RadioBeacon getBeacon(IWrapperWorld world, String name){
 		if(!worldBeacons.containsKey(world.getDimensionID())){
+			//No beacons for this world.  Load data.
 			loadBeacons(world);
-			//Check to make sure we actually loaded data.
+			
+			//Check to make sure we actually loaded data before trying to get it.
 			if(!worldBeacons.containsKey(world.getDimensionID())){
 				return null;
 			}
@@ -34,10 +36,13 @@ public final class BeaconManager{
 	 *  Adds the beacon with the specified name to the world.
 	 */
 	public static void addBeacon(IWrapperWorld world, RadioBeacon beacon){
-		worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
-		if(!world.isClient()){
-			saveBeacons(world);
-			//FIXME send beacon update packet here.
+		//Don't add un-named beacons.
+		if(!beacon.name.isEmpty()){
+			worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
+			if(!world.isClient()){
+				saveBeacons(world);
+				MasterLoader.networkInterface.sendToAllClients(new PacketBeaconListingChange(beacon));
+			}
 		}
 	}
 	
@@ -48,7 +53,7 @@ public final class BeaconManager{
 		worldBeacons.get(world.getDimensionID()).remove(name);
 		if(!world.isClient()){
 			saveBeacons(world);
-			//FIXME send beacon update packet here.
+			MasterLoader.networkInterface.sendToAllClients(new PacketBeaconListingChange(name));
 		}
 	}
 	
@@ -84,14 +89,14 @@ public final class BeaconManager{
 				beacon.save(beaconData);
 				worldData.setData("radioBeacon_" + beaconIndex++, beaconData);
 			}
-			worldData.setInteger("radioBeaconCount", --beaconIndex);
+			worldData.setInteger("radioBeaconCount", beaconIndex);
 			world.setData(worldData);
 		}
 	}
 	
 	public static class RadioBeacon{
 		public final String name;
-		public final int glideSlope;
+		public final double glideSlope;
 		public final Point3i location;
 		
 		public RadioBeacon(IWrapperNBT data){
@@ -100,7 +105,7 @@ public final class BeaconManager{
 			this.location = data.getPoint3i("location");
 		}
 		
-		public RadioBeacon(String name, int glideSlope, Point3i location){
+		public RadioBeacon(String name, double glideSlope, Point3i location){
 			this.name = name;
 			this.glideSlope = glideSlope;
 			this.location = location;
@@ -108,7 +113,7 @@ public final class BeaconManager{
 		
 		public void save(IWrapperNBT data){
 			data.setString("name", name);
-			data.setInteger("glideSlope", glideSlope);
+			data.setDouble("glideSlope", glideSlope);
 			data.setPoint3i("location", location);
 		}
 	}

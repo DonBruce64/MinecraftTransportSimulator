@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -278,18 +277,12 @@ public class GUIPanelAircraft extends AGUIPanel{
 		}
 		
 		//Add beacon text box.  This is stacked below the custom selectors.
-		beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeacon != null ? vehicle.selectedBeacon.name : "", SELECTOR_SIZE, Color.GREEN, Color.BLACK, 5){
+		beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
 			@Override
 			public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 				super.handleKeyTyped(typedChar, typedCode, control);
-				//If we have a valid beacon typed, update the server to the beacon state.
-				RadioBeacon beacon = BeaconManager.getBeacon(vehicle.world, getText());
-				if(beacon != null){
-					fontColor = Color.GREEN;
-					//FIXME send packet to update beacon state.
-				}else{
-					fontColor = Color.RED;
-				}
+				//Update the vehicle beacon state.
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleBeaconChange(vehicle, getText()));
 			}
 		};
 		addTextBox(beaconBox);
@@ -377,6 +370,9 @@ public class GUIPanelAircraft extends AGUIPanel{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
 			}
 		}
+		
+		//Set the beaconBox text color depending on if we have an active beacon.
+		beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
 		
 		//Iterate through custom selectors and set their states.
 		for(byte i=0; i<customSelectors.size(); ++i){

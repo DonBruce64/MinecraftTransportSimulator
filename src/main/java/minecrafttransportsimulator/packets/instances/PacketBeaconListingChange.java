@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.BeaconManager;
+import minecrafttransportsimulator.baseclasses.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -18,9 +18,15 @@ public class PacketBeaconListingChange extends APacketBase{
 	private final String beaconName;
 	private final RadioBeacon beacon;
 	
-	public PacketBeaconListingChange(String beaconName, RadioBeacon beacon){
+	public PacketBeaconListingChange(String beaconName){
 		super(null);
 		this.beaconName = beaconName;
+		this.beacon = null;
+	}
+	
+	public PacketBeaconListingChange(RadioBeacon beacon){
+		super(null);
+		this.beaconName = null;
 		this.beacon = beacon;
 	}
 	

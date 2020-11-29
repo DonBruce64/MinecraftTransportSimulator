@@ -2,9 +2,9 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
@@ -22,24 +22,27 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	public TileEntityBeacon(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
-		if(textLines.isEmpty()){
-			//Need to add default text if we don't have any.
-			textLines.add("");
-			textLines.add("");
+		//Manually get the textLines, as these won't be in the JSON.
+		textLines.clear();
+		textLines.addAll(data.getStrings("textLines", 2));
+		if(textLines.get(BEACON_NAME_INDEX).isEmpty()){
+			//Need to add default entries as we don't have one.
+			textLines.set(BEACON_NAME_INDEX, "NONE");
+			textLines.set(GLIDE_SLOPE_INDEX, "3.0");
 		}
 	}
 	
 	@Override
-	public void setTextLines(List<String> textLines){
+	public void setTextLines(List<String> textLinesToSet){
 		BeaconManager.removeBeacon(world, textLines.get(BEACON_NAME_INDEX));
-		super.setTextLines(textLines);
+		super.setTextLines(textLinesToSet);
 		try{
-			RadioBeacon beacon = new RadioBeacon(textLines.get(BEACON_NAME_INDEX), Integer.valueOf(textLines.get(GLIDE_SLOPE_INDEX)), position);
+			RadioBeacon beacon = new RadioBeacon(textLinesToSet.get(BEACON_NAME_INDEX), Double.valueOf(textLinesToSet.get(GLIDE_SLOPE_INDEX)), position);
 			BeaconManager.addBeacon(world, beacon);
 		}catch(Exception e){
 			//Don't save this beacon.  It's entered invalid.
-			textLines.set(BEACON_NAME_INDEX, "");
-			textLines.set(GLIDE_SLOPE_INDEX, "00000");
+			textLines.set(BEACON_NAME_INDEX, "NONE");
+			textLines.set(GLIDE_SLOPE_INDEX, "3.0");
 		}
 	}
 }

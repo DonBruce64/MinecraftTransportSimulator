@@ -2,9 +2,9 @@ package minecrafttransportsimulator.blocks.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
-import minecrafttransportsimulator.blocks.tileentities.components.BeaconManager;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;

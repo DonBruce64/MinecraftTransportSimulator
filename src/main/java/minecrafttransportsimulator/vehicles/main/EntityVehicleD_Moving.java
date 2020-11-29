@@ -16,7 +16,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleMotorized;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection

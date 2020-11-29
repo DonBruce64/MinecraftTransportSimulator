@@ -68,8 +68,6 @@ class WrapperWorld implements IWrapperWorld{
 	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
 	final World world;
-	InterfaceWorldSavedData savedData;
-	static final String dataID = MasterInterface.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -163,35 +161,36 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public IWrapperNBT getData(){
 		if(!world.isRemote){
-			if(savedData == null){
-				savedData = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, dataID);
-				if(savedData == null){
-					savedData = new InterfaceWorldSavedData(dataID);
+			if(savedDataAccessor == null){
+				savedDataAccessor = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, dataID);
+				if(savedDataAccessor == null){
+					savedDataAccessor = new InterfaceWorldSavedData(dataID);
 				}
 			}
-		}else if(savedData == null){
+		}else if(savedDataAccessor == null){
 			return null;
 		}
-		IWrapperNBT data = MasterInterface.coreInterface.createNewTag();
-		savedData.writeToNBT(((WrapperNBT) data).tag);
-		return data;
+		return new WrapperNBT(savedDataAccessor.internalData);
 	}
 	
 	@Override
 	public void setData(IWrapperNBT data){
 		if(!world.isRemote){
-			savedData.readFromNBT(((WrapperNBT) data).tag);
-			savedData.markDirty();
-			world.getPerWorldStorage().setData(savedData.mapName, savedData);
+			savedDataAccessor.internalData = ((WrapperNBT) data).tag;
+			savedDataAccessor.markDirty();
+			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 		}else{
 			MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
 		}
 	}
 	
+	InterfaceWorldSavedData savedDataAccessor;
+	static final String dataID = MasterInterface.MODID + "_WORLD_DATA";
+	
 	/**
 	 *  Class used to interface with world saved data methods.
 	 */
-	public class InterfaceWorldSavedData extends WorldSavedData{
+	public static class InterfaceWorldSavedData extends WorldSavedData{
 	private NBTTagCompound internalData = new NBTTagCompound(); 
 		
 		public InterfaceWorldSavedData(String name){
