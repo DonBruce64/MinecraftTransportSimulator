@@ -59,7 +59,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.11.0-BETA20";
+	public static final String MODVER = "19.11.0-BETA21";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -123,9 +123,6 @@ public class MasterLoader{
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/instrumentbench.json"), "UTF-8"), "instrumentbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/decorbench.json"), "UTF-8"), "decorbench", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/itembench.json"), "UTF-8"), "itembench", resourceDomain);
-			//FIXME add these when OBJ models are ready.
-			//PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon_top.json"), "UTF-8"), "beacon_top", resourceDomain);
-			//PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/beacon_tower.json"), "UTF-8"), "beacon_tower", resourceDomain);
 		}catch(Exception e){
 			e.printStackTrace();
 		}

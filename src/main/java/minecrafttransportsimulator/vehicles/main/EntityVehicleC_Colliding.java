@@ -64,7 +64,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
 	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
 	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
-	public final Map<BoundingBox, VehicleDoor> doorBoxes = new HashMap<BoundingBox, VehicleDoor>();
+	public final Map<BoundingBox, VehicleDoor> vehicleDoorBoxes = new HashMap<BoundingBox, VehicleDoor>();
+	public final Map<APart, Map<BoundingBox, VehicleDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, VehicleDoor>>();
 	
 	
 	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
@@ -89,10 +90,25 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			doorsOpen.clear();
 			for(VehicleDoor door : definition.doors){
 				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
-				doorBoxes.put(box, door);
+				vehicleDoorBoxes.put(box, door);
 				collisionBoxes.add(box);
 				if(data.getBoolean("doorsOpen_" + door.name)){
 					doorsOpen.add(door.name);
+				}
+			}
+			for(APart part : parts){
+				if(part.definition.doors != null){
+					Map<BoundingBox, VehicleDoor> partDoors = new HashMap<BoundingBox, VehicleDoor>();
+					for(VehicleDoor door : part.definition.doors){
+						Point3d doorOffsetCenter = door.closedPos.copy().add(part.placementOffset);
+						BoundingBox box = new BoundingBox(doorOffsetCenter, doorOffsetCenter.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
+						partDoors.put(box, door);
+						collisionBoxes.add(box);
+						if(data.getBoolean("doorsOpen_" + door.name)){
+							doorsOpen.add(door.name);
+						}
+					}
+					partDoorBoxes.put(part, partDoors);
 				}
 			}
 		}
@@ -159,11 +175,22 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Update door collision boxes.
-		for(Entry<BoundingBox, VehicleDoor> doorEntry : doorBoxes.entrySet()){
+		for(Entry<BoundingBox, VehicleDoor> doorEntry : vehicleDoorBoxes.entrySet()){
 			if(doorsOpen.contains(doorEntry.getValue().name)){
 				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
 			}else{
 				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
+			}
+		}
+		for(APart part : parts){
+			if(partDoorBoxes.containsKey(part)){
+				for(Entry<BoundingBox, VehicleDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
+					if(doorsOpen.contains(doorEntry.getValue().name)){
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).add(part.totalOffset).rotateFine(angles).add(position);
+					}else{
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).add(part.totalOffset).rotateFine(angles).add(position);
+					}
+				}
 			}
 		}
 		
@@ -326,6 +353,18 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}
 		}
 		
+		//Add door boxes to maps, if the part has them.
+		if(part.definition.doors != null){
+			Map<BoundingBox, VehicleDoor> partDoors = new HashMap<BoundingBox, VehicleDoor>();
+			for(VehicleDoor door : part.definition.doors){
+				Point3d doorOffsetCenter = door.closedPos.copy().add(part.placementOffset);
+				BoundingBox box = new BoundingBox(doorOffsetCenter, doorOffsetCenter.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
+				partDoors.put(box, door);
+				collisionBoxes.add(box);
+			}
+			partDoorBoxes.put(part, partDoors);
+		}
+		
 		//Recalculate slots.
 		recalculatePartSlots();
 	}
@@ -340,6 +379,14 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				blockCollisionBoxes.remove(box);
 			}
 			partCollisionBoxes.remove(part);
+		}
+		
+		//Remove door boxes from maps.
+		if(partDoorBoxes.containsKey(part)){
+			for(BoundingBox box : partDoorBoxes.get(part).keySet()){
+				collisionBoxes.remove(box);
+			}
+			partDoorBoxes.remove(part);
 		}
 		
 		//Recalculate slots.

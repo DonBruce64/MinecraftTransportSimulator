@@ -2,12 +2,12 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
-
-import minecrafttransportsimulator.baseclasses.Point3d;
 
 public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartEngine engine;
@@ -20,6 +20,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartCustom custom;
     public List<VehiclePart> subParts;
     public List<VehicleCollisionBox> collision;
+    public List<VehicleDoor> doors;
     public VehicleRendering rendering;
     
     @Deprecated

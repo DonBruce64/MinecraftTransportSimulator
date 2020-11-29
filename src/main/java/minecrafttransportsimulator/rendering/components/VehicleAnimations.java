@@ -317,10 +317,8 @@ public final class VehicleAnimations{
 		}
 		
 		//Check if this is a door variable.
-		for(String doorName : vehicle.doorsOpen){
-			if(variable.equals(doorName)){
-				return 1;
-			}
+		if(vehicle.doorsOpen.contains(variable)){
+			return 1;
 		}
 		
 		//Check if this is a custom variable.
@@ -330,8 +328,9 @@ public final class VehicleAnimations{
 			}
 		}
 		
-		//No variable found for anything.  We could have an error, but likely we have an older pack or are a closed door.
-		//Return 0 here to prevent pack crashes.
+		//No variable found for anything.  We could have an error, but likely we have an older pack,
+		//a closed door, a missing part, or something else entirely.
+		//Return 0 here as we don't want to animate.
 		return 0;
 	}
 }

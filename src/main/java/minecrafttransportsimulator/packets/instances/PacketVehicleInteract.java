@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
@@ -112,7 +114,12 @@ public class PacketVehicleInteract extends APacketVehicle{
 				}
 				
 				//Check if we clicked a door.
-				for(Entry<BoundingBox, VehicleDoor> doorEntry : vehicle.doorBoxes.entrySet()){
+				Map<BoundingBox, VehicleDoor> allDoors = new HashMap<BoundingBox, VehicleDoor>();
+				allDoors.putAll(vehicle.vehicleDoorBoxes);
+				for(Map<BoundingBox, VehicleDoor> doorMap : vehicle.partDoorBoxes.values()){
+					allDoors.putAll(doorMap);
+				}
+				for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
 					if(doorEntry.getKey().localCenter.equals(hitPosition)){
 						//Can't open locked vehicles.
 						if(vehicle.locked){

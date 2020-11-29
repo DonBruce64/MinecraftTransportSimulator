@@ -130,6 +130,15 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 						}
 					}
 				}
+				for(APart part : newVehicle.parts){
+					if(part.definition.doors != null){
+						for(VehicleDoor door : part.definition.doors){
+							if(!door.closedByDefault){
+								newVehicle.doorsOpen.add(door.name);
+							}
+						}
+					}
+				}
 			}
 			
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
