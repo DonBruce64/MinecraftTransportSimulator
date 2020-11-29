@@ -114,6 +114,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		this.aileronTrim = (short) data.getInteger("aileronTrim");
 		this.elevatorTrim = (short) data.getInteger("elevatorTrim");
 		this.rudderTrim = (short) data.getInteger("rudderTrim");
+		
+		this.autopilot = data.getBoolean("autopilot");
+		this.cruiseControl = data.getBoolean("cruiseControl");
+		this.altitudeSetting = data.getDouble("altitudeSetting");
+		this.cruiseControlSpeed = data.getDouble("cruiseControlSpeed");
 	}
 	
 	@Override
@@ -587,5 +592,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		data.setInteger("aileronTrim", aileronTrim);
 		data.setInteger("elevatorTrim", elevatorTrim);
 		data.setInteger("rudderTrim", rudderTrim);
+
+		data.setBoolean("autopilot", autopilot);
+		data.setBoolean("cruiseControl", cruiseControl);
+		data.setDouble("altitudeSetting", altitudeSetting);
+		data.setDouble("cruiseControlSpeed", cruiseControlSpeed);
 	}
 }
