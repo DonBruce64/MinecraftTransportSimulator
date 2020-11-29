@@ -34,6 +34,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleCustomToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
@@ -59,7 +60,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.11.0-BETA21";
+	public static final String MODVER = "19.11.0-BETA23";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
@@ -180,6 +181,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlDigital.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehicleCustomToggle.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleInteract.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleLightToggle.class);

@@ -71,8 +71,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public FluidTank fuelTank;
 	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
 	public final Set<LightType> lightsOn = new HashSet<LightType>();
-	/**List containing all active custom variable indexes.    Created as a set to allow for add calls that don't add duplicates.**/
-	public final Set<Byte> customsOn = new HashSet<Byte>();
+	/**List containing all active custom variable names that are on.    Created as a set to allow for add calls that don't add duplicates.**/
+	public final Set<String> customsOn = new HashSet<String>();
 	/**List containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
 	public final List<String> textLines = new ArrayList<String>();
 	
@@ -118,14 +118,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}
 		
 		//Load custom variables.
-		if(definition.rendering.customVariables != null){
-			customsOn.clear();
-			String customsOnString = data.getString("customsOn");
-			while(!customsOnString.isEmpty()){
-				byte customIndex = Byte.valueOf(customsOnString.substring(0, customsOnString.indexOf(',')));
-				customsOn.add(customIndex);
-				customsOnString = customsOnString.substring(customsOnString.indexOf(',') + 1);
-			}
+		customsOn.clear();
+		String customsOnString = data.getString("customsOn");
+		while(!customsOnString.isEmpty()){
+			String customName = customsOnString.substring(0, customsOnString.indexOf(','));
+			customsOn.add(customName);
+			customsOnString = customsOnString.substring(customsOnString.indexOf(',') + 1);
 		}
 		
 		//Load text.
@@ -480,13 +478,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}
 		data.setString("lightsOn", lightsOnString);
 		
-		if(definition.rendering.customVariables != null){
-			String customsOnString = "";
-			for(byte customIndex : customsOn){
-				customsOnString += customIndex + ",";
-			}
-			data.setString("customsOn", customsOnString);
+		String customsOnString = "";
+		for(String custom : customsOn){
+			lightsOnString += custom + ",";
 		}
+		data.setString("customsOn", customsOnString);
 		
 		if(definition.rendering.textObjects != null){
 			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){

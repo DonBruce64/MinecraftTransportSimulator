@@ -13,12 +13,14 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleCustomToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -254,26 +256,27 @@ public class GUIPanelAircraft extends AGUIPanel{
 		//Add custom selectors if we have any.
 		//These are the right-most selector and are vehicle-specific.
 		//We render two rows of side-by-side selectors here.
-		if(vehicle.definition.rendering.customVariables != null && vehicle.definition.rendering.customVariables.size() > 0){
-			for(int i=0; i<vehicle.definition.rendering.customVariables.size(); ++i){
-				GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset + (i%2)*SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + (i/2)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, vehicle.definition.rendering.customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-					@Override
-					public void onClicked(boolean leftSide){
-						byte selectorNumber = (byte) customSelectors.indexOf(this);
-						switch(selectorNumber){
-							case(0) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_0, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(1) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_1, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(2) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_2, !vehicle.customsOn.contains(selectorNumber))); break;
-							case(3) : MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CUSTOM_3, !vehicle.customsOn.contains(selectorNumber))); break;
-						}
-					}
-					
-					@Override
-					public void onReleased(){}
-				};
-				customSelectors.add(customSelector);
-				addSelector(customSelector);
+		List<String> customVariables = new ArrayList<String>();
+		if(vehicle.definition.rendering.customVariables != null){
+			customVariables.addAll(vehicle.definition.rendering.customVariables);
+		}
+		for(APart part : vehicle.parts){
+			if(part.definition.rendering != null && part.definition.rendering.customVariables != null){
+				customVariables.addAll(part.definition.rendering.customVariables);
 			}
+		}
+		for(int i=0; i<customVariables.size(); ++i){
+			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset + (i%2)*SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + (i/2)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleCustomToggle(vehicle, this.text));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			customSelectors.add(customSelector);
+			addSelector(customSelector);
 		}
 		
 		//Add beacon text box.  This is stacked below the custom selectors.
@@ -375,8 +378,8 @@ public class GUIPanelAircraft extends AGUIPanel{
 		beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
 		
 		//Iterate through custom selectors and set their states.
-		for(byte i=0; i<customSelectors.size(); ++i){
-			customSelectors.get(i).selectorState = vehicle.customsOn.contains(i) ? 1 : 0;
+		for(GUIComponentSelector customSelector : customSelectors){
+			customSelector.selectorState = vehicle.customsOn.contains(customSelector.text) ? 1 : 0;
 		}
 	}
 }

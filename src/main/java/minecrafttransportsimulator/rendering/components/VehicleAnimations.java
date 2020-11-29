@@ -322,14 +322,12 @@ public final class VehicleAnimations{
 		}
 		
 		//Check if this is a custom variable.
-		if(vehicle.definition.rendering.customVariables != null){
-			if(vehicle.definition.rendering.customVariables.contains(variable)){
-				return vehicle.customsOn.contains((byte)vehicle.definition.rendering.customVariables.indexOf(variable)) ? 1 : 0;
-			}
+		if(vehicle.customsOn.contains(variable)){
+			return 1;
 		}
 		
 		//No variable found for anything.  We could have an error, but likely we have an older pack,
-		//a closed door, a missing part, or something else entirely.
+		//a closed door, a missing part, a custom variable that's not on, or something else entirely.
 		//Return 0 here as we don't want to animate.
 		return 0;
 	}
