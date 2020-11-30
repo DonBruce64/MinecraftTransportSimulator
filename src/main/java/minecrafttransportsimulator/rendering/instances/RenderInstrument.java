@@ -152,6 +152,9 @@ public final class RenderInstrument{
 											p2.y += yTranslation;
 											p3.y += yTranslation;
 										}
+									}else if(component.moveComponent){
+										//Translate the rather than adjust the window coords.
+										GL11.glTranslated(xTranslation, yTranslation, 0);
 									}else{
 										//Offset the window coords to the appropriate section of the texture sheet.
 										//We don't want to do an OpenGL translation here as that would move the texture's

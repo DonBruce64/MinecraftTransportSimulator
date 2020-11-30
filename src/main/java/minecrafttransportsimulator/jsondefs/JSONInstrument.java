@@ -26,6 +26,7 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	
     	public boolean rotateWindow;
     	public boolean extendWindow;
+    	public boolean moveComponent;
     	public List<VehicleAnimationDefinition> animations;
     	
     	public boolean lightUpTexture;

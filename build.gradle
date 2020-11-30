@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.12.2-19.11.0-BETA25"
+version = "1.12.2-19.11.0-BETA26"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
