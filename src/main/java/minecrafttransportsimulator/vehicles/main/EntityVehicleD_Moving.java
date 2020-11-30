@@ -365,7 +365,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			tempBoxAngles.setTo(rotation).add(angles);
 			for(BoundingBox box : blockCollisionBoxes){
 				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-				if(box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+				if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 					collisionBoxCollided = true;
 					break;
 				}
