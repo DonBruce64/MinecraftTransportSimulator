@@ -79,6 +79,7 @@ class InterfaceGUI implements IInterfaceGUI{
 		}
 		
 		//Check for auto-scaling.
+		float heightOffset = 0F;
 		if(autoScaled){
 			//Get the string width.  This is in text-pixels, and by default 1tp=1block.
 			//We scale this to the actual pixel-width by multiplying it by the incoming scale.
@@ -90,6 +91,7 @@ class InterfaceGUI implements IInterfaceGUI{
 			if(stringWidth/scale > wrapWidth){
 				if(stringWidth > wrapWidth){
 					scale *= scaleFactor;
+					heightOffset = scaleFactor*scale*(fontRenderer.FONT_HEIGHT - fontRenderer.FONT_HEIGHT*scaleFactor);
 				}
 				wrapWidth = 0;
 			}
@@ -98,11 +100,11 @@ class InterfaceGUI implements IInterfaceGUI{
 		//Push to translate text.
 		GL11.glPushMatrix();
 		if(renderPosition.equals(TextPosition.CENTERED)){
-			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y, 0);
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text)/2, y + heightOffset, 0);
 		}else if(renderPosition.equals(TextPosition.RIGHT_ALIGNED)){
-			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text), y, 0);
+			GL11.glTranslatef(x - scale*fontRenderer.getStringWidth(text), y + heightOffset, 0);
 		}else{
-			GL11.glTranslatef(x, y, 0);
+			GL11.glTranslatef(x, y + heightOffset, 0);
 		}
 		GL11.glScalef(scale, scale, scale);
 		drawBasicText(text, 0, 0, color, TextPosition.LEFT_ALIGNED, wrapWidth);

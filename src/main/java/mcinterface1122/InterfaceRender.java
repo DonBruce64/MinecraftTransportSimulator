@@ -279,7 +279,7 @@ class InterfaceRender implements IInterfaceRender{
 							internalLightingEnabled = true;
 							setInternalLightingState(internalLightingEnabled);
 						}
-						//System.out.println(text);
+						
 						GL11.glPushMatrix();
 						//Translate to the position to render.
 						GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
