@@ -97,12 +97,12 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
 		//Pitch and yaw only depend on where the player is looking, and where the gun is pointed.
 		//This allows for guns to be mounted anywhere on a vehicle and at any angle.
-		if(active){
+		if(active || definition.gun.resetPosition){
+			boolean lockedOn = active;
 			//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
 			//We also get a flag to see if the gun is currently pointed to the hostile mob.
 			//If not, then we don't fire the gun, as that'd waste ammo.
-			boolean lockedOn = true;
-			if(!(controller instanceof IWrapperPlayer)){
+			if(active && !(controller instanceof IWrapperPlayer)){
 				IWrapperEntity hostile = vehicle.world.getNearestHostile(controller, 48);
 				if(hostile != null){
 					//Need to aim for the middle of the mob, not their base (feet).
@@ -122,8 +122,9 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				}
 			}
 			
-			//Aadjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-			double deltaYaw = controller.getHeadYaw() - (vehicle.angles.y + totalRotation.y + currentOrientation.y);
+			//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
+			double targetYaw = active ? controller.getHeadYaw() - (vehicle.angles.y + totalRotation.y) : (double)definition.gun.defaultYaw;
+			double deltaYaw = targetYaw - currentOrientation.y;
 			while(deltaYaw > 180){
 				deltaYaw -= 360;
 			}
@@ -169,7 +170,8 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//so a yaw change can result in a pitch change.
 			double vehiclePitchContribution = (vehicle.angles.x + totalRotation.x)*Math.cos(Math.toRadians(totalRotation.y + currentOrientation.y));
 			double vehicleRollContribution = -(vehicle.angles.z + totalRotation.z)*Math.sin(Math.toRadians(totalRotation.y + currentOrientation.y));
-			double deltaPitch = controller.getPitch() - (vehiclePitchContribution + vehicleRollContribution + currentOrientation.x);
+			double targetPitch = active ? controller.getPitch() - (vehiclePitchContribution + vehicleRollContribution) : -(double)definition.gun.defaultPitch;
+			double deltaPitch = targetPitch - currentOrientation.x;
 			if(deltaPitch < 0){
 				if(deltaPitch < -anglePerTickSpeed){
 					deltaPitch = -anglePerTickSpeed;
@@ -191,7 +193,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				currentOrientation.x = -definition.gun.minPitch;
 			}
 			
-			//If we told the gun to fire becase we saw an entity, but we can't hit it due to the gun clamp don't fire.
+			//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
 			//This keeps NPCs from wasting ammo.
 			if(!(controller instanceof IWrapperPlayer)){
 				if(!lockedOn || currentOrientation.y == definition.gun.maxYaw || currentOrientation.y == definition.gun.minYaw || currentOrientation.x == -definition.gun.minPitch || currentOrientation.x == -definition.gun.maxPitch){
