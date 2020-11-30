@@ -96,9 +96,9 @@ public class BuilderEntity extends Entity{
     		double furthestWidthRadius = 0;
     		double furthestHeightRadius = 0;
     		for(BoundingBox box : entity.interactionBoxes){
-    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, box.localCenter.x + box.widthRadius);
-    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, box.localCenter.y + box.heightRadius);
-    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, box.localCenter.z + box.depthRadius);
+    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - entity.position.x + box.widthRadius));
+    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - entity.position.y + box.heightRadius));
+    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - entity.position.z + box.depthRadius));
     		}
     		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
     		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
