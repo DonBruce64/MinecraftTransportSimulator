@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -30,6 +31,7 @@ public class VehicleGroundDeviceBox{
 	public boolean isCollidedLiquid;
 	public boolean isGrounded;
 	public boolean isGroundedLiquid;
+	public boolean isLiquidCollidedWithGround;
 	public double collisionDepth;
 	public final Point3d contactPoint = new Point3d(0D, 0D, 0D);
 	
@@ -139,7 +141,7 @@ public class VehicleGroundDeviceBox{
 		}
 		liquidBox.widthRadius /= 2D*(liquidDevices.size() + liquidCollisionBoxes.size());
 		liquidBox.heightRadius /= 2D*(liquidDevices.size() + liquidCollisionBoxes.size());
-		liquidBox.depthRadius = solidBox.widthRadius;
+		liquidBox.depthRadius = liquidBox.widthRadius;
 		liquidBox.localCenter.multiply(1D/(liquidDevices.size() + liquidCollisionBoxes.size()));
 	}
 	
@@ -178,6 +180,14 @@ public class VehicleGroundDeviceBox{
 			liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
 			isGroundedLiquid = isCollidedLiquid ? true : !liquidBox.collidingBlocks.isEmpty();
 			
+			isLiquidCollidedWithGround = false;
+			for(IWrapperBlock block : liquidBox.collidingBlocks){
+				if(!block.isLiquid()){
+					isLiquidCollidedWithGround = true;
+					break;
+				}
+			}
+			
 			//If the liquid boxes are grounded and are more collided, use liquid values.
 			//Otherwise, use the solid values.
 			if(isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)){
@@ -198,6 +208,6 @@ public class VehicleGroundDeviceBox{
 	 * Returns true if this box has any boxes and is ready for collision operations.
 	 */
 	public boolean isReady(){
-		return !groundDevices.isEmpty() || !liquidDevices.isEmpty();
+		return !groundDevices.isEmpty() || !liquidCollisionBoxes.isEmpty() || !liquidDevices.isEmpty();
 	}
 }

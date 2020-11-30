@@ -14,7 +14,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
@@ -394,11 +393,11 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				havePropeller = true;
 				Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.totalRotation.copy().add(vehicle.angles));
 				propellerAxialVelocity = vehicle.motion.dotProduct(propellerThrustAxis);
+				propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 				
 				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 				if(wheelFriction == 0 && currentGearRatio != 0){
 					isPropellerInLiquid = propeller.isInLiquid();
-					propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 					double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
 					double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio*Math.signum(currentGearRatio)/60D/20D;
 					double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
@@ -713,7 +712,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 	}
 	
-	public void shiftUp(boolean autoShift){
+	public boolean shiftUp(boolean autoShift){
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(currentGear < 0){//Reverse to neutral or higher reverse.
@@ -728,15 +727,13 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		if(doShift || vehicle.world.isClient()){
 			currentGear = nextGear;
-			if(!vehicle.world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, autoShift));
-			}
 		}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
 			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 		}
+		return doShift;
 	}
 	
-	public void shiftDown(boolean autoShift){
+	public boolean shiftDown(boolean autoShift){
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(currentGear >= 1){//Forwards gear to lower forwards gear or neutral.
@@ -751,9 +748,6 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}
 		if(doShift || vehicle.world.isClient()){
 			currentGear = nextGear;
-			if(!vehicle.world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, autoShift));
-			}
 			//If we are a big truck, turn on the backup beeper.
 			if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
 				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
@@ -761,6 +755,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
 			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 		}
+		return doShift;
 	}
 	
 	

@@ -227,10 +227,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		if(brakeOn || parkingBrakeOn){
-			brakingFactor += 0.5D*groundDeviceCollective.getBoxesInLiquid();
+			brakingFactor += 0.5D*groundDeviceCollective.getNumberBoxesInLiquid();
 		}
 		
-		//Now get any contributions from the colliding collision bits.
+		//Get any contributions from the colliding collision bits.
 		for(BoundingBox box : blockCollisionBoxes){
 			if(!box.collidingBlocks.isEmpty()){
 				Point3i groundPosition = new Point3i(box.globalCenter);
@@ -242,6 +242,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 			}
 		}
+		
+		//Get any contributions from liquid boxes that aren't in liquids.
+		brakingFactor += 2.0F*groundDeviceCollective.getNumberCollidedLiquidBoxes();
+		
 		return brakingFactor;
 	}
 	
@@ -259,7 +263,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 		
 		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
-		skiddingFactor += 0.5D*groundDeviceCollective.getBoxesInLiquid();
+		skiddingFactor += 0.5D*groundDeviceCollective.getNumberBoxesInLiquid();
 		return skiddingFactor > 0 ? skiddingFactor : 0;
 	}
 	
@@ -355,6 +359,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//If we hit something, however, we need to inhibit the movement so we don't do that.
 		//This prevents vehicles from phasing through walls even though they are driving on the ground.
 		//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
+		//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
 		boolean collisionBoxCollided = false;
 		if(towedByVehicle == null){
 			tempBoxAngles.setTo(rotation).add(angles);

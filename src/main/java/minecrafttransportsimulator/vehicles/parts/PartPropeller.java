@@ -75,10 +75,10 @@ public class PartPropeller extends APart{
 		//Adjust angular position and velocity.
 		if(connectedEngine.propellerGearboxRatio != 0){
 			angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
-		}else if(angularVelocity > 1){
-			--angularVelocity;
-		}else if(angularVelocity < -1){
-			++angularVelocity;
+		}else if(angularVelocity > .01){
+			angularVelocity -= 0.01;
+		}else if(angularVelocity < -.01){
+			angularVelocity += 0.01;
 		}else{
 			angularVelocity = 0;
 		}

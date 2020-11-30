@@ -102,18 +102,18 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				return false;
 			}
 			case SHIFT_UP : {
+				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					engine.shiftUp(controlState);
+					didShift = engine.shiftUp(controlState);
 				}
-				//Return here as we may not have shifted.
-				return false;
+				return didShift;
 			}
 			case SHIFT_DN : {
+				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					engine.shiftDown(controlState);
+					didShift = engine.shiftDown(controlState);
 				}
-				//Return here as we may not have shifted.
-				return false;
+				return didShift;
 			}
 			case REVERSE : {
 				if(vehicle.definition.general.isBlimp){

@@ -96,7 +96,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 				}
 			}else{
 				//Check if we clicked a part slot box.
-				for(BoundingBox slotBox : vehicle.activePartSlotBoxes.keySet()){
+				for(BoundingBox slotBox : vehicle.partSlotBoxes.keySet()){
 					if(slotBox.localCenter.equals(hitPosition)){
 						//Only owners can add vehicle parts.
 						if(!canPlayerEditVehicle){
