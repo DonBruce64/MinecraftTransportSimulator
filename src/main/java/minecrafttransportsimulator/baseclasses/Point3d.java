@@ -175,6 +175,22 @@ public class Point3d{
 	}
 	
 	/**
+     * Returns the difference between the passed-in value and this point's Y value, between
+     * the range of -180 to 180.  Placed here as Y is frequently used in yaw angle for in-game
+     * entities and needs to be clamped to this domain for calculations.
+     */
+    public double getClampedYDelta(double otherY){
+    	double deltaYaw = this.y - otherY;
+		while(deltaYaw > 180){
+			deltaYaw -= 360;
+		}
+		while(deltaYaw < -180){
+			deltaYaw += 360;
+		}
+		return deltaYaw;
+    }
+	
+	/**
 	 * Returns a copy of this point as a new object.
 	 */
 	public Point3d copy(){
