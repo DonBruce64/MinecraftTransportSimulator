@@ -114,6 +114,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float diameter;
     	public float length;
     	public boolean fireSolo;
+    	public boolean resetPosition;
+    	public float defaultPitch;
+    	public float defaultYaw;
     }
     
     public class JSONPartBullet{
