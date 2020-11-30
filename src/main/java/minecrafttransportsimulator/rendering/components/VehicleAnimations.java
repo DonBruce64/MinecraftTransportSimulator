@@ -280,8 +280,8 @@ public final class VehicleAnimations{
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 			case("beacon_bearing"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.location.x - vehicle.position.x, vehicle.selectedBeacon.location.z - vehicle.position.z))) : 0;
 			case("beacon_glideslope_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope : 0;
-			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location)) : 0;
-			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location)) - vehicle.selectedBeacon.glideSlope : 0;
+			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
+			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) - vehicle.selectedBeacon.glideSlope : 0;
 			
 			//Missile incoming variables.
 			//Variable is in the form of missile_X_variablename.
