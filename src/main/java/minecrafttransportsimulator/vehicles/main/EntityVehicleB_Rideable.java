@@ -141,19 +141,36 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 		}
 		
-		//Set the rider dismount position if we are on the server.
-		//If we are on the client, disable mouse-yoke blocking.
-		if(!world.isClient()){			
-			Point3d dismountPosition;
-			if(packPart.dismountPos != null){
-				//We have a dismount position in the JSON.  Use it.
-				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
+		//Set the rider dismount position.
+		//If we have a dismount position in the JSON.  Use it.
+		//Otherwise, put us to the right or left of the seat depending on x-offset.
+		//Make sure to take into the movement of the seat we were riding if it had moved.
+		//This ensures the dismount moves with the seat.
+		Point3d dismountPosition;
+		APart partRiding = getPartAtLocation(riderLocation);
+		if(packPart.dismountPos != null){
+			if(partRiding != null){
+				dismountPosition = packPart.dismountPos.copy().add(partRiding.totalOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
 			}else{
-				//We don't have a dismount position.  Put us to the right or left of the seat depending on x-offset.
-				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);	
+				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
 			}
-			rider.setPosition(dismountPosition);
-		}else if(MasterLoader.gameInterface.getClientPlayer().equals(rider)){
+		}else{
+			if(partRiding != null){
+				Point3d partDelta = partRiding.totalOffset.copy().subtract(partRiding.placementOffset);
+				if(riderLocation.x < 0){
+					partDelta.x = -partDelta.x;
+					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);
+				}else{
+					dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);
+				}
+			}else{
+				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);
+			}
+		}
+		rider.setPosition(dismountPosition);
+		
+		//If we are on the client, disable mouse-yoke blocking.
+		if(world.isClient() && MasterLoader.gameInterface.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
 			MasterLoader.inputInterface.setMouseEnabled(true);
 			MasterLoader.guiInterface.closeGUI();
