@@ -8,15 +8,19 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
+import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
+import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -472,11 +476,54 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
 			}
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			if(definition.gun.particleObjects != null) {
+				spawnEffectParticles();
+			}
 			lastTimeFired = timeToFire;
 			
 			//Remove a bullet from the count and add shots fired.
 			--bulletsLeft;
 			++bulletsFired;
+		}
+	}
+	
+	//Rather than spawn a bullet particle, this method spawns
+	//a particle related to some special effect, such as gun smoke.
+	public void spawnEffectParticles() {
+		for(ParticleObject particleObject : definition.gun.particleObjects) {
+			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
+			//Add a little variation to this.
+			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy());
+			
+			//Get the particle's initial position.
+			Point3d particlePosition = worldPos.copy();
+			if(particleObject.pos != null) {
+				particlePosition.add(particleObject.pos.copy().rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy()));
+			}
+
+			//Spawn the appropriate type and amount of particles.
+			//Change default values from 0 to 1.
+			if(particleObject.quantity == 0) particleObject.quantity = 1;
+			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
+			AParticle currentParticle;
+			switch(particleObject.type) {
+				case "smoke": {
+					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleSuspendedSmoke(vehicle.world, particlePosition, particleVelocity.copy(), particleObject);
+						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					}
+					break;
+				}
+				case "flame": {
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleFlame(vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
+						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					}
+					break;
+				}
+			}
 		}
 	}
 }

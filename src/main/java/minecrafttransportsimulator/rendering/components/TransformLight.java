@@ -110,7 +110,13 @@ public class TransformLight extends ATransform{
 	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 8V.
-		setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+		//Special case for the generic light, which doesn't require power, and is always on.
+		if(type.equals(LightType.GENERICLIGHT)) {
+			setLightupTextureState(true, 1);
+		}
+		else {
+			setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+		}
 		return 0;
 	}
 	

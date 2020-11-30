@@ -19,6 +19,7 @@ public enum LightType{
 	HEADLIGHT(true),
 	EMERGENCYLIGHT(false),
 	DAYTIMELIGHT(false),
+	GENERICLIGHT(false),
 	
 	//The following light types are only for block-based systems.
 	UNLINKEDLIGHT(false),
