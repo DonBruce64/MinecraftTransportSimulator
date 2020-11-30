@@ -683,9 +683,15 @@ class InterfaceRender implements IInterfaceRender{
 						AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 						
 						//Get the actual resource path for this resource and return its stream.
-						return getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
+						stream = getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
+						if(stream != null){
+							return stream;
+						}else{
+							MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + rawPackInfo);
+							throw new FileNotFoundException(rawPackInfo);
+						}
 					}catch(Exception e){
-						MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + rawPackInfo);
+						MasterInterface.coreInterface.logError("ERROR: Could not parse which item PNG to get from: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}
