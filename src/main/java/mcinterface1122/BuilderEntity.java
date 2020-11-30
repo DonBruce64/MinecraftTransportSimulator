@@ -93,21 +93,26 @@ public class BuilderEntity extends Entity{
     		//Update AABBs.
     		//We need to update a wrapper class here as normal entities only allow a single collision box.
     		//We also need to know if we need to increase the max world collision bounds to detect this entity.
-    		double furthestWidthRadius = 0;
-    		double furthestHeightRadius = 0;
-    		for(BoundingBox box : entity.interactionBoxes){
-    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - entity.position.x + box.widthRadius));
-    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - entity.position.y + box.heightRadius));
-    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - entity.position.z + box.depthRadius));
-    		}
-    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
+    		//Only do this after the first tick of the entity, as we might have some states that need updating
+    		//on that first tick that would cause bad maths.
+    		//We also do this only every second, as it prevents excess checks.
     		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
     		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
-    		
-    		//Make sure the collision bounds for MC are big enough to collide with this entity.
-			if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
-				World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
-			}
+    		if(entity.ticksExisted > 1 && entity.ticksExisted%20 == 0){
+	    		double furthestWidthRadius = 0;
+	    		double furthestHeightRadius = 0;
+	    		for(BoundingBox box : entity.interactionBoxes){
+	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - entity.position.x + box.widthRadius));
+	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - entity.position.y + box.heightRadius));
+	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - entity.position.z + box.depthRadius));
+	    		}
+	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
+	    		
+	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
+				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
+					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
+				}
+    		}
     		
 			//Set the new position and rotation.
     		setPosition(entity.position.x, entity.position.y, entity.position.z);
