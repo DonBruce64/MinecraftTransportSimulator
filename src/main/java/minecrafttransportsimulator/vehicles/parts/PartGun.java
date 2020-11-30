@@ -261,11 +261,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 		}
 		
-		//If we are out of bullets, and aren't currently loading any, re-load ourselves from any vehicle inventories.
+		//If we can accept bullets, and aren't currently loading any, re-load ourselves from any vehicle inventories.
 		//This only works if the gun is set to auto-reload.
 		//While the reload method checks for reload time, we check here to save on code processing.
 		//No sense in looking for bullets if we can't load them anyways.
-		if(!vehicle.world.isClient() && definition.gun.autoReload && bulletsLeft == 0 && bulletsReloading == 0){
+		if(!vehicle.world.isClient() && definition.gun.autoReload && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
 			//Iterate through all the inventory slots in crates to try to find matching ammo.
 			for(APart part : vehicle.parts){
 				if(part instanceof PartInteractable){
