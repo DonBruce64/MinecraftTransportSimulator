@@ -106,13 +106,18 @@ public class GUITextEditor extends AGUIBase{
 			//Create internal textObjects if we don't have them already.
 			//If we do have them, just use them as-is.
 			if(decor.definition.general.textObjects == null){
+				//TODO this should probably be generic...
 				textObjects = new ArrayList<JSONText>();
 				JSONText text = new JSONText();
 				text.fieldName = "Beacon Name";
 				text.maxLength = 5;
 				textObjects.add(text);
 				text = new JSONText();
-				text.fieldName = "Glide Slope";
+				text.fieldName = "Glide Slope (Deg)";
+				text.maxLength = 5;
+				textObjects.add(text);
+				text = new JSONText();
+				text.fieldName = "Bearing (Deg)";
 				text.maxLength = 5;
 				textObjects.add(text);
 			}else{

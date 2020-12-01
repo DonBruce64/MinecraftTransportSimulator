@@ -93,28 +93,4 @@ public final class BeaconManager{
 			world.setData(worldData);
 		}
 	}
-	
-	public static class RadioBeacon{
-		public final String name;
-		public final double glideSlope;
-		public final Point3i location;
-		
-		public RadioBeacon(IWrapperNBT data){
-			this.name = data.getString("name");
-			this.glideSlope = data.getInteger("glideSlope");
-			this.location = data.getPoint3i("location");
-		}
-		
-		public RadioBeacon(String name, double glideSlope, Point3i location){
-			this.name = name;
-			this.glideSlope = glideSlope;
-			this.location = location;
-		}
-		
-		public void save(IWrapperNBT data){
-			data.setString("name", name);
-			data.setDouble("glideSlope", glideSlope);
-			data.setPoint3i("location", location);
-		}
-	}
 }

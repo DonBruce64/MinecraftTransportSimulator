@@ -608,22 +608,20 @@ class InterfaceRender implements IInterfaceRender{
 
 		@Override
 		public InputStream getInputStream(ResourceLocation location) throws IOException{
+			//Create stream return variable and get raw data.
+			InputStream stream;
 			String rawPackInfo = location.getPath();
 			
 			//Strip the suffix from the packInfo, and then test to see if it's an internal
 			//resource or one being handled by an external loader.
 			String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
 			if(!strippedSuffix.contains(AItemPack.PACKID_SEPARATOR)){
-				try{
-					return getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
-				}catch(Exception e){
+				stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
+				if(stream == null){
 					MasterInterface.coreInterface.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
 					throw new FileNotFoundException(rawPackInfo);
 				}
 			}else{
-				//Create stream return variable.
-				InputStream stream;
-				
 				//If we are for an item JSON, try to find that JSON, or generate one automatically.
 				//If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
 				//Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
@@ -661,7 +659,6 @@ class InterfaceRender implements IInterfaceRender{
 							String fakeJSON = "{\"parent\":\"mts:item/basic\",\"textures\":{\"layer0\": \"" + itemTexturePath + "\"}}";
 							stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 						}
-						return stream;
 					}catch(Exception e){
 						MasterInterface.coreInterface.logError("ERROR: Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
 						throw new FileNotFoundException(rawPackInfo);
@@ -684,9 +681,7 @@ class InterfaceRender implements IInterfaceRender{
 						
 						//Get the actual resource path for this resource and return its stream.
 						stream = getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
-						if(stream != null){
-							return stream;
-						}else{
+						if(stream == null){
 							MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + rawPackInfo);
 							throw new FileNotFoundException(rawPackInfo);
 						}
@@ -696,6 +691,9 @@ class InterfaceRender implements IInterfaceRender{
 					}
 				}
 			}
+			
+			//Return whichever stream we found.
+			return stream;
 		}
 
 		@Override

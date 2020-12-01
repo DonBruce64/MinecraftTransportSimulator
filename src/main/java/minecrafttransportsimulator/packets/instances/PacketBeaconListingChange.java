@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BeaconManager;
-import minecrafttransportsimulator.baseclasses.BeaconManager.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;

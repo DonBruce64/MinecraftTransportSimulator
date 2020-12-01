@@ -14,9 +14,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BeaconManager;
-import minecrafttransportsimulator.baseclasses.BeaconManager.RadioBeacon;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
