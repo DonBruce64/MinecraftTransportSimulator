@@ -24,7 +24,7 @@ public class ItemTicket extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
 	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
-		if(rightClick){
+		if(rightClick && !vehicle.world.isClient()){
 			if(player.isSneaking()){
 				Iterator<IWrapperEntity> iterator = vehicle.locationRiderMap.inverse().keySet().iterator();
 				while(iterator.hasNext()){
