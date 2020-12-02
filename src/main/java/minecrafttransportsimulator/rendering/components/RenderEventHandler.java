@@ -84,15 +84,17 @@ public class RenderEventHandler{
 		    					//Iterate over all vehicle cameras.  If they are deactivated, don't try to use them.
 		    					for(VehicleCameraObject testCamera : vehicle.definition.rendering.cameraObjects){
 		    						boolean cameraActive = true;
-		    						for(VehicleAnimationDefinition animation : testCamera.animations){
-		            					if(animation.animationType.equals("visibility")){
-		            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, null); 
-		            						if(value < animation.clampMin || value > animation.clampMax){
-		            							//Encountered an inactive camera.  Skip it.
-		            							cameraActive = false;
-		            							break;
-		            						}
-		            					}
+		    						if(testCamera.animations != null){
+			    						for(VehicleAnimationDefinition animation : testCamera.animations){
+			            					if(animation.animationType.equals("visibility")){
+			            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, null); 
+			            						if(value < animation.clampMin || value > animation.clampMax){
+			            							//Encountered an inactive camera.  Skip it.
+			            							cameraActive = false;
+			            							break;
+			            						}
+			            					}
+			    						}
 		    						}
 		    						if(cameraActive){
 		    							if(customCameraIndex <= camerasChecked){
@@ -112,15 +114,17 @@ public class RenderEventHandler{
 		    							//Iterate over all part cameras.  If they are deactivated, don't try to use them.
 				    					for(VehicleCameraObject testCamera : part.definition.rendering.cameraObjects){
 				    						boolean cameraActive = true;
-				    						for(VehicleAnimationDefinition animation : testCamera.animations){
-				            					if(animation.animationType.equals("visibility")){
-				            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, part); 
-				            						if(value < animation.clampMin || value > animation.clampMax){
-				            							//Encountered an inactive camera.  Skip it.
-				            							cameraActive = false;
-				            							break;
-				            						}
-				            					}
+				    						if(testCamera.animations != null){
+					    						for(VehicleAnimationDefinition animation : testCamera.animations){
+					            					if(animation.animationType.equals("visibility")){
+					            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, part); 
+					            						if(value < animation.clampMin || value > animation.clampMax){
+					            							//Encountered an inactive camera.  Skip it.
+					            							cameraActive = false;
+					            							break;
+					            						}
+					            					}
+					    						}
 				    						}
 				    						if(cameraActive){
 				    							if(customCameraIndex <= camerasChecked){
