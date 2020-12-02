@@ -34,12 +34,12 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.passive.IAnimals;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -406,7 +406,7 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public void loadEntities(BoundingBox box, AEntityBase vehicle){
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(((WrapperEntity) vehicle.wrapper).entity, convertBox(box))){
-			if((entity instanceof INpc || entity instanceof IAnimals) && !(entity instanceof IMob)){
+			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
 						if(vehicle instanceof EntityVehicleF_Physics){
