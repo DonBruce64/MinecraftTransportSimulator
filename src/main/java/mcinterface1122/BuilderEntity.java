@@ -62,11 +62,6 @@ public class BuilderEntity extends Entity{
 	AEntityBase entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
-	/**The data on or from the server for this entity.  If this is present on a tick, then the entity that was stored in this
-	 * data will be created, and the data will then be discarded..  This is only done on the update() tick to prevent created 
-	 * builders from loading their entities if they aren't actually in the world.  Used to combat mods making duplicate
-	 * entities on clients.**/
-	private NBTTagCompound serverNBTData;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
 	/**Position where we have spawned a fake light.  Used for shader compatibility.**/
@@ -171,12 +166,6 @@ public class BuilderEntity extends Entity{
     		if(requestDataFromServer){
     			MasterInterface.networkInterface.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
     			requestDataFromServer = false;
-    		}
-    		
-    		if(serverNBTData != null){
-    			//Restore the Entity from saved state.
-    			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-    			entity = entityMap.get(serverNBTData.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), new WrapperNBT(serverNBTData));
     		}
     	}else{
     		//Builder with no entity on the server.  Likely due to a bad creation routine.
@@ -353,10 +342,8 @@ public class BuilderEntity extends Entity{
 			//If we are on a server, restore the entity from saved state.
 			//If we are on a client, set the data tag.
 			//This prevents loading duplicate client entities that don't update. 
-			//For the clients, we use the NBT reference to create the entity in the update() call.
-			if(world.isRemote){
-				serverNBTData = tag;
-			}else{
+			//For the clients, we use the packet to create the entity after an update() call.
+			if(!world.isRemote){
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), new WrapperNBT(tag));
 			}

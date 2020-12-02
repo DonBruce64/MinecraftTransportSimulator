@@ -50,8 +50,9 @@ class PacketEntityCSHandshake extends APacketBase{
 	@Override
 	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		if(world.isClient()){
-			//Load the data into the entity.
-			world.getEntity(builderID).setNBT(data);
+			//Create the entity from loaded data.
+			BuilderEntity builder = (BuilderEntity) ((WrapperEntity) world.getEntity(builderID)).entity; 
+			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, ((WrapperWorld) world).getWrapperFor(builder), data);
 		}else{
 			//Send back a packet to the player who requested it.
 			player.sendPacket(new PacketEntityCSHandshake(builderID, world.getEntity(builderID).getNBT()));
