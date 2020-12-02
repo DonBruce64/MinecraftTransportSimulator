@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,8 +70,11 @@ public final class PackParserSystem{
 	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
 	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
-	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.**/
-	private static TreeMap<String, LinkedHashMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, LinkedHashMap<String, AItemPack<?>>>();
+	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.  Both maps are tree-maps
+	 * to allow pack-item auto-sorting in their respective GUIs irrespective of when they were loaded in the JSON.  This is
+	 * because sub-folders only matter for the creative tabs, where all items are together.  Not the benches, where items only
+	 * appear one-at-a-time.**/
+	private static TreeMap<String, TreeMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, TreeMap<String, AItemPack<?>>>();
 
 	/**Custom Gson instance for parsing packs.*/
 	public static final Gson packParser = JSONTypeAdapters.getParserWithAdapters();
@@ -301,7 +303,7 @@ public final class PackParserSystem{
 				    		    	
 				    		    	//Put the item in the map in the registry.
 				    		    	if(!packItemMap.containsKey(item.definition.packID)){
-				    		    		packItemMap.put(item.definition.packID, new LinkedHashMap<String, AItemPack<?>>());
+				    		    		packItemMap.put(item.definition.packID, new TreeMap<String, AItemPack<?>>());
 				    		    	}
 				    		    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
 								}
@@ -384,7 +386,7 @@ public final class PackParserSystem{
     	
     	//All definitions were okay.  Add items to the registry.
     	if(!packItemMap.containsKey(mainDefinition.packID)){
-    		packItemMap.put(mainDefinition.packID, new LinkedHashMap<String, AItemPack<?>>());
+    		packItemMap.put(mainDefinition.packID, new TreeMap<String, AItemPack<?>>());
     	}
     	packItemMap.get(mainDefinition.packID).putAll(packItems);
     }
@@ -563,7 +565,7 @@ public final class PackParserSystem{
     	
     	//Put the item in the map in the registry.
     	if(!packItemMap.containsKey(packID)){
-    		packItemMap.put(packID, new LinkedHashMap<String, AItemPack<?>>());
+    		packItemMap.put(packID, new TreeMap<String, AItemPack<?>>());
     	}
     	packItemMap.get(packID).put(item.definition.systemName + subName, item);
     	
