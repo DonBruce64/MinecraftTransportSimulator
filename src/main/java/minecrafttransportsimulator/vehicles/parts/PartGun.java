@@ -267,6 +267,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			}
 		}
 		
+		
 		//If we can accept bullets, and aren't currently loading any, re-load ourselves from any vehicle inventories.
 		//This only works if the gun is set to auto-reload.
 		//While the reload method checks for reload time, we check here to save on code processing.
@@ -290,12 +291,6 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 						}
 					}
 				}
-			}
-			//If we are on the server, we need to set the bullet as null to allow for new bullets to be loaded.
-			//If we are on the client, we need to leave this here, as the client might still be processing bullet firing.
-			//If we set it null during that time, the bullet would be fired and not know what it was.
-			if(!vehicle.world.isClient()){
-				loadedBullet = null;
 			}
 		}
 	}
