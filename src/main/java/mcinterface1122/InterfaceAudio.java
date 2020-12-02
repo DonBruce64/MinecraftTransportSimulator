@@ -200,7 +200,7 @@ class InterfaceAudio implements IInterfaceAudio{
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
 					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the sound slots.  Probabaly Immersive Railroading.  Sound will not play.");
+					MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -231,7 +231,7 @@ class InterfaceAudio implements IInterfaceAudio{
 			AL10.alGenSources(sourceBuffer);
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
 				++sourceGetFailures;
-				MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading.  Sound will not play.");
+				MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);
