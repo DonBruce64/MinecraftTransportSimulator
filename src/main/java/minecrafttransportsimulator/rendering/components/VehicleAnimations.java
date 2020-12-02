@@ -114,6 +114,7 @@ public final class VehicleAnimations{
 			if(optionalPart instanceof PartEngine){
 				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
+					case("engine_present"): return 1;	
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
@@ -249,7 +250,7 @@ public final class VehicleAnimations{
 			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
 			case("siren"): return vehicle.sirenOn ? 1 : 0;
-			case("hood"): return vehicle.engines.isEmpty() ? 1 : 0;
+			case("locked"): return vehicle.locked ? 1 : 0;
 			case("rain"): return vehicle.electricFlow < 0 ? (1.0 - Math.cos(((int)vehicle.world.getRainStrength(new Point3i(vehicle.position)))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
