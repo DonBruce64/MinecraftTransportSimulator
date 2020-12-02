@@ -167,9 +167,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				//Clamp the box's points if required.
 				if(box.isCollision){
 					//Need to round box to nearest 0.1 unit to prevent floating-point errors.
-					box.globalCenter.x = ((int) (box.globalCenter.x*10D))/10D;
-					box.globalCenter.y = ((int) (box.globalCenter.y*10D))/10D;
-					box.globalCenter.z = ((int) (box.globalCenter.z*10D))/10D;
+					box.globalCenter.x = ((int) (box.globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+					box.globalCenter.y = ((int) (box.globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+					box.globalCenter.z = ((int) (box.globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
 				}
 			}
 		}

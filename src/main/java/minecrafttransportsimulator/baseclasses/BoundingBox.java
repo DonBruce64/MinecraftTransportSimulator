@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -91,10 +92,10 @@ public class BoundingBox{
 	public void updateToEntity(AEntityBase entity){
 		globalCenter.setTo(localCenter).rotateFine(entity.angles).add(entity.position);
 		if(isCollision){
-			//Need to round box to nearest 0.1 unit to prevent floating-point errors.
-			globalCenter.x = ((int) (globalCenter.x*10D))/10D;
-			globalCenter.y = ((int) (globalCenter.y*10D))/10D;
-			globalCenter.z = ((int) (globalCenter.z*10D))/10D;
+			//Need to round box to prevent floating-point errors.
+			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+			globalCenter.y = ((int) (globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+			globalCenter.z = ((int) (globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
 		}
 	}
 	
