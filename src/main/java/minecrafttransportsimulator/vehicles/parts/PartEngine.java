@@ -14,6 +14,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
@@ -289,19 +290,27 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					if(shiftCooldown == 0){
 						if(definition.engine.upShiftRPM != null && definition.engine.downShiftRPM != null){
 							if(rpm > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F)) {
-								shiftUp(true);
-								shiftCooldown = definition.engine.shiftSpeed;
+								if(shiftUp(true)){
+									shiftCooldown = definition.engine.shiftSpeed;
+									MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
+								}
 							}else if(rpm < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-								shiftDown(true);
-								shiftCooldown = definition.engine.shiftSpeed;
+								if(shiftDown(true)){
+									shiftCooldown = definition.engine.shiftSpeed;
+									MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
+								}
 							}
 						}else{
 							if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicle.throttle/100F)){
-								shiftUp(true);
-								shiftCooldown = definition.engine.shiftSpeed;
+								if(shiftUp(true)){
+									shiftCooldown = definition.engine.shiftSpeed;
+									MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
+								}
 							}else if(rpm < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicle.throttle/100F) && currentGear > 1){
-								shiftDown(true);
-								shiftCooldown = definition.engine.shiftSpeed;
+								if(shiftDown(true)){
+									shiftCooldown = definition.engine.shiftSpeed;
+									MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
+								}
 							}
 						}
 					}else{
