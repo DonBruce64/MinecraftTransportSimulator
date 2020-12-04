@@ -136,7 +136,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		super.update();
 		
 		//Turn on brake lights and indicator lights.
-		if(brakeOn){
+		if(brake > 0){
 			lightsOn.add(LightType.BRAKELIGHT);
 			if(lightsOn.contains(LightType.LEFTTURNLIGHT)){
 				lightsOn.remove(LightType.LEFTINDICATORLIGHT);
@@ -291,7 +291,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				
 				//If the throttle is idle, and we have the brake pressed at a slow speed, stop the blimp.
 				//This is needed to prevent runaway blimps.
-				if(throttle == 0 && Math.abs(velocity) < 0.15 && (brakeOn || parkingBrakeOn)){
+				if(throttle == 0 && Math.abs(velocity) < 0.15 && (brake > 0 || parkingBrakeOn)){
 					motion.x = 0;
 					motion.z = 0;
 					thrustForce.set(0D, 0D, 0D);

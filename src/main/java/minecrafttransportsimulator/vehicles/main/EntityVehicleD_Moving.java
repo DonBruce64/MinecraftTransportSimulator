@@ -28,7 +28,8 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 
 	//External state control.
-	public boolean brakeOn;
+	public static final byte MAX_BRAKE = 100;
+	public byte brake;
 	public boolean parkingBrakeOn;
 	public boolean locked;
 	public String ownerUUID = "";
@@ -59,7 +60,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		super(world, wrapper, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
-		this.brakeOn = data.getBoolean("brakeOn");
+		this.brake = (byte) data.getInteger("brake");
 		this.towedVehicleSavedID = data.getString("towedVehicleID");
 		this.towedByVehicleSavedID = data.getString("towedByVehicleID");
 		this.ownerUUID = data.getString("ownerUUID");
@@ -214,19 +215,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Depends on number of grounded core collision sections and braking ground devices.
 	 */
 	private float getBrakingForce(){
+		float brakingPower = parkingBrakeOn ? 1.0F : brake/(float)MAX_BRAKE;
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
-		for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-			float addedFactor = 0;
-			if(brakeOn || parkingBrakeOn){
-				addedFactor = groundDevice.getMotiveFriction();
+		if(brakingPower > 0){
+			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
+				float groundDevicePower = groundDevice.getMotiveFriction();
+				if(groundDevicePower != 0){
+					brakingFactor += Math.max(groundDevicePower - groundDevice.getFrictionLoss(), 0);
+				}
 			}
-			if(addedFactor != 0){
-				brakingFactor += Math.max(addedFactor - groundDevice.getFrictionLoss(), 0);
-			}
-		}
-		if(brakeOn || parkingBrakeOn){
 			brakingFactor += 0.5D*groundDeviceCollective.getNumberBoxesInLiquid();
 		}
 		
@@ -575,8 +574,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public void save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("locked", locked);
-		data.setBoolean("brakeOn", brakeOn);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
+		data.setInteger("brake", brake);
 		if(towedVehicle != null){
 			data.setString("towedVehicleID", towedVehicle.uniqueUUID);
 		}

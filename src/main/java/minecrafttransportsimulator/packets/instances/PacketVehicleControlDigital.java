@@ -41,7 +41,6 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	@Override
 	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
-			case BRAKE : vehicle.brakeOn = controlState; break;
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
@@ -159,7 +158,6 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	}
 	
 	public enum Controls{
-		BRAKE,
 		P_BRAKE,
 		HORN,
 		SIREN,

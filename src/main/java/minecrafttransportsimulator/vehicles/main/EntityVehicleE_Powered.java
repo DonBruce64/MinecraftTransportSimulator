@@ -25,6 +25,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
@@ -59,7 +60,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public boolean reverseThrust;
 	public boolean gearUpCommand;
 	public boolean beingFueled;
+	public static final byte MAX_THROTTLE = 100;
 	public byte throttle;
+	
 	
 	//Internal states.
 	public int gearMovementTime;
@@ -198,7 +201,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					lightsOn.clear();
 					lightsOn.addAll(towedByVehicle.lightsOn);
 					parkingBrakeOn = false;
-					brakeOn = towedByVehicle.brakeOn;
+					brake = towedByVehicle.brake;
 				}else{
 					parkingBrakeOn = true;
 				}
@@ -297,7 +300,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 						for(PartEngine engine : engines.values()){
 							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 						}
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.BRAKE, false));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, (byte) 0));
 						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					}
 				}

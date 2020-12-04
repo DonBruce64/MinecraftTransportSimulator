@@ -241,11 +241,11 @@ public final class VehicleAnimations{
 			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
 
 			//Vehicle state cases.
-			case("throttle"): return vehicle.throttle/100D;
+			case("throttle"): return vehicle.throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
+			case("brake"): return vehicle.brake/(double)EntityVehicleF_Physics.MAX_BRAKE;
 			case("fuel"): return vehicle.fuelTank.getFluidLevel()/vehicle.fuelTank.getMaxLevel();
 			case("electric_power"): return vehicle.electricPower;
 			case("electric_usage"): return vehicle.electricFlow*20D;
-			case("brake"): return vehicle.brakeOn ? 1 : 0;
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
 			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;

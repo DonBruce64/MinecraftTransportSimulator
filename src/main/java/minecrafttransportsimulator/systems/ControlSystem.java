@@ -111,26 +111,16 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic dynamic, ControlsJoystick analogBrake, ControlsJoystick pBrake){
+	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
-		boolean isParkingBrakePressed = MasterLoader.inputInterface.isJoystickPresent(analogBrake.config.joystickName) ? pBrake.isPressed() : dynamic.isPressed() || pBrake.isPressed();
-		boolean isBrakePressed = MasterLoader.inputInterface.isJoystickPresent(analogBrake.config.joystickName) ? analogBrake.getAxisState((short) 0) > 25 : dynamic.mainControl.isPressed();
-		if(isParkingBrakePressed){
-			if(!vehicle.parkingBrakeOn){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
-			}
-		}else if(isBrakePressed){
-			if(!vehicle.brakeOn){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.BRAKE, true));
-			}
-			if(vehicle.parkingBrakeOn){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
-			}
-		}else{
-			if(vehicle.brakeOn){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.BRAKE, false));
-			}
+		boolean isParkingBrakePressed = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
+		byte brakeValue = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+		if(isParkingBrakePressed && !vehicle.parkingBrakeOn){
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+		}else if(brakeValue > 0 && vehicle.parkingBrakeOn){
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
+		MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
@@ -188,7 +178,7 @@ public final class ControlSystem{
 		}
 		
 		//Check brake status.
-		controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE_ANALOG, ControlsJoystick.AIRCRAFT_PARK);
+		controlBrake(aircraft, ControlsKeyboardDynamic.AIRCRAFT_PARK, ControlsJoystick.AIRCRAFT_BRAKE, ControlsJoystick.AIRCRAFT_BRAKE_DIGITAL, ControlsJoystick.AIRCRAFT_PARK);
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
@@ -304,48 +294,53 @@ public final class ControlSystem{
 		//Check brake and gas.  Depends on how the controls are configured.
 		if(ConfigSystem.configObject.clientControls.simpleThrottle.value){
 			if(!powered.engines.values().isEmpty()){
-				//If the vehicle is moving forwards, and we are pressing the brake, stop it.
-				//If we are going in reverse, and we are pressing the gas, also stop it.
-				//If we are stopped, switch gears based on if gas or brake is pressed.
+				//Get the current gear.
 				byte currentGear = 0;
 				for(PartEngine engine : powered.engines.values()){
 					currentGear = engine.currentGear;
 				}
-				boolean brakePressed = ControlsKeyboard.CAR_BRAKE.isPressed();
-				boolean gasPressed = ControlsKeyboard.CAR_GAS.isPressed();
-				if(brakePressed){
-					if(currentGear >= 0){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, brakePressed));
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
-						if(powered.velocity == 0 || currentGear == 0){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
-						}
-					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, gasPressed));
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (brakePressed ? 100 : 0), Byte.MAX_VALUE));
-					}
-				}else if(gasPressed){
-					if(currentGear <= 0){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, gasPressed));
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
-						if(powered.velocity == 0 || currentGear == 0){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
-						}
-					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, brakePressed));
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (gasPressed ? 100 : 0), Byte.MAX_VALUE));
-					}
-				}else if(Math.abs(powered.velocity) > 0.3){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, false));
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+				
+				//Get the brake value.
+				short brakeValue = 0;
+				if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
+					brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState((short) 0);
+				}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
+					 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
+				}
+				
+				//Get the throttle value.
+				short throttleValue = 0;
+				if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+					throttleValue = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+				}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+					throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2; 
+				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
+					throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2 : EntityVehicleF_Physics.MAX_THROTTLE;
+				}
+				
+				//If we don't have velocity, and we have the appropriate control, shift.
+				if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+				}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+				}
+				
+				//If we are going slow, and don't have gas or brake, automatically set the brake.
+				//Otherwise send normal values if we are in neutral or forwards,
+				//and invert controls if we are in a reverse gear.
+				if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
+				}else if(currentGear >= 0){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
 				}else{
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.BRAKE, true));
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
 				}
 			}
 		}else{
 			//Check brake and gas and set to on or off.
-			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE_ANALOG, ControlsJoystick.CAR_PARK);
+			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
 			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
@@ -355,15 +350,15 @@ public final class ControlSystem{
 			}else{
 				if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
 					}
 				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 100, Byte.MAX_VALUE));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 50, Byte.MAX_VALUE));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
 					}
 				}else{
 					//Don't send gas off packet if we have cruise on.
@@ -555,10 +550,10 @@ public final class ControlSystem{
 		AIRCRAFT_PITCH(true, false),
 		AIRCRAFT_ROLL(true, false),
 		AIRCRAFT_THROTTLE(true, false),
+		AIRCRAFT_BRAKE(true, false),
+		AIRCRAFT_BRAKE_DIGITAL(false, false),
 		AIRCRAFT_FLAPS_U(false, true),
 		AIRCRAFT_FLAPS_D(false, true),
-		AIRCRAFT_BRAKE(false, false),
-		AIRCRAFT_BRAKE_ANALOG(true, false),
 		AIRCRAFT_PANEL(false, true),
 		AIRCRAFT_PARK(false, true),
 		AIRCRAFT_RADIO(false, true),
@@ -586,8 +581,8 @@ public final class ControlSystem{
 		CAR_CAMLOCK(false, true),
 		CAR_TURN(true, false),
 		CAR_GAS(true, false),
-		CAR_BRAKE(false, false),
-		CAR_BRAKE_ANALOG(true, false),
+		CAR_BRAKE(true, false),
+		CAR_BRAKE_DIGITAL(false, false),
 		CAR_PANEL(false, true),
 		CAR_SHIFT_U(false, true),
 		CAR_SHIFT_D(false, true),
@@ -698,7 +693,7 @@ public final class ControlSystem{
 		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
 		
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
-		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD);		
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD);
 		
 		public final String translatedName;
 		public final ControlsKeyboard mainControl;

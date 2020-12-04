@@ -124,7 +124,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 				boundingBox.depthRadius -= 0.25;
 			}
 		}else if((placementOffset.z > 0 && !vehicle.definition.motorized.isFrontWheelDrive) || (placementOffset.z <= 0 && !vehicle.definition.motorized.isRearWheelDrive)){
-			if(vehicle.brakeOn || vehicle.parkingBrakeOn){
+			if(vehicle.brake > 0 || vehicle.parkingBrakeOn){
 				angularVelocity = 0;
 			}else if(angularVelocity>0){
 				angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);

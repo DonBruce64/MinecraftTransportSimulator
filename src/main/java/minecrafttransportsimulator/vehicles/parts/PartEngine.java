@@ -74,6 +74,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	private static final float OVERHEAT_TEMP_2 = 121.111F;
 	private static final float FAILURE_TEMP = 132.222F;
 	private static final float LOW_OIL_PRESSURE = 40F;
+	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
 	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
@@ -720,7 +721,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
 		}else if(currentGear == 0){//Neutral to 1st.
 			nextGear = 1;
-			doShift = vehicle.axialVelocity < 0.35 || wheelFriction == 0 || !vehicle.goingInReverse;
+			doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicle.goingInReverse;
 		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
 			doShift = !definition.engine.isAutomatic || (autoShift && !vehicle.world.isClient());
 			nextGear = (byte) (currentGear + 1);
@@ -741,7 +742,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 			nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
 		}else if(currentGear == 0){//Neutral to reverse.
 			nextGear = -1;
-			doShift = vehicle.axialVelocity < 0.35 || wheelFriction == 0 || vehicle.goingInReverse;
+			doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicle.goingInReverse;
 		}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
 			doShift = true;
 			nextGear = (byte) (currentGear - 1);
