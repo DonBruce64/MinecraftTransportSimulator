@@ -115,7 +115,9 @@ public final class VehicleAnimations{
 				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
 					case("engine_present"): return 1;
+					case("!engine_present"): return 0;
 					case("engine_isautomatic"): return engine.definition.engine.isAutomatic ? 1 : 0;	
+					case("!engine_isautomatic"): return engine.definition.engine.isAutomatic ? 0 : 1;	
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
@@ -133,8 +135,11 @@ public final class VehicleAnimations{
 					case("engine_gearshift_hvertical"): return engine.getGearshiftPosition_Vertical();
 					case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
+					case("!engine_magneto"): return engine.state.magnetoOn ? 0 : 1;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
+					case("!engine_starter"): return engine.state.esOn ? 0 : 1;
 					case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
+					case("!engine_jumper_cable"): return engine.linkedEngine != null ? 0 : 1;
 					case("engine_hours"): return engine.hours;
 				}
 			}else if(optionalPart instanceof PartGun){
@@ -151,13 +156,16 @@ public final class VehicleAnimations{
 				}
 				switch(variable){
 					case("gun_active"): return gun.active ? 1 : 0;
+					case("!gun_active"): return gun.active ? 0 : 1;
 					case("gun_firing"): return gun.firing ? 1 : 0;
+					case("!gun_firing"): return gun.firing ? 0 : 1;
 					case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
 					case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
 					case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
 					case("gun_windup_time"): return gun.windupTimeCurrent;
 					case("gun_windup_rotation"): return gun.windupRotation;
 					case("gun_windup_complete"): return gun.windupTimeCurrent == gun.definition.gun.windupTime ? 1 : 0;
+					case("!gun_windup_complete"): return gun.windupTimeCurrent == gun.definition.gun.windupTime ? 0 : 1;
 					case("gun_reload"): return gun.reloadTimeRemaining/(double)gun.definition.gun.reloadTime;
 					case("gun_ammo_count"): return gun.bulletsLeft;
 					case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
@@ -181,8 +189,11 @@ public final class VehicleAnimations{
 				switch(variable){
 					case("ground_rotation"): return groundDevice.getActionRotation(partialTicks).x;
 					case("ground_onground"): return vehicle.groundDeviceCollective.isDeviceOnGround(groundDevice) ? 1 : 0;
+					case("!ground_onground"): return vehicle.groundDeviceCollective.isDeviceOnGround(groundDevice) ? 0 : 1;
 					case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
+					case("!ground_inliquid"): return groundDevice.isInLiquid() ? 0 : 1;
 					case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
+					case("!ground_isflat"): return groundDevice.getFlatState() ? 0 : 1;
 				}
 			}else if(optionalPart instanceof PartSeat){
 				PartSeat seat = (PartSeat) optionalPart;
@@ -190,6 +201,7 @@ public final class VehicleAnimations{
 				boolean riderPresent = riderForSeat != null && riderForSeat.isValid();
 				switch(variable){
 					case("seat_occupied"): return riderPresent ? 1 : 0;
+					case("!seat_occupied"): return riderPresent ? 0 : 1;
 					case("seat_rider_yaw"): {
 						if(riderPresent){
 							double riderYaw = riderForSeat.getHeadYaw() - vehicle.angles.y;
