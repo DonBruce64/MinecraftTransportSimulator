@@ -172,7 +172,7 @@ public class PartPropeller extends APart{
 				//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
 				thrust *= Math.PI*Math.pow(0.0254*definition.propeller.diameter/2D, 2);
 				//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
-				thrust *= vehicle.airDensity/25D;
+				thrust *= vehicle.airDensity/25D*1.5D;
 
 				//Get the angle of attack of the propeller.
 				//Note pitch velocity is in linear in meters per second, 
