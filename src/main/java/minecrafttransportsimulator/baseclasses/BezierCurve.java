@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**Curve class used for roads.
+/**Curve class used for paths.
  * Start point is at 0,0,0.  Offset as needed in whatever class encloses this curve.
  * Needs an end point, a start angle, and an end angle to calculate the curve.
  * For all calls, segmentPoint should be a value between 0 and the pathLength of this curve.
@@ -11,7 +11,8 @@ package minecrafttransportsimulator.baseclasses;
  * 
  * @author don_bruce
  */
-public class RoadCurve{
+public class BezierCurve{
+	public final Point3d endPos;
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
@@ -30,7 +31,8 @@ public class RoadCurve{
 	/**Mutable point used for return calls.**/
 	private static final Point3d MUTABLE_POINT = new Point3d(0, 0, 0);
 	
-	public RoadCurve(Point3d endPos, float startAngle, float endAngle){
+	public BezierCurve(Point3d endPos, float startAngle, float endAngle){
+		this.endPos = endPos;
 		this.startAngle = startAngle;
 		this.endAngle = endAngle;
 		this.startPoint = new float[]{0, 0, 0};

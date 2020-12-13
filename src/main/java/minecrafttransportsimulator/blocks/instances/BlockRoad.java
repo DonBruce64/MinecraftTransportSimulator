@@ -32,6 +32,22 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	public boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player){
 		return false;
 	}
+	
+	@Override
+    public void onBroken(IWrapperWorld world, Point3i location){
+		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
+		if(road != null && !road.isHolographic){
+			road.isHolographic = true;
+			for(Point3i blockOffset : road.collidingBlockOffsets){
+				Point3i blockLocation = location.copy().add(blockOffset);
+				//Check to make sure we don't destroy non-road blocks.
+				//This is required in case our TE is corrupt or someone messes with it.
+				if(world.getBlock(blockLocation) instanceof BlockRoadCollision){
+					world.destroyBlock(blockLocation);
+				}
+			}
+		}
+	}
     
     @Override
 	public TileEntityRoad createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){

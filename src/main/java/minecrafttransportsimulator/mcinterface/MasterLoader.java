@@ -96,7 +96,6 @@ public class MasterLoader{
 		MasterInterface.createItem(new ItemJumperCable());
 		MasterInterface.createItem(new ItemJerrycan());
 		MasterInterface.createItem(new ItemPaintGun());
-		//MasterInterface.createItem(new ItemRoadTool());
 		MasterInterface.createItem(new ItemTicket());
 		MasterInterface.createItem(new ItemY2KButton());
 		

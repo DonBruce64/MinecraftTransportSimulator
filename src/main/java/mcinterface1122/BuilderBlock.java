@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -323,7 +324,17 @@ class BuilderBlock extends Block{
 			}
 		}
 		
-		//Finally, register the fake light block.
+		//Register the collision blocks.
+		for(int i=0; i<BlockRoadCollision.blocks.size(); ++i){
+			BlockRoadCollision collisionBlock = BlockRoadCollision.blocks.get(i);
+			BuilderBlock wrapper = new BuilderBlock(collisionBlock);
+			String name = collisionBlock.getClass().getSimpleName();
+			name = MasterInterface.MODID + ":" + name.substring("Block".length()) + i;
+			event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
+			blockMap.put(collisionBlock, wrapper);
+		}
+		
+		//Register the fake light block.
 		event.getRegistry().register(BuilderBlockFakeLight.instance.setRegistryName(MasterInterface.MODID + ":fake_light"));
 	}
 }

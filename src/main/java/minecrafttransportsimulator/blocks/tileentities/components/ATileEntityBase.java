@@ -62,9 +62,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	 */
 	public List<AItemPack<JSONDefinition>> getDrops(){
 		List<AItemPack<JSONDefinition>> drops = new ArrayList<AItemPack<JSONDefinition>>();
-		if(item != null){
-			drops.add(item);
-		}
+		drops.add(item);
 		return drops;
 	}
 	

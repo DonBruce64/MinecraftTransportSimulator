@@ -6,52 +6,53 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.RoadCurve;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final Map<JSONRoadComponent, Integer> componentDisplayListMap = new HashMap<JSONRoadComponent, Integer>();
+	private static int flagDisplayListIndex = -1;
 	
 	@Override
-	public void render(TileEntityRoad tile, float partialTicks){
-		ItemRoadComponent coreComponent = tile.components.get(RoadComponent.CORE);
-		if(coreComponent != null){
+	public void render(TileEntityRoad road, float partialTicks){
+		ItemRoadComponent coreComponent = road.components.get(RoadComponent.CORE);
+		//Render road components.
+		
+		
+		//If we are holographic, render road bounds and colliding boxes.
+		if(road.isHolographic){
+			//Render the information hashes.
+			//First set states.
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glLineWidth(2);
+			GL11.glBegin(GL11.GL_LINES);
 			
-			//Render connector points.
-			for(Point3d connectionPoint : tile.curveConnectionPoints){
-				GL11.glColor3f(1, 0, 0);
-				GL11.glDisable(GL11.GL_TEXTURE_2D);
-				GL11.glLineWidth(5);
-				GL11.glBegin(GL11.GL_LINES);
-				GL11.glVertex3d(connectionPoint.x, connectionPoint.y, connectionPoint.z);
-				GL11.glVertex3d(connectionPoint.x, connectionPoint.y + 2, connectionPoint.z);
-				GL11.glEnd();
-				GL11.glLineWidth(1);
-				GL11.glEnable(GL11.GL_TEXTURE_2D);
+			//Render the lane start points.
+			GL11.glColor3f(1, 0, 0);
+			for(RoadLane lane : road.lanes){
+				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y, lane.startingOffset.z);
+				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y + 2, lane.startingOffset.z);
 			}
-			for(int laneNumber=0; laneNumber<tile.curves.length; ++laneNumber){
-				RoadCurve curve = tile.curves[laneNumber];
-				if(curve != null){
-					GL11.glPushMatrix();
-					GL11.glTranslated(tile.curveConnectionPoints[laneNumber].x, tile.curveConnectionPoints[laneNumber].y, tile.curveConnectionPoints[laneNumber].z);
-					GL11.glDisable(GL11.GL_LIGHTING);
-					GL11.glColor3f(1, 1, 0);
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					GL11.glBegin(GL11.GL_LINES);
-					for(float f=0; f<curve.pathLength; f+=0.1){
-						Point3d point = curve.getPointAt(f);
-						GL11.glVertex3d(point.x, point.y, point.z);
-						GL11.glVertex3d(point.x, point.y + 2, point.z);
-					}
-					GL11.glEnd();
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-					GL11.glEnable(GL11.GL_LIGHTING);
-					GL11.glPopMatrix();
+			
+			//Render the lane paths.
+			GL11.glColor3f(1, 1, 0);
+			Point3d point = new Point3d(0, 0, 0);
+			for(RoadLane lane : road.lanes){
+				for(float f=0; f<lane.curve.pathLength; f+=0.1){
+					point.setTo(lane.curve.getPointAt(f)).add(lane.startingOffset);
+					GL11.glVertex3d(point.x, point.y, point.z);
+					GL11.glVertex3d(point.x, point.y + 1, point.z);
 				}
 			}
+			
+			//Set states back to normal.
+			GL11.glEnd();
+			GL11.glEnable(GL11.GL_LIGHTING);
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
 		}
 		
 		

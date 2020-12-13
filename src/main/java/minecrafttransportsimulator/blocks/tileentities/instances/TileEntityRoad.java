@@ -6,16 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.baseclasses.RoadCurve;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -36,23 +37,26 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
-	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
-	public final Point3d[] curveConnectionPoints;
-	public final Point3i[] backwardsBlockPositions;
-	public final Point3i[] forwardsBlockPositions;
-	public final Point3d[] forwardsCurveConnectionPoints;
-	public final Double[] forwardsCurveRotations;
-	public final RoadCurve[] curves;
+	//Static variables based on core definition.
 	public final BoundingBox boundingBox;
+	public final List<Point3i> collisionBlockOffsets;
+	public final List<RoadLane> lanes;
+
+	//Dynamic variables based on states.
+	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
+	public final List<Point3i> collidingBlockOffsets = new ArrayList<Point3i>();
+	public boolean isHolographic;
 	
+	//Static constants.
 	public static final int MAX_CURVE_CONNECTIONS = 3;
 	public static final int MAX_SEGMENT_LENGTH = 32;
 	
-	public boolean holographic;
-	
 	public TileEntityRoad(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
-		//Load components back in.
+		//Set the bounding box.
+		this.boundingBox = new BoundingBox(new Point3d(0, (definition.general.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.general.collisionHeight/16D/2D, 0.5D);
+		
+		//Load components back in.  Our core component will always be our definition.
 		for(RoadComponent componentType : RoadComponent.values()){
 			String packID = data.getString("packID" + componentType.ordinal());
 			if(!packID.isEmpty()){
@@ -61,51 +65,23 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 				components.put(componentType, newComponent);
 			}
 		}
+		components.put(RoadComponent.CORE, (ItemRoadComponent) item);
 		
-		//Create a Point3d for rotation operations.
-		Point3d totalRotation = new Point3d(0, rotation, 0);
-		
-		//Now generate the curve connection points.  These come from our definition and our current rotation.
-		curveConnectionPoints = new Point3d[definition.general.laneOffsets.length];
-		for(int laneNumber=0; laneNumber<definition.general.laneOffsets.length; ++laneNumber){
-			curveConnectionPoints[laneNumber] = new Point3d(definition.general.laneOffsets[laneNumber], 0, 0).rotateFine(totalRotation);
-		}
-		
-		//Get saved curve connections that go to the generated points.
-		//For blocks, we just store them until needed.  For curves, we use the points to generate them.
-		//The reason we store the points and the block positions is because the blocks for the curves may not
-		//get loaded in-order, but we need to know where the curve points are on construction. 
-		this.backwardsBlockPositions = new Point3i[curveConnectionPoints.length];
-		this.forwardsBlockPositions = new Point3i[curveConnectionPoints.length];
-		this.forwardsCurveConnectionPoints = new Point3d[curveConnectionPoints.length];
-		this.forwardsCurveRotations = new Double[curveConnectionPoints.length];
-		this.curves = new RoadCurve[curveConnectionPoints.length];
-		for(int laneNumber=0; laneNumber<curveConnectionPoints.length; ++laneNumber){
-			Point3i loadedBackwardsPosition = data.getPoint3i("backwardsBlockPosition" + laneNumber);
-			Point3i loadedForwardsPosition = data.getPoint3i("forwardsBlockPosition" + laneNumber);
-			if(!loadedBackwardsPosition.isZero()){
-				backwardsBlockPositions[laneNumber] = loadedBackwardsPosition;
-			}
-			if(!loadedForwardsPosition.isZero()){
-				forwardsBlockPositions[laneNumber] = loadedForwardsPosition;
-				forwardsCurveConnectionPoints[laneNumber] = data.getPoint3d("forwardsCurveConnectionPoint" + laneNumber);
-				forwardsCurveRotations[laneNumber] = data.getDouble("forwardsCurveRotation" + laneNumber);
-				curves[laneNumber] = new RoadCurve(forwardsCurveConnectionPoints[laneNumber].copy().subtract(curveConnectionPoints[laneNumber]), (float) rotation, forwardsCurveRotations[laneNumber].floatValue());
+		//Load lane data.  We may not have this yet if we're in the process of creating a new road.
+		this.lanes = new ArrayList<RoadLane>();
+		float[] definitionOffsets = components.get(RoadComponent.CORE).definition.general.laneOffsets;
+		for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
+			IWrapperNBT laneData = data.getData("lane" + laneNumber);
+			if(laneData != null){
+				lanes.add(new RoadLane(laneData));
 			}
 		}
 		
-		//Set the bounding box.
-		this.boundingBox = new BoundingBox(new Point3d(0, (definition.general.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.general.collisionHeight/16D/2D, 0.5D);
+		//If we have points for collision due to use creating collision blocks, load them now.
+		this.collisionBlockOffsets = data.getPoints("collisionBlockOffsets");
 		
 		//Get the holographic state.
-		this.holographic = data.getBoolean("holographic");
-	}
-	
-	public void setCurve(int laneNumber, TileEntityRoad endTile, int endLaneNumber, boolean reversed){
-		forwardsBlockPositions[laneNumber] = endTile.position;
-		forwardsCurveConnectionPoints[laneNumber] = endTile.curveConnectionPoints[endLaneNumber].copy().add(endTile.position.x, endTile.position.y, endTile.position.z).add(-position.x, -position.y, -position.z);
-		forwardsCurveRotations[laneNumber] = reversed ? endTile.rotation : endTile.rotation + 180;
-		curves[laneNumber] = new RoadCurve(forwardsCurveConnectionPoints[laneNumber], (float) rotation, forwardsCurveRotations[laneNumber].floatValue());
+		this.isHolographic = data.getBoolean("isHolographic");
 	}
 	
 	@Override
@@ -133,21 +109,103 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
 		}
 		
-		//Save curve connection data.
-		for(int laneNumber=0; laneNumber<curveConnectionPoints.length; ++laneNumber){
-			if(backwardsBlockPositions[laneNumber] != null){
-				data.setPoint3i("backwardsBlockPosition" + laneNumber, backwardsBlockPositions[laneNumber]);
+		//Save lane data.
+		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
+			RoadLane lane = lanes.get(laneNumber);
+			IWrapperNBT laneData = MasterLoader.coreInterface.createNewTag();
+			lane.save(laneData);
+			data.setData("lane" + laneNumber, laneData);
+		}
+		
+		//Save cure collision point data.
+		data.setPoints("collisionBlockOffsets", collisionBlockOffsets);
+		
+		//Save holographic state.
+		data.setBoolean("isHolographic", isHolographic);
+    }
+	
+	/**
+	 *  Helper class for containing lane data.
+	 */
+	public class RoadLane{
+		public final Point3d startingOffset;
+		public final Point3d endingOffset;
+		public final BezierCurve curve;
+		public RoadLaneConnection priorConnection;
+		public RoadLaneConnection nextConnection;
+		
+		public RoadLane(Point3d startingOffset, Point3d endingOffset, double endingRotation){
+			this.startingOffset = startingOffset;
+			this.endingOffset = endingOffset.copy().subtract(startingOffset);
+			this.curve = new BezierCurve(this.endingOffset, (float) rotation, (float) endingRotation);
+		}
+		
+		public RoadLane(IWrapperNBT data){
+			this.startingOffset = data.getPoint3d("startingOffset");
+			this.endingOffset = data.getPoint3d("endingOffset");
+			this.curve = new BezierCurve(endingOffset, (float) rotation, (float) data.getDouble("endingRotaton"));
+			IWrapperNBT priorConnectionData = data.getData("priorConnection");
+			if(priorConnectionData != null){
+				priorConnection = new RoadLaneConnection(priorConnectionData);
 			}
-			if(forwardsBlockPositions[laneNumber] != null){
-				TileEntityRoad connectedRoad = world.getTileEntity(forwardsBlockPositions[laneNumber]);
-				if(connectedRoad != null){
-					data.setPoint3i("forwardsBlockPosition" + laneNumber, forwardsBlockPositions[laneNumber]);
-					data.setPoint3d("forwardsCurveConnectionPoint" + laneNumber, forwardsCurveConnectionPoints[laneNumber]);
-					data.setDouble("forwardsCurveRotation" + laneNumber, forwardsCurveRotations[laneNumber]);
-				}
+			IWrapperNBT nextConnectionData = data.getData("nextConnection");
+			if(nextConnectionData != null){
+				nextConnection = new RoadLaneConnection(nextConnectionData);
 			}
 		}
-    }
+		
+		public void connectToPrior(TileEntityRoad road, int laneNumber, boolean connectedToStart){
+			priorConnection = new RoadLaneConnection(road.position, laneNumber, connectedToStart);
+		}
+		
+		public void connectToNext(TileEntityRoad road, int laneNumber, boolean connectedToStart){
+			nextConnection = new RoadLaneConnection(road.position, laneNumber, connectedToStart);
+		}
+		
+		public void save(IWrapperNBT data){
+			data.setPoint3d("startingOffset", startingOffset);
+			data.setPoint3d("endingOffset", curve.endPos);
+			data.setDouble("endingRotaton", curve.endAngle);
+			if(priorConnection != null){
+				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
+				priorConnection.save(connectionData);
+				data.setData("priorConnection", connectionData);
+			}
+			if(nextConnection != null){
+				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
+				nextConnection.save(connectionData);
+				data.setData("nextConnection", connectionData);
+			}
+		}
+		
+		/**
+		 *  Helper class for containing connecton data..
+		 */
+		private class RoadLaneConnection{
+			public final Point3i tileLocation;
+			public final int laneNumber;
+			public final boolean connectedToStart;
+			
+			public RoadLaneConnection(Point3i tileLocation, int laneNumber, boolean connectedToStart){
+				this.tileLocation = tileLocation;
+				this.laneNumber = laneNumber;
+				this.connectedToStart = connectedToStart;
+			}
+			
+			public RoadLaneConnection(IWrapperNBT data){
+				this.tileLocation = data.getPoint3i("tileLocation");
+				this.laneNumber = data.getInteger("laneNumber");
+				this.connectedToStart = data.getBoolean("connectedToStart");
+			}
+			
+			public void save(IWrapperNBT data){
+				data.setPoint3i("tileLocation",tileLocation);
+				data.setInteger("laneNumber", laneNumber);
+				data.setBoolean("connectedToStart", connectedToStart);
+			}
+		}
+		
+	}
 	
 	/**
 	 *  Enums for part-specific stuff.

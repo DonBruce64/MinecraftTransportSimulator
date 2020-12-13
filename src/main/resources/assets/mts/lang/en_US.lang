@@ -83,13 +83,6 @@ interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot
 interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
 interact.trailer.notfound=No trailers were found within 2 blocks of the hitch on this vehicle.
 
-interact.roadtool.nocomponents=No components are set for this road tool yet.  Sneak-use it in the air to set them.
-interact.roadtool.set=End position set.
-interact.roadtool.reset=End position cleared.
-interact.roadtool.toofar=The end position is too far from the block clicked.  Make the segment shorter or use a different end position.
-interact.roadtool.invalid=The end position is no longer a valid road.  Was it destroyed?  Resetting position to null.
-interact.roadtool.blockingblocks=There are blocks blocking the creation of this road.  Remove them before continuing, or be a creative OP to bypass this check.
-
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
 input.aircraft.yaw=Yaw
@@ -333,11 +326,6 @@ info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
 info.item.paintgun.use=Use on a vehicle to change its color.
-info.item.roadtool.line1=Right-click in the air to select a road to place.
-info.item.roadtool.line2=Right-click on a block to place a road segment.
-info.item.roadtool.line3=Road segments will connect to the last-placed segment.
-info.item.roadtool.line4=Segment connections may be changed by sneak-clicking.
-info.item.roadtool.line5=Currently selected road components are: 
 info.item.ticket.line1=Right-click on a vehicle to load nearby entities.
 info.item.ticket.line2=Sneak-click on a vehicle to unload all entities.
 info.item.ticket.line3=Note: Will not unload players.
