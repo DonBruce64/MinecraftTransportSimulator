@@ -402,7 +402,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		partSlotBoxes.clear();
 		for(Entry<Point3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), 0, 0, 0, false, false, false, 0); 
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false, false, false, 0);
 				partSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 			}
 		}
