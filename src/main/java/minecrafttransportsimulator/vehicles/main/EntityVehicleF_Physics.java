@@ -12,6 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
@@ -268,6 +269,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Get forces.  Some forces are specific to JSON sections.
 			//First get gravity.
 			gravitationalForce = definition.motorized.ballastVolume == 0 ? currentMass*(9.8/400) : 0;
+			if(!definition.general.isAircraft){
+				gravitationalForce *= ConfigSystem.configObject.general.gravityFactor.value;
+			}
 			
 			//Get the track angle.  This is used for control surfaces.
 			trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));

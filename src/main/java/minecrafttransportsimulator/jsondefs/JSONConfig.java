@@ -38,6 +38,7 @@ public class JSONConfig{
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
 		public ConfigDouble climbSpeed = new ConfigDouble(0.125D, "How far a vehicle will 'climb' blocks every tick when the wheels go into the ground.  Higher values make vehicles climb blocks quicker at the cost of smooth movement.");
+		public ConfigDouble gravityFactor = new ConfigDouble(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
 		public ConfigDouble engineSpeedTempFactor = new ConfigDouble(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
 		public ConfigDouble engineBiomeTempFactor = new ConfigDouble(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
