@@ -114,7 +114,8 @@ public final class VehicleAnimations{
 			if(optionalPart instanceof PartEngine){
 				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
-					case("engine_present"): return 1;	
+					case("engine_present"): return 1;
+					case("engine_isautomatic"): return engine.definition.engine.isAutomatic ? 1 : 0;	
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
