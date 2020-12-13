@@ -112,37 +112,49 @@ public class VehicleGroundDeviceBox{
 	 */
 	public void updateBounds(){
 		//Update solid box local center and size.
-		solidBox.localCenter.set(0D, 0D, 0D);
+		//We use the lowest-contacting ground device for size.
+		//Position is average for XZ, and min for Y.
+		solidBox.localCenter.set(0D, Double.MAX_VALUE, 0D);
 		solidBox.widthRadius = 0;
 		solidBox.heightRadius = 0;
 		for(APart groundDevice : groundDevices){
-			solidBox.localCenter.add(groundDevice.totalOffset);
-			solidBox.widthRadius += groundDevice.getWidth();
-			solidBox.heightRadius += groundDevice.getHeight();
+			solidBox.localCenter.x += groundDevice.totalOffset.x;
+			solidBox.localCenter.z += groundDevice.totalOffset.z;
+			if(groundDevice.totalOffset.y - groundDevice.getHeight()/2D < solidBox.localCenter.y - solidBox.heightRadius){
+				solidBox.localCenter.y = groundDevice.totalOffset.y;
+				solidBox.heightRadius = groundDevice.getHeight()/2D;
+				solidBox.widthRadius = groundDevice.getWidth()/2D;
+			}
 		}
-		solidBox.widthRadius /= 2D*groundDevices.size();
-		solidBox.heightRadius /= 2D*groundDevices.size();
 		solidBox.depthRadius = solidBox.widthRadius;
-		solidBox.localCenter.multiply(1D/groundDevices.size());
+		solidBox.localCenter.x *= 1D/groundDevices.size();
+		solidBox.localCenter.z *= 1D/groundDevices.size();
 		
 		//Update liquid box local center and size.
-		liquidBox.localCenter.set(0D, 0D, 0D);
+		liquidBox.localCenter.set(0D, Double.MAX_VALUE, 0D);
 		liquidBox.widthRadius = 0;
 		liquidBox.heightRadius = 0;
 		for(APart groundDevice : liquidDevices){
-			liquidBox.localCenter.add(groundDevice.totalOffset);
-			liquidBox.widthRadius += groundDevice.getWidth();
-			liquidBox.heightRadius += groundDevice.getHeight();
+			liquidBox.localCenter.x += groundDevice.totalOffset.x;
+			liquidBox.localCenter.z += groundDevice.totalOffset.z;
+			if(groundDevice.totalOffset.y - groundDevice.getHeight()/2D < liquidBox.localCenter.y - liquidBox.heightRadius){
+				liquidBox.localCenter.y = groundDevice.totalOffset.y;
+				liquidBox.heightRadius = groundDevice.getHeight()/2D;
+				liquidBox.widthRadius = groundDevice.getWidth()/2D;
+			}
 		}
 		for(BoundingBox box : liquidCollisionBoxes){
-			liquidBox.localCenter.add(box.localCenter);
-			liquidBox.widthRadius += box.widthRadius*2D;
-			liquidBox.heightRadius += box.heightRadius*2D;
+			liquidBox.localCenter.x += box.localCenter.x;
+			liquidBox.localCenter.z += box.localCenter.z;
+			if(box.localCenter.y - box.heightRadius < liquidBox.localCenter.y - liquidBox.heightRadius){
+				liquidBox.localCenter.y = box.localCenter.y;
+				liquidBox.heightRadius = box.heightRadius;
+				liquidBox.widthRadius = box.widthRadius;
+			}
 		}
-		liquidBox.widthRadius /= 2D*(liquidDevices.size() + liquidCollisionBoxes.size());
-		liquidBox.heightRadius /= 2D*(liquidDevices.size() + liquidCollisionBoxes.size());
 		liquidBox.depthRadius = liquidBox.widthRadius;
-		liquidBox.localCenter.multiply(1D/(liquidDevices.size() + liquidCollisionBoxes.size()));
+		liquidBox.localCenter.x *= 1D/(liquidDevices.size() + liquidCollisionBoxes.size());
+		liquidBox.localCenter.z *= 1D/(liquidDevices.size() + liquidCollisionBoxes.size());
 	}
 	
 	/**
