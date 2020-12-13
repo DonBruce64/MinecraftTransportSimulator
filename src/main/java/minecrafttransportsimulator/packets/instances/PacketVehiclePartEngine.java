@@ -108,12 +108,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 			case ES_OFF: engine.setElectricStarterStatus(false); break;
 			case ES_ON: engine.setElectricStarterStatus(true); break;
 			case HS_ON: engine.handStartEngine(); break;
-			case AS_ON: {
-				engine.setMagnetoStatus(true);
-				engine.rpm = 2500;
-				engine.startEngine();
-				break;
-			}
+			case AS_ON: engine.autoStartEngine(); break;
 			case BACKFIRE: engine.backfireEngine(); break;
 			case START: engine.startEngine(); break;
 			case FUEL_OUT: engine.stallEngine(packetType); break;

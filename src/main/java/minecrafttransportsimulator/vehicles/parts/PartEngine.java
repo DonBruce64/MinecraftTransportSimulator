@@ -48,6 +48,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 	//Internal variables.
 	private boolean backfired;
 	private boolean isPropellerInLiquid;
+	private boolean autoStarterEngaged;
 	private int starterLevel;
 	private int shiftCooldown;
 	private int internalFuel;
@@ -178,6 +179,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(vehicle.electricPower > 1){
 					starterLevel += 4;
 				}else{
+					autoStarterEngaged = false;
 					setElectricStarterStatus(false);
 				}
 			}
@@ -603,6 +605,10 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		
 		//Turn starter off.
 		starterLevel = 0;
+		if(autoStarterEngaged){
+			setElectricStarterStatus(false);
+			autoStarterEngaged = false;
+		}
 		
 		//If we are not a steam engine, set oil pressure.
 		if(!definition.engine.isSteamPowered){
@@ -641,6 +647,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 		if(vehicle.world.isClient()){
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
 		}
+	}
+	
+	public void autoStartEngine(){
+		autoStarterEngaged = true;
+		setMagnetoStatus(true);
+		setElectricStarterStatus(true);
 	}
 	
 	public void stallEngine(Signal signal){
