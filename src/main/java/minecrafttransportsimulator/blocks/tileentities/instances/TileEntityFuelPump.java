@@ -52,7 +52,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			}
 			
 			//Check distance to make sure the vehicle hasn't moved away.
-			if(connectedVehicle.position.distanceTo(position) > 20){
+			if(connectedVehicle.position.distanceTo(position) > 16){
 				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
 					if(entity instanceof IWrapperPlayer){
