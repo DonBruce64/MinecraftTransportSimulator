@@ -17,12 +17,14 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartBullet bullet;
     public JSONPartInteractable interactable;
     public JSONPartEffector effector;
-    public JSONPartCustom custom;
+    public JSONPartGeneric generic;
     public List<VehiclePart> subParts;
     public List<VehicleCollisionBox> collision;
     public List<VehicleDoor> doors;
     public VehicleRendering rendering;
     
+    @Deprecated
+    public PartCustom custom;
     @Deprecated
     public PartWheel wheel;
     @Deprecated
@@ -150,7 +152,13 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public int blocksWide;
     }
     
-    public class JSONPartCustom{
+    public class JSONPartGeneric{
+    	public float width;
+    	public float height;
+    }
+    
+    @Deprecated
+    public class PartCustom{
     	public float width;
     	public float height;
     }

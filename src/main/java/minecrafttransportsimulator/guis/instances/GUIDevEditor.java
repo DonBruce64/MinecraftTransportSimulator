@@ -175,7 +175,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.bullet = loadedDefinition.bullet;
 												definition.interactable = loadedDefinition.interactable;
 												definition.effector = loadedDefinition.effector;
-												definition.custom = loadedDefinition.custom;
+												definition.generic = loadedDefinition.generic;
 												definition.subParts = loadedDefinition.subParts;
 												definition.collision = loadedDefinition.collision;
 												definition.rendering = loadedDefinition.rendering;

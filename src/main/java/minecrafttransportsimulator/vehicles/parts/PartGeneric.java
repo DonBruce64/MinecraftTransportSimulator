@@ -5,19 +5,19 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-public final class PartCustom extends APart{
+public final class PartGeneric extends APart{
 	
-	public PartCustom(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartGeneric(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 	}
 	
 	@Override
 	public float getWidth(){
-		return definition.custom.width;
+		return definition.generic.width;
 	}
 
 	@Override
 	public float getHeight(){
-		return definition.custom.height;
+		return definition.generic.height;
 	}
 }

@@ -219,12 +219,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 						//Are there any doors blocking us from clicking this part?
 						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
-							//special bounds of the custom part if we're holding one.
+							//special bounds of the generic part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
-							if(heldPart.definition.general.type.equals("custom")){
-								box.widthRadius = heldPart.definition.custom.width/2D;
-								box.heightRadius = heldPart.definition.custom.height/2D;
-								box.depthRadius = heldPart.definition.custom.width/2D;
+							if(heldPart.definition.generic != null){
+								box.widthRadius = heldPart.definition.generic.width/2D;
+								box.heightRadius = heldPart.definition.generic.height/2D;
+								box.depthRadius = heldPart.definition.generic.width/2D;
 							}else{
 								box.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
 								box.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;

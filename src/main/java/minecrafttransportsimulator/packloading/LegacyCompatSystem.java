@@ -269,7 +269,7 @@ public final class LegacyCompatSystem{
 				}
 			}
 		}else{
-			//Check for old ground devices, crates, barrels, and effectors.
+			//Check for old ground devices, crates, barrels, effectors, and customs.
 			switch(definition.general.type){
 				case("wheel"):{
 					definition.general.type = "ground_" + definition.general.type;
@@ -279,6 +279,7 @@ public final class LegacyCompatSystem{
 					definition.ground.height = definition.wheel.diameter;
 					definition.ground.lateralFriction = definition.wheel.lateralFriction;
 					definition.ground.motiveFriction = definition.wheel.motiveFriction;
+					definition.wheel = null;
 					break;
 				}case("skid"):{
 					definition.general.type = "ground_" + definition.general.type;
@@ -286,6 +287,7 @@ public final class LegacyCompatSystem{
 					definition.ground.width = definition.skid.width;
 					definition.ground.height = definition.skid.width;
 					definition.ground.lateralFriction = definition.skid.lateralFriction;
+					definition.skid = null;
 					break;
 				}case("pontoon"):{
 					definition.general.type = "ground_" + definition.general.type;
@@ -295,6 +297,7 @@ public final class LegacyCompatSystem{
 					definition.ground.height = definition.pontoon.width;
 					definition.ground.lateralFriction = definition.pontoon.lateralFriction;
 					definition.ground.extraCollisionBoxOffset = definition.pontoon.extraCollisionBoxOffset;
+					definition.pontoon = null;
 					break;
 				}case("tread"):{
 					definition.general.type = "ground_" + definition.general.type;
@@ -306,6 +309,7 @@ public final class LegacyCompatSystem{
 					definition.ground.motiveFriction = definition.tread.motiveFriction;
 					definition.ground.extraCollisionBoxOffset = definition.tread.extraCollisionBoxOffset;
 					definition.ground.spacing = definition.tread.spacing;
+					definition.tread = null;
 					break;
 				}case("crate"):{
 					definition.general.type = "interactable_crate";
@@ -359,6 +363,13 @@ public final class LegacyCompatSystem{
 					definition.effector.type = "plow";
 					definition.effector.blocksWide = 1;
 					break;
+				}case("custom"):{
+					definition.general.type = "generic";
+					definition.generic = definition.new JSONPartGeneric();
+					definition.generic.height = definition.custom.height;
+					definition.generic.width = definition.custom.width;
+					definition.custom = null;
+					break;
 				}
 			}
 			
@@ -370,8 +381,9 @@ public final class LegacyCompatSystem{
 		
 		if(definition.subParts != null){
     		//Check all part slots for ground device names and update them.
-    		//Also check if we define an additional part, and make it a list instead.
-    		//Finally, switch all crates and barrels to effectors with the appropriate type.
+    		//Check if we define an additional part, and make it a list instead.
+    		//Switch all crates and barrels to effectors with the appropriate type.
+			//Switch custom types to generic.
     		for(VehiclePart subPartDef : definition.subParts){
     			if(subPartDef.additionalPart != null){
     				subPartDef.additionalParts = new ArrayList<VehiclePart>();
@@ -390,6 +402,8 @@ public final class LegacyCompatSystem{
     					subPartDef.maxValue = 1;
     				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
     					subPartDef.types.set(i, "effector_" + subPartName);
+    				}else if(subPartName.equals("custom")){
+    					subPartDef.types.set(i, "generic");
     				}
     				//If we have additional parts, check those too.
     				if(subPartDef.additionalParts != null){
@@ -407,6 +421,8 @@ public final class LegacyCompatSystem{
 	    	    					additionalPartDef.maxValue = 1;
 	    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
 	    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
+	    	    				}else if(additionalPartName.equals("custom")){
+	    	    					additionalPartDef.types.set(i, "generic");
 	    	    				}
 	    	    			}
     					}
