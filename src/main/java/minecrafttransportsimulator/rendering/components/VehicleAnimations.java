@@ -117,6 +117,8 @@ public final class VehicleAnimations{
 					case("engine_present"): return 1;
 					case("engine_isautomatic"): return engine.definition.engine.isAutomatic ? 1 : 0;	
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
+					case("engine_sin"): return Math.sin(Math.toRadians(engine.getEngineRotation(partialTicks)));
+					case("engine_cos"): return Math.cos(Math.toRadians(engine.getEngineRotation(partialTicks)));
 					case("engine_driveshaft_rotation"): return engine.getDriveshaftRotation(partialTicks);
 					case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
 					case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(engine.getDriveshaftRotation(partialTicks)));
