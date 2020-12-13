@@ -341,8 +341,8 @@ public final class RenderVehicle{
 		
 		//Mirror the model if we need to do so.
 		//If we are a sub-part, don't mirror as we'll already be mirrored.
-		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring; 
-		if(mirrored && !part.vehicleDefinition.isSubPart){
+		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring && !part.vehicleDefinition.isSubPart;
+		if(mirrored){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			GL11.glCullFace(GL11.GL_FRONT);
 		}
@@ -382,7 +382,7 @@ public final class RenderVehicle{
 					
 					//Translate to our new center and render.
 					GL11.glPushMatrix();
-					GL11.glTranslated(relativeOffset.x, relativeOffset.y, relativeOffset.z);
+					GL11.glTranslated(mirrored ? -relativeOffset.x : relativeOffset.x, relativeOffset.y, relativeOffset.z);
 					renderPart(childPart, partialTicks);
 					GL11.glPopMatrix();
 				}
