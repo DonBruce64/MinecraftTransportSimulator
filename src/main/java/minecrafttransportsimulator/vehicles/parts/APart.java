@@ -156,9 +156,7 @@ public abstract class APart implements ISoundProvider{
 			//We also need to add this rotation to our current rotation.
 			Point3d parentActionRotation = parentPart.getActionRotation(0);
 			totalOffset.rotateFine(parentActionRotation);
-			//FIXME this may be wrong, but it may also be right?
-			totalRotation.add(parentActionRotation);
-			//totalRotation.add(parentActionRotation).add(getPositionRotation(0)).add(placementRotation);
+			totalRotation.add(parentActionRotation).add(getPositionRotation(0)).add(placementRotation);
 			
 			//Now that we have the proper relative offset, add our parent's placement and position offsets.
 			//This is our final offset point.
