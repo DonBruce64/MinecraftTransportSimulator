@@ -115,8 +115,10 @@ public final class ControlSystem{
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
 		boolean isParkingBrakePressed = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
 		byte brakeValue = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-		if(isParkingBrakePressed && !vehicle.parkingBrakeOn){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+		if(isParkingBrakePressed){
+			if(!vehicle.parkingBrakeOn){
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+			}
 		}else if(brakeValue > 0 && vehicle.parkingBrakeOn){
 			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
