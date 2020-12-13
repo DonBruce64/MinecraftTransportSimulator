@@ -300,7 +300,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 						for(PartEngine engine : engines.values()){
 							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 						}
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, (byte) 0));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
 						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					}
 				}
