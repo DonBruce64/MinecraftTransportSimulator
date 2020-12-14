@@ -395,7 +395,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		double groundRotationBoost = 0;
 		if(collisionBoxCollided){
 			correctCollidingMovement();
-		}else if(towedByVehicle == null || !towedByVehicle.activeHitchConnection.mounted){
+		}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
 			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 			groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
