@@ -3,6 +3,8 @@ package minecrafttransportsimulator.blocks.instances;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -12,12 +14,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 public class BlockRoadCollision extends ABlockBase{
 	public static List<BlockRoadCollision> blocks = createCollisionBlocks();
-			
-	private final int collisionHeightInPixels;
+	private final BoundingBox blockBounds;
 	
     public BlockRoadCollision(int collisionHeightInPixels){
     	super(10.0F, 5.0F);
-    	this.collisionHeightInPixels = collisionHeightInPixels;
+    	this.blockBounds = new BoundingBox(new Point3d(0, -collisionHeightInPixels/16D/2D, 0), 0.5D, collisionHeightInPixels/16D/2D, 0.5D);
 	}
     
     @Override
@@ -37,6 +38,11 @@ public class BlockRoadCollision extends ABlockBase{
 			return;
     	}
     }
+    
+    @Override
+    public void addCollisionBoxes(IWrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+		collidingBoxes.add(blockBounds);
+	}
     
     public TileEntityRoad getRoadForBlock(IWrapperWorld world, Point3i location){
     	Point3i blockOffset = new Point3i(0, 0, 0);

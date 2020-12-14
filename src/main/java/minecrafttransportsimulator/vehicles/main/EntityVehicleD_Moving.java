@@ -6,12 +6,14 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
+import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -40,8 +42,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public double groundVelocity;
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
+	public VehicleConnection activeHitchConnection;
+	public VehicleConnection activeHookupConnection;
 	private String towedVehicleSavedID;
 	private String towedByVehicleSavedID;
+	private int activeHitchConnectionSavedIndex;
+	private int activeHookupConnectionSavedIndex;
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -63,6 +69,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.brake = (byte) data.getInteger("brake");
 		this.towedVehicleSavedID = data.getString("towedVehicleID");
 		this.towedByVehicleSavedID = data.getString("towedByVehicleID");
+		this.activeHitchConnectionSavedIndex = data.getInteger("activeHitchConnectionSavedIndex");
+		this.activeHookupConnectionSavedIndex = data.getInteger("activeHookupConnectionSavedIndex");
 		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
@@ -76,14 +84,26 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Before calling super, see if we need to link a towed or towed by vehicle.
 		//We need to wait on this in case the vehicle didn't load at the same time.
 		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
-			for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
-				if(entity.uniqueUUID.equals(towedVehicleSavedID)){
-					towedVehicle = (EntityVehicleF_Physics) entity;
-					towedVehicleSavedID = "";
-				}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
-					towedByVehicle = (EntityVehicleF_Physics) entity;
-					towedByVehicleSavedID = "";
+			try{
+				for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
+					if(entity.uniqueUUID.equals(towedVehicleSavedID)){
+						towedVehicle = (EntityVehicleF_Physics) entity;
+						activeHitchConnection = definition.motorized.hitches.get(activeHitchConnectionSavedIndex);
+						towedVehicleSavedID = "";
+					}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
+						towedByVehicle = (EntityVehicleF_Physics) entity;
+						activeHookupConnection = definition.motorized.hookups.get(activeHookupConnectionSavedIndex);
+						towedByVehicleSavedID = "";
+					}
 				}
+			}catch(Exception e){
+				MasterLoader.coreInterface.logError("ERROR: Could not connect trailer to vehicle.  Did the JSON change?");
+				towedVehicle = null;
+				activeHitchConnection = null;
+				towedByVehicle = null;
+				activeHookupConnection = null;
+				towedVehicleSavedID = "";
+				towedByVehicleSavedID = "";
 			}
 		}
 		super.update();
@@ -375,7 +395,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		double groundRotationBoost = 0;
 		if(collisionBoxCollided){
 			correctCollidingMovement();
-		}else{
+		}else if(towedByVehicle == null || !towedByVehicle.activeHitchConnection.mounted){
 			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 			groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
@@ -549,6 +569,46 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 	}
 	
+	/**
+	 * Method block for connecting this vehicle to another vehicle.
+	 * This vehicle will be considered towed by the other vehicle, and will
+	 * do different physics to follow the other vehicle than it normally would.
+	 * The passed-in vehicle should be the trailer we want to tow, or null if 
+	 * we should be disconnecting from any trailer we are currently towing.
+	 * Hitch and hookup index should be part of our and the trailer's respective
+	 * definitions.
+	 */
+	public void changeTrailer(EntityVehicleF_Physics trailer, int hitchIndex, int hookupIndex){
+		if(trailer == null){
+			towedVehicle.towedByVehicle = null;
+			towedVehicle.activeHookupConnection = null;
+			towedVehicle.parkingBrakeOn = true;
+			towedVehicle = null;
+			if(!world.isClient()){
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchIndex, hookupIndex));
+			}
+		}else{
+			towedVehicle = trailer;
+			activeHitchConnection = definition.motorized.hitches.get(hitchIndex);
+			trailer.towedByVehicle = (EntityVehicleF_Physics) this;
+			trailer.activeHookupConnection = trailer.definition.motorized.hookups.get(hookupIndex); 
+			trailer.parkingBrakeOn = false;
+			if(activeHitchConnection.mounted){
+				trailer.angles.setTo(angles);
+				trailer.prevAngles.setTo(prevAngles);
+				EntityVehicleF_Physics trailerTrailer = trailer.towedVehicle;
+				while(trailerTrailer != null){
+					trailerTrailer.angles.setTo(angles);
+					trailerTrailer.prevAngles.setTo(prevAngles);
+					trailerTrailer = trailerTrailer.towedVehicle;
+				}
+			}
+			if(!world.isClient()){
+				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchIndex, hookupIndex));
+			}
+		}
+	}
+	
 	public void addToServerDeltas(Point3d motion, Point3d rotation){
 		serverDeltaM.add(motion);
 		serverDeltaR.add(rotation);
@@ -578,9 +638,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setInteger("brake", brake);
 		if(towedVehicle != null){
 			data.setString("towedVehicleID", towedVehicle.uniqueUUID);
+			data.setInteger("activeHitchConnectionSavedIndex", activeHitchConnectionSavedIndex);
 		}
 		if(towedByVehicle != null){
 			data.setString("towedByVehicleID", towedByVehicle.uniqueUUID);
+			data.setInteger("activeHookupConnectionSavedIndex", activeHookupConnectionSavedIndex);
 		}
 		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);

@@ -373,7 +373,7 @@ public class GUIPanelGround extends AGUIPanel{
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.
 		EntityVehicleF_Physics currentVehicle = vehicle;
 		for(int i=0; i<trailerSelectors.size(); ++i){
-			if(currentVehicle != null && currentVehicle.definition.motorized.hitchPos != null){
+			if(currentVehicle != null && currentVehicle.definition.motorized.hitches != null){
 				trailerSelectors.get(i).visible = true;
 				trailerSelectors.get(i).selectorState = currentVehicle.towedVehicle != null ? 0 : 1;
 				currentVehicle = currentVehicle.towedVehicle;

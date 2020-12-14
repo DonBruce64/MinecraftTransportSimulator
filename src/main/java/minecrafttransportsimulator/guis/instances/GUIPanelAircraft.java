@@ -51,6 +51,8 @@ public class GUIPanelAircraft extends AGUIPanel{
 	private static final int GEAR_TEXTURE_HEIGHT_OFFSET = 176;
 	private static final int CUSTOM_TEXTURE_WIDTH_OFFSET = GEAR_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int CUSTOM_TEXTURE_HEIGHT_OFFSET = 216;
+	private static final int TRAILER_TEXTURE_WIDTH_OFFSET = CUSTOM_TEXTURE_WIDTH_OFFSET + 20;
+	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
 	
 	private final Map<LightType, GUIComponentSelector> lightSelectors = new HashMap<LightType, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
@@ -62,6 +64,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 	private GUIComponentSelector reverseSelector;
 	private GUIComponentSelector autopilotSelector;
 	private GUIComponentSelector gearSelector;
+	private GUIComponentSelector trailerSelector;
 	private GUIComponentTextBox beaconBox;
 	
 	private GUIComponentSelector selectedTrimSelector;
@@ -295,6 +298,53 @@ public class GUIPanelAircraft extends AGUIPanel{
 		beaconLabel.setBox(beaconBox);
 		labels.add(beaconLabel);
 		
+		//If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle
+		if(vehicle.definition.motorized.gearSequenceDuration != 0 && vehicle.definition.motorized.hitches != null){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(gearSelector);
+			
+			trailerSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trailer"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(trailerSelector);
+		}else if(vehicle.definition.motorized.gearSequenceDuration != 0){
+			gearSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(gearSelector);
+		}else if(vehicle.definition.motorized.hitches != null){
+			trailerSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trailer"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			addSelector(trailerSelector);
+		}
+		
 		//If we have gear, add a selector for it.
 		//This is rendered on the 4th row.
 		if(vehicle.definition.motorized.gearSequenceDuration != 0){
@@ -372,6 +422,11 @@ public class GUIPanelAircraft extends AGUIPanel{
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
 			}
+		}
+		
+		//If we have a hitch, set the selector state.
+		if(trailerSelector != null){
+			trailerSelector.selectorState = vehicle.towedVehicle != null ? 0 : 1;
 		}
 		
 		//Set the beaconBox text color depending on if we have an active beacon.

@@ -79,7 +79,6 @@ interact.fuelhose.differentfluids=The source and destination tanks do not contai
 
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
-interact.trailer.nohitch=This vehicle does not have a hitch and therefore cannot tow anything.
 interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
 interact.trailer.notfound=No trailers were found within 2 blocks of the hitch on this vehicle.
 

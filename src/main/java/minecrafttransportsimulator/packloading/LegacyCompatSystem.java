@@ -13,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
@@ -89,6 +90,28 @@ public final class LegacyCompatSystem{
 			definition.motorized.rudderArea = definition.blimp.rudderArea;
 			definition.motorized.ballastVolume = definition.blimp.ballastVolume;
 			definition.blimp = null;
+		}
+		
+		//Check for old hitches and hookups.
+		if(definition.motorized.hitchPos != null){
+			definition.motorized.hitches = new ArrayList<VehicleConnection>();
+			for(String hitchName : definition.motorized.hitchTypes){
+				VehicleConnection hitch = definition.new VehicleConnection();
+				hitch.type = hitchName;
+				hitch.pos = definition.motorized.hitchPos;
+				definition.motorized.hitches.add(hitch);
+			}
+			definition.motorized.hitchPos = null;
+			definition.motorized.hitchTypes = null;
+		}
+		if(definition.motorized.hookupPos != null){
+			definition.motorized.hookups = new ArrayList<VehicleConnection>();
+			VehicleConnection hookup = definition.new VehicleConnection();
+			hookup.type = definition.motorized.hookupType;
+			hookup.pos = definition.motorized.hookupPos;
+			definition.motorized.hookups.add(hookup);
+			definition.motorized.hookupType = null;
+			definition.motorized.hookupPos = null;
 		}
 		
 		//Check all part slots for ground device names and update them.
@@ -189,7 +212,10 @@ public final class LegacyCompatSystem{
 					partDef.maxValue = 1;
 				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
 					partDef.types.set(i, "effector_" + partName);
+				}else if(partName.equals("custom")){
+					partDef.types.set(i, "generic");
 				}
+				
 				//If we have additional parts, check those too.
 				if(partDef.additionalParts != null){
 					for(VehiclePart additionalPartDef : partDef.additionalParts){
@@ -206,6 +232,8 @@ public final class LegacyCompatSystem{
     	    					additionalPartDef.maxValue = 1;
     	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
     	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
+    	    				}else if(additionalPartName.equals("custom")){
+    	    					additionalPartDef.types.set(i, "generic");
     	    				}
     	    			}
 					}

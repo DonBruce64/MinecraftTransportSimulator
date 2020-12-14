@@ -1,24 +1,16 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
-import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
-	private static final Map<JSONRoadComponent, Integer> componentDisplayListMap = new HashMap<JSONRoadComponent, Integer>();
-	private static int flagDisplayListIndex = -1;
+	//private static final Map<JSONRoadComponent, Integer> componentDisplayListMap = new HashMap<JSONRoadComponent, Integer>();
 	
 	@Override
 	public void render(TileEntityRoad road, float partialTicks){
-		ItemRoadComponent coreComponent = road.components.get(RoadComponent.CORE);
 		//Render road components.
 		
 		

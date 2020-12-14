@@ -249,7 +249,7 @@ public class VehicleGroundDeviceCollection{
 			if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 				side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 				side2Delta = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-				groundedSideOffset = Math.hypot(vehicle.definition.motorized.hookupPos.y, vehicle.definition.motorized.hookupPos.z);
+				groundedSideOffset = Math.hypot(vehicle.activeHookupConnection.pos.y, vehicle.activeHookupConnection.pos.z);
 				testBox1 = rearLeftGDB;
 				testBox2 = rearRightGDB;
 			}else if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
@@ -259,7 +259,7 @@ public class VehicleGroundDeviceCollection{
 				//First populate variables.
 				side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 				side2Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-				groundedSideOffset = -Math.hypot(vehicle.definition.motorized.hookupPos.y, vehicle.definition.motorized.hookupPos.z);
+				groundedSideOffset = -Math.hypot(vehicle.activeHookupConnection.pos.y, vehicle.activeHookupConnection.pos.z);
 				side1Delta -= groundedSideOffset;
 				side2Delta -= groundedSideOffset;
 				

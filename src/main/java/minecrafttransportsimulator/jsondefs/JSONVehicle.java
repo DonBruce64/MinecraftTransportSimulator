@@ -52,12 +52,20 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float ballastVolume;
     	public String hornSound;
     	public String sirenSound;
+    	public List<VehicleConnection> hitches;
+    	public List<VehicleConnection> hookups;
+    	
+    	@Deprecated
         public Point3d hitchPos;
+    	@Deprecated
         public List<String> hitchTypes;
+    	@Deprecated
         public Point3d hookupPos;
+    	@Deprecated
         public String hookupType;
         public List<PackInstrument> instruments;
     }
+    
     @Deprecated
     public class VehiclePlane{
         public boolean hasFlaps;
@@ -205,6 +213,12 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public String name;
     	public int duration;
     	public int amplifier;
+    }
+    
+    public class VehicleConnection{
+    	public String type;
+    	public Point3d pos;
+    	public boolean mounted;
     }
     
     public class PackInstrument{

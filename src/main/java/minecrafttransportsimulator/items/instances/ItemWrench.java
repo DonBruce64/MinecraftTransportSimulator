@@ -11,7 +11,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -65,15 +64,10 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
 						//Make sure we disconnect any trailers linked to this vehicle.  We don't want to save those.
 						if(vehicle.towedVehicle != null){
-							vehicle.towedVehicle.towedByVehicle = null;
-							vehicle.towedVehicle.parkingBrakeOn = true;
-							vehicle.towedVehicle = null;
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle));
+							vehicle.changeTrailer(null, 0, 0);
 						}
 						if(vehicle.towedByVehicle != null){
-							vehicle.towedByVehicle.towedVehicle = null;
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange(vehicle.towedByVehicle));
-							vehicle.towedByVehicle = null;
+							vehicle.towedByVehicle.changeTrailer(null, 0, 0);
 						}
 						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 						IWrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();
