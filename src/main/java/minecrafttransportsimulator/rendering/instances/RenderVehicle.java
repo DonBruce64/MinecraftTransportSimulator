@@ -380,10 +380,20 @@ public final class RenderVehicle{
 					//Get the relative distance between our offset and our parent's offset.
 					Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
 					
+					
 					//Translate to our new center and render.
+					//If we are mirroring, and are a child part that shouldn't mirror, don't do so.
 					GL11.glPushMatrix();
 					GL11.glTranslated(mirrored ? -relativeOffset.x : relativeOffset.x, relativeOffset.y, relativeOffset.z);
-					renderPart(childPart, partialTicks);
+					if(mirrored && childPart.disableMirroring){
+						GL11.glScalef(-1.0F, 1.0F, 1.0F);
+						GL11.glCullFace(GL11.GL_BACK);
+						renderPart(childPart, partialTicks);
+						GL11.glScalef(-1.0F, 1.0F, 1.0F);
+						GL11.glCullFace(GL11.GL_FRONT);
+					}else{
+						renderPart(childPart, partialTicks);
+					}
 					GL11.glPopMatrix();
 				}
 			}
