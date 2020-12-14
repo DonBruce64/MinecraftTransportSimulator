@@ -316,7 +316,7 @@ public class VehicleGroundDeviceCollection{
 		VehicleGroundDeviceBox testBox1 = null;
 		VehicleGroundDeviceBox testBox2 = null;
 		if(rearLeftGDB.isGrounded || frontLeftGDB.isGrounded){
-			if(!rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
+			if((!rearRightGDB.isGrounded && (!frontRightGDB.isGrounded || frontRightGDB.contactPoint.x == 0)) || (!frontRightGDB.isGrounded && (!rearRightGDB.isGrounded || rearRightGDB.contactPoint.x == 0))){
 				side1Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
 				side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
 				if(rearLeftGDB.isGrounded && !frontRightGDB.isGrounded){
@@ -331,7 +331,7 @@ public class VehicleGroundDeviceCollection{
 			}
 		}
 		if(rearRightGDB.isGrounded || frontRightGDB.isGrounded){
-			if(!rearLeftGDB.isGrounded && !frontLeftGDB.isGrounded){
+			if((!rearLeftGDB.isGrounded && (!frontLeftGDB.isGrounded || frontLeftGDB.contactPoint.x == 0)) || (!frontLeftGDB.isGrounded && (!rearLeftGDB.isGrounded || rearLeftGDB.contactPoint.x == 0))){
 				side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
 				side2Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
 				if(rearRightGDB.isGrounded && !frontRightGDB.isGrounded){
@@ -379,12 +379,13 @@ public class VehicleGroundDeviceCollection{
 				testBox2.updateCollisionStatuses(null);
 				
 				//Check if we collided after this movement.  If so, we need to calculate how far we need to angle to prevent collision.
+				//If we are tilting and a box along the axis centerline collided, ignore it, as these shouldn't be taken into account.
 				double angularCorrection = 0;
 				double linearCorrection = 0;
-				if(testBox1.collisionDepth > 0){
+				if(testBox1.collisionDepth > 0 && pitch ? testBox1.contactPoint.z != 0 : testBox1.contactPoint.x != 0){
 					angularCorrection = Math.toDegrees(Math.asin(testBox1.collisionDepth/side1Delta));
 				}
-				if(testBox2.collisionDepth > 0){
+				if(testBox2.collisionDepth > 0 && pitch ? testBox2.contactPoint.z != 0 : testBox2.contactPoint.x != 0){
 					double angularCorrection2 = Math.toDegrees(Math.asin(testBox2.collisionDepth/side2Delta));
 					if(angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection){
 						angularCorrection = angularCorrection2;
