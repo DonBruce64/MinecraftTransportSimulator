@@ -106,6 +106,10 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public List<String> customTypes;
         public float minValue;
         public float maxValue;
+        public float minYaw;
+        public float maxYaw;
+        public float minPitch;
+        public float maxPitch;
         @Deprecated
         public VehiclePart additionalPart;
         public List<VehiclePart> additionalParts;
@@ -115,7 +119,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public String linkedDoor;
         
         //Animation variables.
-        public List<VehicleAnimationDefinition> animations;
+        public List<JSONAnimationDefinition> animations;
         @Deprecated
         public String translationVariable;
         @Deprecated
@@ -230,7 +234,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float hudScale;
         public int optionalPartNumber;
         public String defaultInstrument;
-        public List<VehicleAnimationDefinition> animations;
+        public List<JSONAnimationDefinition> animations;
     }
     
     public class VehicleRendering{
@@ -239,11 +243,10 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public String panelTextColor;
         public String panelLitTextColor;
         public List<JSONText> textObjects;
-        public List<VehicleAnimatedObject> animatedObjects;
+        public List<JSONAnimatedObject> animatedObjects;
         public List<VehicleCameraObject> cameraObjects;
         public List<String> customVariables;
         
-        //DEPRECIATED CODE!
         @Deprecated
         public int displayTextMaxLength;
         @Deprecated
@@ -284,36 +287,11 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public boolean absoluteValue;
     }
     
-    public class VehicleAnimatedObject{
-    	public String objectName;
-    	public String applyAfter;
-    	public List<VehicleAnimationDefinition> animations;
-    }
-    
-    public class VehicleAnimationDefinition{
-    	public String animationType;
-    	public String variable;
-    	public Point3d centerPoint;
-    	public Point3d axis;
-    	public float offset;
-    	public boolean addPriorOffset;
-    	public float clampMin;
-    	public float clampMax;
-    	public boolean absolute;
-    	public int duration;
-    	public int forwardsDelay;
-    	public int reverseDelay;
-    	public String forwardsStartSound;
-    	public String forwardsEndSound;
-    	public String reverseStartSound;
-    	public String reverseEndSound;
-    }
-    
     public class VehicleCameraObject{
     	public Point3d pos;
     	public Point3d rot;
     	public float fovOverride;
     	public String overlay;
-    	public List<VehicleAnimationDefinition> animations;
+    	public List<JSONAnimationDefinition> animations;
     }
 }

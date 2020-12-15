@@ -26,6 +26,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class PartGun extends APart implements IVehiclePartFXProvider{
+	
+	private final double minYawAngle;
+	private final double maxYawAngle;
+	private final double minPitchAngle;
+	private final double maxPitchAngle;
+	
 	//Stored variables used to determine bullet firing behavior.
 	public int bulletsFired;
 	public int bulletsLeft;
@@ -51,6 +57,28 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 		
 	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
+		//Set min/max yaw/pitch angles based on our definition and the vehicle definition.
+		if(definition.gun.minYaw != 0){
+			minYawAngle = vehicleDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, vehicleDefinition.minYaw) : definition.gun.minYaw;
+		}else{
+			minYawAngle =  vehicleDefinition.minYaw;
+		}
+		if(definition.gun.maxYaw != 0){
+			maxYawAngle = vehicleDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, vehicleDefinition.maxYaw) : definition.gun.maxYaw;
+		}else{
+			maxYawAngle =  vehicleDefinition.maxYaw;
+		}
+		if(definition.gun.minPitch != 0){
+			minPitchAngle = vehicleDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, vehicleDefinition.minPitch) : -definition.gun.minPitch;
+		}else{
+			minPitchAngle = -vehicleDefinition.minPitch;
+		}	
+		if(definition.gun.maxPitch != 0){
+			maxPitchAngle = vehicleDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, vehicleDefinition.maxPitch) : -definition.gun.maxPitch;
+		}else{
+			maxPitchAngle = -vehicleDefinition.maxPitch;
+		}
+		
 		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.currentOrientation = data.getPoint3d("currentOrientation");
@@ -151,7 +179,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 			//Apply yaw clamps.
 			//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 			//We need to do special logic for this type of gun.
-			if(definition.gun.minYaw == -180  && definition.gun.maxYaw == 180){
+			if(minYawAngle == -180  && maxYawAngle == 180){
 				if(currentOrientation.y > 180 ){
 					currentOrientation.y -= 360;
 					prevOrientation.y -= 360;
@@ -160,11 +188,11 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 					prevOrientation.y += 360;
 				}
 			}else{
-				if(currentOrientation.y > definition.gun.maxYaw){
-					currentOrientation.y = definition.gun.maxYaw;
+				if(currentOrientation.y > maxYawAngle){
+					currentOrientation.y = maxYawAngle;
 				}
-				if(currentOrientation.y < definition.gun.minYaw){
-					currentOrientation.y = definition.gun.minYaw;
+				if(currentOrientation.y < minYawAngle){
+					currentOrientation.y = minYawAngle;
 				}
 			}
 			
@@ -190,17 +218,17 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				currentOrientation.x += deltaPitch;
 			}
 			//Apply pitch clamps.
-			if(currentOrientation.x < -definition.gun.maxPitch){
-				currentOrientation.x = -definition.gun.maxPitch;
+			if(currentOrientation.x < maxPitchAngle){
+				currentOrientation.x = maxPitchAngle;
 			}
-			if(currentOrientation.x > -definition.gun.minPitch){
-				currentOrientation.x = -definition.gun.minPitch;
+			if(currentOrientation.x > minPitchAngle){
+				currentOrientation.x = minPitchAngle;
 			}
 			
 			//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
 			//This keeps NPCs from wasting ammo.
 			if(!(controller instanceof IWrapperPlayer)){
-				if(!lockedOn || currentOrientation.y == definition.gun.maxYaw || currentOrientation.y == definition.gun.minYaw || currentOrientation.x == -definition.gun.minPitch || currentOrientation.x == -definition.gun.maxPitch){
+				if(!lockedOn || currentOrientation.y == minYawAngle || currentOrientation.y == maxYawAngle || currentOrientation.x == minPitchAngle || currentOrientation.x == maxPitchAngle){
 					firing = false;
 				}
 			}

@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.VehicleAnimations;
@@ -80,7 +80,7 @@ public final class RenderInstrument{
 					boolean skipRender = false;
 					boolean skipFurtherTransforms = false;
 					if(component.animations != null){
-						for(VehicleAnimationDefinition animation : component.animations){
+						for(JSONAnimationDefinition animation : component.animations){
 							//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
 							//If so, we need to let the animation system know by adding a suffix to the variable.
 							//Otherwise, as we don't pass-in the part, it will assume it's a vehicle variable.

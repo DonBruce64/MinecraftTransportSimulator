@@ -7,8 +7,8 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -29,8 +29,8 @@ public class RenderableModelObject extends RenderableTransform{
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, VehicleAnimatedObject definition, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
-		super(definition != null ? definition.animations : new ArrayList<VehicleAnimationDefinition>());
+	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
+		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
 		this.modelName = modelName;
 		this.objectName = objectName;
 		this.vertices = vertices;
@@ -41,7 +41,7 @@ public class RenderableModelObject extends RenderableTransform{
 			//Rollers are special and require special transform constructors.
 			//This happens if a pack has rollers in their JSON manually defined.
 			//TODO should this be removed to force auto-calculation?
-			for(VehicleAnimationDefinition animation : definition.animations){
+			for(JSONAnimationDefinition animation : definition.animations){
 				if(animation.animationType.equals("animations") && objectName.toLowerCase().contains("roller")){
 					TransformTreadRoller rollerTransform = TransformTreadRoller.create(objectName, animation, vehicle, vertices);
 					int transformIndex = definition.animations.indexOf(animation);

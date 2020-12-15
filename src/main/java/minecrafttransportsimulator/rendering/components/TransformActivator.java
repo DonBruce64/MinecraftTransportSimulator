@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -12,7 +12,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public class TransformActivator extends ATransform{
 	
-	public TransformActivator(VehicleAnimationDefinition definition){
+	public TransformActivator(JSONAnimationDefinition definition){
 		super(definition);
 	}
 	

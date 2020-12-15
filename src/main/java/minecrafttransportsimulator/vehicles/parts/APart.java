@@ -12,8 +12,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -101,7 +101,7 @@ public abstract class APart implements ISoundProvider{
 		
 		//Create movement animation clocks.
 		if(vehicleDefinition.animations != null){
-			for(VehicleAnimationDefinition animation : vehicleDefinition.animations){
+			for(JSONAnimationDefinition animation : vehicleDefinition.animations){
 				animations.add(new DurationDelayClock(animation));
 			}
 		}
@@ -185,7 +185,7 @@ public abstract class APart implements ISoundProvider{
 		if(!animations.isEmpty()){
 			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 			for(DurationDelayClock animation : animations){
-				VehicleAnimationDefinition definition = animation.definition;
+				JSONAnimationDefinition definition = animation.definition;
 				if(definition.animationType.equals("inhibitor")){
 					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
@@ -256,7 +256,7 @@ public abstract class APart implements ISoundProvider{
 		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 		if(!animations.isEmpty()){
 			for(DurationDelayClock animation : animations){
-				VehicleAnimationDefinition definition = animation.definition;
+				JSONAnimationDefinition definition = animation.definition;
 				if(definition.animationType.equals("inhibitor")){
 					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
 					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){

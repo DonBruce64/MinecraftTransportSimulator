@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -15,7 +15,7 @@ public class TransformRotatable extends ATransform{
 	private final Point3d rotationAxis;
 	private double rotationMagnitude;
 	
-	public TransformRotatable(VehicleAnimationDefinition definition){
+	public TransformRotatable(JSONAnimationDefinition definition){
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//rotation magnitude is the magnitude of that vector.

@@ -17,10 +17,10 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -230,7 +230,7 @@ public final class RenderVehicle{
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
 			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 			if(vehicle.definition.rendering.animatedObjects != null){
-				for(VehicleAnimatedObject definition : vehicle.definition.rendering.animatedObjects){
+				for(JSONAnimatedObject definition : vehicle.definition.rendering.animatedObjects){
 					if(parsedModel.containsKey(definition.objectName)){
 						modelObjects.add(new RenderableModelObject(vehicle.definition.systemName, definition.objectName, definition, parsedModel.get(definition.objectName), vehicle, null));
 						parsedModel.remove(definition.objectName);
@@ -302,7 +302,7 @@ public final class RenderVehicle{
 			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
 			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 			if(part.definition.rendering != null && part.definition.rendering.animatedObjects != null){
-				for(VehicleAnimatedObject definition : part.definition.rendering.animatedObjects){
+				for(JSONAnimatedObject definition : part.definition.rendering.animatedObjects){
 					if(parsedModel.containsKey(definition.objectName)){
 						modelObjects.add(new RenderableModelObject(partModelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), part.vehicle, part));
 						parsedModel.remove(definition.objectName);

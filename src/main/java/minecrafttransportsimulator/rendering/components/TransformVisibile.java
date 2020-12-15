@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -11,7 +11,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public class TransformVisibile extends ATransform{
 	
-	public TransformVisibile(VehicleAnimationDefinition definition){
+	public TransformVisibile(JSONAnimationDefinition definition){
 		super(definition);
 	}
 	

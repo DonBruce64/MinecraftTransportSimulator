@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane.RoadLaneConnection;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -94,10 +95,10 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					if(startingRoadData != null){
 						if(startingRoadData.clickedStart){
 							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.startingOffset);
-							startRotation = startingRoadData.clickedForward ? startingRoadData.roadClicked.curve.startAngle : startingRoadData.roadClicked.curve.startAngle + 180;
+							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.startAngle : startingRoadData.roadClicked.curve.startAngle + 180;
 						}else{
 							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.startingOffset).add(startingRoadData.roadClicked.curve.endPos);
-							startRotation = startingRoadData.clickedForward ? startingRoadData.roadClicked.curve.endAngle : startingRoadData.roadClicked.curve.endAngle + 180;
+							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.endAngle : startingRoadData.roadClicked.curve.endAngle + 180;
 						}
 						
 						//Set the block position to be close to the start of the curve, but not on it.
@@ -133,10 +134,10 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					if(endingRoadData != null){
 						if(endingRoadData.clickedStart){
 							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset);
-							endRotation = endingRoadData.clickedForward ? endingRoadData.roadClicked.curve.startAngle : endingRoadData.roadClicked.curve.startAngle + 180;
+							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.startAngle : endingRoadData.roadClicked.curve.startAngle + 180;
 						}else{
 							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset).add(endingRoadData.roadClicked.curve.endPos);
-							endRotation = endingRoadData.clickedForward ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
+							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
 						}
 					}else{
 						endPosition = new Point3d(lastPositionClicked.get(player));
@@ -167,25 +168,100 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						//Set the lane connections, as appropriate.
 						//If we are butted-up to a segment, connect the connections in order.
 						//If we are opposite to a segment, connect the connections in opposite pairs.
-						//FIXME do connection logic here.
 						if(startingRoadData != null){
 							for(int laneNumber=0; laneNumber < newRoad.lanes.size(); ++laneNumber){
-								if(startingRoadData.clickedForward){
-									if(startingRoadData.laneClicked + laneNumber < startingRoadData.roadClicked.lanes.size()){
-										int connectionLaneNumber = startingRoadData.laneClicked + laneNumber;
-										RoadLane laneToConnect = startingRoadData.roadClicked.lanes.get(connectionLaneNumber);
+								int connectionLaneNumber = startingRoadData.laneClicked + (startingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
+								if(connectionLaneNumber >= 0 && connectionLaneNumber < startingRoadData.roadClicked.lanes.size()){
+									RoadLane laneToConnect = startingRoadData.roadClicked.lanes.get(connectionLaneNumber);
+									
+									if(startingRoadData.clickedSameDirection){
 										if(startingRoadData.clickedStart){
-											//Clicked the start of the road, and in the same direction.
+											//Clicked the start of the starting road, and in the same direction.
 											//In this case, our road starts at the same position, and needs the same connections.
-											newRoad.lanes.get(laneNumber).priorConnections.addAll(laneToConnect.priorConnections);
+											for(RoadLaneConnection connection : laneToConnect.priorConnections){
+												newRoad.lanes.get(laneNumber).priorConnections.add(connection);
+												TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+												if(connection.connectedToStart){
+													otherRoad.lanes.get(connection.laneNumber).connectToPrior(newRoad, laneNumber, true);
+												}else{
+													otherRoad.lanes.get(connection.laneNumber).connectToNext(newRoad, laneNumber, true);
+												}
+											}
 										}else{
-											//Clicked the end of the road, and in the same direction.
-											//In the case, our road starts at the end of the lane, so only add that connection.
+											//Clicked the end of the starting road, and in the same direction.
+											//In the case, our road starts at the end of the starting road, so connect our start to that road's end.
 											newRoad.lanes.get(laneNumber).connectToPrior(startingRoadData.roadClicked, connectionLaneNumber, false);
+											laneToConnect.connectToNext(newRoad, laneNumber, true);
+										}
+									}else{
+										if(startingRoadData.clickedStart){
+											//Clicked the start of the starting road, and in the opposite direction.
+											//In this case, our road's start connection needs to be the start of the starting road.
+											newRoad.lanes.get(laneNumber).connectToPrior(startingRoadData.roadClicked, connectionLaneNumber, false);
+											laneToConnect.connectToNext(newRoad, laneNumber, true);
+										}else{
+											//Clicked the end of the starting road, and in the opposite direction.
+											//In the case, our road starts at the end of the starting road, but goes the other way, so add the starting road's next connections as our priors.
+											for(RoadLaneConnection connection : laneToConnect.nextConnections){
+												newRoad.lanes.get(laneNumber).priorConnections.add(connection);
+												TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+												if(connection.connectedToStart){
+													otherRoad.lanes.get(connection.laneNumber).connectToPrior(newRoad, laneNumber, true);
+												}else{
+													otherRoad.lanes.get(connection.laneNumber).connectToNext(newRoad, laneNumber, true);
+												}
+											}
 										}
 									}
-								}else{
-									//FIXME connect in reverse here.
+								}
+							}
+						}
+						
+						if(endingRoadData != null){
+							for(int laneNumber=0; laneNumber < newRoad.lanes.size(); ++laneNumber){
+								int connectionLaneNumber = endingRoadData.laneClicked + (endingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
+								if(connectionLaneNumber >= 0 && connectionLaneNumber < endingRoadData.roadClicked.lanes.size()){
+									RoadLane laneToConnect = endingRoadData.roadClicked.lanes.get(connectionLaneNumber);
+									
+									if(endingRoadData.clickedSameDirection){
+										if(endingRoadData.clickedStart){
+											//Clicked the start of the ending road, and in the same direction.
+											//In this case, connect our end with that road's start.
+											newRoad.lanes.get(laneNumber).connectToNext(endingRoadData.roadClicked, connectionLaneNumber, true);
+											laneToConnect.connectToPrior(newRoad, laneNumber, false);
+										}else{
+											//Clicked the end of the ending road, and in the same direction.
+											//In the case, our road ends at the same position, so connect to the same connections.
+											for(RoadLaneConnection connection : laneToConnect.nextConnections){
+												newRoad.lanes.get(laneNumber).nextConnections.add(connection);
+												TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+												if(connection.connectedToStart){
+													otherRoad.lanes.get(connection.laneNumber).connectToPrior(newRoad, laneNumber, false);
+												}else{
+													otherRoad.lanes.get(connection.laneNumber).connectToNext(newRoad, laneNumber, false);
+												}
+											}
+										}
+									}else{
+										if(endingRoadData.clickedStart){
+											//Clicked the start of the ending road, and in the opposite direction.
+											//In this case, our road's end connection is the same as that road's start connection.
+											for(RoadLaneConnection connection : laneToConnect.priorConnections){
+												newRoad.lanes.get(laneNumber).nextConnections.add(connection);
+												TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+												if(connection.connectedToStart){
+													otherRoad.lanes.get(connection.laneNumber).connectToPrior(newRoad, laneNumber, false);
+												}else{
+													otherRoad.lanes.get(connection.laneNumber).connectToNext(newRoad, laneNumber, false);
+												}
+											}
+										}else{
+											//Clicked the end of the ending road, and in the opposite direction.
+											//In this case, we need to join our end with the ending road's end.
+											newRoad.lanes.get(laneNumber).connectToNext(endingRoadData.roadClicked, connectionLaneNumber, false);
+											laneToConnect.connectToNext(newRoad, laneNumber, false);
+										}
+									}
 								}
 							}
 						}

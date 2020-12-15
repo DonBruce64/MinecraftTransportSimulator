@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -16,10 +16,10 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * @author don_bruce
  */
 public abstract class ATransform{
-	public final VehicleAnimationDefinition definition; 
+	public final JSONAnimationDefinition definition; 
 	private final Map<EntityVehicleF_Physics, DurationDelayClock> clocks = new HashMap<EntityVehicleF_Physics, DurationDelayClock>();
 	
-	public ATransform(VehicleAnimationDefinition definition){
+	public ATransform(JSONAnimationDefinition definition){
 		this.definition = definition;
 	}
 	

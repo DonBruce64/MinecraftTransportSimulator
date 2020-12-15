@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -26,7 +26,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	public double endZ;
 	public double endAngle;
 	
-	private TransformTreadRoller(String objectName, VehicleAnimationDefinition definition, double yPos, double zPos, double radius, double circumference){
+	private TransformTreadRoller(String objectName, JSONAnimationDefinition definition, double yPos, double zPos, double radius, double circumference){
 		super(definition);
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		this.zPos = zPos;
@@ -38,7 +38,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	/**
 	 * Helper function to create a tread roller.
 	 */
-	public static TransformTreadRoller create(String objectName, VehicleAnimationDefinition definition, EntityVehicleF_Physics vehicle, Float[][] vertices){
+	public static TransformTreadRoller create(String objectName, JSONAnimationDefinition definition, EntityVehicleF_Physics vehicle, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;
@@ -57,7 +57,7 @@ public class TransformTreadRoller extends TransformRotatable{
 		
 		if(definition == null){
 			//We don't have a definition for this, auto-create one and return the roller with it.
-			definition = vehicle.definition.new VehicleAnimationDefinition();
+			definition = new JSONAnimationDefinition();
 			definition.animationType = "rotation";
 			definition.variable = "engine_driveshaft_rotation_1";
 			definition.centerPoint = new Point3d(0D, yPos, zPos);

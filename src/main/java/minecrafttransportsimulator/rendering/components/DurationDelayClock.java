@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -11,7 +11,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public class DurationDelayClock{
-	public final VehicleAnimationDefinition definition;
+	public final JSONAnimationDefinition definition;
 	private Long timeCommandedForwards = 0L;
 	private Long timeCommandedReverse = 0L;
 	private boolean playedForwardsStartSound = false;
@@ -19,7 +19,7 @@ public class DurationDelayClock{
 	private boolean playedReverseStartSound = false;
 	private boolean playedReverseEndSound = false;
 	
-	public DurationDelayClock(VehicleAnimationDefinition definition){
+	public DurationDelayClock(JSONAnimationDefinition definition){
 		this.definition = definition;
 	}
 	

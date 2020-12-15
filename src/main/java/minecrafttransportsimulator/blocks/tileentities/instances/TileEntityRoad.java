@@ -153,13 +153,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		public final TileEntityRoad roadClicked;
 		public final int laneClicked;
 		public final boolean clickedStart;
-		public final boolean clickedForward;
+		public final boolean clickedSameDirection;
 		
 		public RoadClickData(TileEntityRoad roadClicked, int laneClicked, boolean clickedStart, boolean clickedForward){
 			this.roadClicked = roadClicked;
 			this.laneClicked = laneClicked;
 			this.clickedStart = clickedStart;
-			this.clickedForward = clickedForward;
+			this.clickedSameDirection = clickedForward;
 		}
 	}
 	
@@ -218,7 +218,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		/**
 		 *  Helper class for containing connection data.
 		 */
-		private class RoadLaneConnection{
+		public class RoadLaneConnection{
 			public final Point3i tileLocation;
 			public final int laneNumber;
 			public final boolean connectedToStart;

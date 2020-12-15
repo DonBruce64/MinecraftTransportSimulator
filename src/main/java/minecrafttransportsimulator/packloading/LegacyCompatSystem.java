@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -11,8 +13,6 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
@@ -28,7 +28,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
  */
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
-	private static final JSONVehicle vehicleJSONinstance = new JSONVehicle();
 	
 	public static void performLegacyCompats(AJSONItem<?> definition){
 		if(definition instanceof JSONVehicle){
@@ -114,131 +113,8 @@ public final class LegacyCompatSystem{
 			definition.motorized.hookupPos = null;
 		}
 		
-		//Check all part slots for ground device names and update them.
-		//Also check if we define an additional part, and make it a list instead.
-		//Finally, switch all crates and barrels to effectors with the appropriate type.
 		for(VehiclePart partDef : definition.parts){
-			if(partDef.additionalPart != null){
-				partDef.additionalParts = new ArrayList<VehiclePart>();
-				partDef.additionalParts.add(partDef.additionalPart);
-				partDef.additionalPart = null;
-			}
-			if(partDef.linkedDoor != null){
-				partDef.linkedDoors = new ArrayList<String>();
-				partDef.linkedDoors.add(partDef.linkedDoor);
-				partDef.linkedDoor = null;
-			}
-			if(partDef.exhaustPos != null){
-				partDef.particleObjects = new ArrayList<ParticleObject>();
-				for(int i=0; i<partDef.exhaustPos.length; i+=3){
-					ParticleObject particle = partDef.new ParticleObject();
-					particle.type = "smoke";
-					particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
-					particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
-					particle.scale = 1.0F;
-					particle.quantity = 1;
-					particle.color = "#D9D9D9";
-					particle.toColor = "#D9D9D9";
-					particle.transparency = 0.25F;
-					particle.toTransparency = 0.25F;
-					partDef.particleObjects.add(particle);
-				}
-				partDef.exhaustPos = null;
-				partDef.exhaustVelocity = null;
-			}
-			if(partDef.exhaustObjects != null) {
-				partDef.particleObjects = new ArrayList<ParticleObject>();
-				for(ExhaustObject exhaust : partDef.exhaustObjects) {
-					ParticleObject particle = partDef.new ParticleObject();
-					particle.type = "smoke";
-					particle.pos = exhaust.pos;
-					particle.velocityVector = exhaust.velocity;
-					particle.scale = exhaust.scale;
-					particle.quantity = 1;
-					particle.color = "#D9D9D9";
-					particle.toColor = "#D9D9D9";
-					particle.transparency = 0.25F;
-					particle.toTransparency = 0.25F;
-					partDef.particleObjects.add(particle);
-				}
-				partDef.exhaustObjects = null;
-			}
-			if(partDef.rotationVariable != null){
-				partDef.animations = new ArrayList<VehicleAnimationDefinition>();
-				VehicleAnimationDefinition animation = definition.new VehicleAnimationDefinition();
-				animation.animationType = "rotation";
-				animation.variable = partDef.rotationVariable;
-				animation.centerPoint = partDef.rotationPosition;
-				animation.axis = partDef.rotationAngles;
-				animation.clampMin = partDef.rotationClampMin;
-				animation.clampMax = partDef.rotationClampMax;
-				animation.absolute = partDef.rotationAbsolute;
-				partDef.animations.add(animation);
-				partDef.rotationVariable = null;
-				partDef.rotationPosition = null;
-				partDef.rotationAngles = null;
-				partDef.rotationClampMin = 0;
-				partDef.rotationClampMax = 0;
-				partDef.rotationAbsolute = false;
-			}
-			if(partDef.translationVariable != null){
-				if(partDef.animations == null){
-					partDef.animations = new ArrayList<VehicleAnimationDefinition>();
-				}
-				VehicleAnimationDefinition animation = definition.new VehicleAnimationDefinition();
-				animation.animationType = "translation";
-				animation.variable = partDef.translationVariable;
-				animation.axis = partDef.translationPosition;
-				animation.clampMin = partDef.translationClampMin;
-				animation.clampMax = partDef.translationClampMax;
-				animation.absolute = partDef.translationAbsolute;
-				partDef.animations.add(animation);
-				partDef.translationVariable = null;
-				partDef.translationPosition = null;
-				partDef.translationClampMin = 0;
-				partDef.translationClampMax = 0;
-				partDef.translationAbsolute = false;
-			}
-			for(byte i=0; i<partDef.types.size(); ++i){
-				String partName = partDef.types.get(i);
-				if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
-					if(partName.equals("tread")){
-						partDef.turnsWithSteer = true;
-					}
-					partDef.types.set(i, "ground_" + partName);
-				}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
-					partDef.types.set(i, "interactable_" + partName);
-					partDef.minValue = 0;
-					partDef.maxValue = 1;
-				}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
-					partDef.types.set(i, "effector_" + partName);
-				}else if(partName.equals("custom")){
-					partDef.types.set(i, "generic");
-				}
-				
-				//If we have additional parts, check those too.
-				if(partDef.additionalParts != null){
-					for(VehiclePart additionalPartDef : partDef.additionalParts){
-    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
-    	    				String additionalPartName = additionalPartDef.types.get(j);
-    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
-    	    					if(additionalPartName.equals("tread")){
-    	    						additionalPartDef.turnsWithSteer = true;
-    	    					}
-    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
-    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
-    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
-    	    					additionalPartDef.minValue = 0;
-    	    					additionalPartDef.maxValue = 1;
-    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
-    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
-    	    				}else if(additionalPartName.equals("custom")){
-    	    					additionalPartDef.types.set(i, "generic");
-    	    				}
-    	    			}
-					}
-				}
-			}
+			performVehiclePartDefLegacyCompats(partDef);
 		}
 		
 		if(definition.rendering != null){
@@ -408,54 +284,8 @@ public final class LegacyCompatSystem{
 		}
 		
 		if(definition.subParts != null){
-    		//Check all part slots for ground device names and update them.
-    		//Check if we define an additional part, and make it a list instead.
-    		//Switch all crates and barrels to effectors with the appropriate type.
-			//Switch custom types to generic.
     		for(VehiclePart subPartDef : definition.subParts){
-    			if(subPartDef.additionalPart != null){
-    				subPartDef.additionalParts = new ArrayList<VehiclePart>();
-    				subPartDef.additionalParts.add(subPartDef.additionalPart);
-    			}
-    			for(byte i=0; i<subPartDef.types.size(); ++i){
-    				String subPartName = subPartDef.types.get(i);
-    				if(subPartName.equals("wheel") || subPartName.equals("skid") || subPartName.equals("pontoon") || subPartName.equals("tread")){
-    					if(subPartName.equals("tread")){
-    						subPartDef.turnsWithSteer = true;
-    					}
-    					subPartDef.types.set(i, "ground_" + subPartName);
-    				}else if(subPartName.equals("crate") || subPartName.equals("barrel") || subPartName.equals("crafting_table") || subPartName.equals("furnace") || subPartName.equals("brewing_stand")){
-    					subPartDef.types.set(i, "interactable_" + subPartName);
-    					subPartDef.minValue = 0;
-    					subPartDef.maxValue = 1;
-    				}else if(subPartName.equals("fertilizer") || subPartName.equals("harvester") || subPartName.equals("planter") || subPartName.equals("plow")){
-    					subPartDef.types.set(i, "effector_" + subPartName);
-    				}else if(subPartName.equals("custom")){
-    					subPartDef.types.set(i, "generic");
-    				}
-    				//If we have additional parts, check those too.
-    				if(subPartDef.additionalParts != null){
-    					for(VehiclePart additionalPartDef : subPartDef.additionalParts){
-	    					for(byte j=0; j<additionalPartDef.types.size(); ++j){
-	    	    				String additionalPartName = additionalPartDef.types.get(j);
-	    	    				if(additionalPartName.equals("wheel") || additionalPartName.equals("skid") || additionalPartName.equals("pontoon") || additionalPartName.equals("tread")){
-	    	    					if(additionalPartName.equals("tread")){
-	    	    						additionalPartDef.turnsWithSteer = true;
-	    	    					}
-	    	    					additionalPartDef.types.set(j, "ground_" + additionalPartName);
-	    	    				}else if(additionalPartName.equals("crate") || additionalPartName.equals("barrel") || additionalPartName.equals("crafting_table") || additionalPartName.equals("furnace") || additionalPartName.equals("brewing_stand")){
-	    	    					additionalPartDef.types.set(i, "interactable_" + additionalPartName);
-	    	    					additionalPartDef.minValue = 0;
-	    	    					additionalPartDef.maxValue = 1;
-	    	    				}else if(additionalPartName.equals("fertilizer") || additionalPartName.equals("harvester") || additionalPartName.equals("planter") || additionalPartName.equals("plow")){
-	    	    					additionalPartDef.types.set(i, "effector_" + additionalPartName);
-	    	    				}else if(additionalPartName.equals("custom")){
-	    	    					additionalPartDef.types.set(i, "generic");
-	    	    				}
-	    	    			}
-    					}
-    				}
-    			}
+    			performVehiclePartDefLegacyCompats(subPartDef);
     		}
 		}
 		
@@ -479,8 +309,8 @@ public final class LegacyCompatSystem{
 				component.lightUpTexture = !component.lightOverlay;
 			}
 			if(component.rotationVariable != null){
-				component.animations = new ArrayList<VehicleAnimationDefinition>();
-				VehicleAnimationDefinition animation = vehicleJSONinstance.new VehicleAnimationDefinition();
+				component.animations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.animationType = "rotation";
 				animation.variable = component.rotationVariable;
 				animation.centerPoint = new Point3d(0, 0, 0);
@@ -499,9 +329,9 @@ public final class LegacyCompatSystem{
 			}
 			if(component.translationVariable != null){
 				if(component.animations == null){
-					component.animations = new ArrayList<VehicleAnimationDefinition>();
+					component.animations = new ArrayList<JSONAnimationDefinition>();
 				}
-				VehicleAnimationDefinition animation = vehicleJSONinstance.new VehicleAnimationDefinition();
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.animationType = "translation";
 				animation.variable = component.translationVariable;
 				if(component.translateHorizontal){
@@ -580,6 +410,125 @@ public final class LegacyCompatSystem{
 			 definition.general.textLines = null;
 		}
 	}
+	
+	private static void performVehiclePartDefLegacyCompats(VehiclePart partDef){
+		if(partDef.additionalPart != null){
+			partDef.additionalParts = new ArrayList<VehiclePart>();
+			partDef.additionalParts.add(partDef.additionalPart);
+			partDef.additionalPart = null;
+		}
+		if(partDef.linkedDoor != null){
+			partDef.linkedDoors = new ArrayList<String>();
+			partDef.linkedDoors.add(partDef.linkedDoor);
+			partDef.linkedDoor = null;
+		}
+		if(partDef.exhaustPos != null){
+			partDef.particleObjects = new ArrayList<ParticleObject>();
+			for(int i=0; i<partDef.exhaustPos.length; i+=3){
+				ParticleObject particle = partDef.new ParticleObject();
+				particle.type = "smoke";
+				particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
+				particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
+				particle.scale = 1.0F;
+				particle.quantity = 1;
+				particle.color = "#D9D9D9";
+				particle.toColor = "#D9D9D9";
+				particle.transparency = 0.25F;
+				particle.toTransparency = 0.25F;
+				partDef.particleObjects.add(particle);
+			}
+			partDef.exhaustPos = null;
+			partDef.exhaustVelocity = null;
+		}
+		if(partDef.exhaustObjects != null) {
+			partDef.particleObjects = new ArrayList<ParticleObject>();
+			for(ExhaustObject exhaust : partDef.exhaustObjects) {
+				ParticleObject particle = partDef.new ParticleObject();
+				particle.type = "smoke";
+				particle.pos = exhaust.pos;
+				particle.velocityVector = exhaust.velocity;
+				particle.scale = exhaust.scale;
+				particle.quantity = 1;
+				particle.color = "#D9D9D9";
+				particle.toColor = "#D9D9D9";
+				particle.transparency = 0.25F;
+				particle.toTransparency = 0.25F;
+				partDef.particleObjects.add(particle);
+			}
+			partDef.exhaustObjects = null;
+		}
+		if(partDef.rotationVariable != null){
+			partDef.animations = new ArrayList<JSONAnimationDefinition>();
+			JSONAnimationDefinition animation = new JSONAnimationDefinition();
+			animation.animationType = "rotation";
+			animation.variable = partDef.rotationVariable;
+			animation.centerPoint = partDef.rotationPosition;
+			animation.axis = partDef.rotationAngles;
+			animation.clampMin = partDef.rotationClampMin;
+			animation.clampMax = partDef.rotationClampMax;
+			animation.absolute = partDef.rotationAbsolute;
+			partDef.animations.add(animation);
+			partDef.rotationVariable = null;
+			partDef.rotationPosition = null;
+			partDef.rotationAngles = null;
+			partDef.rotationClampMin = 0;
+			partDef.rotationClampMax = 0;
+			partDef.rotationAbsolute = false;
+		}
+		if(partDef.translationVariable != null){
+			if(partDef.animations == null){
+				partDef.animations = new ArrayList<JSONAnimationDefinition>();
+			}
+			JSONAnimationDefinition animation = new JSONAnimationDefinition();
+			animation.animationType = "translation";
+			animation.variable = partDef.translationVariable;
+			animation.axis = partDef.translationPosition;
+			animation.clampMin = partDef.translationClampMin;
+			animation.clampMax = partDef.translationClampMax;
+			animation.absolute = partDef.translationAbsolute;
+			partDef.animations.add(animation);
+			partDef.translationVariable = null;
+			partDef.translationPosition = null;
+			partDef.translationClampMin = 0;
+			partDef.translationClampMax = 0;
+			partDef.translationAbsolute = false;
+		}
+		for(byte i=0; i<partDef.types.size(); ++i){
+			String partName = partDef.types.get(i);
+			if(partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")){
+				if(partName.equals("tread")){
+					partDef.turnsWithSteer = true;
+				}
+				partDef.types.set(i, "ground_" + partName);
+			}else if(partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")){
+				partDef.types.set(i, "interactable_" + partName);
+				partDef.minValue = 0;
+				partDef.maxValue = 1;
+			}else if(partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")){
+				partDef.types.set(i, "effector_" + partName);
+			}else if(partName.equals("custom")){
+				partDef.types.set(i, "generic");
+			}
+			
+			//If we have ground devices that are wheels, but no animations, add those automatically.
+			if(partDef.types.get(i).equals("ground_wheel") && partDef.turnsWithSteer && partDef.animations == null){
+				partDef.animations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3d(0, 0, 0);
+				animation.axis = new Point3d(0, -1, 0);
+				animation.animationType = "rotation";
+				animation.variable = "rudder";
+				partDef.animations.add(animation);
+			}
+			
+			//If we have additional parts, check those too.
+			if(partDef.additionalParts != null){
+				for(VehiclePart additionalPartDef : partDef.additionalParts){
+					performVehiclePartDefLegacyCompats(additionalPartDef);
+				}
+			}
+		}
+	}
     
     private static void performAnimationLegacyCompats(VehicleRendering rendering){
     	if(rendering.textMarkings != null){
@@ -597,27 +546,30 @@ public final class LegacyCompatSystem{
 				rendering.textObjects.add(object);
 			}
     		rendering.textMarkings = null;
+    		rendering.defaultDisplayText = null;
+    		rendering.displayTextMaxLength = 0;
+    		rendering.textLighted = false;
     	}
     	if(rendering.rotatableModelObjects != null){
     		if(rendering.animatedObjects == null){
-    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
+    			rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
     		}
     		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects){
-    			VehicleAnimatedObject object = null;
-    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
+    			JSONAnimatedObject object = null;
+    			for(JSONAnimatedObject testObject : rendering.animatedObjects){
     				if(testObject.objectName.equals(rotatable.partName)){
     					object = testObject;
     					break;
     				}
     			}
     			if(object == null){
-    				object = vehicleJSONinstance.new VehicleAnimatedObject();
+    				object = new JSONAnimatedObject();
     				object.objectName = rotatable.partName;
-    				object.animations = new ArrayList<VehicleAnimationDefinition>();
+    				object.animations = new ArrayList<JSONAnimationDefinition>();
     				rendering.animatedObjects.add(object);
     			}
     			
-    			VehicleAnimationDefinition animation = vehicleJSONinstance.new VehicleAnimationDefinition();
+    			JSONAnimationDefinition animation = new JSONAnimationDefinition();
     			animation.animationType = "rotation";
     	    	animation.variable = rotatable.rotationVariable;
     	    	animation.centerPoint = rotatable.rotationPoint;
@@ -638,24 +590,24 @@ public final class LegacyCompatSystem{
     	}
     	if(rendering.translatableModelObjects != null){
     		if(rendering.animatedObjects == null){
-    			rendering.animatedObjects = new ArrayList<VehicleAnimatedObject>();
+    			rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
     		}
     		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects){
-    			VehicleAnimatedObject object = null;
-    			for(VehicleAnimatedObject testObject : rendering.animatedObjects){
+    			JSONAnimatedObject object = null;
+    			for(JSONAnimatedObject testObject : rendering.animatedObjects){
     				if(testObject.objectName.equals(translatable.partName)){
     					object = testObject;
     					break;
     				}
     			}
     			if(object == null){
-    				object = vehicleJSONinstance.new VehicleAnimatedObject();
+    				object = new JSONAnimatedObject();
     				object.objectName = translatable.partName;
-    				object.animations = new ArrayList<VehicleAnimationDefinition>();
+    				object.animations = new ArrayList<JSONAnimationDefinition>();
     				rendering.animatedObjects.add(object);
     			}
     			
-    			VehicleAnimationDefinition animation = vehicleJSONinstance.new VehicleAnimationDefinition();
+    			JSONAnimationDefinition animation = new JSONAnimationDefinition();
     			animation.animationType = "translation";
     	    	animation.variable = translatable.translationVariable;
     	    	animation.axis = translatable.translationAxis;

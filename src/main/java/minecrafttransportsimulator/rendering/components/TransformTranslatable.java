@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -16,7 +16,7 @@ public class TransformTranslatable extends ATransform{
 	private final double translationMagnitude;
 	
 	
-	public TransformTranslatable(VehicleAnimationDefinition definition){
+	public TransformTranslatable(JSONAnimationDefinition definition){
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//translation magnitude is the magnitude of that vector.

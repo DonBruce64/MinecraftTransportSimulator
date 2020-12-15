@@ -3,15 +3,15 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a set of transforms that can be applied prior to rendering an object.
  * No rendering is performed in this class, as such rendering may change and is left to the calling class.
  * Rather, this class is a way to collect a series of {@link ATransform} objects via passing-in a list
- * of {@link VehicleAnimatedObject}s at construction.  These will be used to apply the appropriate transforms,
+ * of {@link JSONAnimatedObject}s at construction.  These will be used to apply the appropriate transforms,
  * which will ensure the rendering state is correct when rendering is performed.
  *
  * @author don_bruce
@@ -19,8 +19,8 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 public class RenderableTransform{
 	public final List<ATransform> transforms = new ArrayList<ATransform>();
 	
-	public RenderableTransform(List<VehicleAnimationDefinition> animations){
-		for(VehicleAnimationDefinition animation : animations){
+	public RenderableTransform(List<JSONAnimationDefinition> animations){
+		for(JSONAnimationDefinition animation : animations){
 			switch(animation.animationType){
 				case("translation") :{
 					transforms.add(new TransformTranslatable(animation));

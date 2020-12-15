@@ -166,10 +166,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	
 	@Override
 	public Point3d getActionRotation(float partialTicks){
-		double xRotation = definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0;
-		double yRotation = vehicleDefinition.turnsWithSteer && getLongPartOffset() == 0 ? -vehicle.rudderAngle/10D*Math.signum(totalOffset.z) : 0;
-		return new Point3d(xRotation, yRotation, 0D);
-		
+		return new Point3d(definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
 	}
 	
 	/**

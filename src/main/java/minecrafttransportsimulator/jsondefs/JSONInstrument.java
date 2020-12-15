@@ -3,8 +3,6 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleAnimationDefinition;
-
 public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     public List<Component> components = new ArrayList<Component>();
 
@@ -27,7 +25,7 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	public boolean rotateWindow;
     	public boolean extendWindow;
     	public boolean moveComponent;
-    	public List<VehicleAnimationDefinition> animations;
+    	public List<JSONAnimationDefinition> animations;
     	
     	public boolean lightUpTexture;
     	public boolean lightOverlay;
