@@ -42,20 +42,21 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 				customTypesValid = packVehicleDef.customTypes.contains(definition.general.customType);
 			}
 			
-			//Do extra part checks for specific part types, or just return the custom def.
-			switch(partPrefix){
-				case("bullet") : return customTypesValid && packVehicleDef.minValue <= definition.bullet.diameter && packVehicleDef.maxValue >= definition.bullet.diameter;
-				case("engine") : return customTypesValid && packVehicleDef.minValue <= definition.engine.fuelConsumption && packVehicleDef.maxValue >= definition.engine.fuelConsumption;
-				case("generic") : return packVehicleDef.customTypes == null || packVehicleDef.customTypes.contains(definition.general.customType);
-				case("ground") : return customTypesValid && packVehicleDef.minValue <= definition.ground.height && packVehicleDef.maxValue >= definition.ground.height;
-				case("gun") : return customTypesValid && packVehicleDef.minValue <= definition.gun.diameter && packVehicleDef.maxValue >= definition.gun.diameter;
-				case("interactable") : return customTypesValid && packVehicleDef.minValue <= definition.interactable.inventoryUnits && packVehicleDef.maxValue >= definition.interactable.inventoryUnits;
-				case("propeller") : return customTypesValid && packVehicleDef.minValue <= definition.propeller.diameter && packVehicleDef.maxValue >= definition.propeller.diameter;
-				default : return customTypesValid;
+			if(customTypesValid){
+				//Do extra part checks for specific part types, or just return the custom def.
+				switch(partPrefix){
+					case("bullet") : return packVehicleDef.minValue <= definition.bullet.diameter && packVehicleDef.maxValue >= definition.bullet.diameter;
+					case("engine") : return packVehicleDef.minValue <= definition.engine.fuelConsumption && packVehicleDef.maxValue >= definition.engine.fuelConsumption;
+					case("generic") : return ((packVehicleDef.minValue <= definition.generic.height && packVehicleDef.maxValue >= definition.generic.height) || (packVehicleDef.minValue == 0 && packVehicleDef.maxValue == 0));
+					case("ground") : return packVehicleDef.minValue <= definition.ground.height && packVehicleDef.maxValue >= definition.ground.height;
+					case("gun") : return packVehicleDef.minValue <= definition.gun.diameter && packVehicleDef.maxValue >= definition.gun.diameter;
+					case("interactable") : return packVehicleDef.minValue <= definition.interactable.inventoryUnits && packVehicleDef.maxValue >= definition.interactable.inventoryUnits;
+					case("propeller") : return packVehicleDef.minValue <= definition.propeller.diameter && packVehicleDef.maxValue >= definition.propeller.diameter;
+					default : return true;
+				}
 			}
-		}else{
-			return false;
 		}
+		return false;
 	}
 	
 	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, IWrapperNBT partData, APart parentPart){
