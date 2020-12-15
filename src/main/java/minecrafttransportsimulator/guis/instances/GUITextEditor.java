@@ -134,19 +134,16 @@ public class GUITextEditor extends AGUIBase{
 			if(vehicle.definition.rendering.textObjects != null){
 				for(JSONText textObject : vehicle.definition.rendering.textObjects){
 					textObjects.add(textObject);
-					textLines.add(vehicle.textLines.get(textObjects.indexOf(textObject)));
+					textLines.add(vehicle.textLines.get(vehicle.definition.rendering.textObjects.indexOf(textObject)));
 				}
 			}
 			//Add all text objects and lines for all parts on the vehicle.
-			int checkedTextObjects = textObjects.size();
 			for(APart part : vehicle.parts){
 				if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
 					for(JSONText textObject : part.definition.rendering.textObjects){
 						textObjects.add(textObject);
-						int objectIndex = textObjects.indexOf(textObject);
-						textLines.add(part.textLines.get(objectIndex - checkedTextObjects));
+						textLines.add(part.textLines.get(part.definition.rendering.textObjects.indexOf(textObject)));
 					}
-					checkedTextObjects += part.definition.rendering.textObjects.size();
 				}
 			}
 		}
