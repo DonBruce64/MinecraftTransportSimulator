@@ -612,20 +612,21 @@ class InterfaceRender implements IInterfaceRender{
 			InputStream stream;
 			String rawPackInfo = location.getPath();
 			
-			//Strip the suffix from the packInfo, and then test to see if it's an internal
-			//resource or one being handled by an external loader.
-			String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
-			if(!strippedSuffix.contains(AItemPack.PACKID_SEPARATOR)){
-				stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
-				if(stream == null){
-					MasterInterface.coreInterface.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
-					throw new FileNotFoundException(rawPackInfo);
-				}
-			}else{
-				//If we are for an item JSON, try to find that JSON, or generate one automatically.
-				//If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
-				//Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
-				if(rawPackInfo.endsWith(".json")){
+			//If we are for an item JSON, try to find that JSON, or generate one automatically.
+			//If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
+			//Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
+			if(rawPackInfo.endsWith(".json")){
+				//Strip the suffix from the packInfo, and then test to see if it's an internal
+				//JSON reference from an item JSON, or if it's the primary JSON for the item being loaded..
+				String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
+				if(!strippedSuffix.contains(AItemPack.PACKID_SEPARATOR)){
+					//JSON reference.  Get the specified file.
+					stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
+					if(stream == null){
+						MasterInterface.coreInterface.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
+						throw new FileNotFoundException(rawPackInfo);
+					}
+				}else{
 					String resourcePath = "";
 					String itemTexturePath = "";
 						
@@ -646,13 +647,21 @@ class InterfaceRender implements IInterfaceRender{
 							//Get the actual texture path.
 							itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
 							
-							//Remove the "/assets/textures/" portion as it's implied with JSON.
-							itemTexturePath = itemTexturePath.substring(("/assets/"  + packID + "/textures/").length());
+							//Remove the "/assets/packID/" portion as it's implied with JSON.
+							itemTexturePath = itemTexturePath.substring(("/assets/"  + packID + "/").length());
+							
+							//If the packloader is internal, remove the "textures/" prefix.  This is auto-generated.
+							//If we don't do this, then the assets won't load right.
+							//TODO remove this when generators aren't internal.
+							if(PackParserSystem.getPackConfiguration(packID).internallyGenerated){
+								itemTexturePath = itemTexturePath.substring("textures/".length());
+							}
 							
 							//Remove the .png suffix as it's also implied.
 							itemTexturePath = itemTexturePath.substring(0, itemTexturePath.length() - ".png".length());
 							
 							//Need to add packID domain to this to comply with JSON domains.
+							//If we don't, the PNG won't get sent to the right loader.
 							itemTexturePath = packID + ":" + itemTexturePath;
 							
 							//Generate fake JSON and return as stream to MC loader.
@@ -663,33 +672,39 @@ class InterfaceRender implements IInterfaceRender{
 						MasterInterface.coreInterface.logError("ERROR: Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
 						throw new FileNotFoundException(rawPackInfo);
 					}
-				}else{
-					try{
-						//Strip off the auto-generated prefix and suffix data.
-						String combinedPackInfo = rawPackInfo;
-						combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
-						
-						//Get the pack information.
-						//If we are ending in _item, it means we are getting a JSON for a modular-pack's item PNG.
-						//Need to remove this suffix to get the correct systemName to look-up in the systems.
-						String packID = domain;
-						String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('/') + 1);
-						if(systemName.endsWith("_item")){
-							systemName = systemName.substring(0, systemName.length() - "_item".length());
-						}
-						AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
-						
-						//Get the actual resource path for this resource and return its stream.
-						stream = getClass().getResourceAsStream(PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName));
-						if(stream == null){
-							MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + rawPackInfo);
-							throw new FileNotFoundException(rawPackInfo);
-						}
-					}catch(Exception e){
+				}
+			}else{
+				try{
+					//Strip off the auto-generated prefix and suffix data.
+					String combinedPackInfo = rawPackInfo;
+					combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
+					
+					//Get the pack information.
+					//If we are ending in _item, it means we are getting a JSON for a modular-pack's item PNG.
+					//Need to remove this suffix to get the correct systemName to look-up in the systems.
+					String packID = domain;
+					String systemName = combinedPackInfo.substring(combinedPackInfo.lastIndexOf('/') + 1);
+					if(systemName.endsWith("_item")){
+						systemName = systemName.substring(0, systemName.length() - "_item".length());
+					}
+					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+					
+					//Get the actual resource path for this resource and return its stream.
+					String streamLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+					stream = getClass().getResourceAsStream(streamLocation);
+					if(stream == null){
+						MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + streamLocation);
+						throw new FileNotFoundException(rawPackInfo);
+					}
+				}catch(Exception e){
+					if(e instanceof FileNotFoundException){
+						throw e;
+					}else{
 						MasterInterface.coreInterface.logError("ERROR: Could not parse which item PNG to get from: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}
+				
 			}
 			
 			//Return whichever stream we found.
