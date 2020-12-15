@@ -33,12 +33,12 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//Render the lane paths.
 			GL11.glColor3f(1, 1, 0);
 			Point3d point = new Point3d(0, 0, 0);
-			for(RoadLane lane : road.lanes){
+			for(RoadLane lane : road.lanes){/*
 				for(float f=0; f<lane.curve.pathLength; f+=0.1){
 					point.setTo(lane.curve.getPointAt(f)).add(lane.startingOffset);
 					GL11.glVertex3d(point.x, point.y, point.z);
 					GL11.glVertex3d(point.x, point.y + 1, point.z);
-				}
+				}*/
 			}
 			
 			//Set states back to normal.

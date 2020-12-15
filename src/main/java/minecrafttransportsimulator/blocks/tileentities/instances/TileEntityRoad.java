@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
@@ -40,6 +41,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static variables based on core definition.
 	public final BoundingBox boundingBox;
 	public final List<Point3i> collisionBlockOffsets;
+	public final Point3d startingOffset;
+	public BezierCurve curve;
 	public final List<RoadLane> lanes;
 
 	//Dynamic variables based on states.
@@ -48,7 +51,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public boolean isHolographic;
 	
 	//Static constants.
-	public static final int MAX_CURVE_CONNECTIONS = 3;
 	public static final int MAX_SEGMENT_LENGTH = 32;
 	
 	public TileEntityRoad(IWrapperWorld world, Point3i position, IWrapperNBT data){
@@ -67,13 +69,20 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		components.put(RoadComponent.CORE, (ItemRoadComponent) item);
 		
-		//Load lane data.  We may not have this yet if we're in the process of creating a new road.
+		//Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
 		this.lanes = new ArrayList<RoadLane>();
-		float[] definitionOffsets = components.get(RoadComponent.CORE).definition.general.laneOffsets;
-		for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
-			IWrapperNBT laneData = data.getData("lane" + laneNumber);
-			if(laneData != null){
-				lanes.add(new RoadLane(laneData));
+		this.startingOffset = data.getPoint3d("startingOffset");
+		Point3d endingOffset = data.getPoint3d("endingOffset");
+		if(!endingOffset.isZero()){
+			this.curve = new BezierCurve(endingOffset.add(startingOffset), (float) rotation, (float) data.getDouble("endingRotaton"));
+			for(int laneNumber=0; laneNumber < components.get(RoadComponent.CORE).definition.general.laneOffsets.length; ++laneNumber){
+				lanes.add(new RoadLane(data.getData("lane" + laneNumber)));
+			}
+		}else{
+			float[] definitionOffsets = components.get(RoadComponent.CORE).definition.general.laneOffsets;
+			for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
+				Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, rotation, 0));
+				lanes.add(new RoadLane(laneOffset));
 			}
 		}
 		
@@ -95,6 +104,15 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		return drops;
 	}
 	
+	/**
+	 *  Helper method to get information on what was clicked.
+	 *  Takes the player's rotation into account, as well as the block they clicked.
+	 */
+	public RoadClickData getClickData(Point3i blockOffset, IWrapperPlayer player){
+		//FIXME get lane number here.
+		return null;
+	}
+	
 	@Override
 	public RenderRoad getRenderer(){
 		return new RenderRoad();
@@ -108,6 +126,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
 			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
 		}
+		
+		//Save curve data.
+		data.setPoint3d("startingOffset", startingOffset);
+		data.setPoint3d("endingOffset", curve.endPos);
 		
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
@@ -125,61 +147,76 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
     }
 	
 	/**
+	 *  Helper class for containing data of what was clicked on this road.
+	 */
+	public class RoadClickData{
+		public final TileEntityRoad roadClicked;
+		public final int laneClicked;
+		public final boolean clickedStart;
+		public final boolean clickedForward;
+		
+		public RoadClickData(TileEntityRoad roadClicked, int laneClicked, boolean clickedStart, boolean clickedForward){
+			this.roadClicked = roadClicked;
+			this.laneClicked = laneClicked;
+			this.clickedStart = clickedStart;
+			this.clickedForward = clickedForward;
+		}
+	}
+	
+	/**
 	 *  Helper class for containing lane data.
 	 */
-	public class RoadLane{
+	public static class RoadLane{
 		public final Point3d startingOffset;
-		public final Point3d endingOffset;
-		public final BezierCurve curve;
-		public RoadLaneConnection priorConnection;
-		public RoadLaneConnection nextConnection;
+		public final List<RoadLaneConnection> priorConnections = new ArrayList<RoadLaneConnection>();
+		public final List<RoadLaneConnection> nextConnections = new ArrayList<RoadLaneConnection>();
 		
-		public RoadLane(Point3d startingOffset, Point3d endingOffset, double endingRotation){
+		public RoadLane(Point3d startingOffset){
 			this.startingOffset = startingOffset;
-			this.endingOffset = endingOffset.copy().subtract(startingOffset);
-			this.curve = new BezierCurve(this.endingOffset, (float) rotation, (float) endingRotation);
 		}
 		
 		public RoadLane(IWrapperNBT data){
 			this.startingOffset = data.getPoint3d("startingOffset");
-			this.endingOffset = data.getPoint3d("endingOffset");
-			this.curve = new BezierCurve(endingOffset, (float) rotation, (float) data.getDouble("endingRotaton"));
-			IWrapperNBT priorConnectionData = data.getData("priorConnection");
-			if(priorConnectionData != null){
-				priorConnection = new RoadLaneConnection(priorConnectionData);
+			int priorConnectionCount = data.getInteger("priorConnectionCount");
+			for(int i=0; i<priorConnectionCount; ++i){
+				IWrapperNBT connectionData = data.getData("priorConnection" + i);
+				priorConnections.add(new RoadLaneConnection(connectionData));
 			}
-			IWrapperNBT nextConnectionData = data.getData("nextConnection");
-			if(nextConnectionData != null){
-				nextConnection = new RoadLaneConnection(nextConnectionData);
+			int nextConnectionCount = data.getInteger("nextConnectionCount");
+			for(int i=0; i<nextConnectionCount; ++i){
+				IWrapperNBT connectionData = data.getData("nextConnection" + i);
+				nextConnections.add(new RoadLaneConnection(connectionData));
 			}
 		}
 		
 		public void connectToPrior(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-			priorConnection = new RoadLaneConnection(road.position, laneNumber, connectedToStart);
+			priorConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
 		}
 		
 		public void connectToNext(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-			nextConnection = new RoadLaneConnection(road.position, laneNumber, connectedToStart);
+			nextConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
 		}
+		
+		//FIXME need a way to remove connections.
 		
 		public void save(IWrapperNBT data){
 			data.setPoint3d("startingOffset", startingOffset);
-			data.setPoint3d("endingOffset", curve.endPos);
-			data.setDouble("endingRotaton", curve.endAngle);
-			if(priorConnection != null){
+			data.setInteger("priorConnectionCount", priorConnections.size());
+			for(int i=0; i<priorConnections.size(); ++i){
 				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
-				priorConnection.save(connectionData);
-				data.setData("priorConnection", connectionData);
+				priorConnections.get(i).save(connectionData);
+				data.setData("priorConnection" + i, connectionData);
 			}
-			if(nextConnection != null){
+			data.setInteger("nextConnectionCount", nextConnections.size());
+			for(int i=0; i<nextConnections.size(); ++i){
 				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
-				nextConnection.save(connectionData);
-				data.setData("nextConnection", connectionData);
+				nextConnections.get(i).save(connectionData);
+				data.setData("nextConnection" + i, connectionData);
 			}
 		}
 		
 		/**
-		 *  Helper class for containing connecton data..
+		 *  Helper class for containing connection data.
 		 */
 		private class RoadLaneConnection{
 			public final Point3i tileLocation;
