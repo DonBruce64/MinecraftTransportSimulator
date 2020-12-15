@@ -178,6 +178,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.generic = loadedDefinition.generic;
 												definition.subParts = loadedDefinition.subParts;
 												definition.collision = loadedDefinition.collision;
+												definition.doors = loadedDefinition.doors;
 												definition.rendering = loadedDefinition.rendering;
 												RenderVehicle.clearPartCaches(definition);
 												
