@@ -297,6 +297,18 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 								break;
 							}
 						}
+						for(APart part : parts){
+							if(part.definition.doors != null){
+								for(VehicleDoor doorDef : part.definition.doors){
+									if(doorDef.name.equals(linkedDoor)){
+										if(doorDef.activateOnSeated){
+											doorsOpen.remove(linkedDoor);
+										}
+										break;
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -318,6 +330,18 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 								doorsOpen.add(linkedDoor);
 							}
 							break;
+						}
+					}
+					for(APart part : parts){
+						if(part.definition.doors != null){
+							for(VehicleDoor doorDef : part.definition.doors){
+								if(doorDef.name.equals(linkedDoor)){
+									if(doorDef.activateOnSeated){
+										doorsOpen.add(linkedDoor);
+									}
+									break;
+								}
+							}
 						}
 					}
 				}
