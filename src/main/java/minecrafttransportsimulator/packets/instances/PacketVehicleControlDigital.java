@@ -79,7 +79,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 									for(VehicleConnection hookup : testVehicle.definition.motorized.hookups){
 										Point3d hitchPos = hitch.pos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
 										Point3d hookupPos = hookup.pos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
-										if(hitchPos.distanceTo(hookupPos) < 5){
+										if(hitchPos.distanceTo(hookupPos) < 2){
 											trailerInRange = true;
 											if(hitch.type.equals(hookup.type)){
 												vehicle.changeTrailer(testVehicle, vehicle.definition.motorized.hitches.indexOf(hitch), testVehicle.definition.motorized.hookups.indexOf(hookup));
