@@ -69,36 +69,47 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 					vehicle.changeTrailer(null, 0, 0);
 					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
 				}else{
+					boolean trailerInRange = false;
+					boolean matchingConnection = false;
 					for(AEntityBase entity : AEntityBase.createdServerEntities){
 						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
 							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
 							if(testVehicle.definition.motorized.hookups != null){
 								//Vehicle has hookups.  See if any of them match our hitches.
-								boolean trailerInRange = false;
 								for(VehicleConnection hitch : vehicle.definition.motorized.hitches){
 									for(VehicleConnection hookup : testVehicle.definition.motorized.hookups){
 										Point3d hitchPos = hitch.pos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
 										Point3d hookupPos = hookup.pos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
-										if(hitchPos.distanceTo(hookupPos) < 2){
-											trailerInRange = true;
-											if(hitch.type.equals(hookup.type)){
+										if(hitchPos.distanceTo(hookupPos) < 10){
+											//Potential connection.
+											boolean validDistance = hitchPos.distanceTo(hookupPos) < 2;
+											boolean validType = hitch.type.equals(hookup.type);
+											if(validDistance && validType){
 												vehicle.changeTrailer(testVehicle, vehicle.definition.motorized.hitches.indexOf(hitch), testVehicle.definition.motorized.hookups.indexOf(hookup));
 												player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect"));
 												return false;
+											}else if(validDistance){
+												trailerInRange = true;
+											}else if(validType){
+												matchingConnection = true;
 											}
 										}
 									}
 								}
-								
-								//If we were in-range for a hookup, but none matched, stop checking and let the player know.
-								if(trailerInRange){
-									player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
-									return false;
-								}
 							}
 						}
 					}
-					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
+				
+					//Send packet based on what we found.
+					if(!trailerInRange && !matchingConnection){
+						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
+					}else if(!trailerInRange && matchingConnection){
+						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.toofar"));
+					}else if(trailerInRange && !matchingConnection){
+						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
+					}else{
+						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));
+					}
 				}
 				return false;
 			}

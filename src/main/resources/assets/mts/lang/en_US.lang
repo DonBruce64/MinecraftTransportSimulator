@@ -79,8 +79,10 @@ interact.fuelhose.differentfluids=The source and destination tanks do not contai
 
 interact.trailer.connect=Trailer connected!
 interact.trailer.disconnect=Trailer disconnected.
-interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
-interact.trailer.notfound=No trailers were found within 2 blocks of the hitch on this vehicle.
+interact.trailer.nohitch=This vehicle does not have the correct hitch for this trailer.
+interact.trailer.toofar=The trailer is too far from the vehicle.  The trailer needs to be less than 2 blocks away.
+interact.trailer.notfound=No trailers were found anywhere near this vehicle.
+interact.trailer.wronghitch=A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?
 
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
