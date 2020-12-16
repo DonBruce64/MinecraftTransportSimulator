@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,7 +11,12 @@ import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.instances.BlockRoad;
+import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -108,21 +114,102 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
-	public RoadClickData getClickData(Point3i blockOffset, IWrapperPlayer player){
-		//FIXME get lane number here.
-		return null;
+	public RoadClickData getClickData(Point3i blockClicked, IWrapperPlayer player){
+		//First check if we clicked the start or end of the curve.
+		Point3i clickedOffset = blockClicked.copy().subtract(position);
+		boolean clickedStart = clickedOffset.isZero() || collisionBlockOffsets.indexOf(clickedOffset) < collisionBlockOffsets.size()/2;
+		
+		//Next check how many lanes the road the player has is holding.  This affects which lane we say they clicked.
+		int lanesOnHeldRoad = 0;
+		AItemBase heldItem = player.getHeldItem();
+		if(heldItem instanceof ItemRoadComponent){
+			if(((ItemRoadComponent) heldItem).definition.general.laneOffsets != null){
+				lanesOnHeldRoad = ((ItemRoadComponent) heldItem).definition.general.laneOffsets.length;
+			}
+		}
+		
+		//Next get the angle between the player and the side of the curve they clicked.
+		double angleDelta;
+		if(clickedStart){
+			angleDelta = player.getYaw() - curve.startAngle;
+		}else{
+			angleDelta = player.getYaw() - curve.endAngle + 180;
+		}
+		while(angleDelta < -180)angleDelta += 360;
+		while(angleDelta > 180)angleDelta -= 360;
+		
+		//Based on the angle, and the lane on our held item, and what side we clicked, return click data.
+		//Try to keep the lane in the center by applying an offset if we're clicking with a road with only a few lanes.
+		//FIXME check math here later.
+		boolean clickedForward = clickedStart ? Math.abs(angleDelta) < 90 : Math.abs(angleDelta) > 90;
+		int laneClicked;
+		if(clickedForward){
+			laneClicked = (int) angleDelta/25;
+			if(lanesOnHeldRoad < lanes.size()){
+				laneClicked += (lanes.size() - lanesOnHeldRoad)/2;
+			}
+		}else{
+			laneClicked = lanes.size() - (int) angleDelta/25;
+			if(lanesOnHeldRoad < lanes.size()){
+				laneClicked -= (lanes.size() - lanesOnHeldRoad)/2;
+			}
+		}
+		
+		//Finally, return the data in object form.
+		return new RoadClickData(this, laneClicked, clickedStart, clickedForward);
 	}
 	
 	/**
 	 *  Helper method to spawn collision boxes for this road.  Returns true and makes
 	 *  this road non-holographic if the boxes could be spawned.  False if there are
 	 *  blocking blocks.  OP and creative-mode players override blocking block checks.
+	 *  Road width is considered to extend to the left and right border, minus 1/2 a block.
 	 */
 	public boolean spawnCollisionBlocks(IWrapperPlayer player){
+		float roadWidth = definition.general.leftBorderOffset - definition.general.rightBorderOffset - 1;
+		float segmentDelta = (float) (roadWidth/(Math.floor(roadWidth) + 1));
 		
+		//Get all the points that make up our collision points.
+		//If we find any colliding points, note them.
+		Point3d testOffset = new Point3d(0, 0, 0);
+		Point3d testRotation = new Point3d(0, 0, 0);
+		Point3i testPoint = new Point3i(0, 0, 0);
+		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
+		for(float f=0; f<curve.pathLength; f+=0.1){
+			for(float offset = definition.general.leftBorderOffset + 0.5F; offset <= definition.general.rightBorderOffset - 0.5; offset += segmentDelta){
+				testRotation.set(curve.getPitchAt(f), curve.getYawAt(f), 0);
+				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(curve.getPointAt(f));
+				testPoint.set((int) testOffset.x,(int) testOffset.y, (int) testOffset.z);
+				
+				//If we don't have a block in this position, check if we need one.
+				if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
+					//Offset the point to the global cordinate space, get the block, and offset back.
+					testPoint.add(position);
+					ABlockBase testBlock = world.getBlock(testPoint);
+					testPoint.subtract(position);
+					if(testBlock == null){
+						//Need a collision box here.
+						collisionBlockOffsets.add(testPoint);
+						collisionHeightMap.put(testPoint, (int) (curve.getPointAt(f).y + definition.general.collisionHeight)%1);
+					}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
+						//Some block is blocking us that's not part of a road.  Flag it.
+						collidingBlockOffsets.add(testPoint);
+					}
+				}
+			}
+		}
 		
-		//FIXME get lane number here.
-		return false;
+		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
+			for(Point3i offset : collisionBlockOffsets){
+				testPoint.setTo(offset).add(position);
+				world.setBlock(BlockRoadCollision.blocks.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
+			}
+			collidingBlockOffsets.clear();
+			return true;
+		}else{
+			collisionBlockOffsets.clear();
+			return false;
+		}
 	}
 	
 	@Override
@@ -160,6 +247,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	/**
 	 *  Helper class for containing data of what was clicked on this road.
+	 *  Note that laneClicked MAY be a negative number in order to allow
+	 *  for offset road-linkings.  Keep this in mind.
 	 */
 	public class RoadClickData{
 		public final TileEntityRoad roadClicked;
@@ -178,7 +267,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	/**
 	 *  Helper class for containing lane data.
 	 */
-	public static class RoadLane{
+	public class RoadLane{
 		public final Point3d startingOffset;
 		public final List<RoadLaneConnection> priorConnections = new ArrayList<RoadLaneConnection>();
 		public final List<RoadLaneConnection> nextConnections = new ArrayList<RoadLaneConnection>();
@@ -209,7 +298,46 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			nextConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
 		}
 		
-		//FIXME need a way to remove connections.
+		public void removeConnections(){
+			try{
+				for(RoadLaneConnection connection : priorConnections){
+					TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+					for(RoadLane otherLane : otherRoad.lanes){
+						Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
+						while(iterator.hasNext()){
+							if(iterator.next().tileLocation.equals(position)){
+								iterator.remove();
+							}
+						}
+						iterator = otherLane.nextConnections.iterator();
+						while(iterator.hasNext()){
+							if(iterator.next().tileLocation.equals(position)){
+								iterator.remove();
+							}
+						}
+					}
+				}
+				for(RoadLaneConnection connection : nextConnections){
+					TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
+					for(RoadLane otherLane : otherRoad.lanes){
+						Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
+						while(iterator.hasNext()){
+							if(iterator.next().tileLocation.equals(position)){
+								iterator.remove();
+							}
+						}
+						iterator = otherLane.nextConnections.iterator();
+						while(iterator.hasNext()){
+							if(iterator.next().tileLocation.equals(position)){
+								iterator.remove();
+							}
+						}
+					}
+				}
+			}catch(Exception e){
+				MasterLoader.coreInterface.logError("ERROR: Couldn't get TE to break road connection.  Was it changed?");
+			}
+		}
 		
 		public void save(IWrapperNBT data){
 			data.setPoint3d("startingOffset", startingOffset);

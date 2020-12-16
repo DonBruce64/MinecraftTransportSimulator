@@ -30,15 +30,20 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y + 2, lane.startingOffset.z);
 			}
 			
-			//Render the lane paths.
+			//Render the curve.
 			GL11.glColor3f(1, 1, 0);
 			Point3d point = new Point3d(0, 0, 0);
-			for(RoadLane lane : road.lanes){/*
-				for(float f=0; f<lane.curve.pathLength; f+=0.1){
-					point.setTo(lane.curve.getPointAt(f)).add(lane.startingOffset);
-					GL11.glVertex3d(point.x, point.y, point.z);
-					GL11.glVertex3d(point.x, point.y + 1, point.z);
-				}*/
+			for(float f=0; f<road.curve.pathLength; f+=0.1){
+				point.setTo(road.curve.getPointAt(f)).add(road.startingOffset);
+				GL11.glVertex3d(point.x, point.y, point.z);
+				GL11.glVertex3d(point.x, point.y + 1, point.z);
+			}
+			
+			//Render the lane end points.
+			GL11.glColor3f(1, 0, 0);
+			for(RoadLane lane : road.lanes){
+				GL11.glVertex3d(road.curve.endPos.x + lane.startingOffset.x, road.curve.endPos.y + lane.startingOffset.y, road.curve.endPos.z + lane.startingOffset.z);
+				GL11.glVertex3d(road.curve.endPos.x + lane.startingOffset.x, road.curve.endPos.y + lane.startingOffset.y + 2, road.curve.endPos.z + lane.startingOffset.z);
 			}
 			
 			//Set states back to normal.

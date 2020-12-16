@@ -214,6 +214,8 @@ public interface IWrapperWorld{
     /**
 	 *  Places the passed-in block at the point specified.
 	 *  Returns true if the block was placed, false if not.
+	 *  If this block isn't placed by a player, pass in null
+	 *  for the player reference.
 	 */
 	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, IWrapperPlayer player, Axis axis);
     

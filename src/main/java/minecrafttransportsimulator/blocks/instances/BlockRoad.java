@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -37,7 +38,13 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
     public void onBroken(IWrapperWorld world, Point3i location){
 		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
 		if(road != null && !road.isHolographic){
+			//Set the TE to holographic and remove all road connections.
 			road.isHolographic = true;
+			for(RoadLane lane : road.lanes){
+				lane.removeConnections();
+			}
+			
+			//Now remove all collision blocks.
 			for(Point3i blockOffset : road.collidingBlockOffsets){
 				Point3i blockLocation = location.copy().add(blockOffset);
 				//Check to make sure we don't destroy non-road blocks.

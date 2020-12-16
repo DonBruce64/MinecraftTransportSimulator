@@ -565,44 +565,55 @@ class WrapperWorld implements IWrapperWorld{
 	@Override
 	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, IWrapperPlayer playerWrapper, Axis axis){
     	if(!world.isRemote){
-	    	BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
-	    	WrapperPlayer player = (WrapperPlayer) playerWrapper;
-	    	WrapperItemStack stack = (WrapperItemStack) ((WrapperPlayer) playerWrapper).getHeldStack();
-	    	BlockPos pos = new BlockPos(location.x, location.y, location.z);
-	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
-	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
-	            pos = pos.offset(facing);
-	            location.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
-	        }
-	    	if(stack.getItem() != null && player.player.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)){
-	            IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
-	            if(world.setBlockState(pos, newState, 11)){
-	            	//Block is set.  See if we need to set TE data.
-	            	if(block instanceof IBlockTileEntity){
-	            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-	            		WrapperNBT data;
-	            		if(stack.stack.hasTagCompound()){
-	            			data = new WrapperNBT(stack.stack.getTagCompound());
-	            		}else{
-	            			data = new WrapperNBT(new NBTTagCompound());
-	            			if(stack.getItem() instanceof AItemPack){
-		            			data.setString("packID", ((AItemPack<?>) stack.getItem()).definition.packID);
-			            		data.setString("systemName", ((AItemPack<?>) stack.getItem()).definition.systemName);
-			            		if(stack.getItem() instanceof AItemSubTyped){
-			            			data.setString("currentSubName", ((AItemSubTyped<?>) stack.getItem()).subName);
-			            		}
-	            			}
-	            		}
-	            		data.setDouble("rotation", player.getHeadYaw()%360);
-	            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
-	            		
-	            	}
-	            	//Send place event to block class, and also send initial update cheeck.
-	            	block.onPlaced(this, location, player);
-	                stack.stack.shrink(1);
-	            }
-	            return true;
-	        }
+    		BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
+    		BlockPos pos = new BlockPos(location.x, location.y, location.z);
+    		if(playerWrapper != null){
+    			WrapperPlayer player = (WrapperPlayer) playerWrapper;
+    	    	WrapperItemStack stack = (WrapperItemStack) ((WrapperPlayer) playerWrapper).getHeldStack();
+    	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
+    	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
+    	            pos = pos.offset(facing);
+    	            location.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
+    	            if(stack.getItem() != null && player.player.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)){
+    	            	IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
+    	            	if(world.setBlockState(pos, newState, 11)){
+    		            	//Block is set.  See if we need to set TE data.
+    		            	if(block instanceof IBlockTileEntity){
+    		            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
+    		            		WrapperNBT data;
+    		            		if(stack.stack.hasTagCompound()){
+    		            			data = new WrapperNBT(stack.stack.getTagCompound());
+    		            		}else{
+    		            			data = new WrapperNBT(new NBTTagCompound());
+    		            			if(stack.getItem() instanceof AItemPack){
+    			            			data.setString("packID", ((AItemPack<?>) stack.getItem()).definition.packID);
+    				            		data.setString("systemName", ((AItemPack<?>) stack.getItem()).definition.systemName);
+    				            		if(stack.getItem() instanceof AItemSubTyped){
+    				            			data.setString("currentSubName", ((AItemSubTyped<?>) stack.getItem()).subName);
+    				            		}
+    		            			}
+    		            		}
+    		            		data.setDouble("rotation", player.getHeadYaw()%360);
+    		            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
+    		            		
+    		            	}
+    		            	//Send place event to block class, and also send initial update check.
+    		            	block.onPlaced(this, location, player);
+    		                stack.stack.shrink(1);
+    		                return true;
+    		            }
+    	            }
+    	        }
+    		}else{
+    			IBlockState newState = wrapper.getDefaultState();
+    			if(world.setBlockState(pos, newState, 11)){
+    				if(block instanceof IBlockTileEntity){
+    					BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
+    					builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), MasterInterface.coreInterface.createNewTag());
+    				}
+    				return true;
+    			}
+    		}
     	}
     	return false;
     }
