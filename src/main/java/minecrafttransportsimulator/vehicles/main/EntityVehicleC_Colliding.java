@@ -186,9 +186,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			if(partDoorBoxes.containsKey(part)){
 				for(Entry<BoundingBox, VehicleDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
 					if(doorsOpen.contains(doorEntry.getValue().name)){
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.getActionRotation(0).copy().add(part.totalRotation)).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
 					}else{
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.getActionRotation(0).copy().add(part.totalRotation)).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
 					}
 				}
 			}

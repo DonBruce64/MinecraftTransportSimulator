@@ -49,11 +49,25 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 		//This could be either a block or a road itself.
 		//If we click a road, we need to figure out what lane number we will connect to.
 		if(!world.isClient()){
+			//If we clicked a holographic road, try to spawn collision blocks.
+			ABlockBase clickedBlock = world.getBlock(point);
+			if(clickedBlock instanceof BlockRoad){
+				TileEntityRoad clickedRoad = world.getTileEntity(point);
+				if(clickedRoad.isHolographic){
+					if(clickedRoad.spawnCollisionBlocks(player)){
+						lastRoadClickedData.put(player, clickedRoad.getClickData(point, player));
+					}else{
+						player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
+					}
+					return true;
+				}
+			}
+			
+			//Didn't click a holographic road.  Do normal functions.
 			if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
 				//Set starting point.  This may or may not be a road segment.
 				lastPositionClicked.put(player, point);
 				lastRotationClicked.put(player, (double) player.getYaw());
-				ABlockBase clickedBlock = world.getBlock(point);
 				TileEntityRoad clickedRoad;
 				if(clickedBlock instanceof BlockRoad){
 					clickedRoad = world.getTileEntity(point);
@@ -81,7 +95,6 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					final double startRotation;
 					final RoadClickData startingRoadData;
 					
-					ABlockBase clickedBlock = world.getBlock(point);
 					if(clickedBlock instanceof BlockRoad){
 						TileEntityRoad startingRoad = world.getTileEntity(point);
 						startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), player);
@@ -267,11 +280,11 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						}
 						
 						//Try to spawn all the collision blocks for this road.
-						//FIXME  Need to spawn collision blocks based on the curve and road lane width.
-						//player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
-						
-						
-						lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player));
+						if(newRoad.spawnCollisionBlocks(player)){
+							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player));
+						}else{
+							player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
+						}
 					}else{
 						player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
 					}

@@ -431,11 +431,11 @@ public final class RenderVehicle{
 			GL11.glRotated(positionRotation.z, 0, 0, 1);
 		}
 
-		Point3d actionRotation = part.getActionRotation(partialTicks);
-		if(!actionRotation.isZero()){
-			GL11.glRotated(actionRotation.y, 0, 1, 0);
-			GL11.glRotated(actionRotation.x, 1, 0, 0);
-			GL11.glRotated(actionRotation.z, 0, 0, 1);
+		Point3d renderingRotation = part.getRenderingRotation(partialTicks);
+		if(!renderingRotation.isZero()){
+			GL11.glRotated(renderingRotation.y, 0, 1, 0);
+			GL11.glRotated(renderingRotation.x, 1, 0, 0);
+			GL11.glRotated(renderingRotation.z, 0, 0, 1);
 		}
 	}
 	

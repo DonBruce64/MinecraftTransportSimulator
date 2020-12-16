@@ -102,7 +102,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     
     public class JSONPartGun{
     	public boolean autoReload;
-    	public boolean isTurret;
     	public int capacity;
     	public int fireDelay;
     	public int reloadTime;

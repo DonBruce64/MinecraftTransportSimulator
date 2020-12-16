@@ -113,6 +113,18 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		return null;
 	}
 	
+	/**
+	 *  Helper method to spawn collision boxes for this road.  Returns true and makes
+	 *  this road non-holographic if the boxes could be spawned.  False if there are
+	 *  blocking blocks.  OP and creative-mode players override blocking block checks.
+	 */
+	public boolean spawnCollisionBlocks(IWrapperPlayer player){
+		
+		
+		//FIXME get lane number here.
+		return false;
+	}
+	
 	@Override
 	public RenderRoad getRenderer(){
 		return new RenderRoad();

@@ -152,15 +152,12 @@ public abstract class APart implements ISoundProvider{
 			//offset between us and our paren't position in our parent's coordinate system.
 			totalOffset.rotateFine(totalRotation);
 			
-			//Now, get the parent's action rotation, and rotate again to take that rotation into account.
-			//We also need to add this rotation to our current rotation.
-			Point3d parentActionRotation = parentPart.getActionRotation(0);
-			totalOffset.rotateFine(parentActionRotation);
-			totalRotation.add(parentActionRotation).add(getPositionRotation(0)).add(placementRotation);
-			
 			//Now that we have the proper relative offset, add our parent's placement and position offsets.
 			//This is our final offset point.
 			totalOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
+			
+			//Also add our own rotation to our cumulative rotation we got from our parent.
+			totalRotation.add(getPositionRotation(0)).add(placementRotation);
 		}else{
 			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
@@ -287,9 +284,9 @@ public abstract class APart implements ISoundProvider{
 	
 	/**
 	 * Gets the rotation angles for the part as a vector.
-	 * This rotation is based on the internal part state, and cannot be modified via JSON.
+	 * This rotation is only for custom rendering operations, and cannot be modified via JSON.
 	 */
-	public Point3d getActionRotation(float partialTicks){
+	public Point3d getRenderingRotation(float partialTicks){
 		return ZERO_POINT;
 	}
 	

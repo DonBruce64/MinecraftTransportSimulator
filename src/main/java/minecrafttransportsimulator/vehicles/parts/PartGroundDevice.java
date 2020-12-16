@@ -165,7 +165,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	}
 	
 	@Override
-	public Point3d getActionRotation(float partialTicks){
+	public Point3d getRenderingRotation(float partialTicks){
 		return new Point3d(definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
 	}
 	
