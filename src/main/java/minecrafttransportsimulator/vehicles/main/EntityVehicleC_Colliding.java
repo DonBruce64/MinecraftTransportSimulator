@@ -149,28 +149,13 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Update vehicle collision boxes.
 		for(BoundingBox box : vehicleCollisionBoxes){
-			box.updateToEntity(this);
+			box.updateToEntity(this, null);
 		}
 		
 		//Update part collision boxes.
-		//We need to manually set the collision here as part boxes rotate with the part.
 		for(APart part : partCollisionBoxes.keySet()){
 			for(BoundingBox box : partCollisionBoxes.get(part)){
-				//First rotate the boxes based on the part's rotation.
-				box.globalCenter.setTo(box.localCenter).rotateFine(part.totalRotation);
-				//Now translate the box to it's actual position relative to the vehicle.
-				box.globalCenter.add(part.totalOffset);
-				//Now rotate the collision box by the vehicle's rotation.
-				box.globalCenter.rotateFine(angles);
-				//Add the worldOffset based on the vehicle's current position.
-				box.globalCenter.add(position);
-				//Clamp the box's points if required.
-				if(box.isCollision){
-					//Need to round box to prevent floating-point errors.
-					box.globalCenter.x = ((int) (box.globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-					box.globalCenter.y = ((int) (box.globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-					box.globalCenter.z = ((int) (box.globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-				}
+				box.updateToPart(part);
 			}
 		}
 		
@@ -195,8 +180,26 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Update part slot box positions.
+		//If this part box is part of a part, make sure we take that part's orientation into account.
 		for(BoundingBox box : partSlotBoxes.keySet()){
-			box.updateToEntity(this);
+			VehiclePart packVehicleDef = partSlotBoxes.get(box);
+			boolean foundPart = false;
+			for(APart part : parts){
+				if(part.definition.subParts != null){
+					for(VehiclePart subPartDef : part.definition.subParts){
+						if(packVehicleDef.equals(getPackForSubPart(part.vehicleDefinition, subPartDef))){
+							//Need to find the delta between our 0-degree position and our current position.
+							Point3d delta = subPartDef.pos.copy().rotateFine(part.totalRotation).subtract(subPartDef.pos);
+							box.updateToEntity(this, delta);
+							foundPart = true;
+							break;
+						}
+					}
+				}
+			}
+			if(!foundPart){
+				box.updateToEntity(this, null);
+			}
 		}
 		
 		//Clear out interaction and slot boxes, as some boxes may not be added this tick depending on various factors.

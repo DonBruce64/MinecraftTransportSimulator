@@ -7,6 +7,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
  * without the need to make a new instance every time.  Also is based on a center point and
@@ -87,10 +88,38 @@ public class BoundingBox{
 	 *  Sets the global center of this box to the position of the passed-in entity, rotated by the
 	 *  entity's rotation and offset by the local center.  Mostly used for updating hitboxes that
 	 *  rotate with the entity.  Rotation is done using the fine Point3d rotation to allow for
-	 *  better interaction while standing on entities.
+	 *  better interaction while standing on entities.  Optional extra offset is present should
+	 *  a supplemental translation need to be performed before aligning to the entity.
 	 */
-	public void updateToEntity(AEntityBase entity){
-		globalCenter.setTo(localCenter).rotateFine(entity.angles).add(entity.position);
+	public void updateToEntity(AEntityBase entity, Point3d optionalOffset){
+		globalCenter.setTo(localCenter);
+		if(optionalOffset != null){
+			globalCenter.add(optionalOffset);
+		}
+		globalCenter.rotateFine(entity.angles).add(entity.position);
+		if(isCollision){
+			//Need to round box to prevent floating-point errors.
+			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+			globalCenter.y = ((int) (globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+			globalCenter.z = ((int) (globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+		}
+	}
+	
+	/**
+	 *  Sets the global center of this box to the position of the passed-in part, rotated by the
+	 *  part and vehicle's rotation and offset by the local center.  This is like {@link #updateToEntity(AEntityBase)}
+	 *  but for parts on vehicles which have offsets.
+	 */
+	public void updateToPart(APart part){
+		//First rotate the box based on the part's rotation.
+		globalCenter.setTo(localCenter).rotateFine(part.totalRotation);
+		//Now translate the box to it's actual position relative to the vehicle.
+		globalCenter.add(part.totalOffset);
+		//Now rotate the collision box by the vehicle's rotation.
+		globalCenter.rotateFine(part.vehicle.angles);
+		//Add the worldOffset based on the vehicle's current position.
+		globalCenter.add(part.vehicle.position);
+		//Clamp the box's points if required.
 		if(isCollision){
 			//Need to round box to prevent floating-point errors.
 			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;

@@ -162,7 +162,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//We need to update the boxes first, however, as they haven't been updated yet.
 			newVehicle.position.y += -furthestDownPoint;
 			for(BoundingBox coreBox : newVehicle.blockCollisionBoxes){
-				coreBox.updateToEntity(newVehicle);
+				coreBox.updateToEntity(newVehicle, null);
 				if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't be spawned.  Bail out.
 					player.sendPacket(new PacketPlayerChatMessage("interact.failure.nospace"));
