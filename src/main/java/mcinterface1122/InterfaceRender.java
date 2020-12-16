@@ -331,14 +331,15 @@ class InterfaceRender implements IInterfaceRender{
         	GL11.glPushMatrix();
         	if(ridingEntity != null){
         		//Get total angles for the entity the player is riding.
-        		Point3d totalAngles = ridingEntity.angles.copy();
+        		Point3d entityAngles = ridingEntity.angles.copy();
+        		Point3d ridingAngles = new Point3d(0, 0, 0);
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
 	            	for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
 						if(Minecraft.getMinecraft().player.equals(((WrapperEntity) rider).entity)){
 							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-		            		totalAngles = ridingEntity.angles.copy().add(seat.placementRotation).add(seat.getPositionRotation(event.getPartialRenderTick()));
+							ridingAngles = seat.placementRotation.copy().add(seat.getPositionRotation(event.getPartialRenderTick()));
 		            		if(seat.parentPart != null){
-		            			totalAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()));
+		            			ridingAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()));
 			            	}
 						}
 	            	}
@@ -348,7 +349,7 @@ class InterfaceRender implements IInterfaceRender{
 	            renderedPlayer.renderYawOffset = 0;
 	            
 	            //Set the player's head yaw to the delta between their yaw and their angled yaw.
-	            renderedPlayer.rotationYawHead = (float) (renderedPlayer.rotationYaw + totalAngles.y); 
+	            renderedPlayer.rotationYawHead = (float) (renderedPlayer.rotationYaw + entityAngles.y + ridingAngles.y);
 	            
 	            //Now add the rotations.
 	            //We have to do this via OpenGL, as changing the player's pitch doesn't make them tilt in the seat, and roll doesn't exist for them.
@@ -364,17 +365,27 @@ class InterfaceRender implements IInterfaceRender{
 	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
 	                
 	                GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
-	                GL11.glRotated(totalAngles.y, 0, 1, 0);
-	                GL11.glRotated(totalAngles.x, 1, 0, 0);
-	                GL11.glRotated(totalAngles.z, 0, 0, 1);
+	                GL11.glRotated(entityAngles.y, 0, 1, 0);
+	                GL11.glRotated(entityAngles.x, 1, 0, 0);
+	                GL11.glRotated(entityAngles.z, 0, 0, 1);
+	                if(!ridingAngles.isZero()){
+		                GL11.glRotated(ridingAngles.y, 0, 1, 0);
+		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
+		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
+	                }
 	                GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
 	                
 	                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 	            }else{
 	            	GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
-	            	GL11.glRotated(totalAngles.y, 0, 1, 0);
-	            	GL11.glRotated(totalAngles.x, 1, 0, 0);
-	            	GL11.glRotated(totalAngles.z, 0, 0, 1);
+	            	GL11.glRotated(entityAngles.y, 0, 1, 0);
+	                GL11.glRotated(entityAngles.x, 1, 0, 0);
+	                GL11.glRotated(entityAngles.z, 0, 0, 1);
+	                if(!ridingAngles.isZero()){
+		                GL11.glRotated(ridingAngles.y, 0, 1, 0);
+		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
+		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
+	                }
 	            	GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
 	            }
         	}
