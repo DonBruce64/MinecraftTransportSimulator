@@ -114,7 +114,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	@Override
 	public void update(){
 		super.update();
-		gunOrientationOffset.setTo(totalRotation).subtract(getPositionRotation(0));
+		gunOrientationOffset.setTo(totalRotation).subtract(getPositionRotation(0)).add(placementRotation);
 		prevOrientation.setTo(currentOrientation);
 		
 		//Get the current controller for this gun.
