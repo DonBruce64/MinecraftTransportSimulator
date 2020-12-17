@@ -246,10 +246,11 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
+			Point3d activeHookup = vehicle.getHookupOffset();
 			if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 				side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 				side2Delta = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-				groundedSideOffset = Math.hypot(vehicle.activeHookupConnection.pos.y, vehicle.activeHookupConnection.pos.z);
+				groundedSideOffset = Math.hypot(activeHookup.y, activeHookup.z);
 				testBox1 = rearLeftGDB;
 				testBox2 = rearRightGDB;
 			}else if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
@@ -259,7 +260,7 @@ public class VehicleGroundDeviceCollection{
 				//First populate variables.
 				side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 				side2Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-				groundedSideOffset = -Math.hypot(vehicle.activeHookupConnection.pos.y, vehicle.activeHookupConnection.pos.z);
+				groundedSideOffset = -Math.hypot(activeHookup.y, activeHookup.z);
 				side1Delta -= groundedSideOffset;
 				side2Delta -= groundedSideOffset;
 				
@@ -270,7 +271,7 @@ public class VehicleGroundDeviceCollection{
 				}
 				if(rearRightGDB.collisionDepth > 0){
 					double angularCorrection2 = Math.toDegrees(Math.asin(rearRightGDB.collisionDepth/side2Delta));
-					if(angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection){
+					if(angularCorrection == 0 || (angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection)){
 						angularCorrection = angularCorrection2;
 					}
 				}
@@ -366,7 +367,7 @@ public class VehicleGroundDeviceCollection{
 			//We need to take into account the ground boost here, as we might have some fake motion.y from prior GDB collisions.
 			//We also don't want to apply correction if it would cause us to pitch in excess of 85 degrees.
 			//This prevents wall-climbing and other odd physics.
-			if(vehicle.motion.y - groundBoost <= 0 && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
+			if(vehicle.motion.y - groundBoost <= 0.01 && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
 				//Add rotation and motion, and check for box collisions.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
 				if(pitch){
@@ -387,7 +388,7 @@ public class VehicleGroundDeviceCollection{
 				}
 				if(testBox2.collisionDepth > 0 && pitch ? testBox2.contactPoint.z != 0 : testBox2.contactPoint.x != 0){
 					double angularCorrection2 = Math.toDegrees(Math.asin(testBox2.collisionDepth/side2Delta));
-					if(angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection){
+					if(angularCorrection == 0 || (angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection)){
 						angularCorrection = angularCorrection2;
 					}
 				}
