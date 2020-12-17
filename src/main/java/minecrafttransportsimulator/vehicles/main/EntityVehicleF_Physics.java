@@ -474,9 +474,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				//Only do this once every 1/2 second to allow for thrust changes.
 				if(world.getTime()%10 == 0){
 					if(motion.y < 0 && throttle < 100){
-						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, (byte) 0));
+						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, Byte.MAX_VALUE));
 					}else if(motion.y > 0 && throttle < 100){
-						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, --throttle, (byte) 0));
+						MasterLoader.networkInterface.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, --throttle, Byte.MAX_VALUE));
 					}
 				}
 				//Change pitch/roll based on movement.

@@ -736,9 +736,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 						}
 						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
 						
-						if(hitchPos.distanceTo(hookupPos) < 2){
+						if(hitchPos.distanceTo(hookupPos) < 10){
 							boolean validType = firstConnection.type.equals(secondConnection.type);
-							boolean validDistance = hitchPos.distanceTo(hookupPos) < 5;
+							boolean validDistance = hitchPos.distanceTo(hookupPos) < 2;
 							if(validType && validDistance){
 								firstVehicle.changeTrailer(secondVehicle, firstConnection, secondConnection, optionalFirstPart, optionalSecondPart);
 								return TrailerConnectionResult.TRAILER_CONNECTED;
