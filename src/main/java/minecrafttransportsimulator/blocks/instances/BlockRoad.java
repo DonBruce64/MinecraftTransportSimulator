@@ -37,15 +37,15 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	@Override
     public void onBroken(IWrapperWorld world, Point3i location){
 		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
-		if(road != null && !road.isHolographic){
-			//Set the TE to holographic and remove all road connections.
-			road.isHolographic = true;
+		if(road != null && road.isActive){
+			//Set the TE to inactive and remove all road connections.
+			road.isActive = false;
 			for(RoadLane lane : road.lanes){
 				lane.removeConnections();
 			}
 			
 			//Now remove all collision blocks.
-			for(Point3i blockOffset : road.collidingBlockOffsets){
+			for(Point3i blockOffset : road.collisionBlockOffsets){
 				Point3i blockLocation = location.copy().add(blockOffset);
 				//Check to make sure we don't destroy non-road blocks.
 				//This is required in case our TE is corrupt or someone messes with it.

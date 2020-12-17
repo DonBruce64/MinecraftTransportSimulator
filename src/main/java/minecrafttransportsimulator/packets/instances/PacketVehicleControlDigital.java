@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -66,50 +64,32 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			}
 			case TRAILER : {
 				if(vehicle.towedVehicle != null){
-					vehicle.changeTrailer(null, 0, 0);
+					vehicle.changeTrailer(null, null, null, null, null);
 					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
 				}else{
-					boolean trailerInRange = false;
 					boolean matchingConnection = false;
+					boolean trailerInRange = false;
 					for(AEntityBase entity : AEntityBase.createdServerEntities){
 						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
-							EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
-							if(testVehicle.definition.motorized.hookups != null){
-								//Vehicle has hookups.  See if any of them match our hitches.
-								for(VehicleConnection hitch : vehicle.definition.motorized.hitches){
-									for(VehicleConnection hookup : testVehicle.definition.motorized.hookups){
-										Point3d hitchPos = hitch.pos.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
-										Point3d hookupPos = hookup.pos.copy().rotateCoarse(testVehicle.angles).add(testVehicle.position);
-										if(hitchPos.distanceTo(hookupPos) < 10){
-											//Potential connection.
-											boolean validDistance = hitchPos.distanceTo(hookupPos) < 2;
-											boolean validType = hitch.type.equals(hookup.type);
-											if(validDistance && validType){
-												vehicle.changeTrailer(testVehicle, vehicle.definition.motorized.hitches.indexOf(hitch), testVehicle.definition.motorized.hookups.indexOf(hookup));
-												player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect"));
-												return false;
-											}else if(validDistance){
-												trailerInRange = true;
-											}else if(validType){
-												matchingConnection = true;
-											}
-										}
-									}
-								}
+							switch(vehicle.tryToConnect((EntityVehicleF_Physics) entity)){
+								case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect")); return false;
+								case TRAILER_TOO_FAR : matchingConnection = true; break;
+								case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+								case NO_TRAILER_NEARBY : break;
 							}
 						}
 					}
-				
+					
 					//Send packet based on what we found.
-					if(!trailerInRange && !matchingConnection){
+					if(!matchingConnection && !trailerInRange){
 						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
-					}else if(!trailerInRange && matchingConnection){
+					}else if(matchingConnection && !trailerInRange){
 						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.toofar"));
-					}else if(trailerInRange && !matchingConnection){
+					}else if(!matchingConnection && trailerInRange){
 						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.nohitch"));
-					}
+						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wrongplacement"));
+					}					
 				}
 				return false;
 			}

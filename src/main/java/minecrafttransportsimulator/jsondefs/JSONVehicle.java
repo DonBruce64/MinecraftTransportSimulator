@@ -16,7 +16,8 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     public List<VehiclePart> parts;
     public List<VehicleCollisionBox> collision;
     public List<VehicleDoor> doors;
-    public List<VehicleEffect> effects; 
+    public List<VehicleConnection> connections;
+    public List<VehicleEffect> effects;
     public VehicleRendering rendering;
     
     public class VehicleGeneral extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>.General{
@@ -52,8 +53,6 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float ballastVolume;
     	public String hornSound;
     	public String sirenSound;
-    	public List<VehicleConnection> hitches;
-    	public List<VehicleConnection> hookups;
     	
     	@Deprecated
         public Point3d hitchPos;
@@ -213,16 +212,25 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public boolean activateOnSeated;
     }
     
+    public class VehicleConnection{
+    	public boolean hookup;
+    	public String type;
+    	public Point3d pos;
+    	public boolean mounted;
+    	public List<VehicleConnectionConnector> connectors;
+    	
+    	public class VehicleConnectionConnector{
+        	public String modelName;
+        	public Point3d startingPos;
+        	public Point3d endingPos;
+        	public double segmentLength;
+        }
+    }
+    
     public class VehicleEffect{
     	public String name;
     	public int duration;
     	public int amplifier;
-    }
-    
-    public class VehicleConnection{
-    	public String type;
-    	public Point3d pos;
-    	public boolean mounted;
     }
     
     public class PackInstrument{

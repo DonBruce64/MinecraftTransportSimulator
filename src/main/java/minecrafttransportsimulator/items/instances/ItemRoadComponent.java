@@ -49,11 +49,11 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 		//This could be either a block or a road itself.
 		//If we click a road, we need to figure out what lane number we will connect to.
 		if(!world.isClient()){
-			//If we clicked a holographic road, try to spawn collision blocks.
+			//If we clicked an inactive road, try to spawn collision blocks.
 			ABlockBase clickedBlock = world.getBlock(point);
 			if(clickedBlock instanceof BlockRoad){
 				TileEntityRoad clickedRoad = world.getTileEntity(point);
-				if(clickedRoad.isHolographic){
+				if(!clickedRoad.isActive){
 					if(clickedRoad.spawnCollisionBlocks(player)){
 						lastRoadClickedData.put(player, clickedRoad.getClickData(point, player));
 					}else{
@@ -66,7 +66,6 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 			//Didn't click a holographic road.  Do normal functions.
 			if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
 				//Set starting point.  This may or may not be a road segment.
-				lastPositionClicked.put(player, point);
 				lastRotationClicked.put(player, (double) player.getYaw());
 				TileEntityRoad clickedRoad;
 				if(clickedBlock instanceof BlockRoad){
@@ -75,10 +74,12 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					clickedRoad = ((BlockRoadCollision) clickedBlock).getRoadForBlock(world, point);
 				}else{
 					clickedRoad = null;
+					lastPositionClicked.put(player, point.copy().add(0, 1, 0));
 				}
 				
 				//If we clicked a road, get the lane number clicked.
 				if(clickedRoad != null){
+					lastPositionClicked.put(player, point);
 					lastRoadClickedData.put(player, clickedRoad.getClickData(point.copy().subtract(clickedRoad.position), player));
 				}else{
 					lastRoadClickedData.remove(player);
@@ -173,7 +174,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						
 						//Now that the road is placed, set the connections to the other roads and lanes.
 						//First set the curve offset.
-						newRoad.startingOffset.setTo(startPosition).add(-blockPlacementPoint.x, -blockPlacementPoint.y, blockPlacementPoint.z);
+						newRoad.startingOffset.setTo(startPosition).add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z);
 						
 						//Next set the curve based on the starting and ending position deltas and rotations.
 						newRoad.curve = new BezierCurve(endPosition.copy().subtract(startPosition), (float) startRotation, (float) endRotation);

@@ -161,6 +161,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.parts = loadedDefinition.parts;
 												definition.collision = loadedDefinition.collision;
 												definition.doors = loadedDefinition.doors;
+												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
 												RenderVehicle.clearVehicleCaches(definition);
 												
@@ -179,6 +180,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.subParts = loadedDefinition.subParts;
 												definition.collision = loadedDefinition.collision;
 												definition.doors = loadedDefinition.doors;
+												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
 												RenderVehicle.clearPartCaches(definition);
 												
@@ -197,7 +199,7 @@ public class GUIDevEditor extends AGUIBase{
 												continue;
 											}
 										}catch(Exception e){
-											e.printStackTrace();
+											//e.printStackTrace();
 											debug.setText(debug.getText() + "\nERROR: could not parse file.  Error is: " + e.getMessage());
 										}
 									}

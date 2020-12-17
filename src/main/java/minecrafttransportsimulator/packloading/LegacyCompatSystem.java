@@ -93,22 +93,26 @@ public final class LegacyCompatSystem{
 		
 		//Check for old hitches and hookups.
 		if(definition.motorized.hitchPos != null){
-			definition.motorized.hitches = new ArrayList<VehicleConnection>();
+			definition.connections = new ArrayList<VehicleConnection>();
 			for(String hitchName : definition.motorized.hitchTypes){
-				VehicleConnection hitch = definition.new VehicleConnection();
-				hitch.type = hitchName;
-				hitch.pos = definition.motorized.hitchPos;
-				definition.motorized.hitches.add(hitch);
+				VehicleConnection connection = definition.new VehicleConnection();
+				connection.hookup = false;
+				connection.type = hitchName;
+				connection.pos = definition.motorized.hitchPos;
+				definition.connections.add(connection);
 			}
 			definition.motorized.hitchPos = null;
 			definition.motorized.hitchTypes = null;
 		}
 		if(definition.motorized.hookupPos != null){
-			definition.motorized.hookups = new ArrayList<VehicleConnection>();
-			VehicleConnection hookup = definition.new VehicleConnection();
-			hookup.type = definition.motorized.hookupType;
-			hookup.pos = definition.motorized.hookupPos;
-			definition.motorized.hookups.add(hookup);
+			if(definition.connections == null){
+				definition.connections = new ArrayList<VehicleConnection>();
+			}
+			VehicleConnection connection = definition.new VehicleConnection();
+			connection.hookup = true;
+			connection.type = definition.motorized.hookupType;
+			connection.pos = definition.motorized.hookupPos;
+			definition.connections.add(connection);
 			definition.motorized.hookupType = null;
 			definition.motorized.hookupPos = null;
 		}

@@ -14,11 +14,17 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 public class BlockRoadCollision extends ABlockBase{
 	public static List<BlockRoadCollision> blocks = createCollisionBlocks();
-	private final BoundingBox blockBounds;
+	//TODO make this private.
+	public final BoundingBox blockBounds;
 	
     public BlockRoadCollision(int collisionHeightInPixels){
     	super(10.0F, 5.0F);
-    	this.blockBounds = new BoundingBox(new Point3d(0, -collisionHeightInPixels/16D/2D, 0), 0.5D, collisionHeightInPixels/16D/2D, 0.5D);
+    	if(collisionHeightInPixels == 0){
+    		collisionHeightInPixels = 1;
+    	}
+    	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
+    	float centerPositionOffset = -(0.5F - heightRadiusRequired)/2F;
+    	this.blockBounds = new BoundingBox(new Point3d(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
 	}
     
     @Override
@@ -29,11 +35,11 @@ public class BlockRoadCollision extends ABlockBase{
     @Override
     public void onBroken(IWrapperWorld world, Point3i location){
     	TileEntityRoad road = getRoadForBlock(world, location);
-    	if(road != null && !road.isHolographic){
+    	if(road != null && road.isActive){
     		//We belong to this TE.  Destroy the block.  This will end up
 			//destroying all collisions, including this one.  However, since
-			//we check if the road block is a hologram, and that gets set before destroying
-			//all collision blocks, the recurring call won't make it down here.
+			//we check if the road block is isActive, and that gets set before destroying
+			//all collision blocks, the recursive call won't make it down here.
 			world.destroyBlock(road.position);
 			return;
     	}

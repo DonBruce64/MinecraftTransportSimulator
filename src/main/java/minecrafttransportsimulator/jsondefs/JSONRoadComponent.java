@@ -7,8 +7,7 @@ public class JSONRoadComponent extends AJSONModelProvider<JSONRoadComponent.Road
     	
     	public float[] laneOffsets;
     	public float[] markingOffsets;
-    	public float leftBorderOffset;
-    	public float rightBorderOffset;
+    	public float borderOffset;
     	public int collisionHeight;
     	
     	public boolean onlyAtJoints;

@@ -61,7 +61,7 @@ public final class PackResourceLoader{
     	DECOR,
     	ITEM,
     	BOOKLET,
-	SKIN;
+    	SKIN;
     	
     	public static List<String> getAllTypesAsStrings(){
         	List<String> assetTypes = new ArrayList<String>();

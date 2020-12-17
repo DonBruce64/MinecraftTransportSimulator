@@ -64,10 +64,10 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
 						//Make sure we disconnect any trailers linked to this vehicle.  We don't want to save those.
 						if(vehicle.towedVehicle != null){
-							vehicle.changeTrailer(null, 0, 0);
+							vehicle.changeTrailer(null, null, null, null, null);
 						}
 						if(vehicle.towedByVehicle != null){
-							vehicle.towedByVehicle.changeTrailer(null, 0, 0);
+							vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
 						}
 						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 						IWrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();

@@ -32,18 +32,19 @@ public abstract class AGUIPanel extends AGUIBase{
 		if(vehicle.definition.general.isBlimp){
 			haveReverseThrustOption = true;
 		}else{
+			boolean foundReversingPart = false;
 			for(APart part : vehicle.parts){
 				if(part instanceof PartPropeller){
 					if(part.definition.propeller.isDynamicPitch){
-						haveReverseThrustOption = true;
-						return;
+						foundReversingPart = true;
+						break;
 					}
 				}else if(part instanceof PartEngine && part.definition.engine.jetPowerFactor > 0){
-					haveReverseThrustOption = true;
-					return;
+					foundReversingPart = true;
+					break;
 				}
 			}
-			haveReverseThrustOption = false;
+			haveReverseThrustOption = foundReversingPart;
 		}
 	}
 	

@@ -54,7 +54,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Dynamic variables based on states.
 	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
 	public final List<Point3i> collidingBlockOffsets = new ArrayList<Point3i>();
-	public boolean isHolographic;
+	public boolean isActive;
 	
 	//Static constants.
 	public static final int MAX_SEGMENT_LENGTH = 32;
@@ -95,8 +95,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//If we have points for collision due to use creating collision blocks, load them now.
 		this.collisionBlockOffsets = data.getPoints("collisionBlockOffsets");
 		
-		//Get the holographic state.
-		this.isHolographic = data.getBoolean("isHolographic");
+		//Get the active state.
+		this.isActive = data.getBoolean("isActive");
 	}
 	
 	@Override
@@ -166,20 +166,19 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Road width is considered to extend to the left and right border, minus 1/2 a block.
 	 */
 	public boolean spawnCollisionBlocks(IWrapperPlayer player){
-		float roadWidth = definition.general.leftBorderOffset - definition.general.rightBorderOffset - 1;
+		float roadWidth = definition.general.borderOffset - 1;
 		float segmentDelta = (float) (roadWidth/(Math.floor(roadWidth) + 1));
 		
 		//Get all the points that make up our collision points.
 		//If we find any colliding points, note them.
 		Point3d testOffset = new Point3d(0, 0, 0);
 		Point3d testRotation = new Point3d(0, 0, 0);
-		Point3i testPoint = new Point3i(0, 0, 0);
 		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
 		for(float f=0; f<curve.pathLength; f+=0.1){
-			for(float offset = definition.general.leftBorderOffset + 0.5F; offset <= definition.general.rightBorderOffset - 0.5; offset += segmentDelta){
+			for(float offset=0.5F; offset <= definition.general.borderOffset - 0.5; offset += segmentDelta){
 				testRotation.set(curve.getPitchAt(f), curve.getYawAt(f), 0);
 				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(curve.getPointAt(f));
-				testPoint.set((int) testOffset.x,(int) testOffset.y, (int) testOffset.z);
+				Point3i testPoint = new Point3i((int) testOffset.x, (int) testOffset.y, (int) testOffset.z);
 				
 				//If we don't have a block in this position, check if we need one.
 				if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
@@ -190,7 +189,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 					if(testBlock == null){
 						//Need a collision box here.
 						collisionBlockOffsets.add(testPoint);
-						collisionHeightMap.put(testPoint, (int) (curve.getPointAt(f).y + definition.general.collisionHeight)%1);
+						collisionHeightMap.put(testPoint, (int) (16*((position.y + testPoint.y + curve.getPointAt(f).y + definition.general.collisionHeight/16F)%1)));
 					}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
 						//Some block is blocking us that's not part of a road.  Flag it.
 						collidingBlockOffsets.add(testPoint);
@@ -201,10 +200,11 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
 			for(Point3i offset : collisionBlockOffsets){
-				testPoint.setTo(offset).add(position);
+				Point3i testPoint = offset.copy().add(position);
 				world.setBlock(BlockRoadCollision.blocks.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
 			}
 			collidingBlockOffsets.clear();
+			isActive = true;
 			return true;
 		}else{
 			collisionBlockOffsets.clear();
@@ -241,8 +241,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Save cure collision point data.
 		data.setPoints("collisionBlockOffsets", collisionBlockOffsets);
 		
-		//Save holographic state.
-		data.setBoolean("isHolographic", isHolographic);
+		//Save isActive state.
+		data.setBoolean("isActive", isActive);
     }
 	
 	/**

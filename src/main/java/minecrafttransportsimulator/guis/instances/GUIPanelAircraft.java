@@ -299,7 +299,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		labels.add(beaconLabel);
 		
 		//If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle
-		if(vehicle.definition.motorized.gearSequenceDuration != 0 && vehicle.definition.motorized.hitches != null){
+		if(vehicle.definition.motorized.gearSequenceDuration != 0 && vehicle.hasHitch()){
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -332,7 +332,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				public void onReleased(){}
 			};
 			addSelector(gearSelector);
-		}else if(vehicle.definition.motorized.hitches != null){
+		}else if(vehicle.hasHitch()){
 			trailerSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.trailer"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){

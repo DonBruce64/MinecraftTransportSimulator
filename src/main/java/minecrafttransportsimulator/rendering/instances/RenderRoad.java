@@ -13,9 +13,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	public void render(TileEntityRoad road, float partialTicks){
 		//Render road components.
 		
-		
-		//If we are holographic, render road bounds and colliding boxes.
-		if(road.isHolographic){
+		//FIXME render stuffs.
+		//If we are inactive, render road bounds and colliding boxes.
+		if(!road.isActive || road.isActive){
 			//Render the information hashes.
 			//First set states.
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -48,6 +48,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			
 			//Set states back to normal.
 			GL11.glEnd();
+			GL11.glColor3f(1, 1, 1);
 			GL11.glEnable(GL11.GL_LIGHTING);
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
 		}

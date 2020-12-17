@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
+import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -40,14 +41,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public boolean goingInReverse;
 	public boolean slipping;
 	public double groundVelocity;
+	
+	//Towing data.
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
 	public VehicleConnection activeHitchConnection;
 	public VehicleConnection activeHookupConnection;
+	public APart activeHitchPart;
+	public APart activeHookupPart;
 	private String towedVehicleSavedID;
 	private String towedByVehicleSavedID;
 	private int activeHitchConnectionSavedIndex;
+	private Point3d activeHitchPartSavedOffset;
 	private int activeHookupConnectionSavedIndex;
+	private Point3d activeHookupPartSavedOffset;
+	
+	//Internal movement variables.
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
@@ -67,10 +76,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
-		this.towedVehicleSavedID = data.getString("towedVehicleID");
-		this.towedByVehicleSavedID = data.getString("towedByVehicleID");
+		
+		this.towedVehicleSavedID = data.getString("towedVehicleSavedID");
+		this.towedByVehicleSavedID = data.getString("towedByVehicleSavedID");
 		this.activeHitchConnectionSavedIndex = data.getInteger("activeHitchConnectionSavedIndex");
 		this.activeHookupConnectionSavedIndex = data.getInteger("activeHookupConnectionSavedIndex");
+		this.activeHitchPartSavedOffset = data.getPoint3d("activeHitchPartSavedOffset");
+		this.activeHookupPartSavedOffset = data.getPoint3d("activeHookupPartSavedOffset");
+		
 		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
@@ -88,11 +101,21 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
 					if(entity.uniqueUUID.equals(towedVehicleSavedID)){
 						towedVehicle = (EntityVehicleF_Physics) entity;
-						activeHitchConnection = definition.motorized.hitches.get(activeHitchConnectionSavedIndex);
+						if(!activeHitchPartSavedOffset.isZero()){
+							activeHitchPart = getPartAtLocation(activeHitchPartSavedOffset);
+							activeHitchConnection = activeHitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
+						}else{
+							activeHitchConnection = definition.connections.get(activeHitchConnectionSavedIndex);
+						}
 						towedVehicleSavedID = "";
 					}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
 						towedByVehicle = (EntityVehicleF_Physics) entity;
-						activeHookupConnection = definition.motorized.hookups.get(activeHookupConnectionSavedIndex);
+						if(!activeHookupPartSavedOffset.isZero()){
+							activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
+							activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
+						}else{
+							activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
+						}
 						towedByVehicleSavedID = "";
 					}
 				}
@@ -570,6 +593,175 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
+	 * Returns true if this vehicle, or any of its parts, have hitches on them.
+	 */
+	public boolean hasHitch(){
+		if(definition.connections != null){
+			for(VehicleConnection connection : definition.connections){
+				if(!connection.hookup){
+					return true;
+				}
+			}
+		}
+		for(APart part : parts){
+			if(part.definition.connections != null){
+				for(VehicleConnection connection : part.definition.connections){
+					if(!connection.hookup){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Returns the current hitch offset for this vehicle.
+	 * If this vehicle doesn't have a current active hitch, null is returned.
+	 */
+	public Point3d getHitchOffset(){
+		if(activeHitchConnection != null){
+			if(activeHitchPart != null){
+				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.totalRotation).add(activeHitchPart.totalOffset); 
+			}else{
+				return activeHitchConnection.pos;
+			}
+		}else{
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the current hookup offset for this vehicle.
+	 * If this vehicle doesn't have a current active hookup, null is returned.
+	 */
+	public Point3d getHookupOffset(){
+		if(activeHookupConnection != null){
+			if(activeHookupPart != null){
+				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.totalRotation).add(activeHookupPart.totalOffset); 
+			}else{
+				return activeHookupConnection.pos;
+			}
+		}else{
+			return null;
+		}
+	}
+	
+	/**
+	 * Tries to connect the passed-in vehicle to this vehicle.
+	 */
+	public TrailerConnectionResult tryToConnect(EntityVehicleD_Moving trailer){
+		//Init variables.
+		boolean matchingConnection = false;
+		boolean trailerInRange = false;
+		
+		//Make sure we have hitches to check before doing this logic.
+		if(hasHitch()){
+			//First make sure the vehicle is in-range.  This is done by checking if the vehicle is even remotely close enough.
+			double trailerDistance = position.distanceTo(trailer.position);
+			if(trailerDistance < 25){
+				//Check all connections.
+				
+				//First check vehicle-vehicle connections.
+				switch(tryToConnectConnections(definition.connections, trailer.definition.connections, this, trailer, null, null)){
+					case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
+					case TRAILER_TOO_FAR : matchingConnection = true; break;
+					case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+					case NO_TRAILER_NEARBY : break;
+				}
+				
+				//Check part-vehicle and part-part connections.
+				for(APart vehiclePart : parts){
+					//Part-vehicle
+					switch(tryToConnectConnections(vehiclePart.definition.connections, trailer.definition.connections, this, trailer, vehiclePart, null)){
+						case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
+						case TRAILER_TOO_FAR : matchingConnection = true; break;
+						case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+						case NO_TRAILER_NEARBY : break;
+					}
+					
+					//Part-part;
+					for(APart trailerPart : trailer.parts){
+						switch(tryToConnectConnections(vehiclePart.definition.connections, trailerPart.definition.connections, this, trailer, vehiclePart, trailerPart)){
+							case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
+							case TRAILER_TOO_FAR : matchingConnection = true; break;
+							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+							case NO_TRAILER_NEARBY : break;
+						}
+					}
+				}
+				
+				//Check vehicle-part connections.
+				for(APart trailerPart : trailer.parts){
+					switch(tryToConnectConnections(definition.connections, trailerPart.definition.connections, this, trailer, null, trailerPart)){
+						case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
+						case TRAILER_TOO_FAR : matchingConnection = true; break;
+						case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+						case NO_TRAILER_NEARBY : break;
+					}
+				}
+			}
+		}
+		
+		//Return results.
+		if(matchingConnection && !trailerInRange){
+			return TrailerConnectionResult.TRAILER_TOO_FAR;
+		}else if(!matchingConnection && trailerInRange){
+			return TrailerConnectionResult.TRAILER_WRONG_HITCH;
+		}else{
+			return TrailerConnectionResult.NO_TRAILER_NEARBY;
+		}
+	}
+	
+	/**
+	 * Helper block for checking if two connection sets can connect.
+	 */
+	private static TrailerConnectionResult tryToConnectConnections(List<VehicleConnection> firstConnections, List<VehicleConnection> secondConnections, EntityVehicleD_Moving firstVehicle, EntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
+		//Check to make sure wer're being fed actual connections.
+		if(firstConnections != null && secondConnections != null){
+			//Create status variables.
+			boolean matchingConnection = false;
+			boolean trailerInRange = false;
+			for(VehicleConnection firstConnection : firstConnections){
+				for(VehicleConnection secondConnection : secondConnections){
+					if(!firstConnection.hookup && secondConnection.hookup){
+						Point3d hitchPos = firstConnection.pos.copy();
+						if(optionalFirstPart != null){
+							hitchPos.rotateCoarse(optionalFirstPart.totalRotation).add(optionalFirstPart.totalOffset);
+						}
+						hitchPos.rotateCoarse(firstVehicle.angles).add(firstVehicle.position);
+						Point3d hookupPos = secondConnection.pos.copy();
+						if(optionalSecondPart != null){
+							hookupPos.rotateCoarse(optionalSecondPart.totalRotation).add(optionalSecondPart.totalOffset);
+						}
+						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
+						
+						if(hitchPos.distanceTo(hookupPos) < 2){
+							boolean validType = firstConnection.type.equals(secondConnection.type);
+							boolean validDistance = hitchPos.distanceTo(hookupPos) < 5;
+							if(validType && validDistance){
+								firstVehicle.changeTrailer(secondVehicle, firstConnection, secondConnection, optionalFirstPart, optionalSecondPart);
+								return TrailerConnectionResult.TRAILER_CONNECTED;
+							}else if(validType){
+								matchingConnection = true;
+							}else if(validDistance){
+								trailerInRange = true;
+							}
+						}
+					}
+				}
+			}
+			
+			if(matchingConnection && !trailerInRange){
+				return TrailerConnectionResult.TRAILER_TOO_FAR;
+			}else if(!matchingConnection && trailerInRange){
+				return TrailerConnectionResult.TRAILER_WRONG_HITCH;
+			}
+		}
+		return TrailerConnectionResult.NO_TRAILER_NEARBY;
+	}
+	
+	/**
 	 * Method block for connecting this vehicle to another vehicle.
 	 * This vehicle will be considered towed by the other vehicle, and will
 	 * do different physics to follow the other vehicle than it normally would.
@@ -578,36 +770,50 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Hitch and hookup index should be part of our and the trailer's respective
 	 * definitions.
 	 */
-	public void changeTrailer(EntityVehicleF_Physics trailer, int hitchIndex, int hookupIndex){
+	public void changeTrailer(EntityVehicleD_Moving trailer, VehicleConnection hitchConnection, VehicleConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
 		if(trailer == null){
 			towedVehicle.towedByVehicle = null;
 			towedVehicle.activeHookupConnection = null;
 			towedVehicle.parkingBrakeOn = true;
 			towedVehicle = null;
-			if(!world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchIndex, hookupIndex));
-			}
 		}else{
-			towedVehicle = trailer;
-			activeHitchConnection = definition.motorized.hitches.get(hitchIndex);
+			towedVehicle = (EntityVehicleF_Physics) trailer;
+			activeHitchConnection = hitchConnection;
+			activeHitchPart = optionalHitchPart;
 			trailer.towedByVehicle = (EntityVehicleF_Physics) this;
-			trailer.activeHookupConnection = trailer.definition.motorized.hookups.get(hookupIndex); 
+			trailer.activeHookupConnection = hookupConnection; 
+			trailer.activeHookupPart = optionalHookupPart;
 			trailer.parkingBrakeOn = false;
 			if(activeHitchConnection.mounted){
 				trailer.angles.setTo(angles);
 				trailer.prevAngles.setTo(prevAngles);
-				EntityVehicleF_Physics trailerTrailer = trailer.towedVehicle;
+				if(activeHitchPart != null){
+					trailer.angles.add(activeHitchPart.totalRotation);
+					trailer.prevAngles.add(activeHitchPart.totalRotation);
+				}
+				EntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
 				while(trailerTrailer != null){
 					trailerTrailer.angles.setTo(angles);
 					trailerTrailer.prevAngles.setTo(prevAngles);
 					trailerTrailer = trailerTrailer.towedVehicle;
 				}
 			}
-			if(!world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchIndex, hookupIndex));
-			}
+		}
+		if(!world.isClient()){
+			MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
 		}
 	}
+	
+	/**
+	 * Emum for easier functions for trailer connections.
+	 */
+	public static enum TrailerConnectionResult{
+		NO_TRAILER_NEARBY,
+		TRAILER_TOO_FAR,
+		TRAILER_WRONG_HITCH,
+		TRAILER_CONNECTED;
+	}
+	
 	
 	public void addToServerDeltas(Point3d motion, Point3d rotation){
 		serverDeltaM.add(motion);
@@ -637,12 +843,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
 		if(towedVehicle != null){
-			data.setString("towedVehicleID", towedVehicle.uniqueUUID);
-			data.setInteger("activeHitchConnectionSavedIndex", activeHitchConnectionSavedIndex);
+			data.setString("towedVehicleSavedID", towedVehicle.uniqueUUID);
+			if(activeHitchPart != null){
+				data.setPoint3d("activeHitchPartSavedOffset", activeHitchPart.placementOffset);
+				data.setInteger("activeHitchConnectionSavedIndex", activeHitchPart.definition.connections.indexOf(activeHitchConnection));
+			}else{
+				data.setInteger("activeHitchConnectionSavedIndex", definition.connections.indexOf(activeHitchConnection));
+			}
 		}
 		if(towedByVehicle != null){
-			data.setString("towedByVehicleID", towedByVehicle.uniqueUUID);
-			data.setInteger("activeHookupConnectionSavedIndex", activeHookupConnectionSavedIndex);
+			data.setString("towedByVehicleSavedID", towedByVehicle.uniqueUUID);
+			if(activeHookupPart != null){
+				data.setPoint3d("activeHookupPartSavedOffset", activeHookupPart.placementOffset);
+				data.setInteger("activeHookupConnectionSavedIndex", activeHookupPart.definition.connections.indexOf(activeHookupConnection));
+			}else{
+				data.setInteger("activeHookupConnectionSavedIndex", definition.connections.indexOf(activeHookupConnection));
+			}
 		}
 		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);

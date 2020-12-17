@@ -405,17 +405,20 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be..
 			if(towedByVehicle.activeHitchConnection != null){
 				if(towedByVehicle.activeHitchConnection.mounted){
-					Point3d hitchRotatedOffset = towedByVehicle.activeHitchConnection.pos.copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position);
-					Point3d hookupRotatedOffset = activeHookupConnection.pos.copy().rotateFine(angles).add(position);
+					Point3d hitchRotatedOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position);
+					Point3d hookupRotatedOffset = getHookupOffset().copy().rotateFine(angles).add(position);
 					motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
 					rotation.setTo(towedByVehicle.angles).subtract(angles);
+					if(towedByVehicle.activeHitchPart != null){
+						rotation.add(towedByVehicle.activeHitchPart.totalRotation);
+					}
 				}else{
 					//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 					//Yaw is applied based on the current and next position of the truck's hookup.
 					//Motion is applied after yaw corrections to ensure the trailer follows the truck.
 					//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-					Point3d tractorHitchPrevOffset = towedByVehicle.activeHitchConnection.pos.copy().rotateFine(towedByVehicle.prevAngles).add(towedByVehicle.prevPosition).subtract(prevPosition);
-					Point3d tractorHitchCurrentOffset = towedByVehicle.activeHitchConnection.pos.copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
+					Point3d tractorHitchPrevOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.prevAngles).add(towedByVehicle.prevPosition).subtract(prevPosition);
+					Point3d tractorHitchCurrentOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
 					Point3d tractorHitchOffset = tractorHitchCurrentOffset.copy();
 					
 					//Now calculate how much yaw we need to apply to rotate the trailer.
@@ -433,10 +436,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					if(!Double.isNaN(rotationDelta)){
 						rotation.y = rotationDelta;
 						angles.y += rotationDelta;
-						trailerHookupOffset = activeHookupConnection.pos.copy().rotateFine(angles);
+						trailerHookupOffset = getHookupOffset().copy().rotateFine(angles);
 						angles.y -= rotationDelta;
 					}else{
-						trailerHookupOffset = activeHookupConnection.pos.copy().rotateFine(angles);
+						trailerHookupOffset = getHookupOffset().copy().rotateFine(angles);
 					}
 					
 					//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
