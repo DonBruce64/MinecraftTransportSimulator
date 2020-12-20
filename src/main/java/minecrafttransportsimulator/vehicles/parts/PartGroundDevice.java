@@ -27,6 +27,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  */
 public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 	public static final Point3d groundDetectionOffset = new Point3d(0, -0.05F, 0);
+	public static final Point3d groundOperationOffset = new Point3d(0, -0.25F, 0);
 	
 	//External states for animations.
 	public boolean skipAngularCalcs = false;
