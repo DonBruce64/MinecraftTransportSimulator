@@ -137,7 +137,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					}else{
 						blockPlacementPoint = point.copy().add(0, 1, 0);
 						startPosition = new Point3d(blockPlacementPoint);
-						startRotation = player.getYaw();
+						startRotation = player.getYaw() + 180;
 					}
 					
 					
@@ -173,11 +173,18 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 						
 						//Now that the road is placed, set the connections to the other roads and lanes.
-						//First set the curve offset.
+						//First set the curve offset and rotation.
 						newRoad.startingOffset.setTo(startPosition).add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z);
 						
 						//Next set the curve based on the starting and ending position deltas and rotations.
 						newRoad.curve = new BezierCurve(endPosition.copy().subtract(startPosition), (float) startRotation, (float) endRotation);
+						
+						//Set the road lanes now that we have the curve.
+						float[] definitionOffsets = newRoad.definition.general.laneOffsets;
+						for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
+							Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, newRoad.curve.startAngle, 0));
+							newRoad.lanes.set(laneNumber, newRoad.new RoadLane(laneOffset));
+						}
 						
 						//Set the lane connections, as appropriate.
 						//If we are butted-up to a segment, connect the connections in order.
@@ -283,6 +290,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						//Try to spawn all the collision blocks for this road.
 						if(newRoad.spawnCollisionBlocks(player)){
 							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player));
+							lastPositionClicked.put(player, newRoad.position);
 						}else{
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
 						}

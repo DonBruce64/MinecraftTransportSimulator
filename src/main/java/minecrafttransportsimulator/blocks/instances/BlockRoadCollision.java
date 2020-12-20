@@ -14,8 +14,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
 public class BlockRoadCollision extends ABlockBase{
 	public static List<BlockRoadCollision> blocks = createCollisionBlocks();
-	//TODO make this private.
-	public final BoundingBox blockBounds;
+	private final BoundingBox blockBounds;
 	
     public BlockRoadCollision(int collisionHeightInPixels){
     	super(10.0F, 5.0F);
@@ -23,7 +22,7 @@ public class BlockRoadCollision extends ABlockBase{
     		collisionHeightInPixels = 1;
     	}
     	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
-    	float centerPositionOffset = -(0.5F - heightRadiusRequired)/2F;
+    	float centerPositionOffset = -(0.5F - heightRadiusRequired);
     	this.blockBounds = new BoundingBox(new Point3d(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
 	}
     

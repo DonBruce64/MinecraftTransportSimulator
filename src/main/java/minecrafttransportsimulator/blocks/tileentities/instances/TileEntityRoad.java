@@ -80,12 +80,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		this.startingOffset = data.getPoint3d("startingOffset");
 		Point3d endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
-			this.curve = new BezierCurve(endingOffset.add(startingOffset), (float) rotation, (float) data.getDouble("endingRotaton"));
-			for(int laneNumber=0; laneNumber < components.get(RoadComponent.CORE).definition.general.laneOffsets.length; ++laneNumber){
+			this.curve = new BezierCurve(endingOffset.add(startingOffset), (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
+			for(int laneNumber=0; laneNumber < definition.general.laneOffsets.length; ++laneNumber){
 				lanes.add(new RoadLane(data.getData("lane" + laneNumber)));
 			}
 		}else{
-			float[] definitionOffsets = components.get(RoadComponent.CORE).definition.general.laneOffsets;
+			float[] definitionOffsets = definition.general.laneOffsets;
 			for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
 				Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, rotation, 0));
 				lanes.add(new RoadLane(laneOffset));
@@ -176,9 +176,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
 		for(float f=0; f<curve.pathLength; f+=0.1){
 			for(float offset=0.5F; offset <= definition.general.borderOffset - 0.5; offset += segmentDelta){
-				testRotation.set(curve.getPitchAt(f), curve.getYawAt(f), 0);
-				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(curve.getPointAt(f));
-				Point3i testPoint = new Point3i((int) testOffset.x, (int) testOffset.y, (int) testOffset.z);
+				curve.setPointToRotationAt(testRotation, f);
+				//We only want yaw for block placement.
+				testRotation.x = 0;
+				testRotation.z = 0;
+				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(0, definition.general.collisionHeight/16F, 0);
+				curve.offsetPointbyPositionAt(testOffset, f);
+				Point3i testPoint = new Point3i((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 				
 				//If we don't have a block in this position, check if we need one.
 				if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
@@ -188,8 +192,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 					testPoint.subtract(position);
 					if(testBlock == null){
 						//Need a collision box here.
+						int collisionBoxIndex = (int) ((testOffset.y - testPoint.y)*16);
 						collisionBlockOffsets.add(testPoint);
-						collisionHeightMap.put(testPoint, (int) (16*((position.y + testPoint.y + curve.getPointAt(f).y + definition.general.collisionHeight/16F)%1)));
+						
+						collisionHeightMap.put(testPoint, collisionBoxIndex);
 					}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
 						//Some block is blocking us that's not part of a road.  Flag it.
 						collidingBlockOffsets.add(testPoint);
@@ -228,7 +234,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Save curve data.
 		data.setPoint3d("startingOffset", startingOffset);
+		data.setDouble("startingRotation", curve.startAngle);
 		data.setPoint3d("endingOffset", curve.endPos);
+		data.setDouble("endingRotation", curve.endAngle);
 		
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){

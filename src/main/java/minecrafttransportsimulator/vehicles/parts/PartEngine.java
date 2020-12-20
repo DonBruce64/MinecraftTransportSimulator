@@ -362,7 +362,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
-					if(vehicle.groundDeviceCollective.isDeviceOnGround(wheel)){
+					if(vehicle.groundDeviceCollective.groundedGroundDevices.contains(wheel)){
 						wheelFriction += wheel.getMotiveFriction() - wheel.getFrictionLoss();
 						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
 						desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
@@ -843,7 +843,7 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 					//If we have wheels not on the ground and we drive them, adjust their velocity now.
 					for(PartGroundDevice wheel : vehicle.wheels){
 						wheel.skipAngularCalcs = false;
-						if(!vehicle.groundDeviceCollective.isDeviceOnGround(wheel) && vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
+						if(!vehicle.groundDeviceCollective.groundedGroundDevices.contains(wheel) && vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
 							wheel.angularVelocity = lowestWheelVelocity;
 						}
 					}

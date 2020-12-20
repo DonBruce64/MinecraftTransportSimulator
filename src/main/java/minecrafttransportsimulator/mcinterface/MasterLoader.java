@@ -60,7 +60,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.12.0-BETA6";
+	public static final String MODVER = "19.12.0-BETA7";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;

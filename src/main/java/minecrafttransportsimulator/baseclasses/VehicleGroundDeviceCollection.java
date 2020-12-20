@@ -170,30 +170,9 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
-	 * Returns true if the passed-in ground device is on the ground.  This queries the appropriate GDB
-	 * for the ground device and checks if it is on the ground.  This way we use a single point of
-	 * state for grounded-ness instead of recalculating it every check.
-	 */
-	public boolean isDeviceOnGround(PartGroundDevice ground){
-		if(ground.placementOffset.z > 0){
-			if(ground.placementOffset.x > 0){
-				return frontLeftGDB.isGrounded;
-			}else{
-				return frontRightGDB.isGrounded;
-			}
-		}else{
-			if(ground.placementOffset.x > 0){
-				return rearLeftGDB.isGrounded;
-			}else{
-				return rearRightGDB.isGrounded;
-			}
-		}
-	}
-	
-	/**
 	 * Returns true if the passed-in ground device can provide motive force.  This checks the vehicle's drivetrain to see
 	 * if it could power the ground device.  Note that just because the ground device can provide power, doesn't mean it is.
-	 * Wheels in the air don't do much good.  For this reason, ensure checks for force use {@link #isDeviceOnGround(PartGroundDevice)}
+	 * Wheels in the air don't do much good.  For this reason, ensure checks for force use {@link #groundedGroundDevices}
 	 */
 	public boolean canDeviceProvideForce(PartGroundDevice ground){
 		return (ground.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (ground.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive);

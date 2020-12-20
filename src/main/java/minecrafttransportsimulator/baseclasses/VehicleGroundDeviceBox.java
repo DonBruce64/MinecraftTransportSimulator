@@ -190,6 +190,7 @@ public class VehicleGroundDeviceBox{
 			if(isCollided || isGrounded){
 				isAbleToDoGroundOperations = true;
 			}else{
+				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
 				solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
@@ -215,6 +216,7 @@ public class VehicleGroundDeviceBox{
 			if(isCollidedLiquid || isGroundedLiquid){
 				isAbleToDoGroundOperationsLiquid = true;
 			}else{
+				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
 				liquidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
 				vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
 				liquidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);

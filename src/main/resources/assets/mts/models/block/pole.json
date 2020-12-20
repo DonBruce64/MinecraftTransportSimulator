@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/block",
-  "textures": {
-    "0": "minecraft:blocks/stone",
-    "particle": "minecraft:blocks/stone"
-  },
-  "elements": []
-}

@@ -1,8 +1,8 @@
 {
     "variants": {
-        "facing=south": { "model": "mts:fluidloader" },
-        "facing=north": { "model": "mts:fluidloader", "y": 180 },
-        "facing=east":  { "model": "mts:fluidloader", "y": 270 },
-        "facing=west":  { "model": "mts:fluidloader", "y": 90 }
+        "facing=south": { "model": "mts:blank" },
+        "facing=north": { "model": "mts:blank" },
+        "facing=east":  { "model": "mts:blank" },
+        "facing=west":  { "model": "mts:blank" }
     }
 }

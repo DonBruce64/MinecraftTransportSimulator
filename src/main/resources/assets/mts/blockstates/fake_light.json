@@ -1,5 +1,5 @@
 {
     "variants": {
-        "normal": { "model": "mts:fake_light" }
+        "normal": { "model": "mts:blank" }
     }
 }
