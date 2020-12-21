@@ -111,7 +111,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				//Need to invert the lookup as location may be null from the builder.
 				//Rider won't be, as it's required, so we can use it to get the actual location.
 				PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-				rider.setYaw(angles.y + seat.placementRotation.y);
+				rider.setYaw(angles.y + seat.totalRotation.y);
 			}
 		}
 		

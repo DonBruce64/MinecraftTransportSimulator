@@ -507,14 +507,6 @@ public final class LegacyCompatSystem{
 				partDef.types.set(i, "effector_" + partName);
 			}else if(partName.equals("custom")){
 				partDef.types.set(i, "generic");
-			}else if(partName.endsWith("gun_turret") && partDef.animations == null){
-				partDef.animations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.centerPoint = new Point3d(0, 0, 0);
-				animation.axis = new Point3d(0, 1, 0);
-				animation.animationType = "rotation";
-				animation.variable = "gun_yaw";
-				partDef.animations.add(animation);
 			}
 			
 			//If we have ground devices that are wheels, but no animations, add those automatically.
