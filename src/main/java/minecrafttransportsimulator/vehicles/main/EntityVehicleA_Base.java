@@ -396,15 +396,9 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			correctedPack.isSubPart = true;
 			
 			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
-			//First add the parent pack's position and rotation to the sub-pack.
+			//First add the parent pack's position to the sub-pack.
+			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
 			correctedPack.pos.add(parentPack.pos);
-			if(parentPack.rot != null){
-				if(correctedPack.rot != null){
-					correctedPack.rot.add(parentPack.rot);
-				}else{
-					correctedPack.rot = parentPack.rot.copy();
-				}
-			}
 			
 			//If the parent pack is mirrored, we need to invert our X-position to match.
 			if(parentPack.pos.x < 0 ^ parentPack.inverseMirroring){
