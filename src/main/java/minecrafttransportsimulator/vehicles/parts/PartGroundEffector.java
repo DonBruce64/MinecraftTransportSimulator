@@ -53,6 +53,7 @@ public class PartGroundEffector extends APart{
 								}
 							}
 						}
+						break;
 					}
 					case("harvester"): {
 						//Harvest drops, and add to inventories.
@@ -81,6 +82,7 @@ public class PartGroundEffector extends APart{
 								}
 							}
 						}
+						break;
 					}
 					case("planter"): {
 						//Search all inventories for seeds and try to plant them.
@@ -97,8 +99,12 @@ public class PartGroundEffector extends APart{
 								}
 							}
 						}
+						break;
 					}
-					case("plow"): vehicle.world.plowBlock(affectedBlocks[i]); break;
+					case("plow"):{
+						vehicle.world.plowBlock(affectedBlocks[i]);
+						break;
+					}
 				}
 				lastBlocksModified[i] = affectedBlocks[i];
 			}
