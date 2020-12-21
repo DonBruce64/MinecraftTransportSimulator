@@ -58,15 +58,22 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		//Set min/max yaw/pitch angles based on our definition and the vehicle definition.
-		if(definition.gun.minYaw != 0){
-			minYawAngle = vehicleDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, vehicleDefinition.minYaw) : definition.gun.minYaw;
+		//If the vehicle's min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
+		//Yaw/Pitch set to 0 is ignored as it's assumed to be un-defined.
+		if(vehicleDefinition.minYaw == -180 && vehicleDefinition.maxYaw == 180){
+			minYawAngle = -180;
+			maxYawAngle = 180;
 		}else{
-			minYawAngle =  vehicleDefinition.minYaw;
-		}
-		if(definition.gun.maxYaw != 0){
-			maxYawAngle = vehicleDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, vehicleDefinition.maxYaw) : definition.gun.maxYaw;
-		}else{
-			maxYawAngle =  vehicleDefinition.maxYaw;
+			if(definition.gun.minYaw != 0){
+				minYawAngle = vehicleDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, vehicleDefinition.minYaw) : definition.gun.minYaw;
+			}else{
+				minYawAngle =  vehicleDefinition.minYaw;
+			}
+			if(definition.gun.maxYaw != 0){
+				maxYawAngle = vehicleDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, vehicleDefinition.maxYaw) : definition.gun.maxYaw;
+			}else{
+				maxYawAngle =  vehicleDefinition.maxYaw;
+			}
 		}
 		if(definition.gun.minPitch != 0){
 			minPitchAngle = vehicleDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, vehicleDefinition.minPitch) : -definition.gun.minPitch;
