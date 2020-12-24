@@ -805,6 +805,11 @@ class WrapperWorld implements IWrapperWorld{
 	public void spawnExplosion(IWrapperPlayer player, Point3d location, double strength, boolean flames){
 		world.newExplosion(((WrapperPlayer) player).player, location.x, location.y, location.z, (float) strength, flames, true);
 	}
+
+	@Override
+	public long getDayTime() {
+		return world.getWorldTime();
+	}
 	
 	/**
 	 *  Helper method to convert a BoundingBox to an AxisAlignedBB.

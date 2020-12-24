@@ -242,6 +242,7 @@ public final class VehicleAnimations{
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
 			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
+			case("day_ticks"): return vehicle.world.getDayTime();
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;

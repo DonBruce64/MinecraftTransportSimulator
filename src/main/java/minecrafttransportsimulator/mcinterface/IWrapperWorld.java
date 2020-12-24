@@ -325,4 +325,9 @@ public interface IWrapperWorld{
 	 *  Explosion in this case is from the player.
 	 */
 	public void spawnExplosion(IWrapperPlayer player, Point3d location, double strength, boolean flames);
+
+	/**
+	 * Get current world time
+	 */
+	public long getDayTime();
 }
