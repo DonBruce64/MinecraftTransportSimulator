@@ -1115,10 +1115,10 @@ public final class RenderVehicle{
 					if(!validParts.isEmpty()){
 						//Get current part to render based on the cycle.
 						int cycle = player.isSneaking() ? 30 : 15;
-						ItemPart partToRender = validParts.get((int) ((vehicle.world.getTime()/cycle)%validParts.size()));
+						ItemPart partToRender = validParts.get((int) ((vehicle.world.getTick()/cycle)%validParts.size()));
 						
 						//If we are on the start of the cycle, beep.
-						if(vehicle.world.getTime()%cycle == 0){
+						if(vehicle.world.getTick()%cycle == 0){
 							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
 						}
 						

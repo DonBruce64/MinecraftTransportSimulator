@@ -59,11 +59,11 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public void update(){
 		//Check every 1 seconds to make sure controlled components are in their correct states.
 		//This could have changed due to chunkloading.  We also check light redstone state here.
-		if(world.getTime()%20 == 0){
+		if(world.getTick()%20 == 0){
 			updateState(currentOpState, false);
 		}
 		
-		int currentTime = (int) ((world.getTime()/20)%Integer.MAX_VALUE);
+		int currentTime = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
 		int redstoneSignal = world.getRedstonePower(position.copy().add(0, -1, 0));
 		//If we aren't in remote control mode, do checks for state changes.
 		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
@@ -181,7 +181,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public void updateState(OpState state, boolean cycleUpdate){
 		currentOpState = state;
 		if(cycleUpdate){
-			timeOperationStarted = (int) ((world.getTime()/20)%Integer.MAX_VALUE);
+			timeOperationStarted = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
 		}
 		Iterator<Point3i> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){

@@ -34,7 +34,7 @@ public class RenderTickData{
 		//Shaders do a pre-render to get their shadow, so the first render pass is actually invalid.
 		if(!shadersPresent || doneRenderingShaders){
 			//Rendering the actual model now.
-			lastTickPass[renderPass] = world.getTime();
+			lastTickPass[renderPass] = world.getTick();
 			lastPartialTicks[renderPass] = partialTicks;
 		}else if(shadersPresent && !doneRenderingShaders){
 			//Rendering shader components.  If we're on pass 1, then shaders should be done rendering this cycle.

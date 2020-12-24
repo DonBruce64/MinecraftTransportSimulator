@@ -23,7 +23,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AIt
 	
 	@Override
 	public String getRegistrationName(){
-		//TODO this need to be the full name when packs register with MTS.
+		//TODO remove this when we no longer have external loaders.
 		//return definition.packID + ":" + definition.systemName;
 		return (PackParserSystem.getPackConfiguration(definition.packID) == null || PackParserSystem.getPackConfiguration(definition.packID).internallyGenerated) ? definition.systemName : definition.packID + PACKID_SEPARATOR + definition.systemName;
 	}

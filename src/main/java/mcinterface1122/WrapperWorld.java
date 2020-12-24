@@ -149,8 +149,13 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public long getTime(){
+	public long getTick(){
 		return world.getTotalWorldTime();
+	}
+	
+	@Override
+	public long getTime(){
+		return world.getWorldTime();
 	}
 		
 	@Override

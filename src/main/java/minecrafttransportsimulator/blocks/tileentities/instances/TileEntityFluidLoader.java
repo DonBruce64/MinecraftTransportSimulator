@@ -32,7 +32,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		if(!world.isClient()){
 			if(connectedPart == null){
 				//Check for a new part every second.  We don't want every tick as this would increase server loads.
-				if(world.getTime()%20 == 0){
+				if(world.getTick()%20 == 0){
 					updateNearestPart();
 				}
 			}else{

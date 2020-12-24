@@ -62,7 +62,7 @@ class BuilderCreativeTab extends CreativeTabs{
 		if(itemIcon != null){
 			return super.getIcon();
 		}else{
-			return new ItemStack(items.get((int) (MasterInterface.gameInterface.getClientWorld().getTime()/20%items.size())));
+			return new ItemStack(items.get((int) (MasterInterface.gameInterface.getClientWorld().getTick()/20%items.size())));
 		}
 	}
 

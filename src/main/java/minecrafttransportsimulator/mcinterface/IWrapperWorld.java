@@ -40,8 +40,15 @@ public interface IWrapperWorld{
 	public int getDimensionID();
 	
 	/**
-	 *  Returns the current world time, in ticks.  Useful when you need to sync
+	 *  Returns the current world tick value.  Useful when you need to sync
 	 *  operations.  For animations, just use the system time.
+	 */
+	public long getTick();
+	
+	/**
+	 *  Returns the time of day of the world, in ticks.  Unlike {@link #getTick()},
+	 *  this method may not increment if the world's internal clock isn't currently
+	 *  advancing.
 	 */
 	public long getTime();
 		
