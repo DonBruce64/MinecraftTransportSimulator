@@ -137,7 +137,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					}else{
 						blockPlacementPoint = point.copy().add(0, 1, 0);
 						startPosition = new Point3d(blockPlacementPoint);
-						startRotation = player.getYaw() + 180;
+						startRotation = player.getYaw();
 					}
 					
 					
@@ -148,7 +148,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					if(endingRoadData != null){
 						if(endingRoadData.clickedStart){
 							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset);
-							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.startAngle : endingRoadData.roadClicked.curve.startAngle + 180;
+							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.startAngle + 180 : endingRoadData.roadClicked.curve.startAngle;
 						}else{
 							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset).add(endingRoadData.roadClicked.curve.endPos);
 							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
@@ -291,6 +291,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						if(newRoad.spawnCollisionBlocks(player)){
 							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player));
 							lastPositionClicked.put(player, newRoad.position);
+							lastRotationClicked.put(player, newRoad.curve.startAngle + 180D);
 						}else{
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
 						}

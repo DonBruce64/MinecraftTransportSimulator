@@ -11,8 +11,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane.RoadLaneConnection;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadDisplayListMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
@@ -129,9 +131,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			GL11.glCallList(displayListMap.get(component));
 		}
 		
-		//FIXME render stuffs.
-		//If we are inactive, render road bounds and colliding boxes.
-		if(!road.isActive){
+		//If we are inactive, or in devMode, render road bounds and colliding boxes.
+		if(!road.isActive || ConfigSystem.configObject.clientControls.devMode.value){
 			//Render the information hashes.
 			//First set states.
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -144,6 +145,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			for(RoadLane lane : road.lanes){
 				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y, lane.startingOffset.z);
 				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y + 5, lane.startingOffset.z);
+				GL11.glVertex3d(lane.startingOffset.x, lane.startingOffset.y + 5, lane.startingOffset.z);
+				rotation.set(0, road.curve.startAngle, 0);
+				position.set(0, 0, 2).rotateFine(rotation);
+				GL11.glVertex3d(lane.startingOffset.x + position.x, lane.startingOffset.y + 5 + position.y, lane.startingOffset.z + position.z);
 			}
 			
 			//Render the curves.
@@ -176,6 +181,28 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					GL11.glVertex3d(position.x, position.y, position.z);
 					GL11.glVertex3d(position.x, position.y + 1.5, position.z);
 				}	
+			}
+			
+			//Render the lane connections.
+			GL11.glColor3f(0, 0, 1);
+			for(int i=0; i<road.lanes.size(); ++i){
+				RoadLane lane = road.lanes.get(i);
+				for(RoadLaneConnection connection : lane.priorConnections){
+					TileEntityRoad otherRoad = road.world.getTileEntity(connection.tileLocation);
+					if(otherRoad != null){
+						//First render our own offset point.
+						road.curve.setPointToRotationAt(rotation, 0.5F);
+						position.set(road.definition.general.laneOffsets[i], 0, 0);
+						position.rotateFine(rotation).add(road.startingOffset);
+						GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+						
+						//Now render the connection point.
+						otherRoad.curve.setPointToRotationAt(rotation, connection.connectedToStart ? 0.5F : otherRoad.curve.pathLength - 0.5F);
+						position.set(otherRoad.definition.general.laneOffsets[connection.laneNumber], 0, 0);
+						position.rotateFine(rotation).add(otherRoad.startingOffset).add(otherRoad.position.x, otherRoad.position.y, otherRoad.position.z).add(-road.position.x, -road.position.y, -road.position.z);
+						GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+					}
+				}
 			}
 			
 			//Set states back to normal.

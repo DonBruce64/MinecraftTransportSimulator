@@ -193,8 +193,7 @@ public abstract class APart implements ISoundProvider{
 					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
 						inhibitAnimations = false;
 					}
-				}
-				if(!inhibitAnimations){
+				}else if(!inhibitAnimations){
 					if(definition.animationType.equals("rotation")){
 						//Found rotation.  Get angles that needs to be applied.
 						double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));

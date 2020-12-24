@@ -142,77 +142,87 @@ public class RenderEventHandler{
 		    				
 		    				//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
 		    				if(camera != null){
+		    					//Need to orient our custom camera.  Custom cameras do viewpoint rendering.
+		    					//This means everything happens in the opposite order of model creation.
+		    					//As this is the case, all rotations are applied as ZXY, not YXZ.
+		    					//This also means all signs are inverted for all operations.
+		    					//Finally, it means that rotation operations do NOT affect the matrix origin.
+		    					
 		    					//Set current overlay for future calls.
 		    					customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
 		            			
-		            			//First rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
-		                		GL11.glRotated(180, 0, 1, 0);
-		                		
-		                		//Rotate to the camera's rotation, if it has one.
-		                		//We also need to take into account the rotation of the part if we have a part camera.
-		                		Point3d totalRotation;
-		                		if(optionalPart != null){
-		                			if(camera.rot != null){
-		                				totalRotation = optionalPart.totalRotation.copy().add(camera.rot);
-		                			}else{
-		                				totalRotation = optionalPart.totalRotation;
-		                			}
-		                		}else{
-		                			totalRotation = camera.rot;
-		                		}
-		            			if(totalRotation != null){
-		            	    		GL11.glRotated(-totalRotation.y, 0, 1, 0);
-		            	    		GL11.glRotated(-totalRotation.x, 1, 0, 0);
-		            	    		GL11.glRotated(-totalRotation.z, 0, 0, 1);
-		            			}
-		            			
-		            			//Apply any rotations from rotation animations.
-		            			if(camera.animations != null){
+		    					//Set variables for camera position and rotation.
+		    					Point3d cameraPosition = new Point3d(0, 0, 0);
+		    					Point3d cameraRotation = new Point3d(0, 0, 0);
+		    					
+		    					//Apply transforms.
+		    					//These happen in-order to ensure proper rendering sequencing.
+		    					if(camera.animations != null){
+		    						boolean inhibitAnimations = false;
 		            				for(JSONAnimationDefinition animation : camera.animations){
-		            					if(animation.animationType.equals("rotation")){
-		            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-		            						if(animationValue != 0){
-		            							Point3d rotationAxis = animation.axis.copy().normalize();
-		                						if(animationValue != 0){
-		                							GL11.glTranslated(animation.centerPoint.x - camera.pos.x, animation.centerPoint.y - camera.pos.y, animation.centerPoint.z - camera.pos.z);
-		                							GL11.glRotated(animationValue, -rotationAxis.x, -rotationAxis.y, -rotationAxis.z);
-		                							GL11.glTranslated(-(animation.centerPoint.x - camera.pos.x), -(animation.centerPoint.y - camera.pos.y), -(animation.centerPoint.z - camera.pos.z));
-		                						}
+		            					if(animation.animationType.equals("inhibitor")){
+		            						double variableValue = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, optionalPart);
+		            						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+		            							inhibitAnimations = true;
 		            						}
+		            					}else if(animation.animationType.equals("activator")){
+		            						double variableValue = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, optionalPart);
+		            						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+		            							inhibitAnimations = false;
+		            						}
+		            					}else if(!inhibitAnimations){
+		            						if(animation.animationType.equals("rotation")){
+			            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+			            						if(animationValue != 0){
+			            							Point3d rotationAmount = animation.axis.copy().normalize().multiply(animationValue);
+			            							Point3d rotationOffset = camera.pos.copy().subtract(animation.centerPoint);
+			            							if(!rotationOffset.isZero()){
+			            								cameraPosition.subtract(rotationOffset).add(rotationOffset.rotateFine(rotationAmount));
+			            							}
+			            							cameraRotation.add(rotationAmount);
+			            						}
+			            					}else if(animation.animationType.equals("translation")){
+			            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
+			            						if(animationValue != 0){
+			            							Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue).rotateFine(cameraRotation);
+			            							cameraPosition.add(translationAmount);
+			            						}
+			            					}
 		            					}
 		            				}
 		            			}
-		                		
-		                		//Translate to the camera's position.
+		    					
+	            				//Now that the transformed camera is ready, add the camera offset position and rotation.
+	            				//This may be for a part, in which case we need to offset by the part's position/rotation as well.
+		    					cameraPosition.add(camera.pos);
+	            				if(camera.rot != null){
+	            					cameraRotation.add(camera.rot);
+	            				}
+	            				if(optionalPart != null){
+	            					cameraPosition.rotateFine(optionalPart.totalRotation).add(optionalPart.totalOffset);
+		    					}
+	            				
+	            				//Camera position is set.  We now need to rotate it to align with the vehicle's orientation.
+	            				Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(partialTicks));
+		    					cameraPosition.rotateFine(vehicleSmoothedRotation);
+		    					cameraRotation.add(vehicleSmoothedRotation);
+		    					
+		    					//Camera is positioned and rotated to match the vehicle.  Do OpenGL transforms to set it.
+		    					//Get the distance from the vehicle's center point to the rendered player to get a 0,0,0 starting point.
 		            			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-		            			//We also need to take into account the part's position, if we are using one.
-		            			double playerPositionToEyeOffset = 0.87;
-		            			if(optionalPart != null){
-		            				GL11.glTranslated(-(optionalPart.totalOffset.x + camera.pos.x - seat.totalOffset.x), -(optionalPart.totalOffset.y + camera.pos.y - playerPositionToEyeOffset - seat.totalOffset.y), -(optionalPart.totalOffset.z + camera.pos.z - seat.totalOffset.z));
-		            			}else{
-		            				GL11.glTranslated(-(camera.pos.x - seat.totalOffset.x), -(camera.pos.y - playerPositionToEyeOffset - seat.totalOffset.y), -(camera.pos.z - seat.totalOffset.z));
-		            			}
-		            			
-		            			//Translate again to any camera animations.
-		            			if(camera.animations != null){
-		            				for(JSONAnimationDefinition animation : camera.animations){
-		            					if(animation.animationType.equals("translation")){
-		            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-		            						if(animationValue != 0){
-		            							if(animation.animationType.equals("translation")){
-		                    						Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue);
-		                    						GL11.glTranslated(-translationAmount.x, -translationAmount.y, -translationAmount.z);
-		                    					}
-		            						}
-		            					}
-		            				}
-		            			}
-		                		
-		            			//Now rotate to match the vehicle's angles.
-		            			Point3d vehicleSmoothedRotation = vehicle.prevAngles.copy().add(vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(partialTicks));
-		                		GL11.glRotated(-vehicleSmoothedRotation.z, 0, 0, 1);
-		                		GL11.glRotated(-vehicleSmoothedRotation.x, 1, 0, 0);
-		                		GL11.glRotated(-vehicleSmoothedRotation.y, 0, 1, 0);
+		    					
+		    					Point3d vehiclePositionDelta = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
+		    					vehiclePositionDelta.subtract(renderEntity.getRenderedPosition(partialTicks).add(0, renderEntity.getEyeHeight(), 0));
+		    					cameraPosition.add(vehiclePositionDelta);
+		    					
+		    					//Rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
+		                		GL11.glRotated(180, 0, 1, 0);
+		    					
+		    					//Now apply our actual offsets.
+		    					GL11.glRotated(-cameraRotation.z, 0, 0, 1);
+		    					GL11.glRotated(-cameraRotation.x, 1, 0, 0);
+		            			GL11.glRotated(-cameraRotation.y, 0, 1, 0);
+		            			GL11.glTranslated(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
 		                		
 		                		//If the camera has an FOV override, apply it.
 		                		if(camera.fovOverride != 0){
