@@ -18,6 +18,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -34,6 +35,7 @@ import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
+import minecrafttransportsimulator.rendering.components.VehicleAnimations;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -162,17 +164,33 @@ public final class RenderVehicle{
 		for(APart part : vehicle.parts){
 			//Only render real parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
 			if(!part.isFake() && !part.vehicleDefinition.isSubPart){
-				GL11.glPushMatrix();
-				if(part.definition.ground != null && part.definition.ground.isTread){
-					//Treads don't get translated by y, or z.
-					GL11.glTranslated(part.placementOffset.x, 0, 0);
-					renderPart(part, partialTicks);
-				}else{
-					Point3d offset = part.getPositionOffset(partialTicks).add(part.placementOffset);
-					GL11.glTranslated(offset.x, offset.y, offset.z);
-					renderPart(part, partialTicks);
+				//Check to see if the part has a visibility animation and it's set to not be visible.
+				boolean shouldRender = true;
+				if(part.vehicleDefinition.animations != null){
+					for(JSONAnimationDefinition animation : part.vehicleDefinition.animations){
+						if(animation.animationType.equals("visibility")){
+							double value = VehicleAnimations.getVariableValue(animation.variable,  partialTicks, vehicle, part);
+							if(value < animation.clampMin || value > animation.clampMax){
+								shouldRender = false;
+								break;
+							}
+						}
+					}
 				}
-				GL11.glPopMatrix();
+				
+				if(shouldRender){
+					GL11.glPushMatrix();
+					if(part.definition.ground != null && part.definition.ground.isTread){
+						//Treads don't get translated by y, or z.
+						GL11.glTranslated(part.placementOffset.x, 0, 0);
+						renderPart(part, partialTicks);
+					}else{
+						Point3d offset = part.getPositionOffset(partialTicks).add(part.placementOffset);
+						GL11.glTranslated(offset.x, offset.y, offset.z);
+						renderPart(part, partialTicks);
+					}
+					GL11.glPopMatrix();
+				}
 			}
 		}
 		
@@ -386,24 +404,39 @@ public final class RenderVehicle{
 			//Now that we have rendered this part, render any sub-part children.
 			for(APart childPart : part.childParts){
 				if(!childPart.isFake() && childPart.vehicleDefinition.isSubPart){
-					//Get the relative distance between our offset and our parent's offset.
-					Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
-					
-					
-					//Translate to our new center and render.
-					//If we are mirroring, and are a child part that shouldn't mirror, don't do so.
-					GL11.glPushMatrix();
-					GL11.glTranslated(mirrored ? -relativeOffset.x : relativeOffset.x, relativeOffset.y, relativeOffset.z);
-					if(mirrored && childPart.disableMirroring){
-						GL11.glScalef(-1.0F, 1.0F, 1.0F);
-						GL11.glCullFace(GL11.GL_BACK);
-						renderPart(childPart, partialTicks);
-						GL11.glScalef(-1.0F, 1.0F, 1.0F);
-						GL11.glCullFace(GL11.GL_FRONT);
-					}else{
-						renderPart(childPart, partialTicks);
+					//Check if we should render.
+					boolean shouldRender = true;
+					if(childPart.vehicleDefinition.animations != null){
+						for(JSONAnimationDefinition animation : childPart.vehicleDefinition.animations){
+							if(animation.animationType.equals("visibility")){
+								double value = VehicleAnimations.getVariableValue(animation.variable,  partialTicks, childPart.vehicle, childPart);
+								if(value < animation.clampMin || value > animation.clampMax){
+									shouldRender = false;
+									break;
+								}
+							}
+						}
 					}
-					GL11.glPopMatrix();
+					
+					if(shouldRender){
+						//Get the relative distance between our offset and our parent's offset.
+						Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
+						
+						//Translate to our new center and render.
+						//If we are mirroring, and are a child part that shouldn't mirror, don't do so.
+						GL11.glPushMatrix();
+						GL11.glTranslated(mirrored ? -relativeOffset.x : relativeOffset.x, relativeOffset.y, relativeOffset.z);
+						if(mirrored && childPart.disableMirroring){
+							GL11.glScalef(-1.0F, 1.0F, 1.0F);
+							GL11.glCullFace(GL11.GL_BACK);
+							renderPart(childPart, partialTicks);
+							GL11.glScalef(-1.0F, 1.0F, 1.0F);
+							GL11.glCullFace(GL11.GL_FRONT);
+						}else{
+							renderPart(childPart, partialTicks);
+						}
+						GL11.glPopMatrix();
+					}
 				}
 			}
 		}
