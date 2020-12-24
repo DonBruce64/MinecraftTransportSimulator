@@ -77,30 +77,32 @@ public class VehicleGroundDeviceBox{
 		liquidDevices.clear();
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
-				//X-offsets of 0 are both left and right as they are center points.
-				//This ensures we don't roll to try and align a center point.
-				if(isFront && part.placementOffset.z > 0){
-					if(isLeft && part.placementOffset.x >= 0){
-						groundDevices.add((PartGroundDevice) part);
-						if(part.definition.ground.canFloat){
-							liquidDevices.add((PartGroundDevice) part);
+				if(!part.vehicleDefinition.isSpare){
+					//X-offsets of 0 are both left and right as they are center points.
+					//This ensures we don't roll to try and align a center point.
+					if(isFront && part.placementOffset.z > 0){
+						if(isLeft && part.placementOffset.x >= 0){
+							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.canFloat){
+								liquidDevices.add((PartGroundDevice) part);
+							}
+						}else if(!isLeft && part.placementOffset.x <= 0){
+							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.canFloat){
+								liquidDevices.add((PartGroundDevice) part);
+							}
 						}
-					}else if(!isLeft && part.placementOffset.x <= 0){
-						groundDevices.add((PartGroundDevice) part);
-						if(part.definition.ground.canFloat){
-							liquidDevices.add((PartGroundDevice) part);
-						}
-					}
-				}else if(!isFront && part.placementOffset.z <= 0){
-					if(isLeft && part.placementOffset.x >= 0){
-						groundDevices.add((PartGroundDevice) part);
-						if(part.definition.ground.canFloat){
-							liquidDevices.add((PartGroundDevice) part);
-						}
-					}else if(!isLeft && part.placementOffset.x <= 0){
-						groundDevices.add((PartGroundDevice) part);
-						if(part.definition.ground.canFloat){
-							liquidDevices.add((PartGroundDevice) part);
+					}else if(!isFront && part.placementOffset.z <= 0){
+						if(isLeft && part.placementOffset.x >= 0){
+							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.canFloat){
+								liquidDevices.add((PartGroundDevice) part);
+							}
+						}else if(!isLeft && part.placementOffset.x <= 0){
+							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.canFloat){
+								liquidDevices.add((PartGroundDevice) part);
+							}
 						}
 					}
 				}
