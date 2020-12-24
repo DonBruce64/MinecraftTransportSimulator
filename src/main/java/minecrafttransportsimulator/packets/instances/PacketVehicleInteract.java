@@ -121,18 +121,21 @@ public class PacketVehicleInteract extends APacketVehicle{
 				}
 				for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
 					if(doorEntry.getKey().localCenter.equals(hitPosition)){
-						//Can't open locked vehicles.
-						if(vehicle.locked){
-							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
-						}else{
-							//Open or close the clicked door.
-							if(vehicle.doorsOpen.contains(doorEntry.getValue().name)){
-								vehicle.doorsOpen.remove(doorEntry.getValue().name);
+						if(!doorEntry.getValue().ignoresClicks){
+							//Can't open locked vehicles.
+							if(vehicle.locked){
+								player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 							}else{
-								vehicle.doorsOpen.add(doorEntry.getValue().name);
+								//Open or close the clicked door.
+								if(vehicle.doorsOpen.contains(doorEntry.getValue().name)){
+									vehicle.doorsOpen.remove(doorEntry.getValue().name);
+								}else{
+									vehicle.doorsOpen.add(doorEntry.getValue().name);
+								}
+								return true;
 							}
-							return true;
 						}
+						return false;
 					}
 				}
 			}

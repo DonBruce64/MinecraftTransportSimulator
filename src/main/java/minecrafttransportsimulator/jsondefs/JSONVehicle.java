@@ -210,6 +210,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public boolean closedByDefault;
         public boolean closeOnMovement;
         public boolean activateOnSeated;
+        public boolean ignoresClicks;
     }
     
     public class VehicleConnection{
