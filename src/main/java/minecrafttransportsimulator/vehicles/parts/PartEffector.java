@@ -12,11 +12,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-public class PartGroundEffector extends APart{
+public class PartEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
 	protected final Point3i[] affectedBlocks;
 	
-	public PartGroundEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		lastBlocksModified = new Point3i[definition.effector.blocksWide];
 		affectedBlocks = new Point3i[definition.effector.blocksWide];

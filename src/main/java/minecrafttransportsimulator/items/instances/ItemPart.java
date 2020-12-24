@@ -9,6 +9,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEffector;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGeneric;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -65,6 +66,7 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			//case("bullet") : return new PartBullet(vehicle, packVehicleDef, definition, partData, parentPart);
+			case("effector") : return new PartEffector(vehicle, packVehicleDef, this, partData, parentPart);
 			case("engine") : return new PartEngine(vehicle, packVehicleDef, this, partData, parentPart);
 			case("ground") : return new PartGroundDevice(vehicle, packVehicleDef, this, partData, parentPart);
 			case("gun") : return new PartGun(vehicle, packVehicleDef, this, partData, parentPart);
