@@ -49,7 +49,7 @@ public final class RenderInstrument{
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if(component.lightOverlay ? MasterLoader.renderInterface.getRenderPass() != 0 : MasterLoader.renderInterface.getRenderPass() != 1){
+			if(component.overlayTexture ? MasterLoader.renderInterface.getRenderPass() != 0 : MasterLoader.renderInterface.getRenderPass() != 1){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
@@ -213,23 +213,20 @@ public final class RenderInstrument{
 						//Translate to the component.
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
 						
-						//If the shape is lit, do blending.  If not, just render normally.
-						if(!component.lightOverlay){
-							if(component.lightUpTexture && lightsOn){
-								MasterLoader.renderInterface.setLightingState(false);
-								renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
-								MasterLoader.renderInterface.setLightingState(true);
-							}else{
-								renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
-							}
-						}else if(lightsOn && ConfigSystem.configObject.clientRendering.instBlending.value){
-							GL11.glEnable(GL11.GL_BLEND);
+						//If the shape is lit, disable lighting.
+						//If the shape is an overlay, do blending.
+						if(component.lightUpTexture && lightsOn){
 							MasterLoader.renderInterface.setLightingState(false);
-						    renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
-						    MasterLoader.renderInterface.setLightingState(true);
-							if(MasterLoader.renderInterface.getRenderPass() != 1){
-								GL11.glDisable(GL11.GL_BLEND);
-							}
+						}
+						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value){
+							GL11.glEnable(GL11.GL_BLEND);
+						}	
+						renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
+						if(component.lightUpTexture && lightsOn){
+							MasterLoader.renderInterface.setLightingState(true);
+						}
+						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value && MasterLoader.renderInterface.getRenderPass() != 1){
+							GL11.glDisable(GL11.GL_BLEND);
 						}
 					}
 				}

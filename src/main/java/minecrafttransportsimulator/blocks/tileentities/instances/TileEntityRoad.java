@@ -2,7 +2,6 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,15 +79,15 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		this.startingOffset = data.getPoint3d("startingOffset");
 		Point3d endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
-			this.curve = new BezierCurve(endingOffset.add(startingOffset), (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
+			this.curve = new BezierCurve(endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
 			for(int laneNumber=0; laneNumber < definition.general.laneOffsets.length; ++laneNumber){
-				lanes.add(new RoadLane(data.getData("lane" + laneNumber)));
+				lanes.add(new RoadLane(this, data.getData("lane" + laneNumber)));
 			}
 		}else{
 			float[] definitionOffsets = definition.general.laneOffsets;
 			for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
 				Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, rotation, 0));
-				lanes.add(new RoadLane(laneOffset));
+				lanes.add(new RoadLane(this, laneOffset));
 			}
 		}
 		
@@ -166,16 +165,14 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Road width is considered to extend to the left and right border, minus 1/2 a block.
 	 */
 	public boolean spawnCollisionBlocks(IWrapperPlayer player){
-		float roadWidth = definition.general.borderOffset - 1;
-		float segmentDelta = (float) (roadWidth/(Math.floor(roadWidth) + 1));
-		
 		//Get all the points that make up our collision points.
 		//If we find any colliding points, note them.
 		Point3d testOffset = new Point3d(0, 0, 0);
 		Point3d testRotation = new Point3d(0, 0, 0);
 		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
+		float segmentDelta = (float) (definition.general.borderOffset/(Math.floor(definition.general.borderOffset) + 1));
 		for(float f=0; f<curve.pathLength; f+=0.1){
-			for(float offset=0.5F; offset <= definition.general.borderOffset - 0.5; offset += segmentDelta){
+			for(float offset=0; offset < definition.general.borderOffset; offset += segmentDelta){
 				curve.setPointToRotationAt(testRotation, f);
 				//We only want yaw for block placement.
 				testRotation.x = 0;
@@ -234,8 +231,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Save curve data.
 		data.setPoint3d("startingOffset", startingOffset);
-		data.setDouble("startingRotation", curve.startAngle);
 		data.setPoint3d("endingOffset", curve.endPos);
+		data.setDouble("startingRotation", curve.startAngle);
 		data.setDouble("endingRotation", curve.endAngle);
 		
 		//Save lane data.
@@ -252,145 +249,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Save isActive state.
 		data.setBoolean("isActive", isActive);
     }
-	
-	/**
-	 *  Helper class for containing data of what was clicked on this road.
-	 *  Note that laneClicked MAY be a negative number in order to allow
-	 *  for offset road-linkings.  Keep this in mind.
-	 */
-	public class RoadClickData{
-		public final TileEntityRoad roadClicked;
-		public final int laneClicked;
-		public final boolean clickedStart;
-		public final boolean clickedSameDirection;
-		
-		public RoadClickData(TileEntityRoad roadClicked, int laneClicked, boolean clickedStart, boolean clickedForward){
-			this.roadClicked = roadClicked;
-			this.laneClicked = laneClicked;
-			this.clickedStart = clickedStart;
-			this.clickedSameDirection = clickedForward;
-		}
-	}
-	
-	/**
-	 *  Helper class for containing lane data.
-	 */
-	public class RoadLane{
-		public final Point3d startingOffset;
-		public final List<RoadLaneConnection> priorConnections = new ArrayList<RoadLaneConnection>();
-		public final List<RoadLaneConnection> nextConnections = new ArrayList<RoadLaneConnection>();
-		
-		public RoadLane(Point3d startingOffset){
-			this.startingOffset = startingOffset;
-		}
-		
-		public RoadLane(IWrapperNBT data){
-			this.startingOffset = data.getPoint3d("startingOffset");
-			int priorConnectionCount = data.getInteger("priorConnectionCount");
-			for(int i=0; i<priorConnectionCount; ++i){
-				IWrapperNBT connectionData = data.getData("priorConnection" + i);
-				priorConnections.add(new RoadLaneConnection(connectionData));
-			}
-			int nextConnectionCount = data.getInteger("nextConnectionCount");
-			for(int i=0; i<nextConnectionCount; ++i){
-				IWrapperNBT connectionData = data.getData("nextConnection" + i);
-				nextConnections.add(new RoadLaneConnection(connectionData));
-			}
-		}
-		
-		public void connectToPrior(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-			priorConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
-		}
-		
-		public void connectToNext(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-			nextConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
-		}
-		
-		public void removeConnections(){
-			try{
-				for(RoadLaneConnection connection : priorConnections){
-					TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
-					for(RoadLane otherLane : otherRoad.lanes){
-						Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
-						while(iterator.hasNext()){
-							if(iterator.next().tileLocation.equals(position)){
-								iterator.remove();
-							}
-						}
-						iterator = otherLane.nextConnections.iterator();
-						while(iterator.hasNext()){
-							if(iterator.next().tileLocation.equals(position)){
-								iterator.remove();
-							}
-						}
-					}
-				}
-				for(RoadLaneConnection connection : nextConnections){
-					TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
-					for(RoadLane otherLane : otherRoad.lanes){
-						Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
-						while(iterator.hasNext()){
-							if(iterator.next().tileLocation.equals(position)){
-								iterator.remove();
-							}
-						}
-						iterator = otherLane.nextConnections.iterator();
-						while(iterator.hasNext()){
-							if(iterator.next().tileLocation.equals(position)){
-								iterator.remove();
-							}
-						}
-					}
-				}
-			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR: Couldn't get TE to break road connection.  Was it changed?");
-			}
-		}
-		
-		public void save(IWrapperNBT data){
-			data.setPoint3d("startingOffset", startingOffset);
-			data.setInteger("priorConnectionCount", priorConnections.size());
-			for(int i=0; i<priorConnections.size(); ++i){
-				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
-				priorConnections.get(i).save(connectionData);
-				data.setData("priorConnection" + i, connectionData);
-			}
-			data.setInteger("nextConnectionCount", nextConnections.size());
-			for(int i=0; i<nextConnections.size(); ++i){
-				IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
-				nextConnections.get(i).save(connectionData);
-				data.setData("nextConnection" + i, connectionData);
-			}
-		}
-		
-		/**
-		 *  Helper class for containing connection data.
-		 */
-		public class RoadLaneConnection{
-			public final Point3i tileLocation;
-			public final int laneNumber;
-			public final boolean connectedToStart;
-			
-			public RoadLaneConnection(Point3i tileLocation, int laneNumber, boolean connectedToStart){
-				this.tileLocation = tileLocation;
-				this.laneNumber = laneNumber;
-				this.connectedToStart = connectedToStart;
-			}
-			
-			public RoadLaneConnection(IWrapperNBT data){
-				this.tileLocation = data.getPoint3i("tileLocation");
-				this.laneNumber = data.getInteger("laneNumber");
-				this.connectedToStart = data.getBoolean("connectedToStart");
-			}
-			
-			public void save(IWrapperNBT data){
-				data.setPoint3i("tileLocation",tileLocation);
-				data.setInteger("laneNumber", laneNumber);
-				data.setBoolean("connectedToStart", connectedToStart);
-			}
-		}
-		
-	}
 	
 	/**
 	 *  Enums for part-specific stuff.

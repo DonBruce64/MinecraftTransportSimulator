@@ -21,6 +21,7 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -262,6 +263,16 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public boolean renderDarkBackground(){
 		return true;
+	}
+	
+	@Override
+	public GUILightingMode getGUILightMode(){
+		return hudSelected ? hudGUI.getGUILightMode() : panelGUI.getGUILightMode();
+	}
+	
+	@Override
+	public AEntityBase getGUILightSource(){
+		return hudSelected ? hudGUI.getGUILightSource() : panelGUI.getGUILightSource();
 	}
 	
 	@Override

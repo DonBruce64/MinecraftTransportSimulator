@@ -306,6 +306,8 @@ public final class LegacyCompatSystem{
 		for(JSONInstrument.Component component : definition.components){
 			if(oldDefinition){
 				component.lightUpTexture = !component.lightOverlay;
+				component.overlayTexture = component.lightOverlay;
+				component.lightOverlay = false;
 			}
 			if(component.rotationVariable != null){
 				component.animations = new ArrayList<JSONAnimationDefinition>();

@@ -11,10 +11,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockRoad;
 import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
+import minecrafttransportsimulator.blocks.tileentities.instances.RoadClickData;
+import minecrafttransportsimulator.blocks.tileentities.instances.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.instances.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadClickData;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane.RoadLaneConnection;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -136,8 +136,9 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						} 
 					}else{
 						blockPlacementPoint = point.copy().add(0, 1, 0);
-						startPosition = new Point3d(blockPlacementPoint);
 						startRotation = player.getYaw();
+						//Need to offset startPosition to the corner of the block we clicked.
+						startPosition = new Point3d(blockPlacementPoint).add(new Point3d(-0.5, 0.0, -0.5).rotateFine(new Point3d(0, startRotation, 0)));
 					}
 					
 					
@@ -156,6 +157,9 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					}else{
 						endPosition = new Point3d(lastPositionClicked.get(player));
 						endRotation = lastRotationClicked.get(player);
+						//Need to offset endPosition to the corner of the block we clicked.
+						//However, this needs to be on the back of the curve, so we need inverted rotation.
+						endPosition.add(new Point3d(-0.5, 0.0, 0.5).rotateFine(new Point3d(0, endRotation + 180, 0)));
 					}
 					
 					
@@ -178,12 +182,13 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						
 						//Next set the curve based on the starting and ending position deltas and rotations.
 						newRoad.curve = new BezierCurve(endPosition.copy().subtract(startPosition), (float) startRotation, (float) endRotation);
+						System.out.println(newRoad.curve.endPos);
 						
 						//Set the road lanes now that we have the curve.
 						float[] definitionOffsets = newRoad.definition.general.laneOffsets;
 						for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
 							Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, newRoad.curve.startAngle, 0));
-							newRoad.lanes.set(laneNumber, newRoad.new RoadLane(laneOffset));
+							newRoad.lanes.set(laneNumber, new RoadLane(newRoad, laneOffset));
 						}
 						
 						//Set the lane connections, as appropriate.

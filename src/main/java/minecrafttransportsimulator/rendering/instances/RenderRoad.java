@@ -8,10 +8,10 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.tileentities.instances.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.instances.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadLane.RoadLaneConnection;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -160,6 +160,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glVertex3d(position.x, position.y, position.z);
 				GL11.glVertex3d(position.x, position.y + 1.5, position.z);
 				
+				road.curve.setPointToRotationAt(rotation, f);
+				position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
+				road.curve.offsetPointbyPositionAt(position, f);
+				position.add(road.startingOffset);
+				
+				GL11.glVertex3d(position.x, position.y, position.z);
+				GL11.glVertex3d(position.x, position.y + 1.5, position.z);
+			}
+			
+			GL11.glColor3f(0, 1, 1);
+			for(float f=0; f<road.curve.pathLength; f+=0.1){
 				road.curve.setPointToRotationAt(rotation, f);
 				position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
 				road.curve.offsetPointbyPositionAt(position, f);

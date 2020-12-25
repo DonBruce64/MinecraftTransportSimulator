@@ -451,6 +451,9 @@ class InterfaceRender implements IInterfaceRender{
         		
         		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
         		//We don't want to enable blending though, as that's on-demand.
+        		//Just in case it is enabled, however, disable it.
+        		//This ensures the blending state is as it will be for the main rendering pass of -1.
+        		GL11.glDisable(GL11.GL_BLEND);
         		GL11.glEnable(GL11.GL_ALPHA_TEST);
         		
         		//Draw the GUI.
