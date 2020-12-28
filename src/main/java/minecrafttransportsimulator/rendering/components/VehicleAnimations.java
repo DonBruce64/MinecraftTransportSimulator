@@ -241,6 +241,8 @@ public final class VehicleAnimations{
 		switch(variable){
 			//Vehicle world state cases.
 			case("tick"): return vehicle.world.getTick();
+			case("tick_sin"): return Math.sin(Math.toRadians(vehicle.world.getTick()));
+			case("tick_cos"): return Math.cos(Math.toRadians(vehicle.world.getTick()));
 			case("time"): return vehicle.world.getTime();
 			case("yaw"): return vehicle.angles.y;
 			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
