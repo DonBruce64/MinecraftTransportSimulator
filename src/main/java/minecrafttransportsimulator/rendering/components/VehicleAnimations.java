@@ -74,6 +74,7 @@ public final class VehicleAnimations{
 				case("interactable"): partClass = PartInteractable.class; break;	
 				case("engine"): partClass = PartEngine.class; break;
 				case("gun"): partClass = PartGun.class; break;
+				case("part"): partClass = APart.class; break;
 				case("propeller"): partClass = PartPropeller.class; break;
 				case("ground"): partClass = PartGroundDevice.class; break;
 				case("seat"): partClass = PartSeat.class; break;
@@ -114,7 +115,6 @@ public final class VehicleAnimations{
 			if(optionalPart instanceof PartEngine){
 				PartEngine engine = (PartEngine) optionalPart;
 				switch(variable){
-					case("engine_present"): return 1;
 					case("engine_isautomatic"): return engine.definition.engine.isAutomatic ? 1 : 0;	
 					case("engine_rotation"): return engine.getEngineRotation(partialTicks);
 					case("engine_sin"): return Math.sin(Math.toRadians(engine.getEngineRotation(partialTicks)));
@@ -136,6 +136,7 @@ public final class VehicleAnimations{
 					case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 					case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 					case("engine_starter"): return engine.state.esOn ? 1 : 0;
+					case("engine_running"): return engine.state.running ? 1 : 0;
 					case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
 					case("engine_hours"): return engine.hours;
 				}
@@ -220,6 +221,10 @@ public final class VehicleAnimations{
 							return 0;
 						}
 					}
+				}
+			}else if(optionalPart instanceof APart){
+				switch(variable){
+					case("part_present"): return 1;
 				}
 			}
 			
