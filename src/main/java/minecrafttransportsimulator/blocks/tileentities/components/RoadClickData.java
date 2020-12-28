@@ -47,6 +47,7 @@ public class RoadClickData{
 			}else{
 				//Clicked end and in the opposite direction.  Adjust point to match lane 0 with clicked lane, and invert rotation.
 				//First set position to where the curve would start.  Then offset it based on the lane we clicked.
+				//FIXME do this.
 				genPosition = new Point3d(roadClicked.position).add(laneClicked.curve.endPos);
 				genRotation = roadClicked.curve.endAngle + 180;
 			}

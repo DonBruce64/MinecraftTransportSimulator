@@ -411,11 +411,12 @@ public class PartEngine extends APart implements IVehiclePartFXProvider{
 				if(wheelFriction == 0 && currentGearRatio != 0){
 					isPropellerInLiquid = propeller.isInLiquid();
 					double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-					double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio*Math.signum(currentGearRatio)/60D/20D;
+					double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/Math.abs(propellerGearboxRatio)*Math.signum(currentGearRatio)/60D/20D;
 					double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
 					if(currentGearRatio < 0 || propeller.currentPitch < 0){
 						propellerFeedback *= -1;
 					}
+					
 					
 					if(state.running){
 						propellerFeedback += propellerForcePenalty*50;

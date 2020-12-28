@@ -18,6 +18,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -107,13 +108,17 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					}
 					
 					if(startingRoadData != null){
+						startPosition = startingRoadData.genPosition;
+						startRotation = startingRoadData.genRotation;
+						
+						/*
 						if(startingRoadData.clickedStart){
 							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.laneClicked.curve.startPos);
 							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.startAngle : startingRoadData.roadClicked.curve.startAngle + 180;
 						}else{
 							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.curve.endPos);
 							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.endAngle : startingRoadData.roadClicked.curve.endAngle + 180;
-						}
+						}*/
 						
 						//Set the block position to be close to the start of the curve, but not on it.
 						blockPlacementPoint = new Point3i(startPosition);
@@ -121,8 +126,9 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						for(int i=-1; i<1 && !foundSpot; ++i){
 							for(int j=-1; j<1 && !foundSpot; ++j){
 								blockPlacementPoint.add(i, 0, j);
+								IWrapperBlock testBlockWrapper = world.getWrapperBlock(blockPlacementPoint);
 								ABlockBase testBlock = world.getBlock(blockPlacementPoint);
-								if(testBlock == null || testBlock instanceof BlockRoadCollision){
+								if(testBlockWrapper == null || testBlock instanceof BlockRoadCollision){
 									foundSpot = true;
 								}else{
 									blockPlacementPoint.add(-i, 0, -j);
@@ -144,13 +150,13 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					
 					//Get the end point and rotation.  This depends if we clicked a road or not.
 					//If we clicked a road, we need to adjust our angle to match the road's angle.
-					//We also need to adjust our position to have the first lane on our road connect with that road's lane.
-					//The lane we connect with will be specified in the clicked data.
-					//Other lanes may or may not be connected depending on their distance from the connected lane and other road lanes.
 					final Point3d endPosition;
 					final double endRotation;
 					final RoadClickData endingRoadData = lastRoadClickedData.get(player);
 					if(endingRoadData != null){
+						endPosition = endingRoadData.genPosition;
+						endRotation = endingRoadData.genRotation;
+						/*
 						if(endingRoadData.clickedStart){
 							if(endingRoadData.clickedSameDirection){
 								endRotation = endingRoadData.roadClicked.curve.startAngle + 180;
@@ -162,7 +168,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						}else{
 							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.laneClicked.curve.endPos);
 							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
-						}
+						}*/
 					}else{
 						endPosition = new Point3d(lastPositionClicked.get(player));
 						endRotation = lastRotationClicked.get(player);
