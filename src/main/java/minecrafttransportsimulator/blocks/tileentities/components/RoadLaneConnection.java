@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.blocks.tileentities.instances;
+package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;

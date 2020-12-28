@@ -1,10 +1,11 @@
-package minecrafttransportsimulator.blocks.tileentities.instances;
+package minecrafttransportsimulator.blocks.tileentities.components;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 
@@ -14,18 +15,21 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
  */
 public class RoadLane{
 	public final TileEntityRoad road;
-	public final Point3d startingOffset;
+	public final int laneNumber;
+	public final BezierCurve curve;
 	public final List<RoadLaneConnection> priorConnections = new ArrayList<RoadLaneConnection>();
 	public final List<RoadLaneConnection> nextConnections = new ArrayList<RoadLaneConnection>();
 	
-	public RoadLane(TileEntityRoad road, Point3d startingOffset){
+	public RoadLane(TileEntityRoad road, int laneNumber){
 		this.road = road;
-		this.startingOffset = startingOffset;
+		this.laneNumber = laneNumber;
+		this.curve = new BezierCurve(road.curve, road.definition.general.laneOffsets[laneNumber]);
 	}
 	
 	public RoadLane(TileEntityRoad road, IWrapperNBT data){
 		this.road = road;
-		this.startingOffset = data.getPoint3d("startingOffset");
+		this.laneNumber = data.getInteger("laneNumber");
+		this.curve = new BezierCurve(road.curve, road.definition.general.laneOffsets[laneNumber]);
 		int priorConnectionCount = data.getInteger("priorConnectionCount");
 		for(int i=0; i<priorConnectionCount; ++i){
 			IWrapperNBT connectionData = data.getData("priorConnection" + i);
@@ -88,7 +92,7 @@ public class RoadLane{
 	}
 	
 	public void save(IWrapperNBT data){
-		data.setPoint3d("startingOffset", startingOffset);
+		data.setInteger("laneNumber", laneNumber);
 		data.setInteger("priorConnectionCount", priorConnections.size());
 		for(int i=0; i<priorConnections.size(); ++i){
 			IWrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();

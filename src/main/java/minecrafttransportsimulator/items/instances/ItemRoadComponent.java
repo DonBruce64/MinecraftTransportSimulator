@@ -11,9 +11,9 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockRoad;
 import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
-import minecrafttransportsimulator.blocks.tileentities.instances.RoadClickData;
-import minecrafttransportsimulator.blocks.tileentities.instances.RoadLane;
-import minecrafttransportsimulator.blocks.tileentities.instances.RoadLaneConnection;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -108,10 +108,10 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					
 					if(startingRoadData != null){
 						if(startingRoadData.clickedStart){
-							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.startingOffset);
+							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.laneClicked.curve.startPos);
 							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.startAngle : startingRoadData.roadClicked.curve.startAngle + 180;
 						}else{
-							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.startingOffset).add(startingRoadData.roadClicked.curve.endPos);
+							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.curve.endPos);
 							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.endAngle : startingRoadData.roadClicked.curve.endAngle + 180;
 						}
 						
@@ -143,15 +143,24 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					
 					
 					//Get the end point and rotation.  This depends if we clicked a road or not.
+					//If we clicked a road, we need to adjust our angle to match the road's angle.
+					//We also need to adjust our position to have the first lane on our road connect with that road's lane.
+					//The lane we connect with will be specified in the clicked data.
+					//Other lanes may or may not be connected depending on their distance from the connected lane and other road lanes.
 					final Point3d endPosition;
 					final double endRotation;
 					final RoadClickData endingRoadData = lastRoadClickedData.get(player);
 					if(endingRoadData != null){
 						if(endingRoadData.clickedStart){
-							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset);
-							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.startAngle + 180 : endingRoadData.roadClicked.curve.startAngle;
+							if(endingRoadData.clickedSameDirection){
+								endRotation = endingRoadData.roadClicked.curve.startAngle + 180;
+								endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.curve.startPos);
+							}else{
+								endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.laneClicked.curve.startPos);
+								endRotation = endingRoadData.roadClicked.curve.startAngle;
+							}
 						}else{
-							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.startingOffset).add(endingRoadData.roadClicked.curve.endPos);
+							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.laneClicked.curve.endPos);
 							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
 						}
 					}else{
@@ -177,26 +186,23 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 						
 						//Now that the road is placed, set the connections to the other roads and lanes.
-						//First set the curve offset and rotation.
-						newRoad.startingOffset.setTo(startPosition).add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z);
-						
-						//Next set the curve based on the starting and ending position deltas and rotations.
-						newRoad.curve = new BezierCurve(endPosition.copy().subtract(startPosition), (float) startRotation, (float) endRotation);
-						System.out.println(newRoad.curve.endPos);
+						//First set the curve offset and rotation, and create the curve.
+						newRoad.curve = new BezierCurve(startPosition.copy().add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z), endPosition.copy().add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z), (float) startRotation, (float) endRotation);
 						
 						//Set the road lanes now that we have the curve.
 						float[] definitionOffsets = newRoad.definition.general.laneOffsets;
 						for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
-							Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, newRoad.curve.startAngle, 0));
-							newRoad.lanes.set(laneNumber, new RoadLane(newRoad, laneOffset));
+							newRoad.lanes.add(laneNumber, new RoadLane(newRoad, laneNumber));
 						}
 						
 						//Set the lane connections, as appropriate.
 						//If we are butted-up to a segment, connect the connections in order.
 						//If we are opposite to a segment, connect the connections in opposite pairs.
+						//FIXME need to check for multiple roads with the same points as the clicked road when doing connections.
+						//these need to be connected to as well.  Perhaps make this function generic due to the amount of code?
 						if(startingRoadData != null){
 							for(int laneNumber=0; laneNumber < newRoad.lanes.size(); ++laneNumber){
-								int connectionLaneNumber = startingRoadData.laneClicked + (startingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
+								int connectionLaneNumber = startingRoadData.laneClicked.laneNumber + (startingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
 								if(connectionLaneNumber >= 0 && connectionLaneNumber < startingRoadData.roadClicked.lanes.size()){
 									RoadLane laneToConnect = startingRoadData.roadClicked.lanes.get(connectionLaneNumber);
 									
@@ -245,7 +251,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						
 						if(endingRoadData != null){
 							for(int laneNumber=0; laneNumber < newRoad.lanes.size(); ++laneNumber){
-								int connectionLaneNumber = endingRoadData.laneClicked + (endingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
+								int connectionLaneNumber = endingRoadData.laneClicked.laneNumber + (endingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
 								if(connectionLaneNumber >= 0 && connectionLaneNumber < endingRoadData.roadClicked.lanes.size()){
 									RoadLane laneToConnect = endingRoadData.roadClicked.lanes.get(connectionLaneNumber);
 									

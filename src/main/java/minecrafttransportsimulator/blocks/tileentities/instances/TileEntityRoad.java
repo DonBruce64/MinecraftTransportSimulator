@@ -15,6 +15,8 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockRoad;
 import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
@@ -46,7 +48,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static variables based on core definition.
 	public final BoundingBox boundingBox;
 	public final List<Point3i> collisionBlockOffsets;
-	public final Point3d startingOffset;
 	public BezierCurve curve;
 	public final List<RoadLane> lanes;
 
@@ -76,18 +77,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
 		this.lanes = new ArrayList<RoadLane>();
-		this.startingOffset = data.getPoint3d("startingOffset");
+		Point3d startingOffset = data.getPoint3d("startingOffset");
 		Point3d endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
-			this.curve = new BezierCurve(endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
+			this.curve = new BezierCurve(startingOffset, endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
 			for(int laneNumber=0; laneNumber < definition.general.laneOffsets.length; ++laneNumber){
 				lanes.add(new RoadLane(this, data.getData("lane" + laneNumber)));
-			}
-		}else{
-			float[] definitionOffsets = definition.general.laneOffsets;
-			for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
-				Point3d laneOffset = new Point3d(definitionOffsets[laneNumber], 0, 0).rotateFine(new Point3d(0, rotation, 0));
-				lanes.add(new RoadLane(this, laneOffset));
 			}
 		}
 		
@@ -139,7 +134,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Based on the angle, and the lane on our held item, and what side we clicked, return click data.
 		//Try to keep the lane in the center by applying an offset if we're clicking with a road with only a few lanes.
-		//FIXME check math here later.
+		//FIXME check math here later.  Clicker doesn't like inverted connections...
 		boolean clickedForward = clickedStart ? Math.abs(angleDelta) < 90 : Math.abs(angleDelta) > 90;
 		int laneClicked;
 		if(clickedForward){
@@ -155,7 +150,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		
 		//Finally, return the data in object form.
-		return new RoadClickData(this, laneClicked, clickedStart, clickedForward);
+		return new RoadClickData(this, lanes.get(laneClicked), clickedStart, clickedForward);
 	}
 	
 	/**
@@ -178,7 +173,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 				testRotation.x = 0;
 				testRotation.z = 0;
 				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(0, definition.general.collisionHeight/16F, 0);
-				curve.offsetPointbyPositionAt(testOffset, f);
+				curve.offsetPointByPositionAt(testOffset, f);
 				Point3i testPoint = new Point3i((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 				
 				//If we don't have a block in this position, check if we need one.
@@ -230,7 +225,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		
 		//Save curve data.
-		data.setPoint3d("startingOffset", startingOffset);
+		data.setPoint3d("startingOffset", curve.startPos);
 		data.setPoint3d("endingOffset", curve.endPos);
 		data.setDouble("startingRotation", curve.startAngle);
 		data.setDouble("endingRotation", curve.endAngle);

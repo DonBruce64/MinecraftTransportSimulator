@@ -6,7 +6,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
-import minecrafttransportsimulator.blocks.tileentities.instances.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
