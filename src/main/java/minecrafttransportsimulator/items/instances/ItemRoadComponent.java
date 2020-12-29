@@ -56,7 +56,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 				TileEntityRoad clickedRoad = world.getTileEntity(point);
 				if(!clickedRoad.isActive){
 					if(clickedRoad.spawnCollisionBlocks(player)){
-						lastRoadClickedData.put(player, clickedRoad.getClickData(point, player));
+						lastRoadClickedData.put(player, clickedRoad.getClickData(point, player, false));
 					}else{
 						player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
 					}
@@ -81,7 +81,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 				//If we clicked a road, get the lane number clicked.
 				if(clickedRoad != null){
 					lastPositionClicked.put(player, point);
-					lastRoadClickedData.put(player, clickedRoad.getClickData(point.copy().subtract(clickedRoad.position), player));
+					lastRoadClickedData.put(player, clickedRoad.getClickData(point.copy().subtract(clickedRoad.position), player, false));
 				}else{
 					lastRoadClickedData.remove(player);
 				}
@@ -99,10 +99,10 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					
 					if(clickedBlock instanceof BlockRoad){
 						TileEntityRoad startingRoad = world.getTileEntity(point);
-						startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), player);
+						startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), player, true);
 					}else if(clickedBlock instanceof BlockRoadCollision){
 						TileEntityRoad startingRoad = ((BlockRoadCollision) clickedBlock).getRoadForBlock(world, point);
-						startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), player);
+						startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), player, true);
 					}else{
 						startingRoadData = null;
 					}
@@ -110,15 +110,6 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					if(startingRoadData != null){
 						startPosition = startingRoadData.genPosition;
 						startRotation = startingRoadData.genRotation;
-						
-						/*
-						if(startingRoadData.clickedStart){
-							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.laneClicked.curve.startPos);
-							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.startAngle : startingRoadData.roadClicked.curve.startAngle + 180;
-						}else{
-							startPosition = new Point3d(startingRoadData.roadClicked.position).add(startingRoadData.roadClicked.curve.endPos);
-							startRotation = startingRoadData.clickedSameDirection ? startingRoadData.roadClicked.curve.endAngle : startingRoadData.roadClicked.curve.endAngle + 180;
-						}*/
 						
 						//Set the block position to be close to the start of the curve, but not on it.
 						blockPlacementPoint = new Point3i(startPosition);
@@ -156,19 +147,6 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 					if(endingRoadData != null){
 						endPosition = endingRoadData.genPosition;
 						endRotation = endingRoadData.genRotation;
-						/*
-						if(endingRoadData.clickedStart){
-							if(endingRoadData.clickedSameDirection){
-								endRotation = endingRoadData.roadClicked.curve.startAngle + 180;
-								endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.roadClicked.curve.startPos);
-							}else{
-								endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.laneClicked.curve.startPos);
-								endRotation = endingRoadData.roadClicked.curve.startAngle;
-							}
-						}else{
-							endPosition = new Point3d(endingRoadData.roadClicked.position).add(endingRoadData.laneClicked.curve.endPos);
-							endRotation = endingRoadData.clickedSameDirection ? endingRoadData.roadClicked.curve.endAngle : endingRoadData.roadClicked.curve.endAngle + 180;
-						}*/
 					}else{
 						endPosition = new Point3d(lastPositionClicked.get(player));
 						endRotation = lastRotationClicked.get(player);
@@ -193,7 +171,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						
 						//Now that the road is placed, set the connections to the other roads and lanes.
 						//First set the curve offset and rotation, and create the curve.
-						newRoad.curve = new BezierCurve(startPosition.copy().add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z), endPosition.copy().add(-blockPlacementPoint.x, -blockPlacementPoint.y, -blockPlacementPoint.z), (float) startRotation, (float) endRotation);
+						newRoad.curve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
 						
 						//Set the road lanes now that we have the curve.
 						float[] definitionOffsets = newRoad.definition.general.laneOffsets;
@@ -306,7 +284,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						
 						//Try to spawn all the collision blocks for this road.
 						if(newRoad.spawnCollisionBlocks(player)){
-							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player));
+							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player, false));
 							lastPositionClicked.put(player, newRoad.position);
 							lastRotationClicked.put(player, newRoad.curve.startAngle + 180D);
 						}else{

@@ -108,17 +108,19 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
-	public RoadClickData getClickData(Point3i blockClicked, IWrapperPlayer player){
+	public RoadClickData getClickData(Point3i blockOffsetClicked, IWrapperPlayer player, boolean curveStart){
 		//First check if we clicked the start or end of the curve.
-		Point3i clickedOffset = blockClicked.copy().subtract(position);
-		boolean clickedStart = clickedOffset.isZero() || collisionBlockOffsets.indexOf(clickedOffset) < collisionBlockOffsets.size()/2;
+		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		
-		//Next check how many lanes the road the player has is holding.  This affects which lane we say they clicked.
+		//Next check how many lanes the road the player has is holding and what the first offset is.
+		//This affects which lane we say they clicked, and what position we return for spawning.
 		int lanesOnHeldRoad = 0;
+		float laneOffset = 0;
 		AItemBase heldItem = player.getHeldItem();
 		if(heldItem instanceof ItemRoadComponent){
 			if(((ItemRoadComponent) heldItem).definition.general.laneOffsets != null){
 				lanesOnHeldRoad = ((ItemRoadComponent) heldItem).definition.general.laneOffsets.length;
+				laneOffset = ((ItemRoadComponent) heldItem).definition.general.laneOffsets[0];
 			}
 		}
 		
@@ -135,8 +137,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Based on the angle, and the lane on our held item, and what side we clicked, return click data.
 		//Try to keep the lane in the center by applying an offset if we're clicking with a road with only a few lanes.
 		//FIXME check math here later.  Clicker doesn't like inverted connections...
-		boolean clickedForward = clickedStart ? Math.abs(angleDelta) < 90 : Math.abs(angleDelta) > 90;
-		int laneClicked;
+		boolean clickedSameDirection = Math.abs(angleDelta) > 90;
+		int laneClicked = 0;
+		/*
 		if(clickedForward){
 			laneClicked = (int) angleDelta/25;
 			if(lanesOnHeldRoad < lanes.size()){
@@ -147,10 +150,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			if(lanesOnHeldRoad < lanes.size()){
 				laneClicked -= (lanes.size() - lanesOnHeldRoad)/2;
 			}
-		}
+		}*/
 		
 		//Finally, return the data in object form.
-		return new RoadClickData(this, lanes.get(laneClicked), clickedStart, clickedForward);
+		return new RoadClickData(this, lanes.get(laneClicked), clickedStart, clickedSameDirection, curveStart, laneOffset);
 	}
 	
 	/**

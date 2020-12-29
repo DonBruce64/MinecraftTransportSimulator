@@ -85,10 +85,32 @@ public class Point3d{
 	}
 	
 	/**
+	 * Adds the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d add(Point3i point){
+		this.x += point.x;
+		this.y += point.y;
+		this.z += point.z;
+		return this;
+	}
+	
+	/**
 	 * Subtracts the passed-in point's values to this point.
 	 * Returns the called object for nested operations.
 	 */
 	public Point3d subtract(Point3d point){
+		this.x -= point.x;
+		this.y -= point.y;
+		this.z -= point.z;
+		return this;
+	}
+	
+	/**
+	 * Subtracts the passed-in point's values to this point.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d subtract(Point3i point){
 		this.x -= point.x;
 		this.y -= point.y;
 		this.z -= point.z;

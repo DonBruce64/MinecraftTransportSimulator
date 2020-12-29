@@ -20,36 +20,61 @@ public class RoadClickData{
 	public final Point3d genPosition;
 	public final float genRotation;
 
-	public RoadClickData(TileEntityRoad roadClicked, RoadLane laneClicked, boolean clickedStart, boolean clickedSameDirection){
+	public RoadClickData(TileEntityRoad roadClicked, RoadLane laneClicked, boolean clickedStart, boolean clickedSameDirection, boolean curveStart, float laneOffset){
 		this.roadClicked = roadClicked;
 		this.laneClicked = laneClicked;
 		this.clickedStart = clickedStart;
 		this.clickedSameDirection = clickedSameDirection;
 		
-		//FIXME need to match lanes here. This should also go in the clickedData block, as it's dependent on those states.
+		//Get the position and rotation for this curve.  Note that curve rotation is flipped 180 on the end of curves.
+		//So if we are calculating curve endpoints, the angles will be flipped 180 to account for this.
 		if(clickedStart){
 			if(clickedSameDirection){
-				//Clicked start and in same direction.  Point and rotation for the curve is same as the existing curve.
-				genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.startPos);
+				//Clicked start and in the same direction.
+				//If this is for the start of the curve, just use the point as-is as the start point will be this curve's start point.
+				//If this is for the end of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
+				//Rotation here needs to be the same as the start rotation of the clicked curve, as our curve is going the same direction.
 				genRotation = roadClicked.curve.startAngle;
+				if(curveStart){
+					genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.startPos);
+				}else{
+					genPosition = new Point3d(roadClicked.definition.general.laneOffsets[laneClicked.laneNumber] + laneOffset, 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.curve.startPos);
+				}
 			}else{
-				//Clicked start and in the opposite direction.  Adjust point to match lane 0 with clicked lane, and invert rotation.
-				//First set position to where the curve would start.  Then offset it based on the lane we clicked.
-				//FIXME do this.
-				genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.startPos);
+				//Clicked start and in the opposite direction.
+				//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
+				//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
+				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.curve.startAngle + 180;
+				if(curveStart){
+					genPosition = new Point3d(-(roadClicked.definition.general.laneOffsets[laneClicked.laneNumber] + laneOffset), 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.curve.startPos);
+				}else{
+					genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.startPos);
+				}
 			}
 		}else{
 			if(clickedSameDirection){
-				//Clicked end and in the same direction.  Point is the end point of the curve, rotation is the same as the end rotation.
-				genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.endPos);
-				genRotation = roadClicked.curve.endAngle;
-			}else{
-				//Clicked end and in the opposite direction.  Adjust point to match lane 0 with clicked lane, and invert rotation.
-				//First set position to where the curve would start.  Then offset it based on the lane we clicked.
-				//FIXME do this.
-				genPosition = new Point3d(roadClicked.position).add(laneClicked.curve.endPos);
+				//Clicked end and in the same direction.
+				//If this is for the start of the curve, we just use the point as-is as the starting point will be this curve's end point..
+				//If this is for the end of a curve, offset the position in the opposite direction to account for the different curve paths.
+				//Rotation here needs to be the opposite of the end rotation of the clicked curve, as our curve is going the same direction.
 				genRotation = roadClicked.curve.endAngle + 180;
+				if(curveStart){
+					genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.endPos);
+				}else{
+					genPosition = new Point3d(roadClicked.definition.general.laneOffsets[laneClicked.laneNumber] + laneOffset, 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.curve.endPos);
+				}
+			}else{
+				//Clicked end and in the opposite direction.
+				//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
+				//If this is for the end of a curve, just use the point as-is as the end point will be this curve's end point.
+				//Rotation here needs to be the same as the end rotation of the clicked curve, as our curve is going the opposite direction.
+				genRotation = roadClicked.curve.endAngle;
+				if(curveStart){
+					genPosition = new Point3d(-(roadClicked.definition.general.laneOffsets[laneClicked.laneNumber] + laneOffset), 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.curve.endPos);
+				}else{
+					genPosition = new Point3d(roadClicked.position).add(roadClicked.curve.endPos);
+				}
 			}
 		}
 	}
