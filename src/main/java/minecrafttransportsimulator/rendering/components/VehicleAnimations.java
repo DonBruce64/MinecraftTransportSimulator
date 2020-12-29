@@ -90,7 +90,7 @@ public final class VehicleAnimations{
 			//Iterate through the pack defs to find the index of the pack def for the part we want.
 			for(VehiclePart vehiclePart : vehicle.getAllPossiblePackParts().values()){
 				for(String defPartType : vehiclePart.types){
-					if(defPartType.startsWith(partType)){
+					if(partType.equals("part") || defPartType.startsWith(partType)){
 						if(partNumber == 0){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
