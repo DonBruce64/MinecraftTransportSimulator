@@ -67,7 +67,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 			//Didn't click a holographic road.  Do normal functions.
 			if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
 				//Set starting point.  This may or may not be a road segment.
-				lastRotationClicked.put(player, (double) player.getYaw());
+				lastRotationClicked.put(player, (double) Math.round(player.getYaw()/15)*15);
 				TileEntityRoad clickedRoad;
 				if(clickedBlock instanceof BlockRoad){
 					clickedRoad = world.getTileEntity(point);
@@ -133,7 +133,7 @@ public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements I
 						} 
 					}else{
 						blockPlacementPoint = point.copy().add(0, 1, 0);
-						startRotation = player.getYaw();
+						startRotation = Math.round(player.getYaw()/15)*15;
 						//Need to offset startPosition to the corner of the block we clicked.
 						startPosition = new Point3d(blockPlacementPoint).add(new Point3d(-0.5, 0.0, -0.5).rotateFine(new Point3d(0, startRotation, 0)));
 					}

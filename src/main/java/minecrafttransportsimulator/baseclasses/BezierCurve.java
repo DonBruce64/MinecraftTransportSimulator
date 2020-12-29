@@ -135,7 +135,7 @@ public class BezierCurve{
 		}else{
 			float segmentPercentage;
 			for(int i=0; i<points.length; ++i){
-				segmentPercentage = i/(points.length*1F);
+				segmentPercentage = i/((points.length - 1)*1F);
 				points[i] = (float) (Math.pow(1-segmentPercentage, 3)*startPoint + 3*Math.pow(1-segmentPercentage, 2)*segmentPercentage*startCurvePoint + 3*(1-segmentPercentage)*Math.pow(segmentPercentage, 2)*endCurvePoint + Math.pow(segmentPercentage, 3)*endPoint);
 			}
 		}
