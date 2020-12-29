@@ -94,6 +94,7 @@ public abstract class ABlockBase{
 		public Point3i getOffsetPoint(Point3i point){
 			return point.copy().add(xOffset, yOffset, zOffset);
 		}
+		
 		public Axis getOpposite(){
 			switch(this){
 				case UP: return DOWN;

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -22,7 +23,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 
     public TileEntityFluidLoader(IWrapperWorld world, Point3i position, IWrapperNBT data){
     	super(world, position, data);
-    	this.tank = new FluidTank(data, 15000, world.isClient());
+    	this.tank = new FluidTank(data, 1000, world.isClient());
     	this.unloadMode = data.getBoolean("unloadMode");
     }
 	
@@ -114,6 +115,11 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	@Override
 	public FluidTank getTank(){
 		return tank;
+	}
+	
+	@Override
+	public boolean canConnectOnAxis(Axis axis){
+		return !axis.equals(Axis.UP);
 	}
 	
 	@Override

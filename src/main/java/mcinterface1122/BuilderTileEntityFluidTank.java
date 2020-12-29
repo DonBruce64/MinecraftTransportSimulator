@@ -3,6 +3,7 @@ package mcinterface1122;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -95,8 +96,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
-    	//Only let fluid be interacted with on the bottom face.
-    	if(facing != null && facing.equals(EnumFacing.DOWN)){
+    	if(facing != null && tileEntity != null && tileEntity.canConnectOnAxis(Axis.valueOf(facing.name()))){
     		return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     	}else{
     		return super.hasCapability(capability, facing);
@@ -106,11 +106,11 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
-    	if(facing != null && facing.equals(EnumFacing.DOWN)){
+    	if(facing != null && tileEntity != null && tileEntity.canConnectOnAxis(Axis.valueOf(facing.name()))){
     		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
     			return (T) this;
     		}
-    	}
+	    }
     	return super.getCapability(capability, facing);
     }
 }

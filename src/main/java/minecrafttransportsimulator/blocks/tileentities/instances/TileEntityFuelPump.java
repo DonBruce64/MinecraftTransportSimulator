@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -98,6 +99,11 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	@Override
 	public FluidTank getTank(){
 		return tank;
+	}
+	
+	@Override
+	public boolean canConnectOnAxis(Axis axis){
+		return axis.equals(Axis.DOWN);
 	}
 	
 	@Override
