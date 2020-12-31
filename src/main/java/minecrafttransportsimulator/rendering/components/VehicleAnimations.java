@@ -96,7 +96,7 @@ public final class VehicleAnimations{
 							//If it's not, or it doesn't exist, return 0.
 							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
-								return getVariableValue(variable.substring(0, variable.length() - 2), partialTicks, vehicle, foundPart);
+								return getVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks, vehicle, foundPart);
 							}else{
 								return 0;
 							}
@@ -222,10 +222,11 @@ public final class VehicleAnimations{
 						}
 					}
 				}
-			}else if(optionalPart instanceof APart){
-				switch(variable){
-					case("part_present"): return 1;
-				}
+			}
+			
+			//Check for generic part variables.
+			switch(variable){
+				case("part_present"): return 1;
 			}
 			
 			//We didn't find any part-specific animations.
