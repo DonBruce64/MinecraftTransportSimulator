@@ -93,7 +93,7 @@ public final class RenderInstrument{
 								partNumber = 1;
 							}
 							String variable = addSuffix ? animation.variable + "_" + partNumber : animation.variable;
-							int clockAnimationMapIndex = (((int) partNumber) << Byte.SIZE*2) | ((int) i << Byte.SIZE*1) | (component.animations.indexOf(animation));
+							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
 							
 							switch(animation.animationType){
 								case("rotation"):{

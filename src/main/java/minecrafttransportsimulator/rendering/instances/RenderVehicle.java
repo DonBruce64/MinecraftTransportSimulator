@@ -134,7 +134,7 @@ public final class RenderVehicle{
 	public static void render(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Get the render offset.
 		//This is the interpolated movement, plus the prior position.
-		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply((double) partialTicks).add(vehicle.prevPosition);
+		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
 		Point3d renderPosition = vehiclePosition.copy().subtract(MasterLoader.gameInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
@@ -952,7 +952,7 @@ public final class RenderVehicle{
 		//Get the total connector distance, and the spacing between the connectors.
 		double connectorDistance = connector.startingPos.distanceTo(connector.endingPos);
 		int numberConnectors = (int) Math.floor(connectorDistance/connector.segmentLength);
-		double segmentDistance = (connectorDistance%connector.segmentLength)/((double) numberConnectors) + connector.segmentLength;
+		double segmentDistance = (connectorDistance%connector.segmentLength)/numberConnectors + connector.segmentLength;
 		
 		//Get the rotation required to go from the start to end point.
 		Point3d vector = connector.endingPos.copy().subtract(connector.startingPos).normalize();

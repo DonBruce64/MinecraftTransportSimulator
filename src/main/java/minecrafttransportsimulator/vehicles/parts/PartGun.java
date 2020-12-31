@@ -431,7 +431,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 				sound.stop();
 			}else{
 				float windupPercent = windupTimeCurrent/(float)definition.gun.windupTime;
-				sound.pitch = (float) 0.25F + 0.75F*windupPercent;
+				sound.pitch = 0.25F + 0.75F*windupPercent;
 				sound.volume = 0.25F + 0.75F*windupPercent;
 			}
 		}

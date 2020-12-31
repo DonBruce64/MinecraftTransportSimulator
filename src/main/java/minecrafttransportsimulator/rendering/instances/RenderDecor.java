@@ -16,7 +16,7 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 		
 	@Override
 	public void render(TileEntityDecor decor, float partialTicks){
-		//If we don't have the displaylist and texture cached, do it now.
+		//If we don't have the displaylist cached, do it now.
 		if(!displayListMap.containsKey(decor.definition)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(decor.definition.getModelLocation());
 			int displayListIndex = GL11.glGenLists(1);

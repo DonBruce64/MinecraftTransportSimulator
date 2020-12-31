@@ -136,8 +136,8 @@ class InterfaceAudio implements IInterfaceAudio{
 						Point3d providerVelocity = sound.provider.getProviderVelocity();
 						Point3d playerVelocity = player.getVelocity();
 						playerVelocity.y = 0;
-						double initalDelta = player.getPosition().add((double)-providerPosbuffer.get(0), (double)-providerPosbuffer.get(1), (double)-providerPosbuffer.get(2)).length();
-						double finalDelta = player.getPosition().add(playerVelocity).add((double)-providerPosbuffer.get(0), (double)-providerPosbuffer.get(1), (double)-providerPosbuffer.get(2)).add(-providerVelocity.x, 0D, -providerVelocity.z).length();
+						double initalDelta = player.getPosition().add(-providerPosbuffer.get(0), -providerPosbuffer.get(1), -providerPosbuffer.get(2)).length();
+						double finalDelta = player.getPosition().add(playerVelocity).add(-providerPosbuffer.get(0), -providerPosbuffer.get(1), -providerPosbuffer.get(2)).add(-providerVelocity.x, 0D, -providerVelocity.z).length();
 						float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
 						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
 					}else{

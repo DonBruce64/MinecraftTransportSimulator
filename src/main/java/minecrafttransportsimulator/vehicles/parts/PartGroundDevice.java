@@ -53,7 +53,7 @@ public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
 		if(!isFake() && getLongPartOffset() != 0){
 			//Need to swap placement for fake part so it uses the offset.
 			Point3d actualPlacement = packVehicleDef.pos;
-			packVehicleDef.pos = packVehicleDef.pos.copy().add(0D, 0D, (double) getLongPartOffset());
+			packVehicleDef.pos = packVehicleDef.pos.copy().add(0D, 0D, getLongPartOffset());
 			fakePart = new PartGroundDeviceFake(this, packVehicleDef, item, data, null);
 			packVehicleDef.pos = actualPlacement;
 			//This hack prevents us from adding this part to the main list during vehicle construction.

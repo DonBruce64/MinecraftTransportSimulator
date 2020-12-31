@@ -326,8 +326,17 @@ public final class VehicleAnimations{
 		
 		//Check if this is a light variable.
 		for(LightType light : LightType.values()){
-			if(light.name().toLowerCase().equals(variable)){
-				return vehicle.lightsOn.contains(light) ? 1 : 0;
+			if(variable.endsWith(light.name().toLowerCase())){
+				if(vehicle.lightsOn.contains(light)){
+					if(variable.indexOf("_") != -1){
+						int flashBits = Integer.decode("0x" + variable.substring(0, variable.indexOf('_')));
+						return ((flashBits >> (20*System.currentTimeMillis()/1000)%20) & 1) > 0 ? 1 : 0;
+					}else{
+						return 1;
+					}
+				}else{
+					return 0;
+				}
 			}
 		}
 		

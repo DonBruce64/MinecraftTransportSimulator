@@ -61,7 +61,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
 			//Makes placement easier and is less likely for players to get stuck.
-			newVehicle.position.set((double) point.x, (double) point.y, (double) point.z);
+			newVehicle.position.set(point.x, point.y, point.z);
 			newVehicle.prevPosition.setTo(newVehicle.position);
 			newVehicle.angles.y = player.getYaw() + 90;
 			newVehicle.prevAngles.setTo(newVehicle.angles);
