@@ -80,7 +80,7 @@ public final class VehicleAnimations{
 				case("seat"): partClass = PartSeat.class; break;
 				
 				default: if(ConfigSystem.configObject.clientControls.devMode.value){
-					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?");
+					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?  Or are you trying to name a door with a suffix of a number?  Only part variables can have numbers at the end of their names!");
 				}else{
 					//Don't crash if we have a fault here.  It could be that we have an old pack that has a bad name.
 					return 0;
