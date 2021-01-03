@@ -60,7 +60,6 @@ public final class PackResourceLoader{
     	ROAD,
     	DECOR,
     	ITEM,
-    	BOOKLET,
     	SKIN;
     	
     	public static List<String> getAllTypesAsStrings(){

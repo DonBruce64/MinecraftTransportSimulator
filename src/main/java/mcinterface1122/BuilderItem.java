@@ -12,19 +12,30 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.IItemFood;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
@@ -102,6 +113,28 @@ class BuilderItem extends Item{
 	}
 	
 	/**
+	 *  This is called by the main MC system to determine how long it takes to eat it.
+	 *  If we are a food item, this should match our eating time.
+	 */
+	@Override
+	public int getMaxItemUseDuration(ItemStack stack){
+        return item instanceof IItemFood ? ((IItemFood) item).getTimeToEat() : 0;
+    }
+	
+	/**
+     * This is called by the main MC system do do item use actions.
+     * If we are a food item, and can be eaten, return eating here.
+     */
+    public EnumAction getItemUseAction(ItemStack stack){
+    	if(item instanceof IItemFood){
+    		IItemFood food = (IItemFood) item;
+    		return food.getTimeToEat() > 0 ? (food.isDrink() ? EnumAction.DRINK : EnumAction.BOW) : EnumAction.NONE;
+    	}else{
+    		return EnumAction.NONE;
+    	}
+    }
+	
+	/**
 	 *  This is called by the main MC system to "use" this item on a block.
 	 *  Forwards this to the main item for processing.
 	 */
@@ -118,7 +151,64 @@ class BuilderItem extends Item{
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
 		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
+		//If we are a food item, set our hand to start eating.
+		if(item instanceof IItemFood &&  ((IItemFood) item).getTimeToEat() > 0 && player.canEat(true)){
+			player.setActiveHand(hand);
+		}
 		return item.onUsed(wrapper, wrapper.getWrapperFor(player)) ? new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand)) : new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));
+	}
+	
+	/**
+	 *  This is called by the main MC system to stop using this item.
+	 *  Forwards this to the main item for processing.
+	 */
+	@Override
+	public void onPlayerStoppedUsing(ItemStack stack, World world, EntityLivingBase entityLiving, int timeLeft){
+		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
+		if(entityLiving instanceof EntityPlayer){
+			item.onStoppedUsing(wrapper, wrapper.getWrapperFor((EntityPlayer) entityLiving));
+		}
+	}
+	
+	/**
+	 *  This is called by the main MC system after the item's use timer has expired.
+	 *  This is normally instant, as {@link #getMaxItemUseDuration(ItemStack)} is 0.
+	 *  If this item is food, and a player is holding the item, have it apply to them. 
+	 */
+	@Override
+	public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entityLiving){
+		if(item instanceof IItemFood){
+			if(entityLiving instanceof EntityPlayer){
+				IItemFood food = ((IItemFood) item);
+	            EntityPlayer player = (EntityPlayer) entityLiving;
+	            
+	            //Add hunger and saturation.
+	            player.getFoodStats().addStats(food.getHungerAmount(), food.getSaturationAmount());
+	            
+	            //Add effects.
+	            List<JSONPotionEffect> effects = food.getEffects();
+	            if(!world.isRemote && effects != null){
+	            	for(JSONPotionEffect effect : effects){
+		            	Potion potion = Potion.getPotionFromResourceLocation(effect.name);
+		    			if(potion != null){
+		    				player.addPotionEffect(new PotionEffect(potion, effect.duration, effect.amplifier, false, false));
+		    			}else{
+		    				throw new NullPointerException("Potion " + effect.name + " does not exist.");
+		    			}
+	            	}
+	            }
+	            
+	            //Play sound of food being eaten and add stats.
+	            world.playSound(player, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_PLAYER_BURP, SoundCategory.PLAYERS, 0.5F, world.rand.nextFloat() * 0.1F + 0.9F);
+	            player.addStat(StatList.getObjectUseStats(this));
+	            if(player instanceof EntityPlayerMP){
+	                CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP)player, stack);
+	            }
+	        }
+			//Remove 1 item due to it being eaten.
+	        stack.shrink(1);
+		}
+		return stack;
 	}
 	
 	/**

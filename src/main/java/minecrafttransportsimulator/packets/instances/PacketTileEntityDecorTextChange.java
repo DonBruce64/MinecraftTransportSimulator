@@ -2,10 +2,12 @@ package minecrafttransportsimulator.packets.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
@@ -46,8 +48,10 @@ public class PacketTileEntityDecorTextChange extends APacketTileEntity<TileEntit
 		if(decor instanceof TileEntityBeacon){
 			((TileEntityBeacon) decor).updateBeaconToText(textLines);
 		}else{
-			for(int i=0; i<textLines.size(); ++i){
-				decor.text.put(decor.definition.rendering.textObjects.get(i), textLines.get(i));
+			int linesChecked = 0;
+			for(Entry<JSONText, String> textEntry : decor.text.entrySet()){
+				textEntry.setValue(textLines.get(linesChecked));
+				++linesChecked;
 			}
 		}
 		return true;

@@ -16,7 +16,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.rendering.components.AParticle;
-import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
+import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-public class PartGun extends APart implements IVehiclePartFXProvider{
+public class PartGun extends APart implements IParticleProvider{
 	
 	private final double minYawAngle;
 	private final double maxYawAngle;
@@ -505,7 +505,7 @@ public class PartGun extends APart implements IVehiclePartFXProvider{
 	
 	//Rather than spawn a bullet particle, this method spawns
 	//a particle related to some special effect, such as gun smoke.
-	public void spawnEffectParticles() {
+	private void spawnEffectParticles() {
 		for(ParticleObject particleObject : definition.gun.particleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.

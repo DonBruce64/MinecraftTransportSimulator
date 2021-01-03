@@ -3,8 +3,8 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -42,8 +42,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		if(rider.isValid()){
 			//Add all vehicle-wide effects to the rider
 			if(this.definition.effects != null) {
-				for(VehicleEffect effect: this.definition.effects) {
-					rider.addPotionEffect(effect.name, effect.duration, effect.amplifier);
+				for(JSONPotionEffect effect: this.definition.effects){
+					rider.addPotionEffect(effect);
 				}
 			}
 			
@@ -52,8 +52,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			
 			//Add all seat-specific effects to the rider
 			if(seat.vehicleDefinition.seatEffects != null) {
-				for(VehicleEffect effect: seat.vehicleDefinition.seatEffects) {
-					rider.addPotionEffect(effect.name, effect.duration, effect.amplifier);
+				for(JSONPotionEffect effect: seat.vehicleDefinition.seatEffects){
+					rider.addPotionEffect(effect);
 				}
 			}
 
@@ -128,16 +128,16 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 
 		//Get rid of any potion effects that were caused by the vehicle
 		if(this.definition.effects != null) {
-			for(VehicleEffect effect: this.definition.effects) {
-				rider.removePotionEffect(effect.name);
+			for(JSONPotionEffect effect: this.definition.effects){
+				rider.removePotionEffect(effect);
 			}
 		}
 		
 		//Get rid of any potion effects that were caused by the seat
 		VehiclePart packPart = getPackDefForLocation(riderLocation);
 		if(packPart.seatEffects != null) {
-			for(VehicleEffect effect: packPart.seatEffects) {
-				rider.removePotionEffect(effect.name);
+			for(JSONPotionEffect effect: packPart.seatEffects){
+				rider.removePotionEffect(effect);
 			}
 		}
 		

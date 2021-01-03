@@ -25,7 +25,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.ATransform;
-import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
+import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
@@ -227,8 +227,8 @@ public final class RenderVehicle{
 		//Spawn particles, but only once per render cycle.
 		if(MasterLoader.renderInterface.getRenderPass() != 1 && !MasterLoader.gameInterface.isGamePaused()){
 			for(APart part : vehicle.parts){
-				if(part instanceof IVehiclePartFXProvider){
-					((IVehiclePartFXProvider) part).spawnParticles();
+				if(part instanceof IParticleProvider){
+					((IParticleProvider) part).spawnParticles();
 				}
 			}
 		}

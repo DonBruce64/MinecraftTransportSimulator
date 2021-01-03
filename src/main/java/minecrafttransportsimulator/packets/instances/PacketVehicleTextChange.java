@@ -2,8 +2,10 @@ package minecrafttransportsimulator.packets.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
@@ -43,18 +45,15 @@ public class PacketVehicleTextChange extends APacketVehicle{
 	
 	@Override
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
-		int vehicleLines = 0;
-		if(vehicle.definition.rendering.textObjects != null){
-			for(int i=0; i<vehicle.definition.rendering.textObjects.size(); ++i){
-				vehicle.text.put(vehicle.definition.rendering.textObjects.get(i), textLines.get(i));
-				++vehicleLines;
-			}
+		int linesChecked = 0;
+		for(Entry<JSONText, String> textEntry : vehicle.text.entrySet()){
+			textEntry.setValue(textLines.get(linesChecked));
+			++linesChecked;
 		}
 		for(APart part : vehicle.parts){
-			if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
-				for(int i=0; i<part.definition.rendering.textObjects.size(); ++i){
-					part.text.put(part.definition.rendering.textObjects.get(i), textLines.get(i + vehicleLines));
-				}
+			for(Entry<JSONText, String> textEntry : part.text.entrySet()){
+				textEntry.setValue(textLines.get(linesChecked));
+				++linesChecked;
 			}
 		}
 		return true;

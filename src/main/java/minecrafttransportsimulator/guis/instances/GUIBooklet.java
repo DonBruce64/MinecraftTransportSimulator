@@ -7,8 +7,8 @@ import java.util.List;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.items.instances.ItemBooklet;
-import minecrafttransportsimulator.jsondefs.JSONBooklet.BookletPage;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 
@@ -21,12 +21,12 @@ public class GUIBooklet extends AGUIBase{
 	private List<ContentsButton> contentsButtons = new ArrayList<ContentsButton>();
 	
 	//Item properties.
-	private final ItemBooklet booklet;
+	private final ItemItem booklet;
 	private final int totalPages;
 	
-	public GUIBooklet(ItemBooklet booklet){
+	public GUIBooklet(ItemItem booklet){
 		this.booklet = booklet;
-		this.totalPages = booklet.definition.general.disableTOC ? 1 + booklet.definition.general.pages.length : 2 + booklet.definition.general.pages.length;
+		this.totalPages = booklet.definition.booklet.disableTOC ? 1 + booklet.definition.booklet.pages.length : 2 + booklet.definition.booklet.pages.length;
 	}
 	
 	@Override 
@@ -51,7 +51,7 @@ public class GUIBooklet extends AGUIBase{
 		
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
-		for(JSONText text : booklet.definition.general.titleText){
+		for(JSONText text : booklet.definition.booklet.titleText){
 			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
@@ -59,7 +59,7 @@ public class GUIBooklet extends AGUIBase{
 		pageTextLabels.add(titleLabels);
 		
 		//Contents text labels and buttons.
-		if(!booklet.definition.general.disableTOC){
+		if(!booklet.definition.booklet.disableTOC){
 			//TOC page label.
 			GUIComponentLabel contentsLabel = new GUIComponentLabel(guiLeft + 50, guiTop + 25, Color.BLACK, "CONTENTS");
 			addLabel(contentsLabel);
@@ -71,7 +71,7 @@ public class GUIBooklet extends AGUIBase{
 			contentsButtons.clear();
 			int leftSideOffset = guiLeft + 20;
 			int rightSideOffset = guiLeft + 155;
-			for(int i=0; i<booklet.definition.general.pages.length; ++i){
+			for(int i=0; i<booklet.definition.booklet.pages.length; ++i){
 				ContentsButton contentsButton = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
 					@Override
 					public void onClicked(){
@@ -92,7 +92,7 @@ public class GUIBooklet extends AGUIBase{
 		}
 		
 		//Regular page labels.
-		for(BookletPage page : booklet.definition.general.pages){
+		for(BookletPage page : booklet.definition.booklet.pages){
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
@@ -101,8 +101,8 @@ public class GUIBooklet extends AGUIBase{
 					addLabel(pageLabel);
 				}catch(Exception e){
 					int pageNumber = -1;
-					for(byte i=0;i<booklet.definition.general.pages.length; ++i){
-						if(booklet.definition.general.pages[i].equals(page)){
+					for(byte i=0;i<booklet.definition.booklet.pages.length; ++i){
+						if(booklet.definition.booklet.pages[i].equals(page)){
 							pageNumber = i + 1;
 						}
 					}
@@ -137,7 +137,7 @@ public class GUIBooklet extends AGUIBase{
 		
 		//Set the TOC buttons visible if we're on the TOC page.
 		for(GUIComponentButton button : contentsButtons){
-			button.visible = booklet.pageNumber == 1 && !booklet.definition.general.disableTOC;
+			button.visible = booklet.pageNumber == 1 && !booklet.definition.booklet.disableTOC;
 		}
 		
 		//Set the TOC button to be visible on other pages.
@@ -148,26 +148,26 @@ public class GUIBooklet extends AGUIBase{
 	
 	@Override
 	public int getWidth(){
-		return booklet.definition.general.textureWidth;
+		return booklet.definition.booklet.textureWidth;
 	}
 	
 	@Override
 	public int getHeight(){
-		return booklet.definition.general.textureHeight;
+		return booklet.definition.booklet.textureHeight;
 	}
 	
 	@Override
 	public String getTexture(){
 		if(booklet.pageNumber == 0){
-			return booklet.definition.general.coverTexture;
-		}else if(!booklet.definition.general.disableTOC){
+			return booklet.definition.booklet.coverTexture;
+		}else if(!booklet.definition.booklet.disableTOC){
 			if(booklet.pageNumber == 1){
-				return booklet.definition.general.pages[0].pageTexture;
+				return booklet.definition.booklet.pages[0].pageTexture;
 			}else{
-				return booklet.definition.general.pages[booklet.pageNumber - 2].pageTexture;
+				return booklet.definition.booklet.pages[booklet.pageNumber - 2].pageTexture;
 			}
 		}else{
-			return booklet.definition.general.pages[booklet.pageNumber - 1].pageTexture;
+			return booklet.definition.booklet.pages[booklet.pageNumber - 1].pageTexture;
 		}
 	}
 	
@@ -181,7 +181,7 @@ public class GUIBooklet extends AGUIBase{
 		protected final int contentsIndex;
 
 		public ContentsButton(int x, int y, int contentsIndex){
-			super(x, y, 110, (contentsIndex + 1) + ": " + booklet.definition.general.pages[contentsIndex].title, 10, false);
+			super(x, y, 110, (contentsIndex + 1) + ": " + booklet.definition.booklet.pages[contentsIndex].title, 10, false);
 			this.contentsIndex = contentsIndex;
 		}
 
@@ -194,7 +194,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		MasterLoader.guiInterface.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.general.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		MasterLoader.guiInterface.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

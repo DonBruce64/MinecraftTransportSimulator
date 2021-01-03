@@ -2,6 +2,7 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
@@ -172,11 +173,11 @@ public interface IWrapperEntity{
 	 * Adds the potion effect with the specified name to the entity.  Only valid for living entities that
 	 * are effected by potions.
 	 */
-	public void addPotionEffect(String name, int duration, int amplifier);
+	public void addPotionEffect(JSONPotionEffect effect);
 	
 	/**
 	 * Removes the potion effect with the specified name from the entity.  Only valid for living entities that
 	 * are effected by potions.
 	 */
-	public void removePotionEffect(String name);
+	public void removePotionEffect(JSONPotionEffect effect);
 }

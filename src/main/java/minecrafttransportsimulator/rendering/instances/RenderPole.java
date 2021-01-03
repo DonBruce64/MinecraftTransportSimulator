@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Core;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 
@@ -119,6 +120,13 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					if(MasterLoader.renderInterface.getRenderPass() != 1){
 						MasterLoader.renderInterface.setTexture(component.definition.getTextureLocation(component.item.subName));
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
+					}
+					
+					//Render any static text.
+					if(component instanceof ITextProvider){
+						if(MasterLoader.renderInterface.renderTextMarkings((ITextProvider) component, null)){
+							MasterLoader.renderInterface.recallTexture();
+						}
 					}
 					
 					//Render the dynamic parts.  This will mostly just be lights.

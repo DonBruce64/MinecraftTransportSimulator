@@ -19,7 +19,6 @@ import com.google.gson.Gson;
 import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.items.instances.ItemBooklet;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -29,7 +28,6 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONBooklet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -228,7 +226,13 @@ public final class PackParserSystem{
 							//Check to make sure json isn't an item JSON or our pack definition.
 							if(!fileName.equals("packdefinition.json") && (structure.equals(PackStructure.MODULAR) ? !fileName.endsWith("_item.json") : entryFullPath.contains("jsondefs"))){
 								//Get classification and JSON class type to use with GSON system.
-								ItemClassification classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
+								ItemClassification classification;
+								try{
+									classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
+								}catch(Exception e){
+									MasterLoader.coreInterface.logError("ERROR: Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+									continue;
+								}
 								Class<? extends AJSONItem<?>> jsonClass = null;
 								if(classification != null){
 									switch(classification){
@@ -239,7 +243,6 @@ public final class PackParserSystem{
 										case ROAD : jsonClass = JSONRoadComponent.class; break;
 										case DECOR : jsonClass = JSONDecor.class; break;
 										case ITEM : jsonClass = JSONItem.class; break;
-										case BOOKLET : jsonClass = JSONBooklet.class; break;
 										case SKIN : jsonClass = JSONSkin.class; break;
 									}
 								}else{
@@ -286,7 +289,6 @@ public final class PackParserSystem{
 				    				switch(classification){
 										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
 										case ITEM : item = new ItemItem((JSONItem) definition); break;
-										case BOOKLET : item = new ItemBooklet((JSONBooklet) definition); break;
 										default : {
 											throw new IllegalArgumentException("ERROR: No corresponding classification found for asset: " + fileName + " Contact the mod author!");
 										}
@@ -536,16 +538,6 @@ public final class PackParserSystem{
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
-    	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their booklets to the mod.**/
-    public static void addBookletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		setupItem(new ItemBooklet(packParser.fromJson(jsonReader, JSONBooklet.class)), packID, jsonFileName, "", "", ItemClassification.BOOKLET);
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());

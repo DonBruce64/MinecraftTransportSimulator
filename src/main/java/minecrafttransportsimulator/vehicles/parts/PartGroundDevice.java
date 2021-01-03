@@ -9,7 +9,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
-import minecrafttransportsimulator.rendering.components.IVehiclePartFXProvider;
+import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PartGroundDevice extends APart implements IVehiclePartFXProvider{
+public class PartGroundDevice extends APart implements IParticleProvider{
 	public static final Point3d groundDetectionOffset = new Point3d(0, -0.05F, 0);
 	public static final Point3d groundOperationOffset = new Point3d(0, -0.25F, 0);
 	

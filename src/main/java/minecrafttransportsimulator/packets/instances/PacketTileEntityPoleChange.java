@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -9,6 +10,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -122,9 +124,11 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//This is a packet attempting to change component text.  Do so now.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
-					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
-							((ITextProvider) component).getText().put(component.definition.rendering.textObjects.get(i), textLines.get(i));
+					if(component instanceof ITextProvider){
+						int linesChecked = 0;
+						for(Entry<JSONText, String> textEntry : ((ITextProvider) component).getText().entrySet()){
+							textEntry.setValue(textLines.get(linesChecked));
+							++linesChecked;
 						}
 					}
 					return true;
@@ -133,9 +137,11 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//Player clicked with a component.  Add it.
 				ATileEntityPole_Component newComponent = pole.createComponent(componentItem);
 				pole.components.put(axis, newComponent);
-				if(textLines != null && newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
-					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
-						((ITextProvider) newComponent).getText().put(newComponent.definition.rendering.textObjects.get(i), textLines.get(i));
+				if(textLines != null && newComponent instanceof ITextProvider){
+					int linesChecked = 0;
+					for(Entry<JSONText, String> textEntry : ((ITextProvider) newComponent).getText().entrySet()){
+						textEntry.setValue(textLines.get(linesChecked));
+						++linesChecked;
 					}
 				}
 				pole.updateLightState();

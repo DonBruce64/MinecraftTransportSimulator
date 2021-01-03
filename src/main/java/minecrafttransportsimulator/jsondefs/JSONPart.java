@@ -104,6 +104,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartGun{
+    	public boolean handHeld;
     	public boolean autoReload;
     	public int capacity;
     	public int fireDelay;

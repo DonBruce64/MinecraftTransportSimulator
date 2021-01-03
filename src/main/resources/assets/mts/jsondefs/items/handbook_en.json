@@ -2,6 +2,9 @@
   "general": {
 	"name" : "MTS Manual (READ ME!)",
 	"materials" : ["minecraft:feather:0:1", "minecraft:book:0:1", "minecraft:dye:0:2", "minecraft:paper:0:1"],
+	"type" : "booklet"
+	},
+	"booklet": {
     "textureWidth": 280,
 	"textureHeight": 180,
 	"titleText": [

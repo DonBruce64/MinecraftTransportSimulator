@@ -6,6 +6,8 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -177,5 +179,20 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
 		}
+	}
+	
+	@Override
+	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
+		if(partPrefix.equals("gun") && definition.gun.handHeld){
+			
+			return true;
+		}else{
+			return false;
+		}
+    }
+	
+	@Override
+	public void onStoppedUsing(IWrapperWorld world, IWrapperPlayer player){
+		
 	}
 }

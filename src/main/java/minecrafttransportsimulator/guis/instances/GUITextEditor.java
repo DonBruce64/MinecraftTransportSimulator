@@ -20,6 +20,7 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -29,40 +30,26 @@ public class GUITextEditor extends AGUIBase{
 	
 	//Input boxes and index linking to 
 	private final List<GUIComponentTextBox> textInputBoxes = new ArrayList<GUIComponentTextBox>();
+	private final List<String> textInputFieldNames = new ArrayList<String>();
+	
+	//Provider clicked.
+	private final ITextProvider provider;
 	
 	//Pole, axis clicked on pole, and label for sign.
 	private final TileEntityPole pole;
 	private final Axis axis;
 	private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
 	
-	//Decor clicked.
-	private final TileEntityDecor decor;
-	
-	//Clicked vehicle.
-	private final EntityVehicleF_Physics vehicle;
-	
-	//List of indexes of text boxes.  Each index corresponds to a text box.
-	private final List<Integer> textLineIndexes = new ArrayList<Integer>();
-	
 	public GUITextEditor(TileEntityPole pole, Axis axis){
+		this.provider = null;
 		this.pole = pole;
 		this.axis = axis;
-		this.decor = null;
-		this.vehicle = null;
 	}
 	
-	public GUITextEditor(TileEntityDecor decor){
+	public GUITextEditor(ITextProvider provider){
+		this.provider = provider;
 		this.pole = null;
 		this.axis = null;
-		this.decor = decor;
-		this.vehicle = null;
-	}
-	
-	public GUITextEditor(EntityVehicleF_Physics vehicle){
-		this.pole = null;
-		this.axis = null;
-		this.decor = null;
-		this.vehicle = vehicle;
 	}
 	
 	@Override 
@@ -102,56 +89,37 @@ public class GUITextEditor extends AGUIBase{
 				addLabel(label);
 				signTextLabels.add(label);
 			}
-		}else if(decor != null){
-			textObjects = new ArrayList<JSONText>();
-			textLines = new ArrayList<String>();
-			textObjects.addAll(decor.getText().keySet());
-			textLines.addAll(decor.getText().values());
 		}else{
-			//Set text and text objects.
 			textObjects = new ArrayList<JSONText>();
 			textLines = new ArrayList<String>();
-			//Add all text objects and lines for the main vehicle.
-			if(vehicle.definition.rendering.textObjects != null){
-				for(JSONText textObject : vehicle.definition.rendering.textObjects){
-					textObjects.add(textObject);
-					textLines.add(vehicle.text.get(vehicle.definition.rendering.textObjects.indexOf(textObject)));
-				}
-			}
-			//Add all text objects and lines for all parts on the vehicle.
-			for(APart part : vehicle.parts){
-				if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
-					for(JSONText textObject : part.definition.rendering.textObjects){
-						textObjects.add(textObject);
-						textLines.add(part.text.get(part.definition.rendering.textObjects.indexOf(textObject)));
-					}
+			textObjects.addAll(provider.getText().keySet());
+			textLines.addAll(provider.getText().values());
+			
+			//Add part text objects if we are a vehicle.
+			if(provider instanceof EntityVehicleF_Physics){
+				for(APart part : ((EntityVehicleF_Physics) provider).parts){
+					textObjects.addAll(part.getText().keySet());
+					textLines.addAll(part.getText().values());
 				}
 			}
 		}
 		
 		//Add text box components for every text.  Paired with labels to render the text name above the boxes.
 		//Don't add multiple boxes per text field, however.  Those use the same box.
-		List<String> renderedFieldNames = new ArrayList<String>();
-		textLineIndexes.clear();
+		textInputFieldNames.clear();
 		int currentOffset = 0;
-		int boxWidth = vehicle != null ? 200 : 100;
+		int boxWidth = pole == null ? 200 : 100;
 		for(JSONText textObject : textObjects){
-			if(!renderedFieldNames.contains(textObject.fieldName)){
+			if(!textInputFieldNames.contains(textObject.fieldName)){
 				//No text box present for the field name.  Create a new one.
 				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, Color.BLACK, textObject.fieldName);
 				addLabel(label);
 				int textRowsRequired = 1 + 5*textObject.maxLength/boxWidth;
 				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, textLines.get(textObjects.indexOf(textObject)), 12*textRowsRequired, Color.WHITE, Color.BLACK, textObject.maxLength);
 				addTextBox(box);
-				//Set the text index to the current index.
-				textLineIndexes.add(textInputBoxes.size());
-				//Add the new field name.
-				renderedFieldNames.add(textObject.fieldName);
 				textInputBoxes.add(box);
 				currentOffset += box.height + 12;
-			}else{
-				//Set the text line index to the index of the existing field name.
-				textLineIndexes.add(renderedFieldNames.indexOf(textObject.fieldName));
+				textInputFieldNames.add(textObject.fieldName);
 			}
 		}
 		
@@ -159,27 +127,19 @@ public class GUITextEditor extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, MasterLoader.coreInterface.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
+				//First copy all the appropriate text box text to a string list for sending out.
+				List<String> packetTextLines = new ArrayList<String>();
+				for(JSONText textObject : textObjects){
+					packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+				}
+				
+				//Now send the appropriate packet.
 				if(pole != null){
-					//Copy text from boxes to string list.
-					List<String> textLines = new ArrayList<String>();
-					for(GUIComponentTextBox box : textInputBoxes){
-						textLines.add(box.getText());
-					}
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, textLines, false));
-				}else if(decor != null){
-					//Copy text from boxes to string list.
-					List<String> textLines = new ArrayList<String>();
-					for(GUIComponentTextBox box : textInputBoxes){
-						textLines.add(box.getText());
-					}
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityDecorTextChange(decor, textLines));
+					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
+				}else if(provider instanceof EntityVehicleF_Physics){
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
 				}else{
-					//Copy text from boxes to string list.
-					List<String> textLines = new ArrayList<String>();
-					for(Integer textBoxIndex : textLineIndexes){
-						textLines.add(textInputBoxes.get(textBoxIndex).getText());
-					}
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleTextChange(vehicle, textLines));
+					MasterLoader.networkInterface.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
 				}
 				MasterLoader.guiInterface.closeGUI();
 			}

@@ -17,7 +17,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     public List<VehicleCollisionBox> collision;
     public List<VehicleDoor> doors;
     public List<VehicleConnection> connections;
-    public List<VehicleEffect> effects;
+    public List<JSONPotionEffect> effects;
     public VehicleRendering rendering;
     
     public class VehicleGeneral extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>.General{
@@ -157,7 +157,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         
         //Seat-specific part variables.
         public Point3d dismountPos;
-        public List<VehicleEffect> seatEffects; 
+        public List<JSONPotionEffect> seatEffects; 
         
         //Engine-specific part variables.
         @Deprecated
@@ -227,12 +227,6 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         	public Point3d endingPos;
         	public double segmentLength;
         }
-    }
-    
-    public class VehicleEffect{
-    	public String name;
-    	public int duration;
-    	public int amplifier;
     }
     
     public class PackInstrument{

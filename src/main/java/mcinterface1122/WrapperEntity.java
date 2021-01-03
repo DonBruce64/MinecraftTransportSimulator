@@ -2,6 +2,7 @@ package mcinterface1122;
 
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -179,28 +180,28 @@ class WrapperEntity implements IWrapperEntity{
 	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
 	
 	@Override
-	public void addPotionEffect(String name, int duration, int amplifier){
+	public void addPotionEffect(JSONPotionEffect effect){
 		// Only instances of EntityLivingBase can receive potion effects
 		if((entity instanceof EntityLivingBase)){
-			Potion potion = Potion.getPotionFromResourceLocation(name);
+			Potion potion = Potion.getPotionFromResourceLocation(effect.name);
 			if(potion != null){
-				((EntityLivingBase)entity).addPotionEffect(new PotionEffect(potion, duration, amplifier, false, false));
+				((EntityLivingBase)entity).addPotionEffect(new PotionEffect(potion, effect.duration, effect.amplifier, false, false));
 			}else{
-				throw new NullPointerException("Potion " + name + " does not exist.");
+				throw new NullPointerException("Potion " + effect.name + " does not exist.");
 			}
 		}
 	}
 	
 	@Override
-	public void removePotionEffect(String name){
+	public void removePotionEffect(JSONPotionEffect effect){
 		// Only instances of EntityLivingBase can have potion effects
 		if((entity instanceof EntityLivingBase)){
 			//Uses a potion here instead of potionEffect because the duration/amplifier is irrelevant
-			Potion potion = Potion.getPotionFromResourceLocation(name);
+			Potion potion = Potion.getPotionFromResourceLocation(effect.name);
 			if(potion != null){
 				((EntityLivingBase)entity).removePotionEffect(potion);
 			}else{
-				throw new NullPointerException("Potion " + name + " does not exist.");
+				throw new NullPointerException("Potion " + effect.name + " does not exist.");
 			}
 		}
 	}
