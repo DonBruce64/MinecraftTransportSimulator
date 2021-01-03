@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
@@ -31,8 +29,7 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
     public void onBroken(IWrapperWorld world, Point3i location){
     	TileEntityBeacon beacon = world.getTileEntity(location);
     	if(beacon != null){
-    		List<String> textLines = beacon.getTextLines();
-	    	BeaconManager.removeBeacon(world, textLines.get(TileEntityBeacon.BEACON_NAME_INDEX));
+	    	BeaconManager.removeBeacon(world, beacon.beaconName);
     	}
     }
     

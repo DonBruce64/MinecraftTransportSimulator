@@ -1,7 +1,6 @@
 package mcinterface1122;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +17,7 @@ import org.lwjgl.openal.AL10;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.IInterfaceAudio;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.IStreamDecoder;
 import minecrafttransportsimulator.sound.OGGDecoderOutput;
 import minecrafttransportsimulator.sound.Radio;
@@ -115,13 +114,16 @@ class InterfaceAudio implements IInterfaceAudio{
 			}
 			
 			if(state == AL10.AL_PLAYING){
-				sound.provider.updateProviderSound(sound);
+				if(sound.provider instanceof ISoundProviderComplex){
+					((ISoundProviderComplex) sound.provider).updateProviderSound(sound);
+				}
 				if(sound.stopSound){
 					AL10.alSourceStop(sound.sourceIndex);
 				}else{
 					//Update position.
-					FloatBuffer providerPosbuffer = sound.provider.getProviderPosition();
-					AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, providerPosbuffer);
+					//FloatBuffer providerPosbuffer = sound.provider.getProviderPositionBuffer();
+					Point3d providerPosition = sound.provider.getProviderPosition();
+					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) providerPosition.x, (float) providerPosition.y, (float) providerPosition.z);
 					
 					//If the player is inside an enclosed vehicle, half the sound volume.
 					if(sound.shouldBeDampened()){
@@ -133,11 +135,11 @@ class InterfaceAudio implements IInterfaceAudio{
 					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
 					//Otherwise, set pitch as normal.
 					if(sound.looping && !sound.provider.equals(player.getEntityRiding())){
-						Point3d providerVelocity = sound.provider.getProviderVelocity();
+						Point3d providerVelocity = ((ISoundProviderComplex) sound.provider).getProviderVelocity();
 						Point3d playerVelocity = player.getVelocity();
 						playerVelocity.y = 0;
-						double initalDelta = player.getPosition().add(-providerPosbuffer.get(0), -providerPosbuffer.get(1), -providerPosbuffer.get(2)).length();
-						double finalDelta = player.getPosition().add(playerVelocity).add(-providerPosbuffer.get(0), -providerPosbuffer.get(1), -providerPosbuffer.get(2)).add(-providerVelocity.x, 0D, -providerVelocity.z).length();
+						double initalDelta = player.getPosition().subtract(providerPosition).length();
+						double finalDelta = player.getPosition().add(playerVelocity).subtract(providerPosition).add(-providerVelocity.x, 0D, -providerVelocity.z).length();
 						float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
 						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
 					}else{
@@ -175,13 +177,15 @@ class InterfaceAudio implements IInterfaceAudio{
 		//If the sound system was reset, blow out all saved data points.
 		if(soundSystemReset){
 			dataSourceBuffers.clear();
-			Set<ISoundProvider> providers = new HashSet<ISoundProvider>();
+			Set<ISoundProviderComplex> providers = new HashSet<ISoundProviderComplex>();
 			for(SoundInstance sound : playingSounds){
-				providers.add(sound.provider);
+				if(sound.provider instanceof ISoundProviderComplex){
+					providers.add((ISoundProviderComplex) sound.provider);
+				}
 			}
 			playingSounds.clear();
 			sourceGetFailures = 0;
-			for(ISoundProvider provider : providers){
+			for(ISoundProviderComplex provider : providers){
 				provider.startSounds();
 			}
 		}
@@ -206,9 +210,10 @@ class InterfaceAudio implements IInterfaceAudio{
 				sound.sourceIndex = sourceBuffer.get(0);
 				
 				//Set properties and bind data buffer to source.
+				Point3d position = sound.provider.getProviderPosition();
 				AL10.alGetError();
 				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-				AL10.alSource(sound.sourceIndex, AL10.AL_POSITION, sound.provider.getProviderPosition());
+				AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) position.x, (float) position.y, (float) position.z);
 	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 	    	    
 				//Done setting up buffer.  Queue sound to start playing.

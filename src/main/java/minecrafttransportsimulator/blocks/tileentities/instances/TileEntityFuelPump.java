@@ -29,16 +29,16 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	public void update(){
 		//Update text lines to the current tank status if required.
 		//Only do this on clients, as servers don't render any text.
-		if(world.isClient() && definition.general.textObjects != null){
-			textLines.clear();
+		if(world.isClient() && definition.rendering != null && definition.rendering.textObjects != null){
+			text.clear();
 			String fluidName = tank.getFluidLevel() > 0 ? MasterLoader.coreInterface.getFluidName(tank.getFluid()).toUpperCase() : "";
 			String fluidLevel = MasterLoader.coreInterface.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
 			String fluidDispensed = MasterLoader.coreInterface.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
-			for(int i=0; i<definition.general.textObjects.size(); ++i){
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
 				switch(i%3){
-					case(0) : textLines.add(fluidName); break;
-					case(1) : textLines.add(fluidLevel); break;
-					case(2) : textLines.add(fluidDispensed); break;
+					case(0) : text.put(definition.rendering.textObjects.get(i), fluidName); break;
+					case(1) : text.put(definition.rendering.textObjects.get(i),fluidLevel); break;
+					case(2) : text.put(definition.rendering.textObjects.get(i),fluidDispensed); break;
 				}
 			}
 		}

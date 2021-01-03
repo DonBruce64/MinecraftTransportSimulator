@@ -3,7 +3,6 @@ package minecrafttransportsimulator.rendering.instances;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,7 +16,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -35,7 +33,6 @@ import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
-import minecrafttransportsimulator.rendering.components.VehicleAnimations;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -169,7 +166,7 @@ public final class RenderVehicle{
 				if(part.vehicleDefinition.animations != null){
 					for(JSONAnimationDefinition animation : part.vehicleDefinition.animations){
 						if(animation.animationType.equals("visibility")){
-							double value = VehicleAnimations.getVariableValue(animation.variable,  partialTicks, vehicle, part);
+							double value = part.getAnimationSystem().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
 							if(value < animation.clampMin || value > animation.clampMax){
 								shouldRender = false;
 								break;
@@ -247,36 +244,15 @@ public final class RenderVehicle{
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 */
 	private static void renderMainModel(EntityVehicleF_Physics vehicle, float partialTicks){
-		//Normally we use the pack name, but since all displaylists
-		//are the same for all models, this is more appropriate.
+		//Normally we use the model name, but since vehicles don't share models
+		//we can use the systemName.  This is due to them historically not having a modelName parameter.
+		//That parameter is deprecated, but some things still use it.  Mainly parts and decor blocks.
 		if(!vehicleDisplayLists.containsKey(vehicle.definition.systemName)){
-			//No distplay list for this model.  Parse and create it now.
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.getModelLocation());
+			vehicleObjectLists.put(vehicle.definition.systemName, OBJParser.generateRenderables(vehicle, vehicle.definition.getModelLocation(), parsedModel, vehicle.definition.rendering.animatedObjects));
+			vehicleDisplayLists.put(vehicle.definition.systemName, OBJParser.generateDisplayList(parsedModel));
 			
-			//For anything that has a definition as an animation, add it to an animated list.
-			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
-			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
-			if(vehicle.definition.rendering.animatedObjects != null){
-				for(JSONAnimatedObject definition : vehicle.definition.rendering.animatedObjects){
-					if(parsedModel.containsKey(definition.objectName)){
-						modelObjects.add(new RenderableModelObject(vehicle.definition.systemName, definition.objectName, definition, parsedModel.get(definition.objectName), vehicle, null));
-						parsedModel.remove(definition.objectName);
-					}
-				}
-			}
-			
-			//Now check for any non-animated model objects.
-			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
-			while(iterator.hasNext()){
-				Entry<String, Float[][]> entry = iterator.next();
-				RenderableModelObject modelObject = new RenderableModelObject(vehicle.definition.systemName, entry.getKey(), null, entry.getValue(), vehicle, null);
-				if(!modelObject.transforms.isEmpty()){
-					modelObjects.add(modelObject);
-					iterator.remove();
-				}
-			}
-			
-			//Now check for any animated instruments.
+			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
 			Map<Integer, RenderableTransform> instrumentTransforms = new HashMap<Integer, RenderableTransform>();
 			for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
@@ -284,10 +260,6 @@ public final class RenderVehicle{
 					instrumentTransforms.put(i, new RenderableTransform(packInstrument.animations));
 				}
 			}
-			
-			//Now finalize the maps.
-			vehicleDisplayLists.put(vehicle.definition.systemName, OBJParser.generateDisplayList(parsedModel));
-			vehicleObjectLists.put(vehicle.definition.systemName, modelObjects);
 			vehicleInstrumentTransforms.put(vehicle.definition.systemName, instrumentTransforms);
 		}
 		
@@ -299,7 +271,7 @@ public final class RenderVehicle{
 		}
 		
 		//Render any static text.
-		if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, vehicle.getSubDefinition().secondColor, null, vehicle.areInteriorLightsOn())){
+		if(MasterLoader.renderInterface.renderTextMarkings(vehicle, null)){
 			MasterLoader.renderInterface.recallTexture();
 		}
 		
@@ -307,7 +279,7 @@ public final class RenderVehicle{
 		List<RenderableModelObject> modelObjects = vehicleObjectLists.get(vehicle.definition.systemName);
 		for(RenderableModelObject modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
-				modelObject.render(vehicle, null, partialTicks, modelObjects);
+				modelObject.render(vehicle, partialTicks, modelObjects);
 			}
 		}
 	}
@@ -324,33 +296,8 @@ public final class RenderVehicle{
 		String partModelLocation = part.definition.getModelLocation();
 		if(!partDisplayLists.containsKey(partModelLocation)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(partModelLocation);
-			
-			//For anything that has a definition as an animation, add it to an animated list.
-			//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
-			List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
-			if(part.definition.rendering != null && part.definition.rendering.animatedObjects != null){
-				for(JSONAnimatedObject definition : part.definition.rendering.animatedObjects){
-					if(parsedModel.containsKey(definition.objectName)){
-						modelObjects.add(new RenderableModelObject(partModelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), part.vehicle, part));
-						parsedModel.remove(definition.objectName);
-					}
-				}
-			}
-			
-			//Now check for any non-animated model objects.
-			Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
-			while(iterator.hasNext()){
-				Entry<String, Float[][]> entry = iterator.next();
-				RenderableModelObject modelObject = new RenderableModelObject(partModelLocation, entry.getKey(), null, entry.getValue(), part.vehicle, part);
-				if(!modelObject.transforms.isEmpty()){
-					modelObjects.add(modelObject);
-					iterator.remove();
-				}
-			}
-			
-			//Now finalize the maps.
+			partObjectLists.put(partModelLocation, OBJParser.generateRenderables(part, partModelLocation, parsedModel, part.definition.rendering != null ? part.definition.rendering.animatedObjects : null));
 			partDisplayLists.put(partModelLocation, OBJParser.generateDisplayList(parsedModel));
-			partObjectLists.put(partModelLocation, modelObjects);
 		}
 		
 		//If we aren't using the vehicle texture, bind the texture for this part.
@@ -389,7 +336,7 @@ public final class RenderVehicle{
 			}
 			
 			//Render any static text.
-			if(MasterLoader.renderInterface.renderTextMarkings(part.definition.rendering != null ? part.definition.rendering.textObjects : null, part.textLines, part.vehicle.getSubDefinition().secondColor, null, part.vehicle.areInteriorLightsOn())){
+			if(MasterLoader.renderInterface.renderTextMarkings(part, null)){
 				MasterLoader.renderInterface.recallTexture();
 			}
 			
@@ -397,7 +344,7 @@ public final class RenderVehicle{
 			List<RenderableModelObject> modelObjects = partObjectLists.get(partModelLocation);
 			for(RenderableModelObject modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
-					modelObject.render(part.vehicle, part, partialTicks, modelObjects);
+					modelObject.render(part, partialTicks, modelObjects);
 				}
 			}
 			
@@ -409,7 +356,7 @@ public final class RenderVehicle{
 					if(childPart.vehicleDefinition.animations != null){
 						for(JSONAnimationDefinition animation : childPart.vehicleDefinition.animations){
 							if(animation.animationType.equals("visibility")){
-								double value = VehicleAnimations.getVariableValue(animation.variable,  partialTicks, childPart.vehicle, childPart);
+								double value = childPart.getAnimationSystem().getAnimatedVariableValue(childPart, animation, 0, null, partialTicks);
 								if(value < animation.clampMin || value > animation.clampMax){
 									shouldRender = false;
 									break;
@@ -995,7 +942,7 @@ public final class RenderVehicle{
 				RenderableTransform transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i);
 				boolean doRender = true;
 				if(transform != null){
-					doRender = transform.doPreRenderTransforms(vehicle, null, 0);
+					doRender = transform.doPreRenderTransforms(vehicle, 0);
 				}
 				
 				if(doRender){
@@ -1007,7 +954,7 @@ public final class RenderVehicle{
 				}
 				
 				if(transform != null){
-					transform.doPostRenderTransforms(vehicle, null, 0);
+					transform.doPostRenderTransforms(vehicle, 0);
 				}
 				GL11.glPopMatrix();
 			}

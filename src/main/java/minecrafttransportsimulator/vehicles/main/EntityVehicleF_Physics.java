@@ -138,28 +138,28 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		
 		//Turn on brake lights and indicator lights.
 		if(brake > 0){
-			lightsOn.add(LightType.BRAKELIGHT);
-			if(lightsOn.contains(LightType.LEFTTURNLIGHT)){
-				lightsOn.remove(LightType.LEFTINDICATORLIGHT);
+			variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
+			if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+				variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
 			}else{
-				lightsOn.add(LightType.LEFTINDICATORLIGHT);
+				variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
 			}
-			if(lightsOn.contains(LightType.RIGHTTURNLIGHT)){
-				lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+			if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
+				variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
 			}else{
-				lightsOn.add(LightType.RIGHTINDICATORLIGHT);
+				variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
 			}
 		}else{
-			lightsOn.remove(LightType.BRAKELIGHT);
-			lightsOn.remove(LightType.LEFTINDICATORLIGHT);
-			lightsOn.remove(LightType.RIGHTINDICATORLIGHT);
+			variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
+			variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
+			variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
 		}
 		
 		//Set backup light state.
-		lightsOn.remove(LightType.BACKUPLIGHT);
+		variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
 		for(PartEngine engine : engines.values()){
 			if(engine.currentGear < 0){
-				lightsOn.add(LightType.BACKUPLIGHT);
+				variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
 				break;
 			}
 		}

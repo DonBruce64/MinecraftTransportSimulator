@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.AParticle;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Interface for the various MC rendering engines.  This class has functions for
@@ -124,11 +122,9 @@ public interface IInterfaceRender{
 	public void spawnBlockBreakParticles(Point3i point, boolean playSound);
 	
 	/**
-	 *  Renders all the text markings given the passed-in parameters.
+	 *  Renders all the text markings on the passed-in provider.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
-	 *  If inheritedColor is non-null, then the passed-in color will be rendered rather than the color in the textDefinition,
-	 *  should the textDefinition be set to use the inheritedColor.
 	 */
-	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String inheritedColor, String objectRendering, boolean lightsOn);
+	public boolean renderTextMarkings(ITextProvider provider, String objectRendering);
 }

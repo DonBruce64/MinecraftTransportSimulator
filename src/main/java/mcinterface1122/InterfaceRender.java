@@ -30,6 +30,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.AParticle;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -251,51 +252,50 @@ class InterfaceRender implements IInterfaceRender{
 	}
 	
 	@Override
-	public boolean renderTextMarkings(List<JSONText> textDefinitions, List<String> textLines, String inheritedColor, String objectRendering, boolean lightsOn){
+	public boolean renderTextMarkings(ITextProvider provider, String objectRendering){
 		if(getRenderPass() != 1){
 			boolean systemLightingEnabled = true;
 			boolean internalLightingEnabled = true;
-			if(textDefinitions != null){
-				for(byte i=0; i<textDefinitions.size(); ++i){
-					JSONText textDefinition = textDefinitions.get(i);
-					String text = textLines.get(i);
+			for(Entry<JSONText, String> textLine : provider.getText().entrySet()){
+				JSONText textDefinition = textLine.getKey();
+				String text = textLine.getValue();
+				
+				//Render if our attached object and the object we are rendering on match.
+				if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
+					//Disable system lighting if we haven't already.
+					//System lighting doesn't work well with text.
+					if(systemLightingEnabled){
+						setSystemLightingState(false);
+						systemLightingEnabled = false;
+					}
 					
-					//Render if our attached object and the object we are rendering on match.
-					if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
-						//Disable system lighting if we haven't already.
-						//System lighting doesn't work well with text.
-						if(systemLightingEnabled){
-							setSystemLightingState(false);
-							systemLightingEnabled = false;
-						}
-						
-						//If we have light-up text, disable lightmap.
-						if(textDefinition.lightsUp && lightsOn){
-							if(internalLightingEnabled){
-								internalLightingEnabled = false;
-								setInternalLightingState(internalLightingEnabled);
-							}
-						}else if(!internalLightingEnabled){
-							internalLightingEnabled = true;
+					//If we have light-up text, disable lightmap.
+					if(textDefinition.lightsUp && provider.renderTextLit()){
+						if(internalLightingEnabled){
+							internalLightingEnabled = false;
 							setInternalLightingState(internalLightingEnabled);
 						}
-						
-						GL11.glPushMatrix();
-						//Translate to the position to render.
-						GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
-						//First rotate 180 along the X-axis to get us rendering right-side up.
-						GL11.glRotatef(180F, 1, 0, 0);
-						//Next, apply rotations.  Y is inverted due to the inverted X axis.
-						GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
-						GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
-						GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
-						//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
-						GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-						//Finally, render the text.
-						String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-						MasterInterface.guiInterface.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
-						GL11.glPopMatrix();
+					}else if(!internalLightingEnabled){
+						internalLightingEnabled = true;
+						setInternalLightingState(internalLightingEnabled);
 					}
+					
+					GL11.glPushMatrix();
+					//Translate to the position to render.
+					GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
+					//First rotate 180 along the X-axis to get us rendering right-side up.
+					GL11.glRotatef(180F, 1, 0, 0);
+					//Next, apply rotations.  Y is inverted due to the inverted X axis.
+					GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
+					GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
+					GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
+					//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
+					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+					//Finally, render the text.
+					String inheritedColor = provider.getSecondaryTextColor();
+					String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
+					MasterInterface.guiInterface.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+					GL11.glPopMatrix();
 				}
 			}
 			

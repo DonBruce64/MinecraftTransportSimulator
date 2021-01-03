@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.vehicles.parts;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -14,14 +14,18 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.rendering.components.AnimationsPart;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
-import minecrafttransportsimulator.rendering.components.VehicleAnimations;
-import minecrafttransportsimulator.sound.ISoundProvider;
+import minecrafttransportsimulator.rendering.components.IAnimationProvider;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
+import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -35,8 +39,9 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public abstract class APart implements ISoundProvider{
+public abstract class APart implements ISoundProviderComplex, IAnimationProvider, ITextProvider{
 	private static final Point3d ZERO_POINT = new Point3d(0, 0, 0);
+	private static final AnimationsPart animator = new AnimationsPart();
 	
 	//JSON properties.
 	public final JSONPart definition;
@@ -51,12 +56,11 @@ public abstract class APart implements ISoundProvider{
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
-	/**List containing text lines for saved text.**/
-	public final List<String> textLines = new ArrayList<String>();
+	/**Map containing text objects and their current associated text.**/
+	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	//Runtime variables.
-	private final List<DurationDelayClock> animations = new ArrayList<DurationDelayClock>();
-	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
+	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	public final Point3d totalOffset;
 	public final Point3d totalRotation;
 	public final Point3d worldPos;
@@ -79,8 +83,8 @@ public abstract class APart implements ISoundProvider{
 		
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				textLines.add(data.getString("textLine" + i));
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
 			}
 		}
 		
@@ -102,7 +106,7 @@ public abstract class APart implements ISoundProvider{
 		//Create movement animation clocks.
 		if(vehicleDefinition.animations != null){
 			for(JSONAnimationDefinition animation : vehicleDefinition.animations){
-				animations.add(new DurationDelayClock(animation));
+				clocks.add(new DurationDelayClock(animation));
 			}
 		}
 	}
@@ -163,13 +167,6 @@ public abstract class APart implements ISoundProvider{
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
 		}
 		worldPos.setTo(totalOffset).rotateFine(vehicle.angles).add(vehicle.position);
-
-		//Update sound variables.
-		soundPosition.rewind();
-		soundPosition.put((float) worldPos.x);
-		soundPosition.put((float) worldPos.y);
-		soundPosition.put((float) worldPos.z);
-		soundPosition.flip();
 	}
 	
 	/**
@@ -179,58 +176,40 @@ public abstract class APart implements ISoundProvider{
 	public final Point3d getPositionOffset(float partialTicks){
 		boolean inhibitAnimations = false;
 		Point3d rollingOffset = new Point3d(0D, 0D, 0D);
-		if(!animations.isEmpty()){
+		if(!clocks.isEmpty()){
 			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
-			for(DurationDelayClock animation : animations){
-				JSONAnimationDefinition definition = animation.definition;
-				if(definition.animationType.equals("inhibitor")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+			for(DurationDelayClock clock : clocks){
+				JSONAnimationDefinition animation = clock.definition;
+				if(animation.animationType.equals("inhibitor")){
+					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 						inhibitAnimations = true;
 					}
-				}else if(definition.animationType.equals("activator")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+				}else if(animation.animationType.equals("activator")){
+					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 						inhibitAnimations = false;
 					}
 				}else if(!inhibitAnimations){
-					if(definition.animationType.equals("rotation")){
+					if(animation.animationType.equals("rotation")){
 						//Found rotation.  Get angles that needs to be applied.
-						double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-						Point3d appliedRotation = new Point3d(0D, 0D, 0D);
-						if(definition.axis.x != 0){
-							appliedRotation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
-						}
-						if(definition.axis.y != 0){
-							appliedRotation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-						}
-						if(definition.axis.z != 0){
-							appliedRotation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-						}
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						Point3d appliedRotation = animation.axis.copy().multiply(variableValue);
 						
 						//Check if we need to apply a translation based on this rotation.
-						if(!definition.centerPoint.isZero()){
+						if(!animation.centerPoint.isZero()){
 							//Use the center point as a vector we rotate to get the applied offset.
 							//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-							rollingOffset.add(definition.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(definition.centerPoint).rotateFine(rollingRotation));
+							rollingOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(rollingRotation));
 						}
 						
 						//Apply rotation.
 						rollingRotation.add(appliedRotation);
-					}else if(definition.animationType.equals("translation")){
+					}else if(animation.animationType.equals("translation")){
 						//Found translation.  This gets applied in the translation axis direction directly.
 						//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-						double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-						Point3d appliedTranslation = new Point3d(0D, 0D, 0D);
-						if(definition.axis.x != 0){
-							appliedTranslation.x = VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute);
-						}
-						if(definition.axis.y != 0){
-							appliedTranslation.y = VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-						}
-						if(definition.axis.z != 0){
-							appliedTranslation.z = VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-						}
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						Point3d appliedTranslation = animation.axis.copy().multiply(variableValue);
 						rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 					}
 				}
@@ -250,31 +229,23 @@ public abstract class APart implements ISoundProvider{
 	public final Point3d getPositionRotation(float partialTicks){
 		boolean inhibitAnimations = false;
 		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
-		if(!animations.isEmpty()){
-			for(DurationDelayClock animation : animations){
-				JSONAnimationDefinition definition = animation.definition;
-				if(definition.animationType.equals("inhibitor")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+		if(!clocks.isEmpty()){
+			for(DurationDelayClock clock : clocks){
+				JSONAnimationDefinition animation = clock.definition;
+				if(animation.animationType.equals("inhibitor")){
+					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 						inhibitAnimations = true;
 					}
-				}else if(definition.animationType.equals("activator")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					if(variableValue >= definition.clampMin && variableValue <= definition.clampMax){
+				}else if(animation.animationType.equals("activator")){
+					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 						inhibitAnimations = false;
 					}
 				}
-				if(!inhibitAnimations && definition.animationType.equals("rotation")){
-					double variableValue = animation.getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable, partialTicks, vehicle, this));
-					if(definition.axis.x != 0){
-						rollingRotation.x += VehicleAnimations.clampAndScale(variableValue, definition.axis.x, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
-					if(definition.axis.y != 0){
-						rollingRotation.y += VehicleAnimations.clampAndScale(variableValue, definition.axis.y, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
-					if(definition.axis.z != 0){
-						rollingRotation.z += VehicleAnimations.clampAndScale(variableValue, definition.axis.z, definition.offset, definition.clampMin, definition.clampMax, definition.absolute); 
-					}
+				if(!inhibitAnimations && animation.animationType.equals("rotation")){
+					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+					rollingRotation.add(animation.axis.x*variableValue, animation.axis.y*variableValue, animation.axis.z*variableValue);
 				}
 			}
 		}
@@ -335,8 +306,8 @@ public abstract class APart implements ISoundProvider{
 	public IWrapperNBT getData(){
 		IWrapperNBT data = MasterLoader.coreInterface.createNewTag();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textLine" + i, textLines.get(i));
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
 			}
 		}
 		return data;
@@ -348,7 +319,7 @@ public abstract class APart implements ISoundProvider{
 	
 
 	
-	//--------------------START OF SOUND CODE--------------------
+	//--------------------START OF SOUND AND ANIMATION CODE--------------------
 	@Override
 	public void updateProviderSound(SoundInstance sound){
 		if(!this.isValid || !vehicle.isValid){
@@ -358,10 +329,10 @@ public abstract class APart implements ISoundProvider{
 	
 	@Override
 	public void startSounds(){}
-    
+	
 	@Override
-    public FloatBuffer getProviderPosition(){
-		return soundPosition;
+    public Point3d getProviderPosition(){
+		return worldPos;
 	}
     
 	@Override
@@ -372,5 +343,35 @@ public abstract class APart implements ISoundProvider{
 	@Override
     public IWrapperWorld getProviderWorld(){
 		return vehicle.getProviderWorld();
+	}
+	
+	@Override
+    public AAnimationsBase getAnimationSystem(){
+		return animator;
+	}
+	
+	@Override
+	public float getLightPower(){
+		return vehicle.getLightPower();
+	}
+	
+	@Override
+	public Set<String> getActiveVariables(){
+		return vehicle.getActiveVariables();
+	}
+	
+	@Override
+	public Map<JSONText, String> getText(){
+		return text;
+	}
+	
+	@Override
+	public String getSecondaryTextColor(){
+		return vehicle.getSecondaryTextColor();
+	}
+	
+	@Override
+	public boolean renderTextLit(){
+		return vehicle.renderTextLit();
 	}
 }

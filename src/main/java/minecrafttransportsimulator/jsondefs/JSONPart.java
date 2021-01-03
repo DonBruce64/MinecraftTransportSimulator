@@ -23,6 +23,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public List<VehicleCollisionBox> collision;
     public List<VehicleDoor> doors;
     public List<VehicleConnection> connections;
+    //TODO make this regular rendering when parts are all converted.
     public VehicleRendering rendering;
     
     @Deprecated

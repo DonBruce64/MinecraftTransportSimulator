@@ -15,7 +15,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
@@ -25,13 +25,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
-public class ItemRoadComponent extends AItemPack<JSONRoadComponent> implements IItemBlock{
+public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
 	private final Map<IWrapperPlayer, Point3i> lastPositionClicked = new HashMap<IWrapperPlayer, Point3i>();
 	private final Map<IWrapperPlayer, Double> lastRotationClicked = new HashMap<IWrapperPlayer, Double>();
 	private final Map<IWrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<IWrapperPlayer, RoadClickData>();
 	
-	public ItemRoadComponent(JSONRoadComponent definition){
-		super(definition);
+	public ItemRoadComponent(JSONRoadComponent definition, String subName){
+		super(definition, subName);
 	}
 	
 	@Override

@@ -1,20 +1,31 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.rendering.components.AnimationsPole;
+import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
  * 
  * @author don_bruce
  */
-public abstract class ATileEntityPole_Component{
-	
+public abstract class ATileEntityPole_Component implements IAnimationProvider{
+	public final TileEntityPole core;
 	public final ItemPoleComponent item;
 	public final JSONPoleComponent definition;
+	public final Set<String> activeVariables = new HashSet<String>();
 	
-	public ATileEntityPole_Component(ItemPoleComponent item){
+	private static final AnimationsPole animator = new AnimationsPole();
+	
+	public ATileEntityPole_Component(TileEntityPole core, ItemPoleComponent item){
+		this.core = core;
 		this.item = item;
 		this.definition = item.definition;
 	}
@@ -26,19 +37,28 @@ public abstract class ATileEntityPole_Component{
 	 */
 	public abstract float lightLevel();
 	
-	/**
-	 *  Gets the text for this component.  May return null if
-	 *  this component doesn't have any.
-	 */
-	public List<String> getTextLines(){
-		return null;
+	@Override
+    public Point3d getProviderPosition(){
+		return core.doublePosition;
 	}
 	
-	/**
-	 *  Sets the text for this component from the passed-in list.
-	 *  This is a valid operation even on components that don't have
-	 *  text.  Null may be passed-in here on components that do
-	 *  have text.
-	 */
-	public void setTextLines(List<String> textLines){}
+	@Override
+    public IWrapperWorld getProviderWorld(){
+		return core.world;
+	}
+	
+	@Override
+    public AAnimationsBase getAnimationSystem(){
+		return animator;
+	}
+	
+	@Override
+	public float getLightPower(){
+		return 1.0F;
+	}
+	
+	@Override
+	public Set<String> getActiveVariables(){
+		return activeVariables;
+	}
 }

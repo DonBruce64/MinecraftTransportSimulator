@@ -46,14 +46,14 @@ public class PacketVehicleTextChange extends APacketVehicle{
 		int vehicleLines = 0;
 		if(vehicle.definition.rendering.textObjects != null){
 			for(int i=0; i<vehicle.definition.rendering.textObjects.size(); ++i){
-				vehicle.textLines.set(i, textLines.get(i));
+				vehicle.text.put(vehicle.definition.rendering.textObjects.get(i), textLines.get(i));
 				++vehicleLines;
 			}
 		}
 		for(APart part : vehicle.parts){
 			if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
 				for(int i=0; i<part.definition.rendering.textObjects.size(); ++i){
-					part.textLines.set(i, textLines.get(i + vehicleLines));
+					part.text.put(part.definition.rendering.textObjects.get(i), textLines.get(i + vehicleLines));
 				}
 			}
 		}

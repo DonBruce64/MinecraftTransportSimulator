@@ -11,7 +11,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -75,19 +75,19 @@ public class RenderEventHandler{
 		    			//Do custom camera, or do normal rendering.
 		    			if(enableCustomCameras){
 		    				runningCustomCameras = true;
-		    				VehicleCameraObject camera = null;
+		    				JSONCameraObject camera = null;
 		    				APart optionalPart = null;
 		    				int camerasChecked = 0;
 		    				
 		    				//Get the next custom camera the vehicle has.
 		    				if(vehicle.definition.rendering.cameraObjects != null){
 		    					//Iterate over all vehicle cameras.  If they are deactivated, don't try to use them.
-		    					for(VehicleCameraObject testCamera : vehicle.definition.rendering.cameraObjects){
+		    					for(JSONCameraObject testCamera : vehicle.definition.rendering.cameraObjects){
 		    						boolean cameraActive = true;
 		    						if(testCamera.animations != null){
 			    						for(JSONAnimationDefinition animation : testCamera.animations){
 			            					if(animation.animationType.equals("visibility")){
-			            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, null); 
+			            						double value = vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, null, partialTicks); 
 			            						if(value < animation.clampMin || value > animation.clampMax){
 			            							//Encountered an inactive camera.  Skip it.
 			            							cameraActive = false;
@@ -112,12 +112,12 @@ public class RenderEventHandler{
 		    					for(APart part : vehicle.parts){
 		    						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
 		    							//Iterate over all part cameras.  If they are deactivated, don't try to use them.
-				    					for(VehicleCameraObject testCamera : part.definition.rendering.cameraObjects){
+				    					for(JSONCameraObject testCamera : part.definition.rendering.cameraObjects){
 				    						boolean cameraActive = true;
 				    						if(testCamera.animations != null){
 					    						for(JSONAnimationDefinition animation : testCamera.animations){
 					            					if(animation.animationType.equals("visibility")){
-					            						double value = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, part); 
+					            						double value = part.getAnimationSystem().getAnimatedVariableValue(part, animation, 0, null, partialTicks); 
 					            						if(value < animation.clampMin || value > animation.clampMax){
 					            							//Encountered an inactive camera.  Skip it.
 					            							cameraActive = false;
@@ -160,21 +160,24 @@ public class RenderEventHandler{
 		    					if(camera.animations != null){
 		    						boolean inhibitAnimations = false;
 		            				for(JSONAnimationDefinition animation : camera.animations){
+		            					double variableValue;
+		            					if(optionalPart != null){
+		            						variableValue = optionalPart.getAnimationSystem().getAnimatedVariableValue(optionalPart, animation, 0, null, partialTicks);
+		            					}else{
+		            						variableValue = vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, null, partialTicks);
+		            					}
 		            					if(animation.animationType.equals("inhibitor")){
-		            						double variableValue = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, optionalPart);
 		            						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 		            							inhibitAnimations = true;
 		            						}
 		            					}else if(animation.animationType.equals("activator")){
-		            						double variableValue = VehicleAnimations.getVariableValue(animation.variable, partialTicks, vehicle, optionalPart);
 		            						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 		            							inhibitAnimations = false;
 		            						}
 		            					}else if(!inhibitAnimations){
 		            						if(animation.animationType.equals("rotation")){
-			            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-			            						if(animationValue != 0){
-			            							Point3d rotationAmount = animation.axis.copy().normalize().multiply(animationValue);
+			            						if(variableValue != 0){
+			            							Point3d rotationAmount = animation.axis.copy().normalize().multiply(variableValue);
 			            							Point3d rotationOffset = camera.pos.copy().subtract(animation.centerPoint);
 			            							if(!rotationOffset.isZero()){
 			            								cameraPosition.subtract(rotationOffset).add(rotationOffset.rotateFine(rotationAmount));
@@ -182,9 +185,8 @@ public class RenderEventHandler{
 			            							cameraRotation.add(rotationAmount);
 			            						}
 			            					}else if(animation.animationType.equals("translation")){
-			            						double animationValue = VehicleAnimations.getVariableValue(animation.variable, animation.axis.length(), animation.offset, animation.clampMin, animation.clampMax, animation.absolute, partialTicks, vehicle, optionalPart);
-			            						if(animationValue != 0){
-			            							Point3d translationAmount = animation.axis.copy().normalize().multiply(animationValue).rotateFine(cameraRotation);
+			            						if(variableValue != 0){
+			            							Point3d translationAmount = animation.axis.copy().normalize().multiply(variableValue).rotateFine(cameraRotation);
 			            							cameraPosition.add(translationAmount);
 			            						}
 			            					}

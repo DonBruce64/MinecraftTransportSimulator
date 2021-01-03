@@ -1,16 +1,11 @@
 package minecrafttransportsimulator.vehicles.main;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BeaconManager;
@@ -19,6 +14,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -29,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.IRadioProvider;
@@ -52,7 +50,7 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider{
+abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements IRadioProvider, ITextProvider{
 	
 	//External state control.
 	public boolean hornOn;
@@ -72,12 +70,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public String selectedBeaconName;
 	public RadioBeacon selectedBeacon;
 	public FluidTank fuelTank;
-	/**List containing all lights that are powered on (shining).  Created as a set to allow for add calls that don't add duplicates.**/
-	public final Set<LightType> lightsOn = new HashSet<LightType>();
-	/**List containing all active custom variable names that are on.    Created as a set to allow for add calls that don't add duplicates.**/
-	public final Set<String> customsOn = new HashSet<String>();
-	/**List containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
-	public final List<String> textLines = new ArrayList<String>();
+	/**Map containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
+	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	//Part maps.
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
@@ -90,7 +84,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	//Internal radio variables.
 	private final Radio radio;
-	private final FloatBuffer soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	
 	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
 		super(world, wrapper, data);
@@ -106,33 +99,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new FluidTank(data, definition.motorized.fuelCapacity, world.isClient());
 		
-		//Load lights.
-		lightsOn.clear();
-		String lightsOnString = data.getString("lightsOn");
-		while(!lightsOnString.isEmpty()){
-			String lightName = lightsOnString.substring(0, lightsOnString.indexOf(','));
-			for(LightType light : LightType.values()){
-				if(light.name().equals(lightName)){
-					lightsOn.add(light);
-					break;
-				}
-			}
-			lightsOnString = lightsOnString.substring(lightsOnString.indexOf(',') + 1);
-		}
-		
-		//Load custom variables.
-		customsOn.clear();
-		String customsOnString = data.getString("customsOn");
-		while(!customsOnString.isEmpty()){
-			String customName = customsOnString.substring(0, customsOnString.indexOf(','));
-			customsOn.add(customName);
-			customsOnString = customsOnString.substring(customsOnString.indexOf(',') + 1);
-		}
-		
 		//Load text.
 		if(definition.rendering.textObjects != null){
-			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				textLines.add(data.getString("textLine" + i));
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
 			}
 		}
 		
@@ -194,12 +164,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			if(towedByVehicle != null && !towedByVehicle.isValid){
 				towedByVehicle = null;
 			}else{
-				//If we are being towed update our lights to match the vehicle we are being towed by.
+				//If we are being towed update our variables to match the vehicle we are being towed by.
 				//Also set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
 				if(towedByVehicle != null){
-					lightsOn.clear();
-					lightsOn.addAll(towedByVehicle.lightsOn);
+					variablesOn.clear();
+					variablesOn.addAll(towedByVehicle.variablesOn);
 					parkingBrakeOn = false;
 					brake = towedByVehicle.brake;
 				}else{
@@ -208,10 +178,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			}
 		}else{
 			//Turn on the DRLs if we have an engine on.
-			lightsOn.remove(LightType.DAYTIMELIGHT);
+			variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
 			for(PartEngine engine : engines.values()){
 				if(engine.state.running){
-					lightsOn.add(LightType.DAYTIMELIGHT);
+					variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
 					break;
 				}
 			}
@@ -219,8 +189,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		
 		//Set electric usage based on light status.
 		if(electricPower > 2){
-			for(LightType light : lightsOn){
-				if(light.hasBeam){
+			for(LightType light : LightType.values()){
+				if(light.hasBeam && light.isInCollection(variablesOn)){
 					electricUsage += 0.0005F;
 				}
 			}
@@ -250,13 +220,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 			}
 		}
 		missilesIncoming.putAll(tempMap);
-		
-		//Update sound variables.
-		soundPosition.rewind();
-		soundPosition.put((float) position.x);
-		soundPosition.put((float) position.y);
-		soundPosition.put((float) position.z);
-		soundPosition.flip();
 	}
 	
 	@Override
@@ -311,15 +274,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public boolean isLitUp(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && (lightsOn.contains(LightType.DAYTIMELIGHT) ? lightsOn.size() > 1 : !lightsOn.isEmpty());
-	}
-	
-	 /**
-     * Returns true if the interior lights on this vehicle are on.  This is taken to mean the interior
-     * lights that cause the instrument cluster to light up, as well as any outer text markings.
-     */
-	public boolean areInteriorLightsOn(){
-		return (lightsOn.contains(LightType.NAVIGATIONLIGHT) || lightsOn.contains(LightType.RUNNINGLIGHT) || lightsOn.contains(LightType.HEADLIGHT)) && electricPower > 3;
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.DAYTIMELIGHT.isInCollection(variablesOn);
 	}
 	
 	@Override
@@ -418,7 +373,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		}
 	}
 	
-	//-----START OF SOUND CODE-----
+	//-----START OF SOUND AND ANIMATION CODE-----
 	@Override
 	public void startSounds(){
 		if(hornOn){
@@ -444,23 +399,38 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
     
 	@Override
-    public FloatBuffer getProviderPosition(){
-		return soundPosition;
-	}
-    
-	@Override
     public Point3d getProviderVelocity(){
 		return motion;
 	}
 	
 	@Override
-    public IWrapperWorld getProviderWorld(){
-		return world;
+	public Radio getRadio(){
+		return radio;
 	}
 	
 	@Override
-	public Radio getRadio(){
-		return radio;
+	public float getLightPower(){
+		return (float) (electricPower/12F);
+	}
+	
+	@Override
+	public Map<JSONText, String> getText(){
+		return text;
+	}
+	
+	@Override
+	public String getSecondaryTextColor(){
+		for(JSONSubDefinition subDefinition : definition.definitions){
+			if(subDefinition.subName.equals(currentSubName)){
+				return subDefinition.secondColor;
+			}
+		}
+		throw new IllegalArgumentException("ERROR: Tried to get the definition for a vehicle of subName:" + currentSubName + ".  But that isn't a valid subName for the vehicle:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+	}
+	
+	@Override
+	public boolean renderTextLit(){
+		return (LightType.NAVIGATIONLIGHT.isInCollection(variablesOn) || LightType.RUNNINGLIGHT.isInCollection(variablesOn) || LightType.HEADLIGHT.isInCollection(variablesOn)) && electricPower > 3;
 	}
 	
 	@Override
@@ -475,21 +445,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		data.setString("selectedBeaconName", selectedBeaconName);
 		fuelTank.save(data);
 		
-		String lightsOnString = "";
-		for(LightType light : lightsOn){
-			lightsOnString += light.name() + ",";
-		}
-		data.setString("lightsOn", lightsOnString);
-		
-		String customsOnString = "";
-		for(String custom : customsOn){
-			lightsOnString += custom + ",";
-		}
-		data.setString("customsOn", customsOnString);
-		
 		if(definition.rendering.textObjects != null){
-			for(byte i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textLine" + i, textLines.get(i));
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
 			}
 		}
 		

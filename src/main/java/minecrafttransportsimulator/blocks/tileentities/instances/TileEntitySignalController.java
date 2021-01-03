@@ -8,10 +8,9 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight.LightState;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal.SignalState;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -185,16 +184,24 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		}
 		Iterator<Point3i> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){
-			TileEntityPole signal = (TileEntityPole) world.getTileEntity(iterator.next());
-			if(signal != null){
-				for(Axis axis : signal.components.keySet()){
-					ATileEntityPole_Component component = signal.components.get(axis);
+			TileEntityPole pole = (TileEntityPole) world.getTileEntity(iterator.next());
+			if(pole != null){
+				for(Axis axis : pole.components.keySet()){
+					ATileEntityPole_Component component = pole.components.get(axis);
 					if(component instanceof TileEntityPole_TrafficSignal){
-						((TileEntityPole_TrafficSignal) component).state = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? state.mainSignalState : state.crossSignalState;
+						TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
+						signal.lightOn = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? currentOpState.mainLight : currentOpState.crossLight;
+						signal.activeVariables.clear();
+						signal.activeVariables.add(signal.lightOn.lowercaseName);
 					}else if(component instanceof TileEntityPole_StreetLight){
-						if(((TileEntityPole_StreetLight) component).state.equals(LightState.ON) ^ lightsOn){
-							((TileEntityPole_StreetLight) component).state = lightsOn ? LightState.ON : LightState.OFF;
-							signal.updateLightState();
+						TileEntityPole_StreetLight light = (TileEntityPole_StreetLight) component;
+						if(light.active ^ lightsOn){
+							light.active = lightsOn;
+							light.activeVariables.clear();
+							if(light.active){
+								light.activeVariables.add(LightType.STREETLIGHT.lowercaseName);
+							}
+							pole.updateLightState();
 						}
 					}
 				}
@@ -226,19 +233,19 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	}
 	
 	public static enum OpState{
-		GREEN_MAIN_RED_CROSS(SignalState.GREEN, SignalState.RED),
-		YELLOW_MAIN_RED_CROSS(SignalState.YELLOW, SignalState.RED),
-		RED_MAIN_RED_CROSS(SignalState.RED, SignalState.RED),
-		RED_MAIN_GREEN_CROSS(SignalState.RED, SignalState.GREEN),
-		RED_MAIN_YELLOW_CROSS(SignalState.RED, SignalState.YELLOW),
-		RED_MAIN2_RED_CROSS2(SignalState.RED, SignalState.RED);
+		GREEN_MAIN_RED_CROSS(LightType.GOLIGHT, LightType.STOPLIGHT),
+		YELLOW_MAIN_RED_CROSS(LightType.CAUTIONLIGHT, LightType.STOPLIGHT),
+		RED_MAIN_RED_CROSS(LightType.STOPLIGHT, LightType.STOPLIGHT),
+		RED_MAIN_GREEN_CROSS(LightType.STOPLIGHT, LightType.GOLIGHT),
+		RED_MAIN_YELLOW_CROSS(LightType.STOPLIGHT, LightType.CAUTIONLIGHT),
+		RED_MAIN2_RED_CROSS2(LightType.STOPLIGHT, LightType.STOPLIGHT);
 		
-		public final SignalState mainSignalState;
-		public final SignalState crossSignalState;
+		public final LightType mainLight;
+		public final LightType crossLight;
 		
-		private OpState(SignalState mainSignalState, SignalState crossSignalState){
-			this.mainSignalState = mainSignalState;
-			this.crossSignalState = crossSignalState;
+		private OpState(LightType mainLight, LightType crossLight){
+			this.mainLight = mainLight;
+			this.crossLight = crossLight;
 		}
 	}
 }

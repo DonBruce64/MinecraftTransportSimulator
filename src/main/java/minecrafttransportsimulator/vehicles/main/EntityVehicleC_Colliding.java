@@ -2,7 +2,6 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Point3d verticalVector = new Point3d(0, 0, 0);
 	public final Point3d sideVector = new Point3d(0, 0, 0);
 	public final Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
-	public final Set<String> doorsOpen = new HashSet<String>();
 	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
@@ -87,14 +85,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Create door boxes, and set states based on saved data.
 		if(definition.doors != null){
-			doorsOpen.clear();
 			for(VehicleDoor door : definition.doors){
 				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
 				vehicleDoorBoxes.put(box, door);
 				collisionBoxes.add(box);
-				if(data.getBoolean("doorsOpen_" + door.name)){
-					doorsOpen.add(door.name);
-				}
 			}
 			for(APart part : parts){
 				if(part.definition.doors != null){
@@ -104,9 +98,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 						BoundingBox box = new BoundingBox(doorOffsetCenter, doorOffsetCenter.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
 						partDoors.put(box, door);
 						collisionBoxes.add(box);
-						if(data.getBoolean("doorsOpen_" + door.name)){
-							doorsOpen.add(door.name);
-						}
 					}
 					partDoorBoxes.put(part, partDoors);
 				}
@@ -132,14 +123,15 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Auto-close any open doors that should be closed.
-		if(velocity > 0.5 && !doorsOpen.isEmpty()){
-			Iterator<String> doorIterator = doorsOpen.iterator();
-			while(doorIterator.hasNext()){
-				String openDoorName = doorIterator.next();
+		//Only do this once a second to prevent lag.
+		if(velocity > 0.5 && ticksExisted%20 == 0){
+			Iterator<String> variableIterator = variablesOn.iterator();
+			while(variableIterator.hasNext()){
+				String openDoorName = variableIterator.next();
 				for(VehicleDoor doorDef : definition.doors){
 					if(doorDef.name.equals(openDoorName)){
 						if(doorDef.closeOnMovement){
-							doorIterator.remove();
+							variableIterator.remove();
 						}
 						break;
 					}
@@ -161,7 +153,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Update door collision boxes.
 		for(Entry<BoundingBox, VehicleDoor> doorEntry : vehicleDoorBoxes.entrySet()){
-			if(doorsOpen.contains(doorEntry.getValue().name)){
+			if(variablesOn.contains(doorEntry.getValue().name)){
 				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
 			}else{
 				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
@@ -170,7 +162,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		for(APart part : parts){
 			if(partDoorBoxes.containsKey(part)){
 				for(Entry<BoundingBox, VehicleDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
-					if(doorsOpen.contains(doorEntry.getValue().name)){
+					if(variablesOn.contains(doorEntry.getValue().name)){
 						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
 					}else{
 						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
@@ -291,11 +283,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(seat.vehicleDefinition.linkedDoors != null){
 				for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
-					if(doorsOpen.contains(linkedDoor)){
+					if(variablesOn.contains(linkedDoor)){
 						for(VehicleDoor doorDef : definition.doors){
 							if(doorDef.name.equals(linkedDoor)){
 								if(doorDef.activateOnSeated){
-									doorsOpen.remove(linkedDoor);
+									variablesOn.remove(linkedDoor);
 								}
 								break;
 							}
@@ -305,7 +297,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 								for(VehicleDoor doorDef : part.definition.doors){
 									if(doorDef.name.equals(linkedDoor)){
 										if(doorDef.activateOnSeated){
-											doorsOpen.remove(linkedDoor);
+											variablesOn.remove(linkedDoor);
 										}
 										break;
 									}
@@ -326,11 +318,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 		if(seat.vehicleDefinition.linkedDoors != null){
 			for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
-				if(!doorsOpen.contains(linkedDoor)){
+				if(!variablesOn.contains(linkedDoor)){
 					for(VehicleDoor doorDef : definition.doors){
 						if(doorDef.name.equals(linkedDoor)){
 							if(doorDef.activateOnSeated){
-								doorsOpen.add(linkedDoor);
+								variablesOn.add(linkedDoor);
 							}
 							break;
 						}
@@ -340,7 +332,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 							for(VehicleDoor doorDef : part.definition.doors){
 								if(doorDef.name.equals(linkedDoor)){
 									if(doorDef.activateOnSeated){
-										doorsOpen.add(linkedDoor);
+										variablesOn.add(linkedDoor);
 									}
 									break;
 								}
@@ -420,6 +412,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		recalculatePartSlots();
 	}
 	
+	@Override
+	public Set<String> getActiveVariables(){
+		return variablesOn;
+	}
+	
 	/**
 	 * Call to re-create the list of all valid part slot boxes.
 	 * This should be called after part addition or part removal.
@@ -442,7 +439,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public boolean areDoorsBlocking(VehiclePart partDef, IWrapperPlayer player){
 		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
 			for(String door : partDef.linkedDoors){
-				if(doorsOpen.contains(door)){
+				if(variablesOn.contains(door)){
 					return false;
 				}
 			}
@@ -541,15 +538,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		Iterator<IWrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
 		while(riderIterator.hasNext()){
 			removeRider(riderIterator.next(), riderIterator);
-		}
-	}
-	
-	@Override
-	public void save(IWrapperNBT data){
-		super.save(data);
-		//Save open doors.
-		for(String doorName : doorsOpen){
-			data.setBoolean("doorsOpen_" + doorName, true);
 		}
 	}
 }

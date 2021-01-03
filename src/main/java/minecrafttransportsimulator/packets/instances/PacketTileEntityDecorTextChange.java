@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
@@ -42,7 +43,13 @@ public class PacketTileEntityDecorTextChange extends APacketTileEntity<TileEntit
 	
 	@Override
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityDecor decor){
-		decor.setTextLines(textLines);
+		if(decor instanceof TileEntityBeacon){
+			((TileEntityBeacon) decor).updateBeaconToText(textLines);
+		}else{
+			for(int i=0; i<textLines.size(); ++i){
+				decor.text.put(decor.definition.rendering.textObjects.get(i), textLines.get(i));
+			}
+		}
 		return true;
 	}
 }

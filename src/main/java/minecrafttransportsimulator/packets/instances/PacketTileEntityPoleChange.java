@@ -14,6 +14,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -95,9 +96,11 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
 					IWrapperNBT data = null;
-					if(component.getTextLines() != null){
+					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
 						data = MasterLoader.coreInterface.createNewTag();
-						data.setStrings("textLines", component.getTextLines());
+						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
+							data.setString("textLine" + i, ((ITextProvider) component).getText().get(component.definition.rendering.textObjects.get(i)));
+						}
 					}
 					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.item, data)){
 						pole.components.remove(axis);
@@ -106,7 +109,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					}
 				}
 			}else if(componentItem == null && textLines == null){
-				if(pole.components.get(axis).getTextLines() != null){
+				if(pole.components.get(axis) instanceof ITextProvider && pole.components.get(axis).definition.rendering != null && pole.components.get(axis).definition.rendering.textObjects != null){
 					if(world.isClient()){
 						MasterLoader.guiInterface.openGUI(new GUITextEditor(pole, axis));
 					}else{
@@ -118,15 +121,22 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			}if(componentItem == null && textLines != null){
 				//This is a packet attempting to change component text.  Do so now.
 				if(pole.components.containsKey(axis)){
-					pole.components.get(axis).setTextLines(textLines);
+					ATileEntityPole_Component component = pole.components.get(axis);
+					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
+						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
+							((ITextProvider) component).getText().put(component.definition.rendering.textObjects.get(i), textLines.get(i));
+						}
+					}
 					return true;
 				}
 			}else if(componentItem != null && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(componentItem);
+				ATileEntityPole_Component newComponent = pole.createComponent(componentItem);
 				pole.components.put(axis, newComponent);
-				if(textLines != null && newComponent.getTextLines() != null){
-					newComponent.setTextLines(textLines);
+				if(textLines != null && newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
+					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
+						((ITextProvider) newComponent).getText().put(newComponent.definition.rendering.textObjects.get(i), textLines.get(i));
+					}
 				}
 				pole.updateLightState();
 				if(!player.isCreative()){

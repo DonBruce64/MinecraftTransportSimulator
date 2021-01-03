@@ -14,7 +14,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public class SoundInstance{
-	public final ISoundProvider provider;
+	public final ISoundProviderSimple provider;
 	public final String soundName;
 	public final boolean looping;
 	public final Radio radio;
@@ -25,23 +25,25 @@ public class SoundInstance{
 	public float pitch = 1.0F;
 	public boolean stopSound = false;
 	
-	public SoundInstance(ISoundProvider provider, String soundName){
-		this(provider, soundName, false);
+	public SoundInstance(ISoundProviderSimple provider, String soundName){
+		this.provider = provider;
+		this.soundName = soundName;
+		this.looping = false;
+		this.radio = null;
 	}
 	
-	public SoundInstance(ISoundProvider provider, String soundName, boolean looping){
-		this(provider, soundName, looping, null);
-	}
-
-	public SoundInstance(ISoundProvider provider, String soundName, boolean looping, Radio radio){
+	public SoundInstance(ISoundProviderComplex provider, String soundName, boolean looping){
 		this.provider = provider;
 		this.soundName = soundName;
 		this.looping = looping;
-		if(radio == null || (radio != null && provider instanceof IRadioProvider)){
-			this.radio = radio;
-		}else{
-			throw new IllegalArgumentException("ERROR: A sound played from a radio was attempted to be added to an object that isn't an instance of " + IRadioProvider.class.getSimpleName());
-		}
+		this.radio = null;
+	}
+
+	public SoundInstance(IRadioProvider provider, String soundName, boolean looping, Radio radio){
+		this.provider = provider;
+		this.soundName = soundName;
+		this.looping = looping;
+		this.radio = radio;
 	}
 	
 	/**

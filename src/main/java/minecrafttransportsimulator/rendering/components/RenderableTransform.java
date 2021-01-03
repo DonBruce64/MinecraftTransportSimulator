@@ -5,8 +5,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a set of transforms that can be applied prior to rendering an object.
  * No rendering is performed in this class, as such rendering may change and is left to the calling class.
@@ -47,29 +45,28 @@ public class RenderableTransform{
 	}
 	
 	/**
-	 *  Does all the transforms for this object.  Vehicle and part are passed-in here to give
-	 *  the animation system information on how to apply the transforms.  If the object should
-	 *  render, return true. If the object should not render due to a transform, return false.
+	 *  Does all the transforms for this object.  If the object should render, return true. 
+	 *  If the object should not render due to a transform, return false.
 	 */
-	public boolean doPreRenderTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public boolean doPreRenderTransforms(IAnimationProvider provider, float partialTicks){
 		double priorOffset = 0;
 		boolean inhibitAnimations = false;
 		for(ATransform transform : transforms){
 			if(inhibitAnimations){
-				if(transform.shouldActivate(vehicle, optionalPart, partialTicks)){
+				if(transform.shouldActivate(provider, partialTicks)){
 					inhibitAnimations = false;
 				}
 			}else{
-				if(transform.shouldInhibit(vehicle, optionalPart, partialTicks)){
+				if(transform.shouldInhibit(provider, partialTicks)){
 					inhibitAnimations = true;
-				}else if(!transform.shouldRender(vehicle, optionalPart, partialTicks)){
+				}else if(!transform.shouldRender(provider, partialTicks)){
 					return false;
 				}else{
 					//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
 					if(transform.definition != null && transform.definition.addPriorOffset){
-						priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, priorOffset);
+						priorOffset = transform.applyTransform(provider, partialTicks, priorOffset);
 					}else{
-						priorOffset = transform.applyTransform(vehicle, optionalPart, partialTicks, 0);
+						priorOffset = transform.applyTransform(provider, partialTicks, 0);
 					}
 				}
 			}
@@ -81,9 +78,9 @@ public class RenderableTransform{
 	 *  Does post-render transform logic.  This is transform-dependent, and should be done after rendering
 	 *  has been completed.
 	 */
-	public void doPostRenderTransforms(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public void doPostRenderTransforms(IAnimationProvider provider, float partialTicks){
 		for(ATransform transform : transforms){
-			transform.doPostRenderLogic(vehicle, optionalPart, partialTicks);
+			transform.doPostRenderLogic(provider, partialTicks);
 		}
 	}
 }

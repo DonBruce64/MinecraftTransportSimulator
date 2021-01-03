@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Class that when extended allows for a common method of applying
  * transforms.  Transforms are a way to modify the rendering routines
@@ -17,7 +15,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public abstract class ATransform{
 	public final JSONAnimationDefinition definition; 
-	private final Map<EntityVehicleF_Physics, DurationDelayClock> clocks = new HashMap<EntityVehicleF_Physics, DurationDelayClock>();
+	private final Map<IAnimationProvider, DurationDelayClock> clocks = new HashMap<IAnimationProvider, DurationDelayClock>();
 	
 	public ATransform(JSONAnimationDefinition definition){
 		this.definition = definition;
@@ -28,7 +26,7 @@ public abstract class ATransform{
 	 *  By default, all transforms are rendered, but this may be overridden should
 	 *  the object this transform is on need to be made invisible.
 	 */
-	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public boolean shouldRender(IAnimationProvider provider, float partialTicks){
 		return true;
 	}
 	
@@ -37,39 +35,38 @@ public abstract class ATransform{
 	 *  from being rendered. This allows disabling certain animations if this animation's
 	 *  criteria are met.
 	 */
-	public boolean shouldInhibit(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
+	public boolean shouldInhibit(IAnimationProvider provider, float partialTicks){
 		return false;
 	}
 	
 	/*
 	 *  This method should return true if this transform should negate a previous inhibitor.
 	 */
-	public boolean shouldActivate(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
+	public boolean shouldActivate(IAnimationProvider provider, float partialTicks){
 		return false;
 	}
 	
 	/**
 	 *  This method applies any transforms this object has prior to rendering.
-	 *  Vehicle and part (if this model is on a part) is passed-in for state-based transform logic.
 	 *  Passed-in offset may or may not be used depending on the transform.
 	 *  Returned offset should be able to be fed to the next transform down the JSON for its use, if required.
 	 */
-	public abstract double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset);
+	public abstract double applyTransform(IAnimationProvider provider, float partialTicks, double offset);
 	
 	/**
 	 *  This method allows for post-render logic.  This allows for additional transforms,
 	 *  or transform clean-up (say if lighting was modified).
 	 */
-	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){};
+	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){};
 	
 	/**
-	 *  Returns the current animation clock for the passed-in vehicle.  Clocks are not shared between
+	 *  Returns the current animation clock for the passed-in provider.  Clocks are not shared between
 	 *  vehicle to allow each vehicle to have their own running clocks for each animation.
 	 */
-	public DurationDelayClock getClock(EntityVehicleF_Physics vehicle){
-		if(!clocks.containsKey(vehicle)){
-			clocks.put(vehicle, new DurationDelayClock(definition));
+	public DurationDelayClock getClock(IAnimationProvider provider){
+		if(!clocks.containsKey(provider)){
+			clocks.put(provider, new DurationDelayClock(definition));
 		}
-		return clocks.get(vehicle);
+		return clocks.get(provider);
 	}
 }

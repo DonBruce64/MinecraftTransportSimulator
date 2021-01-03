@@ -247,15 +247,11 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public List<JSONAnimationDefinition> animations;
     }
     
-    public class VehicleRendering{
+    public class VehicleRendering extends JSONRendering{
         public String hudTexture;
         public String panelTexture;
         public String panelTextColor;
         public String panelLitTextColor;
-        public List<JSONText> textObjects;
-        public List<JSONAnimatedObject> animatedObjects;
-        public List<VehicleCameraObject> cameraObjects;
-        public List<String> customVariables;
         
         @Deprecated
         public int displayTextMaxLength;
@@ -295,13 +291,5 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public float translationClampMin;
     	public float translationClampMax;
     	public boolean absoluteValue;
-    }
-    
-    public class VehicleCameraObject{
-    	public Point3d pos;
-    	public Point3d rot;
-    	public float fovOverride;
-    	public String overlay;
-    	public List<JSONAnimationDefinition> animations;
     }
 }

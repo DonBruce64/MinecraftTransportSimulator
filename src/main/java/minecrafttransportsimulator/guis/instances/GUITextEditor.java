@@ -20,8 +20,6 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
-import minecrafttransportsimulator.packloading.PackResourceLoader;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -73,23 +71,25 @@ public class GUITextEditor extends AGUIBase{
 		List<String> textLines;
 		textInputBoxes.clear();
 		if(pole != null){
-			TileEntityPole_Sign sign = (TileEntityPole_Sign) pole.components.get(axis);
+			TileEntityPole_Sign component = (TileEntityPole_Sign) pole.components.get(axis);
 			
 			//Add the render to render the sign.
 			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
-			modelRender.modelLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.OBJ, sign.definition.general.modelName != null ? sign.definition.general.modelName : sign.definition.systemName);
-			modelRender.textureLocation = PackResourceLoader.getPackResource(sign.definition, ResourceType.PNG, sign.definition.systemName);
+			modelRender.modelLocation = component.definition.getModelLocation();
+			modelRender.textureLocation = component.definition.getTextureLocation(component.item.subName);
 			
 			//Set text and text objects.
-			textObjects = pole.components.get(axis).definition.general.textObjects;
-			textLines = sign.getTextLines();
+			textObjects = new ArrayList<JSONText>();
+			textLines = new ArrayList<String>();
+			textObjects.addAll(component.getText().keySet());
+			textLines.addAll(component.getText().values());
 			
 			//Add render-able labels for the sign object.
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textObject = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), sign.getTextLines().get(i), TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), textLines.get(i), TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
 					@Override
 					public void renderText(){
 						GL11.glPushMatrix();
@@ -103,29 +103,10 @@ public class GUITextEditor extends AGUIBase{
 				signTextLabels.add(label);
 			}
 		}else if(decor != null){
-			//Create internal textObjects if we don't have them already.
-			//If we do have them, just use them as-is.
-			if(decor.definition.general.textObjects == null){
-				//TODO this should probably be generic...
-				textObjects = new ArrayList<JSONText>();
-				JSONText text = new JSONText();
-				text.fieldName = "Beacon Name";
-				text.maxLength = 5;
-				textObjects.add(text);
-				text = new JSONText();
-				text.fieldName = "Glide Slope (Deg)";
-				text.maxLength = 5;
-				textObjects.add(text);
-				text = new JSONText();
-				text.fieldName = "Bearing (Deg)";
-				text.maxLength = 5;
-				textObjects.add(text);
-			}else{
-				textObjects = decor.definition.general.textObjects;
-			}
-			
-			//Set text lines.
-			textLines = decor.getTextLines();
+			textObjects = new ArrayList<JSONText>();
+			textLines = new ArrayList<String>();
+			textObjects.addAll(decor.getText().keySet());
+			textLines.addAll(decor.getText().values());
 		}else{
 			//Set text and text objects.
 			textObjects = new ArrayList<JSONText>();
@@ -134,7 +115,7 @@ public class GUITextEditor extends AGUIBase{
 			if(vehicle.definition.rendering.textObjects != null){
 				for(JSONText textObject : vehicle.definition.rendering.textObjects){
 					textObjects.add(textObject);
-					textLines.add(vehicle.textLines.get(vehicle.definition.rendering.textObjects.indexOf(textObject)));
+					textLines.add(vehicle.text.get(vehicle.definition.rendering.textObjects.indexOf(textObject)));
 				}
 			}
 			//Add all text objects and lines for all parts on the vehicle.
@@ -142,7 +123,7 @@ public class GUITextEditor extends AGUIBase{
 				if(part.definition.rendering != null && part.definition.rendering.textObjects != null){
 					for(JSONText textObject : part.definition.rendering.textObjects){
 						textObjects.add(textObject);
-						textLines.add(part.textLines.get(part.definition.rendering.textObjects.indexOf(textObject)));
+						textLines.add(part.text.get(part.definition.rendering.textObjects.indexOf(textObject)));
 					}
 				}
 			}

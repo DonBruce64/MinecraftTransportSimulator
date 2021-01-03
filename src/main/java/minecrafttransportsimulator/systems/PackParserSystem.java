@@ -24,7 +24,6 @@ import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -286,8 +285,6 @@ public final class PackParserSystem{
 									AItemPack<?> item;
 				    				switch(classification){
 										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
-										case POLE : item = ((JSONPoleComponent) definition).general.type.equals("core") ? new ItemPole((JSONPoleComponent) definition) : new ItemPoleComponent((JSONPoleComponent) definition); break;
-										case ROAD : item = new ItemRoadComponent((JSONRoadComponent) definition); break;
 										case ITEM : item = new ItemItem((JSONItem) definition); break;
 										case BOOKLET : item = new ItemBooklet((JSONBooklet) definition); break;
 										default : {
@@ -368,6 +365,8 @@ public final class PackParserSystem{
 						case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
 						case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
 						case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
+						case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
+						case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
 						default : {
 							throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
 						}
@@ -489,7 +488,17 @@ public final class PackParserSystem{
     	try{
     		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
     		LegacyCompatSystem.performLegacyCompats(definition);
-    		setupItem(definition.general.type.equals("core") ? new ItemPole(definition) : new ItemPoleComponent(definition), packID, jsonFileName, "", "", ItemClassification.POLE);
+    		for(JSONSubDefinition subDefinition : definition.definitions){
+	    		try{
+	    			if(subDefinition.extraMaterials != null){
+	    				setupItem(new ItemPoleComponent(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
+		    		}else{
+	    				throw new NullPointerException();
+	    			}
+	    		}catch(Exception e){
+	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+	    		}
+    		}
     	}catch(Exception e){
     		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		MasterLoader.coreInterface.logError(e.getMessage());
@@ -498,14 +507,7 @@ public final class PackParserSystem{
     
     /**Packs should call this upon load to add their road components to the mod.**/
     public static void addRoadDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONRoadComponent definition = packParser.fromJson(jsonReader, JSONRoadComponent.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
-    		setupItem(new ItemRoadComponent(definition), packID, jsonFileName, "", "", ItemClassification.ROAD);
-    	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
-    	}
+    	//NOOP.  Packs better get used to that new loader if they want these!
     }
     
     /**Packs should call this upon load to add their decor blocks to the mod.**/

@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a pseudo-animation that disables other animations.
  * This transform will disable the other animations of this
@@ -17,13 +15,13 @@ public class TransformInhibitor extends ATransform{
 	}
 	
 	@Override
-	public boolean shouldInhibit(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks) {
-		double value = definition.offset + getClock(vehicle).getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
+	public boolean shouldInhibit(IAnimationProvider provider, float partialTicks){
+		double value = definition.offset + provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, 0, getClock(provider), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
 	@Override
-	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
+	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
 		//Do nothing.
 		return 0;
 	}

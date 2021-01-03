@@ -16,7 +16,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -392,16 +391,12 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Enable render based on what component we have.
-		if(currentItem.definition instanceof AJSONModelProvider){
-			modelRender.modelLocation = ((AJSONModelProvider<?>) currentItem.definition).getModelLocation();
-			modelRender.textureLocation = ((AJSONModelProvider<?>) currentItem.definition).getTextureLocation();
-			itemRender.stack = null;
-			//Don't spin signs.  That gets annoying.
-			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
-		}else if(currentItem instanceof AItemSubTyped){
+		if(currentItem instanceof AItemSubTyped){
 			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation();
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
+			//Don't spin signs.  That gets annoying.
+			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
 		}else{
 			itemRender.stack = MasterLoader.coreInterface.getStack(currentItem);
 			modelRender.modelLocation = null;

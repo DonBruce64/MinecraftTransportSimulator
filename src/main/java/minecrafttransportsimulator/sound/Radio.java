@@ -28,11 +28,11 @@ public class Radio{
 	public RadioStation currentStation;
 	
 	//Private runtime variables.
-	private final ISoundProvider provider;
+	private final IRadioProvider provider;
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
-	public Radio(ISoundProvider provider, IWrapperNBT data){
+	public Radio(IRadioProvider provider, IWrapperNBT data){
 		this.provider = provider;
 		this.radioID = provider.getProviderWorld().isClient() ? data.getInteger("radioID") : idCounter++;
 		if(provider.getProviderWorld().isClient()){

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.Collection;
+
 /**Light types.  These are common to all lighting, be it vehicles or blocks or something else.
  * 
  * @author don_bruce
@@ -30,7 +32,14 @@ public enum LightType{
 	DECORLIGHT(false);
 	
 	public final boolean hasBeam;
+	public final String lowercaseName;
+	
 	private LightType(boolean hasBeam){
 		this.hasBeam = hasBeam;
+		this.lowercaseName = name();
+	}
+	
+	public boolean isInCollection(Collection<String> collection){
+		return collection.contains(lowercaseName);
 	}
 }

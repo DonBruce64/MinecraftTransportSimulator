@@ -3,7 +3,6 @@ package minecrafttransportsimulator.rendering.components;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used both in model animations, and part movements.
@@ -27,99 +26,95 @@ public class DurationDelayClock{
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
-	public double getFactoredState(EntityVehicleF_Physics vehicle, double variable){
-		if(definition.duration == 0 && definition.forwardsDelay == 0 && definition.reverseDelay == 0){
-			return variable;
-		}else{
-			boolean commandForwards = variable == 1;
-			long currentTime = System.currentTimeMillis();
-			long cycleTime = definition.duration*50 + definition.forwardsDelay*50 + definition.reverseDelay*50;
-			
-			//If we don't have an existing command, just set ourselves to the end of our command path.
-			if(timeCommandedForwards == 0 && timeCommandedReverse == 0){
-				if(commandForwards){
-					timeCommandedForwards = currentTime - cycleTime;
-				}else{
-					timeCommandedReverse = currentTime - cycleTime;
-				}
-				playedForwardsStartSound = true;
-				playedForwardsEndSound = true;
-				playedReverseStartSound = true;
-				playedReverseEndSound = true;
-			}else if(timeCommandedForwards != 0){
-				if(!commandForwards){
-					//Going forwards, need to reverse.
-					timeCommandedReverse = currentTime;
-					long timeForwards = currentTime - timeCommandedForwards;
-					if(timeForwards < cycleTime){
-						//Didn't make it to the end of the cycle.  Adjust start time to compensate.
-						timeCommandedReverse += timeForwards - cycleTime;
-					}
-					if(timeForwards >= definition.duration*50 + definition.forwardsDelay*50){
-						//Made it to the end of travel, so need to play sound when we start travel back up.
-						playedReverseStartSound = false;
-					}
-					playedReverseEndSound = false;
-					timeCommandedForwards = 0L;
-				}
-			}else{
-				if(commandForwards){
-					//Going in reverse, need to go forwards.
-					timeCommandedForwards = currentTime;
-					long timeReverse = currentTime - timeCommandedReverse;
-					if(timeReverse < cycleTime){
-						//Didn't make it to the end of the cycle.  Adjust start time to compensate.
-						timeCommandedForwards += timeReverse - cycleTime;
-					}else{
-						//Made it to the end of travel, so need to play sound when we start travel back up.
-						playedForwardsStartSound = false;
-					}
-					playedForwardsEndSound = false;
-					timeCommandedReverse = 0L;
-				}
-			}
-			
-			double movementFactor = 0;
+	public double getFactoredState(IAnimationProvider provider, double value){
+		boolean commandForwards = value == 1;
+		long currentTime = System.currentTimeMillis();
+		long cycleTime = definition.duration*50 + definition.forwardsDelay*50 + definition.reverseDelay*50;
+		
+		//If we don't have an existing command, just set ourselves to the end of our command path.
+		if(timeCommandedForwards == 0 && timeCommandedReverse == 0){
 			if(commandForwards){
-				long timedelayed = currentTime - timeCommandedForwards;
-				if(timedelayed >= definition.forwardsDelay*50){
-					long timeMoved = currentTime - (timeCommandedForwards + definition.forwardsDelay*50);
-					if(timeMoved < definition.duration*50){
-						movementFactor = timeMoved/(double)(definition.duration*50);
-					}else{
-						movementFactor = 1;
-						if(!playedForwardsEndSound && vehicle.world.isClient()){
-							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.forwardsEndSound));
-							playedForwardsEndSound = true;
-						}
-					}
-					if(!playedForwardsStartSound && vehicle.world.isClient()){
-						MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.forwardsStartSound));
-						playedForwardsStartSound = true;
-					}
-				}
+				timeCommandedForwards = currentTime - cycleTime;
 			}else{
-				long timedelayed = currentTime - timeCommandedReverse;
-				if(timedelayed >= definition.reverseDelay*50){
-					long timeMoved = currentTime - (timeCommandedReverse + definition.reverseDelay*50);
-					if(timeMoved < definition.duration*50){
-						movementFactor = timeMoved/(double)(definition.duration*50);
-					}else{
-						movementFactor = 1;
-						if(!playedReverseEndSound && vehicle.world.isClient()){
-							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.reverseEndSound));
-							playedReverseEndSound = true;
-						}
-					}
-					if(!playedReverseStartSound && vehicle.world.isClient()){
-						MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, definition.reverseStartSound));
-						playedReverseStartSound = true;
+				timeCommandedReverse = currentTime - cycleTime;
+			}
+			playedForwardsStartSound = true;
+			playedForwardsEndSound = true;
+			playedReverseStartSound = true;
+			playedReverseEndSound = true;
+		}else if(timeCommandedForwards != 0){
+			if(!commandForwards){
+				//Going forwards, need to reverse.
+				timeCommandedReverse = currentTime;
+				long timeForwards = currentTime - timeCommandedForwards;
+				if(timeForwards < cycleTime){
+					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
+					timeCommandedReverse += timeForwards - cycleTime;
+				}
+				if(timeForwards >= definition.duration*50 + definition.forwardsDelay*50){
+					//Made it to the end of travel, so need to play sound when we start travel back up.
+					playedReverseStartSound = false;
+				}
+				playedReverseEndSound = false;
+				timeCommandedForwards = 0L;
+			}
+		}else{
+			if(commandForwards){
+				//Going in reverse, need to go forwards.
+				timeCommandedForwards = currentTime;
+				long timeReverse = currentTime - timeCommandedReverse;
+				if(timeReverse < cycleTime){
+					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
+					timeCommandedForwards += timeReverse - cycleTime;
+				}else{
+					//Made it to the end of travel, so need to play sound when we start travel back up.
+					playedForwardsStartSound = false;
+				}
+				playedForwardsEndSound = false;
+				timeCommandedReverse = 0L;
+			}
+		}
+		
+		double movementFactor = 0;
+		if(commandForwards){
+			long timedelayed = currentTime - timeCommandedForwards;
+			if(timedelayed >= definition.forwardsDelay*50){
+				long timeMoved = currentTime - (timeCommandedForwards + definition.forwardsDelay*50);
+				if(timeMoved < definition.duration*50){
+					movementFactor = timeMoved/(double)(definition.duration*50);
+				}else{
+					movementFactor = 1;
+					if(!playedForwardsEndSound && provider.getProviderWorld().isClient()){
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(provider, definition.forwardsEndSound));
+						playedForwardsEndSound = true;
 					}
 				}
-				movementFactor = 1 - movementFactor;
+				if(!playedForwardsStartSound && provider.getProviderWorld().isClient()){
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(provider, definition.forwardsStartSound));
+					playedForwardsStartSound = true;
+				}
 			}
-			
-			return movementFactor;
+		}else{
+			long timedelayed = currentTime - timeCommandedReverse;
+			if(timedelayed >= definition.reverseDelay*50){
+				long timeMoved = currentTime - (timeCommandedReverse + definition.reverseDelay*50);
+				if(timeMoved < definition.duration*50){
+					movementFactor = timeMoved/(double)(definition.duration*50);
+				}else{
+					movementFactor = 1;
+					if(!playedReverseEndSound && provider.getProviderWorld().isClient()){
+						MasterLoader.audioInterface.playQuickSound(new SoundInstance(provider, definition.reverseEndSound));
+						playedReverseEndSound = true;
+					}
+				}
+				if(!playedReverseStartSound && provider.getProviderWorld().isClient()){
+					MasterLoader.audioInterface.playQuickSound(new SoundInstance(provider, definition.reverseStartSound));
+					playedReverseStartSound = true;
+				}
+			}
+			movementFactor = 1 - movementFactor;
 		}
+		
+		return movementFactor;
 	}
 }

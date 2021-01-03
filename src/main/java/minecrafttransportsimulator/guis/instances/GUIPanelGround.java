@@ -9,10 +9,9 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehicleCustomToggle;
-import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -72,19 +71,19 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
+							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}else if(selectorState == 1){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RUNNINGLIGHT));
+							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 						}
 					}else{
 						if(selectorState == 0){
 							if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT)){
-								MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RUNNINGLIGHT));
+								MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 							}else{
-								MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
+								MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 							}
 						}else if(selectorState == 1){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.HEADLIGHT));
+							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}
 					}
 				}
@@ -101,9 +100,9 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.LEFTTURNLIGHT));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.RIGHTTURNLIGHT));
+						MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
 					}
 				}
 				
@@ -118,7 +117,7 @@ public class GUIPanelGround extends AGUIPanel{
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.emergencylights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(vehicle, LightType.EMERGENCYLIGHT));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
 				}
 				
 				@Override
@@ -298,7 +297,7 @@ public class GUIPanelGround extends AGUIPanel{
 			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleCustomToggle(vehicle, this.text));
+					MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, this.text));
 				}
 				
 				@Override
@@ -313,19 +312,19 @@ public class GUIPanelGround extends AGUIPanel{
 	public void setStates(){
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.lightsOn.contains(LightType.HEADLIGHT) ? 2 : (vehicle.lightsOn.contains(LightType.RUNNINGLIGHT) ? 1 : 0);
+			lightSelector.selectorState = vehicle.variablesOn.contains(LightType.HEADLIGHT.lowercaseName) ? 2 : (vehicle.variablesOn.contains(LightType.RUNNINGLIGHT.lowercaseName) ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
 			boolean halfSecondClock = inClockPeriod(20, 10);
-			if(vehicle.lightsOn.contains(LightType.LEFTTURNLIGHT) && halfSecondClock){
-				if(vehicle.lightsOn.contains(LightType.RIGHTTURNLIGHT)){
+			if(vehicle.variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) && halfSecondClock){
+				if(vehicle.variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
 					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
-			}else if(vehicle.lightsOn.contains(LightType.RIGHTTURNLIGHT) && halfSecondClock){
+			}else if(vehicle.variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName) && halfSecondClock){
 				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
@@ -335,7 +334,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//If we have emergency lights, set the state of the emergency light selector.
 		if(emergencySelector != null){
-			emergencySelector.selectorState = vehicle.lightsOn.contains(LightType.EMERGENCYLIGHT) ? 1 : 0;
+			emergencySelector.selectorState = vehicle.variablesOn.contains(LightType.EMERGENCYLIGHT.lowercaseName) ? 1 : 0;
 		}
 		
 		//If we have a siren, set the state of the siren selector.
@@ -384,7 +383,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Iterate through custom selectors and set their states.
 		for(GUIComponentSelector customSelector : customSelectors){
-			customSelector.selectorState = vehicle.customsOn.contains(customSelector.text) ? 1 : 0;
+			customSelector.selectorState = vehicle.variablesOn.contains(customSelector.text) ? 1 : 0;
 		}
 	}
 }

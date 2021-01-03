@@ -10,6 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -361,6 +362,16 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performPoleLegacyCompats(JSONPoleComponent definition){
+		//If we are a pole without a definition, add one so we don't crash on other systems.
+		if(definition.definitions == null){
+			definition.definitions = new ArrayList<JSONSubDefinition>();
+			JSONSubDefinition subDefinition = new JSONSubDefinition();
+			subDefinition.extraMaterials = new ArrayList<String>();
+			subDefinition.name = definition.general.name;
+			subDefinition.subName = "";
+			definition.definitions.add(subDefinition);
+		}
+				
 		//If we are a sign using the old textlines, update them.
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
@@ -375,6 +386,15 @@ public final class LegacyCompatSystem{
 				definition.general.textObjects.add(object);
 			}
 			definition.general.textLines = null;
+		}
+		
+		//If we are a sign using the old textObjects location, move it.
+		if(definition.general.textObjects != null){
+			if(definition.rendering == null){
+				definition.rendering = new JSONRendering();
+			}
+			definition.rendering.textObjects = definition.general.textObjects;
+			definition.general.textObjects = null;
 		}
 	}
 	
@@ -409,6 +429,15 @@ public final class LegacyCompatSystem{
 				definition.general.textObjects.add(object);
 			}
 			 definition.general.textLines = null;
+		}
+		
+		//If we are a sign using the old textObjects location, move it.
+		if(definition.general.textObjects != null){
+			if(definition.rendering == null){
+				definition.rendering = new JSONRendering();
+			}
+			definition.rendering.textObjects = definition.general.textObjects;
+			definition.general.textObjects = null;
 		}
 	}
 	

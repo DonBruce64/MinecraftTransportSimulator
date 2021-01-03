@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -27,6 +28,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public final IWrapperWorld world;
 	/**Current position of this TileEntity.**/
 	public final Point3i position;
+	/**Current position of this TileEntity in Point3d form.**/
+	public final Point3d doublePosition;
 	/**Y-axis rotation of this TileEntity when it was placed.**/
 	public final double rotation;
 	/**Current subName for this TileEntity.**/
@@ -41,6 +44,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public ATileEntityBase(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		this.world = world;
 		this.position = position;
+		this.doublePosition = new Point3d(position);
 		this.rotation = data.getDouble("rotation");
 		this.currentSubName = data.getString("currentSubName");
 		this.item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), currentSubName);
@@ -72,6 +76,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	public void remove(){}
 	
 	/**
+	 *  Called to get a render for this TE.  Only called on the client.
+	 */
+	public abstract ARenderTileEntityBase<? extends ATileEntityBase<JSONDefinition>> getRenderer();
+	
+	/**
 	 *  Called when the TileEntity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
@@ -82,10 +91,4 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 		data.setString("currentSubName", currentSubName);
 		data.setDouble("lightLevel", lightLevel);
 	}
-
-	
-	/**
-	 *  Called to get a render for this TE.  Only called on the client.
-	 */
-	public abstract ARenderTileEntityBase<? extends ATileEntityBase<JSONDefinition>> getRenderer();
 }

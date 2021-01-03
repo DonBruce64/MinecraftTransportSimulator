@@ -10,7 +10,7 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -102,19 +102,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		//Now call the super to update prev variables.
 		super.update();
 	}
-	
-	/**
-   	 * Returns the current definition based on the vehicle's currentSubName.
-   	 */
-	public JSONSubDefinition getSubDefinition(){
-		for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(currentSubName)){
-				return subDefinition;
-			}
-		}
-		//We'll never get here, but gotta make the compiler happy.
-		return null;
-	}
     
     /**
 	 * Adds the passed-part to this vehicle.  This method will check at the passed-in point
@@ -190,8 +177,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	    		boolean newPart = partData.getString("packID").isEmpty();
 	    		if(newPart){
 					if(partToAdd.definition.rendering != null && partToAdd.definition.rendering.textObjects != null){
-						for(byte i=0; i<partToAdd.definition.rendering.textObjects.size(); ++i){
-							partToAdd.textLines.set(i, partToAdd.definition.rendering.textObjects.get(i).defaultText);
+						for(JSONText textObject : partToAdd.definition.rendering.textObjects){
+							partToAdd.text.put(textObject, textObject.defaultText);
 						}
 					}
 					partData = partToAdd.getData();
@@ -434,8 +421,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						
 						//Set default text for the new part, if we have any.
 						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
-							for(byte i=0; i<newPart.definition.rendering.textObjects.size(); ++i){
-								newPart.textLines.set(i, newPart.definition.rendering.textObjects.get(i).defaultText);
+							for(JSONText textObject : newPart.definition.rendering.textObjects){
+								newPart.text.put(textObject, textObject.defaultText);
 							}
 						}
 						

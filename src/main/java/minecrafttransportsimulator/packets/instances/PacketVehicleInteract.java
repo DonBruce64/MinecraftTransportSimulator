@@ -127,10 +127,10 @@ public class PacketVehicleInteract extends APacketVehicle{
 								player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 							}else{
 								//Open or close the clicked door.
-								if(vehicle.doorsOpen.contains(doorEntry.getValue().name)){
-									vehicle.doorsOpen.remove(doorEntry.getValue().name);
+								if(vehicle.variablesOn.contains(doorEntry.getValue().name)){
+									vehicle.variablesOn.remove(doorEntry.getValue().name);
 								}else{
-									vehicle.doorsOpen.add(doorEntry.getValue().name);
+									vehicle.variablesOn.add(doorEntry.getValue().name);
 								}
 								return true;
 							}

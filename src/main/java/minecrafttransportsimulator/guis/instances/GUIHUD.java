@@ -45,7 +45,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	public GUILightingMode getGUILightMode(){
-		return vehicle.areInteriorLightsOn() ? GUILightingMode.LIT : GUILightingMode.DARK;
+		return vehicle.renderTextLit() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 public class JSONDecor extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>{
+	public JSONRendering rendering;
 
     public class DecorGeneral extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>.General{
     	public String type;
@@ -10,6 +11,7 @@ public class JSONDecor extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>{
     	public float height;
     	public float depth;
     	public TextLine[] textLines;
+    	@Deprecated
     	public List<JSONText> textObjects;
     	public List<String> itemTypes;
     	public List<String> partTypes;

@@ -1,0 +1,179 @@
+package minecrafttransportsimulator.rendering.components;
+
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.parts.PartInteractable;
+import minecrafttransportsimulator.vehicles.parts.PartPropeller;
+import minecrafttransportsimulator.vehicles.parts.PartSeat;
+
+/**This class contains methods for vehicle animations.  These are used to animate
+ * the vehicle, as well as instruments.  All methods are designed to be as
+ * global as possible to keep all animations in this class.  Parts are rendered
+ * by {@link AnimationsParts}.
+ *
+ * @author don_bruce
+ */
+public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Physics>{
+	
+	/**
+	 *  Returns the part number for the passed-in variable, or -1 if there is no part number for the variable.
+	 *  Part number is 0-indexed to conform to the list indexes internal to vehicle parts.
+	 */
+	public static int getPartNumber(String variable){
+		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
+			return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+		}else{
+			return -1;
+		}
+	}
+	
+	@Override
+	public double getRawVariableValue(EntityVehicleF_Physics vehicle, String variable, float partialTicks){
+		//First check if we are a base variable.
+		double value = getBaseVariableValue(vehicle, variable, partialTicks);
+		if(Double.isNaN(value)){
+			return 0;
+		}
+		
+		//If we have a variable with a suffix, we need to get that part first and pass
+		//it into this method rather than trying to run through the code now.
+		int partNumber = getPartNumber(variable);
+		if(partNumber != -1){
+			//Get the part type from the variable.
+			String partType = variable.substring(0, variable.indexOf('_'));
+			final Class<?> partClass;
+			switch(partType){
+				case("interactable"): partClass = PartInteractable.class; break;	
+				case("engine"): partClass = PartEngine.class; break;
+				case("gun"): partClass = PartGun.class; break;
+				case("part"): partClass = APart.class; break;
+				case("propeller"): partClass = PartPropeller.class; break;
+				case("ground"): partClass = PartGroundDevice.class; break;
+				case("seat"): partClass = PartSeat.class; break;
+				
+				default: if(ConfigSystem.configObject.clientControls.devMode.value){
+					throw new IllegalArgumentException("ERROR: Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?  Or are you trying to name a door with a suffix of a number?  Only part variables can have numbers at the end of their names!");
+				}else{
+					//Don't crash if we have a fault here.  It could be that we have an old pack that has a bad name.
+					return 0;
+				}
+			}
+			
+			//Iterate through the pack defs to find the index of the pack def for the part we want.
+			for(VehiclePart vehiclePart : vehicle.getAllPossiblePackParts().values()){
+				for(String defPartType : vehiclePart.types){
+					if(partType.equals("part") || defPartType.startsWith(partType)){
+						if(partNumber == 0){
+							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
+							//If it's not, or it doesn't exist, return 0.
+							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos);
+							if(foundPart != null && partClass.isInstance(foundPart)){
+								return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+							}else{
+								return 0;
+							}
+						}else{
+							--partNumber;
+							break;
+						}
+					}
+				}
+			}
+			
+			//We couldn't find the part we were supposed to.  Likely because it hasn't been placed yet.
+			return 0;
+		}
+
+		//Not a part variable that needs forwarding.  Try vehicle variables.
+		switch(variable){
+			//Vehicle world state cases.
+			case("yaw"): return vehicle.angles.y;
+			case("heading"): int heading = (int)-vehicle.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
+			case("pitch"): return vehicle.angles.x;
+			case("roll"): return vehicle.angles.z;
+			case("altitude"): return vehicle.position.y;
+			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
+
+			//Vehicle state cases.
+			case("throttle"): return vehicle.throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
+			case("brake"): return vehicle.brake/(double)EntityVehicleF_Physics.MAX_BRAKE;
+			case("fuel"): return vehicle.fuelTank.getFluidLevel()/vehicle.fuelTank.getMaxLevel();
+			case("electric_power"): return vehicle.electricPower;
+			case("electric_usage"): return vehicle.electricFlow*20D;
+			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
+			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
+			case("horn"): return vehicle.hornOn ? 1 : 0;
+			case("siren"): return vehicle.sirenOn ? 1 : 0;
+			case("locked"): return vehicle.locked ? 1 : 0;
+			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
+			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
+			case("trailer_pitch"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.x - vehicle.angles.x : 0;
+			case("trailer_yaw"): return vehicle.towedVehicle != null ?  vehicle.towedVehicle.angles.y - vehicle.angles.y : 0;
+			case("trailer_roll"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.z - vehicle.angles.z : 0;
+			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
+			case("hookup_pitch"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.x - vehicle.angles.x : 0;
+			case("hookup_yaw"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.y - vehicle.angles.y : 0;
+			case("hookup_roll"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.z - vehicle.angles.z : 0;
+			case("fueling"): return vehicle.beingFueled ? 1 : 0;
+			
+			//State cases generally used on aircraft.
+			case("aileron"): return vehicle.aileronAngle/10D;
+			case("elevator"): return vehicle.elevatorAngle/10D;
+			case("rudder"): return vehicle.rudderAngle/10D;
+			case("flaps_setpoint"): return vehicle.flapDesiredAngle/10D;
+			case("flaps_actual"): return vehicle.flapCurrentAngle/10D;
+			case("trim_aileron"): return vehicle.aileronTrim/10D;
+			case("trim_elevator"): return vehicle.elevatorTrim/10D;
+			case("trim_rudder"): return vehicle.rudderTrim/10D;
+			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
+			case("lift_reserve"): return -vehicle.trackAngle;
+			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
+			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
+			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
+			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
+			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
+			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.location.x - vehicle.position.x, vehicle.selectedBeacon.location.z - vehicle.position.z))) : 0;
+			case("beacon_bearing_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.bearing : 0;
+			case("beacon_bearing_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.getBearingDelta(vehicle) : 0;
+			case("beacon_glideslope_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope : 0;
+			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
+			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
+			
+			//Missile incoming variables.
+			//Variable is in the form of missile_X_variablename.
+			default: {
+				if(variable.startsWith("missile_")){
+					String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
+					int missileNumber = getPartNumber(variable.substring(0, variable.lastIndexOf('_')));
+					if(missileNumber != -1){
+						if(vehicle.missilesIncoming.size() <= missileNumber){
+							return 0;
+						}else{
+							switch(missileVariable){
+								case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+								case("direction"): {
+									double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+									Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
+									return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
+								}
+							}
+						}
+					}else if(missileVariable.equals("incoming")){
+						return vehicle.missilesIncoming.isEmpty() ? 0 : 1;
+					}
+				}
+			}
+		}
+		
+		//Not a vehicle variable or a part variable.  We could have an error, but likely we have an older pack,
+		//a closed door, a missing part, a custom variable that's not on, or something else entirely.
+		//In that case, we return 0 to prevent crashes.
+		return 0;
+	}
+}

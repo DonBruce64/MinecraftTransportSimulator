@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
@@ -76,8 +77,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 
 				//Set default vehicle text.
 				if(newVehicle.definition.rendering.textObjects != null){
-					for(byte i=0; i<newVehicle.definition.rendering.textObjects.size(); ++i){
-						newVehicle.textLines.set(i, newVehicle.definition.rendering.textObjects.get(i).defaultText);
+					for(JSONText textObject : newVehicle.definition.rendering.textObjects){
+						newVehicle.text.put(textObject, textObject.defaultText);
 					}
 				}
 				
@@ -126,7 +127,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				if(definition.doors != null){
 					for(VehicleDoor door : definition.doors){
 						if(!door.closedByDefault){
-							newVehicle.doorsOpen.add(door.name);
+							newVehicle.variablesOn.add(door.name);
 						}
 					}
 				}
@@ -134,7 +135,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 					if(part.definition.doors != null){
 						for(VehicleDoor door : part.definition.doors){
 							if(!door.closedByDefault){
-								newVehicle.doorsOpen.add(door.name);
+								newVehicle.variablesOn.add(door.name);
 							}
 						}
 					}

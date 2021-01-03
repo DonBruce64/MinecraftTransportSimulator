@@ -34,10 +34,8 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehicleCustomToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
@@ -47,6 +45,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -180,10 +179,8 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleControlDigital.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleCustomToggle.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleInteract.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleLightToggle.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartEngine.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
@@ -193,5 +190,6 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleTextChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
+		networkInterface.registerPacket(packetIndex++, PacketVehicleVariableToggle.class);
 	}
 }

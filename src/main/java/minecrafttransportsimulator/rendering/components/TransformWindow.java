@@ -4,8 +4,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a window object of a model.  The only transform this applies is binding
  * the glass texture prior to rendering, and rendering the window inner parts if set in the config.
@@ -21,12 +19,12 @@ public class TransformWindow extends ATransform{
 	}
 	
 	@Override
-	public boolean shouldRender(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public boolean shouldRender(IAnimationProvider provider, float partialTicks){
 		return ConfigSystem.configObject.clientRendering.renderWindows.value;
 	}
 
 	@Override
-	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
+	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			MasterLoader.renderInterface.bindTexture("mts:textures/rendering/glass.png");
 		}
@@ -34,7 +32,7 @@ public class TransformWindow extends ATransform{
 	}
 	
 	@Override
-	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
 		if(MasterLoader.renderInterface.getRenderPass() != 1){
 			//Render inner windows, if set.
 			if(ConfigSystem.configObject.clientRendering.innerWindows.value){

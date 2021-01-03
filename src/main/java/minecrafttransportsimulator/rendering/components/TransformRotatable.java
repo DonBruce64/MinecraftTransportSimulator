@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents a rotatable object of a model.
  *
@@ -13,28 +12,24 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public class TransformRotatable extends ATransform{
 	private final Point3d rotationAxis;
-	private double rotationMagnitude;
 	
 	public TransformRotatable(JSONAnimationDefinition definition){
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//rotation magnitude is the magnitude of that vector.
 		this.rotationAxis = definition.axis.copy();
-		this.rotationMagnitude = rotationAxis.length();
 		rotationAxis.normalize();
 	}
 
 	@Override
-	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
+	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
 		//Update rotation axis, if required.
-		if(updateRotationAxis(vehicle, rotationAxis)){
-			rotationMagnitude = rotationAxis.length();
+		if(provider instanceof EntityVehicleF_Physics && updateRotationAxis((EntityVehicleF_Physics) provider, rotationAxis)){
 			rotationAxis.normalize();
 		}
 		
 		//Get rotation.
-		double rotation = getClock(vehicle).getFactoredState(vehicle, VehicleAnimations.getVariableValue(definition.variable,  partialTicks, vehicle, optionalPart));
-		rotation = VehicleAnimations.clampAndScale(rotation, rotationMagnitude, definition.offset + offset, definition.clampMin, definition.clampMax, definition.absolute);
+		double rotation = provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, offset, getClock(provider), partialTicks);
 		
 		//Do rotation.
 		if(rotation != 0){

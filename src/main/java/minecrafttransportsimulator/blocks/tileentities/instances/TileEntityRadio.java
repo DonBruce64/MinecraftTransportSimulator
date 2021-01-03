@@ -52,18 +52,8 @@ public class TileEntityRadio extends TileEntityDecor implements IRadioProvider{
 	public void updateProviderSound(SoundInstance sound){}
 
 	@Override
-	public FloatBuffer getProviderPosition(){
-		return soundPosition;
-	}
-
-	@Override
 	public Point3d getProviderVelocity(){
 		return soundVelocity;
-	}
-
-	@Override
-	public IWrapperWorld getProviderWorld(){
-		return world;
 	}
 
 	@Override

@@ -1,15 +1,23 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.rendering.components.AnimationsDecor;
+import minecrafttransportsimulator.rendering.components.IAnimationProvider;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
 /**Decor tile entity.  Contains the definition so we know how
@@ -18,11 +26,12 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  *
  * @author don_bruce
  */
-public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
+public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnimationProvider, ITextProvider{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
-
-	//Generic text variables.
-	protected final List<String> textLines;
+	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
+	
+	private static final Set<String> EMPTY_VARIABLE_SET = new HashSet<String>();
+	private static final AnimationsDecor animator = new AnimationsDecor();
 	
 	public TileEntityDecor(IWrapperWorld world, Point3i position, IWrapperNBT data){
 		super(world, position, data);
@@ -31,20 +40,58 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		this.boundingBoxes[1] = new BoundingBox(new Point3d(0, 0, 0), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
 		this.boundingBoxes[2] = boundingBoxes[0];
 		this.boundingBoxes[3] = boundingBoxes[1];
-		if(definition.general.textObjects != null){
-			this.textLines = data.getStrings("textLines", definition.general.textObjects.size());
-		}else{
-			this.textLines = new ArrayList<String>();
+		
+		//Get text.
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
+			}
 		}
 	}
 	
-	public List<String> getTextLines(){
-		return textLines;
+	@Override
+    public Point3d getProviderPosition(){
+		return doublePosition;
 	}
 	
-	public void setTextLines(List<String> textLinesToSet){
-		this.textLines.clear();
-		this.textLines.addAll(textLinesToSet);
+	@Override
+    public IWrapperWorld getProviderWorld(){
+		return world;
+	}
+	
+	@Override
+    public AAnimationsBase getAnimationSystem(){
+		return animator;
+	}
+	
+	@Override
+	public float getLightPower(){
+		return (15 - world.getRedstonePower(position))/15F;
+	}
+	
+	@Override
+	public Set<String> getActiveVariables(){
+		return EMPTY_VARIABLE_SET;
+	}
+	
+	@Override
+	public Map<JSONText, String> getText(){
+		return text;
+	}
+	
+	@Override
+	public String getSecondaryTextColor(){
+		for(JSONSubDefinition subDefinition : definition.definitions){
+			if(subDefinition.subName.equals(currentSubName)){
+				return subDefinition.secondColor;
+			}
+		}
+		throw new IllegalArgumentException("ERROR: Tried to get the definition for a decor of subName:" + currentSubName + ".  But that isn't a valid subName for the decor:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+	}
+	
+	@Override
+	public boolean renderTextLit(){
+		return true;
 	}
 	
 	@Override
@@ -55,6 +102,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	@Override
 	public void save(IWrapperNBT data){
 		super.save(data);
-		data.setStrings("textLines", textLines);
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
+			}
+		}
 	}
 }

@@ -18,6 +18,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.rendering.components.AnimationsVehicle;
+import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
 /**Base entity class.  This class contains the most basic code for entities,
  * as well as some basic variables and methods for movement and save/load operations.
@@ -37,7 +40,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
  * 
  * @author don_bruce
  */
-public abstract class AEntityBase{
+public abstract class AEntityBase implements IAnimationProvider{
 	/**Internal counter for entity IDs.  Increments each time an entity is created**/
 	private static int idCounter = 1;
 	/**List of created entities.  This is a list as it's possible for clients to have multiple identical entities.
@@ -45,6 +48,8 @@ public abstract class AEntityBase{
 	public static List<AEntityBase> createdClientEntities = new ArrayList<AEntityBase>();
 	/**Like {@link #createdClientEntities}, but on the server.**/
 	public static List<AEntityBase> createdServerEntities = new ArrayList<AEntityBase>();
+	/**Render instance for this class.**/
+	private static final AnimationsVehicle animator = new AnimationsVehicle();
 	
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
@@ -99,6 +104,9 @@ public abstract class AEntityBase{
 	 **/
 	public BiMap<Point3d, IWrapperEntity> locationRiderMap = HashBiMap.create();
 	
+	/**Set of variables that are "on" for this entity.  Used for animations.**/
+	public final Set<String> variablesOn = new HashSet<String>();
+	
 	public AEntityBase(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
@@ -117,6 +125,15 @@ public abstract class AEntityBase{
 		//Riders come from the Builder class after construction as that class saves them.
 		for(int riderIndex=0; riderIndex<data.getInteger("totalSavedRiderLocations"); ++riderIndex){
 			savedRiderLocations.add(data.getPoint3d("savedRiderLocation" + riderIndex));
+		}
+		
+		//Load variables.
+		variablesOn.clear();
+		String variablesOnString = data.getString("variablesOn");
+		while(!variablesOnString.isEmpty()){
+			String variableName = variablesOnString.substring(0, variablesOnString.indexOf(','));
+			variablesOn.add(variableName);
+			variablesOnString = variablesOnString.substring(variablesOnString.indexOf(',') + 1);
 		}
 		
 		if(world.isClient()){
@@ -244,6 +261,21 @@ public abstract class AEntityBase{
 	 */
 	public abstract void render(float partialTicks);
 	
+	@Override
+    public AAnimationsBase getAnimationSystem(){
+		return animator;
+	}
+	
+	@Override
+    public IWrapperWorld getProviderWorld(){
+		return world;
+	}
+	
+	@Override
+    public Point3d getProviderPosition(){
+		return position;
+	}
+	
 	/**
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
@@ -262,5 +294,12 @@ public abstract class AEntityBase{
 			data.setPoint3d("savedRiderLocation" + riderIndex++, riderLocation);
 		}
 		data.setInteger("totalSavedRiderLocations", riderIndex);
+		
+		//Save variables on.
+		String variablesOnString = "";
+		for(String variableName : variablesOn){
+			variablesOnString += variableName + ",";
+		}
+		data.setString("variablesOn", variablesOnString);
 	}
 }

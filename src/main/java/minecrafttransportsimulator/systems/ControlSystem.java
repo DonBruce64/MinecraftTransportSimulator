@@ -9,9 +9,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehicleLightToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
+import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -410,14 +410,14 @@ public final class ControlSystem{
 		
 		//Check for lights.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.RUNNINGLIGHT));
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.HEADLIGHT));
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RUNNINGLIGHT.lowercaseName));
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.HEADLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.LEFTTURNLIGHT));
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.RIGHTTURNLIGHT));
+			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 		}
 
 		//Change turn signal status depending on turning status.
@@ -428,20 +428,20 @@ public final class ControlSystem{
 			if(!powered.turningLeft && powered.rudderAngle < -200){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.LEFTTURNLIGHT));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(!powered.turningRight && powered.rudderAngle > 200){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.RIGHTTURNLIGHT));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.LEFTTURNLIGHT));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleLightToggle(powered, LightType.RIGHTTURNLIGHT));
+				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
 				--powered.turningCooldown;

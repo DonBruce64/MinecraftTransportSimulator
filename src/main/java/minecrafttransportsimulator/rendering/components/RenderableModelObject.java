@@ -10,12 +10,9 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**This class represents an object that can be rendered from an OBJ model.  This object is a set of
- * faces that are rendered during the main rendering routine.  These faces may be part of the vehicle
- * itself, or a part on on the vehicle with its own OBJ model.  Various transforms may be performed on
+ * faces that are rendered during the main rendering routine.  Various transforms may be performed on
  * this object via the extended rendering classes.  These transforms are applied to the mesh prior
  * to rendering, either manipulating the mesh directly, or manipulating the OpenGL state.
  *
@@ -29,7 +26,7 @@ public class RenderableModelObject extends RenderableTransform{
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, EntityVehicleF_Physics vehicle, APart optionalPart){
+	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, IAnimationProvider provider){
 		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
 		this.modelName = modelName;
 		this.objectName = objectName;
@@ -43,7 +40,7 @@ public class RenderableModelObject extends RenderableTransform{
 			//TODO should this be removed to force auto-calculation?
 			for(JSONAnimationDefinition animation : definition.animations){
 				if(animation.animationType.equals("animations") && objectName.toLowerCase().contains("roller")){
-					TransformTreadRoller rollerTransform = TransformTreadRoller.create(objectName, animation, vehicle, vertices);
+					TransformTreadRoller rollerTransform = TransformTreadRoller.create(objectName, animation, vertices);
 					int transformIndex = definition.animations.indexOf(animation);
 					transforms.set(transformIndex, rollerTransform);
 				}
@@ -52,7 +49,7 @@ public class RenderableModelObject extends RenderableTransform{
 			//Roller not in JSON file found.  Create a transform for it.
 			this.applyAfter = null;
 			if(objectName.toLowerCase().contains("roller")){
-				transforms.add(TransformTreadRoller.create(objectName, null, vehicle, vertices));
+				transforms.add(TransformTreadRoller.create(objectName, null, vertices));
 			}	
 		}
 		if(objectName.contains("&")){
@@ -67,23 +64,14 @@ public class RenderableModelObject extends RenderableTransform{
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, List<RenderableModelObject> allObjects){
+	public void render(IAnimationProvider provider, float partialTicks, List<RenderableModelObject> allObjects){
 		GL11.glPushMatrix();
-		if(doPreRenderTransforms(vehicle, optionalPart, partialTicks)){
+		if(doPreRenderTransforms(provider, partialTicks)){
 			//Render, caching the displayList if needed.
 			//Don't render on pass 1, as that's for transparency.
 			if(MasterLoader.renderInterface.getRenderPass() != 1){
 				if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
-					int displayListIndex = GL11.glGenLists(1);
-					GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-					GL11.glBegin(GL11.GL_TRIANGLES);
-					for(Float[] vertex : vertices){
-						GL11.glTexCoord2f(vertex[3], vertex[4]);
-						GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-						GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-					}
-					GL11.glEnd();
-					GL11.glEndList();
+					int displayListIndex = OBJParser.generateDisplayList(vertices);
 					if(!displayLists.containsKey(modelName)){
 						displayLists.put(modelName, new HashMap<String, Integer>());
 					}
@@ -93,15 +81,11 @@ public class RenderableModelObject extends RenderableTransform{
 			}
 			
 			//Do post-render logic.
-			doPostRenderTransforms(vehicle, optionalPart, partialTicks);
+			doPostRenderTransforms(provider, partialTicks);
 			
-			//Check if we need to render text on this object.
-			if(optionalPart != null){
-				if(MasterLoader.renderInterface.renderTextMarkings(optionalPart.definition.rendering != null ? optionalPart.definition.rendering.textObjects : null, optionalPart.textLines, vehicle.getSubDefinition().secondColor, objectName, optionalPart.vehicle.areInteriorLightsOn())){
-					MasterLoader.renderInterface.recallTexture();
-				}
-			}else{
-				if(MasterLoader.renderInterface.renderTextMarkings(vehicle.definition.rendering != null ? vehicle.definition.rendering.textObjects : null, vehicle.textLines, vehicle.getSubDefinition().secondColor, objectName, vehicle.areInteriorLightsOn())){
+			//Render text on this object.
+			if(provider instanceof ITextProvider){
+				if(MasterLoader.renderInterface.renderTextMarkings((ITextProvider) provider, objectName)){
 					MasterLoader.renderInterface.recallTexture();
 				}
 			}
@@ -109,7 +93,7 @@ public class RenderableModelObject extends RenderableTransform{
 			//Render any parts that depend on us before we pop our state.
 			for(RenderableModelObject modelObject : allObjects){
 				if(objectName.equals(modelObject.applyAfter)){
-					modelObject.render(vehicle, optionalPart, partialTicks, allObjects);
+					modelObject.render(provider, partialTicks, allObjects);
 				}
 			}
 		}

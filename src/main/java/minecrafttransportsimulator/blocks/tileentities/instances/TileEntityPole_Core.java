@@ -9,8 +9,8 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
  */
 public class TileEntityPole_Core extends ATileEntityPole_Component{
 		
-	public TileEntityPole_Core(ItemPoleComponent item){
-		super(item);
+	public TileEntityPole_Core(TileEntityPole core, ItemPoleComponent item){
+		super(core, item);
 	}
 
 	@Override

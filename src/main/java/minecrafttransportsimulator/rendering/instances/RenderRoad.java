@@ -12,6 +12,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
+import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -33,15 +34,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		}
 		Map<RoadComponent, Integer> displayListMap = roadDisplayListMap.get(road);
 		for(RoadComponent component : road.components.keySet()){
+			ItemRoadComponent componentItem = road.components.get(component);
+			
 			if(!displayListMap.containsKey(component)){
 				int displayListIndex = GL11.glGenLists(1);
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						MasterLoader.renderInterface.bindTexture(road.components.get(component).definition.getTextureLocation());
+						MasterLoader.renderInterface.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 						//Core components need to be transformed to wedges.
 						List<Float[]> transformedVertices = new ArrayList<Float[]>();
-						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(road.components.get(component).definition.getModelLocation());
+						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation());
 						
 						Point3d priorPosition = new Point3d(0, 0, 0);
 						Point3d priorRotation = new Point3d(0, 0, 0);
@@ -127,7 +130,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				displayListMap.put(component, displayListIndex);
 			}
 			
-			MasterLoader.renderInterface.bindTexture(road.components.get(component).definition.getTextureLocation());
+			MasterLoader.renderInterface.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 			GL11.glCallList(displayListMap.get(component));
 		}
 		

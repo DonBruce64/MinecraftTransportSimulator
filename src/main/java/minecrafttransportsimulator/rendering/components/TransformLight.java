@@ -6,11 +6,9 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**This class represents a light object of a model.  Inputs are the name of the name model
 * and the name of the light.
@@ -107,40 +105,34 @@ public class TransformLight extends ATransform{
 	}
 
 	@Override
-	public double applyTransform(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks, double offset){
+	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
-		//Lights start dimming due to low power at 8V.
+		//Lights start dimming due to low power at 2/3 power.
 		//Special case for the generic light, which doesn't require power, and is always on.
-		if(type.equals(LightType.GENERICLIGHT)) {
+		if(type.equals(LightType.GENERICLIGHT)){
 			setLightupTextureState(true, 1);
-		}
-		else {
-			setLightupTextureState(vehicle.lightsOn.contains(type), (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1));
+		}else{
+			double electricPower = provider.getLightPower();
+			setLightupTextureState(provider.getActiveVariables().contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
 		}
 		return 0;
 	}
 	
 	@Override
-	public void doPostRenderLogic(EntityVehicleF_Physics vehicle, APart optionalPart, float partialTicks){
+	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
 		//We cheat here and render our light bits at this point.
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.
 		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
-		boolean lightActuallyOn = vehicle.lightsOn.contains(type) && isFlashingLightOn();
-		float sunLight = vehicle.world.getLightBrightness(new Point3i(vehicle.position), false);
-		//Lights start dimming due to low power at 8V.
-		float electricFactor = (float) Math.min(vehicle.electricPower > 2 ? (vehicle.electricPower-2)/6F : 0, 1);
-		//Max brightness occurs when ambient light is 0 and we have at least 8V power.
+		boolean lightActuallyOn = provider.getActiveVariables().contains(type.lowercaseName) && isFlashingLightOn();
+		float sunLight = provider.getProviderWorld().getLightBrightness(new Point3i(provider.getProviderPosition()), false);
+		float electricPower = provider.getLightPower();
+		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
+		float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
+		
+		//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, (float) vehicle.electricPower, electricFactor, lightBrightness, ConfigSystem.configObject.clientRendering.vehicleBeams.value);
-	}
-	
-	
-	/**
-	 *  Renders this light at a specific block-based position.  Full power and brightness is assumed.
-	 */
-	public void renderOnBlock(IWrapperWorld world, Point3i location, boolean lightActive){
-		render(lightActive && isFlashingLightOn(), 12.0F, 1.0F, 1 - world.getLightBrightness(location, false), ConfigSystem.configObject.clientRendering.blockBeams.value);
+		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, provider instanceof AEntityBase ? ConfigSystem.configObject.clientRendering.vehicleBeams.value : ConfigSystem.configObject.clientRendering.blockBeams.value);
 	}
 	
 	/**
@@ -174,8 +166,9 @@ public class TransformLight extends ATransform{
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
+		//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
 		if(beamEnabled && renderBeam && lightOn && doBlendRenders){
-			renderBeam(Math.min(electricPower > 4 ? 1.0F : 0, lightBrightness));
+			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness));
 		}
 		
 		//Set color back to normal, turn off blending, turn on lighting, and un-bind the light textures.

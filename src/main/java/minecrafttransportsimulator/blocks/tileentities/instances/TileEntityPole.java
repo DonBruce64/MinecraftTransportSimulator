@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -34,12 +35,22 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
-				ATileEntityPole_Component newComponent = TileEntityPole.createComponent(PackParserSystem.getItem(packID, systemName));
+				ATileEntityPole_Component newComponent = createComponent(PackParserSystem.getItem(packID, systemName));
 				components.put(axis, newComponent);
-				if(newComponent.definition.general.textObjects != null){
-					newComponent.setTextLines(data.getStrings("textLines", newComponent.definition.general.textObjects.size()));
+				
+				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
+					ITextProvider provider = (ITextProvider) newComponent;
+					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
+						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLines" + i));
+					}
 				}
 			}
+		}
+		
+		//If we don't have our core component on the NONE axis, add it now based on our definition.
+		//This is done for ease of rendering and lookup routines.
+		if(!components.containsKey(Axis.NONE)){
+			components.put(Axis.NONE, createComponent(((ItemPoleComponent) this.item)));
 		}
 	}
 	
@@ -78,10 +89,15 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
-			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
-			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
-			if(connectedObjectEntry.getValue().getTextLines() != null){
-				data.setStrings("textLines", connectedObjectEntry.getValue().getTextLines());
+			Axis axis = connectedObjectEntry.getKey();
+			ATileEntityPole_Component component = connectedObjectEntry.getValue();
+			data.setString("packID" + axis.ordinal(), component.definition.packID);
+			data.setString("systemName" + axis.ordinal(), component.definition.systemName);
+			if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
+				ITextProvider provider = (ITextProvider) component;
+				for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
+					data.setString("textLines" + i, provider.getText().get(component.definition.rendering.textObjects.get(i)));
+				}
 			}
 		}
     }
@@ -89,12 +105,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	/**
 	 *  Helper method to create a component for this TE.  Does not add the component.
 	 */
-	public static ATileEntityPole_Component createComponent(ItemPoleComponent item){
+	public ATileEntityPole_Component createComponent(ItemPoleComponent item){
 		switch(item.definition.general.type){
-			case("core") : return new TileEntityPole_Core(item);	
-			case("traffic_signal") : return new TileEntityPole_TrafficSignal(item);
-			case("street_light") : return new TileEntityPole_StreetLight(item);
-			case("sign") : return new TileEntityPole_Sign(item);
+			case("core") : return new TileEntityPole_Core(this, item);	
+			case("traffic_signal") : return new TileEntityPole_TrafficSignal(this, item);
+			case("street_light") : return new TileEntityPole_StreetLight(this, item);
+			case("sign") : return new TileEntityPole_Sign(this, item);
 			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (item.definition.general.type != null ? item.definition.general.type : null) + " for pole:" + item.definition.packID + ":" + item.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
 		}
 	}

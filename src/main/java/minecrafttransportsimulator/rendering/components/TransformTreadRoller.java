@@ -38,7 +38,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	/**
 	 * Helper function to create a tread roller.
 	 */
-	public static TransformTreadRoller create(String objectName, JSONAnimationDefinition definition, EntityVehicleF_Physics vehicle, Float[][] vertices){
+	public static TransformTreadRoller create(String objectName, JSONAnimationDefinition definition, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;

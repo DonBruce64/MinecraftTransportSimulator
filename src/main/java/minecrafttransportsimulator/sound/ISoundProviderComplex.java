@@ -1,17 +1,15 @@
 package minecrafttransportsimulator.sound;
 
-import java.nio.FloatBuffer;
-
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 
-/**Interface for classes that need to have sounds played via the audio system.
- * Designed to be server-safe and only query the class implementing this interface for information
- * about the sound state rather than having that class feed it all back to a non-existent system.
+/**Interface for classes that need to have complex sounds played via the audio system.
+ * These sounds are on a provider that moves, so velocity data is required.
+ * This class also assumes that the provider has looping sounds that need to be re-started
+ * should it be interrupted.
  *
  * @author don_bruce
  */
-public interface ISoundProvider{
+public interface ISoundProviderComplex extends ISoundProviderSimple{
 	
 	/**
    	 *  Called to start all sounds when this provider is loaded.
@@ -30,19 +28,9 @@ public interface ISoundProvider{
 	 *  Called to update the passed-in sound.
 	 */
     public void updateProviderSound(SoundInstance sound);
-    
-    /**
-	 *  Return the position of this ISoundProvider as a 3-unit FloatBuffer.
-	 */
-    public FloatBuffer getProviderPosition();
-    
     /**
 	 *  Return the velocity of this ISoundProvider as a Point3d vector.
 	 */
     public Point3d getProviderVelocity();
     
-    /**
-	 *  Return the world this sound is in.  Required for world loading/unloading.
-	 */
-    public IWrapperWorld getProviderWorld();
 }

@@ -9,10 +9,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.instances.ItemPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -45,16 +45,6 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public void onPlaced(IWrapperWorld world, Point3i location, IWrapperPlayer player){
-		//If there's no NBT data, this is a new pole and needs to have its initial component added.
-		IWrapperNBT data = player.getHeldStack().getData();
-		if(data.getString("packID").isEmpty()){
-			TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
-			pole.components.put(Axis.NONE, TileEntityPole.createComponent(((ItemPoleComponent) player.getHeldItem())));
-		}
-	}
-	
-	@Override
 	public boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
@@ -63,19 +53,20 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		if(pole != null){
 			IWrapperItemStack heldStack = player.getHeldStack();
 			AItemBase heldItem = heldStack.getItem();
+			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
-			boolean isPlayerClickingEditableSign = pole.components.get(axis) instanceof TileEntityPole_Sign && pole.components.get(axis).definition.general.textObjects != null;
-			boolean isPlayerHoldingComponent = heldItem instanceof ItemPoleComponent && !(heldItem instanceof ItemPole);
+			boolean isPlayerClickingEditableSign = clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null;
+			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals("core");
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
 					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
 					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
-				}else if(isPlayerHoldingComponent){
+				}else if(!isPlayerHoldingCore){
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
-					if(component.definition.general.textObjects != null){
-						textLines = heldStack.getData().getStrings("textLines", component.definition.general.textObjects.size());
+					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
+						textLines = heldStack.getData().getStrings("textLines", component.definition.rendering.textObjects.size());
 					}
 					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
