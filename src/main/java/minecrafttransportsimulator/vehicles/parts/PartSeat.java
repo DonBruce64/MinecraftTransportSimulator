@@ -56,7 +56,7 @@ public final class PartSeat extends APart{
 						}else{
 							for(ItemPart gunType : vehicle.guns.keySet()){
 								for(PartGun gun : vehicle.guns.get(gunType)){
-									if(player.equals(gun.getCurrentController())){
+									if(player.equals(gun.getController())){
 										if(gunType.equals(activeGun)){
 											return true;
 										}
@@ -89,7 +89,7 @@ public final class PartSeat extends APart{
 		if(activeGun == null){
 			for(ItemPart gunType : vehicle.guns.keySet()){
 				for(PartGun gun : vehicle.guns.get(gunType)){
-					if(rider.equals(gun.getCurrentController())){
+					if(rider.equals(gun.getController())){
 						activeGun = gunType;
 						gunIndex = 0;
 						return;
@@ -103,7 +103,7 @@ public final class PartSeat extends APart{
 			boolean pastActiveGun = false;
 			for(ItemPart gunType : vehicle.guns.keySet()){
 				for(PartGun gun : vehicle.guns.get(gunType)){
-					if(rider.equals(gun.getCurrentController())){
+					if(rider.equals(gun.getController())){
 						if(pastActiveGun){
 							activeGun = gunType;
 							return;

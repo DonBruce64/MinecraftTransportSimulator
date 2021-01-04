@@ -1,7 +1,13 @@
 package minecrafttransportsimulator.mcinterface;
 
+import minecrafttransportsimulator.baseclasses.Gun;
+import minecrafttransportsimulator.baseclasses.IGunProvider;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.rendering.components.IParticleProvider;
+import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -10,7 +16,7 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  *
  * @author don_bruce
  */
-public interface IWrapperPlayer extends IWrapperEntity{
+public interface IWrapperPlayer extends IWrapperEntity, IGunProvider, IParticleProvider{
 	
 	/**
 	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
@@ -86,4 +92,98 @@ public interface IWrapperPlayer extends IWrapperEntity{
 	 *  chests, furnaces, and brewing stands.
 	 */
 	public void openTileEntityGUI(IWrapperTileEntity tile);
+	
+	
+	//----------START OF GUN SOUND AND FUNCTION CODE----------
+	@Override
+	public default Point3d getProviderPosition(){
+		return getPosition().add(0, getEyeHeight(), 0);
+	}
+	
+	@Override
+	public default Point3d getProviderVelocity(){
+		return getVelocity();
+	}
+
+	@Override
+	public default Point3d getProviderRotation(){
+		return new Point3d(getPitch(), getHeadYaw(), 0);
+	}
+	
+	@Override
+	public default IWrapperWorld getProviderWorld(){
+		return getWorld();
+	}
+	
+	@Override
+	public default void reloadGunBullets(){
+		//Check the player's inventory for bullets.
+		IWrapperInventory inventory = getInventory();
+		for(int i=0; i<inventory.getSize(); ++i){
+			AItemBase item = inventory.getItemInSlot(i);
+			if(item instanceof ItemPart){
+				if(ItemPart.getGunForPlayer(this).tryToReload((ItemPart) item)){
+					//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+					//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+					inventory.decrementSlot(i);
+					return;
+				}
+			}
+		}
+	}
+
+	@Override
+	public default IWrapperEntity getController(){
+		return this;
+	}
+	
+	@Override
+	public default boolean isGunActive(IWrapperEntity controller){
+		return true;
+	}
+	
+	@Override
+	public default double getDesiredYaw(IWrapperEntity controller){
+		return 0;
+	}
+	
+	@Override
+	public default double getDesiredPitch(IWrapperEntity controller){
+		return 0;
+	}
+
+	@Override
+	public default int getGunNumber(){
+		return 1;
+	}
+	
+	@Override
+	public default int getTotalGuns(){
+		return 1;
+	}
+	
+	@Override
+	public default void updateProviderSound(SoundInstance sound){
+		Gun gun = ItemPart.getGunForPlayer(this);
+		if(gun != null){
+			gun.updateProviderSound(sound);
+		}
+	}
+	
+	@Override
+	public default void startSounds(){
+		Gun gun = ItemPart.getGunForPlayer(this);
+		if(gun != null){
+			gun.startSounds();
+		}
+	}
+	
+	@Override
+	public default void spawnParticles(){
+		//Forward calls to the gun.
+		Gun gun = ItemPart.getGunForPlayer(this);
+		if(gun != null){
+			gun.spawnParticles();
+		}
+	}
 }

@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -118,7 +119,13 @@ class BuilderItem extends Item{
 	 */
 	@Override
 	public int getMaxItemUseDuration(ItemStack stack){
-        return item instanceof IItemFood ? ((IItemFood) item).getTimeToEat() : 0;
+		if(item instanceof IItemFood){
+			return ((IItemFood) item).getTimeToEat();
+		}else if(item instanceof ItemPart && ((ItemPart) item).isHandHeldGun()){
+			return Integer.MAX_VALUE;
+		}else{
+			return 0;
+		}
     }
 	
 	/**
@@ -128,10 +135,12 @@ class BuilderItem extends Item{
     public EnumAction getItemUseAction(ItemStack stack){
     	if(item instanceof IItemFood){
     		IItemFood food = (IItemFood) item;
-    		return food.getTimeToEat() > 0 ? (food.isDrink() ? EnumAction.DRINK : EnumAction.BOW) : EnumAction.NONE;
-    	}else{
-    		return EnumAction.NONE;
-    	}
+    		return food.getTimeToEat() > 0 ? (food.isDrink() ? EnumAction.DRINK : EnumAction.EAT) : EnumAction.NONE;
+    	}else if(item instanceof ItemPart && ((ItemPart) item).isHandHeldGun()){
+			return EnumAction.BOW;
+		}else{
+			return EnumAction.NONE;
+		}
     }
 	
 	/**
@@ -152,7 +161,7 @@ class BuilderItem extends Item{
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand){
 		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
 		//If we are a food item, set our hand to start eating.
-		if(item instanceof IItemFood &&  ((IItemFood) item).getTimeToEat() > 0 && player.canEat(true)){
+		if((item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 && player.canEat(true)) || (item instanceof ItemPart && ((ItemPart) item).isHandHeldGun())){
 			player.setActiveHand(hand);
 		}
 		return item.onUsed(wrapper, wrapper.getWrapperFor(player)) ? new ActionResult<ItemStack>(EnumActionResult.SUCCESS, player.getHeldItem(hand)) : new ActionResult<ItemStack>(EnumActionResult.FAIL, player.getHeldItem(hand));

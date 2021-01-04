@@ -67,7 +67,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			boolean controllingGun = false;
 			for(APart part : parts){
 				if(part instanceof PartGun){
-					if(rider.equals(((PartGun) part).getCurrentController())){
+					if(rider.equals(((PartGun) part).getController())){
 						controllingGun = true;
 					}
 				}

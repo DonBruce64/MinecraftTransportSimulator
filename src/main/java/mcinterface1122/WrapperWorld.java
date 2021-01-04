@@ -290,7 +290,7 @@ class WrapperWorld implements IWrapperWorld{
     }
 	
 	@Override
-	public Map<IWrapperEntity, BoundingBox> attackEntities(Damage damage, AEntityBase damageSource, Point3d motion){
+	public Map<IWrapperEntity, BoundingBox> attackEntities(Damage damage, IWrapperEntity damageSource, Point3d motion){
 		AxisAlignedBB mcBox = convertBox(damage.box);
 		List<Entity> collidedEntities;
 		List<Point3d> rayTraceHits = new ArrayList<Point3d>();;
@@ -325,12 +325,16 @@ class WrapperWorld implements IWrapperWorld{
 					Entity entity = iterator.next();
 					if(entity instanceof BuilderEntity){
 						AEntityBase testSource = ((BuilderEntity) entity).entity;
-						if(damageSource.equals(testSource)){
+						if(damageSource.equals(testSource.wrapper)){
 							iterator.remove();
 						}
 					}else if(entity.getRidingEntity() instanceof BuilderEntity){
 						AEntityBase testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
-						if(damageSource.equals(testSource)){
+						if(damageSource.equals(testSource.wrapper)){
+							iterator.remove();
+						}
+					}else{
+						if(((WrapperEntity) damageSource).entity.equals(entity)){
 							iterator.remove();
 						}
 					}
@@ -807,8 +811,8 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public void spawnExplosion(IWrapperPlayer player, Point3d location, double strength, boolean flames){
-		world.newExplosion(((WrapperPlayer) player).player, location.x, location.y, location.z, (float) strength, flames, true);
+	public void spawnExplosion(IWrapperEntity entity, Point3d location, double strength, boolean flames){
+		world.newExplosion(((WrapperEntity) entity).entity, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**

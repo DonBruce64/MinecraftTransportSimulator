@@ -1,5 +1,7 @@
 package mcinterface1122;
 
+import minecrafttransportsimulator.baseclasses.Gun;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IInterfaceGame;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -83,6 +85,12 @@ class InterfaceGame implements IInterfaceGame{
     public static void on(TickEvent.PlayerTickEvent event){
     	//Only do updates at the end of a phase to prevent double-updates.
         if(event.phase.equals(Phase.END)){
+        	//If the player is holding a gun, send update ticks to it.
+        	Gun heldGun = ItemPart.getGunForPlayer(WrapperWorld.getWrapperFor(event.player.world).getWrapperFor(event.player));
+        	if(heldGun != null){
+        		heldGun.update();
+        	}
+        	
     		//If we are on the integrated server, and riding a vehicle, reduce render height.
     		if(event.side.isServer()){
     			if(event.player.getRidingEntity() instanceof BuilderEntity && ((BuilderEntity) event.player.getRidingEntity()).entity instanceof EntityVehicleF_Physics){

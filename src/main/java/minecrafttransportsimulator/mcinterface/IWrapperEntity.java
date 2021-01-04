@@ -28,6 +28,11 @@ public interface IWrapperEntity{
 	public int getID();
 	
 	/**
+	 *  Returns the world this entity is in.
+	 */
+	public IWrapperWorld getWorld();
+	
+	/**
 	 *  Returns the entity this entity is riding, or null if
 	 *  the entity is not riding any MTS entity (rider may will be riding
 	 *  a vanilla entity).
@@ -115,7 +120,7 @@ public interface IWrapperEntity{
 	 *  Returns a vector in the direction of the entity's line of sight,
 	 *  with a magnitude equal to the passed-in distance. 
 	 */
-	public Point3d getLineOfSight(float distance);
+	public Point3d getLineOfSight(double distance);
 	
 	/**
 	 *  Sets the entity's yaw to the passed-in yaw.

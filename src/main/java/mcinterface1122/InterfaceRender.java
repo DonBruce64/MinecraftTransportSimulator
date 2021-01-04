@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -24,6 +25,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -473,6 +475,14 @@ class InterfaceRender implements IInterfaceRender{
         for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
             if(entity instanceof BuilderEntity){
             	Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
+            }else if(entity instanceof EntityPlayer){
+            	//If the player is holding a gun, send particle commands to it.
+            	if(!MasterInterface.gameInterface.isGamePaused()){
+            		Gun heldGun = ItemPart.getGunForPlayer(WrapperWorld.getWrapperFor(entity.world).getWrapperFor((EntityPlayer) entity));
+                	if(heldGun != null){
+                		heldGun.spawnParticles();
+                	}
+            	}
             }
         }
         Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();

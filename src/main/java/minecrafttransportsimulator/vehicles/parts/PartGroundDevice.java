@@ -120,7 +120,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 					wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicle.currentMass/1000F;
 				}
 				Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(wheelDamage, vehicle, null);
+				vehicle.world.attackEntities(wheelDamage, vehicle.wrapper, null);
 				boundingBox.widthRadius -= 0.25;
 				boundingBox.depthRadius -= 0.25;
 			}

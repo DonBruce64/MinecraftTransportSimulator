@@ -126,7 +126,7 @@ public interface IWrapperWorld{
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<IWrapperEntity, BoundingBox> attackEntities(Damage damage, AEntityBase damageSource, Point3d motion);
+	public Map<IWrapperEntity, BoundingBox> attackEntities(Damage damage, IWrapperEntity damageSource, Point3d motion);
 	
 	/**
 	 *  Moves all entities that collide with the passed-in bounding boxes by the passed-in offset.
@@ -323,13 +323,13 @@ public interface IWrapperWorld{
 	
 	/**
 	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from an entity.
+	 *  Explosion in this case is from an internal entity.
 	 */
 	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames);
 	
 	/**
 	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from the player.
+	 *  Explosion in this case is from a wrapper entity.
 	 */
-	public void spawnExplosion(IWrapperPlayer player, Point3d location, double strength, boolean flames);
+	public void spawnExplosion(IWrapperEntity enitty, Point3d location, double strength, boolean flames);
 }

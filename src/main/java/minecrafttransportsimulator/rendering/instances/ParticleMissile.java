@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
-public final class ParticleMissile extends ParticleBullet {
+public final class ParticleMissile extends ParticleBullet{
 	
 	private Point3d targetPosition;
 	private PartEngine engineTarget;
@@ -21,7 +21,7 @@ public final class ParticleMissile extends ParticleBullet {
 	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
-	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController, Point3i target) {
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, IWrapperEntity gunController, Point3i target) {
 		super(position, motion, direction, bullet, gun, gunController);
 		this.targetPosition = new Point3d(target);
 		this.entityTarget = null;
@@ -31,7 +31,7 @@ public final class ParticleMissile extends ParticleBullet {
 	}
 	
 	//Passes in an entity to be used as the target
-	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController, IWrapperEntity target) {
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, IWrapperEntity gunController, IWrapperEntity target) {
 		super(position, motion, direction, bullet, gun, gunController);
 		this.entityTarget = target;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;

@@ -174,8 +174,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						newRoad.curve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
 						
 						//Set the road lanes now that we have the curve.
-						float[] definitionOffsets = newRoad.definition.general.laneOffsets;
-						for(int laneNumber=0; laneNumber < definitionOffsets.length; ++laneNumber){
+						for(int laneNumber=0; laneNumber < newRoad.definition.general.laneOffsets.length; ++laneNumber){
 							newRoad.lanes.add(laneNumber, new RoadLane(newRoad, laneNumber));
 						}
 						

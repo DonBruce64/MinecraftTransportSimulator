@@ -6,6 +6,7 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
@@ -46,6 +47,11 @@ class WrapperEntity implements IWrapperEntity{
 	@Override
 	public int getID(){
 		return entity.getEntityId();
+	}
+	
+	@Override
+	public IWrapperWorld getWorld(){
+		return WrapperWorld.getWrapperFor(entity.world);
 	}
 	
 	@Override
@@ -118,7 +124,7 @@ class WrapperEntity implements IWrapperEntity{
 	}
 	
 	@Override
-	public Point3d getLineOfSight(float distance) {
+	public Point3d getLineOfSight(double distance){
 		return (new Point3d(0D, 0D, distance)).rotateFine(new Point3d(entity.rotationPitch, 0D, 0D)).rotateFine(new Point3d(0D, -entity.rotationYaw, 0));
 	}
 	

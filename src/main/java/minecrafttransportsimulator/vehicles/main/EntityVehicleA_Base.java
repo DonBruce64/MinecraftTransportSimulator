@@ -58,7 +58,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	private static final Map<VehiclePart, Map<VehiclePart, VehiclePart>> SUBPACK_MAPPINGS = new HashMap<VehiclePart, Map<VehiclePart, VehiclePart>>();  
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
-	public final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
+	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
 	public EntityVehicleA_Base(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
 		super(world, wrapper, data);

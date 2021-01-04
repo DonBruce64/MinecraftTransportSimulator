@@ -462,12 +462,12 @@ public class PartEngine extends APart implements IParticleProvider{
 				boundingBox.depthRadius += 0.25;
 				boundingBox.globalCenter.add(vehicle.headingVector);
 				Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(jetIntake, vehicle, null);
+				vehicle.world.attackEntities(jetIntake, vehicle.wrapper, null);
 				
 				boundingBox.globalCenter.subtract(vehicle.headingVector);
 				boundingBox.globalCenter.subtract(vehicle.headingVector);
 				Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, jetIntake.attacker).setFire();
-				vehicle.world.attackEntities(jetExhaust, vehicle, null);
+				vehicle.world.attackEntities(jetExhaust, vehicle.wrapper, null);
 				
 				boundingBox.globalCenter.add(vehicle.headingVector);
 				boundingBox.widthRadius -= 0.25;

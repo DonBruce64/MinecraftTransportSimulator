@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
@@ -18,7 +19,7 @@ import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
+import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**This part class is special, in that it does not extend APart.
  * This is because bullets do not render as vehicle parts, and instead
@@ -34,7 +35,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public class ParticleBullet extends AParticle{
 	private final ItemPart bullet;
-	private final PartGun gun;
+	private final Gun gun;
 	private final int bulletNumber;
 	private final double initialVelocity;
 	private final Point3d initialDirection;
@@ -48,8 +49,8 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
-    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, IWrapperEntity gunController){
-    	super(gun.vehicle.world, position, motion);
+    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, IWrapperEntity gunController){
+    	super(gun.getProviderWorld(), position, motion);
     	this.bullet = bullet;
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
@@ -76,7 +77,15 @@ public class ParticleBullet extends AParticle{
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
-		Map<IWrapperEntity, BoundingBox> attackedEntities = world.attackEntities(damage, gun.vehicle, motion);
+		Map<IWrapperEntity, BoundingBox> attackedEntities;
+		if(gun.provider instanceof AEntityBase){
+			attackedEntities = world.attackEntities(damage, ((AEntityBase) gun.provider).wrapper, motion);
+		}else if(gun.provider instanceof IWrapperEntity){
+			attackedEntities = world.attackEntities(damage, (IWrapperEntity) gun.provider, motion);
+		}else{
+			attackedEntities = world.attackEntities(damage, null, motion);
+		}
+		
 		if(!attackedEntities.isEmpty()){
 			for(IWrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
@@ -122,7 +131,7 @@ public class ParticleBullet extends AParticle{
 		
 		//Check proximity fuze against any blocks that might be out front
 		if(bullet.definition.bullet.proximityFuze != 0) {
-			Point3i projectedImpactPoint = gun.vehicle.world.getBlockHit(this.position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
+			Point3i projectedImpactPoint = gun.getProviderWorld().getBlockHit(this.position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
 			if(projectedImpactPoint != null) {
 				this.doBulletHit(this.position, velocity);
 				return;
@@ -194,14 +203,14 @@ public class ParticleBullet extends AParticle{
 				case "smoke": {
 					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
 					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(gun.vehicle.world, particlePosition, particleVelocity.copy(), particleObject);
+						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), particleObject);
 						MasterLoader.renderInterface.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
 					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(gun.vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
+						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
 						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
 						MasterLoader.renderInterface.spawnParticle(currentParticle);
 					}

@@ -9,7 +9,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartGun;
+import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -130,8 +130,8 @@ public final class ControlSystem{
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(MasterLoader.gameInterface.getClientPlayer().equals(gun.getCurrentController())){
-					MasterLoader.networkInterface.sendToServer(new PacketVehiclePartGun(gun, gunTrigger.isPressed()));
+				if(MasterLoader.gameInterface.getClientPlayer().equals(gun.getController())){
+					MasterLoader.networkInterface.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){

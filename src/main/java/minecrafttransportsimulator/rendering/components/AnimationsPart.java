@@ -62,21 +62,21 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				//Parse one or more digits, then take off one because we are zero-indexed
 				int muzzleNumber = Integer.parseInt(muzzleVariable.substring(0, muzzleVariable.indexOf('_'))) - 1;
 				switch(muzzleVariable.substring(muzzleVariable.indexOf('_') + 1)) {
-					case("firing"): return (muzzleNumber == gun.currentMuzzle ? 1 : 0) * gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+					case("firing"): return (muzzleNumber == gun.internalGun.currentMuzzle ? 1 : 0) * gun.internalGun.cooldownTimeRemaining/(double)gun.internalGun.definition.gun.fireDelay;
 				}
 			}
 			switch(variable){
-				case("gun_active"): return gun.active ? 1 : 0;
-				case("gun_firing"): return gun.firing ? 1 : 0;
-				case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
-				case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
-				case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
-				case("gun_windup_time"): return gun.windupTimeCurrent;
-				case("gun_windup_rotation"): return gun.windupRotation;
-				case("gun_windup_complete"): return gun.windupTimeCurrent == gun.definition.gun.windupTime ? 1 : 0;
-				case("gun_reload"): return gun.reloadTimeRemaining/(double)gun.definition.gun.reloadTime;
-				case("gun_ammo_count"): return gun.bulletsLeft;
-				case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
+				case("gun_active"): return gun.internalGun.active ? 1 : 0;
+				case("gun_firing"): return gun.internalGun.firing ? 1 : 0;
+				case("gun_pitch"): return gun.internalGun.prevOrientation.x + (gun.internalGun.currentOrientation.x - gun.internalGun.prevOrientation.x)*partialTicks;
+				case("gun_yaw"): return gun.internalGun.prevOrientation.y + (gun.internalGun.currentOrientation.y - gun.internalGun.prevOrientation.y)*partialTicks;
+				case("gun_cooldown"): return gun.internalGun.cooldownTimeRemaining/(double)gun.internalGun.definition.gun.fireDelay;
+				case("gun_windup_time"): return gun.internalGun.windupTimeCurrent;
+				case("gun_windup_rotation"): return gun.internalGun.windupRotation;
+				case("gun_windup_complete"): return gun.internalGun.windupTimeCurrent == gun.internalGun.definition.gun.windupTime ? 1 : 0;
+				case("gun_reload"): return gun.internalGun.reloadTimeRemaining/(double)gun.internalGun.definition.gun.reloadTime;
+				case("gun_ammo_count"): return gun.internalGun.bulletsLeft;
+				case("gun_ammo_percent"): return gun.internalGun.bulletsLeft/gun.internalGun.definition.gun.capacity;
 			}
 		}else if(part instanceof PartInteractable){
 			PartInteractable interactable = (PartInteractable) part;

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
@@ -12,11 +13,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Packet used for sending bullet hit information to and from the server.  The first instance of this packet
  * is sent from clients to the server when they detect that a bullet that was spawned by the client player
@@ -25,23 +24,23 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
  * 
  * @author don_bruce
  */
-public class PacketBulletHit extends APacketVehiclePart{
+public class PacketBulletHit extends APacketBase{
+	private final int gunID;
 	private final Point3d localCenter;
 	private final Point3d globalCenter;
 	private final double bulletVelocity;
 	private final ItemPart bullet;
-	private final int gunNumber;
 	private final int bulletNumber;
 	private final int hitEntityID;
 	private final int controllerEntityID;
 
-	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, PartGun gun, int bulletNumber, IWrapperEntity hitEntity, IWrapperEntity controllerEntity){
-		super(gun.vehicle, gun.placementOffset);
+	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, Gun gun, int bulletNumber, IWrapperEntity hitEntity, IWrapperEntity controllerEntity){
+		super(null);
+		this.gunID = gun.gunID;
 		this.localCenter = box.localCenter;
 		this.globalCenter = box.globalCenter;
 		this.bulletVelocity = velocity;
 		this.bullet = bullet;
-		this.gunNumber = gun.gunNumber;
 		this.bulletNumber = bulletNumber;
 		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
 		this.controllerEntityID = controllerEntity != null ? controllerEntity.getID() : -1;
@@ -49,11 +48,11 @@ public class PacketBulletHit extends APacketVehiclePart{
 	
 	public PacketBulletHit(ByteBuf buf){
 		super(buf);
+		this.gunID = buf.readInt();
 		this.localCenter = readPoint3dFromBuffer(buf);
 		this.globalCenter = readPoint3dFromBuffer(buf);
 		this.bulletVelocity = buf.readDouble();
 		this.bullet = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
-		this.gunNumber = buf.readInt();
 		this.bulletNumber = buf.readInt();
 		this.hitEntityID = buf.readInt();
 		this.controllerEntityID = buf.readInt();
@@ -62,27 +61,27 @@ public class PacketBulletHit extends APacketVehiclePart{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
+		buf.writeInt(gunID);
 		writePoint3dToBuffer(localCenter, buf);
 		writePoint3dToBuffer(globalCenter, buf);
 		buf.writeDouble(bulletVelocity);
 		writeStringToBuffer(bullet.definition.packID, buf);
 		writeStringToBuffer(bullet.definition.systemName, buf);
 		writeStringToBuffer(bullet.subName, buf);
-		buf.writeInt(gunNumber);
 		buf.writeInt(bulletNumber);
 		buf.writeInt(hitEntityID);
 		buf.writeInt(controllerEntityID);
 	}
 	
 	@Override
-	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
+	public void handle(IWrapperWorld world, IWrapperPlayer player){
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
 			JSONPart bulletDefinition = bullet.definition;
 			float blastSize = bulletDefinition.bullet.blastStrength == 0f ? bulletDefinition.bullet.diameter/10f : bulletDefinition.bullet.blastStrength;
 			BoundingBox box = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false, false, false, 0);
-			PartGun gun = (PartGun) vehicle.getPartAtLocation(offset);
+			Gun gun = Gun.createdServerGuns.get(gunID);
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
@@ -90,7 +89,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 				//If we are an explosive bullet, blow up at our current position.
 				//Otherwise do attack logic.
 				if(bulletDefinition.bullet.types.contains("explosive")){
-					world.spawnExplosion(vehicle, box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
+					world.spawnExplosion(gun.provider.getController(), box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
@@ -138,7 +137,7 @@ public class PacketBulletHit extends APacketVehiclePart{
 								}
 							}else{
 								//Couldn't break the block or set it on fire.  Have clients do effects.
-								return true;
+								MasterLoader.networkInterface.sendToAllClients(this);
 							}
 						}
 					}
@@ -149,6 +148,5 @@ public class PacketBulletHit extends APacketVehiclePart{
 			//If this is the case, play the block break sound and spawn some particles.
 			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(globalCenter), true);
 		}
-		return false;
 	}
 }
