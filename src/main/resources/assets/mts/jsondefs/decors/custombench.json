@@ -6,6 +6,6 @@
 		"height" : 1.0,
 		"depth" : 1.0,
 		"itemTypes" : ["part"],
-		"partTypes" : ["custom"]
+		"partTypes" : ["generic"]
 	}
 }
