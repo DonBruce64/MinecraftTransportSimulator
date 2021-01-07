@@ -328,15 +328,17 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					}
 				}
 			}
-		}else if(part instanceof PartGroundDevice){
-			if(part.definition.ground.isWheel || part.definition.ground.isTread){
-				wheels.add((PartGroundDevice) part);
+		}else if(!part.vehicleDefinition.isSpare){
+			if(part instanceof PartGroundDevice){
+				if(part.definition.ground.isWheel || part.definition.ground.isTread){
+					wheels.add((PartGroundDevice) part);
+				}
+			}else if(part instanceof PartGun){
+				if(!guns.containsKey(part.getItem())){
+					guns.put(part.getItem(), new ArrayList<PartGun>());
+				}
+				guns.get(part.getItem()).add((PartGun) part);
 			}
-		}else if(part instanceof PartGun){
-			if(!guns.containsKey(part.getItem())){
-				guns.put(part.getItem(), new ArrayList<PartGun>());
-			}
-			guns.get(part.getItem()).add((PartGun) part);
 		}
 	}
 	
