@@ -1,19 +1,17 @@
 package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.packets.instances.PacketGunChange;
+import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEffector;
@@ -25,10 +23,8 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
-public class ItemPart extends AItemSubTyped<JSONPart>{
+public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider{
 	private final String partPrefix;
-	private static final Map<IWrapperPlayer, Gun> activeClientGuns = new ConcurrentHashMap<IWrapperPlayer, Gun>();
-	private static final Map<IWrapperPlayer, Gun> activeServerGuns = new ConcurrentHashMap<IWrapperPlayer, Gun>();
 	
 	public ItemPart(JSONPart definition, String subName){
 		super(definition, subName);
@@ -191,21 +187,8 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 	@Override
 	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
 		if(isHandHeldGun()){
-			if(world.isClient()){
-				//Don't set our gun as firing.  This comes from packets.
-			}else{
-				//Create new gun from stack data.
-				IWrapperItemStack stack = player.getHeldStack();
-				IWrapperNBT data = stack.getData();
-				System.out.println("START SERVER");
-				Gun gun = new Gun(player, definition, 0, 0, 0, 0, data);
-				activeServerGuns.put(player, gun);
-				
-				//Set gun as firing and set data to clients.
-				//FIXME This won't reach clients if this gun doesn't already exist.  BAD
-				gun.firing = true;
-				MasterLoader.networkInterface.sendToAllClients(new PacketGunChange(gun, true));
-				System.out.println(gun.bulletsLeft);
+			if(!world.isClient()){
+				EntityPlayerGun.playerServerGuns.get(player.getUUID()).fireCommand = true;
 			}
 			return true;
 		}else{
@@ -215,34 +198,22 @@ public class ItemPart extends AItemSubTyped<JSONPart>{
 	
 	@Override
 	public void onStoppedUsing(IWrapperWorld world, IWrapperPlayer player){
-		if(isHandHeldGun()){
-			System.out.println("STOP");
-			//Save the gun data to the player's inventory.
-			//This ensures the states like number of bullets fired and ammo are kept.
-			IWrapperItemStack stack = player.getHeldStack();
-			Gun gun = world.isClient() ? activeClientGuns.get(player) : activeServerGuns.get(player);
-			if(gun != null){
-				IWrapperNBT data = stack.getData();
-				gun.save(data);
-				stack.setData(data);
-				gun.firing = false;
-			}
+		if(isHandHeldGun() && !world.isClient()){
+			EntityPlayerGun.playerServerGuns.get(player.getUUID()).fireCommand = false;
 		}
+	}
+	
+	@Override
+	public EntityPlayerGun createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, IWrapperNBT data){
+		return new EntityPlayerGun(world, wrapper, playerSpawning, data);
+	}
+
+	@Override
+	public Class<EntityPlayerGun> getEntityClass(){
+		return EntityPlayerGun.class;
 	}
 	
 	public boolean isHandHeldGun(){
-		return definition.gun != null && !definition.gun.handHeld;
-	}
-	
-	public static Gun getGunForPlayer(IWrapperPlayer player){
-		if(!player.getWorld().isClient()){
-			return activeServerGuns.get(player);
-		}else{
-			Gun clientGun = activeClientGuns.get(player);
-			if(clientGun != null){
-				//Need to request packet data here.
-			}
-			return clientGun;
-		}
+		return definition.gun != null && definition.gun.handHeld;
 	}
 }

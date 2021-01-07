@@ -23,6 +23,7 @@ import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
@@ -59,12 +60,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.13.0-BETA6";
+	public static final String MODVER = "19.13.0-BETA7";
 	
 	public static String resourceDomain;
 	public static IInterfaceAudio audioInterface;
 	public static IInterfaceCore coreInterface;
-	public static IInterfaceGame gameInterface;
+	public static IInterfaceClient clientInterface;
 	public static IInterfaceGUI guiInterface;
 	public static IInterfaceInput inputInterface;
 	public static IInterfaceNetwork networkInterface;
@@ -75,12 +76,12 @@ public class MasterLoader{
 	/**
 	 *  Called to set interfaces.  This needs to be done before ANY logic is executed.
 	 */
-	public static void setInterfaces(String resourceDomain, IInterfaceAudio audioInterface, IInterfaceCore coreInterface, IInterfaceGame gameInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceNetwork networkInterface, IInterfaceOGGDecoder oggDecoderInterface, IInterfaceRender renderInterface){
+	public static void setInterfaces(String resourceDomain, IInterfaceAudio audioInterface, IInterfaceCore coreInterface, IInterfaceClient clientInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceNetwork networkInterface, IInterfaceOGGDecoder oggDecoderInterface, IInterfaceRender renderInterface){
 		//Set interfaces.
 		MasterLoader.resourceDomain = resourceDomain;
 		MasterLoader.audioInterface = audioInterface;
 		MasterLoader.coreInterface = coreInterface;
-		MasterLoader.gameInterface = gameInterface;
+		MasterLoader.clientInterface = clientInterface;
 		MasterLoader.guiInterface = guiInterface;
 		MasterLoader.inputInterface = inputInterface;
 		MasterLoader.networkInterface = networkInterface;
@@ -168,6 +169,7 @@ public class MasterLoader{
 		networkInterface.registerPacket(packetIndex++, PacketGunChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		networkInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
+		networkInterface.registerPacket(packetIndex++, PacketPlayerGunChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
 		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);

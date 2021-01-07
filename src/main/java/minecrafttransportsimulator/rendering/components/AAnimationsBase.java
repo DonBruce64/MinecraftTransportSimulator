@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -35,8 +33,9 @@ public abstract class AAnimationsBase<ProviderClass extends IAnimationProvider>{
 	 *  requested in the animation definition.  The passed-in offset is used to allow for stacking animations, and should
 	 *  be 0 if this functionality is not required.  The passed-in clock may be null to prevent duration/delay functionality.
 	 */
-	public double getAnimatedVariableValue(ProviderClass provider, JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
-		double value = getRawVariableValue(provider, animation.variable, partialTicks);
+	@SuppressWarnings("unchecked")
+	public final double getAnimatedVariableValue(IAnimationProvider provider, JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
+		double value = getRawVariableValue((ProviderClass) provider, animation.variable, partialTicks);
 		if(clock == null || (animation.duration == 0 && animation.forwardsDelay == 0 && animation.reverseDelay == 0)){
 			return clampAndScale(value, animation, offset);
 		}else{
@@ -76,9 +75,8 @@ public abstract class AAnimationsBase<ProviderClass extends IAnimationProvider>{
 			return provider.getProviderWorld().getTick()%ticksCycle >= startTick ? 1 : 0;
 		}
 		
-		//Check if this is a generic variable or a light variable.
-		Set<String> activeVariables = provider.getActiveVariables();
-		if(activeVariables.contains(variable)){
+		//Check if this is a generic variable.  This contains lights in most cases.
+		if(provider.getActiveVariables().contains(variable)){
 			return 1;
 		}
 		

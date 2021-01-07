@@ -345,7 +345,7 @@ public class BuilderEntity extends Entity{
 			//For the clients, we use the packet to create the entity after an update() call.
 			if(!world.isRemote){
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), new WrapperNBT(tag));
+				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), null, new WrapperNBT(tag));
 			}
 		}
 	}

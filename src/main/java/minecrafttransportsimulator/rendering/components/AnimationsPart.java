@@ -21,8 +21,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 	public double getRawVariableValue(APart part, String variable, float partialTicks){
 		//First check if we are a base variable.
 		double value = getBaseVariableValue(part, variable, partialTicks);
-		if(Double.isNaN(value)){
-			return 0;
+		if(!Double.isNaN(value)){
+			return value;
 		}
 				
 		if(part instanceof PartEngine){
@@ -54,29 +54,9 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_hours"): return engine.hours;
 			}
 		}else if(part instanceof PartGun){
-			PartGun gun = (PartGun) part;
-			//Check for an instance of a gun_muzzle_# variable, since these requires additional parsing
-			if (variable.startsWith("gun_muzzle_")){
-				//Get the rest of the variable after gun_muzzle_
-				String muzzleVariable = variable.substring("gun_muzzle_".length());
-				//Parse one or more digits, then take off one because we are zero-indexed
-				int muzzleNumber = Integer.parseInt(muzzleVariable.substring(0, muzzleVariable.indexOf('_'))) - 1;
-				switch(muzzleVariable.substring(muzzleVariable.indexOf('_') + 1)) {
-					case("firing"): return (muzzleNumber == gun.internalGun.currentMuzzle ? 1 : 0) * gun.internalGun.cooldownTimeRemaining/(double)gun.internalGun.definition.gun.fireDelay;
-				}
-			}
-			switch(variable){
-				case("gun_active"): return gun.internalGun.active ? 1 : 0;
-				case("gun_firing"): return gun.internalGun.firing ? 1 : 0;
-				case("gun_pitch"): return gun.internalGun.prevOrientation.x + (gun.internalGun.currentOrientation.x - gun.internalGun.prevOrientation.x)*partialTicks;
-				case("gun_yaw"): return gun.internalGun.prevOrientation.y + (gun.internalGun.currentOrientation.y - gun.internalGun.prevOrientation.y)*partialTicks;
-				case("gun_cooldown"): return gun.internalGun.cooldownTimeRemaining/(double)gun.internalGun.definition.gun.fireDelay;
-				case("gun_windup_time"): return gun.internalGun.windupTimeCurrent;
-				case("gun_windup_rotation"): return gun.internalGun.windupRotation;
-				case("gun_windup_complete"): return gun.internalGun.windupTimeCurrent == gun.internalGun.definition.gun.windupTime ? 1 : 0;
-				case("gun_reload"): return gun.internalGun.reloadTimeRemaining/(double)gun.internalGun.definition.gun.reloadTime;
-				case("gun_ammo_count"): return gun.internalGun.bulletsLeft;
-				case("gun_ammo_percent"): return gun.internalGun.bulletsLeft/gun.internalGun.definition.gun.capacity;
+			value = AnimationsGun.getGunVariable(((PartGun) part).internalGun, variable, partialTicks);
+			if(!Double.isNaN(value)){
+				return value;
 			}
 		}else if(part instanceof PartInteractable){
 			PartInteractable interactable = (PartInteractable) part;

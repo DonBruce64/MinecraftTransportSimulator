@@ -204,7 +204,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//We add these before part boxes so the player can click them before clicking a part.
 		if(world.isClient()){
 			activePartSlotBoxes.clear();
-			IWrapperPlayer player = MasterLoader.gameInterface.getClientPlayer();
+			IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			if(heldItem instanceof ItemPart){
 				for(Entry<BoundingBox, VehiclePart> partSlotBoxEntry : partSlotBoxes.entrySet()){
@@ -242,7 +242,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//This is dependent on what the current player entity is holding.
 		for(APart part : parts){
 			if(world.isClient()){
-				IWrapperPlayer clientPlayer = MasterLoader.gameInterface.getClientPlayer();
+				IWrapperPlayer clientPlayer = MasterLoader.clientInterface.getClientPlayer();
 				//If the part is fake, don't add it.
 				if(part.isFake()){
 					continue;

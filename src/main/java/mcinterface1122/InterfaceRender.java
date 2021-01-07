@@ -17,7 +17,6 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -25,7 +24,6 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -38,6 +36,7 @@ import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.block.SoundType;
@@ -68,7 +67,9 @@ import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
@@ -403,14 +404,16 @@ class InterfaceRender implements IInterfaceRender{
     
     @SubscribeEvent
     public static void on(CameraSetup event){
-    	WrapperEntity renderEntity = WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor(event.getEntity());
-    	float currentPitch = event.getPitch();
-    	float currentYaw = event.getYaw();
-    	event.setPitch(0);
-		event.setYaw(0);
-    	if(!RenderEventHandler.onCameraSetup(renderEntity, (float) event.getRenderPartialTicks())){
-    		event.setPitch(currentPitch);
-    		event.setYaw(currentYaw);
+    	if(event.getEntity() instanceof EntityPlayer){
+	    	WrapperPlayer playerWrapper = WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor((EntityPlayer) event.getEntity());
+	    	float currentPitch = event.getPitch();
+	    	float currentYaw = event.getYaw();
+	    	event.setPitch(0);
+			event.setYaw(0);
+	    	if(!RenderEventHandler.onCameraSetup(playerWrapper, (float) event.getRenderPartialTicks())){
+	    		event.setPitch(currentPitch);
+	    		event.setYaw(currentYaw);
+	    	}
     	}
     }
     
@@ -468,6 +471,22 @@ class InterfaceRender implements IInterfaceRender{
     		}
     	}
     }
+    
+    @SubscribeEvent
+    public static void on(RenderHandEvent event){
+    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
+    	if(entity != null && entity.gun != null){
+    		event.setCanceled(true);
+    	}
+    }
+    
+    @SubscribeEvent
+    public static void on(RenderSpecificHandEvent event){
+    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
+    	if(entity != null && entity.gun != null){
+    		event.setCanceled(true);
+    	}
+    }
 	
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
@@ -475,14 +494,6 @@ class InterfaceRender implements IInterfaceRender{
         for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
             if(entity instanceof BuilderEntity){
             	Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
-            }else if(entity instanceof EntityPlayer){
-            	//If the player is holding a gun, send particle commands to it.
-            	if(!MasterInterface.gameInterface.isGamePaused()){
-            		Gun heldGun = ItemPart.getGunForPlayer(WrapperWorld.getWrapperFor(entity.world).getWrapperFor((EntityPlayer) entity));
-                	if(heldGun != null){
-                		heldGun.spawnParticles();
-                	}
-            	}
             }
         }
         Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();

@@ -72,7 +72,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 					}
 				}
 			}
-            if(controllingGun || !world.isClient() || MasterLoader.gameInterface.inFirstPerson() || lockCameraToMovement){
+            if(controllingGun || !world.isClient() || MasterLoader.clientInterface.inFirstPerson() || lockCameraToMovement){
             	//Get yaw delta between entity and player from -180 to 180.
             	double playerYawDelta = (360 + (angles.y - rider.getYaw())%360)%360;
             	if(playerYawDelta > 180){
@@ -86,7 +86,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.            	
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-			if(world.isClient() && !MasterLoader.gameInterface.isChatOpen() && rider.equals(MasterLoader.gameInterface.getClientPlayer())){
+			if(world.isClient() && !MasterLoader.clientInterface.isChatOpen() && rider.equals(MasterLoader.clientInterface.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
     			MasterLoader.inputInterface.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
@@ -170,7 +170,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		rider.setPosition(dismountPosition);
 		
 		//If we are on the client, disable mouse-yoke blocking.
-		if(world.isClient() && MasterLoader.gameInterface.getClientPlayer().equals(rider)){
+		if(world.isClient() && MasterLoader.clientInterface.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
 			MasterLoader.inputInterface.setMouseEnabled(true);
 			MasterLoader.guiInterface.closeGUI();

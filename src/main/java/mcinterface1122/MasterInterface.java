@@ -24,7 +24,7 @@ public class MasterInterface{
 	static Logger logger;
 	static final InterfaceAudio audioInterface;
 	static final InterfaceCore coreInterface;
-	static final InterfaceGame gameInterface;
+	static final InterfaceClient gameInterface;
 	static final InterfaceGUI guiInterface;
 	static final InterfaceInput inputInterface;
 	static final InterfaceNetwork networkInterface;
@@ -40,7 +40,7 @@ public class MasterInterface{
 		if(FMLCommonHandler.instance().getSide().isClient()){
 			audioInterface = new InterfaceAudio();
 			coreInterface = new InterfaceCore();
-			gameInterface = new InterfaceGame();
+			gameInterface = new InterfaceClient();
 			guiInterface = new InterfaceGUI();
 			inputInterface = new InterfaceInput();
 			networkInterface = new InterfaceNetwork();

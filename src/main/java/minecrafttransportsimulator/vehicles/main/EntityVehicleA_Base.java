@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.rendering.components.AnimationsVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -55,7 +56,10 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * This second map is keyed by a part vehicle definition, with the value equal to a corrected vehicle definition.  This means that
 	 * in total, this object contains all sub-packs created on any vehicle for any part with sub-packs.  This is done as parts with
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any vehicle part location.*/
-	private static final Map<VehiclePart, Map<VehiclePart, VehiclePart>> SUBPACK_MAPPINGS = new HashMap<VehiclePart, Map<VehiclePart, VehiclePart>>();  
+	private static final Map<VehiclePart, Map<VehiclePart, VehiclePart>> SUBPACK_MAPPINGS = new HashMap<VehiclePart, Map<VehiclePart, VehiclePart>>();
+	
+	/**Animator for vehicles.*/
+	private static final AnimationsVehicle animator = new AnimationsVehicle();
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
@@ -454,6 +458,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				}
 			}
 		}
+	}
+	
+	@Override
+    public AnimationsVehicle getAnimationSystem(){
+		return animator;
 	}
 	
 	@Override

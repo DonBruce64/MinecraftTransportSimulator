@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 
 /**Interface to the core MC system.  This class has methods for registrations
  * file locations, and other core things that are common to clients and servers.
- * Client-specific things go into {@link IInterfaceGame}, rendering goes into
+ * Client-specific things go into {@link IInterfaceClient}, rendering goes into
  * {@link IInterfaceRender}.
  *
  * @author don_bruce

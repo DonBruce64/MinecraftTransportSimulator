@@ -37,8 +37,8 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 	public double getRawVariableValue(EntityVehicleF_Physics vehicle, String variable, float partialTicks){
 		//First check if we are a base variable.
 		double value = getBaseVariableValue(vehicle, variable, partialTicks);
-		if(Double.isNaN(value)){
-			return 0;
+		if(!Double.isNaN(value)){
+			return value;
 		}
 		
 		//If we have a variable with a suffix, we need to get that part first and pass

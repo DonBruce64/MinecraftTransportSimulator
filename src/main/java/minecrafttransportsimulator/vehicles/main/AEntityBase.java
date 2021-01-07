@@ -18,8 +18,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
-import minecrafttransportsimulator.rendering.components.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
 /**Base entity class.  This class contains the most basic code for entities,
@@ -48,8 +46,6 @@ public abstract class AEntityBase implements IAnimationProvider{
 	public static List<AEntityBase> createdClientEntities = new ArrayList<AEntityBase>();
 	/**Like {@link #createdClientEntities}, but on the server.**/
 	public static List<AEntityBase> createdServerEntities = new ArrayList<AEntityBase>();
-	/**Render instance for this class.**/
-	private static final AnimationsVehicle animator = new AnimationsVehicle();
 	
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
@@ -260,11 +256,6 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 *  classes that do rendering.
 	 */
 	public abstract void render(float partialTicks);
-	
-	@Override
-    public AAnimationsBase getAnimationSystem(){
-		return animator;
-	}
 	
 	@Override
     public IWrapperWorld getProviderWorld(){

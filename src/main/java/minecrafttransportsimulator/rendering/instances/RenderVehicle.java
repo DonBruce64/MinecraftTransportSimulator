@@ -134,7 +134,7 @@ public final class RenderVehicle{
 		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
-		Point3d renderPosition = vehiclePosition.copy().subtract(MasterLoader.gameInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
+		Point3d renderPosition = vehiclePosition.copy().subtract(MasterLoader.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the vehicle rotation.
 		Point3d renderRotation = vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(vehicle.angles);
@@ -225,7 +225,7 @@ public final class RenderVehicle{
 		MasterLoader.renderInterface.resetStates();
 		
 		//Spawn particles, but only once per render cycle.
-		if(MasterLoader.renderInterface.getRenderPass() != 1 && !MasterLoader.gameInterface.isGamePaused()){
+		if(MasterLoader.renderInterface.getRenderPass() != 1 && !MasterLoader.clientInterface.isGamePaused()){
 			for(APart part : vehicle.parts){
 				if(part instanceof IParticleProvider){
 					((IParticleProvider) part).spawnParticles();
@@ -975,7 +975,7 @@ public final class RenderVehicle{
 			
 			//If we are holding a part, render the valid slots.
 			//If we are holding a scanner, render all slots, but only render the looked-at one with items above it.
-			IWrapperPlayer player = MasterLoader.gameInterface.getClientPlayer();
+			IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			
 			if(heldItem instanceof ItemPart){

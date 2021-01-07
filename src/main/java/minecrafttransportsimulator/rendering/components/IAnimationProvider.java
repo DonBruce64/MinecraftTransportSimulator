@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -13,6 +14,7 @@ import minecrafttransportsimulator.sound.ISoundProviderSimple;
  * @author don_bruce
  */
 public interface IAnimationProvider extends ISoundProviderSimple{
+	public static final Set<String> EMPTY_VARIABLE_SET = new HashSet<String>();
     
     /**
 	 *  Returns the position of this provider.
@@ -30,7 +32,7 @@ public interface IAnimationProvider extends ISoundProviderSimple{
     public AAnimationsBase getAnimationSystem();
     
     /**
-   	 *  Returns how much power have on the lights on this provider.
+   	 *  Returns how much power the lights on the provider have.
    	 *  1 is full power, 0 is no power.  Note that this does not directly
    	 *  correspond to rendering of the lights due to different light sections
    	 *  rendering differently at different power levels.
@@ -43,5 +45,7 @@ public interface IAnimationProvider extends ISoundProviderSimple{
    	 *  individual providers.  Rather, this is for common collections
    	 *  of variables, like lights.
    	 */
-    public Set<String> getActiveVariables();
+    public default Set<String> getActiveVariables(){
+    	return EMPTY_VARIABLE_SET;
+    }
 }

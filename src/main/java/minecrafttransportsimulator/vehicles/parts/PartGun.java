@@ -210,7 +210,8 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		internalGun.spawnParticles();
 	}
 	
-	//--------------------START OF GUN SOUND METHODS--------------------	
+	//--------------------START OF GUN SOUND METHODS--------------------
+	//FIXME remove when gun code is good.
 	/*
 	@Override
 	public void spawnParticles(){

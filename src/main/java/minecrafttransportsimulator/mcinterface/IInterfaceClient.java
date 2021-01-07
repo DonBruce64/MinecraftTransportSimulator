@@ -1,15 +1,15 @@
 package minecrafttransportsimulator.mcinterface;
 
-/**Interface to the MC game instance.  This class has methods used for determining
+/**Interface to the MC client instance.  This class has methods used for determining
  * if the game is paused, the chat window status, and a few other things.
  * This interface interfaces with both Forge and MC code, so if it's something 
- * that's core to the game and doesn't need an instance of an object to access, it's likely here.
+ * that's core to the client and doesn't need an instance of an object to access, it's likely here.
  * Note that this interface will not be present on servers, so attempting to access it on such
  * will return null.
  *
  * @author don_bruce
  */
-public interface IInterfaceGame{
+public interface IInterfaceClient{
 	/**
 	 *  Returns true if the game is paused.
 	 */

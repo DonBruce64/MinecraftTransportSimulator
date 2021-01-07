@@ -61,7 +61,7 @@ public class SoundInstance{
 	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
 	public boolean shouldBeDampened(){
-		AEntityBase entityRiding = MasterLoader.gameInterface.getClientPlayer().getEntityRiding();
-		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && MasterLoader.gameInterface.inFirstPerson() && (radio == null || !entityRiding.equals(provider));
+		AEntityBase entityRiding = MasterLoader.clientInterface.getClientPlayer().getEntityRiding();
+		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && MasterLoader.clientInterface.inFirstPerson() && (radio == null || !entityRiding.equals(provider));
 	}
 }

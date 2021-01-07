@@ -55,7 +55,7 @@ public final class ControlSystem{
 
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
-		clientPlayer = MasterLoader.gameInterface.getClientPlayer();
+		clientPlayer = MasterLoader.clientInterface.getClientPlayer();
 		if(vehicle.definition.general.isAircraft){
 			controlAircraft(vehicle, isPlayerController);
 		}else{
@@ -76,7 +76,7 @@ public final class ControlSystem{
 		}
 		
 		if(changeView.isPressed()){
-			MasterLoader.gameInterface.toggleFirstPerson();
+			MasterLoader.clientInterface.toggleFirstPerson();
 		}
 	}
 	
@@ -130,12 +130,12 @@ public final class ControlSystem{
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(MasterLoader.gameInterface.getClientPlayer().equals(gun.getController())){
+				if(MasterLoader.clientInterface.getClientPlayer().equals(gun.getController())){
 					MasterLoader.networkInterface.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
-					if(MasterLoader.gameInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
+					if(MasterLoader.clientInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
 						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
 					}
 				}

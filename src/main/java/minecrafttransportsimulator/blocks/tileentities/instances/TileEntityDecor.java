@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -30,7 +28,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
-	private static final Set<String> EMPTY_VARIABLE_SET = new HashSet<String>();
 	private static final AnimationsDecor animator = new AnimationsDecor();
 	
 	public TileEntityDecor(IWrapperWorld world, Point3i position, IWrapperNBT data){
@@ -67,11 +64,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	@Override
 	public float getLightPower(){
 		return (15 - world.getRedstonePower(position))/15F;
-	}
-	
-	@Override
-	public Set<String> getActiveVariables(){
-		return EMPTY_VARIABLE_SET;
 	}
 	
 	@Override

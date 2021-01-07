@@ -41,7 +41,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -55,7 +55,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber()
+@EventBusSubscriber
 class BuilderItem extends Item{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
 	static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
@@ -135,12 +135,11 @@ class BuilderItem extends Item{
     public EnumAction getItemUseAction(ItemStack stack){
     	if(item instanceof IItemFood){
     		IItemFood food = (IItemFood) item;
-    		return food.getTimeToEat() > 0 ? (food.isDrink() ? EnumAction.DRINK : EnumAction.EAT) : EnumAction.NONE;
-    	}else if(item instanceof ItemPart && ((ItemPart) item).isHandHeldGun()){
-			return EnumAction.BOW;
-		}else{
-			return EnumAction.NONE;
+    		if(food.getTimeToEat() > 0){
+    			return food.isDrink() ? EnumAction.DRINK : EnumAction.EAT;
+    		}
 		}
+    	return EnumAction.NONE;
     }
 	
 	/**

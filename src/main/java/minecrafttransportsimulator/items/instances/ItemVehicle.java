@@ -57,7 +57,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//then we just make a blank, new instance.
 			//Prior to creating this class we need to create a new entity wrapper to hold it.
 			//Get one, and then create the class with it.
-			EntityVehicleF_Physics newVehicle = createEntity(world, world.generateEntity(), data);
+			EntityVehicleF_Physics newVehicle = createEntity(world, world.generateEntity(), player, data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -183,7 +183,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleF_Physics createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, IWrapperNBT data){
 		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, wrapper, data);
 		//Need to wait for vehicle to load-in before we try to add saved parts.
 		for(APart part : vehicle.partsFromNBT){

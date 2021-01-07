@@ -82,8 +82,8 @@ public class PacketGunChange extends APacketBase{
 			if(!world.isClient()){
 				MasterLoader.networkInterface.sendToAllClients(this);
 			}
-		}else if(world.isClient()){
-			System.out.println("CLIENT");
+		}else{
+			System.out.println("NULL GUN" + gunID);
 		}
 	}
 }

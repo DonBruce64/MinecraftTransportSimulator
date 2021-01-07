@@ -20,7 +20,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.AnimationsPart;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
@@ -346,7 +345,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	}
 	
 	@Override
-    public AAnimationsBase getAnimationSystem(){
+    public AnimationsPart getAnimationSystem(){
 		return animator;
 	}
 	

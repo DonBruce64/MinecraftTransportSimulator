@@ -18,7 +18,7 @@ public interface IInterfaceProvider{
 	
 	public IInterfaceCore getCoreInterface();
 	
-	public IInterfaceGame getGameInterface();
+	public IInterfaceClient getGameInterface();
 	
 	public IInterfaceInput getInputInterface();
 	

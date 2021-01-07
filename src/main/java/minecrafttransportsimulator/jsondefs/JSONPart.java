@@ -104,7 +104,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartGun{
-    	public boolean handHeld;
     	public boolean autoReload;
     	public int capacity;
     	public int fireDelay;
@@ -123,6 +122,10 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float defaultPitch;
     	public float defaultYaw;
         public List<ParticleObject> particleObjects;
+        
+        public boolean handHeld;
+    	public Point3d handHeldNormalOffset;
+    	public Point3d handHeldAimedOffset;
     }
     
     public class JSONPartBullet{

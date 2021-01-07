@@ -367,17 +367,17 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
 			//This is based on the barrel length and shell size.
-			Point3d totalRotationA = new Point3d((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
-			totalRotationA.add(provider.getProviderRotation());
+			Point3d totalRotation = new Point3d((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
+			totalRotation.add(provider.getProviderRotation());
 			
 			//Set initial velocity to the provider's velocity, plus the gun muzzle velocity at the specified orientation.
-			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(currentOrientation).rotateFine(totalRotationA);
+			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(currentOrientation).rotateFine(totalRotation);
 			Point3d bulletVelocity = provider.getProviderVelocity().copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR).add(bulletDirection.multiply(definition.gun.muzzleVelocity/20D/10D));
 			
 			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
 			//Then move the bullet to the appropriate firing position.
-			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotationA).add(provider.getProviderPosition());
-			bulletPosition.add(getFiringPosition().rotateFine(totalRotationA));
+			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).add(provider.getProviderPosition());
+			bulletPosition.add(getFiringPosition().rotateFine(totalRotation));
 
 			//Add the bullet as a particle.
 			//If the bullet is a missile, give it a target.
