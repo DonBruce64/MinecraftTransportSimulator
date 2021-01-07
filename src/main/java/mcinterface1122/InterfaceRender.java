@@ -724,12 +724,28 @@ class InterfaceRender implements IInterfaceRender{
 					}
 					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 					
-					//Get the actual resource path for this resource and return its stream.
-					String streamLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
-					stream = getClass().getResourceAsStream(streamLocation);
+					String streamLocation = null;
+					if(packItem != null){
+						//Get the actual resource path for this resource and return its stream.
+						streamLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+						stream = getClass().getResourceAsStream(streamLocation);
+					}else{
+						stream = null;
+					}
+					
 					if(stream == null){
-						MasterInterface.coreInterface.logError("ERROR: Could not find item PNG: " + streamLocation);
-						throw new FileNotFoundException(rawPackInfo);
+						//We might not have this file, but we also might have a JSON-defined item here.
+						//Try the JSON standards before throwing an error.
+						String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
+						stream = getClass().getResourceAsStream(streamJSONLocation);
+						if(stream == null){
+							if(streamLocation != null){
+								MasterInterface.coreInterface.logError("ERROR: Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+							}else{
+								MasterInterface.coreInterface.logError("ERROR: Could not find JSON PNG: " + streamJSONLocation);
+							}
+							throw new FileNotFoundException(rawPackInfo);
+						}
 					}
 				}catch(Exception e){
 					if(e instanceof FileNotFoundException){
