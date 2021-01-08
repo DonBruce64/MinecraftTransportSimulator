@@ -14,15 +14,11 @@ public interface IInterfaceProvider{
 	
 	public String getDomain();
 	
-	public IInterfaceAudio getAudioInterface();
-	
 	public IInterfaceCore getCoreInterface();
 	
 	public IInterfaceClient getGameInterface();
 	
 	public IInterfaceInput getInputInterface();
-	
-	public IInterfaceNetwork getNetworkInterface();
 	
 	public IInterfaceRender getRenderInterface();
 }

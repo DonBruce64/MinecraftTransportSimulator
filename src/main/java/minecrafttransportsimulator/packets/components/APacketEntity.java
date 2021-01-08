@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.components;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet class that includes a default implementation for transmitting an entity
@@ -41,7 +40,7 @@ public abstract class APacketEntity extends APacketBase{
 			}
 		}
 		if(sendReturnPacket){
-			MasterLoader.networkInterface.sendToAllClients(this);
+			NetworkSystem.sendToAllClients(this);
 		}
 	}
 	

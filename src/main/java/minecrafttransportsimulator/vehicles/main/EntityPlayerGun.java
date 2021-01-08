@@ -12,10 +12,10 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
 import minecrafttransportsimulator.rendering.components.AnimationsGun;
@@ -43,7 +43,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	private static final AnimationsGun animator = new AnimationsGun();
 	
-	public EntityPlayerGun(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, IWrapperNBT data){
+	public EntityPlayerGun(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, WrapperNBT data){
 		super(world, wrapper, data);
 		if(playerSpawning != null){
 			//Newly-spawned entity.
@@ -97,7 +97,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				
 				//Check to make sure if we had a gun, that it didn't change.
 				if(gun != null && (!gunItem.equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
-					IWrapperNBT data = gunStack.getData();
+					WrapperNBT data = gunStack.getData();
 					gun.save(data);
 					gunStack.setData(data);
 					gun = null;
@@ -109,7 +109,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 					if(heldItem instanceof ItemPart && ((ItemPart) heldItem).isHandHeldGun()){
 						if(!world.isClient()){
 							createNewGun(-1);
-							MasterLoader.networkInterface.sendToAllClients(new PacketPlayerGunChange(this));
+							NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this));
 						}
 					}
 				}
@@ -132,12 +132,12 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 					
 					if(fireCommand && !gun.firing && !world.isClient()){
 						gun.firing = true;
-						MasterLoader.networkInterface.sendToAllClients(new PacketGunChange(gun, true));
+						NetworkSystem.sendToAllClients(new PacketGunChange(gun, true));
 					}else if(!fireCommand && gun.firing && !world.isClient()){
 						gun.firing = false;
-						MasterLoader.networkInterface.sendToAllClients(new PacketGunChange(gun, false));
+						NetworkSystem.sendToAllClients(new PacketGunChange(gun, false));
 						//Also save data to the item.
-						IWrapperNBT data = gunStack.getData();
+						WrapperNBT data = gunStack.getData();
 						gun.save(data);
 						gunStack.setData(data);
 					}
@@ -152,7 +152,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public void createNewGun(int optionalGunID){
 		gunStack = player.getHeldStack();
 		gunItem = (ItemPart) gunStack.getItem();
-		IWrapperNBT data = gunStack.getData();
+		WrapperNBT data = gunStack.getData();
 		if(optionalGunID != -1){
 			data.setInteger("gunID", optionalGunID);
 		}
@@ -265,7 +265,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		data.setString("playerUUID", player.getUUID());
 		if(gun != null){

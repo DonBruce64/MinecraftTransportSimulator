@@ -8,9 +8,9 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -58,7 +58,7 @@ class InterfaceCore implements IInterfaceCore{
 	}
 	
 	@Override
-	public IWrapperNBT createNewTag(){
+	public WrapperNBT createNewTag(){
 		return new WrapperNBT(new NBTTagCompound());
 	}
 	
@@ -105,7 +105,7 @@ class InterfaceCore implements IInterfaceCore{
 	}
 	
 	@Override
-	public IWrapperTileEntity getFakeTileEntity(String type, IWrapperWorld world, IWrapperNBT data, int inventoryUnits){
+	public IWrapperTileEntity getFakeTileEntity(String type, IWrapperWorld world, WrapperNBT data, int inventoryUnits){
 		switch(type){
 			case("chest") : return new WrapperTileEntity.WrapperEntityChest((WrapperWorld) world, (WrapperNBT) data, inventoryUnits);
 			case("furnace") : return new WrapperTileEntity.WrapperEntityFurnace((WrapperWorld) world, (WrapperNBT) data);

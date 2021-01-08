@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Beacon class.  Responsible for containing the state of a beacon, which includes
@@ -14,7 +14,7 @@ public class RadioBeacon{
 	public final double bearing;
 	public final Point3i location;
 	
-	public RadioBeacon(IWrapperNBT data){
+	public RadioBeacon(WrapperNBT data){
 		this.name = data.getString("name");
 		this.glideSlope = data.getDouble("glideSlope");
 		this.bearing = data.getDouble("bearing");
@@ -38,7 +38,7 @@ public class RadioBeacon{
 		return delta;
 	}
 	
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		data.setString("name", name);
 		data.setDouble("glideSlope", glideSlope);
 		data.setDouble("bearing", bearing);

@@ -3,8 +3,8 @@ package mcinterface1122;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
@@ -36,12 +36,12 @@ class WrapperItemStack implements IWrapperItemStack{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
+	public WrapperNBT getData(){
 		return stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound()) : new WrapperNBT(new NBTTagCompound());
 	}
 	
 	@Override
-	public void setData(IWrapperNBT data){
+	public void setData(WrapperNBT data){
 		stack.setTagCompound(((WrapperNBT) data).tag);
 	}
 	

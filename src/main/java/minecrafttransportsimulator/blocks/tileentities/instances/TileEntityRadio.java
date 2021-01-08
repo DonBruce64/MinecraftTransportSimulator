@@ -6,8 +6,8 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -23,7 +23,7 @@ public class TileEntityRadio extends TileEntityDecor implements IRadioProvider{
 	private final FloatBuffer soundPosition;
 	private final Point3d soundVelocity = new Point3d(0D, 0D, 0D);
 	
-	public TileEntityRadio(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityRadio(IWrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		this.soundPosition = ByteBuffer.allocateDirect(3*Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer();
 		soundPosition.put(position.x);
@@ -40,7 +40,7 @@ public class TileEntityRadio extends TileEntityDecor implements IRadioProvider{
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		radio.save(data);
 	}

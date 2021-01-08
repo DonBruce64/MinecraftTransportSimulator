@@ -16,10 +16,10 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.components.AnimationsPart;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
@@ -67,7 +67,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	public String currentSubName;
 	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		this.vehicle = vehicle;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
@@ -302,8 +302,8 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * This does not include the part offsets, as those are re-calculated every time the part is attached
 	 * and are saved separately from the item NBT data in the vehicle.
 	 */
-	public IWrapperNBT getData(){
-		IWrapperNBT data = MasterLoader.coreInterface.createNewTag();
+	public WrapperNBT getData(){
+		WrapperNBT data = MasterLoader.coreInterface.createNewTag();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
 				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));

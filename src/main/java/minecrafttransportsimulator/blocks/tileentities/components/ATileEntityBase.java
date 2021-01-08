@@ -8,8 +8,8 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -41,7 +41,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
 	
-	public ATileEntityBase(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public ATileEntityBase(IWrapperWorld world, Point3i position, WrapperNBT data){
 		this.world = world;
 		this.position = position;
 		this.doublePosition = new Point3d(position);
@@ -84,7 +84,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	 *  Called when the TileEntity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		data.setDouble("rotation", rotation);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);

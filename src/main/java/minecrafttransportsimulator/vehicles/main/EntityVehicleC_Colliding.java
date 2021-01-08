@@ -19,10 +19,10 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -66,7 +66,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<APart, Map<BoundingBox, VehicleDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, VehicleDoor>>();
 	
 	
-	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		
 		//Create the initial part slots.

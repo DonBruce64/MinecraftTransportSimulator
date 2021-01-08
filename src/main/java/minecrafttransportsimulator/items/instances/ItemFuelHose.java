@@ -4,9 +4,10 @@ import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -17,7 +18,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 	private static PartInteractable firstPartClicked;
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=5; ++i){
 			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.fuelhose.line" + String.valueOf(i)));
 		}
@@ -47,7 +48,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 								if(part.worldPos.distanceTo(firstPartClicked.worldPos) < 15){
 									if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 										firstPartClicked.linkedPart = interactable;
-										MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
+										NetworkSystem.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
 										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
 										firstPartClicked = null;
 									}else{
@@ -67,7 +68,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 						if(vehicle.position.distanceTo(firstPartClicked.worldPos) < 15){
 							if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 								firstPartClicked.linkedVehicle = vehicle;
-								MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
+								NetworkSystem.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
 								player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
 								firstPartClicked = null;
 							}else{

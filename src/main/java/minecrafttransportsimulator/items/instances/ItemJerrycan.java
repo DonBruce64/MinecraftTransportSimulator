@@ -6,9 +6,9 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.fill"));
 		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.drain"));
 		if(data.getBoolean("isFull")){
@@ -32,7 +32,7 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				IWrapperItemStack stack = player.getHeldStack();
-				IWrapperNBT data = stack.getData();
+				WrapperNBT data = stack.getData();
 				
 				//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
 				if(part instanceof PartInteractable){

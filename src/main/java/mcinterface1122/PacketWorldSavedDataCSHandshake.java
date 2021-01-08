@@ -2,9 +2,9 @@ package mcinterface1122;
 
 import io.netty.buffer.ByteBuf;
 import mcinterface1122.WrapperWorld.InterfaceWorldSavedData;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**Packet used to request world NBT data from the server, and to send that data back to clients.
@@ -13,11 +13,11 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  * 
  * @author don_bruce
  */
-class PacketWorldSavedDataCSHandshake extends APacketBase{
+public class PacketWorldSavedDataCSHandshake extends APacketBase{
 	private final int worldID;
-	private final IWrapperNBT data;
+	private final WrapperNBT data;
 	
-	public PacketWorldSavedDataCSHandshake(int worldID, IWrapperNBT data){
+	public PacketWorldSavedDataCSHandshake(int worldID, WrapperNBT data){
 		super(null);
 		this.worldID = worldID;
 		this.data = data;
@@ -27,7 +27,7 @@ class PacketWorldSavedDataCSHandshake extends APacketBase{
 		super(buf);
 		this.worldID = buf.readInt();
 		if(buf.readBoolean()){
-			this.data = MasterInterface.networkInterface.createDataFromBuffer(buf);
+			this.data = readDataFromBuffer(buf);
 		}else{
 			this.data = null;
 		}
@@ -39,7 +39,7 @@ class PacketWorldSavedDataCSHandshake extends APacketBase{
 		buf.writeInt(worldID);
 		if(data != null){
 			buf.writeBoolean(true);
-			data.writeToBuffer(buf);
+			writeDataToBuffer(data, buf);
 		}else{
 			buf.writeBoolean(false);
 		}

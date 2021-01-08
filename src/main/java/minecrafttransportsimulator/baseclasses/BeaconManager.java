@@ -3,9 +3,10 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 
 /**Class responsible for managing beacons in the world.  Handles access to beacons,
@@ -41,7 +42,7 @@ public final class BeaconManager{
 			worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
 			if(!world.isClient()){
 				saveBeacons(world);
-				MasterLoader.networkInterface.sendToAllClients(new PacketBeaconListingChange(beacon));
+				NetworkSystem.sendToAllClients(new PacketBeaconListingChange(beacon));
 			}
 		}
 	}
@@ -53,7 +54,7 @@ public final class BeaconManager{
 		worldBeacons.get(world.getDimensionID()).remove(name);
 		if(!world.isClient()){
 			saveBeacons(world);
-			MasterLoader.networkInterface.sendToAllClients(new PacketBeaconListingChange(name));
+			NetworkSystem.sendToAllClients(new PacketBeaconListingChange(name));
 		}
 	}
 	
@@ -64,7 +65,7 @@ public final class BeaconManager{
 	 *  hasn't gotten its data packet from the server yet.
 	 */
 	private static void loadBeacons(IWrapperWorld world){
-		IWrapperNBT data = world.getData();
+		WrapperNBT data = world.getData();
 		if(data != null){
 			Map<String, RadioBeacon> beacons = new HashMap<String, RadioBeacon>();
 			int beaconCount = data.getInteger("radioBeaconCount");
@@ -82,10 +83,10 @@ public final class BeaconManager{
 	 */
 	private static void saveBeacons(IWrapperWorld world){
 		if(worldBeacons.containsKey(world.getDimensionID())){
-			IWrapperNBT worldData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT worldData = MasterLoader.coreInterface.createNewTag();
 			int beaconIndex=0;
 			for(RadioBeacon beacon : worldBeacons.get(world.getDimensionID()).values()){
-				IWrapperNBT beaconData = MasterLoader.coreInterface.createNewTag();
+				WrapperNBT beaconData = MasterLoader.coreInterface.createNewTag();
 				beacon.save(beaconData);
 				worldData.setData("radioBeacon_" + beaconIndex++, beaconData);
 			}

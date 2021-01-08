@@ -18,6 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -107,7 +108,7 @@ public class GUIInstruments extends AGUIBase{
 				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), (ItemInstrument) playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this)).getItem()));
+						NetworkSystem.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), (ItemInstrument) playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this)).getItem()));
 						selectedInstrumentOnVehicle = null;
 					}
 					
@@ -134,7 +135,7 @@ public class GUIInstruments extends AGUIBase{
 		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, MasterLoader.coreInterface.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
+				NetworkSystem.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
 				selectedInstrumentOnVehicle = null;
 			}
 		});

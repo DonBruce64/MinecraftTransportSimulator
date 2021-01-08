@@ -16,6 +16,7 @@ import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
@@ -63,27 +64,23 @@ public class MasterLoader{
 	public static final String MODVER = "19.13.0-BETA7";
 	
 	public static String resourceDomain;
-	public static IInterfaceAudio audioInterface;
 	public static IInterfaceCore coreInterface;
 	public static IInterfaceClient clientInterface;
 	public static IInterfaceGUI guiInterface;
 	public static IInterfaceInput inputInterface;
-	public static IInterfaceNetwork networkInterface;
 	public static IInterfaceRender renderInterface;
 	public static String gameDirectory;
 	
 	/**
 	 *  Called to set interfaces.  This needs to be done before ANY logic is executed.
 	 */
-	public static void setInterfaces(String resourceDomain, IInterfaceAudio audioInterface, IInterfaceCore coreInterface, IInterfaceClient clientInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceNetwork networkInterface, IInterfaceRender renderInterface){
+	public static void setInterfaces(String resourceDomain, IInterfaceCore coreInterface, IInterfaceClient clientInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceRender renderInterface){
 		//Set interfaces.
 		MasterLoader.resourceDomain = resourceDomain;
-		MasterLoader.audioInterface = audioInterface;
 		MasterLoader.coreInterface = coreInterface;
 		MasterLoader.clientInterface = clientInterface;
 		MasterLoader.guiInterface = guiInterface;
 		MasterLoader.inputInterface = inputInterface;
-		MasterLoader.networkInterface = networkInterface;
 		MasterLoader.renderInterface = renderInterface;
 		
 		//Create main items.
@@ -160,36 +157,36 @@ public class MasterLoader{
 	public static void registerPackets(byte packetIndex){
 		//Register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
-		networkInterface.registerPacket(packetIndex++, PacketBeaconListingChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketBulletHit.class);
-		networkInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketFluidTankChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketGunChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
-		networkInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
-		networkInterface.registerPacket(packetIndex++, PacketPlayerGunChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleColorChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleControlDigital.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleInstruments.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleInteract.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehiclePartChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehiclePartEngine.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehiclePartInteractable.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehiclePartSeat.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleTextChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
-		networkInterface.registerPacket(packetIndex++, PacketVehicleVariableToggle.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketBeaconListingChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketBulletHit.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketEntityRiderChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketFluidTankChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketGunChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketPlayerGunChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketRadioStateChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleColorChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleControlDigital.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleInstruments.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleInteract.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehiclePartChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehiclePartEngine.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehiclePartInteractable.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehiclePartSeat.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleTextChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketVehicleVariableToggle.class);
 	}
 }

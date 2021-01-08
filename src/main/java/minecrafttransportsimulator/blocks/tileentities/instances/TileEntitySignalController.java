@@ -8,8 +8,8 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
@@ -36,7 +36,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	//Locations of blocks.
 	public final List<Point3i> componentLocations = new ArrayList<Point3i>();
 	
-	public TileEntitySignalController(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntitySignalController(IWrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Load state data.
 		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
@@ -210,7 +210,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	}
     
 	@Override
-    public void save(IWrapperNBT data){
+    public void save(WrapperNBT data){
 		super.save(data);
 		data.setInteger("currentOpMode", currentOpMode.ordinal());
 		data.setInteger("currentOpState", currentOpState.ordinal());

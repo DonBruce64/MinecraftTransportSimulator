@@ -27,10 +27,10 @@ public interface IWrapperTileEntity{
 	/**
 	 *  Loads the TE data from the passed-in source.
 	 */
-	public void load(IWrapperNBT data);
+	public void load(WrapperNBT data);
 	
 	/**
 	 *  Saves the TE to the passed-in NBT Wrapper tag.
 	 */
-	public void save(IWrapperNBT data);
+	public void save(WrapperNBT data);
 }

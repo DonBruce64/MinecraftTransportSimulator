@@ -1,16 +1,17 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IInterfaceNetwork;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import net.minecraft.network.PacketBuffer;
 
 /**Base packet class.  All packets must extend this class to be used with the
- * {@link IInterfaceNetwork}.  This allows for standard packet handling across
+ * {@link NetworkSystem}.  This allows for standard packet handling across
  * all MC versions.
  *
  * @author don_bruce
@@ -34,7 +35,7 @@ public abstract class APacketBase{
 	 *  the buffer so the network knows what packet class this packet goes to!
 	 */
 	public void writeToBuffer(ByteBuf buf){
-		buf.writeByte(MasterLoader.networkInterface.getPacketIndex(this));
+		buf.writeByte(NetworkSystem.getPacketIndex(this));
 	}
 	
 	/**
@@ -83,5 +84,30 @@ public abstract class APacketBase{
 	 */
 	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
 		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+	}
+	
+	/**
+	 *  Helper method to write NBT data to the buffer.
+	 *  Note: there is a limit to the size of an NBT tag.
+	 *  As such, data should NOT be sent as a large tag.
+	 *  Instead, segment it out and only send what you need.
+	 *  Because you probably don't need the whole tag anyways.
+	 */
+	protected static void writeDataToBuffer(WrapperNBT data, ByteBuf buf){
+		PacketBuffer pb = new PacketBuffer(buf);
+		 pb.writeCompoundTag(data.tag);
+	}
+	
+	/**
+	 *  Helper method to read NBT data from the buffer.
+	 */
+	protected static WrapperNBT readDataFromBuffer(ByteBuf buf){
+		PacketBuffer pb = new PacketBuffer(buf);
+        try{
+        	return new WrapperNBT(pb.readCompoundTag());
+        }catch (IOException e){
+            // Unpossible? --- Says Forge comments, so who knows?
+            throw new RuntimeException(e);
+        }
 	}
 }

@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -111,7 +111,7 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public boolean addItem(AItemBase item, IWrapperNBT data){
+	public boolean addItem(AItemBase item, WrapperNBT data){
 		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
 		if(data != null){
 			stack.setData(data);
@@ -146,7 +146,7 @@ class WrapperInventory implements IWrapperInventory{
 	}
 	
 	@Override
-	public boolean removeItem(AItemBase item, IWrapperNBT data){
+	public boolean removeItem(AItemBase item, WrapperNBT data){
 		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
 		if(data != null){
 			stack.setData(data);

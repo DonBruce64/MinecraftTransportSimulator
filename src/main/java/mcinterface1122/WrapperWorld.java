@@ -20,9 +20,10 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
@@ -72,7 +73,7 @@ class WrapperWorld implements IWrapperWorld{
 	private WrapperWorld(World world){
 		this.world = world;
 		if(world.isRemote){
-			MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
+			NetworkSystem.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
 		}
 	}
 	
@@ -164,7 +165,7 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
+	public WrapperNBT getData(){
 		if(!world.isRemote){
 			if(savedDataAccessor == null){
 				savedDataAccessor = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, dataID);
@@ -179,13 +180,13 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public void setData(IWrapperNBT data){
+	public void setData(WrapperNBT data){
 		if(!world.isRemote){
 			savedDataAccessor.internalData = ((WrapperNBT) data).tag;
 			savedDataAccessor.markDirty();
 			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 		}else{
-			MasterInterface.networkInterface.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
+			NetworkSystem.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
 		}
 	}
 	
@@ -792,7 +793,7 @@ class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public void spawnItem(AItemBase item, IWrapperNBT data, Point3d point){
+	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point){
 		ItemStack stack = new ItemStack(BuilderItem.itemMap.get(item));
 		if(data != null){
 			stack.setTagCompound(((WrapperNBT) data).tag);

@@ -29,14 +29,14 @@ public interface IWrapperItemStack{
 	 *  Returns the NBT data for this stack, as a wrapper.  If no NBT data is present,
 	 *  then a new, blank, wrapper instance is created.
 	 */
-	public IWrapperNBT getData();
+	public WrapperNBT getData();
 	
 	/**
 	 *  Sets the stack's data to the passed-in data.  This should be called after modifying any data
 	 *  values as it cannot be assumed that the data returned from {@link #getData()} was not a
 	 *  newly-created data block that wasn't part of the item.
 	 */
-	public void setData(IWrapperNBT data);
+	public void setData(WrapperNBT data);
 	
 	/**
 	 *  Attempts to fill the passed-in tank with this stack's contents, or drain the tank

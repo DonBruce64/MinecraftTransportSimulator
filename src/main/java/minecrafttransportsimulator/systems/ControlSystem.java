@@ -7,9 +7,10 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -117,12 +118,12 @@ public final class ControlSystem{
 		byte brakeValue = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
 		if(isParkingBrakePressed){
 			if(!vehicle.parkingBrakeOn){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 			}
 		}else if(brakeValue > 0 && vehicle.parkingBrakeOn){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 		}
-		MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
+		NetworkSystem.sendToServer(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
@@ -131,12 +132,12 @@ public final class ControlSystem{
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
 				if(MasterLoader.clientInterface.getClientPlayer().equals(gun.getController())){
-					MasterLoader.networkInterface.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
+					NetworkSystem.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
 					if(MasterLoader.clientInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
+						NetworkSystem.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
 					}
 				}
 			}
@@ -184,92 +185,92 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.REVERSE, !aircraft.reverseThrust));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.REVERSE, !aircraft.reverseThrust));
 		}
 		
 		//Increment or decrement throttle.
 		if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
+			NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
 			}
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
 			}
 		}		
 		
 		//Check flaps.
 		if(aircraft.definition.motorized.hasFlaps){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
 			}
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, true));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, true));
 			}
 		}
 		
 		//Check yaw.
 		if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+			NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 			}
 			if(ControlsKeyboard.AIRCRAFT_YAW_L.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 			}
 		}
 		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_R.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, true));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, true));
 		}
 		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_L.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, false));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, false));
 		}
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && MasterLoader.guiInterface.isGUIActive(null)){
 				long mousePosition = MasterLoader.inputInterface.getTrackedMouseInfo();
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
 				
 			}
 		}else{
 			//Check pitch.
 			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}
 				if(ControlsKeyboard.AIRCRAFT_PITCH_D.isPressed()){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_U.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_D.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
 			}
 			
 			//Check roll.
 			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}
 				if(ControlsKeyboard.AIRCRAFT_ROLL_L.isPressed()){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_R.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
 			}
 			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_L.isPressed()){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+				NetworkSystem.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 			}
 		}
 	}
@@ -322,22 +323,22 @@ public final class ControlSystem{
 				
 				//If we don't have velocity, and we have the appropriate control, shift.
 				if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
 				}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
 				}
 				
 				//If we are going slow, and don't have gas or brake, automatically set the brake.
 				//Otherwise send normal values if we are in neutral or forwards,
 				//and invert controls if we are in a reverse gear.
 				if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
 				}else if(currentGear >= 0){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
 				}else{
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
 				}
 			}
 		}else{
@@ -347,25 +348,25 @@ public final class ControlSystem{
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
 				if(!powered.cruiseControl || powered.throttle < throttleLevel){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 				}
 			}else{
 				if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
 					}
 				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
 					}
 				}else{
 					//Don't send gas off packet if we have cruise on.
 					if(!powered.cruiseControl){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
 					}
 				}
 			}
@@ -375,49 +376,49 @@ public final class ControlSystem{
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && MasterLoader.guiInterface.isGUIActive(null)){
 				long mousePosition = MasterLoader.inputInterface.getTrackedMouseInfo();
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}
 		}else{
 			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 			}else{
 				//Depending on what we are pressing, send out packets.
 				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
 				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
 				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
 				if(turningRight && !turningLeft){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}else if(turningLeft && !turningRight){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+					NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
 				}
 			}
 		}
 		
 		//Check if we are shifting.
 		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
 		}
 		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
 		}
 		
 		//Check if horn button is pressed.
 		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.hornOn){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, true));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, true));
 		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.hornOn){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, false));
+			NetworkSystem.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, false));
 		}
 		
 		//Check for lights.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RUNNINGLIGHT.lowercaseName));
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.HEADLIGHT.lowercaseName));
+			NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RUNNINGLIGHT.lowercaseName));
+			NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.HEADLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+			NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
-			MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+			NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 		}
 
 		//Change turn signal status depending on turning status.
@@ -428,20 +429,20 @@ public final class ControlSystem{
 			if(!powered.turningLeft && powered.rudderAngle < -200){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+				NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(!powered.turningRight && powered.rudderAngle > 200){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+				NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+				NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
-				MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+				NetworkSystem.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
 				--powered.turningCooldown;

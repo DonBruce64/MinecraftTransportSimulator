@@ -7,9 +7,9 @@ import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -19,7 +19,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
 public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.use"));
 		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.useblock"));
 		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.attack"));
@@ -70,7 +70,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 							vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
 						}
 						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
-						IWrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();
+						WrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
 						vehicle.isValid = false;

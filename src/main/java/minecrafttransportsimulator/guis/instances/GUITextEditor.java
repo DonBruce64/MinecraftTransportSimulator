@@ -17,6 +17,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
@@ -135,11 +136,11 @@ public class GUITextEditor extends AGUIBase{
 				
 				//Now send the appropriate packet.
 				if(pole != null){
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
+					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
 				}else if(provider instanceof EntityVehicleF_Physics){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
+					NetworkSystem.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
 				}else{
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
+					NetworkSystem.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
 				}
 				MasterLoader.guiInterface.closeGUI();
 			}

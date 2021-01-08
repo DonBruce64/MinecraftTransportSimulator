@@ -5,9 +5,9 @@ import java.util.List;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=5; ++i){
 			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.key.line" + String.valueOf(i)));
 		}
@@ -43,7 +43,7 @@ public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
 					IWrapperItemStack stack = player.getHeldStack();
-					IWrapperNBT data = stack.getData();
+					WrapperNBT data = stack.getData();
 					String keyVehicleUUID = data.getString("vehicle");
 					if(keyVehicleUUID.isEmpty()){
 						//Check if we are the owner before making this a valid key.

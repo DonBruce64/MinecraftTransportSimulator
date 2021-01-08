@@ -1,8 +1,8 @@
 package mcinterface1122;
 
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
@@ -31,12 +31,12 @@ class WrapperTileEntity implements IWrapperTileEntity{
 	}
 	
 	@Override
-	public void load(IWrapperNBT data){
+	public void load(WrapperNBT data){
 		tile.readFromNBT(((WrapperNBT) data).tag);
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		tile.writeToNBT(((WrapperNBT) data).tag);
 	}
 	

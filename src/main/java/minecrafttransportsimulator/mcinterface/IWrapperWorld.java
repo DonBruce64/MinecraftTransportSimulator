@@ -68,12 +68,12 @@ public interface IWrapperWorld{
 	 *  de-synchronized state.  Instead, send a packet to the server to modify its copy, 
 	 *  and then wait for the synchronizing packet.
 	 */
-	public IWrapperNBT getData();
+	public WrapperNBT getData();
 	
 	/**
 	 *  Saves the passed-in data as the world's additional saved data.
 	 */
-	public void setData(IWrapperNBT data);
+	public void setData(WrapperNBT data);
 	
 	/**
 	 *  Returns the entity that has the passed-in ID.
@@ -312,7 +312,7 @@ public interface IWrapperWorld{
 	 *  This should be called only on servers, as spawning items on clients
 	 *  leads to phantom items that can't be picked up. 
 	 */
-	public void spawnItem(AItemBase item, IWrapperNBT data, Point3d point);
+	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point);
 	
 	/**
 	 *  Spawns the passed-in stack as an item entity at the passed-in point.

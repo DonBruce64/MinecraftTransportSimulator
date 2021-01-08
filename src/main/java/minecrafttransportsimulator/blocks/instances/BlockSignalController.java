@@ -4,10 +4,10 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalController>{
 	
@@ -24,7 +24,7 @@ public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalContr
 	}
 
 	@Override
-	public TileEntitySignalController createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntitySignalController createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntitySignalController(world, position, data);
 	}
 

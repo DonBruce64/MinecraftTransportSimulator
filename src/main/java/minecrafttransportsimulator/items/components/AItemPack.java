@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base item class for all pack-created items.  Stores information such as the
@@ -34,7 +34,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AIt
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		if(definition.general.description != null){
 			for(String tooltipLine : definition.general.description.split("\n")){
 				tooltipLines.add(tooltipLine);

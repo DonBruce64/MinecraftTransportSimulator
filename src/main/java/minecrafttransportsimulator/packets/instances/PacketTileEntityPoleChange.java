@@ -11,10 +11,10 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -97,7 +97,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
 					ATileEntityPole_Component component = pole.components.get(axis);
-					IWrapperNBT data = null;
+					WrapperNBT data = null;
 					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
 						data = MasterLoader.coreInterface.createNewTag();
 						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){

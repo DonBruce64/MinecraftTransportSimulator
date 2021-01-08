@@ -49,7 +49,7 @@ public interface IWrapperInventory{
 	 *  Adds the passed-in item to this inventory.  Does not care about slot position.
 	 *  Returns true if addition was successful.
 	 */
-	public boolean addItem(AItemBase item, IWrapperNBT data);
+	public boolean addItem(AItemBase item, WrapperNBT data);
 	
 	/**
 	 *  Attempts to remove the passed-in number of items matching those in the stack
@@ -62,7 +62,7 @@ public interface IWrapperInventory{
 	 *  Attempts to remove the passed-in item from this inventory.
 	 *  Returns true if removal was successful.
 	 */
-	public boolean removeItem(AItemBase item, IWrapperNBT data);
+	public boolean removeItem(AItemBase item, WrapperNBT data);
 
 	/**
 	 *  Returns true if this inventory has all the materials to make the pack-based item.

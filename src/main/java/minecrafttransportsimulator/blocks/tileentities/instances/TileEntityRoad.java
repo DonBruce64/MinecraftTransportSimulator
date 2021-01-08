@@ -21,10 +21,10 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -59,7 +59,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static constants.
 	public static final int MAX_SEGMENT_LENGTH = 32;
 	
-	public TileEntityRoad(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityRoad(IWrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Set the bounding box.
 		this.boundingBox = new BoundingBox(new Point3d(0, (definition.general.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.general.collisionHeight/16D/2D, 0.5D);
@@ -219,7 +219,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-    public void save(IWrapperNBT data){
+    public void save(WrapperNBT data){
 		super.save(data);
 		//Save all components.
 		for(Entry<RoadComponent, ItemRoadComponent> connectedObjectEntry : components.entrySet()){
@@ -236,7 +236,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
 			RoadLane lane = lanes.get(laneNumber);
-			IWrapperNBT laneData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT laneData = MasterLoader.coreInterface.createNewTag();
 			lane.save(laneData);
 			data.setData("lane" + laneNumber, laneData);
 		}

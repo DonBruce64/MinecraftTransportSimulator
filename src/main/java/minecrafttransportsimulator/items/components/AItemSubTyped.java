@@ -4,7 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
 	public final String subName;
@@ -30,7 +30,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){

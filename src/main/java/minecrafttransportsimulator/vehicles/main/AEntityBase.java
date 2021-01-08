@@ -14,9 +14,9 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
@@ -103,7 +103,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
-	public AEntityBase(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public AEntityBase(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
@@ -211,7 +211,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 			locationRiderMap.put(riderLocation, rider);
 			if(!world.isClient()){
 				rider.setRiding(this);
-				MasterLoader.networkInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
+				NetworkSystem.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
 			}
 			return true;
 		}
@@ -231,7 +231,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 			}
 			if(!world.isClient()){
 				rider.setRiding(null);
-				MasterLoader.networkInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
+				NetworkSystem.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
 			}
 		}
 	}
@@ -271,7 +271,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
 	 */
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		data.setInteger("lookupID", lookupID);
 		data.setString("uniqueUUID", uniqueUUID);
 		data.setPoint3d("position", position);

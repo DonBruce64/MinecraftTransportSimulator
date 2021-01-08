@@ -10,9 +10,10 @@ import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -71,7 +72,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
@@ -429,7 +430,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+				NetworkSystem.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.
@@ -800,7 +801,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		if(!world.isClient()){
-			MasterLoader.networkInterface.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
+			NetworkSystem.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
 		}
 	}
 	
@@ -837,7 +838,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	protected abstract void dampenControlSurfaces();
     
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("locked", locked);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);

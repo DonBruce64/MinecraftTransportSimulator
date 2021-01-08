@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -22,12 +23,10 @@ public class MasterInterface{
 	
 	//Variables common to interface systems
 	static Logger logger;
-	static final InterfaceAudio audioInterface;
 	static final InterfaceCore coreInterface;
 	static final InterfaceClient gameInterface;
 	static final InterfaceGUI guiInterface;
 	static final InterfaceInput inputInterface;
-	static final InterfaceNetwork networkInterface;
 	static final InterfaceRender renderInterface;
 	
 	static{
@@ -37,23 +36,19 @@ public class MasterInterface{
 		//Create instances of the various interfaces and send them to the loader.
 		//If we're on a server, don't create the client interfaces.
 		if(FMLCommonHandler.instance().getSide().isClient()){
-			audioInterface = new InterfaceAudio();
 			coreInterface = new InterfaceCore();
 			gameInterface = new InterfaceClient();
 			guiInterface = new InterfaceGUI();
 			inputInterface = new InterfaceInput();
-			networkInterface = new InterfaceNetwork();
 			renderInterface = new InterfaceRender();
 		}else{
-			audioInterface = null;
 			coreInterface = new InterfaceCore();
 			gameInterface = null;
 			guiInterface = null;
 			inputInterface = null;
-			networkInterface = new InterfaceNetwork();
 			renderInterface = null;
 		}
-		MasterLoader.setInterfaces(MODID, audioInterface, coreInterface, gameInterface, guiInterface, inputInterface, networkInterface, renderInterface);
+		MasterLoader.setInterfaces(MODID, coreInterface, gameInterface, guiInterface, inputInterface, renderInterface);
 	}
 
 	@EventHandler
@@ -70,10 +65,10 @@ public class MasterInterface{
 	public void init(FMLInitializationEvent event){
 		//Init networking interface and fire off command to load packets.
 		//Register our own packet for handshaking.
-		networkInterface.init();
+		NetworkSystem.init();
 		byte packetIndex = 0;
-		networkInterface.registerPacket(packetIndex++, PacketEntityCSHandshake.class);
-		networkInterface.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketEntityCSHandshake.class);
+		NetworkSystem.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
 		MasterLoader.registerPackets(packetIndex);
 	}
 	

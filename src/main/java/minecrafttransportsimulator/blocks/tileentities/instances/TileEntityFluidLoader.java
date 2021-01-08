@@ -5,9 +5,9 @@ import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -21,7 +21,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	public boolean unloading;
     private FluidTank tank;
 
-    public TileEntityFluidLoader(IWrapperWorld world, Point3i position, IWrapperNBT data){
+    public TileEntityFluidLoader(IWrapperWorld world, Point3i position, WrapperNBT data){
     	super(world, position, data);
     	this.tank = new FluidTank(data, 1000, world.isClient());
     	this.unloadMode = data.getBoolean("unloadMode");
@@ -105,9 +105,9 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		}
 		if(nearestPart != null){
 			connectedPart = nearestPart;
-			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, true));
+			NetworkSystem.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, true));
 		}else if(connectedPart != null){
-			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, false));
+			NetworkSystem.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, false));
 			connectedPart = null;
 		}
 	}
@@ -123,7 +123,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		tank.save(data);
 		data.setBoolean("unloadMode", unloadMode);

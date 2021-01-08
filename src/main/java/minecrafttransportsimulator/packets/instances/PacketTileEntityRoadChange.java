@@ -4,9 +4,9 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -62,7 +62,7 @@ public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad
 			//Player clicked with a wrench, try to remove the component.
 			if(road.components.containsKey(componentType)){
 				ItemRoadComponent component = road.components.get(componentType);
-				IWrapperNBT data = null;
+				WrapperNBT data = null;
 				if(world.isClient() || player.isCreative() || player.getInventory().addItem(component, data)){
 					road.components.remove(componentType);
 					return true;

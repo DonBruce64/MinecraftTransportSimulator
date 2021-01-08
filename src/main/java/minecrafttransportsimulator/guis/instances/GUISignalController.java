@@ -19,6 +19,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 
 public class GUISignalController extends AGUIBase{
@@ -217,7 +218,7 @@ public class GUISignalController extends AGUIBase{
 				}catch(Exception e){
 					return;
 				}
-				MasterLoader.networkInterface.sendToServer(new PacketTileEntitySignalControllerChange(controller));
+				NetworkSystem.sendToServer(new PacketTileEntitySignalControllerChange(controller));
 				MasterLoader.guiInterface.closeGUI();
 			}
 		});

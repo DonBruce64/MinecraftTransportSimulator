@@ -7,10 +7,10 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -22,7 +22,7 @@ public final class PartInteractable extends APart{
 	public PartInteractable linkedPart;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		switch(definition.interactable.interactionType){
 			case("crate"): this.interactable = MasterLoader.coreInterface.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
@@ -123,8 +123,8 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
-		IWrapperNBT data = super.getData();
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();
 		if(interactable != null){
 			interactable.save(data);
 		}else if(tank != null){

@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
@@ -71,19 +72,19 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}else if(selectorState == 1){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+							NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 						}
 					}else{
 						if(selectorState == 0){
 							if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT)){
-								MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+								NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 							}else{
-								MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+								NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 							}
 						}else if(selectorState == 1){
-							MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}
 					}
 				}
@@ -100,9 +101,9 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
+						NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
 					}else{
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
+						NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
 					}
 				}
 				
@@ -117,7 +118,7 @@ public class GUIPanelGround extends AGUIPanel{
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.emergencylights"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
+					NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
 				}
 				
 				@Override
@@ -131,7 +132,7 @@ public class GUIPanelGround extends AGUIPanel{
 			sirenSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.siren"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, SIREN_TEXTURE_WIDTH_OFFSET, SIREN_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SIREN, !leftSide));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.SIREN, !leftSide));
 				}
 				
 				@Override
@@ -154,20 +155,20 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(selectorState == 0 && !leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
+						NetworkSystem.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
 					}else if(selectorState == 1 && !leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
+						NetworkSystem.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
 					}else if(selectorState == 1 && leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+						NetworkSystem.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
 					}else if(selectorState == 2 && leftSide){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						NetworkSystem.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 				
 				@Override
 				public void onReleased(){
 					if(selectorState == 2){
-						MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						NetworkSystem.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 			};
@@ -181,7 +182,7 @@ public class GUIPanelGround extends AGUIPanel{
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
 				}
 				
 				@Override
@@ -195,7 +196,7 @@ public class GUIPanelGround extends AGUIPanel{
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
 				}
 				
 				@Override
@@ -206,7 +207,7 @@ public class GUIPanelGround extends AGUIPanel{
 			cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
 				}
 				
 				@Override
@@ -217,7 +218,7 @@ public class GUIPanelGround extends AGUIPanel{
 			reverseSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.reverse"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, REVERSE_TEXTURE_WIDTH_OFFSET, REVERSE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.REVERSE, !vehicle.reverseThrust));
 				}
 				
 				@Override
@@ -228,7 +229,7 @@ public class GUIPanelGround extends AGUIPanel{
 			cruiseControlSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.cruisecontrol"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CRUISECONTROL_TEXTURE_WIDTH_OFFSET, CRUISECONTROL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.CRUISECONTROL, !vehicle.cruiseControl));
 				}
 				
 				@Override
@@ -250,7 +251,7 @@ public class GUIPanelGround extends AGUIPanel{
 					for(int i=0; i<trailerNumber; ++ i){
 						currentVehicle = currentVehicle.towedVehicle;
 					}
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(currentVehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(currentVehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
 				}
 				
 				@Override
@@ -270,7 +271,7 @@ public class GUIPanelGround extends AGUIPanel{
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, MasterLoader.coreInterface.translate("gui.panel.gear"), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
 				}
 				
 				@Override
@@ -297,7 +298,7 @@ public class GUIPanelGround extends AGUIPanel{
 			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleVariableToggle(vehicle, this.text));
+					NetworkSystem.sendToServer(new PacketVehicleVariableToggle(vehicle, this.text));
 				}
 				
 				@Override

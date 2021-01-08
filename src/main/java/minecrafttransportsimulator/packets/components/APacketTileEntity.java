@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 
 /**Packet class that includes a default implementation for transmitting a tile entity
  * to allow tile entity-specific interactions on the other side of the network.
@@ -39,7 +38,7 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 		if(tile != null && tile.world != null){
 			if(handle(world, player, tile) && !world.isClient()){
 				world.markTileEntityChanged(position);
-				MasterLoader.networkInterface.sendToAllClients(this);
+				NetworkSystem.sendToAllClients(this);
 			}
 		}
 	}

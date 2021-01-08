@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Radio stations are sources that radios can hook into to provide sound.  All radios share the
@@ -49,7 +48,7 @@ public class RadioStation{
 		}else{
 			musicFiles = new ArrayList<File>();
 		}
-		MasterLoader.audioInterface.addRadioStation(this);
+		AudioSystem.addRadioStation(this);
 	}
 	
 	/**
@@ -62,7 +61,7 @@ public class RadioStation{
 		ByteBuffer buffer = decoder.readBlock();
 		if(buffer != null){
 			//Get new buffer index from the audio system and add it to our radios.
-			int bufferIndex = MasterLoader.audioInterface.createBuffer(buffer, decoder);
+			int bufferIndex = AudioSystem.createBuffer(buffer, decoder);
 			activeBuffers.add(bufferIndex);
 			
 			//Update station buffer counts and return buffer index.
@@ -110,10 +109,10 @@ public class RadioStation{
 				//If we have any playing radios, do buffer logic.
 				if(!playingRadios.isEmpty()){
 					//First check if we have any buffers that are done playing that we can re-claim.
-					freeBufferIndex = MasterLoader.audioInterface.getFreeStationBuffer(playingRadios);
+					freeBufferIndex = AudioSystem.getFreeStationBuffer(playingRadios);
 					if(freeBufferIndex != 0){
 						activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
-						MasterLoader.audioInterface.deleteBuffer(freeBufferIndex);
+						AudioSystem.deleteBuffer(freeBufferIndex);
 					}
 				}
 				
@@ -122,7 +121,7 @@ public class RadioStation{
 				if((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()){
 					for(Radio radio : queuedRadios){
 						radio.start();
-						MasterLoader.audioInterface.addRadioSound(radio.getPlayingSound(), activeBuffers);
+						AudioSystem.addRadioSound(radio.getPlayingSound(), activeBuffers);
 						playingRadios.add(radio);
 					}
 					queuedRadios.clear();
@@ -133,7 +132,7 @@ public class RadioStation{
 					int newIndex = generateBufferIndex();
 					if(newIndex != 0){
 						for(Radio radio : playingRadios){
-							MasterLoader.audioInterface.bindBuffer(radio.getPlayingSound(), newIndex);
+							AudioSystem.bindBuffer(radio.getPlayingSound(), newIndex);
 						}
 					}
 				}
@@ -163,7 +162,7 @@ public class RadioStation{
 	private void startPlayback(){
 		//Delete any buffers we might still have.
 		for(int buffer : activeBuffers){
-			MasterLoader.audioInterface.deleteBuffer(buffer);
+			AudioSystem.deleteBuffer(buffer);
 		}
 		activeBuffers.clear();
 		

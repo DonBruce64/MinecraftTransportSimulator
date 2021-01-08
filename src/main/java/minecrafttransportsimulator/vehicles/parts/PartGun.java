@@ -8,8 +8,8 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -18,7 +18,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	
 	public final Gun internalGun;
 		
-	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		//Set min/max yaw/pitch angles based on our definition and the vehicle definition.
 		//If the vehicle's min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
@@ -77,8 +77,8 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
-		IWrapperNBT data = super.getData();
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();
 		internalGun.save(data);
 		return data;
 	}

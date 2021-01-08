@@ -9,10 +9,11 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
@@ -20,6 +21,7 @@ import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
+import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -75,7 +77,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	private final double anglePerTickSpeed;
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();	
 		
-	public Gun(IGunProvider provider, JSONPart definition, double minYawAngle, double maxYawAngle, double minPitchAngle, double maxPitchAngle, IWrapperNBT data){
+	public Gun(IGunProvider provider, JSONPart definition, double minYawAngle, double maxYawAngle, double minPitchAngle, double maxPitchAngle, WrapperNBT data){
 		//Set passed-in parameters.
 		this.provider = provider;
 		this.gunID = provider.getProviderWorld().isClient() ? data.getInteger("gunID") : idCounter++;
@@ -237,7 +239,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
 			if(windupTimeCurrent == 0 && provider.getProviderWorld().isClient()){
-				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+				AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
 			}
 			++windupTimeCurrent;
 		}else if(!firing && windupTimeCurrent > 0){
@@ -302,9 +304,9 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 					bulletsReloading = part.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
 					if(provider.getProviderWorld().isClient()){
-						MasterLoader.audioInterface.playQuickSound(new SoundInstance(provider, definition.packID + ":" + definition.systemName + "_reloading"));
+						AudioSystem.playQuickSound(new SoundInstance(provider, definition.packID + ":" + definition.systemName + "_reloading"));
 					}else{
-						MasterLoader.networkInterface.sendToAllClients(new PacketGunChange(this, loadedBullet));
+						NetworkSystem.sendToAllClients(new PacketGunChange(this, loadedBullet));
 					}
 					return true;
 				}
@@ -313,7 +315,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		return false;
 	}
 	
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		data.setInteger("gunID", gunID);
 		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
@@ -357,7 +359,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	@Override
 	public void startSounds(){
 		if(windupTimeCurrent > 0){
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+			AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
 		}
 	}
 		
@@ -410,7 +412,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			}
 			
 			//Do sound and effects.
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			if(definition.gun.particleObjects != null){
 				spawnEffectParticles();
 			}

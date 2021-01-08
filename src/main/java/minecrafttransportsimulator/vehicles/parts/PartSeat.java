@@ -3,9 +3,9 @@ package minecrafttransportsimulator.vehicles.parts;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -15,7 +15,7 @@ public final class PartSeat extends APart{
 	public ItemPart activeGun;
 	public int gunIndex;
 	
-	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"));
 	}
@@ -52,7 +52,7 @@ public final class PartSeat extends APart{
 						//If we do have an active gun, validate that it's still correct.
 						if(activeGun == null){
 							setNextActiveGun();
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartSeat(this));
+							NetworkSystem.sendToAllClients(new PacketVehiclePartSeat(this));
 						}else{
 							for(ItemPart gunType : vehicle.guns.keySet()){
 								for(PartGun gun : vehicle.guns.get(gunType)){
@@ -67,7 +67,7 @@ public final class PartSeat extends APart{
 							//Didn't invalid active gun detected.  Select a new one.
 							activeGun = null;
 							setNextActiveGun();
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartSeat(this));
+							NetworkSystem.sendToAllClients(new PacketVehiclePartSeat(this));
 						}
 					}
 				}
@@ -149,8 +149,8 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
-		IWrapperNBT data = super.getData();
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();
 		if(activeGun != null){
 			data.setString("activeGunPackID", activeGun.definition.packID);
 			data.setString("activeGunSystemName", activeGun.definition.systemName);

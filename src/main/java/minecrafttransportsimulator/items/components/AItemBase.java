@@ -4,10 +4,10 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Base item class for all MTS items.  Contains multiple methods to define the item's behavior,
  * such as display name, additional text to add to the tooltip, how the item handles left and
@@ -42,13 +42,13 @@ public abstract class AItemBase{
 	 *  However, this does not mean the data block will be populated with values.  If the
 	 *  item is fresh from crafting, it may not have any data.
 	 */
-	public abstract void addTooltipLines(List<String> tooltipLines, IWrapperNBT data);
+	public abstract void addTooltipLines(List<String> tooltipLines, WrapperNBT data);
 	
 	/**
 	 *  Gets all item data values for the given item, and adds them to the passed-in list.
 	 *  By default, this method does nothing, which means no additional blocks are present.
 	 */
-	public void getDataBlocks(List<IWrapperNBT> list){}
+	public void getDataBlocks(List<WrapperNBT> list){}
 	
 	/**
 	 *  Called when the player clicks a block with this item.  The position of the block

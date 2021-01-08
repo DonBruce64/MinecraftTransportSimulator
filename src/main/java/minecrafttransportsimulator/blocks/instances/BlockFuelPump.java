@@ -6,10 +6,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -39,7 +39,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 			
 			//Check if the item is a jerrycan.
 			if(stack.getItem() instanceof ItemJerrycan){
-				IWrapperNBT data = stack.getData();
+				WrapperNBT data = stack.getData();
 				if(!data.getBoolean("isFull")){
 					if(tank.getFluidLevel() >= 1000){
 						data.setBoolean("isFull", true);
@@ -87,7 +87,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
     								pump.connectedVehicle = nearestVehicle;
     								pump.connectedVehicle.beingFueled = true;
     								tank.resetAmountDispensed();
-    								MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, true));
+    								NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, true));
     								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
     	    						return true;
     							}
@@ -100,7 +100,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
-    			MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, false));
+    			NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, false));
     			pump.connectedVehicle.beingFueled = false;
     			pump.connectedVehicle = null;
     			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
@@ -110,7 +110,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 	}
 	
     @Override
-	public TileEntityFuelPump createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityFuelPump createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityFuelPump(world, position, data);
 	}
 

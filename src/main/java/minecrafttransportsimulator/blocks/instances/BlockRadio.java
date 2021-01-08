@@ -4,10 +4,10 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRadio;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	
@@ -24,7 +24,7 @@ public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	}
 
 	@Override
-	public TileEntityRadio createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityRadio createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityRadio(world, position, data);
 	}
 

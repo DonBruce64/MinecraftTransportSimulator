@@ -6,10 +6,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -28,7 +28,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	public static boolean lockCameraToMovement = true;
 	
-	public EntityVehicleB_Rideable(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleB_Rideable(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 	}
 	

@@ -33,6 +33,7 @@ import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.rendering.components.TransformTranslatable;
 import minecrafttransportsimulator.rendering.components.TransformTreadRoller;
+import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -1066,7 +1067,7 @@ public final class RenderVehicle{
 						
 						//If we are on the start of the cycle, beep.
 						if(vehicle.world.getTick()%cycle == 0){
-							MasterLoader.audioInterface.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
+							AudioSystem.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
 						}
 						
 						//Render the part's name.

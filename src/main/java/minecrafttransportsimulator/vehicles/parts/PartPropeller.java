@@ -4,9 +4,9 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -23,7 +23,7 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.damage = data.getDouble("damage");
 		this.currentPitch = definition.propeller.pitch;
@@ -43,7 +43,7 @@ public class PartPropeller extends APart{
 			if(damage.attacker instanceof IWrapperPlayer && ((IWrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
-					MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
+					NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
 				}
 				return;
 			}
@@ -122,8 +122,8 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
-		IWrapperNBT data = super.getData();		
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();		
 		data.setDouble("damage", damage);
 		return data;
 	}

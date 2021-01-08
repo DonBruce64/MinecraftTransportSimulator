@@ -5,8 +5,8 @@ import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to send signals to guns.  This can be either to start/stop the firing of the gun,
@@ -80,7 +80,7 @@ public class PacketGunChange extends APacketBase{
 				gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName));
 			}
 			if(!world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(this);
+				NetworkSystem.sendToAllClients(this);
 			}
 		}else{
 			System.out.println("NULL GUN" + gunID);

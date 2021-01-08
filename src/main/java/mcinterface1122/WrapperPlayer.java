@@ -112,7 +112,7 @@ class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	
 	@Override
 	public void sendPacket(APacketBase packet){
-		MasterInterface.networkInterface.sendToPlayer(packet, (EntityPlayerMP) player);
+		InterfaceNetwork.sendToPlayer(packet, (EntityPlayerMP) player);
 	}
 	
 	@Override

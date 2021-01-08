@@ -7,10 +7,10 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -65,7 +65,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 		return false;
 	}
 	
-	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, IWrapperNBT partData, APart parentPart){
+	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, WrapperNBT partData, APart parentPart){
 		switch(partPrefix){
 			case("generic") : return new PartGeneric(vehicle, packVehicleDef, this, partData, parentPart);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
@@ -83,7 +83,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
     }
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		switch(partPrefix){
 			case("bullet") : {
@@ -175,10 +175,10 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	}
 	
 	@Override
-	public void getDataBlocks(List<IWrapperNBT> dataBlocks){
+	public void getDataBlocks(List<WrapperNBT> dataBlocks){
 		//If this is an engine, add a creative variant.
 		if(partPrefix.equals("engine")){
-			IWrapperNBT data = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT data = MasterLoader.coreInterface.createNewTag();
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
 		}
@@ -204,7 +204,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	}
 	
 	@Override
-	public EntityPlayerGun createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, IWrapperNBT data){
+	public EntityPlayerGun createEntity(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, WrapperNBT data){
 		return new EntityPlayerGun(world, wrapper, playerSpawning, data);
 	}
 

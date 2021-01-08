@@ -49,7 +49,7 @@ public interface IInterfaceCore{
 	/**
 	 *  Returns a new, empty NBT tag for use.
 	 */
-	public IWrapperNBT createNewTag();
+	public WrapperNBT createNewTag();
 	
 	/**
 	 *  Returns a stack containing the passed-in item.
@@ -71,5 +71,5 @@ public interface IInterfaceCore{
 	 *  fake TEs can be used on moving entities anywhere in the world without the
 	 *  game crashing or the GUI closing out.
 	 */
-	public IWrapperTileEntity getFakeTileEntity(String type, IWrapperWorld world, IWrapperNBT data, int inventoryUnits);
+	public IWrapperTileEntity getFakeTileEntity(String type, IWrapperWorld world, WrapperNBT data, int inventoryUnits);
 }

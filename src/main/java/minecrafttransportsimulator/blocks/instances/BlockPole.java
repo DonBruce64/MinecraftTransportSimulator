@@ -16,10 +16,10 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
@@ -59,16 +59,16 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals("core");
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
+					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(!isPlayerHoldingCore){
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
 					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
 						textLines = heldStack.getData().getStrings("textLines", component.definition.rendering.textObjects.size());
 					}
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
 					return false;
 				}
@@ -94,7 +94,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityPole createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityPole(world, position, data);
 	}
 

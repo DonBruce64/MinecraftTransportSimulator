@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -105,9 +106,9 @@ public class GUIPaintGun extends AGUIBase{
 			@Override
 			public void onClicked(){
 				if(vehicle != null){
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
+					NetworkSystem.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
 				}else{
-					MasterLoader.networkInterface.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
+					NetworkSystem.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
 				}
 				MasterLoader.guiInterface.closeGUI();
 			}

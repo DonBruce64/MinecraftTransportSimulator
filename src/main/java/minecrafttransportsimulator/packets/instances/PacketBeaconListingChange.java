@@ -3,10 +3,10 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**This packet is sent from the server to all clients when the list of beacons changes.  This
@@ -37,7 +37,7 @@ public class PacketBeaconListingChange extends APacketBase{
 			this.beacon = null;
 		}else{
 			this.beaconName = null;
-			this.beacon = new RadioBeacon(MasterLoader.networkInterface.createDataFromBuffer(buf));
+			this.beacon = new RadioBeacon(readDataFromBuffer(buf));
 		}
 	}
 	
@@ -49,9 +49,9 @@ public class PacketBeaconListingChange extends APacketBase{
 			writeStringToBuffer(beaconName, buf);
 		}else{
 			buf.writeBoolean(false);
-			IWrapperNBT data = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT data = MasterLoader.coreInterface.createNewTag();
 			beacon.save(data);
-			data.writeToBuffer(buf);
+			writeDataToBuffer(data, buf);
 		}
 	}
 	

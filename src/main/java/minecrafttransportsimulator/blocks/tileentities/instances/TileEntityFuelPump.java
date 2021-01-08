@@ -8,10 +8,11 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -20,7 +21,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	public EntityVehicleF_Physics connectedVehicle;
     private FluidTank tank;
 
-    public TileEntityFuelPump(IWrapperWorld world, Point3i position, IWrapperNBT data){
+    public TileEntityFuelPump(IWrapperWorld world, Point3i position, WrapperNBT data){
     	super(world, position, data);
     	this.tank = new FluidTank(data, 15000, world.isClient());
     }
@@ -54,7 +55,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 16){
-				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
 					if(entity instanceof IWrapperPlayer){
 						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
@@ -73,7 +74,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
 					//No more room in the vehicle.  Disconnect.
-					MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+					NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
 					for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
@@ -84,7 +85,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
-				MasterLoader.networkInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
 				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
@@ -107,7 +108,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		tank.save(data);
 	}

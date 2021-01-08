@@ -14,6 +14,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -137,7 +138,7 @@ public class PacketBulletHit extends APacketBase{
 								}
 							}else{
 								//Couldn't break the block or set it on fire.  Have clients do effects.
-								MasterLoader.networkInterface.sendToAllClients(this);
+								NetworkSystem.sendToAllClients(this);
 							}
 						}
 					}

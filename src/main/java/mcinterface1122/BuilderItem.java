@@ -15,7 +15,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
@@ -102,9 +102,9 @@ class BuilderItem extends Item{
 	@Override
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items){
 		super.getSubItems(tab, items);
-		List<IWrapperNBT> dataBlocks = new ArrayList<IWrapperNBT>();
+		List<WrapperNBT> dataBlocks = new ArrayList<WrapperNBT>();
 		item.getDataBlocks(dataBlocks);
-		for(IWrapperNBT data : dataBlocks){
+		for(WrapperNBT data : dataBlocks){
 			if(this.isInCreativeTab(tab)){
 				ItemStack stack = new ItemStack(this);
 				stack.setTagCompound(((WrapperNBT) data).tag);

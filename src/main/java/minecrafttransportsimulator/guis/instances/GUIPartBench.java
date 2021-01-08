@@ -24,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -188,7 +189,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				MasterLoader.networkInterface.sendToServer(new PacketPlayerCraftItem(currentItem));
+				NetworkSystem.sendToServer(new PacketPlayerCraftItem(currentItem));
 			}
 		});
 		

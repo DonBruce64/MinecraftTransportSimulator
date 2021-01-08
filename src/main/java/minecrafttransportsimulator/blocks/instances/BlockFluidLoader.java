@@ -3,9 +3,9 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
@@ -26,7 +26,7 @@ public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	}
 	
     @Override
-	public TileEntityFluidLoader createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityFluidLoader createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityFluidLoader(world, position, data);
 	}
 

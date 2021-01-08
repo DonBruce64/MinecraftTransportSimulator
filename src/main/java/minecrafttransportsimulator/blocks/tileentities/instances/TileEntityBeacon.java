@@ -7,8 +7,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Beacon tile entity.  Contains code for handling interfacing with
  * the global world saved data and information of the beacon states.
@@ -25,7 +25,7 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	public String beaconName;
 	
-	public TileEntityBeacon(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityBeacon(IWrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Manually add textLines, as these won't be in the JSON.
 		this.nameTextObject = new JSONText();
@@ -88,7 +88,7 @@ public class TileEntityBeacon extends TileEntityDecor{
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		data.setString("beaconName", beaconName);
 	}

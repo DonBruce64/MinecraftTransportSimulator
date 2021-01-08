@@ -6,11 +6,13 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
+import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -41,7 +43,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, IWrapperNBT data, APart parentPart){
+	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
@@ -144,8 +146,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	}
 	
 	@Override
-	public IWrapperNBT getData(){
-		IWrapperNBT data = super.getData();
+	public WrapperNBT getData(){
+		WrapperNBT data = super.getData();
 		data.setBoolean("isFlat", isFlat);
 		return data;
 	}
@@ -177,7 +179,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	public void setFlatState(boolean setFlat){
 		if(vehicle.world.isClient()){
 			if(setFlat){
-				MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
+				AudioSystem.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
 			}
 		}else{
 			//On the server, can we go flat and does the config let us?
@@ -192,7 +194,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
+			NetworkSystem.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
 		}
 		
 		//Set flat state and new bounding box.
@@ -242,7 +244,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			for(byte i=0; i<4; ++i){
 				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
+			AudioSystem.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && vehicle.groundDeviceCollective.groundedGroundDevices.contains(this)){

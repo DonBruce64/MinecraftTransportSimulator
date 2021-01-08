@@ -4,9 +4,9 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
@@ -144,14 +144,14 @@ class WrapperEntity implements IWrapperEntity{
 	}
 	
 	@Override
-	public IWrapperNBT getNBT(){
+	public WrapperNBT getNBT(){
 		NBTTagCompound tag = new NBTTagCompound();
 		entity.writeToNBT(tag);
 		return new WrapperNBT(tag);
 	}
 	
 	@Override
-	public void setNBT(IWrapperNBT data){
+	public void setNBT(WrapperNBT data){
 		entity.readFromNBT(((WrapperNBT) data).tag);
 	}
 	

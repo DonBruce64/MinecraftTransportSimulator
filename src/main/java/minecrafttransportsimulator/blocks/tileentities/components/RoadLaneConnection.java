@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Helper class for containing connection data.
  *
@@ -18,13 +18,13 @@ public class RoadLaneConnection{
 		this.connectedToStart = connectedToStart;
 	}
 	
-	public RoadLaneConnection(IWrapperNBT data){
+	public RoadLaneConnection(WrapperNBT data){
 		this.tileLocation = data.getPoint3i("tileLocation");
 		this.laneNumber = data.getInteger("laneNumber");
 		this.connectedToStart = data.getBoolean("connectedToStart");
 	}
 	
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		data.setPoint3i("tileLocation",tileLocation);
 		data.setInteger("laneNumber", laneNumber);
 		data.setBoolean("connectedToStart", connectedToStart);

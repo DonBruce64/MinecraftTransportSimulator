@@ -14,9 +14,10 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.rendering.components.AnimationsVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -64,7 +65,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleA_Base(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleA_Base(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		//Set definition and current subName.
 		ItemVehicle item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName")); 
@@ -78,7 +79,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			//Use a try-catch for parts in case they've changed since this vehicle was last placed.
 			//Don't want crashes due to pack updates.
 			try{
-				IWrapperNBT partData = data.getData("part_" + i);
+				WrapperNBT partData = data.getData("part_" + i);
 				ItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
 				Point3d partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, partData, partOffset, true);
@@ -116,7 +117,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns true if the part was able to be added, false if something prevented it.
 	 */
-    public boolean addPartFromItem(ItemPart partItem, IWrapperNBT partData, Point3d offset, boolean doingConstruction){
+    public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean doingConstruction){
     	//Get the part pack to add.
 		VehiclePart packPart = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -189,7 +190,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	    		}
 				
 				//Send packet to client with part data.
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem, partData, partToAdd.parentPart));
+				NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem, partData, partToAdd.parentPart));
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
@@ -241,7 +242,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
+				NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
 			}
 		}
 		
@@ -432,7 +433,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						
 						//Send a packet if required.
 						if(sendPacket){
-							MasterLoader.networkInterface.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
+							NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.
@@ -466,7 +467,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
@@ -476,7 +477,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		for(APart part : parts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
-				IWrapperNBT partData = part.getData();
+				WrapperNBT partData = part.getData();
 				//We need to set some extra data here for the part to allow this vehicle to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setString("packID", part.definition.packID);

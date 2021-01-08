@@ -5,10 +5,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 	
@@ -31,7 +31,7 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 	}
     
     @Override
-	public TileEntityDecor createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityDecor createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityDecor(world, position, data);
 	}
 

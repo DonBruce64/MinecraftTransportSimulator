@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.sound;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -15,15 +15,8 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IInterfaceAudio;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.sound.DecodedFile;
-import minecrafttransportsimulator.sound.ISoundProviderComplex;
-import minecrafttransportsimulator.sound.IStreamDecoder;
-import minecrafttransportsimulator.sound.OGGDecoder;
-import minecrafttransportsimulator.sound.Radio;
-import minecrafttransportsimulator.sound.RadioStation;
-import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.mcinterface.MasterLoader;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -31,8 +24,13 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
+/**Interface for the audio system.  This is responsible for playing sound from vehicles/interactions.
+ * As well as from the internal radio.
+ *
+ * @author don_bruce
+ */
 @Mod.EventBusSubscriber(Side.CLIENT)
-class InterfaceAudio implements IInterfaceAudio{
+public class AudioSystem{
 	/**Flag for game paused state.  Gets set when the game is paused.**/
 	private static boolean isSystemPaused;
 	
@@ -53,15 +51,18 @@ class InterfaceAudio implements IInterfaceAudio{
 	 * will stop attempting to play sounds.  Used for when mods take all the sources.**/
 	private static byte sourceGetFailures = 0;
 	
-	@Override
-	public void update(){
+	/**
+	 *  Main update loop.  Call every tick to update playing sounds,
+	 *  as well as queue up sounds that aren't playing yet but need to.
+	 */
+	public static void update(){
 		if(!AL.isCreated()){
 			//Don't go any further if OpenAL isn't ready.
 			return;
 		}
 		
 		//Handle pause state logic.
-		if(MasterInterface.gameInterface.isGamePaused()){
+		if(MasterLoader.clientInterface.isGamePaused()){
 			if(!isSystemPaused){
 				for(SoundInstance sound : playingSounds){
 					AL10.alSourcePause(sound.sourceIndex);
@@ -77,7 +78,7 @@ class InterfaceAudio implements IInterfaceAudio{
 		}
 		
 		//If the world is null, we need to stop all sounds as we're on the main screen.
-		if(MasterInterface.gameInterface.getClientWorld() == null){
+		if(MasterLoader.clientInterface.getClientWorld() == null){
 			Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
     			iterator.remove();
@@ -97,7 +98,7 @@ class InterfaceAudio implements IInterfaceAudio{
 		}
 		
 		//Get the player for further calculations.
-		IWrapperPlayer player = MasterInterface.gameInterface.getClientPlayer();
+		IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
@@ -192,8 +193,11 @@ class InterfaceAudio implements IInterfaceAudio{
 		}
 	}
 	
-	@Override
-	public void playQuickSound(SoundInstance sound){
+	/**
+	 *  Plays a sound file located in a jar without buffering.
+	 *  Useful for quick sounds like gunshots or button presses.
+	 */
+	public static void playQuickSound(SoundInstance sound){
 		if(AL.isCreated() && sourceGetFailures < 10){
 			//First get the IntBuffer pointer to where this sound data is stored.
 			Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
@@ -205,7 +209,7 @@ class InterfaceAudio implements IInterfaceAudio{
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
 					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+					MasterLoader.clientInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -223,13 +227,20 @@ class InterfaceAudio implements IInterfaceAudio{
 		}
 	}
     
-	@Override
-    public void addRadioStation(RadioStation station){
+	/**
+	 *  Adds a station to be queued for updates.  This should only be done once upon station construction.
+	 */
+    public static void addRadioStation(RadioStation station){
     	playingStations.add(station);
     }
     
-	@Override
-	public void addRadioSound(SoundInstance sound, List<Integer> buffers){
+    /**
+	 *  Adds a new radio sound source, and queues it up with the buffer indexes passed-in.
+	 *  Unlike the quick sound, this does not queue the sound added.  This means that the
+	 *  method must be called from the main update loop somewhere at the parent call in the
+	 *  stack to avoid a CME.
+	 */
+	public static void addRadioSound(SoundInstance sound, List<Integer> buffers){
 		if(AL.isCreated() && sourceGetFailures < 10){
     		//Set the sound's source buffer index.
 			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
@@ -237,7 +248,7 @@ class InterfaceAudio implements IInterfaceAudio{
 			AL10.alGenSources(sourceBuffer);
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
 				++sourceGetFailures;
-				MasterInterface.gameInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+				MasterLoader.clientInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);
@@ -251,8 +262,11 @@ class InterfaceAudio implements IInterfaceAudio{
     	}
 	}
 
-	@Override
-	public int createBuffer(ByteBuffer buffer, IStreamDecoder decoder){
+	/**
+	 *  Buffers a ByteBuffer's worth of data from a streaming decoder.
+	 *  Returns the index of the integer to where this buffer is stored.
+	 */
+	public static int createBuffer(ByteBuffer buffer, IStreamDecoder decoder){
 		if(decoder.isStereo()){
 			buffer = stereoToMono(buffer);
 		}
@@ -262,18 +276,28 @@ class InterfaceAudio implements IInterfaceAudio{
 		return newDataBuffer.get(0);
 	}
 	
-	@Override
-	public void deleteBuffer(int bufferIndex){
+	/**
+	 *  Deletes a buffer of station data.  Used when all radios are done playing the buffer,
+	 *  or if the station switches buffers out.
+	 */
+	public static void deleteBuffer(int bufferIndex){
 		AL10.alDeleteBuffers(bufferIndex);
 	}
 	
-	@Override
-	public void bindBuffer(SoundInstance sound, int bufferIndex){
+	/**
+	 *  Binds the passed-in buffer to the passed-in source index.
+	 */
+	public static void bindBuffer(SoundInstance sound, int bufferIndex){
 		AL10.alSourceQueueBuffers(sound.sourceIndex, bufferIndex);
 	}
 	
-	@Override
-	public int getFreeStationBuffer(Set<Radio> playingRadios){
+	/**
+	 *  Checks if the passed-in radios all have a free buffer.  If so,
+	 *  then the free buffer index is returned, and the buffer is-unbound
+	 *  from all the sounds for all the radios.  If the radios are invalid
+	 *  or not synced, then they are turned off for safety.
+	 */
+	public static int getFreeStationBuffer(Set<Radio> playingRadios){
 		boolean freeBuffer = true;
 		Radio badRadio = null;
 		AL10.alGetError();
@@ -378,7 +402,7 @@ class InterfaceAudio implements IInterfaceAudio{
         if(event.phase.equals(Phase.END)){
 			//We put this into a try block as sound system reloads can cause the thread to get stopped mid-execution.
 			try{
-				MasterInterface.audioInterface.update();
+				update();
 			}catch(Exception e){
 				e.printStackTrace();
 				//Do nothing.  We only get exceptions here if OpenAL isn't ready.
@@ -410,7 +434,7 @@ class InterfaceAudio implements IInterfaceAudio{
     		
     		//Mark world as un-paused and update sounds to stop the ones that were just removed.
             isSystemPaused = false;
-            MasterInterface.audioInterface.update();
+            update();
     	}
     }
 }

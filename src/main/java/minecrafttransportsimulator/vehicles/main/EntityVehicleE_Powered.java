@@ -18,10 +18,10 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -29,6 +29,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Sig
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
+import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -85,7 +86,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	//Internal radio variables.
 	private final Radio radio;
 	
-	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperEntity wrapper, IWrapperNBT data){
+	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		
 		//Load simple variables.
@@ -229,10 +230,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 				if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
-							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+							NetworkSystem.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
 						}
 					}
-					MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+					NetworkSystem.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 				}
 			}
 			return true;
@@ -261,10 +262,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					}
 					if(!otherController){
 						for(PartEngine engine : engines.values()){
-							MasterLoader.networkInterface.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+							NetworkSystem.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 						}
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
-						MasterLoader.networkInterface.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+						NetworkSystem.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
+						NetworkSystem.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					}
 				}
 			}
@@ -379,9 +380,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public void startSounds(){
 		if(hornOn){
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
+			AudioSystem.playQuickSound(new SoundInstance(this, definition.motorized.hornSound, true));
 		}else if(sirenOn){
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
+			AudioSystem.playQuickSound(new SoundInstance(this, definition.motorized.sirenSound, true));
 		}
 	}
 	
@@ -436,7 +437,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void save(IWrapperNBT data){
+	public void save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("hornOn", hornOn);
 		data.setBoolean("sirenOn", sirenOn);

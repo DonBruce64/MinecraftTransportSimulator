@@ -14,6 +14,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -164,7 +166,7 @@ public class BuilderEntity extends Entity{
     		///Although we could call this in the constructor, Minecraft changes the
     		//entity IDs after spawning and that fouls things up.
     		if(requestDataFromServer){
-    			MasterInterface.networkInterface.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
+    			NetworkSystem.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
     			requestDataFromServer = false;
     		}
     	}else{
@@ -408,7 +410,7 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
 	    		if(boxClicked != null){
-		    		MasterInterface.networkInterface.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
+		    		NetworkSystem.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
 	    			MasterInterface.logger.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
@@ -433,7 +435,7 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
     			if(boxClicked != null){
-    				MasterInterface.networkInterface.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
+    				NetworkSystem.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
         			MasterInterface.logger.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}

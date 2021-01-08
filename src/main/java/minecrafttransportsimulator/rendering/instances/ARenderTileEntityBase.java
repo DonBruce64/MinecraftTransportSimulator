@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 
 /**Base Tile Entity rendering class (TESR).  
  * This should be used with all blocks that need fancy rendering that can't be done with JSON.

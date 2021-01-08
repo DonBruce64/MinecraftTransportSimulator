@@ -6,10 +6,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
 	
@@ -34,7 +34,7 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
     }
     
     @Override
-	public TileEntityBeacon createTileEntity(IWrapperWorld world, Point3i position, IWrapperNBT data){
+	public TileEntityBeacon createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityBeacon(world, position, data);
 	}
 

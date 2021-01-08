@@ -4,10 +4,9 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -20,7 +19,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  */
 public class PacketVehiclePartChange extends APacketVehiclePart{
 	private final ItemPart partItem;
-	private final IWrapperNBT partData;
+	private final WrapperNBT partData;
 	private boolean clickedPart;
 	private Point3d partClickedOffset;
 	
@@ -31,7 +30,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		this.partClickedOffset = null;
 	}
 	
-	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, ItemPart partItem, IWrapperNBT partData, APart partClicked){
+	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, ItemPart partItem, WrapperNBT partData, APart partClicked){
 		super(vehicle, offset);
 		this.partItem = partItem;
 		this.partData = partData;
@@ -43,7 +42,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 		super(buf);
 		if(buf.readBoolean()){
 			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
-			this.partData = MasterLoader.networkInterface.createDataFromBuffer(buf);
+			this.partData = readDataFromBuffer(buf);
 			this.clickedPart = buf.readBoolean();
 			if(clickedPart){
 				this.partClickedOffset = readPoint3dFromBuffer(buf);
@@ -65,7 +64,7 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 			writeStringToBuffer(partItem.definition.packID, buf);
 			writeStringToBuffer(partItem.definition.systemName, buf);
 			writeStringToBuffer(partItem.subName, buf);
-			partData.writeToBuffer(buf);
+			writeDataToBuffer(partData, buf);
 			buf.writeBoolean(clickedPart);
 			if(clickedPart){
 				writePoint3dToBuffer(partClickedOffset, buf);
