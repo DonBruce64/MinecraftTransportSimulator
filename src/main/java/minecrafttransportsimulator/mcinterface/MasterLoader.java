@@ -69,14 +69,13 @@ public class MasterLoader{
 	public static IInterfaceGUI guiInterface;
 	public static IInterfaceInput inputInterface;
 	public static IInterfaceNetwork networkInterface;
-	public static IInterfaceOGGDecoder oggDecoderInterface;
 	public static IInterfaceRender renderInterface;
 	public static String gameDirectory;
 	
 	/**
 	 *  Called to set interfaces.  This needs to be done before ANY logic is executed.
 	 */
-	public static void setInterfaces(String resourceDomain, IInterfaceAudio audioInterface, IInterfaceCore coreInterface, IInterfaceClient clientInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceNetwork networkInterface, IInterfaceOGGDecoder oggDecoderInterface, IInterfaceRender renderInterface){
+	public static void setInterfaces(String resourceDomain, IInterfaceAudio audioInterface, IInterfaceCore coreInterface, IInterfaceClient clientInterface, IInterfaceGUI guiInterface, IInterfaceInput inputInterface, IInterfaceNetwork networkInterface, IInterfaceRender renderInterface){
 		//Set interfaces.
 		MasterLoader.resourceDomain = resourceDomain;
 		MasterLoader.audioInterface = audioInterface;
@@ -85,7 +84,6 @@ public class MasterLoader{
 		MasterLoader.guiInterface = guiInterface;
 		MasterLoader.inputInterface = inputInterface;
 		MasterLoader.networkInterface = networkInterface;
-		MasterLoader.oggDecoderInterface = oggDecoderInterface;
 		MasterLoader.renderInterface = renderInterface;
 		
 		//Create main items.

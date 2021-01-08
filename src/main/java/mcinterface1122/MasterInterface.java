@@ -28,7 +28,6 @@ public class MasterInterface{
 	static final InterfaceGUI guiInterface;
 	static final InterfaceInput inputInterface;
 	static final InterfaceNetwork networkInterface;
-	static final InterfaceOGGDecoder oggDecoderInterface;
 	static final InterfaceRender renderInterface;
 	
 	static{
@@ -44,7 +43,6 @@ public class MasterInterface{
 			guiInterface = new InterfaceGUI();
 			inputInterface = new InterfaceInput();
 			networkInterface = new InterfaceNetwork();
-			oggDecoderInterface = new InterfaceOGGDecoder();
 			renderInterface = new InterfaceRender();
 		}else{
 			audioInterface = null;
@@ -53,10 +51,9 @@ public class MasterInterface{
 			guiInterface = null;
 			inputInterface = null;
 			networkInterface = new InterfaceNetwork();
-			oggDecoderInterface = null;
 			renderInterface = null;
 		}
-		MasterLoader.setInterfaces(MODID, audioInterface, coreInterface, gameInterface, guiInterface, inputInterface, networkInterface, oggDecoderInterface, renderInterface);
+		MasterLoader.setInterfaces(MODID, audioInterface, coreInterface, gameInterface, guiInterface, inputInterface, networkInterface, renderInterface);
 	}
 
 	@EventHandler

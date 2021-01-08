@@ -299,7 +299,7 @@ public class RadioStation{
 				if(contentURL != null){
 					switch(contentType){
 						case("audio/mpeg") : station.decoder = new MP3Decoder(contentURL.openStream(), station.equalizer); break;
-						case("application/ogg") : station.decoder = MasterLoader.oggDecoderInterface.createFrom(contentURL); break;
+						case("application/ogg") : station.decoder = new OGGDecoder(contentURL); break;
 					}
 				}else{
 					station.decoder = new MP3Decoder(new FileInputStream(contentFile), station.equalizer);

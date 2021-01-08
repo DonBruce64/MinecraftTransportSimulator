@@ -24,7 +24,5 @@ public interface IInterfaceProvider{
 	
 	public IInterfaceNetwork getNetworkInterface();
 	
-	public IInterfaceOGGDecoder getOGGDecoderInterface();
-	
 	public IInterfaceRender getRenderInterface();
 }

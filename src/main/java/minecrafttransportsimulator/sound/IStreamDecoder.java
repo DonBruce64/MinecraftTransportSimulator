@@ -8,7 +8,8 @@ import java.nio.ByteBuffer;
  * @author don_bruce
  */
 public interface IStreamDecoder{
-    /**
+    
+	/**
 	 *  Reads a block of data and returns it as a ByteBuffer.
 	 *  Note that this buffer is re-used, so do NOT make multiple
 	 *  calls to this method without storing the data somewhere in

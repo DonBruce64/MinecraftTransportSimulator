@@ -17,9 +17,10 @@ import org.lwjgl.openal.AL10;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.IInterfaceAudio;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.sound.DecodedFile;
 import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.IStreamDecoder;
-import minecrafttransportsimulator.sound.OGGDecoderOutput;
+import minecrafttransportsimulator.sound.OGGDecoder;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -348,7 +349,7 @@ class InterfaceAudio implements IInterfaceAudio{
 			return dataSourceBuffers.get(soundName);
 		}else{
 			//Need to parse the data.  Do so now.
-			OGGDecoderOutput decoderOutput = MasterInterface.oggDecoderInterface.parseWholeOGGFile(soundName);
+			DecodedFile decoderOutput = OGGDecoder.parseInternalFile(soundName);
 			if(decoderOutput != null){
 				//Generate an IntBuffer to store a pointer to the data buffer.
 				IntBuffer dataBufferPointers = BufferUtils.createIntBuffer(1);
