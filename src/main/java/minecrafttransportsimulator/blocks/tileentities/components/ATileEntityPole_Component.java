@@ -8,7 +8,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.AnimationsPole;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
@@ -48,7 +47,7 @@ public abstract class ATileEntityPole_Component implements IAnimationProvider{
 	}
 	
 	@Override
-    public AAnimationsBase getAnimationSystem(){
+    public AnimationsPole getAnimationSystem(){
 		return animator;
 	}
 	

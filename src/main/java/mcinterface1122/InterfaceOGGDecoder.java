@@ -152,10 +152,13 @@ class InterfaceOGGDecoder implements IInterfaceOGGDecoder{
 	private static class ResourceStreamHandler extends URLStreamHandler{
 		public ResourceStreamHandler(){}
 		
+		@Override
         protected URLConnection openConnection(URL connection){
             return new URLConnection(connection){
+            	@Override
                 public void connect() throws IOException{}
                 
+            	@Override
                 public InputStream getInputStream() throws IOException{
                 	String soundName = connection.getFile();
                 	String soundDomain = soundName.substring(0, soundName.indexOf(':'));

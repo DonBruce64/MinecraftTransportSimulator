@@ -444,9 +444,9 @@ public class BuilderEntity extends Entity{
     }
 	
 	//Junk methods, forced to pull in.
-	protected void entityInit(){}
-	protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
-	protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
+    @Override protected void entityInit(){}
+    @Override protected void readEntityFromNBT(NBTTagCompound p_70037_1_){}
+    @Override protected void writeEntityToNBT(NBTTagCompound p_70014_1_){}
 	
 	/**
 	 * Registers all builder instances that build our own entities into the game.

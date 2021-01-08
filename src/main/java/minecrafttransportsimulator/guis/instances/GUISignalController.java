@@ -82,6 +82,7 @@ public class GUISignalController extends AGUIBase{
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, MasterLoader.coreInterface.translate("gui.trafficsignalcontroller.scan")){
+			@Override
 			public void onClicked(){
 				trafficSignals = 0;
 				streetLights = 0;

@@ -18,7 +18,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.AnimationsGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -236,7 +235,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	//----------START OF RENDERING INTERFACE CODE----------
 	@Override
-    public AAnimationsBase getAnimationSystem(){
+    public AnimationsGun getAnimationSystem(){
 		return animator;
 	}
 	

@@ -488,7 +488,7 @@ public class PartEngine extends APart implements IParticleProvider{
 			}
 		}
 		if(driveshaftDesiredSpeed != -999){
-			driveshaftRotation += 360D*driveshaftDesiredSpeed*vehicle.SPEED_FACTOR;
+			driveshaftRotation += 360D*driveshaftDesiredSpeed*EntityVehicleF_Physics.SPEED_FACTOR;
 		}else{
 			driveshaftRotation += 360D*rpm/1200D*currentGearRatio;
 		}

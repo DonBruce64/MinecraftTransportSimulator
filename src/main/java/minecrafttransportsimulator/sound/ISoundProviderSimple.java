@@ -12,12 +12,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 public interface ISoundProviderSimple{
     
     /**
-	 *  Return the position of this ISoundProvider as a Point3d.
+	 *  Return the position of this provider as a Point3d.
 	 */
     public Point3d getProviderPosition();
     
     /**
-	 *  Return the world this sound is in.  Required for world loading/unloading.
+	 *  Return the world this provider is in.
 	 */
     public IWrapperWorld getProviderWorld();
 }

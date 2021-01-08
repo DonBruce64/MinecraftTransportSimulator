@@ -16,6 +16,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		super(definition, subName);
 	}
 	
+	@Override
 	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
 		if(definition.general.type.equals("core")){
 			return ((IItemBlock) this).placeBlock(world, player, point, axis);

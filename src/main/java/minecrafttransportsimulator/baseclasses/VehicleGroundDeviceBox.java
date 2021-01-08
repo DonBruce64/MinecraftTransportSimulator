@@ -171,7 +171,7 @@ public class VehicleGroundDeviceBox{
 		isGrounded = false;
 		isAbleToDoGroundOperations = false;
 		collisionDepth = 0;
-		Point3d vehicleMotionOffset = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR);
+		Point3d vehicleMotionOffset = vehicle.motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR);
 		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
 			solidBox.globalCenter.setTo(solidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);

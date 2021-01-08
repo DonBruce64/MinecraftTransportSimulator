@@ -57,7 +57,7 @@ public class BlockRoadCollision extends ABlockBase{
     			for(int k=-TileEntityRoad.MAX_SEGMENT_LENGTH; k<2*TileEntityRoad.MAX_SEGMENT_LENGTH; ++k){
     				blockOffset.set(i, j, k);
     				testPoint.setTo(location).subtract(blockOffset);
-            		ATileEntityBase testTile = world.getTileEntity(testPoint);
+            		ATileEntityBase<?> testTile = world.getTileEntity(testPoint);
             		if(testTile instanceof TileEntityRoad){
             			if(((TileEntityRoad) testTile).collisionBlockOffsets.contains(blockOffset)){
             				return (TileEntityRoad) testTile;

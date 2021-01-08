@@ -775,7 +775,7 @@ public final class RenderVehicle{
 		//We manually set point 0 here due to the fact it's a joint between two differing angles.
 		//We also need to translate to that point to start rendering as we're currently at 0,0,0.
 		//For each remaining point, we only translate the delta of the point.
-		float treadLinearPosition = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*treadPart.vehicle.SPEED_FACTOR);
+		float treadLinearPosition = (float) ((Math.abs(treadPart.angularPosition) + treadPart.angularVelocity*partialTicks)*EntityVehicleF_Physics.SPEED_FACTOR);
 		float treadMovementPercentage = treadLinearPosition%treadPart.definition.ground.spacing/treadPart.definition.ground.spacing;
 		if(treadPart.angularPosition < 0){
 			treadMovementPercentage = 1 - treadMovementPercentage;

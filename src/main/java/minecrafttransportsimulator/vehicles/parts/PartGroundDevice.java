@@ -167,7 +167,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	
 	@Override
 	public Point3d getRenderingRotation(float partialTicks){
-		return new Point3d(definition.ground.isWheel ? vehicle.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
+		return new Point3d(definition.ground.isWheel ? EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
 	}
 	
 	/**

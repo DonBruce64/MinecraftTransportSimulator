@@ -132,6 +132,7 @@ class BuilderItem extends Item{
      * This is called by the main MC system do do item use actions.
      * If we are a food item, and can be eaten, return eating here.
      */
+	@Override
     public EnumAction getItemUseAction(ItemStack stack){
     	if(item instanceof IItemFood){
     		IItemFood food = (IItemFood) item;

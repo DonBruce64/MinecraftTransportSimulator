@@ -12,7 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.AnimationsDecor;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
@@ -57,7 +56,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	}
 	
 	@Override
-    public AAnimationsBase getAnimationSystem(){
+    public AnimationsDecor getAnimationSystem(){
 		return animator;
 	}
 	

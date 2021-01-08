@@ -98,7 +98,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("pitch"): return vehicle.angles.x;
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
-			case("speed"): return vehicle.axialVelocity*vehicle.SPEED_FACTOR*20;
+			case("speed"): return vehicle.axialVelocity*EntityVehicleF_Physics.SPEED_FACTOR*20;
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
@@ -131,7 +131,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("trim_aileron"): return vehicle.aileronTrim/10D;
 			case("trim_elevator"): return vehicle.elevatorTrim/10D;
 			case("trim_rudder"): return vehicle.rudderTrim/10D;
-			case("vertical_speed"): return vehicle.motion.y*vehicle.SPEED_FACTOR*20;
+			case("vertical_speed"): return vehicle.motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
 			case("lift_reserve"): return -vehicle.trackAngle;
 			case("turn_coordinator"): return ((vehicle.angles.z - vehicle.prevAngles.z)/10 + vehicle.angles.y - vehicle.prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;

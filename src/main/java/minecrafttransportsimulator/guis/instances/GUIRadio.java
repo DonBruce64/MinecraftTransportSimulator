@@ -104,17 +104,19 @@ public class GUIRadio extends AGUIBase{
 		});
 		
 		//Volume controls.
-		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){public void onClicked(){radio.changeVolume(++radio.volume, true);}});
-		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){public void onClicked(){radio.changeVolume(--radio.volume, true);}});
+		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){@Override public void onClicked(){radio.changeVolume(++radio.volume, true);}});
+		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){@Override public void onClicked(){radio.changeVolume(--radio.volume, true);}});
 		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, Color.WHITE, Color.BLACK, 32));
-		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){public void onClicked(){equalizerMode = true;}});
+		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){@Override public void onClicked(){equalizerMode = true;}});
 		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", TextPosition.CENTERED, 0, 1.0F, false).setButton(volUpButton));
 		
 		//Preset buttons.
 		presetButtons.clear();
 		int x = 25;
 		for(byte i=1; i<7; ++i){
-			presetButtons.add(new GUIComponentButton(guiLeft + x, guiTop + 155, 35, String.valueOf(i)){public void onClicked(){presetButtonClicked(this);}});
+			presetButtons.add(new GUIComponentButton(guiLeft + x, guiTop + 155, 35, String.valueOf(i)){
+			@Override
+			public void onClicked(){presetButtonClicked(this);}});
 			addButton(presetButtons.get(i-1));
 			x += 35;
 		}
@@ -123,7 +125,7 @@ public class GUIRadio extends AGUIBase{
 		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 150));
 		
 		//Add equalizer screen buttons.
-		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){public void onClicked(){equalizerMode = false;}});
+		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){@Override public void onClicked(){equalizerMode = false;}});
 		addButton(equalizerResetButton = new GUIComponentButton(guiLeft + getWidth() - 80 - 40, guiTop + 162, 80, "RESET"){
 			@Override
 			public void onClicked(){

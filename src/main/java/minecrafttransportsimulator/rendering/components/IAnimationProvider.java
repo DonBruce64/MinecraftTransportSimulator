@@ -3,8 +3,6 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.HashSet;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.sound.ISoundProviderSimple;
 
 /**Interface for classes that need to have animations done on them and their models.
@@ -17,19 +15,9 @@ public interface IAnimationProvider extends ISoundProviderSimple{
 	public static final Set<String> EMPTY_VARIABLE_SET = new HashSet<String>();
     
     /**
-	 *  Returns the position of this provider.
-	 */
-    public Point3d getProviderPosition();
-    
-    /**
-	 *  Returns the world this provider is in.
-	 */
-    public IWrapperWorld getProviderWorld();
-    
-    /**
 	 *  Returns the animation system for this provider.
 	 */
-    public AAnimationsBase getAnimationSystem();
+    public AAnimationsBase<?> getAnimationSystem();
     
     /**
    	 *  Returns how much power the lights on the provider have.

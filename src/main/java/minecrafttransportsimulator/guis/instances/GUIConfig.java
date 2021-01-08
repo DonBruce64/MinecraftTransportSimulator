@@ -83,6 +83,7 @@ public class GUIConfig extends AGUIBase{
 	public void setupComponents(int guiLeft, int guiTop){
 		//Global header buttons.
 		addButton(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.config.rendering")){
+			@Override
 			public void onClicked(){
 				configuringControls = false;
 				configuringRendering = true;
@@ -94,6 +95,7 @@ public class GUIConfig extends AGUIBase{
 			}
 		});
 		addButton(controlConfigScreenButton = new GUIComponentButton(guiLeft + 85, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.config.controls")){
+			@Override
 			public void onClicked(){
 				configuringControls = false;
 				configuringRendering = false; 
@@ -104,7 +106,8 @@ public class GUIConfig extends AGUIBase{
 				calibrating = false;
 			}
 		});
-		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 171, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.controls")){public void onClicked(){configuringControls = true;}});
+		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 171, guiTop - 20, 85, MasterLoader.coreInterface.translate("gui.config.header.controls")){@Override
+		public void onClicked(){configuringControls = true;}});
 		
 		
 		//Config buttons and text.
@@ -119,6 +122,7 @@ public class GUIConfig extends AGUIBase{
 		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+110, Color.BLACK, MasterLoader.coreInterface.translate("gui.config.joystick.error"), TextPosition.LEFT_ALIGNED, 240, 1.0F, false));
 		for(String vehicleType : vehicleTypes){
 			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(MasterLoader.inputInterface.isJoystickSupportEnabled() ? 2 : 1)), 120, MasterLoader.coreInterface.translate("gui.config.controls." + vehicleType + ".keyboard")){
+				@Override
 				public void onClicked(){
 					String lookupString = vehicleSelectionButtons.get(this);
 					vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
@@ -134,6 +138,7 @@ public class GUIConfig extends AGUIBase{
 			
 			if(MasterLoader.inputInterface.isJoystickSupportEnabled()){
 				GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 90 + 20*(vehicleSelectionButtons.size()/2), 120, MasterLoader.coreInterface.translate("gui.config.controls." + vehicleType + ".joystick")){
+					@Override
 					public void onClicked(){
 						String lookupString = vehicleSelectionButtons.get(this);
 						vehicleConfiguring = lookupString.substring(0, lookupString.indexOf('.'));
@@ -159,6 +164,7 @@ public class GUIConfig extends AGUIBase{
 				if(keyboardControl.systemName.contains(vehicleType)){
 					//First create the text box for input.
 					GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + horizontalOffset, guiTop + verticalOffset, 40, "", 10, Color.WHITE, Color.BLACK, 5){
+						@Override
 						public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 							setText(MasterLoader.inputInterface.getNameForKeyCode(typedCode));
 		        			keyboardBoxes.get(vehicleConfiguring).get(this).config.keyCode =  typedCode;
@@ -194,14 +200,16 @@ public class GUIConfig extends AGUIBase{
 			}
 			keyboardLabels.put(vehicleType, dynamicLabels);
 		}
-		addButton(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, MasterLoader.coreInterface.translate("gui.config.controls.confirm")){public void onClicked(){vehicleConfiguring = "";}});
+		addButton(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, MasterLoader.coreInterface.translate("gui.config.controls.confirm")){@Override
+		public void onClicked(){vehicleConfiguring = "";}});
 		
 		
 		
 		//Joystick selection buttons and text.
 		joystickSelectionButtons.clear();
 		for(String joystick : MasterLoader.inputInterface.getAllJoysticks()){
-			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, String.format(" %-30.28s", joystick), 20, false){public void onClicked(){selectedJoystick = joystickSelectionButtons.get(this);}};
+			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, String.format(" %-30.28s", joystick), 20, false){@Override
+			public void onClicked(){selectedJoystick = joystickSelectionButtons.get(this);}};
 			joystickSelectionButtons.put(button, joystick);
 			addButton(button);
 			
@@ -221,10 +229,14 @@ public class GUIConfig extends AGUIBase{
 			joystickComponentSelectionButtons.add(button);
 			addButton(button);
 		}
-		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, "/\\"){public void onClicked(){scrollSpot -= 9;}});
-		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, "\\/"){public void onClicked(){scrollSpot += 9;}});
-		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 - 1)/100F);}});
-		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 + 1)/100F);}});
+		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, "/\\"){@Override
+		public void onClicked(){scrollSpot -= 9;}});
+		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, "\\/"){@Override
+		public void onClicked(){scrollSpot += 9;}});
+		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){@Override
+		public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 - 1)/100F);}});
+		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){@Override
+		public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 + 1)/100F);}});
 		addTextBox(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 		
 		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+20, Color.BLACK, MasterLoader.coreInterface.translate("gui.config.joystick.mapping")).setButton(componentListUpButton));
@@ -237,8 +249,10 @@ public class GUIConfig extends AGUIBase{
 		
 		//Joystick assignment buttons and text.
 		//Global buttons and labels for digital and analog.
-		addButton(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, MasterLoader.coreInterface.translate("gui.config.joystick.cancel")){public void onClicked(){joystickComponentId = -1; calibrating = false;}});
+		addButton(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, MasterLoader.coreInterface.translate("gui.config.joystick.cancel")){@Override
+		public void onClicked(){joystickComponentId = -1; calibrating = false;}});
 		addButton(clearAssignmentButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, MasterLoader.coreInterface.translate("gui.config.joystick.clear")){
+			@Override
 			public void onClicked(){
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 					if(selectedJoystick.equals(joystickControl.config.joystickName)){
@@ -267,6 +281,7 @@ public class GUIConfig extends AGUIBase{
 				if(joystickControl.systemName.startsWith(vehicleType)){
 					if(!joystickControl.isAxis){
 						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, joystickControl.translatedName, 15, true){
+							@Override
 							public void onClicked(){
 								digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystick, joystickComponentId);
 								joystickComponentId = -1;
@@ -277,6 +292,7 @@ public class GUIConfig extends AGUIBase{
 						topOffsetDigital += button.height;
 					}else{
 						GUIComponentButton button = new GUIComponentButton(guiLeft + 85, guiTop + 40 + topOffsetAnalog, 80, joystickControl.translatedName, 20, true){
+							@Override
 							public void onClicked(){
 								controlCalibrating = analogAssignButtons.get(vehicleConfiguring).get(this);
 								axisMinBoundsTextBox.setText("0.0");
@@ -302,6 +318,7 @@ public class GUIConfig extends AGUIBase{
 		
 		//Analog calibration components.
 		addButton(confirmBoundsButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, MasterLoader.coreInterface.translate("gui.config.joystick.confirm")){
+			@Override
 			public void onClicked(){
 				boolean isInverted = invertAxisButton.text.contains(MasterLoader.coreInterface.translate("gui.config.joystick.invert"));
 				controlCalibrating.setAxisControl(selectedJoystick, joystickComponentId, Double.valueOf(axisMinBoundsTextBox.getText()), Double.valueOf(axisMaxBoundsTextBox.getText()), isInverted);
@@ -310,6 +327,7 @@ public class GUIConfig extends AGUIBase{
 			}
 		});
 		addButton(invertAxisButton = new GUIComponentButton(guiLeft + 50, guiTop + 120, 150, MasterLoader.coreInterface.translate("gui.config.joystick.axismode") + MasterLoader.coreInterface.translate("gui.config.joystick.normal")){
+			@Override
 			public void onClicked(){
 				if(text.contains(MasterLoader.coreInterface.translate("gui.config.joystick.invert"))){
 					text = MasterLoader.coreInterface.translate("gui.config.joystick.axismode") + MasterLoader.coreInterface.translate("gui.config.joystick.normal");

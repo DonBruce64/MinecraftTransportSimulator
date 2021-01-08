@@ -23,7 +23,7 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
-public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider{
+public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider<EntityPlayerGun>{
 	private final String partPrefix;
 	
 	public ItemPart(JSONPart definition, String subName){
