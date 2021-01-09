@@ -124,7 +124,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Auto-close any open doors that should be closed.
 		//Only do this once a second to prevent lag.
-		if(velocity > 0.5 && ticksExisted%20 == 0){
+		if(definition.doors != null && velocity > 0.5 && ticksExisted%20 == 0){
 			Iterator<String> variableIterator = variablesOn.iterator();
 			while(variableIterator.hasNext()){
 				String openDoorName = variableIterator.next();
