@@ -7,6 +7,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -14,7 +15,6 @@ import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
@@ -28,9 +28,9 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 @EventBusSubscriber
-class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
+public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	
-	final EntityPlayer player;
+	public final EntityPlayer player;
 	
 	WrapperPlayer(EntityPlayer player){
 		super(player);
@@ -112,7 +112,7 @@ class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	
 	@Override
 	public void sendPacket(APacketBase packet){
-		InterfaceNetwork.sendToPlayer(packet, (EntityPlayerMP) player);
+		NetworkSystem.sendToPlayer(packet, this);
 	}
 	
 	@Override

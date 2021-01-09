@@ -4,10 +4,12 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface1122.InterfaceNetwork;
+import mcinterface1122.WrapperPlayer;
+import mcinterface1122.WrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -17,7 +19,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
 public class NetworkSystem{
-	public static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MasterLoader.MODID);
+	private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MasterLoader.MODID);
 	private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 	
 	/**
@@ -58,11 +60,20 @@ public class NetworkSystem{
 	}
 	
 	/**
+	 *  Sends the passed-in packet to the passed-in player.
+	 *  Note that this may ONLY be called on the server, as
+	 *  clients don't know about other player's network pipelines.
+	 */
+	public static void sendToPlayer(APacketBase packet, IWrapperPlayer player){
+		network.sendTo(new WrapperPacket(packet), (EntityPlayerMP) ((WrapperPlayer) player).player);
+	}
+	
+	/**
 	 *  Gets the world this packet was sent from based on its context.
 	 *  Used for handling packets arriving on the server.
 	 */
 	private static IWrapperWorld getServerWorld(MessageContext ctx){
-		return InterfaceNetwork.getServerWorld(ctx);
+		return WrapperWorld.getWrapperFor(ctx.getServerHandler().player.world);
 	}
 	
 	/**
@@ -70,7 +81,7 @@ public class NetworkSystem{
 	 *  Used for handling packets arriving on the server.
 	 */
 	private static IWrapperPlayer getServerPlayer(MessageContext ctx){
-		return InterfaceNetwork.getServerPlayer(ctx);
+		return ((WrapperWorld) getServerWorld(ctx)).getWrapperFor(ctx.getServerHandler().player);
 	}
 	
 	
@@ -78,7 +89,8 @@ public class NetworkSystem{
 	 *  Custom class for packets.  Allows for a common packet to be used for all MC versions, 
 	 *  as well as less boilerplate code due to thread operations.  Note that when this packet 
 	 *  arrives on the other side of the pipeline, MC won't know what class to construct.
-	 *  That's up to us to handle via the packet's first byte.
+	 *  That's up to us to handle via the packet's first byte.  Also note that this class
+	 *  must be public, as if it is private MC won't be able to construct it due to access violations.
 	 */
 	public static class WrapperPacket implements IMessage{
 		private APacketBase packet;

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.NetworkSystem;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -72,7 +73,9 @@ public interface IWrapperPlayer extends IWrapperEntity{
 	/**
 	 *  Sends a packet to this player over the network.
 	 *  Convenience method so we don't need to call the
-	 *  {@link IInterfaceNetwork} for player-specific packets.
+	 *  {@link NetworkSystem} for player-specific packets.
+	 *  Note that this may ONLY be called on the server, as
+	 *  clients don't know about other player's network pipelines.
 	 */
 	public void sendPacket(APacketBase packet);
 	

@@ -63,7 +63,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
 
-class WrapperWorld implements IWrapperWorld{
+public class WrapperWorld implements IWrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
@@ -81,7 +81,7 @@ class WrapperWorld implements IWrapperWorld{
 	 *  Returns a wrapper instance for the passed-in world instance.
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
 	 */
-	static WrapperWorld getWrapperFor(World world){
+	public static WrapperWorld getWrapperFor(World world){
 		if(world != null){
 			if(!worldWrappers.containsKey(world)){
 				worldWrappers.put(world, new WrapperWorld(world));
@@ -98,7 +98,7 @@ class WrapperWorld implements IWrapperWorld{
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
 	 *  If the entity is a player, then a player wrapper is returned.
 	 */
-	WrapperEntity getWrapperFor(Entity entity){
+	public WrapperEntity getWrapperFor(Entity entity){
 		if(entity instanceof EntityPlayer){
 			return getWrapperFor((EntityPlayer) entity);
 		}else if(entity != null){
@@ -123,7 +123,7 @@ class WrapperWorld implements IWrapperWorld{
 	 *  the wrapped entity directly if you aren't sure what its class is.
 	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
 	 */
-	WrapperPlayer getWrapperFor(EntityPlayer player){
+	public WrapperPlayer getWrapperFor(EntityPlayer player){
 		if(player != null){
 			if(!playerWrappers.containsKey(player)){
 				playerWrappers.put(player, new WrapperPlayer(player));

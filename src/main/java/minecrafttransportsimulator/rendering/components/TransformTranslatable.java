@@ -17,8 +17,7 @@ public class TransformTranslatable extends ATransform{
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 
 		//translation magnitude is the magnitude of that vector.
-		this.translationAxis = definition.axis.copy();
-		translationAxis.normalize();
+		this.translationAxis = definition.axis.copy().normalize();
 	}
 
 	@Override

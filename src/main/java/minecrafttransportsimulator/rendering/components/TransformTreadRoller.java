@@ -137,8 +137,12 @@ public class TransformTreadRoller extends TransformRotatable{
 		}
 	}
 	
-	@Override
-	protected boolean updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
+	/**
+	 *  Manual helper function for updating the rotaitonAxis of a part prior to rendering.
+	 *  Required for auto-rotations.  This function should return true if the axis was updated
+	 *  to allow the calling method to save the axis state.
+	 */
+	protected void updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
 		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
 		if(rotationAxis.x == 0){
 			for(APart part : vehicle.parts){
@@ -148,11 +152,11 @@ public class TransformTreadRoller extends TransformRotatable{
 					//Knowing this, we can calculate the linear velocity for this roller, as a roller with
 					//half the circumference needs double the factor, and vice-versa.  Basically, we get
 					//the ratio of the two circumferences of the "standard" roller and our roller.
-					rotationAxis.x = (1.0D/Math.PI)/(radius*2D);
-					return true;
+					definition.axis.x = (1.0D/Math.PI)/(radius*2D);
+					this.rotationAxis.x = 1.0;
+					return;
 				}
 			}
 		}
-		return false;
 	}
 }
