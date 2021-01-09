@@ -372,9 +372,16 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			Point3d totalRotation = new Point3d((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
 			totalRotation.add(provider.getProviderRotation());
 			
-			//Set initial velocity to the provider's velocity, plus the gun muzzle velocity at the specified orientation.
+			//Set the bullet's direction the the provider's orientation.
 			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(currentOrientation).rotateFine(totalRotation);
-			Point3d bulletVelocity = provider.getProviderVelocity().copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR).add(bulletDirection.multiply(definition.gun.muzzleVelocity/20D/10D));
+			
+			//If we have a gun with a muzzle velocity, set the bullet's velocity to that.  Otherwise set it to the vehicle's velocity.
+			Point3d bulletVelocity;
+			if(definition.gun.muzzleVelocity > 0){
+				bulletVelocity = bulletDirection.copy().multiply(definition.gun.muzzleVelocity/20D/10D);
+			}else{
+				bulletVelocity = provider.getProviderVelocity().copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR);
+			}
 			
 			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
 			//Then move the bullet to the appropriate firing position.
