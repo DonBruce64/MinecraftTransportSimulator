@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Helper class used to handle rendering operations across multiple passes.  Tracks
@@ -15,8 +16,6 @@ public class RenderTickData{
 	private float[] lastPartialTicks = new float[] {0F, 0F, 0F};
 	private boolean doneRenderingShaders;
 	
-	private static boolean shadersPresent;
-	
 	public RenderTickData(WrapperWorld world){
 		this.world = world;
 	}
@@ -25,18 +24,18 @@ public class RenderTickData{
 		//We always render on pass 0 and 1, but we only render on pass 2 if we haven't rendered on pass 0 or 1.
 		//If we are rendering on pass 0 or 1 a second time (before pass 2), it means shaders are present.
 		//Set bit to detect these buggers and keep vehicles from rendering funny or disappearing.
-		if(!shadersPresent && renderPass != 2 && lastTickPass[renderPass] > lastTickPass[2] && lastTickPass[2] > 0){
-			shadersPresent = true;
+		if(renderPass != 2 && lastTickPass[renderPass] > lastTickPass[2] && lastTickPass[2] > 0){
+			InterfaceRender.shadersDetected = true;
 		}
 		
 		//If we are rendering the object, update times.
 		//This may not be the case if shaders are present and we haven't rendered the shader component.
 		//Shaders do a pre-render to get their shadow, so the first render pass is actually invalid.
-		if(!shadersPresent || doneRenderingShaders){
+		if(!InterfaceRender.shadersDetected || doneRenderingShaders){
 			//Rendering the actual model now.
 			lastTickPass[renderPass] = world.getTick();
 			lastPartialTicks[renderPass] = partialTicks;
-		}else if(shadersPresent && !doneRenderingShaders){
+		}else if(InterfaceRender.shadersDetected && !doneRenderingShaders){
 			//Rendering shader components.  If we're on pass 1, then shaders should be done rendering this cycle.
 			if(renderPass == 1){
 				doneRenderingShaders = true;
@@ -48,7 +47,7 @@ public class RenderTickData{
 			//Note that shaders may do operations in pass 0 for lighting, but won't render the actual model.
 			//In this case, the lastPartialTicks won't have been updated, so we do render here.
 			//We also need to reset the shader render state variable to ensure we are ready for the next cycle.
-			if(shadersPresent){
+			if(InterfaceRender.shadersDetected){
 				doneRenderingShaders = false;
 			}
 			

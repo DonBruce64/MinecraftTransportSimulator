@@ -92,6 +92,7 @@ public class InterfaceRender{
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureLocation;
 	private static BuilderGUI currentGUI = null;
+	public static boolean shadersDetected;
 	
 	/**
 	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,

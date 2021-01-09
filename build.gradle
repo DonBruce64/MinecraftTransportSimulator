@@ -1,59 +1,59 @@
 buildscript {
-    repositories {
-        jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
-    }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+	repositories {
+		jcenter()
+		maven { url = "http://files.minecraftforge.net/maven" }
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
 		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
-    }
+	}
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.12.2-19.13.0-BETA8"
+version = "1.12.2-19.13.0-BETA9"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+	sourceCompatibility = targetCompatibility = '1.8'
 	options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
 
 minecraft {
-    version = "1.12.2-14.23.5.2768"
-    runDir = "run"
-    mappings = "stable_39"
-    makeObfSourceJar = false
+	version = "1.12.2-14.23.5.2768"
+	runDir = "run"
+	mappings = "stable_39"
+	makeObfSourceJar = false
 }
 
 //Shadow plugin code for radio.
 reobf {
-    shadowJar {}
+  shadowJar {}
 }
 
 shadowJar {
 	classifier ''
 	//Need to shadow javazoom (jlayer) for MP3 support.
-    relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
-    exclude 'dummyThing'
+	relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
+	exclude 'dummyThing'
 }
 
 dependencies {
-    compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
+  compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
 }
 
 
 //Do file stuffs.  I think this just updates mcmod.info?
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft.version
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+		expand 'version':project.version, 'mcversion':project.minecraft.version
+	}
+	from(sourceSets.main.resources.srcDirs) {
+		exclude 'mcmod.info'
+	}
 }

@@ -75,7 +75,7 @@ public class RenderEventHandler{
     	if(InterfaceClient.inFirstPerson()){
     		//If we are sneaking and holding a gun, enable custom cameras.
     		if(playerGunEntity != null && playerGunEntity.gun != null && sittingSeat == null){
-    			enableCustomCameras = player.isSneaking();
+    			enableCustomCameras = player.isSneaking() && !InterfaceRender.shadersDetected;
     			customCameraIndex = 0;
     		}
 			//Do custom camera, or do normal rendering.
@@ -260,7 +260,7 @@ public class RenderEventHandler{
     		if(runningCustomCameras){
     			++customCameraIndex;
     			InterfaceClient.toggleFirstPerson();
-    		}else if(vehicle != null){
+    		}else if(vehicle != null && !InterfaceRender.shadersDetected){
     			enableCustomCameras = true;
         		customCameraIndex = 0;
     		}
@@ -271,24 +271,26 @@ public class RenderEventHandler{
         	//Assuming inverted third-person mode.
         	//If we get here, and don't have any custom cameras, stay here.
         	//If we do have custom cameras, use them instead.
-        	if(vehicle != null){
-	        	if(vehicle.definition.rendering.cameraObjects != null){
-	        		InterfaceClient.toggleFirstPerson();
-				}else{
-					for(APart part : vehicle.parts){
-						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-							InterfaceClient.toggleFirstPerson();
-							break;
+        	if(!InterfaceRender.shadersDetected){
+	        	if(vehicle != null){
+		        	if(vehicle.definition.rendering.cameraObjects != null){
+		        		InterfaceClient.toggleFirstPerson();
+					}else{
+						for(APart part : vehicle.parts){
+							if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
+								InterfaceClient.toggleFirstPerson();
+								break;
+							}
 						}
 					}
-				}
-	        	if(sittingSeat != null){
-	        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
+		        	if(sittingSeat != null){
+		        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
+		        	}
+	        	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
+	        		if(playerGunEntity.gunItem.definition.rendering != null && playerGunEntity.gunItem.definition.rendering.cameraObjects != null){
+	        			InterfaceClient.toggleFirstPerson();
+	        		}
 	        	}
-        	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
-        		if(playerGunEntity.gunItem.definition.rendering != null && playerGunEntity.gunItem.definition.rendering.cameraObjects != null){
-        			InterfaceClient.toggleFirstPerson();
-        		}
         	}
 		}
 		customCameraOverlay = null;
