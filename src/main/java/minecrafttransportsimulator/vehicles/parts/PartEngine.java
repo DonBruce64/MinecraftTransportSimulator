@@ -423,7 +423,7 @@ public class PartEngine extends APart implements IParticleProvider{
 					
 					if(state.running){
 						propellerFeedback += propellerForcePenalty*50;
-						double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
+						engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
 						double engineRPMDifference = engineTargetRPM - rpm;
 						
 						//propellerFeedback can't make an engine stall, but hours can.
@@ -443,7 +443,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		//Or, if we are not on, just slowly spin the engine down.
 		if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 			if(state.running){
-				double engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
+				engineTargetRPM = vehicle.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
 				rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 				if(rpm > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
 					rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
