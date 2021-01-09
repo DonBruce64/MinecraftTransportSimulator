@@ -3,17 +3,14 @@ package mcinterface1122;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -58,18 +55,8 @@ class InterfaceCore implements IInterfaceCore{
 	}
 	
 	@Override
-	public WrapperNBT createNewTag(){
-		return new WrapperNBT(new NBTTagCompound());
-	}
-	
-	@Override
-	public IWrapperItemStack getStack(AItemBase item){
-		return new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
-	}
-	
-	@Override
-	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		List<IWrapperItemStack> stackList = new ArrayList<IWrapperItemStack>();
+	public List<ItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub){
+		List<ItemStack> stackList = new ArrayList<ItemStack>();
 		String currentSubName = "";
 		try{
 			//Get main materials.
@@ -80,7 +67,7 @@ class InterfaceCore implements IInterfaceCore{
 					
 					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+					stackList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
 				}
 			}
 	    	
@@ -92,7 +79,7 @@ class InterfaceCore implements IInterfaceCore{
 					
 					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					stackList.add(new WrapperItemStack(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata)));
+					stackList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
 		    	}
 	    	}
 	    	
@@ -107,9 +94,9 @@ class InterfaceCore implements IInterfaceCore{
 	@Override
 	public IWrapperTileEntity getFakeTileEntity(String type, IWrapperWorld world, WrapperNBT data, int inventoryUnits){
 		switch(type){
-			case("chest") : return new WrapperTileEntity.WrapperEntityChest((WrapperWorld) world, (WrapperNBT) data, inventoryUnits);
-			case("furnace") : return new WrapperTileEntity.WrapperEntityFurnace((WrapperWorld) world, (WrapperNBT) data);
-			case("brewing_stand") : return new WrapperTileEntity.WrapperEntityBrewingStand((WrapperWorld) world, (WrapperNBT) data);
+			case("chest") : return new WrapperTileEntity.WrapperEntityChest((WrapperWorld) world, data, inventoryUnits);
+			case("furnace") : return new WrapperTileEntity.WrapperEntityFurnace((WrapperWorld) world, data);
+			case("brewing_stand") : return new WrapperTileEntity.WrapperEntityBrewingStand((WrapperWorld) world, data);
 			default : return null;
 		}
 	}

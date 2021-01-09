@@ -4,10 +4,12 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import net.minecraft.item.ItemStack;
 
 /**Base item class for all MTS items.  Contains multiple methods to define the item's behavior,
  * such as display name, additional text to add to the tooltip, how the item handles left and
@@ -83,6 +85,20 @@ public abstract class AItemBase{
 	 */
 	public boolean canBeStacked(){
 		return true;
+	}
+	
+	/**
+	 *  Returns the builder for this item.
+	 */
+	public BuilderItem getBuilder(){
+		return BuilderItem.itemMap.get(this);
+	}
+	
+	/**
+	 *  Returns a stack with a single item of this type.
+	 */
+	public ItemStack getNewStack(){
+		return new ItemStack(getBuilder());
 	}
 	
 	/**

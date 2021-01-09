@@ -2,8 +2,8 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
 
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import net.minecraft.item.ItemStack;
 
 /**Interface to the core MC system.  This class has methods for registrations
  * file locations, and other core things that are common to clients and servers.
@@ -47,22 +47,12 @@ public interface IInterfaceCore{
 	public void logError(String message);
 	
 	/**
-	 *  Returns a new, empty NBT tag for use.
-	 */
-	public WrapperNBT createNewTag();
-	
-	/**
-	 *  Returns a stack containing the passed-in item.
-	 */
-	public IWrapperItemStack getStack(AItemBase item);
-	
-	/**
 	 *  Returns a list of wrappers required to craft the passed-in item.
 	 *  Note that while different versions of MC will reference different definition 
 	 *  sections due to the "flattening" changing item names, the end result will be
 	 *  a list of stacks needed to craft the passed-in item based on the definition. 
 	 */
-	public List<IWrapperItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub);
+	public List<ItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub);
 	
 	/**
 	 *  Returns a fake TileEntity created to allow for such a TileEntity to be used on

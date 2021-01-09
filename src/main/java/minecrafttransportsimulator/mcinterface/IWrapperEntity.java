@@ -148,12 +148,12 @@ public interface IWrapperEntity{
 	/**
 	 *  Returns the entity's NBT data.
 	 */
-	public WrapperNBT getNBT();
+	public WrapperNBT getData();
 	
 	/**
 	 *  Loads the entity data from the passed-in NBT.
 	 */
-	public void setNBT(WrapperNBT data);
+	public void setData(WrapperNBT data);
 	
 	/**
 	 *  Tries to leash up the entity to the passed-in player.

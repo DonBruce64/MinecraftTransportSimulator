@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
@@ -49,7 +48,7 @@ public class PacketBeaconListingChange extends APacketBase{
 			writeStringToBuffer(beaconName, buf);
 		}else{
 			buf.writeBoolean(false);
-			WrapperNBT data = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT data = new WrapperNBT();
 			beacon.save(data);
 			writeDataToBuffer(data, buf);
 		}

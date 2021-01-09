@@ -14,7 +14,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
@@ -22,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorC
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -181,7 +181,7 @@ public class GUIPaintGun extends AGUIBase{
 		partName.text = currentItem.getItemName();
 		
 		//Parse crafting items and set icon items.
-		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, false, true);
+		List<ItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, false, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < craftingMaterials.size()){
 				craftingItemIcons.get(i).stack = craftingMaterials.get(i);

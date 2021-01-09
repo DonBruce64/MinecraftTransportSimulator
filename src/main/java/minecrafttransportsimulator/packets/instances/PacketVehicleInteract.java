@@ -15,9 +15,9 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable.Cal
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -58,8 +58,8 @@ public class PacketVehicleInteract extends APacketVehicle{
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
 		boolean canPlayerEditVehicle = player.isOP() || vehicle.ownerUUID.isEmpty() || player.getUUID().equals(vehicle.ownerUUID);
 		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
-		IWrapperItemStack heldStack = player.getHeldStack();
-		AItemBase heldItem = heldStack.getItem();
+		ItemStack heldStack = player.getHeldStack();
+		AItemBase heldItem = player.getHeldItem();
 		APart part = vehicle.getPartAtLocation(hitPosition);
 		
 		//If our part is null, see if we clicked a part's collision box instead.
@@ -104,7 +104,7 @@ public class PacketVehicleInteract extends APacketVehicle{
 						}else{
 							//Attempt to add a part.  Vehicle is responsible for callback packet here.
 							if(heldItem instanceof ItemPart){
-								if(vehicle.addPartFromItem((ItemPart) heldItem, heldStack.getData(), hitPosition, false) && !player.isCreative()){				
+								if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitPosition, false) && !player.isCreative()){				
 									player.getInventory().removeStack(heldStack, 1);
 								}
 							}

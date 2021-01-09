@@ -1077,7 +1077,7 @@ public final class RenderVehicle{
 						//Items also need to be offset by -150 units due to how MC does rendering.
 						//Also need to translate to the center as items are rendered from the top-left corner.
 						GL11.glTranslated(-0.5D, 0.25F, -150D/16D);
-						MasterLoader.guiInterface.drawItem(MasterLoader.coreInterface.getStack(partToRender), 0, 0, 1F/16F);
+						MasterLoader.guiInterface.drawItem(partToRender.getNewStack(), 0, 0, 1F/16F);
 					}
 					GL11.glPopMatrix();
 				}

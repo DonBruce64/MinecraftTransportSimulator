@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import net.minecraft.item.ItemStack;
 
 /**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -285,7 +286,7 @@ public interface IWrapperWorld{
 	 *  Tries to fertilize the block with the passed-in stack.
 	 *  Returns true if the block was fertilized.
 	 */
-	public boolean fertilizeBlock(Point3i point, IWrapperItemStack stack);
+	public boolean fertilizeBlock(Point3i point, ItemStack stack);
 	
 	/**
 	 *  Tries to harvest the block at the passed-in location.  If the harvest was
@@ -294,13 +295,13 @@ public interface IWrapperWorld{
 	 *  If the block was harvested, but not crops, then the resulting drops
 	 *  are dropped on the ground and an empty list is returned.
 	 */
-	public List<IWrapperItemStack> harvestBlock(Point3i point);
+	public List<ItemStack> harvestBlock(Point3i point);
 	
 	/**
 	 *  Tries to plant the item as a block.  Only works if the land conditions are correct
 	 *  and the item is actually seeds that can be planted.
 	 */
-	public boolean plantBlock(Point3i point, IWrapperItemStack stack);
+	public boolean plantBlock(Point3i point, ItemStack stack);
 	
 	/**
 	 *  Tries to plow the block.  Essentially, this turns grass and dirt into farmland.
@@ -319,7 +320,7 @@ public interface IWrapperWorld{
 	 *  This should be called only on servers, as spawning items on clients
 	 *  leads to phantom items that can't be picked up. 
 	 */
-	public void spawnItemStack(IWrapperItemStack stack, Point3d point);
+	public void spawnItemStack(ItemStack stack, Point3d point);
 	
 	/**
 	 *  Spawns an explosion of the specified strength at the passed-in point.

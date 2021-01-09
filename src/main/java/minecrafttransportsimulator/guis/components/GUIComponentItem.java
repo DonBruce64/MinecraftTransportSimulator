@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.guis.components;
 
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import net.minecraft.item.ItemStack;
 
-/**Custom item render class.  This class is designed to render a {@link IWrapperItemStack} 
+/**Custom item render class.  This class is designed to render a {@link ItemStack} 
  * into the GUI without, or calling any MC methods.  This allows us to use a simple string 
  * name for the render to prevent version changes from causing issues.
  * Note that the item parameters are not final.  This allows for switching items in GUIs.
@@ -16,9 +16,9 @@ public class GUIComponentItem{
 	public final int x;
 	public final int y;
 	public final float scale;
-	public IWrapperItemStack stack;
+	public ItemStack stack;
 		    	
-	public GUIComponentItem(int x, int y, float scale, IWrapperItemStack stack){
+	public GUIComponentItem(int x, int y, float scale, ItemStack stack){
 		this.x = x;
 		this.y = y;
 		this.scale = scale;

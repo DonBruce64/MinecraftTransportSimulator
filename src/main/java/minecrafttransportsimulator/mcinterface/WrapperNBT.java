@@ -5,19 +5,29 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**Wrapper for interfacing with NBT data.  This pares down a few of the method to ones
  * more suited to what we use normally.  Of special importance is the ability to save
- * complex data objects like Point3d and lists.
+ * complex data objects like Point3d and lists.  Note that if a stack without a tag is 
+ * passed-in to the constructor, one is created.  This is to prevent excess null checks.
  *
  * @author don_bruce
  */
 public class WrapperNBT{
 	public final NBTTagCompound tag;
 	
+	public WrapperNBT(){
+		this.tag = new NBTTagCompound();
+	}
+	
 	public WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
+	}
+	
+	public WrapperNBT(ItemStack stack){
+		this.tag = stack.getTagCompound() != null ? stack.getTagCompound() : new NBTTagCompound();
 	}
 	
 	public boolean getBoolean(String name){
@@ -113,7 +123,7 @@ public class WrapperNBT{
 	}
 	
 	public void setData(String name, WrapperNBT value){
-		tag.setTag(name, ((WrapperNBT) value).tag);
+		tag.setTag(name, value.tag);
 	}
 	
 	public void deleteData(String name){

@@ -1,6 +1,7 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;

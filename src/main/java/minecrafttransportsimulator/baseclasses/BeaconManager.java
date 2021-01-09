@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
@@ -83,10 +82,10 @@ public final class BeaconManager{
 	 */
 	private static void saveBeacons(IWrapperWorld world){
 		if(worldBeacons.containsKey(world.getDimensionID())){
-			WrapperNBT worldData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT worldData = new WrapperNBT();
 			int beaconIndex=0;
 			for(RadioBeacon beacon : worldBeacons.get(world.getDimensionID()).values()){
-				WrapperNBT beaconData = MasterLoader.coreInterface.createNewTag();
+				WrapperNBT beaconData = new WrapperNBT();
 				beacon.save(beaconData);
 				worldData.setData("radioBeacon_" + beaconIndex++, beaconData);
 			}

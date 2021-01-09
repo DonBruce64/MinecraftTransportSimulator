@@ -18,12 +18,11 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.rendering.components.AnimationsPart;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
+import minecrafttransportsimulator.rendering.instances.AnimationsPart;
 import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -303,7 +302,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * and are saved separately from the item NBT data in the vehicle.
 	 */
 	public WrapperNBT getData(){
-		WrapperNBT data = MasterLoader.coreInterface.createNewTag();
+		WrapperNBT data = new WrapperNBT();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
 				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));

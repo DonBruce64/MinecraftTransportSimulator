@@ -63,10 +63,10 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		if(tileEntity != null){
 			//Gets called when we do a blockstate update for this TE.
 			//Done during initial placedown so we need to get the full data for initial state. 
-			NBTTagCompound tag = new NBTTagCompound();
-			tileEntity.save(new WrapperNBT(tag));
-			tag.setString("teid", tileEntity.getClass().getSimpleName());
-		    return new SPacketUpdateTileEntity(getPos(), -1, tag);
+			WrapperNBT data = new WrapperNBT();
+			tileEntity.save(data);
+			data.setString("teid", tileEntity.getClass().getSimpleName());
+		    return new SPacketUpdateTileEntity(getPos(), -1, data.tag);
 		}else{
 			return super.getUpdatePacket();
 		}

@@ -20,6 +20,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
@@ -144,7 +145,7 @@ class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				AItemPack<?> item = ((BuilderTileEntity<?>) tile).tileEntity.item;
     				if(item != null){
-    					ItemStack stack = new ItemStack(BuilderItem.itemMap.get(item));
+    					ItemStack stack = item.getNewStack();
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
     	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
@@ -183,7 +184,7 @@ class BuilderBlock extends Block{
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
         			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
-        				drops.add(new ItemStack(BuilderItem.itemMap.get(item)));
+        				drops.add(item.getNewStack());
         			}
         			dropsAtPositions.put(pos, drops);
     			}

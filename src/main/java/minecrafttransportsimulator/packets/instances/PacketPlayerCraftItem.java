@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
@@ -42,7 +42,7 @@ public class PacketPlayerCraftItem extends APacketBase{
 	
 	@Override
 	public void handle(IWrapperWorld world, IWrapperPlayer player){
-		IWrapperInventory inventory = player.getInventory();
+		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true)){
 			if(!player.isCreative()){
 				inventory.removeMaterials(itemToCraft, true, true);

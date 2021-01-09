@@ -3,10 +3,18 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.HashMap;
 import java.util.Map;
 
+import mcinterface1122.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 /**Basic fluid tanks class.  Class contains methods for filling and draining, as well as automatic
  * syncing of fluid levels across clients and servers.  This allows the tank to be put on any object
@@ -141,6 +149,46 @@ public class FluidTank{
 		}else{
 			return 0;
 		}
+	}
+	
+	/**
+	 *  Attempts to fill the passed-in tank with the contents of the item held by the player,
+	 *  or drain the tank into that stack if the player is sneaking.
+	 *  Returns the amount filled or drained if successful.
+	 */
+	public double interactWith(IWrapperPlayer player){
+		ItemStack stack = player.getHeldStack();
+		if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
+			//If we are sneaking, drain this tank.  If we are not, fill it.
+			if(!player.isSneaking()){
+				//Item can provide fluid.  Check if the tank can accept it.
+				IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+				FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+				if(drainedStack != null){
+					//Able to take fluid from item, attempt to do so.
+					int amountToDrain = (int) fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
+					drainedStack = handler.drain(amountToDrain, !player.isCreative());
+					if(drainedStack != null){
+						//Was able to provide liquid from item.  Fill the tank.
+						double amountFilled = fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
+						((WrapperPlayer) player).player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+						return amountFilled;
+					}
+				}
+			}else{
+				//Item can hold fluid.  Check if we can fill it.
+				IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+				FluidStack containedStack = FluidRegistry.getFluidStack(getFluid(), (int) getFluidLevel());
+				int amountFilled = handler.fill(containedStack, !player.isCreative());
+				if(amountFilled > 0){
+					//Were able to fill the item.  Apply state change to tank and item.
+					double amountDrained = drain(getFluid(), amountFilled, true);
+					((WrapperPlayer) player).player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+					return amountDrained;
+				}
+			}
+		}
+		return 0;
 	}
 	
 	/**

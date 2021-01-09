@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
@@ -104,7 +104,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 			//Iterate through all the inventory slots in crates to try to find matching ammo.
 			for(APart part : vehicle.parts){
 				if(part instanceof PartInteractable){
-					IWrapperInventory inventory = ((PartInteractable) part).inventory;
+					WrapperInventory inventory = ((PartInteractable) part).inventory;
 					if(inventory != null && part.definition.interactable.feedsVehicles){
 						for(byte i=0; i<inventory.getSize(); ++i){
 							AItemBase item = inventory.getItemInSlot(i);

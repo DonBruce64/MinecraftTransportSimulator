@@ -21,12 +21,13 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -371,7 +372,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Create part description text.
 		List<String> descriptiveLines = new ArrayList<String>();
-		currentItem.addTooltipLines(descriptiveLines, MasterLoader.coreInterface.createNewTag());
+		currentItem.addTooltipLines(descriptiveLines, new WrapperNBT());
 		partInfo.text = "";
 		for(String line : descriptiveLines){
 			partInfo.text += line + "\n";
@@ -382,7 +383,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<IWrapperItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, true, true);
+		List<ItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, true, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < craftingMaterials.size()){
 				craftingItemIcons.get(i).stack = craftingMaterials.get(i);
@@ -399,7 +400,7 @@ public class GUIPartBench extends AGUIBase{
 			//Don't spin signs.  That gets annoying.
 			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
 		}else{
-			itemRender.stack = MasterLoader.coreInterface.getStack(currentItem);
+			itemRender.stack = currentItem.getNewStack();
 			modelRender.modelLocation = null;
 		}
 		

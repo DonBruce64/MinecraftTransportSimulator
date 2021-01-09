@@ -70,7 +70,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 							vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
 						}
 						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
-						WrapperNBT vehicleData = MasterLoader.coreInterface.createNewTag();
+						WrapperNBT vehicleData = new WrapperNBT();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
 						vehicle.isValid = false;

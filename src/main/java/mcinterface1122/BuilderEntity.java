@@ -301,8 +301,8 @@ public class BuilderEntity extends Entity{
 					
 					//If we found a part, return it as an item.
 					if(part != null){
-						ItemStack stack = new ItemStack(BuilderItem.itemMap.get(part.getItem()));
-						stack.setTagCompound(((WrapperNBT) part.getData()).tag);
+						ItemStack stack = part.getItem().getNewStack();
+						stack.setTagCompound(part.getData().tag);
 						return stack;
 					}
 				}

@@ -1,6 +1,7 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 
 /**This class contains methods for pole animations.
  * These are used to animate pole components in the world.

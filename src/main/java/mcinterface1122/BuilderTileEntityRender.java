@@ -7,8 +7,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
-import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 
 /**Builder for MC TESR classes. This should NOT be used directly for any rendering as it's a builder

@@ -15,12 +15,12 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemWrench;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import net.minecraft.item.ItemStack;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
  * placement of components on poles via the Tile Entity.
@@ -51,8 +51,8 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
-			IWrapperItemStack heldStack = player.getHeldStack();
-			AItemBase heldItem = heldStack.getItem();
+			ItemStack heldStack = player.getHeldStack();
+			AItemBase heldItem = player.getHeldItem();
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerClickingEditableSign = clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null;
@@ -66,7 +66,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
 					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						textLines = heldStack.getData().getStrings("textLines", component.definition.rendering.textObjects.size());
+						textLines = new WrapperNBT(heldStack).getStrings("textLines", component.definition.rendering.textObjects.size());
 					}
 					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{

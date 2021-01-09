@@ -3,6 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
+import net.minecraft.item.ItemStack;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -56,9 +57,9 @@ public interface IWrapperPlayer extends IWrapperEntity{
 	public AItemBase getHeldItem();
 	
 	/**
-	 *  Returns the held stack as a wrapper.
+	 *  Returns the held stack.
 	 */
-	public IWrapperItemStack getHeldStack();
+	public ItemStack getHeldStack();
 	
 	/**
 	 *  Gets the index of the held stack in the hotbar.
@@ -68,7 +69,7 @@ public interface IWrapperPlayer extends IWrapperEntity{
 	/**
 	 *  Gets the inventory of the player.
 	 */
-	public IWrapperInventory getInventory();
+	public WrapperInventory getInventory();
 	
 	/**
 	 *  Sends a packet to this player over the network.

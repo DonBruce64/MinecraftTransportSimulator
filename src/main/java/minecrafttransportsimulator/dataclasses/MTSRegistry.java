@@ -3,7 +3,6 @@ package minecrafttransportsimulator.dataclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface1122.MasterInterface;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -32,7 +31,7 @@ public final class MTSRegistry{
 		}
 		List<Item> items = new ArrayList<Item>();
 		for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
-			items.add(MasterInterface.getItem(packItem));
+			items.add(packItem.getBuilder());
 		}
 		return items;
 	}

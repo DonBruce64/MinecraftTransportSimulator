@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -77,21 +78,13 @@ public class MasterInterface{
 	 *  This wrapper instance will interact with all MC code via passthrough of the item's methods.
 	 */
 	public static void createItem(AItemBase item){
-		BuilderItem.itemMap.put(item, new BuilderItem(item));
+		BuilderItem builder = new BuilderItem(item);
 		//TODO remove when packs don't register their own items.  Instead, auto-register items from pack creative tabs.
 		if(item instanceof AItemPack){
 			String packID = ((AItemPack<?>) item).definition.packID;
 			if(PackParserSystem.getPackConfiguration(packID) == null){
-				BuilderItem.itemMap.get(item).setTranslationKey(packID + "." + item.getRegistrationName());
+				builder.setTranslationKey(packID + "." + item.getRegistrationName());
 			}
 		}
-	}
-	
-	/**
-	 *  Gets the actual item for the passed-in wrapper from the lookup table.
-	 *  Only present because packs still load their own items.
-	 */
-	public static BuilderItem getItem(AItemBase item){
-		return BuilderItem.itemMap.get(item);
 	}
 }

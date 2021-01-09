@@ -19,7 +19,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -182,7 +181,7 @@ public class WrapperWorld implements IWrapperWorld{
 	@Override
 	public void setData(WrapperNBT data){
 		if(!world.isRemote){
-			savedDataAccessor.internalData = ((WrapperNBT) data).tag;
+			savedDataAccessor.internalData = data.tag;
 			savedDataAccessor.markDirty();
 			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 		}else{
@@ -579,29 +578,30 @@ public class WrapperWorld implements IWrapperWorld{
     		BlockPos pos = new BlockPos(location.x, location.y, location.z);
     		if(playerWrapper != null){
     			WrapperPlayer player = (WrapperPlayer) playerWrapper;
-    	    	WrapperItemStack stack = (WrapperItemStack) ((WrapperPlayer) playerWrapper).getHeldStack();
+    	    	ItemStack stack = ((WrapperPlayer) playerWrapper).getHeldStack();
+    	    	AItemBase item = player.getHeldItem();
     	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
     	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
     	            pos = pos.offset(facing);
     	            location.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
     	    	}
     	    	
-	            if(stack.getItem() != null && player.player.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)){
+	            if(item != null && player.player.canPlayerEdit(pos, facing, stack) && world.mayPlace(wrapper, pos, false, facing, null)){
 	            	IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
 	            	if(world.setBlockState(pos, newState, 11)){
 		            	//Block is set.  See if we need to set TE data.
 		            	if(block instanceof IBlockTileEntity){
 		            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
 		            		WrapperNBT data;
-		            		if(stack.stack.hasTagCompound()){
-		            			data = new WrapperNBT(stack.stack.getTagCompound());
+		            		if(stack.hasTagCompound()){
+		            			data = new WrapperNBT(stack);
 		            		}else{
-		            			data = new WrapperNBT(new NBTTagCompound());
-		            			if(stack.getItem() instanceof AItemPack){
-			            			data.setString("packID", ((AItemPack<?>) stack.getItem()).definition.packID);
-				            		data.setString("systemName", ((AItemPack<?>) stack.getItem()).definition.systemName);
-				            		if(stack.getItem() instanceof AItemSubTyped){
-				            			data.setString("currentSubName", ((AItemSubTyped<?>) stack.getItem()).subName);
+		            			data = new WrapperNBT();
+		            			if(item instanceof AItemPack){
+			            			data.setString("packID", ((AItemPack<?>) item).definition.packID);
+				            		data.setString("systemName", ((AItemPack<?>) item).definition.systemName);
+				            		if(item instanceof AItemSubTyped){
+				            			data.setString("currentSubName", ((AItemSubTyped<?>) item).subName);
 				            		}
 		            			}
 		            		}
@@ -611,7 +611,7 @@ public class WrapperWorld implements IWrapperWorld{
 		            	}
 		            	//Send place event to block class, and also send initial update check.
 		            	block.onPlaced(this, location, player);
-		                stack.stack.shrink(1);
+		                stack.shrink(1);
 		                return true;
 		            }
 	            }
@@ -620,7 +620,7 @@ public class WrapperWorld implements IWrapperWorld{
     			if(world.setBlockState(pos, newState, 11)){
     				if(block instanceof IBlockTileEntity){
     					BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-    					builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), MasterInterface.coreInterface.createNewTag());
+    					builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT());
     				}
     				return true;
     			}
@@ -692,9 +692,8 @@ public class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public boolean fertilizeBlock(Point3i point, IWrapperItemStack wrapperStack){
+	public boolean fertilizeBlock(Point3i point, ItemStack stack){
 		//Check if the item can fertilize things and we are on the server.
-		ItemStack stack = ((WrapperItemStack) wrapperStack).stack;
 		if(stack.getItem().equals(Items.DYE) && !world.isRemote){
 			//Check if we are in crops.
 			BlockPos cropPos = new BlockPos(point.x, point.y, point.z);
@@ -712,13 +711,13 @@ public class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public List<IWrapperItemStack> harvestBlock(Point3i point){
+	public List<ItemStack> harvestBlock(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		IBlockState state = world.getBlockState(pos);
 		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
 			Block harvestedBlock = state.getBlock();
 			NonNullList<ItemStack> drops = NonNullList.create();
-			List<IWrapperItemStack> cropDrops = new ArrayList<IWrapperItemStack>();
+			List<ItemStack> cropDrops = new ArrayList<ItemStack>();
 			world.playSound(pos.getX(), pos.getY(), pos.getZ(), harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 			
 			//Only return drops on servers.  Clients don't do items.
@@ -727,7 +726,7 @@ public class WrapperWorld implements IWrapperWorld{
 				world.setBlockToAir(pos);
 				if(harvestedBlock instanceof BlockCrops){
 					for(ItemStack drop : drops){
-						cropDrops.add(new WrapperItemStack(drop));
+						cropDrops.add(drop);
 					}
 				}else{
 					for(ItemStack stack : drops){
@@ -743,9 +742,9 @@ public class WrapperWorld implements IWrapperWorld{
 	}
 	
 	@Override
-	public boolean plantBlock(Point3i point, IWrapperItemStack stack){
+	public boolean plantBlock(Point3i point, ItemStack stack){
 		//Check for valid seeds.
-		Item item = ((WrapperItemStack) stack).stack.getItem();
+		Item item = stack.getItem();
 		if(item instanceof IPlantable){
 			IPlantable plantable = (IPlantable) item;
 			
@@ -794,16 +793,16 @@ public class WrapperWorld implements IWrapperWorld{
 	
 	@Override
 	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point){
-		ItemStack stack = new ItemStack(BuilderItem.itemMap.get(item));
+		ItemStack stack = item.getNewStack();
 		if(data != null){
-			stack.setTagCompound(((WrapperNBT) data).tag);
+			stack.setTagCompound(data.tag);
 		}
 		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
 	}
 	
 	@Override
-	public void spawnItemStack(IWrapperItemStack stack, Point3d point){
-		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, ((WrapperItemStack) stack).stack));
+	public void spawnItemStack(ItemStack stack, Point3d point){
+		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
 	}
 	
 	@Override

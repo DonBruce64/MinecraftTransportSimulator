@@ -8,8 +8,8 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.rendering.components.AnimationsPole;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
+import minecrafttransportsimulator.rendering.instances.AnimationsPole;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
  * 

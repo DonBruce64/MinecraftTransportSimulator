@@ -17,10 +17,10 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
+import net.minecraft.item.ItemStack;
 
 public class GUISignalController extends AGUIBase{
 	
@@ -47,8 +47,8 @@ public class GUISignalController extends AGUIBase{
 	private GUIComponentItem streetLightItem;
 	
 	//These are only used to save the items until we create the components.
-	private IWrapperItemStack trafficSignalItemTemp;
-	private IWrapperItemStack streetLightItemTemp;
+	private ItemStack trafficSignalItemTemp;
+	private ItemStack streetLightItemTemp;
 	
 	
 	//Internal controller locations point list.
@@ -67,11 +67,11 @@ public class GUISignalController extends AGUIBase{
 			if(tile instanceof TileEntityPole){
 				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 					if(component instanceof TileEntityPole_TrafficSignal){
-						trafficSignalItemTemp = MasterLoader.coreInterface.getStack(component.item);
+						trafficSignalItemTemp = component.item.getNewStack();
 						++trafficSignals;
 						componentLocations.add(location);
 					}else if(component instanceof TileEntityPole_StreetLight){
-						streetLightItemTemp = MasterLoader.coreInterface.getStack(component.item);
+						streetLightItemTemp = component.item.getNewStack();
 						++streetLights;
 						componentLocations.add(location);
 					}
@@ -97,11 +97,11 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										trafficSignalItem.stack = MasterLoader.coreInterface.getStack(component.item);
+										trafficSignalItem.stack = component.item.getNewStack();
 										++trafficSignals;
 										componentLocations.add(location);
 									}else if(component instanceof TileEntityPole_StreetLight){
-										streetLightItem.stack = MasterLoader.coreInterface.getStack(component.item);
+										streetLightItem.stack = component.item.getNewStack();
 										++streetLights;
 										componentLocations.add(location);
 									}

@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,23 +26,23 @@ import net.minecraftforge.fml.relauncher.Side;
  * @author don_bruce
  */
 @Mod.EventBusSubscriber(Side.CLIENT)
-class BuilderCreativeTab extends CreativeTabs{
+public class BuilderCreativeTab extends CreativeTabs{
 	/**Map of created tabs names linked to their builder instances.  Used for interface operations.**/
-	static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
+	public static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
 	
 	private Item itemIcon;
 	private final List<Item> items = new ArrayList<Item>();
 	
-	BuilderCreativeTab(String name, AItemBase itemIcon){
+	BuilderCreativeTab(String name, AItemBase iconItem){
 		super(name);
-		this.itemIcon = BuilderItem.itemMap.get(itemIcon);
+		this.itemIcon = iconItem.getBuilder();
 	}
 	
 	/**
      * Adds the passed-in item to this tab.
      */
 	public void addItem(AItemBase item){
-		Item mcItem = BuilderItem.itemMap.get(item);
+		Item mcItem = item.getBuilder();
 		items.add(mcItem);
 		mcItem.setCreativeTab(this);
     }
@@ -62,7 +62,7 @@ class BuilderCreativeTab extends CreativeTabs{
 		if(itemIcon != null){
 			return super.getIcon();
 		}else{
-			return new ItemStack(items.get((int) (MasterInterface.gameInterface.getClientWorld().getTick()/20%items.size())));
+			return new ItemStack(items.get((int) (MasterLoader.clientInterface.getClientWorld().getTick()/20%items.size())));
 		}
 	}
 
@@ -91,7 +91,7 @@ class BuilderCreativeTab extends CreativeTabs{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(createdTabs.values().contains(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()])){
-	    			MasterInterface.guiInterface.openGUI(new GUIPackMissing());
+	    			MasterLoader.guiInterface.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}

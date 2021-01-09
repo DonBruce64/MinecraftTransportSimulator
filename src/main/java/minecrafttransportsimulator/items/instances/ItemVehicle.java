@@ -12,7 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -22,6 +21,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import net.minecraft.item.ItemStack;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
 	
@@ -32,12 +32,12 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	@Override
 	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
 		if(!world.isClient()){
-			IWrapperItemStack heldStack = player.getHeldStack();
+			ItemStack heldStack = player.getHeldStack();
 			//We want to spawn above this block.
 			++point.y;
 			
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
-			WrapperNBT data = heldStack.getData();
+			WrapperNBT data = new WrapperNBT(heldStack);
 			boolean wasSaved = !data.getString("packID").isEmpty();
 			data.setString("packID", definition.packID);
 			data.setString("systemName", definition.systemName);

@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import mcinterface1122.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -15,7 +16,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
@@ -46,30 +46,29 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-/**Builder for MC items.  Constructor takes a type of {@link AItemBase}, but
- * is only visible when calling {@link #createItem(AItemBase)}.  This will automatically
- * construct the item and will return the created instance of the item (not builder)
- * for use in the code.  The builder instance is cached and saved to be registered
- * in the MC systems.  When interfacing with MC systems use this class, but when
- * doing code in MTS use the item, NOT the builder!
+/**Builder for MC items.  Constructing a new item with this builder This will automatically
+ * construct the item and will add it to the appropriate maps for automatic registration.
+ * When interfacing with MC systems use this class, but when doing code in MTS use the item, 
+ * NOT the builder!
  *
  * @author don_bruce
  */
 @EventBusSubscriber
-class BuilderItem extends Item{
+public class BuilderItem extends Item{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
-	static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
+	public static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
 	/**Current entity we are built around.**/
-	final AItemBase item;
+	public final AItemBase item;
 	
-	BuilderItem(AItemBase item){
+	public BuilderItem(AItemBase item){
 		super();
 		this.item = item;
 		setFull3D();
 		if(!item.canBeStacked()){
 			this.setMaxStackSize(1);
 		}
+		itemMap.put(item, this);
 	}
 	
 	/**
@@ -107,7 +106,7 @@ class BuilderItem extends Item{
 		for(WrapperNBT data : dataBlocks){
 			if(this.isInCreativeTab(tab)){
 				ItemStack stack = new ItemStack(this);
-				stack.setTagCompound(((WrapperNBT) data).tag);
+				stack.setTagCompound(data.tag);
 				items.add(stack);
 			}
 		}
@@ -241,7 +240,7 @@ class BuilderItem extends Item{
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
 			//TODO remove when packs don't register their own items.
-			if(tabID.equals(MasterInterface.MODID)){
+			if(tabID.equals(MasterLoader.MODID)){
 				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
 			}else if(item instanceof AItemPack){
 				if(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){

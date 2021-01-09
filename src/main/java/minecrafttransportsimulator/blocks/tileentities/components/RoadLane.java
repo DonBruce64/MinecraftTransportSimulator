@@ -95,13 +95,13 @@ public class RoadLane{
 		data.setInteger("laneNumber", laneNumber);
 		data.setInteger("priorConnectionCount", priorConnections.size());
 		for(int i=0; i<priorConnections.size(); ++i){
-			WrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT connectionData = new WrapperNBT();
 			priorConnections.get(i).save(connectionData);
 			data.setData("priorConnection" + i, connectionData);
 		}
 		data.setInteger("nextConnectionCount", nextConnections.size());
 		for(int i=0; i<nextConnections.size(); ++i){
-			WrapperNBT connectionData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT connectionData = new WrapperNBT();
 			nextConnections.get(i).save(connectionData);
 			data.setData("nextConnection" + i, connectionData);
 		}

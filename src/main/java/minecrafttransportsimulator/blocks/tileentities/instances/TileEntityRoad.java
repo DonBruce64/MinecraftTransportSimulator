@@ -23,7 +23,6 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -236,7 +235,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
 			RoadLane lane = lanes.get(laneNumber);
-			WrapperNBT laneData = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT laneData = new WrapperNBT();
 			lane.save(laneData);
 			data.setData("lane" + laneNumber, laneData);
 		}

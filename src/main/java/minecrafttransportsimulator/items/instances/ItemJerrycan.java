@@ -5,7 +5,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -13,6 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
+import net.minecraft.item.ItemStack;
 
 public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		
@@ -31,8 +31,8 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
-				IWrapperItemStack stack = player.getHeldStack();
-				WrapperNBT data = stack.getData();
+				ItemStack stack = player.getHeldStack();
+				WrapperNBT data = new WrapperNBT(stack);
 				
 				//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
 				if(part instanceof PartInteractable){
@@ -42,7 +42,7 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 							if(tank.getFluidLevel() >= 1000){
 								data.setBoolean("isFull", true);
 								data.setString("fluidName", tank.getFluid());
-								stack.setData(data);
+								stack.setTagCompound(data.tag);
 								tank.drain(tank.getFluid(), 1000, true);
 							}
 						}
@@ -55,7 +55,7 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 							vehicle.fuelTank.fill(data.getString("fluidName"), 1000, true);
 							data.setBoolean("isFull", false);
 							data.setString("fluidName", "");
-							stack.setData(data);
+							stack.setTagCompound(data.tag);
 							player.sendPacket(new PacketPlayerChatMessage("interact.jerrycan.success"));
 						}
 					}else{

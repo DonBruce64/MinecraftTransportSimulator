@@ -10,17 +10,17 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
-import minecrafttransportsimulator.rendering.components.AnimationsGun;
+import minecrafttransportsimulator.rendering.instances.AnimationsGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.sound.SoundInstance;
+import net.minecraft.item.ItemStack;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will render the held gun, if it exists, as well as
@@ -36,7 +36,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	public final IWrapperPlayer player;
 	public int hotbarSelected = -1;
-	public IWrapperItemStack gunStack;
+	public ItemStack gunStack;
 	public ItemPart gunItem;
 	public Gun gun;
 	public boolean fireCommand;
@@ -97,10 +97,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				
 				//Check to make sure if we had a gun, that it didn't change.
 				if(gun != null && (!gunItem.equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
-					WrapperNBT data = gunStack.getData();
-					gun.save(data);
-					gunStack.setData(data);
-					gun = null;
+					saveGun(true);
 				}
 				
 				//If we don't have a gun yet, try to get the current one if the player is holding one.
@@ -136,10 +133,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 					}else if(!fireCommand && gun.firing && !world.isClient()){
 						gun.firing = false;
 						NetworkSystem.sendToAllClients(new PacketGunChange(gun, false));
-						//Also save data to the item.
-						WrapperNBT data = gunStack.getData();
-						gun.save(data);
-						gunStack.setData(data);
+						saveGun(false);
 					}
 					gun.update();
 				}
@@ -151,13 +145,22 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	public void createNewGun(int optionalGunID){
 		gunStack = player.getHeldStack();
-		gunItem = (ItemPart) gunStack.getItem();
-		WrapperNBT data = gunStack.getData();
+		gunItem = (ItemPart) player.getHeldItem();
+		WrapperNBT data = new WrapperNBT(gunStack);
 		if(optionalGunID != -1){
 			data.setInteger("gunID", optionalGunID);
 		}
 		gun = new Gun(this, gunItem.definition, 0, 0, 0, 0, data);
 		hotbarSelected = player.getHotbarIndex();
+	}
+	
+	private void saveGun(boolean delete){
+		WrapperNBT data = new WrapperNBT();
+		gun.save(data);
+		gunStack.setTagCompound(data.tag);
+		if(delete){
+			gun = null;
+		}
 	}
 	
 	
@@ -166,7 +169,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public void reloadGunBullets(){
 		if(gunItem.definition.gun.autoReload || gun.bulletsLeft == 0){
 			//Check the player's inventory for bullets.
-			IWrapperInventory inventory = player.getInventory();
+			WrapperInventory inventory = player.getInventory();
 			for(int i=0; i<inventory.getSize(); ++i){
 				AItemBase item = inventory.getItemInSlot(i);
 				if(item instanceof ItemPart){

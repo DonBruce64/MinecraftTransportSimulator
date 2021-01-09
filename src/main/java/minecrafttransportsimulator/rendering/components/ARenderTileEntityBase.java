@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.instances;
+package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;

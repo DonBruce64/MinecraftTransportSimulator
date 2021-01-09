@@ -1,11 +1,11 @@
 package mcinterface1122;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -19,6 +19,8 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.WorldServer;
@@ -92,12 +94,13 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	
 	@Override
 	public AItemBase getHeldItem(){
-		return player.getHeldItemMainhand().getItem() instanceof BuilderItem ? ((BuilderItem) player.getHeldItemMainhand().getItem()).item : null;
+		Item heldItem = player.getHeldItemMainhand().getItem();
+		return heldItem instanceof BuilderItem ? ((BuilderItem) heldItem).item : null;
 	}
 	
 	@Override
-	public IWrapperItemStack getHeldStack(){
-		return new WrapperItemStack(player.getHeldItemMainhand());
+	public ItemStack getHeldStack(){
+		return player.getHeldItemMainhand();
 	}
 	
 	@Override
@@ -106,7 +109,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	}
 	
 	@Override
-	public IWrapperInventory getInventory(){
+	public WrapperInventory getInventory(){
 		return new WrapperInventory(player.inventory);
 	}
 	
@@ -175,7 +178,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
             	if(!EntityPlayerGun.playerServerGuns.containsKey(event.player.getUniqueID().toString())){
             		WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(event.player.world);
             		WrapperPlayer playerWrapper = worldWrapper.getWrapperFor(event.player);
-            		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, worldWrapper.generateEntity(), playerWrapper, MasterLoader.coreInterface.createNewTag());
+            		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, worldWrapper.generateEntity(), playerWrapper, new WrapperNBT());
             		worldWrapper.spawnEntity(entity);
             	}
         	}

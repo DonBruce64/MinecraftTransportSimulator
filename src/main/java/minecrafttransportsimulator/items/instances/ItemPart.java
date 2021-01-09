@@ -178,7 +178,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	public void getDataBlocks(List<WrapperNBT> dataBlocks){
 		//If this is an engine, add a creative variant.
 		if(partPrefix.equals("engine")){
-			WrapperNBT data = MasterLoader.coreInterface.createNewTag();
+			WrapperNBT data = new WrapperNBT();
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
 		}

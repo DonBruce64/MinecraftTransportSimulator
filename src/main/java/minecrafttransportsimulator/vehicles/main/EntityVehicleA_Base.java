@@ -19,7 +19,7 @@ import minecrafttransportsimulator.mcinterface.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
-import minecrafttransportsimulator.rendering.components.AnimationsVehicle;
+import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -162,7 +162,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				}
 				
 				//Part is valid.  Create it.
-				partToAdd = partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : MasterLoader.coreInterface.createNewTag(), parentPart); 
+				partToAdd = partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : new WrapperNBT(), parentPart); 
 			}
 		}
     	
@@ -421,7 +421,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
 					try{
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, MasterLoader.coreInterface.createNewTag(), parentPart);
+						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, new WrapperNBT(), parentPart);
 						vehicle.addPart(newPart);
 						
 						//Set default text for the new part, if we have any.

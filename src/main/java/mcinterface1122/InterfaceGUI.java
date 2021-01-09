@@ -10,7 +10,6 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.mcinterface.IInterfaceGUI;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -19,6 +18,7 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -28,8 +28,8 @@ class InterfaceGUI implements IInterfaceGUI{
 	private static RenderItem itemRenderer;
 	
 	@Override
-	public void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, IWrapperItemStack stack){
-		List<String> tooltipText = ((WrapperItemStack) stack).stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+	public void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack){
+		List<String> tooltipText = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         for(int i = 0; i < tooltipText.size(); ++i){
             if(i == 0){
                 tooltipText.set(i, tooltipText.get(i));
@@ -37,7 +37,7 @@ class InterfaceGUI implements IInterfaceGUI{
                 tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
             }
         }
-		GuiUtils.drawHoveringText(((WrapperItemStack) stack).stack, tooltipText, mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
+		GuiUtils.drawHoveringText(stack, tooltipText, mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
 	}
 	
 	@Override
@@ -127,7 +127,7 @@ class InterfaceGUI implements IInterfaceGUI{
 	}
 	
 	@Override
-	public void drawItem(IWrapperItemStack stack, int x, int y, float scale){
+	public void drawItem(ItemStack stack, int x, int y, float scale){
 		if(itemRenderer == null){
 			itemRenderer = Minecraft.getMinecraft().getRenderItem();
 		}
@@ -135,15 +135,15 @@ class InterfaceGUI implements IInterfaceGUI{
 			GL11.glPushMatrix();
 			GL11.glTranslatef(x, y, 0);
 			GL11.glScalef(scale, scale, scale);
-			itemRenderer.renderItemAndEffectIntoGUI(((WrapperItemStack) stack).stack, 0, 0);
-			if(stack.getSize() > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, ((WrapperItemStack) stack).stack, 0, 0);
+			itemRenderer.renderItemAndEffectIntoGUI(stack, 0, 0);
+			if(stack.getCount() > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack, 0, 0);
 			}
 			GL11.glPopMatrix();
 		}else{
-			itemRenderer.renderItemAndEffectIntoGUI(((WrapperItemStack) stack).stack, x, y);
-			if(stack.getSize() > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, ((WrapperItemStack) stack).stack, x, y);
+			itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
+			if(stack.getCount() > 1){
+				itemRenderer.renderItemOverlays(fontRenderer, stack, x, y);
 			}
 		}
 	}

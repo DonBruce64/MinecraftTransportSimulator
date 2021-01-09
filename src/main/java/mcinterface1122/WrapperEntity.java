@@ -144,15 +144,15 @@ class WrapperEntity implements IWrapperEntity{
 	}
 	
 	@Override
-	public WrapperNBT getNBT(){
+	public WrapperNBT getData(){
 		NBTTagCompound tag = new NBTTagCompound();
 		entity.writeToNBT(tag);
 		return new WrapperNBT(tag);
 	}
 	
 	@Override
-	public void setNBT(WrapperNBT data){
-		entity.readFromNBT(((WrapperNBT) data).tag);
+	public void setData(WrapperNBT data){
+		entity.readFromNBT(data.tag);
 	}
 	
 	@Override

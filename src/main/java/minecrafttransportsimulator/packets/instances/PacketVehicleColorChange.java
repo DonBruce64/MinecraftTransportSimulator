@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
@@ -40,7 +40,7 @@ public class PacketVehicleColorChange extends APacketVehicle{
 	
 	@Override
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
-		IWrapperInventory inventory = player.getInventory();
+		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(newVehicleItem, false, true)){
 			//Remove livery materials (if required) and set new sugName.
 			if(!player.isCreative()){

@@ -1,7 +1,7 @@
 package mcinterface1122;
 
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -26,18 +26,18 @@ class WrapperTileEntity implements IWrapperTileEntity{
 	}
 	
 	@Override
-	public IWrapperInventory getInventory(){
+	public WrapperInventory getInventory(){
 		return tile instanceof IInventory ? new WrapperInventory((IInventory) tile) : null;
 	}
 	
 	@Override
 	public void load(WrapperNBT data){
-		tile.readFromNBT(((WrapperNBT) data).tag);
+		tile.readFromNBT(data.tag);
 	}
 	
 	@Override
 	public void save(WrapperNBT data){
-		tile.writeToNBT(((WrapperNBT) data).tag);
+		tile.writeToNBT(data.tag);
 	}
 	
 	/**Wrapper for Chests.

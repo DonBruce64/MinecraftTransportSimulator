@@ -99,7 +99,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					ATileEntityPole_Component component = pole.components.get(axis);
 					WrapperNBT data = null;
 					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						data = MasterLoader.coreInterface.createNewTag();
+						data = new WrapperNBT();
 						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
 							data.setString("textLine" + i, ((ITextProvider) component).getText().get(component.definition.rendering.textObjects.get(i)));
 						}

@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import net.minecraft.item.ItemStack;
 
 /**Interface for MC GUI classes.  Allows access to various GUI-specific functions.
  *
@@ -16,7 +17,7 @@ public interface IInterfaceGUI{
 	 *  the last thing that gets rendered, as otherwise it may render
 	 *  behind other components.
 	 */
-	public void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, IWrapperItemStack stack);
+	public void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack);
 	
 	/**
 	 *  Draws a tooltip into the GUI.  This is for things that are NOT items, so
@@ -57,7 +58,7 @@ public interface IInterfaceGUI{
 	 *  renders all items from their top-left corner, so take this into account when
 	 *  choosing where to put this component in your GUI.
 	 */
-	public void drawItem(IWrapperItemStack stack, int x, int y, float scale);
+	public void drawItem(ItemStack stack, int x, int y, float scale);
 	
 	/**
 	 *  Draws the specified portion of the currently-bound texture.  Texture size needs to be

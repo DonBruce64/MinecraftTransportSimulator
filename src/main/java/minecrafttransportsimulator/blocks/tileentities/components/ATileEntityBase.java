@@ -10,7 +10,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.rendering.instances.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.

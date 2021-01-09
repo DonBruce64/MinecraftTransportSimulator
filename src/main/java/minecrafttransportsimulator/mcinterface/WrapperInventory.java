@@ -1,61 +1,70 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
 
-class WrapperInventory implements IWrapperInventory{
-	final IInventory inventory;
+public class WrapperInventory{
+	private final IInventory inventory;
 	
-	WrapperInventory(IInventory inventory){
+	public WrapperInventory(IInventory inventory){
 		this.inventory = inventory;
 	}
 	
-	@Override
+	/**
+	 *  Returns the total number of stacks that can fit into this inventory.
+	 */
 	public int getSize(){
 		return inventory.getSizeInventory();
 	}
 	
-	@Override
-	public WrapperItemStack getStackInSlot(int slot){
-		return new WrapperItemStack(inventory.getStackInSlot(slot));
+	/**
+	 *  Returns the stack in the specified slot.
+	 */
+	public ItemStack getStackInSlot(int slot){
+		return inventory.getStackInSlot(slot);
 	}
 	
-	@Override
+	/**
+	 *  Returns the item in the specified slot.  Only valid for {@link AItemBase} items.
+	 */
 	public AItemBase getItemInSlot(int slot){
 		Item item = inventory.getStackInSlot(slot).getItem();
 		return item instanceof BuilderItem ? ((BuilderItem) item).item : null;
 	}
 	
-	@Override
+	/**
+	 *  Removes a single item from the passed-in slot.
+	 */
 	public void decrementSlot(int slot){
 		inventory.getStackInSlot(slot).setCount(inventory.getStackInSlot(slot).getCount() - 1);
 		inventory.markDirty();
 	}
 
-	@Override
+	/**
+	 *  Returns true if this inventory contains the passed-in item.
+	 */
 	public boolean hasItem(AItemBase itemToFind){
 		for(int i=0; i<getSize(); ++i){
 			ItemStack currentStack = inventory.getStackInSlot(i);
-			if(BuilderItem.itemMap.get(itemToFind).equals(currentStack.getItem())){
+			if(itemToFind.getBuilder().equals(currentStack.getItem())){
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	@Override
-	public boolean addStack(IWrapperItemStack wrapperStack){
-		ItemStack stack = ((WrapperItemStack) wrapperStack).stack;
+	/**
+	 *  Adds the passed-in stack to this inventory.  If not possible, false is returned.
+	 */
+	public boolean addStack(ItemStack stack){
 		if(stack.isItemDamaged()){
             //Damaged items can't be stacked, so we need a free slot for them.
 			//Try to find the next empty one now.
@@ -110,20 +119,27 @@ class WrapperInventory implements IWrapperInventory{
     	return false;
 	}
 	
-	@Override
+	/**
+	 *  Adds the passed-in item to this inventory.  Does not care about slot position.
+	 *  Returns true if addition was successful.
+	 */
 	public boolean addItem(AItemBase item, WrapperNBT data){
-		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
+		ItemStack stack = item.getNewStack();
 		if(data != null){
-			stack.setData(data);
+			stack.setTagCompound(data.tag);
 		}
 		return addStack(stack);
 	}
 	
-	@Override
-	public boolean removeStack(IWrapperItemStack stack, int qtyToRemove){
-		Item item = ((WrapperItemStack) stack).stack.getItem();
-		int meta = ((WrapperItemStack) stack).stack.getMetadata();
-		NBTTagCompound nbt = ((WrapperItemStack) stack).stack.getTagCompound();
+	/**
+	 *  Attempts to remove the passed-in number of items matching those in the stack
+	 *  from this inventory.  Returns true if all the items were removed, false if
+	 *  only some of the items were removed.
+	 */
+	public boolean removeStack(ItemStack stack, int qtyToRemove){
+		Item item = stack.getItem();
+		int meta = stack.getMetadata();
+		NBTTagCompound nbt = stack.getTagCompound();
 		int qtyRemoved = 0;
         for(int i=0; i<getSize(); ++i){
             ItemStack currentStack = inventory.getStackInSlot(i);
@@ -145,22 +161,27 @@ class WrapperInventory implements IWrapperInventory{
         return false;
 	}
 	
-	@Override
+	/**
+	 *  Attempts to remove the passed-in item from this inventory.
+	 *  Returns true if removal was successful.
+	 */
 	public boolean removeItem(AItemBase item, WrapperNBT data){
-		WrapperItemStack stack = new WrapperItemStack(new ItemStack(BuilderItem.itemMap.get(item)));
+		ItemStack stack = item.getNewStack();
 		if(data != null){
-			stack.setData(data);
+			stack.setTagCompound(data.tag);
 		}
 		return removeStack(stack, 1);
 	}
 	
-	@Override
+	/**
+	 *  Returns true if this inventory has all the materials to make the pack-based item.
+	 */
 	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item, includeMain, includeSub)){
-			int requiredMaterialCount = materialStack.getSize();
+		for(ItemStack materialStack : MasterLoader.coreInterface.parseFromJSON(item, includeMain, includeSub)){
+			int requiredMaterialCount = materialStack.getCount();
 			for(int i=0; i<getSize(); ++i){
 				ItemStack stack = inventory.getStackInSlot(i);
-				if(ItemStack.areItemsEqual(stack, ((WrapperItemStack) materialStack).stack)){
+				if(ItemStack.areItemsEqual(stack, materialStack)){
 					requiredMaterialCount -= stack.getCount();
 				}
 			}
@@ -171,15 +192,22 @@ class WrapperInventory implements IWrapperInventory{
 		return true;
 	}
 	
-	@Override
+	/**
+	 *  Removes all materials from the inventory required to craft the passed-in item.
+	 *  {@link #hasMaterials(AItemPack, boolean, boolean)} MUST be called before this method to ensure
+	 *  the the inventory actually has the required materials.  Failure to do so will
+	 *  result in the this method removing the incorrect number of materials.
+	 */
 	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(IWrapperItemStack materialStack : MasterInterface.coreInterface.parseFromJSON(item, includeMain, includeSub)){
-			removeStack(materialStack, materialStack.getSize());
+		for(ItemStack materialStack : MasterLoader.coreInterface.parseFromJSON(item, includeMain, includeSub)){
+			removeStack(materialStack, materialStack.getCount());
 		}
 		inventory.markDirty();
 	}
 	
-	@Override
+	/**
+	 * Gets the weight of this inventory.
+	 */
 	public float getInventoryWeight(Map<String, Double> heavyItems){
 		float weight = 0;
 		for(int i=0; i<inventory.getSizeInventory(); ++i){
@@ -196,5 +224,24 @@ class WrapperInventory implements IWrapperInventory{
 			}
 		}
 		return weight;
+	}
+	
+	/**
+	 *  Gets the explosive power of this inventory.  Used when this container is blown up.
+	 *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
+	 *  that fuel-containing items are stable enough to not blow up when this container is hit.
+	 */
+	public double getExplosiveness(){
+		double explosivePower = 0;
+		for(int i=0; i<getSize(); ++i){
+			AItemBase item = getItemInSlot(i);
+			if(item instanceof ItemPart){
+				ItemPart part = ((ItemPart) item);
+				if(part.definition.bullet != null){
+					explosivePower += getStackInSlot(i).getCount()*part.definition.bullet.diameter/10D;
+				}
+			}
+		}
+		return explosivePower;
 	}
 }

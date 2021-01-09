@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.items.instances.ItemDecor;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
@@ -37,7 +37,7 @@ public class PacketTileEntityDecorColorChange extends APacketTileEntity<TileEnti
 	
 	@Override
 	public boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityDecor decor){
-		IWrapperInventory inventory = player.getInventory();
+		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(newDecorItem, false, true)){
 			//Remove livery materials (if required) and set new subName.
 			if(!player.isCreative()){

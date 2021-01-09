@@ -7,10 +7,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
@@ -42,7 +42,7 @@ public class PartEffector extends APart{
 						//Search all inventories for fertilizer and try to use it.
 						for(APart part : vehicle.parts){
 							if(part instanceof PartInteractable){
-								IWrapperInventory inventory = ((PartInteractable) part).inventory;
+								WrapperInventory inventory = ((PartInteractable) part).inventory;
 								if(inventory != null && part.definition.interactable.feedsVehicles){
 									for(int j=0; j<inventory.getSize(); ++j){
 										if(vehicle.world.fertilizeBlock(affectedBlocks[i], inventory.getStackInSlot(j))){
@@ -57,15 +57,15 @@ public class PartEffector extends APart{
 					}
 					case("harvester"): {
 						//Harvest drops, and add to inventories.
-						List<IWrapperItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
+						List<ItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
 						if(drops != null){
 							for(APart part : vehicle.parts){
 								if(part instanceof PartInteractable){
-									IWrapperInventory inventory = ((PartInteractable) part).inventory;
+									WrapperInventory inventory = ((PartInteractable) part).inventory;
 									if(inventory != null){
-										Iterator<IWrapperItemStack> iterator = drops.iterator();
+										Iterator<ItemStack> iterator = drops.iterator();
 										while(iterator.hasNext()){
-											IWrapperItemStack stack = iterator.next();
+											ItemStack stack = iterator.next();
 											if(inventory.addStack(stack)){
 												iterator.remove();
 												break;
@@ -76,8 +76,8 @@ public class PartEffector extends APart{
 							}
 							
 							//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-							for(IWrapperItemStack stack : drops){
-								if(stack.getSize() > 0){
+							for(ItemStack stack : drops){
+								if(stack.getCount() > 0){
 									vehicle.world.spawnItemStack(stack, worldPos);
 								}
 							}
@@ -88,7 +88,7 @@ public class PartEffector extends APart{
 						//Search all inventories for seeds and try to plant them.
 						for(APart part : vehicle.parts){
 							if(part instanceof PartInteractable){
-								IWrapperInventory inventory = ((PartInteractable) part).inventory;
+								WrapperInventory inventory = ((PartInteractable) part).inventory;
 								if(inventory != null && part.definition.interactable.feedsVehicles){
 									for(int j=0; j<inventory.getSize(); ++j){
 										if(vehicle.world.plantBlock(affectedBlocks[i], inventory.getStackInSlot(j))){

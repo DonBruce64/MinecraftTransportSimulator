@@ -22,7 +22,7 @@ public interface IWrapperTileEntity{
 	/**
 	 *  Gets the inventory for this TE, or null if it doesn't have one.
 	 */
-	public IWrapperInventory getInventory();
+	public WrapperInventory getInventory();
 	
 	/**
 	 *  Loads the TE data from the passed-in source.

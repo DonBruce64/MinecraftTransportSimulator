@@ -6,7 +6,7 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
 import minecrafttransportsimulator.mcinterface.MasterLoader;
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartInteractable extends APart{
 	private final IWrapperTileEntity interactable;
-	public final IWrapperInventory inventory;
+	public final WrapperInventory inventory;
 	public final FluidTank tank;
 	public PartInteractable linkedPart;
 	public EntityVehicleF_Physics linkedVehicle;
@@ -44,7 +44,7 @@ public final class PartInteractable extends APart{
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
-				player.getHeldStack().interactWithTank(tank, player);
+				tank.interactWith(player);
 			}	
 		}else{
 			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));

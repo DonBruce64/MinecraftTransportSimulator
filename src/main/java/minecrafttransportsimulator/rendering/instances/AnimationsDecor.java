@@ -1,8 +1,9 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRadio;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class contains methods for decor animations.
