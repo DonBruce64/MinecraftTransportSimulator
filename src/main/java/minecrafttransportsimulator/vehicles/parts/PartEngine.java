@@ -820,35 +820,37 @@ public class PartEngine extends APart implements IParticleProvider{
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
 				wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicle.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
-				//Check to see if the wheels need to spin out.
-				//If they do, we'll need to provide less force.
-				if(Math.abs(wheelForce/300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300D))){
-					wheelForce *= vehicle.currentMass/100000D*wheelFriction/Math.abs(wheelForce/300F);					
-					for(PartGroundDevice wheel : vehicle.wheels){
-						if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
-							if(currentGearRatio > 0){
-								if(wheelForce >= 0){
-									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+				if(wheelForce != 0){
+					//Check to see if the wheels need to spin out.
+					//If they do, we'll need to provide less force.
+					if(Math.abs(wheelForce/300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300D))){
+						wheelForce *= vehicle.currentMass/100000D*wheelFriction/Math.abs(wheelForce/300F);
+						for(PartGroundDevice wheel : vehicle.wheels){
+							if(vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
+								if(currentGearRatio > 0){
+									if(wheelForce >= 0){
+										wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+									}else{
+										wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+									}
 								}else{
-									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+									if(wheelForce >= 0){
+										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+									}else{
+										
+										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+									}
 								}
-							}else{
-								if(wheelForce >= 0){
-									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
-								}else{
-									
-									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicle.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
-								}
+								wheel.skipAngularCalcs = true;
 							}
-							wheel.skipAngularCalcs = true;
 						}
-					}
-				}else{
-					//If we have wheels not on the ground and we drive them, adjust their velocity now.
-					for(PartGroundDevice wheel : vehicle.wheels){
-						wheel.skipAngularCalcs = false;
-						if(!vehicle.groundDeviceCollective.groundedGroundDevices.contains(wheel) && vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
-							wheel.angularVelocity = lowestWheelVelocity;
+					}else{
+						//If we have wheels not on the ground and we drive them, adjust their velocity now.
+						for(PartGroundDevice wheel : vehicle.wheels){
+							wheel.skipAngularCalcs = false;
+							if(!vehicle.groundDeviceCollective.groundedGroundDevices.contains(wheel) && vehicle.groundDeviceCollective.canDeviceProvideForce(wheel)){
+								wheel.angularVelocity = lowestWheelVelocity;
+							}
 						}
 					}
 				}
