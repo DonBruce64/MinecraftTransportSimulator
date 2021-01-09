@@ -5,7 +5,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleDrip extends AParticle{
-	private boolean touchingBlocks;
 	
 	public ParticleDrip(WrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float scale){
 		super(world, position, motion, red, green, blue, 1.0F, scale);
