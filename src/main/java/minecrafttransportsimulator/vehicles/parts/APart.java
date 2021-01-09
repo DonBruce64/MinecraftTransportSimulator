@@ -192,7 +192,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 					if(animation.animationType.equals("rotation")){
 						//Found rotation.  Get angles that needs to be applied.
 						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						Point3d appliedRotation = animation.axis.copy().multiply(variableValue);
+						Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
 						
 						//Check if we need to apply a translation based on this rotation.
 						if(!animation.centerPoint.isZero()){
@@ -207,7 +207,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 						//Found translation.  This gets applied in the translation axis direction directly.
 						//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
 						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						Point3d appliedTranslation = animation.axis.copy().multiply(variableValue);
+						Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
 						rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 					}
 				}
@@ -243,7 +243,8 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 				}
 				if(!inhibitAnimations && animation.animationType.equals("rotation")){
 					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					rollingRotation.add(animation.axis.x*variableValue, animation.axis.y*variableValue, animation.axis.z*variableValue);
+					Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
+					rollingRotation.add(appliedRotation.x, appliedRotation.y, appliedRotation.z);
 				}
 			}
 		}
