@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -18,11 +19,8 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
@@ -62,12 +60,22 @@ import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
 
-public class WrapperWorld implements IWrapperWorld{
+/**Wrapper to a world instance.  This contains many common methods that 
+ * MC has seen fit to change over multiple versions (such as lighting) and as such
+ * provides a single point of entry to the world to interface with it.  Note that
+ * clients and servers don't share world interfaces, and there are world interfaces for
+ * every loaded world, so multiple interfaces will always be present on a system.
+ *
+ * @author don_bruce
+ */
+public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
-	final World world;
+	public final World world;
+	public InterfaceWorldSavedData savedDataAccessor;
+	public static final String dataID = MasterLoader.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -138,32 +146,59 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Returns true if this is a client world, false if we're on the server.
+	 */
 	public boolean isClient(){
 		return world.isRemote;
 	}
 	
-	@Override
+	/**
+	 *  Returns the ID of the current dimension.
+	 *  0 for overworld.
+	 *  1 for the End.
+	 *  -1 for the Nether.
+	 *  Mods may add other values for their dims, so this list is not inclusive.
+	 */
 	public int getDimensionID(){
 		return world.provider.getDimension();
 	}
 	
-	@Override
+	/**
+	 *  Returns the current world tick value.  Useful when you need to sync
+	 *  operations.  For animations, just use the system time.
+	 */
 	public long getTick(){
 		return world.getTotalWorldTime();
 	}
 	
-	@Override
+	/**
+	 *  Returns the time of day of the world, in ticks.  Unlike {@link #getTick()},
+	 *  this method may not increment if the world's internal clock isn't currently
+	 *  advancing.
+	 */
 	public long getTime(){
 		return world.getWorldTime();
 	}
 		
-	@Override
+	/**
+	 *  Returns the max build height for the world.  Note that entities may move and be saved
+	 *  above this height, and moving above this height will result in rendering oddities.
+	 */
 	public long getMaxHeight(){
 		return world.getHeight();
 	}
 	
-	@Override
+	/**
+	 *  Returns the saved world data for this world.  As servers save data, while clients don't,
+	 *  this method will only ensure valid return values on the server.  On clients, there will
+	 *  be some delay in obtaining the data from the server due to packets.  As such, this method
+	 *  may return null if the data hasn't arrived from the server.  After this, the object will 
+	 *  contain all the server data, and will remain updated with data changes from the server.  
+	 *  Do NOT attempt to modify the data object on the client, as it will result in a
+	 *  de-synchronized state.  Instead, send a packet to the server to modify its copy, 
+	 *  and then wait for the synchronizing packet.
+	 */
 	public WrapperNBT getData(){
 		if(!world.isRemote){
 			if(savedDataAccessor == null){
@@ -178,7 +213,9 @@ public class WrapperWorld implements IWrapperWorld{
 		return new WrapperNBT(savedDataAccessor.internalData);
 	}
 	
-	@Override
+	/**
+	 *  Saves the passed-in data as the world's additional saved data.
+	 */
 	public void setData(WrapperNBT data){
 		if(!world.isRemote){
 			savedDataAccessor.internalData = data.tag;
@@ -189,51 +226,34 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	InterfaceWorldSavedData savedDataAccessor;
-	static final String dataID = MasterInterface.MODID + "_WORLD_DATA";
-	
 	/**
-	 *  Class used to interface with world saved data methods.
+	 *  Returns the entity that has the passed-in ID.
+	 *  If the entity is a player, an instance of {@link WrapperPlayer}
+	 *  is returned instead.
 	 */
-	public static class InterfaceWorldSavedData extends WorldSavedData{
-	private NBTTagCompound internalData = new NBTTagCompound(); 
-		
-		public InterfaceWorldSavedData(String name){
-			super(name);
-		}
-
-		@Override
-		public void readFromNBT(NBTTagCompound tag){
-			internalData = tag.getCompoundTag("internalData");
-		}
-
-		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound tag){
-			tag.setTag("internalData", internalData);
-			return tag;
-		}
-	}
-	
-	@Override
-	public IWrapperEntity getEntity(int id){
+	public WrapperEntity getEntity(int id){
 		Entity entity = world.getEntityByID(id);
 		return entity instanceof EntityPlayer ? getWrapperFor((EntityPlayer) entity) : getWrapperFor(entity);
 	}
 	
-	@Override
-	public List<IWrapperEntity> getEntitiesWithin(BoundingBox box){
-		List<IWrapperEntity> entities = new ArrayList<IWrapperEntity>();
+	/**
+	 *  Returns a list of entities within the specified bounds.
+	 */
+	public List<WrapperEntity> getEntitiesWithin(BoundingBox box){
+		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
 		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, convertBox(box))){
 			entities.add(getWrapperFor(entity));
 		}
 		return entities;
 	}
 	
-	@Override
-	public WrapperEntity getNearestHostile(IWrapperEntity entityLooking, int searchRadius){
+	/**
+	 *  Returns the nearest hostile entity that can be seen by the passed-in entity.
+	 */
+	public WrapperEntity getNearestHostile(WrapperEntity entityLooking, int searchRadius){
 		double smallestDistance = searchRadius*2;
 		Entity foundEntity = null;
-		Entity mcLooker = ((WrapperEntity) entityLooking).entity;
+		Entity mcLooker = entityLooking.entity;
 		Vec3d mcLookerPos = mcLooker.getPositionVector();
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
 			float distance = mcLooker.getDistance(entity);
@@ -247,15 +267,14 @@ public class WrapperWorld implements IWrapperWorld{
 		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
 	}
 	
-	/*
-	 *  Finds the closest entity that the looker's line of sight intersects,
-	 *  within the passed-in searchRadius.
+	/**
+	 *  Returns the closest entity whose collision boxes are intercepted by the
+	 *  passed-in entity's line of sight.
 	 */
-	@Override
-	public WrapperEntity getEntityLookingAt(IWrapperEntity entityLooking, float searchRadius){
+	public WrapperEntity getEntityLookingAt(WrapperEntity entityLooking, float searchRadius){
 		double smallestDistance = searchRadius*2;
 		Entity foundEntity = null;
-		Entity mcLooker = ((WrapperEntity) entityLooking).entity;
+		Entity mcLooker = entityLooking.entity;
 		Vec3d mcLookerPos = mcLooker.getPositionVector();
 		Point3d lookerLos = entityLooking.getLineOfSight(searchRadius).add(entityLooking.getPosition());
 		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
@@ -274,23 +293,44 @@ public class WrapperWorld implements IWrapperWorld{
 		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
 	}
 	
-	@Override
-	public IWrapperEntity generateEntity(){
+	/**
+	 *  Generates a new wrapper to be used for entity tracking.
+	 *  This should be fed into the constructor of {@link AEntityBase}
+	 *  at construction time to allow it to interface with the world.
+	 */
+	public WrapperEntity generateEntity(){
 		//Generate a new builder to hold the entity and return the wrapper for it.
     	BuilderEntity builder = new BuilderEntity(world);
     	return getWrapperFor(builder);
     }
 	
-	@Override
+	/**
+	 *  Spawns the entity into the world.  Only valid for entities that
+	 *  have had their wrapper set from {@link #generateEntity()}
+	 */
 	public void spawnEntity(AEntityBase entity){
-		BuilderEntity builder = (BuilderEntity) ((WrapperEntity) entity.wrapper).entity;
+		BuilderEntity builder = (BuilderEntity) entity.wrapper.entity;
 		builder.entity = entity;
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		world.spawnEntity(builder);
     }
 	
-	@Override
-	public Map<IWrapperEntity, BoundingBox> attackEntities(Damage damage, IWrapperEntity damageSource, Point3d motion){
+	/**
+	 *  Attacks all entities that are in the passed-in damage range.  If the
+	 *  passed-in entity is not null, then any entity riding the passed-in
+	 *  entity that are inside the bounding box will not be attacked, nor will
+	 *  the passed-in entity be attacked.  Useful for vehicles, where you don't 
+	 *  want players firing weapons to hit themselves or the vehicle.
+	 *  Note that if this is called on clients, then this method will not attack
+	 *  any entities. Instead, it will return a map of all entities that could have
+	 *  been attacked with the bounding box attacked if they are of type 
+	 *  {@link BuilderEntity} as the value to the entity key.
+	 *  This is because attacking cannot be done on clients, but it may be useful to 
+	 *  know what entities could have been attacked should the call have been made on a server.
+	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
+	 *  prevent excess collision checking, and may be null if no motion is applied.
+	 */
+	public Map<WrapperEntity, BoundingBox> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
 		AxisAlignedBB mcBox = convertBox(damage.box);
 		List<Entity> collidedEntities;
 		List<Point3d> rayTraceHits = new ArrayList<Point3d>();;
@@ -334,7 +374,7 @@ public class WrapperWorld implements IWrapperWorld{
 							iterator.remove();
 						}
 					}else{
-						if(((WrapperEntity) damageSource).entity.equals(entity)){
+						if(damageSource.entity.equals(entity)){
 							iterator.remove();
 						}
 					}
@@ -344,14 +384,14 @@ public class WrapperWorld implements IWrapperWorld{
 			//If we are on the server, attack the entities.
 			if(!isClient()){
 				for(Entity entity : collidedEntities){
-					WrapperEntity.attack(entity, damage);
+					getWrapperFor(entity).attack(damage);
 				}
 			}
 		}
 		
 		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
 		if(isClient()){
-			Map<IWrapperEntity, BoundingBox> entities = new HashMap<IWrapperEntity, BoundingBox>();
+			Map<WrapperEntity, BoundingBox> entities = new HashMap<WrapperEntity, BoundingBox>();
 			for(Entity entity : collidedEntities){
 				if(entity instanceof BuilderEntity){
 					//Need to check which box we hit for this entity.
@@ -378,7 +418,11 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Moves all entities that collide with the passed-in bounding boxes by the passed-in offset.
+	 *  Offset is determined by the passed-in vector, and the passed-in angle of said vector.
+	 *  This allows for angular movement as well as linear.
+	 */
 	public void moveEntities(List<BoundingBox> boxesToCheck, Point3d intialPosition, Point3d initalRotation, Point3d linearMovement, Point3d angularMovement){
 		List<Entity> movedEntities = new ArrayList<Entity>();
 		for(BoundingBox box : boxesToCheck){
@@ -412,9 +456,12 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Loads all entities that are in the passed-in range into the passed-in entity.
+	 *  Only non-hostile mobs will be loaded.
+	 */
 	public void loadEntities(BoundingBox box, AEntityBase vehicle){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(((WrapperEntity) vehicle.wrapper).entity, convertBox(box))){
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(vehicle.wrapper.entity, convertBox(box))){
 			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
@@ -431,18 +478,26 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Returns the block wrapper at the passed-in location, or null if the block is air.
+	 */
 	public WrapperBlock getWrapperBlock(Point3i point){
 		return isAir(point) ? null : new WrapperBlock(world, new BlockPos(point.x, point.y, point.z));
 	}
 	
-	@Override
+	/**
+	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
+	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
+	 */
 	public ABlockBase getBlock(Point3i point){
 		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
-		return block instanceof BuilderBlock ? ((BuilderBlock) block).block : null;
+		return block instanceof BuilderBlock ? ((BuilderBlock) block).mcBlock : null;
 	}
 	
-	@Override
+	/**
+	 *  Returns the point where the first block along the path can be hit, or null if there are
+	 *  no blocks along the path.
+	 */
 	public Point3i getBlockHit(Point3d position, Point3d delta){
 		Vec3d start = new Vec3d(position.x, position.y, position.z);
 		RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
@@ -455,39 +510,64 @@ public class WrapperWorld implements IWrapperWorld{
 		return null;
 	}
 	
-	@Override
+	/**
+	 *  Returns the rotation (in degrees) of the block at the passed-in location.
+	 *  Only valid for blocks of type {@link ABlockBase}.
+	 */
     public float getBlockRotation(Point3i point){
     	return world.getBlockState(new BlockPos(point.x, point.y, point.z)).getValue(BuilderBlock.FACING).getHorizontalAngle();
     }
 	
-	@Override
+    /**
+	 *  Returns true if the block at the passed-in location is solid.  Solid means
+	 *  that said block can be collided with, is a cube, and is generally able to have
+	 *  things placed or connected to it.
+	 */
 	public boolean isBlockSolid(Point3i point){
 		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
 		Block offsetMCBlock = offsetMCState.getBlock();
         return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
 	}
 	
-	@Override
+	/**
+	 *  Returns true if the block is liquid.
+	 */
 	public boolean isBlockLiquid(Point3i point){
 		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
         return offsetMCState.getMaterial().isLiquid();
 	}
 	
-	@Override
+	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  bottom portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
 	public boolean isBlockBottomSlab(Point3i point){
 		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
 	}
 	
-	@Override
+	/**
+	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  top portion of the slab.  May be used to adjust renders to do half-block
+	 *  rendering to avoid floating blocks.
+	 */
 	public boolean isBlockTopSlab(Point3i point){
 		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
 	}
 	
-	@Override
+	/**
+	 * Updates the blocks and depths of collisions for the passed-in BoundingBox to the box's internal variables.
+	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
+	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
+	 * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
+	 * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
+	 * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
+	 * collisionDepth be set for that axis.
+	 */
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
 		AxisAlignedBB mcBox = convertBox(box);
 		box.collidingBlocks.clear();
@@ -554,31 +634,44 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Returns the current redstone power at the passed-in position.
+	 */
 	public int getRedstonePower(Point3i point){
 		return world.getStrongPower(new BlockPos(point.x, point.y, point.z));
 	}
 
-	@Override
+	/**
+	 *  Returns the rain strength at the passed-in position.
+	 *  0 is no rain, 1 is rain, and 2 is a thunderstorm.
+	 */
 	public float getRainStrength(Point3i point){
 		return world.isRainingAt(new BlockPos(point.x, point.y, point.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
 	}
 	
-	@Override
+	/**
+	 *  Returns the current temperature at the passed-in position.
+	 *  Dependent on biome, and likely modified by mods that add new boimes.
+	 */
 	public float getTemperature(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		return world.getBiome(pos).getTemperature(pos);
 	}
 
+	 /**
+	 *  Places the passed-in block at the point specified.
+	 *  Returns true if the block was placed, false if not.
+	 *  If this block isn't placed by a player, pass in null
+	 *  for the player reference.
+	 */
 	@SuppressWarnings("unchecked")
-	@Override
-	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, IWrapperPlayer playerWrapper, Axis axis){
+	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer playerWrapper, Axis axis){
     	if(!world.isRemote){
     		BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
     		BlockPos pos = new BlockPos(location.x, location.y, location.z);
     		if(playerWrapper != null){
-    			WrapperPlayer player = (WrapperPlayer) playerWrapper;
-    	    	ItemStack stack = ((WrapperPlayer) playerWrapper).getHeldStack();
+    			WrapperPlayer player = playerWrapper;
+    	    	ItemStack stack = playerWrapper.getHeldStack();
     	    	AItemBase item = player.getHeldItem();
     	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
     	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
@@ -629,25 +722,36 @@ public class WrapperWorld implements IWrapperWorld{
     	return false;
     }
     
-	@Override
+	 /**
+	 *  Gets the wrapper TE at the specified position.
+	 */
 	public WrapperTileEntity getWrapperTileEntity(Point3i position){
 		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
 		return tile != null ? new WrapperTileEntity(tile) : null;
 	}
 	
+	/**
+	 *  Returns the tile entity at the passed-in location, or null if it doesn't exist in the world.
+	 *  Only valid for TEs of type {@link ATileEntityBase} others will return null.
+	 */
 	@SuppressWarnings("unchecked")
-	@Override
 	public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3i point){
 		TileEntity tile = world.getTileEntity(new BlockPos(point.x, point.y, point.z));
 		return tile instanceof BuilderTileEntity ? ((BuilderTileEntity<TileEntityType>) tile).tileEntity : null;
 	}
 	
-	@Override
+	/**
+	 *  Flags the tile entity at the passed-in point for saving.  This means the TE's
+	 *  NBT data will be saved to disk when the chunk unloads so it will maintain its state.
+	 */
 	public void markTileEntityChanged(Point3i point){
 		world.getTileEntity(new BlockPos(point.x, point.y, point.z)).markDirty();
 	}
 	
-	@Override
+	/**
+	 *  Gets the brightness at this point, as a value between 0.0-1.0. Calculated from the
+	 *  sun brightness, and possibly the block brightness if calculateBlock is true.
+	 */
 	public float getLightBrightness(Point3i point, boolean calculateBlock){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		float sunLight = world.getSunBrightness(0)*(world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted())/15F;
@@ -655,7 +759,10 @@ public class WrapperWorld implements IWrapperWorld{
 		return Math.max(sunLight, blockLight);
 	}
 	
-	@Override
+	/**
+	 *  Updates the brightness of the block at this point.  Only works if the block
+	 *  is a dynamic-brightness block that implements {@link IBlockTileEntity}. 
+	 */
 	public void updateLightBrightness(Point3i point){
 		ATileEntityBase<?> tile = getTileEntity(point);
 		if(tile != null){
@@ -666,12 +773,18 @@ public class WrapperWorld implements IWrapperWorld{
 		}
 	}
 	
-	@Override
+	/**
+	 *  Destroys the block at the position, dropping it as whatever drop it drops as.
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
 	public void destroyBlock(Point3i point){
 		world.destroyBlock(new BlockPos(point.x, point.y, point.z), true);
 	}
 	
-	@Override
+	/**
+	 *  Returns true if the block at this point is air.
+	 */
 	public boolean isAir(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		IBlockState state = world.getBlockState(pos); 
@@ -679,19 +792,30 @@ public class WrapperWorld implements IWrapperWorld{
 		return block.isAir(state, world, pos);
 	}
 	
-	@Override
+	/**
+	 *  Returns true if the block at this point is fire.
+	 *  Note: this will return true on vanilla fire, as well as
+	 *  any other blocks made of fire from other mods.
+	 */
 	public boolean isFire(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		IBlockState state = world.getBlockState(pos); 
 		return state.getMaterial().equals(Material.FIRE);
 	}
 	
-	@Override
+	/**
+	 *  Sets the block at the passed-in position to fire. 
+	 *  This does no sanity checks, so make sure you're
+	 *  actually allowed to do such a thing before calling.
+	 */
 	public void setToFire(Point3i point){
 		world.setBlockState(new BlockPos(point.x, point.y, point.z), Blocks.FIRE.getDefaultState());
 	}
 	
-	@Override
+	/**
+	 *  Tries to fertilize the block with the passed-in stack.
+	 *  Returns true if the block was fertilized.
+	 */
 	public boolean fertilizeBlock(Point3i point, ItemStack stack){
 		//Check if the item can fertilize things and we are on the server.
 		if(stack.getItem().equals(Items.DYE) && !world.isRemote){
@@ -710,7 +834,13 @@ public class WrapperWorld implements IWrapperWorld{
 		return false;
 	}
 	
-	@Override
+	/**
+	 *  Tries to harvest the block at the passed-in location.  If the harvest was
+	 *  successful, and the block harvested was crops, the result returned is a list
+	 *  of the drops from the crops.  If the crops couldn't be harvested, null is returned.
+	 *  If the block was harvested, but not crops, then the resulting drops
+	 *  are dropped on the ground and an empty list is returned.
+	 */
 	public List<ItemStack> harvestBlock(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		IBlockState state = world.getBlockState(pos);
@@ -741,7 +871,10 @@ public class WrapperWorld implements IWrapperWorld{
 		return null;
 	}
 	
-	@Override
+	/**
+	 *  Tries to plant the item as a block.  Only works if the land conditions are correct
+	 *  and the item is actually seeds that can be planted.
+	 */
 	public boolean plantBlock(Point3i point, ItemStack stack){
 		//Check for valid seeds.
 		Item item = stack.getItem();
@@ -768,7 +901,9 @@ public class WrapperWorld implements IWrapperWorld{
 		return false;
 	}
 	
-	@Override
+	/**
+	 *  Tries to plow the block.  Essentially, this turns grass and dirt into farmland.
+	 */
 	public boolean plowBlock(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		IBlockState oldState = world.getBlockState(pos);
@@ -791,7 +926,11 @@ public class WrapperWorld implements IWrapperWorld{
 		return true;
 	}
 	
-	@Override
+	/**
+	 *  Spawns the passed-in item as an item entity at the passed-in point.
+	 *  This should be called only on servers, as spawning items on clients
+	 *  leads to phantom items that can't be picked up. 
+	 */
 	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point){
 		ItemStack stack = item.getNewStack();
 		if(data != null){
@@ -800,19 +939,29 @@ public class WrapperWorld implements IWrapperWorld{
 		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
 	}
 	
-	@Override
+	/**
+	 *  Spawns the passed-in stack as an item entity at the passed-in point.
+	 *  This should be called only on servers, as spawning items on clients
+	 *  leads to phantom items that can't be picked up. 
+	 */
 	public void spawnItemStack(ItemStack stack, Point3d point){
 		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
 	}
 	
-	@Override
+	/**
+	 *  Spawns an explosion of the specified strength at the passed-in point.
+	 *  Explosion in this case is from an internal entity.
+	 */
 	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
-		world.newExplosion(((WrapperEntity) source.wrapper).entity, location.x, location.y, location.z, (float) strength, flames, true);
+		world.newExplosion(source.wrapper.entity, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
-	@Override
-	public void spawnExplosion(IWrapperEntity entity, Point3d location, double strength, boolean flames){
-		world.newExplosion(((WrapperEntity) entity).entity, location.x, location.y, location.z, (float) strength, flames, true);
+	/**
+	 *  Spawns an explosion of the specified strength at the passed-in point.
+	 *  Explosion in this case is from a wrapper entity.
+	 */
+	public void spawnExplosion(WrapperEntity entity, Point3d location, double strength, boolean flames){
+		world.newExplosion(entity.entity, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**
@@ -827,5 +976,27 @@ public class WrapperWorld implements IWrapperWorld{
 			box.globalCenter.y + box.heightRadius,
 			box.globalCenter.z + box.depthRadius
 		);
+	}
+	
+	/**
+	 *  Class used to interface with world saved data methods.
+	 */
+	public static class InterfaceWorldSavedData extends WorldSavedData{
+		private NBTTagCompound internalData = new NBTTagCompound(); 
+		
+		public InterfaceWorldSavedData(String name){
+			super(name);
+		}
+
+		@Override
+		public void readFromNBT(NBTTagCompound tag){
+			internalData = tag.getCompoundTag("internalData");
+		}
+
+		@Override
+		public NBTTagCompound writeToNBT(NBTTagCompound tag){
+			tag.setTag("internalData", internalData);
+			return tag;
+		}
 	}
 }

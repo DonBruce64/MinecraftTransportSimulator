@@ -7,9 +7,9 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 	/*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
@@ -20,9 +20,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 	}
 	
 	@Override
-	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient() && "booklet".equals(definition.general.type)){
-			MasterLoader.guiInterface.openGUI(new GUIBooklet(this));
+			InterfaceGUI.openGUI(new GUIBooklet(this));
 		}
         return true;
     }

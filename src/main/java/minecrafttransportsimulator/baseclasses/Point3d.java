@@ -66,6 +66,7 @@ public class Point3d{
 	 * Adds the passed-in values to the point.
 	 * Returns the called object for nested operations.
 	 */
+	@SuppressWarnings("hiding")
 	public Point3d add(double x, double y, double z){
 		this.x += x;
 		this.y += y;

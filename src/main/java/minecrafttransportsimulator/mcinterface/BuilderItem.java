@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import mcinterface1122.WrapperWorld;
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;

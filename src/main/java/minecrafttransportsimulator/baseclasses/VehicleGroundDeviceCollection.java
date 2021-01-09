@@ -3,7 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
@@ -67,16 +67,16 @@ public class VehicleGroundDeviceCollection{
 	 */
 	public void spawnSlippingParticles(){
 		if(frontLeftGDB.isGrounded){
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
 		}
 		if(frontRightGDB.isGrounded){
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
 		}
 		if(rearLeftGDB.isGrounded){
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
 		}
 		if(rearRightGDB.isGrounded){
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
 		}
 	}
 	

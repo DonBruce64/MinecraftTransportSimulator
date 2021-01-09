@@ -13,7 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnec
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -42,7 +42,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						MasterLoader.renderInterface.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
+						InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 						//Core components need to be transformed to wedges.
 						List<Float[]> transformedVertices = new ArrayList<Float[]>();
 						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation());
@@ -131,7 +131,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				displayListMap.put(component, displayListIndex);
 			}
 			
-			MasterLoader.renderInterface.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
+			InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 			GL11.glCallList(displayListMap.get(component));
 		}
 		

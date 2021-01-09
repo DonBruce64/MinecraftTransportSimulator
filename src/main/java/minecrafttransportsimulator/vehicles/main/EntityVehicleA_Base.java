@@ -13,10 +13,10 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
@@ -65,7 +65,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleA_Base(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleA_Base(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		//Set definition and current subName.
 		ItemVehicle item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName")); 
@@ -84,7 +84,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				Point3d partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, partData, partOffset, true);
 			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR IN LOADING PART FROM NBT!");
+				InterfaceCore.logError("ERROR IN LOADING PART FROM NBT!");
 				e.printStackTrace();
 			}
 		}

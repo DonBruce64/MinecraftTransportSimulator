@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -60,7 +60,7 @@ public class SoundInstance{
 	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
 	public boolean shouldBeDampened(){
-		AEntityBase entityRiding = MasterLoader.clientInterface.getClientPlayer().getEntityRiding();
-		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && MasterLoader.clientInterface.inFirstPerson() && (radio == null || !entityRiding.equals(provider));
+		AEntityBase entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && InterfaceClient.inFirstPerson() && (radio == null || !entityRiding.equals(provider));
 	}
 }

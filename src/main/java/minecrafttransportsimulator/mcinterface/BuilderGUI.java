@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.io.IOException;
 
@@ -15,26 +15,25 @@ import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
-import minecrafttransportsimulator.mcinterface.IInterfaceGUI;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.SoundEvents;
 
-/**Builder for MC GUI classes.  Created when {@link IInterfaceGUI#openGUI(AGUIBase)}
+/**Builder for MC GUI classes.  Created when {@link InterfaceGUI#openGUI(AGUIBase)}
  * is called to open a GUI.  GUI instance is not saved after closed.
  *
  * @author don_bruce
  */
-class BuilderGUI extends GuiScreen{
+public class BuilderGUI extends GuiScreen{
 	private int guiLeft;
 	private int guiTop;
 	private GUIComponentSelector lastSelectorClicked;
 	
 	/**Current gui we are built around.**/
-	final AGUIBase gui;
+	public final AGUIBase gui;
 	
-	BuilderGUI(AGUIBase gui){
+	public BuilderGUI(AGUIBase gui){
 		this.gui = gui;
 	}
 	
@@ -85,14 +84,14 @@ class BuilderGUI extends GuiScreen{
 		
 		//If we are light-sensitive, enable lighting.
 		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
-			MasterInterface.renderInterface.setLightingToEntity(gui.getGUILightSource());
-			MasterInterface.renderInterface.setSystemLightingState(false);
+			InterfaceRender.setLightingToEntity(gui.getGUILightSource());
+			InterfaceRender.setSystemLightingState(false);
 		}
 		
 		//Bind the standard texture and render the background.
-		MasterInterface.renderInterface.bindTexture(gui.getTexture());
+		InterfaceRender.bindTexture(gui.getTexture());
 		if(gui.renderBackground()){
-			MasterInterface.guiInterface.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 		}
 		
 		//Render buttons and selectors.  These choose if they render or not depending on visibility.
@@ -107,9 +106,9 @@ class BuilderGUI extends GuiScreen{
 		//This allows all text to be lit up if required.  We also render the lit texture now.
 		//This requires a re-render of all the components to ensure the lit texture portions of said components render.
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
-			MasterInterface.renderInterface.setLightingState(false);
-			MasterInterface.renderInterface.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
-			MasterInterface.guiInterface.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+			InterfaceRender.setLightingState(false);
+			InterfaceRender.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
+			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
 			for(GUIComponentButton button : gui.buttons){
 				button.renderButton(mouseX, mouseY);
 			}
@@ -122,7 +121,7 @@ class BuilderGUI extends GuiScreen{
 		//CHeck to make sure the texture exists before binding.
 		for(GUIComponentOBJModel objModel : gui.objModels){
 			if(objModel.textureLocation != null){
-				MasterInterface.renderInterface.bindTexture(objModel.textureLocation);
+				InterfaceRender.bindTexture(objModel.textureLocation);
 			}
 			objModel.renderModel();
 		}
@@ -149,7 +148,7 @@ class BuilderGUI extends GuiScreen{
 		//Re-enable lighting for instrument rendering,
 		//then render the instruments.  These use their own texture,
 		//so the text texture will be overridden at this point.
-		MasterInterface.renderInterface.setLightingState(true);
+		InterfaceRender.setLightingState(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
 			instrument.renderInstrument();
 		}

@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleSuspendedSmoke extends AParticle {
 
-	public ParticleSuspendedSmoke(IWrapperWorld world, Point3d position, Point3d motion, ParticleObject particleObject){
-		super(world, position, motion.add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject);
+	public ParticleSuspendedSmoke(WrapperWorld world, Point3d position, Point3d motion, JSONParticleObject JSONParticleObject){
+		super(world, position, motion.add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject);
 	}
 	
 	@Override
@@ -29,7 +29,7 @@ public class ParticleSuspendedSmoke extends AParticle {
 	
 	@Override
 	protected int generateMaxAge(){
-		return particleObject.duration == 0 ? (int)(8.0D / (Math.random() * 0.8D + 0.2D)) : particleObject.duration;
+		return JSONParticleObject.duration == 0 ? (int)(8.0D / (Math.random() * 0.8D + 0.2D)) : JSONParticleObject.duration;
 	}
 	
 	@Override

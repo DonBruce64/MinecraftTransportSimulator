@@ -13,9 +13,9 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
@@ -60,10 +60,10 @@ public abstract class AEntityBase implements IAnimationProvider{
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
-	public final IWrapperWorld world;
+	public final WrapperWorld world;
 	
 	/**Wrapper reference for interfacing with wrapper systems.**/
-	public final IWrapperEntity wrapper;
+	public final WrapperEntity wrapper;
 	
 	/**True as long as this entity is part of the world and being ticked.**/
 	public boolean isValid = true;
@@ -98,12 +98,12 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public BiMap<Point3d, IWrapperEntity> locationRiderMap = HashBiMap.create();
+	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
-	public AEntityBase(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public AEntityBase(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		this.lookupID = world.isClient() ? data.getInteger("lookupID") : idCounter++;
 		this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID"); 
 		this.world = world;
@@ -156,7 +156,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 *  as the entity needs to move to its new position before we can know where the
 	 *  riders of said entity will be.
 	 */
-	public void updateRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Update entity position and motion.
 		if(rider.isValid()){
 			rider.setPosition(locationRiderMap.inverse().get(rider));
@@ -175,7 +175,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 *  If we are re-loading a rider from saved data, pass-in null as the position
 	 *  
 	 */
-	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(riderLocation == null){
 			if(savedRiderLocations.isEmpty()){
 				return false;
@@ -222,7 +222,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	 *  Passed-in iterator is optional, but MUST be included if this is called inside a loop
 	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
 	 */
-	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(locationRiderMap.containsValue(rider)){
 			if(iterator != null){
 				iterator.remove();
@@ -258,7 +258,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 	public abstract void render(float partialTicks);
 	
 	@Override
-    public IWrapperWorld getProviderWorld(){
+    public WrapperWorld getProviderWorld(){
 		return world;
 	}
 	

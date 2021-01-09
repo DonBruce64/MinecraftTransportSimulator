@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class represents an object that can be rendered from an OBJ model.  This object is a set of
  * faces that are rendered during the main rendering routine.  Various transforms may be performed on
@@ -69,7 +69,7 @@ public class RenderableModelObject extends RenderableTransform{
 		if(doPreRenderTransforms(provider, partialTicks)){
 			//Render, caching the displayList if needed.
 			//Don't render on pass 1, as that's for transparency.
-			if(MasterLoader.renderInterface.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
 					int displayListIndex = OBJParser.generateDisplayList(vertices);
 					if(!displayLists.containsKey(modelName)){
@@ -85,8 +85,8 @@ public class RenderableModelObject extends RenderableTransform{
 			
 			//Render text on this object.
 			if(provider instanceof ITextProvider){
-				if(MasterLoader.renderInterface.renderTextMarkings((ITextProvider) provider, objectName)){
-					MasterLoader.renderInterface.recallTexture();
+				if(InterfaceRender.renderTextMarkings((ITextProvider) provider, objectName)){
+					InterfaceRender.recallTexture();
 				}
 			}
 			

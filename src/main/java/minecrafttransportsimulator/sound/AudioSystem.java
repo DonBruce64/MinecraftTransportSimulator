@@ -15,10 +15,10 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -29,7 +29,7 @@ import net.minecraftforge.fml.relauncher.Side;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Side.CLIENT)
 public class AudioSystem{
 	/**Flag for game paused state.  Gets set when the game is paused.**/
 	private static boolean isSystemPaused;
@@ -62,7 +62,7 @@ public class AudioSystem{
 		}
 		
 		//Handle pause state logic.
-		if(MasterLoader.clientInterface.isGamePaused()){
+		if(InterfaceClient.isGamePaused()){
 			if(!isSystemPaused){
 				for(SoundInstance sound : playingSounds){
 					AL10.alSourcePause(sound.sourceIndex);
@@ -78,7 +78,7 @@ public class AudioSystem{
 		}
 		
 		//If the world is null, we need to stop all sounds as we're on the main screen.
-		if(MasterLoader.clientInterface.getClientWorld() == null){
+		if(InterfaceClient.getClientWorld() == null){
 			Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
     			iterator.remove();
@@ -98,7 +98,7 @@ public class AudioSystem{
 		}
 		
 		//Get the player for further calculations.
-		IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
+		WrapperPlayer player = InterfaceClient.getClientPlayer();
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
@@ -209,7 +209,7 @@ public class AudioSystem{
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
 					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					MasterLoader.clientInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+					InterfaceClient.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -248,7 +248,7 @@ public class AudioSystem{
 			AL10.alGenSources(sourceBuffer);
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
 				++sourceGetFailures;
-				MasterLoader.clientInterface.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+				InterfaceClient.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);

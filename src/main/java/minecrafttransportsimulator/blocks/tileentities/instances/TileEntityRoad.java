@@ -21,9 +21,9 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -58,7 +58,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static constants.
 	public static final int MAX_SEGMENT_LENGTH = 32;
 	
-	public TileEntityRoad(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityRoad(WrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Set the bounding box.
 		this.boundingBox = new BoundingBox(new Point3d(0, (definition.general.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.general.collisionHeight/16D/2D, 0.5D);
@@ -107,7 +107,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
-	public RoadClickData getClickData(Point3i blockOffsetClicked, IWrapperPlayer player, boolean curveStart){
+	public RoadClickData getClickData(Point3i blockOffsetClicked, WrapperPlayer player, boolean curveStart){
 		//First check if we clicked the start or end of the curve.
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		
@@ -161,7 +161,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  blocking blocks.  OP and creative-mode players override blocking block checks.
 	 *  Road width is considered to extend to the left and right border, minus 1/2 a block.
 	 */
-	public boolean spawnCollisionBlocks(IWrapperPlayer player){
+	public boolean spawnCollisionBlocks(WrapperPlayer player){
 		//Get all the points that make up our collision points.
 		//If we find any colliding points, note them.
 		Point3d testOffset = new Point3d(0, 0, 0);
@@ -201,7 +201,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
 			for(Point3i offset : collisionBlockOffsets){
 				Point3i testPoint = offset.copy().add(position);
-				world.setBlock(BlockRoadCollision.blocks.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
+				world.setBlock(BlockRoadCollision.blockInstances.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
 			}
 			collidingBlockOffsets.clear();
 			isActive = true;

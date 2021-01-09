@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
 
@@ -11,16 +11,16 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
-/**This wrapper is essentially a collective list of BoundingBoxes.  It intercepts all AABB 
+/**This class is essentially a collective list of BoundingBoxes.  It intercepts all AABB 
  * calls and does checks for each BoundingBox that's in the passed-in list.
  * Mostly used for entities that need complex collision mapping, because MC don't let you have more
  * than one AABB per entity, but somehow you can have more than one for something as small as a block?
  * 
  * @author don_bruce
  */
-class WrapperAABBCollective extends AxisAlignedBB{
+public class WrapperAABBCollective extends AxisAlignedBB{
 	private final List<BoundingBox> boxes;
-	BoundingBox lastBoxRayTraced;
+	public BoundingBox lastBoxRayTraced;
 	
 	public WrapperAABBCollective(BuilderEntity entity, List<BoundingBox> boxes){
 		super(	entity.posX - entity.width/2D,
@@ -105,15 +105,15 @@ class WrapperAABBCollective extends AxisAlignedBB{
     }
 	
 	@Override
-    public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ){
+    public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ){
 		for(BoundingBox testBox : boxes){
 				if(
-					maxX > testBox.globalCenter.x - testBox.widthRadius && 
-					minX < testBox.globalCenter.x + testBox.widthRadius && 
-					maxY > testBox.globalCenter.y - testBox.heightRadius && 
-					minY < testBox.globalCenter.y + testBox.heightRadius &&
-					maxZ > testBox.globalCenter.z - testBox.depthRadius &&
-					minZ < testBox.globalCenter.z + testBox.depthRadius)
+					otherMaxX > testBox.globalCenter.x - testBox.widthRadius && 
+					otherMinX < testBox.globalCenter.x + testBox.widthRadius && 
+					otherMaxY > testBox.globalCenter.y - testBox.heightRadius && 
+					otherMinY < testBox.globalCenter.y + testBox.heightRadius &&
+					otherMaxZ > testBox.globalCenter.z - testBox.depthRadius &&
+					otherMinZ < testBox.globalCenter.z + testBox.depthRadius)
 				{
 				return true;
 			}

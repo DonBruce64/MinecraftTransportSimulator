@@ -15,8 +15,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
@@ -58,7 +59,7 @@ public class GUIInstruments extends AGUIBase{
 	private final List<TexturelessButton> vehicleInstrumentSlots = new ArrayList<TexturelessButton>();
 	private final List<GUIComponentInstrument> vehicleInstruments = new ArrayList<GUIComponentInstrument>();
 	
-	public GUIInstruments(EntityVehicleF_Physics vehicle, IWrapperPlayer player){
+	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
 		this.hudGUI = new GUIHUD(vehicle);
 		this.panelGUI = vehicle.definition.general.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);
@@ -131,7 +132,7 @@ public class GUIInstruments extends AGUIBase{
 		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, ""));
 
 		//Create the clear button.
-		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, MasterLoader.coreInterface.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
+		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
 				NetworkSystem.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
@@ -140,7 +141,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the HUD selection button.
-		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, MasterLoader.coreInterface.translate("gui.instruments.main")){
+		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.main")){
 			@Override
 			public void onClicked(){
 				hudSelected = true;
@@ -151,7 +152,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, MasterLoader.coreInterface.translate("gui.instruments.control")){
+		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.control")){
 			@Override
 			public void onClicked(){
 				hudSelected = false;
@@ -187,11 +188,11 @@ public class GUIInstruments extends AGUIBase{
 						//If the currently-selected vehicle instrument is this instrument, render an overlay.
 						//This happens even if there's an instrument rendered as we need to highlight it.
 						if(packInstrument.equals(selectedInstrumentOnVehicle)){
-							int instrumentRadius = (int) (64F*packInstrument.hudScale);
+							int selectedInstrumentRadius = (int) (64F*packInstrument.hudScale);
 							if(inClockPeriod(40, 20)){
 								GL11.glPushMatrix();
 								GL11.glTranslatef(0, 0, 1.0F);
-								MasterLoader.guiInterface.renderRectangle(this.x, this.y, 2*instrumentRadius, 2*instrumentRadius, Color.WHITE);
+								InterfaceGUI.renderRectangle(this.x, this.y, 2*selectedInstrumentRadius, 2*selectedInstrumentRadius, Color.WHITE);
 								GL11.glPopMatrix();
 							}
 						}
@@ -256,7 +257,7 @@ public class GUIInstruments extends AGUIBase{
 		panelButton.enabled = hudSelected;
 		
 		//Set info and clear state based on if we've clicked an instrument.
-		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + MasterLoader.coreInterface.translate("gui.instruments.idle") + "  \\/" : "/\\  " + MasterLoader.coreInterface.translate("gui.instruments.decide") + "  /\\";
+		infoLabel.text = selectedInstrumentOnVehicle == null ? "\\/  " + InterfaceCore.translate("gui.instruments.idle") + "  \\/" : "/\\  " + InterfaceCore.translate("gui.instruments.decide") + "  /\\";
 		clearButton.enabled = selectedInstrumentOnVehicle != null && vehicle.instruments.containsKey(vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle));
 	}
 	
@@ -318,12 +319,12 @@ public class GUIInstruments extends AGUIBase{
 			if(visible){
 				if(enabled){
 					if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-						MasterLoader.guiInterface.renderRectangle(this.x, this.y, this.width, this.height, Color.LIGHT_GRAY);
+						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.LIGHT_GRAY);
 					}else{
-						MasterLoader.guiInterface.renderRectangle(this.x, this.y, this.width, this.height, Color.GRAY);
+						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.GRAY);
 					}
 				}else{
-					MasterLoader.guiInterface.renderRectangle(this.x, this.y, this.width, this.height, Color.BLACK);
+					InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.BLACK);
 				}
 			}
 		}

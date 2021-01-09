@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AParticle;
 
 public class ParticleDrip extends AParticle{
 	private boolean touchingBlocks;
 	
-	public ParticleDrip(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float scale){
+	public ParticleDrip(WrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float scale){
 		super(world, position, motion, red, green, blue, 1.0F, scale);
 	}
 	

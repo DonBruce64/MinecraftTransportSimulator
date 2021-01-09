@@ -4,10 +4,10 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRadio;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	
@@ -16,15 +16,15 @@ public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	}
 	
 	@Override
-	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		if(world.isClient()){
-			MasterLoader.guiInterface.openGUI(new GUIRadio((TileEntityRadio) world.getTileEntity(point)));
+			InterfaceGUI.openGUI(new GUIRadio((TileEntityRadio) world.getTileEntity(point)));
 		}
 		return true;
 	}
 
 	@Override
-	public TileEntityRadio createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityRadio createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityRadio(world, position, data);
 	}
 

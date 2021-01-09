@@ -2,9 +2,9 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
@@ -21,15 +21,15 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public boolean interact(IWrapperPlayer player){
+	public boolean interact(WrapperPlayer player){
 		//See if we can interact with the seats of this vehicle.
 		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
 		if(!vehicle.locked || vehicle.equals(player.getEntityRiding())){
-			IWrapperEntity riderForSeat = vehicle.locationRiderMap.get(placementOffset);
+			WrapperEntity riderForSeat = vehicle.locationRiderMap.get(placementOffset);
 			if(riderForSeat != null){
 				//We already have a rider for this seat.  If it's not us, mark the seat as taken.
 				//If it's an entity that can be leashed, dismount the entity and leash it.
-				if(riderForSeat instanceof IWrapperPlayer){
+				if(riderForSeat instanceof WrapperPlayer){
 					if(!player.equals(riderForSeat)){
 						player.sendPacket(new PacketPlayerChatMessage("interact.failure.seattaken"));
 					}
@@ -39,7 +39,7 @@ public final class PartSeat extends APart{
 				}
 			}else{
 				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
-				IWrapperEntity leashedEntity = player.getLeashedEntity();
+				WrapperEntity leashedEntity = player.getLeashedEntity();
 				if(leashedEntity != null){
 					vehicle.addRider(leashedEntity, placementOffset);
 				}else{
@@ -83,7 +83,7 @@ public final class PartSeat extends APart{
 	 * see if this rider can control them.  If so, then the active gun is set to that gun type.
 	 */
 	public void setNextActiveGun(){
-		IWrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
 		//Iterate over all the gun types, attempting to get the type after our selected type.
 		//If we don't have an active gun, just get the next possible unit.
 		if(activeGun == null){
@@ -142,7 +142,7 @@ public final class PartSeat extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		IWrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
 		if(rider != null){
 			vehicle.removeRider(rider, null);
 		}

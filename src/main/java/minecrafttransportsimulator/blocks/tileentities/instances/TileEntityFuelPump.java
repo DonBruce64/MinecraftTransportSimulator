@@ -7,11 +7,11 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
@@ -21,7 +21,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	public EntityVehicleF_Physics connectedVehicle;
     private FluidTank tank;
 
-    public TileEntityFuelPump(IWrapperWorld world, Point3i position, WrapperNBT data){
+    public TileEntityFuelPump(WrapperWorld world, Point3i position, WrapperNBT data){
     	super(world, position, data);
     	this.tank = new FluidTank(data, 15000, world.isClient());
     }
@@ -32,9 +32,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 		//Only do this on clients, as servers don't render any text.
 		if(world.isClient() && definition.rendering != null && definition.rendering.textObjects != null){
 			text.clear();
-			String fluidName = tank.getFluidLevel() > 0 ? MasterLoader.coreInterface.getFluidName(tank.getFluid()).toUpperCase() : "";
-			String fluidLevel = MasterLoader.coreInterface.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
-			String fluidDispensed = MasterLoader.coreInterface.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
+			String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()).toUpperCase() : "";
+			String fluidLevel = InterfaceCore.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
+			String fluidDispensed = InterfaceCore.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
 			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
 				switch(i%3){
 					case(0) : text.put(definition.rendering.textObjects.get(i), fluidName); break;
@@ -56,9 +56,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 16){
 				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
-					if(entity instanceof IWrapperPlayer){
-						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
 					}
 				}
 				connectedVehicle.beingFueled = false;
@@ -77,9 +77,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 					NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
-					for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
-						if(entity instanceof IWrapperPlayer){
-							((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.complete"));
+					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+						if(entity instanceof WrapperPlayer){
+							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.complete"));
 						}
 					}
 				}
@@ -88,9 +88,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
-				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
-					if(entity instanceof IWrapperPlayer){
-						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.empty"));
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.empty"));
 					}
 				}
 			}

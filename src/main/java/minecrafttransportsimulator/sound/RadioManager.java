@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.MasterLoader;
 
 /**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
  * as well as giving said stations to radios when they request them.  This class also interfaces with

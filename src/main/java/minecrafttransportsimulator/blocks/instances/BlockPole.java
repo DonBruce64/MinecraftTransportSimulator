@@ -15,9 +15,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemWrench;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import net.minecraft.item.ItemStack;
@@ -45,7 +45,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public boolean onClicked(IWrapperWorld world, Point3i location, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
@@ -79,7 +79,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public void addCollisionBoxes(IWrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+	public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
 		//For every connection or component we have, return a collision box.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
@@ -94,7 +94,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityPole(world, position, data);
 	}
 

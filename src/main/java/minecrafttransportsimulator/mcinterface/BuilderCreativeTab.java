@@ -14,7 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -25,7 +25,7 @@ import net.minecraftforge.fml.relauncher.Side;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Side.CLIENT)
 public class BuilderCreativeTab extends CreativeTabs{
 	/**Map of created tabs names linked to their builder instances.  Used for interface operations.**/
 	public static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
@@ -62,7 +62,7 @@ public class BuilderCreativeTab extends CreativeTabs{
 		if(itemIcon != null){
 			return super.getIcon();
 		}else{
-			return new ItemStack(items.get((int) (MasterLoader.clientInterface.getClientWorld().getTick()/20%items.size())));
+			return new ItemStack(items.get((int) (InterfaceClient.getClientWorld().getTick()/20%items.size())));
 		}
 	}
 
@@ -91,7 +91,7 @@ public class BuilderCreativeTab extends CreativeTabs{
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(createdTabs.values().contains(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()])){
-	    			MasterLoader.guiInterface.openGUI(new GUIPackMissing());
+	    			InterfaceGUI.openGUI(new GUIPackMissing());
 	    		}
 	    	}
     	}

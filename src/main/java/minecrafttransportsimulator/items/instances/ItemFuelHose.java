@@ -4,9 +4,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
@@ -20,12 +20,12 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=5; ++i){
-			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.fuelhose.line" + String.valueOf(i)));
+			tooltipLines.add(InterfaceCore.translate("info.item.fuelhose.line" + String.valueOf(i)));
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				if(firstPartClicked == null){

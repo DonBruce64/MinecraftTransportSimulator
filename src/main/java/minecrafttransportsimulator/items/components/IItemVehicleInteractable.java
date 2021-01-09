@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.items.components;
 
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -27,7 +27,7 @@ public interface IItemVehicleInteractable{
 	 *  this, any client-side interactions that need to know something about the player who initially interacted 
 	 *  with this vehicle should NOT use {@link CallbackType#ALL}, as this will not give the "correct" player instance.
 	 */
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
 	
 	public static enum PlayerOwnerState{
 		USER,

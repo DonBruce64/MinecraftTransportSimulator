@@ -7,7 +7,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
@@ -27,14 +27,14 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		MasterLoader.renderInterface.setTexture(decor.definition.getTextureLocation(decor.currentSubName));
-		if(MasterLoader.renderInterface.getRenderPass() != 1){
+		InterfaceRender.setTexture(decor.definition.getTextureLocation(decor.currentSubName));
+		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(displayListMap.get(modelLocation));
 		}
 		
 		//Render any static text.
-		if(MasterLoader.renderInterface.renderTextMarkings(decor, null)){
-			MasterLoader.renderInterface.recallTexture();
+		if(InterfaceRender.renderTextMarkings(decor, null)){
+			InterfaceRender.recallTexture();
 		}
 		
 		//The display list only renders static objects.  We need to render dynamic ones manually.

@@ -12,9 +12,9 @@ import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
@@ -41,7 +41,7 @@ public class ParticleBullet extends AParticle{
 	private final double initialVelocity;
 	private final Point3d initialDirection;
 	private final double deltaVelocity;
-	private final IWrapperEntity gunController;
+	private final WrapperEntity gunController;
 	
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
@@ -50,7 +50,7 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
-    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, IWrapperEntity gunController){
+    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController){
     	super(gun.getProviderWorld(), position, motion);
     	this.bullet = bullet;
     	this.gun = gun;
@@ -78,17 +78,17 @@ public class ParticleBullet extends AParticle{
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
-		Map<IWrapperEntity, BoundingBox> attackedEntities;
+		Map<WrapperEntity, BoundingBox> attackedEntities;
 		if(gun.provider instanceof AEntityBase){
 			attackedEntities = world.attackEntities(damage, ((AEntityBase) gun.provider).wrapper, motion);
-		}else if(gun.provider instanceof IWrapperEntity){
-			attackedEntities = world.attackEntities(damage, (IWrapperEntity) gun.provider, motion);
+		}else if(gun.provider instanceof WrapperEntity){
+			attackedEntities = world.attackEntities(damage, (WrapperEntity) gun.provider, motion);
 		}else{
 			attackedEntities = world.attackEntities(damage, null, motion);
 		}
 		
 		if(!attackedEntities.isEmpty()){
-			for(IWrapperEntity entity : attackedEntities.keySet()){
+			for(WrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
 					BoundingBox hitBox = attackedEntities.get(entity);
 					if(hitBox.armorThickness != 0){
@@ -164,7 +164,7 @@ public class ParticleBullet extends AParticle{
 		}
 		
 		//Create trail particles, if defined
-		if (bullet.definition.bullet.particleObjects != null) {
+		if (bullet.definition.bullet.JSONParticleObjects != null) {
 			spawnParticles();
 		}
 		
@@ -184,36 +184,36 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	private void spawnParticles() {
-		for(ParticleObject particleObject : this.bullet.definition.bullet.particleObjects) {
+		for(JSONParticleObject JSONParticleObject : this.bullet.definition.bullet.JSONParticleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
-			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
+			Point3d particleVelocity = JSONParticleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = this.position.copy();
-			if(particleObject.pos != null) {
-				particlePosition.add(particleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
+			if(JSONParticleObject.pos != null) {
+				particlePosition.add(JSONParticleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
 			}
 
 			//Spawn the appropriate type and amount of particles.
 			//Change default values from 0 to 1.
-			if(particleObject.quantity == 0) particleObject.quantity = 1;
-			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
+			if(JSONParticleObject.quantity == 0) JSONParticleObject.quantity = 1;
+			if(JSONParticleObject.scale == 0f && JSONParticleObject.toScale == 0f) JSONParticleObject.scale = 1f;
 			AParticle currentParticle;
-			switch(particleObject.type) {
+			switch(JSONParticleObject.type) {
 				case "smoke": {
-					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
-					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), particleObject);
-						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					if(JSONParticleObject.transparency == 0f && JSONParticleObject.toTransparency == 0F) JSONParticleObject.transparency = 1f;
+					for(int i=0; i<JSONParticleObject.quantity; i++) {
+						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), JSONParticleObject);
+						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
-					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
-						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
-						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					for(int i=0; i<JSONParticleObject.quantity; i++) {
+						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject.scale);
+						currentParticle.deltaScale = (JSONParticleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
@@ -289,7 +289,7 @@ public class ParticleBullet extends AParticle{
         }
         
         //Bind the texture for this bullet.
-        MasterLoader.renderInterface.bindTexture(bullet.definition.getTextureLocation(bullet.subName));
+        InterfaceRender.bindTexture(bullet.definition.getTextureLocation(bullet.subName));
         
         //Render the parsed model.  Translation will already have been applied, 
         //so we just need to rotate ourselves based on our velocity.

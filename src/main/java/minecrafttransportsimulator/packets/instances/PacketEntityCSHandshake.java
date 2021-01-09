@@ -1,9 +1,10 @@
-package mcinterface1122;
+package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**Packet used to request NBT data for entities from the server, and to send that data back to clients.
@@ -48,11 +49,11 @@ public class PacketEntityCSHandshake extends APacketBase{
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
 			//Create the entity from loaded data.
-			BuilderEntity builder = (BuilderEntity) ((WrapperEntity) world.getEntity(builderID)).entity; 
-			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, ((WrapperWorld) world).getWrapperFor(builder), player, data);
+			BuilderEntity builder = (BuilderEntity) world.getEntity(builderID).entity; 
+			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, world.getWrapperFor(builder), player, data);
 		}else{
 			//Send back a packet to the player who requested it.
 			player.sendPacket(new PacketEntityCSHandshake(builderID, world.getEntity(builderID).getData()));

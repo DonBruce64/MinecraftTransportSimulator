@@ -5,10 +5,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 	
@@ -17,21 +17,21 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 	}
     
     @Override
-	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		if(world.isClient()){
 			TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(point);
 			if(player.getHeldItem() instanceof ItemPaintGun){
 				//Let the paint gun open the GUI.  To do this, we return false to allow item interaction.
 				return false;
 			}else if(decor.definition.general.itemTypes != null){
-				MasterLoader.guiInterface.openGUI(new GUIPartBench(decor, player));
+				InterfaceGUI.openGUI(new GUIPartBench(decor, player));
 			}
 		}
 		return true;
 	}
     
     @Override
-	public TileEntityDecor createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityDecor createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityDecor(world, position, data);
 	}
 

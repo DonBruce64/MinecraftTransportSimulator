@@ -13,8 +13,8 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -28,7 +28,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	public TileEntityPole(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityPole(WrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Load components back in.
 		for(Axis axis : Axis.values()){
@@ -105,13 +105,13 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	/**
 	 *  Helper method to create a component for this TE.  Does not add the component.
 	 */
-	public ATileEntityPole_Component createComponent(ItemPoleComponent item){
-		switch(item.definition.general.type){
-			case("core") : return new TileEntityPole_Core(this, item);	
-			case("traffic_signal") : return new TileEntityPole_TrafficSignal(this, item);
-			case("street_light") : return new TileEntityPole_StreetLight(this, item);
-			case("sign") : return new TileEntityPole_Sign(this, item);
-			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (item.definition.general.type != null ? item.definition.general.type : null) + " for pole:" + item.definition.packID + ":" + item.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
+	public ATileEntityPole_Component createComponent(ItemPoleComponent itemAdded){
+		switch(itemAdded.definition.general.type){
+			case("core") : return new TileEntityPole_Core(this, itemAdded);	
+			case("traffic_signal") : return new TileEntityPole_TrafficSignal(this, itemAdded);
+			case("street_light") : return new TileEntityPole_StreetLight(this, itemAdded);
+			case("sign") : return new TileEntityPole_Sign(this, itemAdded);
+			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (itemAdded.definition.general.type != null ? itemAdded.definition.general.type : null) + " for pole:" + itemAdded.definition.packID + ":" + itemAdded.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
 		}
 	}
 }

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import net.minecraft.item.ItemStack;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
@@ -32,7 +32,7 @@ public class GUIComponentItem{
 	 */
     public void renderItem(){
     	if(stack != null){
-    		MasterLoader.guiInterface.drawItem(stack, x, y, scale);
+    		InterfaceGUI.drawItem(stack, x, y, scale);
     	}
     }
     
@@ -45,7 +45,7 @@ public class GUIComponentItem{
     	if(stack != null){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
-    			MasterLoader.guiInterface.drawItemTooltip(gui, mouseX, mouseY, stack);
+    			InterfaceGUI.drawItemTooltip(gui, mouseX, mouseY, stack);
     		}
     	}
     }

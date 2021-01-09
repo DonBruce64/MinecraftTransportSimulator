@@ -9,11 +9,11 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockRoadCollision extends ABlockBase{
-	public static List<BlockRoadCollision> blocks = createCollisionBlocks();
+	public static List<BlockRoadCollision> blockInstances = createCollisionBlocks();
 	private final BoundingBox blockBounds;
 	
     public BlockRoadCollision(int collisionHeightInPixels){
@@ -27,12 +27,12 @@ public class BlockRoadCollision extends ABlockBase{
 	}
     
     @Override
-	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		return false;
 	}
     
     @Override
-    public void onBroken(IWrapperWorld world, Point3i location){
+    public void onBroken(WrapperWorld world, Point3i location){
     	TileEntityRoad road = getRoadForBlock(world, location);
     	if(road != null && road.isActive){
     		//We belong to this TE.  Destroy the block.  This will end up
@@ -45,11 +45,11 @@ public class BlockRoadCollision extends ABlockBase{
     }
     
     @Override
-    public void addCollisionBoxes(IWrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+    public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
 		collidingBoxes.add(blockBounds);
 	}
     
-    public TileEntityRoad getRoadForBlock(IWrapperWorld world, Point3i location){
+    public TileEntityRoad getRoadForBlock(WrapperWorld world, Point3i location){
     	Point3i blockOffset = new Point3i(0, 0, 0);
     	Point3i testPoint = new Point3i(0, 0, 0);
     	for(int i=-TileEntityRoad.MAX_SEGMENT_LENGTH; i<2*TileEntityRoad.MAX_SEGMENT_LENGTH; ++i){

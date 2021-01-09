@@ -5,7 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public abstract class ABlockBaseDecor<DecorClass extends TileEntityDecor> extends ABlockBase implements IBlockTileEntity<DecorClass>{
 	
@@ -14,7 +14,7 @@ public abstract class ABlockBaseDecor<DecorClass extends TileEntityDecor> extend
 	}
     
     @Override
-    public void addCollisionBoxes(IWrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+    public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
     	//Get collision box from decor.
     	TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(location);
     	if(decor != null){

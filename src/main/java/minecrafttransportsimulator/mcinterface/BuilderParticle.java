@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import org.lwjgl.opengl.GL11;
 
@@ -14,11 +14,11 @@ import net.minecraft.util.math.AxisAlignedBB;
  *
  * @author don_bruce
  */
-class BuilderParticle extends Particle{
+public class BuilderParticle extends Particle{
 	private final AParticle particle;
 	
-    BuilderParticle(AParticle particle){
-		super(((WrapperWorld) particle.world).world, particle.position.x, particle.position.y, particle.position.z);
+    public BuilderParticle(AParticle particle){
+		super(particle.world.world, particle.position.x, particle.position.y, particle.position.z);
 		this.particle = particle;
 		this.particleMaxAge = particle.maxAge;
 		this.motionX = particle.motion.x;
@@ -86,11 +86,11 @@ class BuilderParticle extends Particle{
         	);
             
             //Set brightness and render.
-    	    MasterInterface.renderInterface.setLightingToBlock(new Point3i(particle.position));
+    	    InterfaceRender.setLightingToBlock(new Point3i(particle.position));
     	    if(particle.isBright()){
-    	    	MasterInterface.renderInterface.setLightingState(false);
+    	    	InterfaceRender.setLightingState(false);
     	    	particle.render(partialTicks);
-    	    	MasterInterface.renderInterface.setLightingState(true);
+    	    	InterfaceRender.setLightingState(true);
     	    }else{
     	    	particle.render(partialTicks);
     	    }

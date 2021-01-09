@@ -4,9 +4,9 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -50,7 +50,7 @@ public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad
 	}
 	
 	@Override
-	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityRoad road){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityRoad road){
 		if(componentItem != null){
 			//Player clicked with a component.  Add/change it.
 			road.components.put(componentType, componentItem);

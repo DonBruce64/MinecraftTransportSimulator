@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.components;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Packet class that includes a default implementation for transmitting a tile entity
  * to allow tile entity-specific interactions on the other side of the network.
@@ -33,7 +33,7 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		TileEntityType tile = world.getTileEntity(position); 
 		if(tile != null && tile.world != null){
 			if(handle(world, player, tile) && !world.isClient()){
@@ -51,5 +51,5 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 	 *  if the action failed due to an issue) return false.  Otherwise, return true to 
 	 *  send this packet on to all clients.  Return method has no function on clients.
 	 */
-	protected abstract boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityType tile);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityType tile);
 }

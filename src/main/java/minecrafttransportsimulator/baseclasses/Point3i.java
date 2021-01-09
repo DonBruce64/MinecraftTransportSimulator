@@ -69,6 +69,7 @@ public class Point3i{
 	 * Adds the passed-in values to the point.
 	 * Returns the called object for nested operations.
 	 */
+	@SuppressWarnings("hiding")
 	public Point3i add(int x, int y, int z){
 		this.x += x;
 		this.y += y;

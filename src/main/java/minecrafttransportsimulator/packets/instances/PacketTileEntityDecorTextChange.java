@@ -8,8 +8,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 
 /**Packet sent to decors to update their their text lines.  This is sent from the
@@ -44,7 +44,7 @@ public class PacketTileEntityDecorTextChange extends APacketTileEntity<TileEntit
 	}
 	
 	@Override
-	public boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityDecor decor){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityDecor decor){
 		if(decor instanceof TileEntityBeacon){
 			((TileEntityBeacon) decor).updateBeaconToText(textLines);
 		}else{

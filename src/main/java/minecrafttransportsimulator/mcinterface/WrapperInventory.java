@@ -177,7 +177,7 @@ public class WrapperInventory{
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
 	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(ItemStack materialStack : MasterLoader.coreInterface.parseFromJSON(item, includeMain, includeSub)){
+		for(ItemStack materialStack : InterfaceCore.parseFromJSON(item, includeMain, includeSub)){
 			int requiredMaterialCount = materialStack.getCount();
 			for(int i=0; i<getSize(); ++i){
 				ItemStack stack = inventory.getStackInSlot(i);
@@ -199,7 +199,7 @@ public class WrapperInventory{
 	 *  result in the this method removing the incorrect number of materials.
 	 */
 	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(ItemStack materialStack : MasterLoader.coreInterface.parseFromJSON(item, includeMain, includeSub)){
+		for(ItemStack materialStack : InterfaceCore.parseFromJSON(item, includeMain, includeSub)){
 			removeStack(materialStack, materialStack.getCount());
 		}
 		inventory.markDirty();

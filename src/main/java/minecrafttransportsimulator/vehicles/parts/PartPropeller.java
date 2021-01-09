@@ -4,8 +4,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 public class PartPropeller extends APart{	
 	public double angularPosition;
 	public double angularVelocity;
-	public double damage;
+	public double damageAmount;
 	public short currentPitch;
 	
 	private final PartEngine connectedEngine;
@@ -25,7 +25,7 @@ public class PartPropeller extends APart{
 	
 	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
-		this.damage = data.getDouble("damage");
+		this.damageAmount = data.getDouble("damageAmount");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
 		if(definition.propeller.isRotor){
@@ -40,7 +40,7 @@ public class PartPropeller extends APart{
 	@Override
 	public void attack(Damage damage){
 		if(damage.attacker != null){
-			if(damage.attacker instanceof IWrapperPlayer && ((IWrapperPlayer) damage.attacker).getHeldItem() == null){
+			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
 					NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
@@ -48,7 +48,7 @@ public class PartPropeller extends APart{
 				return;
 			}
 		}
-		this.damage += damage.amount;
+		this.damageAmount += damage.amount;
 	}
 	
 	@Override
@@ -99,18 +99,18 @@ public class PartPropeller extends APart{
 				
 				//If the propeller is colliding with blocks, damage it.
 				if(!boundingBox.collidingBlocks.isEmpty()){
-					++damage;
+					++damageAmount;
 					
 				}
 				
 				//If the propeller is over-speeding, damage it enough to break it.
 				if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
-					damage += definition.propeller.startingHealth;
+					damageAmount += definition.propeller.startingHealth;
 				}
 			}
 			
 			//If we are too damaged, remove ourselves.
-			if(damage > definition.propeller.startingHealth && !vehicle.world.isClient()){
+			if(damageAmount > definition.propeller.startingHealth && !vehicle.world.isClient()){
 				if(ConfigSystem.configObject.damage.explosions.value){
 					vehicle.world.spawnExplosion(vehicle, worldPos, 1F, true);
 				}else{
@@ -124,7 +124,7 @@ public class PartPropeller extends APart{
 	@Override
 	public WrapperNBT getData(){
 		WrapperNBT data = super.getData();		
-		data.setDouble("damage", damage);
+		data.setDouble("damageAmount", damageAmount);
 		return data;
 	}
 	

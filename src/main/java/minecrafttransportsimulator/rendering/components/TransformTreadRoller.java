@@ -142,7 +142,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	 *  Required for auto-rotations.  This function should return true if the axis was updated
 	 *  to allow the calling method to save the axis state.
 	 */
-	protected void updateRotationAxis(EntityVehicleF_Physics vehicle, Point3d rotationAxis){
+	protected void updateRotationAxis(EntityVehicleF_Physics vehicle){
 		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
 		if(rotationAxis.x == 0){
 			for(APart part : vehicle.parts){

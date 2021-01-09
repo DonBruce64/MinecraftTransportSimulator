@@ -7,9 +7,10 @@ import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -20,27 +21,27 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 	
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.use"));
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.useblock"));
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.attack"));
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.wrench.sneakattack"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.use"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.useblock"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.attack"));
+		tooltipLines.add(InterfaceCore.translate("info.item.wrench.sneakattack"));
 		if(ConfigSystem.configObject.clientControls.devMode.value){
 			tooltipLines.add("Use while riding a vehicle to open the devMode editor.");
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		//If the player isn't the owner of the vehicle, they can't interact with it.
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
 				if(vehicle.world.isClient()){
 					if(ConfigSystem.configObject.clientControls.devMode.value && vehicle.equals(player.getEntityRiding())){
-						MasterLoader.guiInterface.openGUI(new GUIDevEditor(vehicle));
+						InterfaceGUI.openGUI(new GUIDevEditor(vehicle));
 					}else if(player.isSneaking()){
-						MasterLoader.guiInterface.openGUI(new GUITextEditor(vehicle));
+						InterfaceGUI.openGUI(new GUITextEditor(vehicle));
 					}else{
-						MasterLoader.guiInterface.openGUI(new GUIInstruments(vehicle, player));
+						InterfaceGUI.openGUI(new GUIInstruments(vehicle, player));
 					}
 				}else{
 					return CallbackType.PLAYER;

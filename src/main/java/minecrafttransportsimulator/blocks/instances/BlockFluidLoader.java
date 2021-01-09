@@ -3,9 +3,9 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
@@ -15,7 +15,7 @@ public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	}
 	
 	@Override
-	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
 			TileEntityFluidLoader loader = (TileEntityFluidLoader) world.getTileEntity(point);
@@ -26,7 +26,7 @@ public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	}
 	
     @Override
-	public TileEntityFluidLoader createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityFluidLoader createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityFluidLoader(world, position, data);
 	}
 

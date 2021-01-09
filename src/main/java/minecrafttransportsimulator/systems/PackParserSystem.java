@@ -16,7 +16,7 @@ import java.util.zip.ZipFile;
 
 import com.google.gson.Gson;
 
-import mcinterface1122.MasterInterface;
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
@@ -38,7 +38,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packloading.JSONTypeAdapters;
 import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
@@ -125,7 +125,7 @@ public final class PackParserSystem{
 			}
 			jarFile.close();
     	}catch(Exception e){
-			MasterLoader.coreInterface.logError("ERROR: A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+			InterfaceCore.logError("ERROR: A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
 			e.printStackTrace();
 		}
     } 
@@ -155,7 +155,7 @@ public final class PackParserSystem{
     			for(String subDirectory : packDef.activators.keySet()){
     				if(!packDef.activators.get(subDirectory).isEmpty()){
     					for(String activator : packDef.activators.get(subDirectory)){
-    	    				if(packIDs.contains(activator) || MasterLoader.coreInterface.isModPresent(activator)){
+    	    				if(packIDs.contains(activator) || InterfaceCore.isModPresent(activator)){
     	    					validSubDirectories.add(subDirectory);
         						break;
         					}
@@ -172,7 +172,7 @@ public final class PackParserSystem{
     		if(packDef.blockers != null){
     			for(String subDirectory : packDef.blockers.keySet()){
 	    			for(String blocker : packDef.blockers.get(subDirectory)){
-	    				if(packIDs.contains(blocker) || MasterLoader.coreInterface.isModPresent(blocker)){
+	    				if(packIDs.contains(blocker) || InterfaceCore.isModPresent(blocker)){
 	    					validSubDirectories.remove(subDirectory);
     						break;
     					}
@@ -183,7 +183,7 @@ public final class PackParserSystem{
     		//If we have dependent sets, make sure we log a pack fault.
     		if(packDef.dependents != null){
     			for(String dependent : packDef.dependents){
-					if(packIDs.contains(dependent) || MasterLoader.coreInterface.isModPresent(dependent)){
+					if(packIDs.contains(dependent) || InterfaceCore.isModPresent(dependent)){
 						faultMap.put(packDef.packID, packDef.dependents);
 						break;
 					}
@@ -230,7 +230,7 @@ public final class PackParserSystem{
 								try{
 									classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
 								}catch(Exception e){
-									MasterLoader.coreInterface.logError("ERROR: Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+									InterfaceCore.logError("ERROR: Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
 								Class<? extends AJSONItem<?>> jsonClass = null;
@@ -246,7 +246,7 @@ public final class PackParserSystem{
 										case SKIN : jsonClass = JSONSkin.class; break;
 									}
 								}else{
-									MasterLoader.coreInterface.logError("ERROR: Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
+									InterfaceCore.logError("ERROR: Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
 								
@@ -256,8 +256,8 @@ public final class PackParserSystem{
 									definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
 									LegacyCompatSystem.performLegacyCompats(definition);
 								}catch(Exception e){
-									MasterLoader.coreInterface.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
-						    		MasterLoader.coreInterface.logError(e.getMessage());
+									InterfaceCore.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
+						    		InterfaceCore.logError(e.getMessage());
 						    		continue;
 								}
 								
@@ -313,7 +313,7 @@ public final class PackParserSystem{
 					//Done parsing.  Close the jarfile.
 					jarFile.close();
 				}catch(Exception e){
-					MasterLoader.coreInterface.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
+					InterfaceCore.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
 					e.printStackTrace();
 				}
     		}
@@ -415,7 +415,7 @@ public final class PackParserSystem{
     			
     		});
     		for(AItemPack<?> item : packItems){
-    			MasterInterface.createItem(item);
+    			MasterLoader.createItem(item);
     		}
     	}
     }
@@ -446,8 +446,8 @@ public final class PackParserSystem{
     			}
     		}
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
     
@@ -468,8 +468,8 @@ public final class PackParserSystem{
 	    		}
     		}
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
     
@@ -480,8 +480,8 @@ public final class PackParserSystem{
     		LegacyCompatSystem.performLegacyCompats(definition);
     		setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT);
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
     
@@ -502,8 +502,8 @@ public final class PackParserSystem{
 	    		}
     		}
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
     
@@ -529,8 +529,8 @@ public final class PackParserSystem{
 	    		}
     		}
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
     
@@ -539,8 +539,8 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
     	}catch(Exception e){
-    		MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
-    		MasterLoader.coreInterface.logError(e.getMessage());
+    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError(e.getMessage());
     	}
     }
 

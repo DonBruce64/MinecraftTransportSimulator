@@ -1,10 +1,9 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -13,16 +12,14 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
-/**Builder for the MC Tile Entity class (called BlockEntity in later MC versions cause
- * the people who maintain the mappings like to make life difficult through constant
- * re-naming of things).  This class interfaces with all the MC-specific code, and is 
- * constructed on the server automatically by MC.  After construction, a tile entity
+/**Builder for the MC Tile Entity class   This class interfaces with all the MC-specific 
+ * code, and is constructed on the server automatically by MC.  After construction, a tile entity
  * class that extends {@link ATileEntityBase} should be assigned to it.  This is either
  * done manually on the first placement, or automatically via loading from NBT.
  * <br><br>
  * Of course, one might ask, "why not just construct the TE class when we construct this one?".
  * That's a good point, but MC doesn't work like that.  MC waits to assign the world and position
- * to TEs, so if we construct our TE right away, we'll end up with TONs of NPES.  To avoid this,
+ * to TEs, so if we construct our TE right away, we'll end up with TONs of null checks.  To avoid this,
  * we only construct our TE after the world and position get assigned, and if we have NBT
  * At that point, we make the TE if we're on the server.  If we're on the client, we always way 
  * for NBT, as we need to sync with the server's data.
@@ -30,7 +27,7 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
-	protected TileEntityType tileEntity;
+	public TileEntityType tileEntity;
 	
 	public BuilderTileEntity(){
 		//Blank constructor for MC.

@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -71,7 +71,7 @@ public class PacketGunChange extends APacketBase{
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		Gun gun = world.isClient() ? Gun.createdClientGuns.get(gunID) : Gun.createdServerGuns.get(gunID);
 		if(gun != null){
 			if(controlPulse){

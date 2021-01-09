@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet class that includes a default implementation for transmitting an entity
@@ -30,7 +30,7 @@ public abstract class APacketEntity extends APacketBase{
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		boolean sendReturnPacket = false;
 		for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
 			if(entity.lookupID == entityID){
@@ -52,5 +52,5 @@ public abstract class APacketEntity extends APacketBase{
 	 *   to an issue) return false.  Otherwise, return true to send this packet on to all clients.  
 	 *   Return method has no function on clients.
 	 */
-	protected abstract boolean handle(IWrapperWorld world, IWrapperPlayer player, AEntityBase entity);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity);
 }

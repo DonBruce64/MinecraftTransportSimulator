@@ -3,7 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -226,7 +226,7 @@ public class VehicleGroundDeviceBox{
 			}
 			
 			isLiquidCollidedWithGround = false;
-			for(IWrapperBlock block : liquidBox.collidingBlocks){
+			for(WrapperBlock block : liquidBox.collidingBlocks){
 				if(!block.isLiquid()){
 					isLiquidCollidedWithGround = true;
 					break;

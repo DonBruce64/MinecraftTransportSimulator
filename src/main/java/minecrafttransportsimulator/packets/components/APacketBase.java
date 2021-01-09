@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface1122.WrapperWorld;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import net.minecraft.network.PacketBuffer;
 
 /**Base packet class.  All packets must extend this class to be used with the
@@ -45,7 +44,7 @@ public abstract class APacketBase{
 	 *  an instance of the player that sent the packet if on a server,
 	 *  or the current player if on a client.
 	 */
-	public abstract void handle(IWrapperWorld world, IWrapperPlayer player);
+	public abstract void handle(WrapperWorld world, WrapperPlayer player);
 	
 	/**
 	 *  Helper method to write a string to the buffer.

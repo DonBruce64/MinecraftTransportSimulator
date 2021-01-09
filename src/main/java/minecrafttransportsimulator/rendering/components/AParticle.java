@@ -4,23 +4,23 @@ import java.awt.Color;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
-import minecrafttransportsimulator.mcinterface.IInterfaceRender;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Class that is the base of all particles.
- * Particles may be spawned by calling {@link IInterfaceRender#spawnParticle(AParticle)}
+ * Particles may be spawned by calling {@link InterfaceRender#spawnParticle(AParticle)}
  *
  * @author don_bruce
  */
 public abstract class AParticle{
 	
-	public final IWrapperWorld world;
+	public final WrapperWorld world;
 	public final Point3d position;
 	public final Point3d motion;
 	public final BoundingBox box;
 	public int maxAge;
-	public final ParticleObject particleObject;
+	public final JSONParticleObject JSONParticleObject;
 
 	public float red;
 	public float green;
@@ -37,29 +37,29 @@ public abstract class AParticle{
 	public float deltaAlpha;
 	public float deltaScale;
 	
-	public AParticle(IWrapperWorld world, Point3d position, Point3d motion){
+	public AParticle(WrapperWorld world, Point3d position, Point3d motion){
 		this(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
-	public AParticle(IWrapperWorld world, Point3d position, Point3d motion, ParticleObject particleObject){
+	public AParticle(WrapperWorld world, Point3d position, Point3d motion, JSONParticleObject JSONParticleObject){
 		this.world = world;
 		this.position = position;
 		this.motion = motion;
 		this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
 
-		Color color = particleObject.color != null ? Color.decode(particleObject.color) : Color.decode("#FFFFFF");
+		Color color = JSONParticleObject.color != null ? Color.decode(JSONParticleObject.color) : Color.decode("#FFFFFF");
 		this.red = color.getRed()/255F;
 		this.green = color.getGreen()/255F;
 		this.blue = color.getBlue()/255F;
-		this.alpha = particleObject.transparency;
-		this.scale = particleObject.scale;
-		this.particleObject = particleObject;
+		this.alpha = JSONParticleObject.transparency;
+		this.scale = JSONParticleObject.scale;
+		this.JSONParticleObject = JSONParticleObject;
 		this.maxAge = generateMaxAge();
 		this.setDeltas();
 		this.isValid = true;
 	}
 	
-	public AParticle(IWrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
+	public AParticle(WrapperWorld world, Point3d position, Point3d motion, float red, float green, float blue, float alpha, float scale){
 		this.world = world;
 		this.position = position;
 		this.motion = motion;
@@ -69,7 +69,7 @@ public abstract class AParticle{
 		this.blue = blue;
 		this.alpha = alpha;
 		this.scale = scale;
-		this.particleObject = null;
+		this.JSONParticleObject = null;
 		this.maxAge = generateMaxAge();
 		this.isValid = true;
 	}
@@ -111,13 +111,13 @@ public abstract class AParticle{
 		//Establish how much to change each tick.
 		float deltaAmount = 1f/(this.maxAge - this.age);
 		
-		Color toColor = particleObject.toColor != null ? Color.decode(particleObject.toColor) : Color.decode(particleObject.color);
+		Color toColor = JSONParticleObject.toColor != null ? Color.decode(JSONParticleObject.toColor) : Color.decode(JSONParticleObject.color);
 		this.deltaRed = (toColor.getRed()/255F - this.red) * deltaAmount;
 		this.deltaGreen = (toColor.getGreen()/255F - this.green) * deltaAmount;
 		this.deltaBlue = (toColor.getBlue()/255F - this.blue) * deltaAmount;
 			
-		this.deltaAlpha = (particleObject.toTransparency - this.alpha) * deltaAmount;
-		this.deltaScale = (particleObject.toScale - this.scale) * deltaAmount;
+		this.deltaAlpha = (JSONParticleObject.toTransparency - this.alpha) * deltaAmount;
+		this.deltaScale = (JSONParticleObject.toScale - this.scale) * deltaAmount;
 	};
 	
 	/**

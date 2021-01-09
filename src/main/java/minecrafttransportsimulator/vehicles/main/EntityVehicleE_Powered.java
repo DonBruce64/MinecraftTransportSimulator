@@ -17,10 +17,10 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -86,7 +86,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	//Internal radio variables.
 	private final Radio radio;
 	
-	public EntityVehicleE_Powered(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleE_Powered(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		
 		//Load simple variables.
@@ -224,10 +224,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
-				if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
+				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
 							NetworkSystem.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
@@ -243,9 +243,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
-			if(rider instanceof IWrapperPlayer && locationRiderMap.containsValue(rider)){
+			if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider)){
 				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
 				boolean otherController = false;
 				if(riddenPart.vehicleDefinition.isController){
@@ -279,11 +279,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public void destroyAtPosition(Point3d position){
-		super.destroyAtPosition(position);
+	public void destroyAt(Point3d location){
+		super.destroyAt(location);
 		//Spawn instruments in the world.
 		for(ItemInstrument instrument : instruments.values()){
-			world.spawnItem(instrument, null, position);
+			world.spawnItem(instrument, null, location);
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
@@ -296,7 +296,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 					explosivePower += ((PartInteractable) part).getExplosiveContribution();
 				}
 			}
-			world.spawnExplosion(this, position, explosivePower + fuelTank.getExplosiveness() + 1D, true);
+			world.spawnExplosion(this, location, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
 		
 		//If we are being towed, unhook us from our tower.

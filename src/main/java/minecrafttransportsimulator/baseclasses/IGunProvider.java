@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.sound.ISoundProviderComplex;
 
@@ -30,25 +30,25 @@ public interface IGunProvider extends ISoundProviderComplex, IParticleProvider{
 	 *  Returns the controller for the gun.
 	 *  The returned value may or may not be the provider itself.
 	 */
-	public IWrapperEntity getController();
+	public WrapperEntity getController();
 	
 	/**
 	 *  Returns true if the guns is currently active.
 	 *  Controller is passed-in for state-based activity.
 	 */
-	public boolean isGunActive(IWrapperEntity controller);
+	public boolean isGunActive(WrapperEntity controller);
 	
 	/**
 	 *  Returns the desired yaw of the gun.
 	 *  This should take the controller into account.
 	 */
-	public double getDesiredYaw(IWrapperEntity controller);
+	public double getDesiredYaw(WrapperEntity controller);
 	
 	/**
 	 *  Returns the desired pitch of the gun.
 	 *  This should take the controller into account.
 	 */
-	public double getDesiredPitch(IWrapperEntity controller);
+	public double getDesiredPitch(WrapperEntity controller);
 	
 	/**
 	 *  Returns the gun number for the gun.

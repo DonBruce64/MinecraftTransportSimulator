@@ -6,10 +6,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
 	
@@ -18,15 +18,15 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
 	}
     
     @Override
-	public boolean onClicked(IWrapperWorld world, Point3i point, Axis axis, IWrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
 		if(world.isClient()){
-			MasterLoader.guiInterface.openGUI(new GUITextEditor((TileEntityDecor) world.getTileEntity(point)));
+			InterfaceGUI.openGUI(new GUITextEditor((TileEntityDecor) world.getTileEntity(point)));
 		}
 		return true;
 	}
     
     @Override
-    public void onBroken(IWrapperWorld world, Point3i location){
+    public void onBroken(WrapperWorld world, Point3i location){
     	TileEntityBeacon beacon = world.getTileEntity(location);
     	if(beacon != null){
 	    	BeaconManager.removeBeacon(world, beacon.beaconName);
@@ -34,7 +34,7 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
     }
     
     @Override
-	public TileEntityBeacon createTileEntity(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityBeacon createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
 		return new TileEntityBeacon(world, position, data);
 	}
 

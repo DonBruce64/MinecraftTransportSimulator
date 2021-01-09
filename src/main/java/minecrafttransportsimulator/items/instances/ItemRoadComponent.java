@@ -18,17 +18,17 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
-	private final Map<IWrapperPlayer, Point3i> lastPositionClicked = new HashMap<IWrapperPlayer, Point3i>();
-	private final Map<IWrapperPlayer, Double> lastRotationClicked = new HashMap<IWrapperPlayer, Double>();
-	private final Map<IWrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<IWrapperPlayer, RoadClickData>();
+	private final Map<WrapperPlayer, Point3i> lastPositionClicked = new HashMap<WrapperPlayer, Point3i>();
+	private final Map<WrapperPlayer, Double> lastRotationClicked = new HashMap<WrapperPlayer, Double>();
+	private final Map<WrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<WrapperPlayer, RoadClickData>();
 	
 	public ItemRoadComponent(JSONRoadComponent definition, String subName){
 		super(definition, subName);
@@ -38,13 +38,13 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		if(definition.general.type.equals("core")){
 			for(byte i=1; i<=5; ++i){
-				tooltipLines.add(MasterLoader.coreInterface.translate("info.item.roadcomponent.line" + String.valueOf(i)));
+				tooltipLines.add(InterfaceCore.translate("info.item.roadcomponent.line" + String.valueOf(i)));
 			}
 		}
 	}
 	
 	@Override
-	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
 		//Create curves between the prior clicked point and the current point.
 		//If the prior point is null, set it when we click it.
 		//This could be either a block or a road itself.
@@ -117,7 +117,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						for(int i=-1; i<1 && !foundSpot; ++i){
 							for(int j=-1; j<1 && !foundSpot; ++j){
 								blockPlacementPoint.add(i, 0, j);
-								IWrapperBlock testBlockWrapper = world.getWrapperBlock(blockPlacementPoint);
+								WrapperBlock testBlockWrapper = world.getWrapperBlock(blockPlacementPoint);
 								ABlockBase testBlock = world.getBlock(blockPlacementPoint);
 								if(testBlockWrapper == null || testBlock instanceof BlockRoadCollision){
 									foundSpot = true;

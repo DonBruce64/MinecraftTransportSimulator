@@ -8,11 +8,11 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
@@ -72,7 +72,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleD_Moving(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
@@ -121,7 +121,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					}
 				}
 			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR: Could not connect trailer to vehicle.  Did the JSON change?");
+				InterfaceCore.logError("ERROR: Could not connect trailer to vehicle.  Did the JSON change?");
 				towedVehicle = null;
 				activeHitchConnection = null;
 				towedByVehicle = null;
@@ -277,7 +277,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		for(BoundingBox box : blockCollisionBoxes){
 			if(!box.collidingBlocks.isEmpty()){
 				Point3i groundPosition = new Point3i(box.globalCenter);
-				IWrapperBlock groundBlock = world.getWrapperBlock(groundPosition);
+				WrapperBlock groundBlock = world.getWrapperBlock(groundPosition);
 				if(groundBlock != null){
 					//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 					float frictionLoss = 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
@@ -816,9 +816,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	
-	public void addToServerDeltas(Point3d motion, Point3d rotation){
-		serverDeltaM.add(motion);
-		serverDeltaR.add(rotation);
+	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded){
+		serverDeltaM.add(motionAdded);
+		serverDeltaR.add(rotationAdded);
 	}
 	
 	/**

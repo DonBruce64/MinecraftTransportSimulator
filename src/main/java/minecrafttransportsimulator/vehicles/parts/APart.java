@@ -16,9 +16,9 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
@@ -125,7 +125,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * Call this ONLY from the server-side!  The server will handle the
 	 * interaction by notifying the client via packet if appropriate.
 	 */
-	public boolean interact(IWrapperPlayer player){
+	public boolean interact(WrapperPlayer player){
 		return false;
 	}
 	
@@ -339,7 +339,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	}
 	
 	@Override
-    public IWrapperWorld getProviderWorld(){
+    public WrapperWorld getProviderWorld(){
 		return vehicle.getProviderWorld();
 	}
 	

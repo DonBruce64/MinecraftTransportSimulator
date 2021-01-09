@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -105,7 +105,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
 	private Point3d rotorRotation = new Point3d(0D, 0D, 0D);//degrees
 
-	public EntityVehicleF_Physics(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
@@ -185,7 +185,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//This could lock up a world if not detected!
 		if(towedVehicle != null){
 			if(towedVehiclesCheckedForWeights.contains(this)){
-				MasterLoader.coreInterface.logError("ERROR: Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+				InterfaceCore.logError("ERROR: Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
 				towedVehicle.towedByVehicle = null;
 				towedVehicle = null;
 				return super.getCurrentMass();

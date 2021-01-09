@@ -2,13 +2,14 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import net.minecraft.item.ItemStack;
 
 /**Base item class for all MTS items.  Contains multiple methods to define the item's behavior,
@@ -34,7 +35,7 @@ public abstract class AItemBase{
 	 *  set in stone, so feel free to modify it as you see fit.
 	 */
 	public String getItemName(){
-		return MasterLoader.coreInterface.translate("item." + getRegistrationName() + ".name");
+		return InterfaceCore.translate("item." + getRegistrationName() + ".name");
 	}
 	
 	/**
@@ -57,7 +58,7 @@ public abstract class AItemBase{
 	 *  clicked and what axis it was hit at is passed-in for reference.  If this item did a thing
 	 *  due to this clicking, return true, as this prevents calling the block's clicked method. 
 	 */
-	public boolean onBlockClicked(IWrapperWorld world, IWrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
 		if(this instanceof IItemBlock){
 			return ((IItemBlock) this).placeBlock(world, player, point, axis);
 		}else{
@@ -66,19 +67,19 @@ public abstract class AItemBase{
 	}
 	
 	/**
-	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(IWrapperWorld, IWrapperPlayer, Point3i, Axis)}
+	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(WrapperWorld, WrapperPlayer, Point3i, Axis)}
 	 *  is called before this method, and if and only if that method returns false will this method be called.
 	 *  If this item does something, return true.
 	 */
-	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		return false;
 	}
 	
 	/**
 	 *  Called when the player releases their right-clicking on this item.
-	 *  This is essentially the "end" call for {@link #onUsed(IWrapperWorld, IWrapperPlayer)}.
+	 *  This is essentially the "end" call for {@link #onUsed(WrapperWorld, WrapperPlayer)}.
 	 */
-	public void onStoppedUsing(IWrapperWorld world, IWrapperPlayer player){}
+	public void onStoppedUsing(WrapperWorld world, WrapperPlayer player){}
 	
 	/**
 	 *  Returns true if this item can be stacked.  Stacking is left up to the game itself.

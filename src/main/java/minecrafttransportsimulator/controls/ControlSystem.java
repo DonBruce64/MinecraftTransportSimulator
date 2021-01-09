@@ -1,12 +1,14 @@
-package minecrafttransportsimulator.systems;
+package minecrafttransportsimulator.controls;
 
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
@@ -15,6 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.RenderEventHandler;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -28,7 +31,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;	
 	private static boolean joysticksInhibited = false;
-	private static IWrapperPlayer clientPlayer;
+	private static WrapperPlayer clientPlayer;
 	
 	/**
 	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
@@ -48,7 +51,7 @@ public final class ControlSystem{
 		}
 		for(ControlsKeyboard control : ControlsKeyboard.values()){
 			if(control.config.keyCode == 0){
-				control.config.keyCode = MasterLoader.inputInterface.getKeyCodeForName(control.defaultKeyName);
+				control.config.keyCode = InputSystem.getKeyCodeForName(control.defaultKeyName);
 			}
 		}
 		ConfigSystem.saveToDisk();
@@ -56,7 +59,7 @@ public final class ControlSystem{
 
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
-		clientPlayer = MasterLoader.clientInterface.getClientPlayer();
+		clientPlayer = InterfaceClient.getClientPlayer();
 		if(vehicle.definition.general.isAircraft){
 			controlAircraft(vehicle, isPlayerController);
 		}else{
@@ -77,7 +80,7 @@ public final class ControlSystem{
 		}
 		
 		if(changeView.isPressed()){
-			MasterLoader.clientInterface.toggleFirstPerson();
+			InterfaceClient.toggleFirstPerson();
 		}
 	}
 	
@@ -114,8 +117,8 @@ public final class ControlSystem{
 	
 	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
-		boolean isParkingBrakePressed = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
-		byte brakeValue = MasterLoader.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+		boolean isParkingBrakePressed = InputSystem.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
+		byte brakeValue = InputSystem.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
 		if(isParkingBrakePressed){
 			if(!vehicle.parkingBrakeOn){
 				NetworkSystem.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
@@ -131,12 +134,12 @@ public final class ControlSystem{
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(MasterLoader.clientInterface.getClientPlayer().equals(gun.getController())){
+				if(InterfaceClient.getClientPlayer().equals(gun.getController())){
 					NetworkSystem.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
-					if(MasterLoader.clientInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
+					if(InterfaceClient.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
 						NetworkSystem.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
 					}
 				}
@@ -146,10 +149,10 @@ public final class ControlSystem{
 	
 	private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
-			if(MasterLoader.guiInterface.isGUIActive(null)){
-				MasterLoader.guiInterface.openGUI(new GUIRadio(vehicle));
-			}else if(MasterLoader.guiInterface.isGUIActive(GUIRadio.class)){
-				MasterLoader.guiInterface.closeGUI();
+			if(InterfaceGUI.isGUIActive(null)){
+				InterfaceGUI.openGUI(new GUIRadio(vehicle));
+			}else if(InterfaceGUI.isGUIActive(GUIRadio.class)){
+				InterfaceGUI.closeGUI();
 			}
 		}
 	}
@@ -157,7 +160,7 @@ public final class ControlSystem{
 	private static void controlJoystick(EntityVehicleF_Physics vehicle, ControlsKeyboard joystickInhibit){
 		if(joystickInhibit.isPressed()){
 			joysticksInhibited = !joysticksInhibited;
-			MasterLoader.inputInterface.inhibitJoysticks(joysticksInhibited);
+			InputSystem.inhibitJoysticks(joysticksInhibited);
 		}
 	}
 	
@@ -173,10 +176,10 @@ public final class ControlSystem{
 		}		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
-			if(MasterLoader.guiInterface.isGUIActive(null)){
-				MasterLoader.guiInterface.openGUI(new GUIPanelAircraft(aircraft));
-			}else if(MasterLoader.guiInterface.isGUIActive(GUIPanelAircraft.class)){
-				MasterLoader.guiInterface.closeGUI();
+			if(InterfaceGUI.isGUIActive(null)){
+				InterfaceGUI.openGUI(new GUIPanelAircraft(aircraft));
+			}else if(InterfaceGUI.isGUIActive(GUIPanelAircraft.class)){
+				InterfaceGUI.closeGUI();
 			}
 		}
 		
@@ -189,7 +192,7 @@ public final class ControlSystem{
 		}
 		
 		//Increment or decrement throttle.
-		if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
+		if(InputSystem.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
 			NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
@@ -211,7 +214,7 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
+		if(InputSystem.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
 			NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
@@ -230,15 +233,15 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && MasterLoader.guiInterface.isGUIActive(null)){
-				long mousePosition = MasterLoader.inputInterface.getTrackedMouseInfo();
+			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.isGUIActive(null)){
+				long mousePosition = InputSystem.getTrackedMouseInfo();
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
 				
 			}
 		}else{
 			//Check pitch.
-			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
+			if(InputSystem.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
@@ -256,7 +259,7 @@ public final class ControlSystem{
 			}
 			
 			//Check roll.
-			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
+			if(InputSystem.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
@@ -287,10 +290,10 @@ public final class ControlSystem{
 		}
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
-			if(MasterLoader.guiInterface.isGUIActive(null)){
-				MasterLoader.guiInterface.openGUI(new GUIPanelGround(powered));
-			}else if(MasterLoader.guiInterface.isGUIActive(GUIPanelGround.class)){
-				MasterLoader.guiInterface.closeGUI();
+			if(InterfaceGUI.isGUIActive(null)){
+				InterfaceGUI.openGUI(new GUIPanelGround(powered));
+			}else if(InterfaceGUI.isGUIActive(GUIPanelGround.class)){
+				InterfaceGUI.closeGUI();
 			}
 		}
 		
@@ -305,7 +308,7 @@ public final class ControlSystem{
 				
 				//Get the brake value.
 				short brakeValue = 0;
-				if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
+				if(InputSystem.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
 					brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState((short) 0);
 				}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
 					 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
@@ -313,7 +316,7 @@ public final class ControlSystem{
 				
 				//Get the throttle value.
 				short throttleValue = 0;
-				if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+				if(InputSystem.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 					throttleValue = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
 				}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 					throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2; 
@@ -344,7 +347,7 @@ public final class ControlSystem{
 		}else{
 			//Check brake and gas and set to on or off.
 			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
-			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+			if(InputSystem.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
 				if(!powered.cruiseControl || powered.throttle < throttleLevel){
@@ -374,12 +377,12 @@ public final class ControlSystem{
 		
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && MasterLoader.guiInterface.isGUIActive(null)){
-				long mousePosition = MasterLoader.inputInterface.getTrackedMouseInfo();
+			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.isGUIActive(null)){
+				long mousePosition = InputSystem.getTrackedMouseInfo();
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}
 		}else{
-			if(MasterLoader.inputInterface.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
+			if(InputSystem.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
 				NetworkSystem.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 			}else{
 				//Depending on what we are pressing, send out packets.
@@ -510,7 +513,7 @@ public final class ControlSystem{
 			this.linkedJoystick = linkedJoystick;
 			this.isMomentary = isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = MasterLoader.coreInterface.translate("input." + systemName);
+			this.translatedName = InterfaceCore.translate("input." + systemName);
 			this.defaultKeyName = defaultKeyName;
 			if(ConfigSystem.configObject.controls.keyboard.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.keyboard.get(systemName);
@@ -528,19 +531,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(linkedJoystick.isPressed()){
 				return true;
-			}else if(MasterLoader.inputInterface.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.configObject.clientControls.kbOverride.value){
+			}else if(InputSystem.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.configObject.clientControls.kbOverride.value){
 				return false;
 			}else{
 				if(isMomentary){
 					if(wasPressedLastCall){
-						wasPressedLastCall = MasterLoader.inputInterface.isKeyPressed(config.keyCode); 
+						wasPressedLastCall = InputSystem.isKeyPressed(config.keyCode); 
 						return false;
 					}else{
-						wasPressedLastCall = MasterLoader.inputInterface.isKeyPressed(config.keyCode);
+						wasPressedLastCall = InputSystem.isKeyPressed(config.keyCode);
 						return wasPressedLastCall;
 					}
 				}else{
-					return MasterLoader.inputInterface.isKeyPressed(config.keyCode);
+					return InputSystem.isKeyPressed(config.keyCode);
 				}
 			}
 		}
@@ -620,7 +623,7 @@ public final class ControlSystem{
 			this.isAxis=isAxis;
 			this.isMomentary=isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = MasterLoader.coreInterface.translate("input." + systemName);
+			this.translatedName = InterfaceCore.translate("input." + systemName);
 			if(ConfigSystem.configObject.controls.joystick.containsKey(systemName)){
 				this.config = ConfigSystem.configObject.controls.joystick.get(systemName);
 			}else{
@@ -631,19 +634,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(isMomentary){
 				if(wasPressedLastCall){
-					wasPressedLastCall = MasterLoader.inputInterface.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0; 
+					wasPressedLastCall = InputSystem.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0; 
 					return false;
 				}else{
-					wasPressedLastCall = MasterLoader.inputInterface.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
+					wasPressedLastCall = InputSystem.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
 					return wasPressedLastCall;
 				}
 			}else{
-				return MasterLoader.inputInterface.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
+				return InputSystem.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
 			}
 		}
 		
 		private float getMultistateValue(){
-			return MasterLoader.inputInterface.getJoystickInputValue(config.joystickName, config.buttonIndex);
+			return InputSystem.getJoystickInputValue(config.joystickName, config.buttonIndex);
 		}
 		
 		//Return type is short to allow for easier packet transmission.
@@ -703,7 +706,7 @@ public final class ControlSystem{
 		public final ControlsKeyboard modControl;
 		
 		private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl){
-			this.translatedName = MasterLoader.coreInterface.translate("input." + name().toLowerCase().replaceFirst("_", "."));
+			this.translatedName = InterfaceCore.translate("input." + name().toLowerCase().replaceFirst("_", "."));
 			this.mainControl = mainControl;
 			this.modControl = modControl;
 		}

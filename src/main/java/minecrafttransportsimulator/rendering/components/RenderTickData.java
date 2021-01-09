@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Helper class used to handle rendering operations across multiple passes.  Tracks
  * rendering times and returns true or false to tell systems to render.  This is done
@@ -10,14 +10,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 * @author don_bruce
 */
 public class RenderTickData{
-	private final IWrapperWorld world;
+	private final WrapperWorld world;
 	private long[] lastTickPass = new long[]{0L, 0L, 0L};
 	private float[] lastPartialTicks = new float[] {0F, 0F, 0F};
 	private boolean doneRenderingShaders;
 	
 	private static boolean shadersPresent;
 	
-	public RenderTickData(IWrapperWorld world){
+	public RenderTickData(WrapperWorld world){
 		this.world = world;
 	}
 	

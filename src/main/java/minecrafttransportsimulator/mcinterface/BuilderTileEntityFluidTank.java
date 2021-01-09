@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import javax.annotation.Nullable;
 
@@ -20,9 +20,7 @@ import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-/**Builder for tile entities that contain fluids.  This builder does not tick.
- * If you need a tickable instance, use {@link BuilderTileEntityFluidTank.Tickable} instead.
- * Rather that implementing things directly, this builder just re-routes all calls the the tank-based builder.
+/**Builder for tile entities that contain fluids.  This builder ticks.
  *
  * @author don_bruce
  */

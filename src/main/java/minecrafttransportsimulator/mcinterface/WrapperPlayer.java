@@ -1,11 +1,6 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -29,12 +24,19 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
+/**Wrapper for the player entity class.  This class wraps the player into a more
+ * friendly instance that allows for common operations, like checking if the player
+ * has an item, checking if they are OP, etc.  Also prevents the need to interact
+ * with the class directly, which allows for abstraction in the code.
+ *
+ * @author don_bruce
+ */
 @EventBusSubscriber
-public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
+public class WrapperPlayer extends WrapperEntity{
 	
 	public final EntityPlayer player;
 	
-	WrapperPlayer(EntityPlayer player){
+	public WrapperPlayer(EntityPlayer player){
 		super(player);
 		this.player = player;
 	}
@@ -47,6 +49,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	
 	@Override
 	public float getHeadYaw(){
+		//FIXME this is why guns don't stay with the player's hands.
 		//Player head yaw is their actual yaw.  Head is used for the camera.
 		return getYaw();
 	}
@@ -56,32 +59,51 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 		setYaw(yaw);
 	}
 	
-	@Override
+	/**
+	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
+	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.
+	 *  <br><br>
+	 *  NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
+	 *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
+	 *  when combined with their changing of entity IDs, makes server-client lookup impossible.
+	 */
 	public String getUUID(){
 		return EntityPlayer.getUUID(player.getGameProfile()).toString();
 	}
 
-	@Override
+	/**
+	 *  Returns true if this player is OP.  Will always return true on single-player worlds.
+	 */
 	public boolean isOP(){
 		return player.getServer() == null || player.getServer().getPlayerList().getOppedPlayers().getEntry(player.getGameProfile()) != null || player.getServer().isSinglePlayer();
 	}
 	
-	@Override
+	/**
+	 *  Displays the passed-in chat message to the player.  This interface assumes that the message is
+	 *  untranslated and will attempt to translate it prior to display.  Should this fail, the
+	 *  raw message will be displayed.
+	 */
 	public void displayChatMessage(String message){
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(MasterInterface.coreInterface.translate(message)));
+		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(InterfaceCore.translate(message)));
 	}
 	
-	@Override
+	/**
+	 *  Returns true if this player is in creative mode.
+	 */
 	public boolean isCreative(){
 		return player.capabilities.isCreativeMode;
 	}
 	
-	@Override
+	/**
+	 *  Returns true if this player is sneaking.
+	 */
 	public boolean isSneaking(){
 		return player.isSneaking();
 	}
 	
-	@Override
+	/**
+	 *  Gets the currently-leashed entity for this player, or null if it doesn't exist.
+	 */
 	public WrapperEntity getLeashedEntity(){
 		for(EntityLiving entityLiving : player.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
 			if(entityLiving.getLeashed() && player.equals(entityLiving.getLeashHolder())){
@@ -92,38 +114,57 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 		return null;
 	}
 	
-	@Override
+	/**
+	 *  Returns the held item.  Only valid for {@link AItemBase} items.
+	 */
 	public AItemBase getHeldItem(){
 		Item heldItem = player.getHeldItemMainhand().getItem();
 		return heldItem instanceof BuilderItem ? ((BuilderItem) heldItem).item : null;
 	}
 	
-	@Override
+	/**
+	 *  Returns the held stack.
+	 */
 	public ItemStack getHeldStack(){
 		return player.getHeldItemMainhand();
 	}
 	
-	@Override
+	/**
+	 *  Gets the index of the held stack in the hotbar.
+	 */
 	public int getHotbarIndex(){
 		return player.inventory.currentItem;
 	}
 	
-	@Override
+	/**
+	 *  Gets the inventory of the player.
+	 */
 	public WrapperInventory getInventory(){
 		return new WrapperInventory(player.inventory);
 	}
 	
-	@Override
+	/**
+	 *  Sends a packet to this player over the network.
+	 *  Convenience method so we don't need to call the
+	 *  {@link NetworkSystem} for player-specific packets.
+	 *  Note that this may ONLY be called on the server, as
+	 *  clients don't know about other player's network pipelines.
+	 */
 	public void sendPacket(APacketBase packet){
 		NetworkSystem.sendToPlayer(packet, this);
 	}
 	
-	@Override
+	/**
+	 *  Opens the crafting table GUI.  This overrides the normal GUI opened
+	 *  when a block is clicked, which allows players to open a GUI by clicking
+	 *  an entity instead.  Required as normally MC checks if there is a block
+	 *  present in the internal code, which automatically closes the GUI.
+	 */
 	public void openCraftingGUI(){
 		player.displayGui(new BlockWorkbench.InterfaceCraftingTable(player.world, null){
 			@Override
-			public Container createContainer(InventoryPlayer playerInventory, EntityPlayer player){
-	            return new ContainerWorkbench(playerInventory, player.world, player.getPosition()){
+			public Container createContainer(InventoryPlayer playerInventory, EntityPlayer playerAccessing){
+	            return new ContainerWorkbench(playerInventory, playerAccessing.world, playerAccessing.getPosition()){
 	            	@Override
 	                public boolean canInteractWith(EntityPlayer playerIn){
 	            		return true;
@@ -133,10 +174,15 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 		});
 	}
 	
-	@Override
-	public void openTileEntityGUI(IWrapperTileEntity tile){
-		if(((WrapperTileEntity) tile).tile instanceof IInventory){
-			player.displayGUIChest((IInventory) ((WrapperTileEntity) tile).tile);
+	/**
+	 *  Opens the GUI for the passed-in TE, or fails to open any GUI if the TE doesn't have one.
+	 *  Actual validity of the GUI being open is left to the TE implementation.
+	 *  Note: This method is for any TE that has inventory.  This includes, but is not limited to,
+	 *  chests, furnaces, and brewing stands.
+	 */
+	public void openTileEntityGUI(WrapperTileEntity tile){
+		if(tile.tile instanceof IInventory){
+			player.displayGUIChest((IInventory) tile.tile);
 		}
 	}
 	

@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
@@ -22,8 +23,10 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection.VehicleConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ATransform;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
@@ -135,13 +138,13 @@ public final class RenderVehicle{
 		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
-		Point3d renderPosition = vehiclePosition.copy().subtract(MasterLoader.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
+		Point3d renderPosition = vehiclePosition.copy().subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the vehicle rotation.
 		Point3d renderRotation = vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(vehicle.angles);
        
         //Set up lighting.
-        MasterLoader.renderInterface.setLightingToEntity(vehicle);
+        InterfaceRender.setLightingToEntity(vehicle);
         
         //Use smooth shading for main model rendering.
 		GL11.glShadeModel(GL11.GL_SMOOTH);
@@ -206,8 +209,8 @@ public final class RenderVehicle{
 		
 		//Check to see if we need to manually render riders.
 		//This happens if we force-render this vehicle in pass -1.
-		if(MasterLoader.renderInterface.getRenderPass() == -1){
-			MasterLoader.renderInterface.renderEntityRiders(vehicle, partialTicks);
+		if(InterfaceRender.getRenderPass() == -1){
+			InterfaceRender.renderEntityRiders(vehicle, partialTicks);
 		}
 		
 		//Translate the vehicle's world position to render the hitboxes as they use global coords.
@@ -217,16 +220,16 @@ public final class RenderVehicle{
 		renderPartBoxes(vehicle);
 		
 		//Render bounding boxes for parts and collision points.
-		if(MasterLoader.renderInterface.shouldRenderBoundingBoxes()){
+		if(InterfaceRender.shouldRenderBoundingBoxes()){
 			renderBoundingBoxes(vehicle);
 		}
 		
 		//Pop vehicle translation matrix and reset all states.
 		GL11.glPopMatrix();
-		MasterLoader.renderInterface.resetStates();
+		InterfaceRender.resetStates();
 		
 		//Spawn particles, but only once per render cycle.
-		if(MasterLoader.renderInterface.getRenderPass() != 1 && !MasterLoader.clientInterface.isGamePaused()){
+		if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 			for(APart part : vehicle.parts){
 				if(part instanceof IParticleProvider){
 					((IParticleProvider) part).spawnParticles();
@@ -266,14 +269,14 @@ public final class RenderVehicle{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		MasterLoader.renderInterface.setTexture(vehicle.definition.getTextureLocation(vehicle.currentSubName));
-		if(MasterLoader.renderInterface.getRenderPass() != 1){
+		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.currentSubName));
+		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.systemName));
 		}
 		
 		//Render any static text.
-		if(MasterLoader.renderInterface.renderTextMarkings(vehicle, null)){
-			MasterLoader.renderInterface.recallTexture();
+		if(InterfaceRender.renderTextMarkings(vehicle, null)){
+			InterfaceRender.recallTexture();
 		}
 		
 		//The display list only renders static objects.  We need to render dynamic ones manually.
@@ -304,9 +307,9 @@ public final class RenderVehicle{
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
 		if(!part.definition.general.useVehicleTexture){
-			MasterLoader.renderInterface.setTexture(part.definition.getTextureLocation(part.currentSubName));
+			InterfaceRender.setTexture(part.definition.getTextureLocation(part.currentSubName));
 		}else{
-			MasterLoader.renderInterface.setTexture(part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
+			InterfaceRender.setTexture(part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
 		}
 		
 		//Rotate the part prior to rendering the displayList.
@@ -324,7 +327,7 @@ public final class RenderVehicle{
 		
 		//If we are a tread, do the tread-specific render rather than the display list.
 		//Don't do this for pass 1 though as treads don't have transparency.
-		if(part.definition.ground != null && part.definition.ground.isTread && MasterLoader.renderInterface.getRenderPass() != 1){
+		if(part.definition.ground != null && part.definition.ground.isTread && InterfaceRender.getRenderPass() != 1){
 			if(part.vehicleDefinition.treadZPoints != null){
 				doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
@@ -332,13 +335,13 @@ public final class RenderVehicle{
 			}
 		}else{
     		//Render the part DisplayList, but only if we aren't in the transparent pass.
-			if(MasterLoader.renderInterface.getRenderPass() != 1){
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glCallList(partDisplayLists.get(partModelLocation));
 			}
 			
 			//Render any static text.
-			if(MasterLoader.renderInterface.renderTextMarkings(part, null)){
-				MasterLoader.renderInterface.recallTexture();
+			if(InterfaceRender.renderTextMarkings(part, null)){
+				InterfaceRender.recallTexture();
 			}
 			
 			//The display list only renders static object.  We need to render dynamic ones manually.
@@ -911,7 +914,7 @@ public final class RenderVehicle{
 		GL11.glRotated(yRotation, 0, 1, 0);
 		GL11.glRotated(xRotation, 1, 0, 0);
 		if(!textureLocation.equals(lastBoundConnectorTexture)){
-			MasterLoader.renderInterface.bindTexture(textureLocation);
+			InterfaceRender.bindTexture(textureLocation);
 			lastBoundConnectorTexture = textureLocation;
 		}
 		for(int i=0; i<numberConnectors; ++i){
@@ -968,15 +971,15 @@ public final class RenderVehicle{
 	 *  needs to be rendered in pass 1 to do alpha blending.
 	 */
 	private static void renderPartBoxes(EntityVehicleF_Physics vehicle){
-		if(MasterLoader.renderInterface.getRenderPass() != 0){
+		if(InterfaceRender.getRenderPass() != 0){
 			//Disable lighting and texture rendering, and enable blending.
-			MasterLoader.renderInterface.setLightingState(false);
-			MasterLoader.renderInterface.setBlendState(true, false);
+			InterfaceRender.setLightingState(false);
+			InterfaceRender.setBlendState(true, false);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			
 			//If we are holding a part, render the valid slots.
 			//If we are holding a scanner, render all slots, but only render the looked-at one with items above it.
-			IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			
 			if(heldItem instanceof ItemPart){
@@ -994,10 +997,10 @@ public final class RenderVehicle{
 							
 					if(isHoldingPart){
 						if(isPartValid){
-							MasterLoader.renderInterface.setColorState(0, 1, 0, 0.5F);
+							InterfaceRender.setColorState(0, 1, 0, 0.5F);
 							RenderBoundingBox.renderSolid(partSlotEntry.getKey());
 						}else{
-							MasterLoader.renderInterface.setColorState(1, 0, 0, 0.5F);
+							InterfaceRender.setColorState(1, 0, 0, 0.5F);
 							RenderBoundingBox.renderSolid(partSlotEntry.getKey());
 						}
 					}
@@ -1007,7 +1010,7 @@ public final class RenderVehicle{
 				Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getHeadYaw(), 0)));
 				BoundingBox highlightedBox = null;
 				for(Entry<BoundingBox, VehiclePart> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
-					MasterLoader.renderInterface.setColorState(0, 0, 1, 0.5F);
+					InterfaceRender.setColorState(0, 0, 1, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					RenderBoundingBox.renderSolid(currentBox);
 					if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
@@ -1022,7 +1025,7 @@ public final class RenderVehicle{
 					VehiclePart packVehicleDef = vehicle.partSlotBoxes.get(highlightedBox);
 					
 					//Set blending back to false and re-enable 2D texture before rendering item and text.
-					MasterLoader.renderInterface.setBlendState(false, false);
+					InterfaceRender.setBlendState(false, false);
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
 					
 					//Get all parts that go to this boxes position.
@@ -1048,14 +1051,14 @@ public final class RenderVehicle{
 					
 					//Translate to the spot above where the item would render and render the standard text.
 					GL11.glTranslated(0, -1.75F, 0);
-					MasterLoader.guiInterface.drawScaledText("Types: " + packVehicleDef.types.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					InterfaceGUI.drawScaledText("Types: " + packVehicleDef.types.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 					GL11.glTranslated(0, 0.15F, 0);
-					MasterLoader.guiInterface.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					InterfaceGUI.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 					GL11.glTranslated(0, 0.15F, 0);
 					if(packVehicleDef.customTypes != null){
-						MasterLoader.guiInterface.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+						InterfaceGUI.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 					}else{
-						MasterLoader.guiInterface.drawScaledText("CustomTypes: None", 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+						InterfaceGUI.drawScaledText("CustomTypes: None", 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 					}
 					GL11.glTranslated(0, 0.25F, 0);
 					
@@ -1071,13 +1074,13 @@ public final class RenderVehicle{
 						}
 						
 						//Render the part's name.
-						MasterLoader.guiInterface.drawScaledText(partToRender.getItemName(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+						InterfaceGUI.drawScaledText(partToRender.getItemName(), 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 						
 						//Do translations to get to the center of where the item will render and render it.
 						//Items also need to be offset by -150 units due to how MC does rendering.
 						//Also need to translate to the center as items are rendered from the top-left corner.
 						GL11.glTranslated(-0.5D, 0.25F, -150D/16D);
-						MasterLoader.guiInterface.drawItem(partToRender.getNewStack(), 0, 0, 1F/16F);
+						InterfaceGUI.drawItem(partToRender.getNewStack(), 0, 0, 1F/16F);
 					}
 					GL11.glPopMatrix();
 				}
@@ -1091,9 +1094,9 @@ public final class RenderVehicle{
 	 */
 	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
 		//Set states for box render.
-		MasterLoader.renderInterface.setLightingState(false);
+		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		MasterLoader.renderInterface.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 		GL11.glLineWidth(3.0F);
 		
 		//Draw collision boxes for the vehicle.
@@ -1102,7 +1105,7 @@ public final class RenderVehicle{
 		}
 		
 		//Draw part center points.
-		MasterLoader.renderInterface.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.parts){
 			Point3d partRotatedCenter = part.totalOffset.copy().rotateCoarse(vehicle.angles);

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents a window object of a model.  The only transform this applies is binding
@@ -25,15 +25,15 @@ public class TransformWindow extends ATransform{
 
 	@Override
 	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
-		if(MasterLoader.renderInterface.getRenderPass() != 1){
-			MasterLoader.renderInterface.bindTexture("mts:textures/rendering/glass.png");
+		if(InterfaceRender.getRenderPass() != 1){
+			InterfaceRender.bindTexture("mts:textures/rendering/glass.png");
 		}
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
-		if(MasterLoader.renderInterface.getRenderPass() != 1){
+		if(InterfaceRender.getRenderPass() != 1){
 			//Render inner windows, if set.
 			if(ConfigSystem.configObject.clientRendering.innerWindows.value){
 				GL11.glBegin(GL11.GL_TRIANGLES);
@@ -46,7 +46,7 @@ public class TransformWindow extends ATransform{
 			}
 			
 			//Un-bind the glass texture.
-			MasterLoader.renderInterface.recallTexture();
+			InterfaceRender.recallTexture();
 		}
 	}
 }

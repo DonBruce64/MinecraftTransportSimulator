@@ -6,10 +6,10 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -58,7 +58,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public boolean interact(IWrapperPlayer player){
+	public boolean interact(WrapperPlayer player){
 		//Check to see if we have any bullets in our hands.
 		//If so, try to re-load this gun with them.
 		AItemBase heldItem = player.getHeldItem();
@@ -124,7 +124,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 
 	@Override
-	public IWrapperEntity getController(){
+	public WrapperEntity getController(){
 		//Check our parent part, if we have one.
 		if(parentPart instanceof PartSeat){
 			return vehicle.locationRiderMap.get(parentPart.placementOffset);
@@ -142,7 +142,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
 				if(vehiclePart.vehicleDefinition.isController){
-					IWrapperEntity controller = vehicle.locationRiderMap.get(vehiclePart.placementOffset);
+					WrapperEntity controller = vehicle.locationRiderMap.get(vehiclePart.placementOffset);
 					if(controller != null){
 						return controller;
 					}
@@ -155,7 +155,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public boolean isGunActive(IWrapperEntity controller){
+	public boolean isGunActive(WrapperEntity controller){
 		//We flag ourselves as inactive if there are no controllers or the seat isn't set to us.
 		//We aren't making sentry turrets here.... yet.
 		//If this gun type can only have one selected at a time, check that this has the selected index.
@@ -164,12 +164,12 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public double getDesiredYaw(IWrapperEntity controller){
+	public double getDesiredYaw(WrapperEntity controller){
 		return controller.getHeadYaw() - (vehicle.angles.y + totalRotation.y);
 	}
 	
 	@Override
-	public double getDesiredPitch(IWrapperEntity controller){
+	public double getDesiredPitch(WrapperEntity controller){
 		double vehiclePitchContribution = (vehicle.angles.x + totalRotation.x)*Math.cos(Math.toRadians(totalRotation.y + internalGun.currentOrientation.y));
 		double vehicleRollContribution = -(vehicle.angles.z + totalRotation.z)*Math.sin(Math.toRadians(totalRotation.y + internalGun.currentOrientation.y));
 		return controller.getPitch() - (vehiclePitchContribution + vehicleRollContribution);
@@ -246,22 +246,22 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 				else {
 					blockTarget = new Point3i(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight));
 				}
-				IWrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
+				WrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
 				
 				//Fire a missile with the found entity as its target, if valid
 				//Otherwise, fall back to the block target
 				if(entityTarget != null) {
-					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, entityTarget));
+					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, entityTarget));
 				}
 				else {
-					MasterLoader.renderInterface.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, blockTarget));
+					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, blockTarget));
 				}
 			}
 			else {
-				MasterLoader.renderInterface.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
+				InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
 			}
 			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
-			if(definition.gun.particleObjects != null) {
+			if(definition.gun.JSONParticleObjects != null) {
 				spawnEffectParticles();
 			}
 			lastTimeFired = timeToFire;
@@ -275,36 +275,36 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	//Rather than spawn a bullet particle, this method spawns
 	//a particle related to some special effect, such as gun smoke.
 	private void spawnEffectParticles() {
-		for(ParticleObject particleObject : definition.gun.particleObjects) {
+		for(JSONParticleObject JSONParticleObject : definition.gun.JSONParticleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
-			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy());
+			Point3d particleVelocity = JSONParticleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy());
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = worldPos.copy();
-			if(particleObject.pos != null) {
-				particlePosition.add(particleObject.pos.copy().rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy()));
+			if(JSONParticleObject.pos != null) {
+				particlePosition.add(JSONParticleObject.pos.copy().rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy()));
 			}
 
 			//Spawn the appropriate type and amount of particles.
 			//Change default values from 0 to 1.
-			if(particleObject.quantity == 0) particleObject.quantity = 1;
-			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
+			if(JSONParticleObject.quantity == 0) JSONParticleObject.quantity = 1;
+			if(JSONParticleObject.scale == 0f && JSONParticleObject.toScale == 0f) JSONParticleObject.scale = 1f;
 			AParticle currentParticle;
-			switch(particleObject.type) {
+			switch(JSONParticleObject.type) {
 				case "smoke": {
-					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
-					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(vehicle.world, particlePosition, particleVelocity.copy(), particleObject);
-						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					if(JSONParticleObject.transparency == 0f && JSONParticleObject.toTransparency == 0F) JSONParticleObject.transparency = 1f;
+					for(int i=0; i<JSONParticleObject.quantity; i++) {
+						currentParticle = new ParticleSuspendedSmoke(vehicle.world, particlePosition, particleVelocity.copy(), JSONParticleObject);
+						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
-					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
-						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
-						MasterLoader.renderInterface.spawnParticle(currentParticle);
+					for(int i=0; i<JSONParticleObject.quantity; i++) {
+						currentParticle = new ParticleFlame(vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject.scale);
+						currentParticle.deltaScale = (JSONParticleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}

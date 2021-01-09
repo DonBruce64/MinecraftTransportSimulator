@@ -7,7 +7,8 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
@@ -22,13 +23,13 @@ public class RenderPlayerGun{
 		Point3d gunPosition = entity.position.copy().subtract(entity.prevPosition).multiply(partialTicks).add(entity.prevPosition);
 		
 		//Subtract the entitie's position by the render entity position to get the delta for translating.
-		Point3d renderPosition = gunPosition.copy().subtract(MasterLoader.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
+		Point3d renderPosition = gunPosition.copy().subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the entity rotation.
 		Point3d renderRotation = entity.angles.copy().subtract(entity.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(entity.angles);
        
         //Set up lighting.
-        MasterLoader.renderInterface.setLightingToEntity(entity);
+        InterfaceRender.setLightingToEntity(entity);
         
         //Use smooth shading for main model rendering.
 		GL11.glShadeModel(GL11.GL_SMOOTH);
@@ -50,8 +51,8 @@ public class RenderPlayerGun{
 			
 			//Bind the texture and render.
 			//Don't render on the transparent pass.
-			MasterLoader.renderInterface.setTexture(entity.gunItem.definition.getTextureLocation(entity.gunItem.subName));
-			if(MasterLoader.renderInterface.getRenderPass() != 1){
+			InterfaceRender.setTexture(entity.gunItem.definition.getTextureLocation(entity.gunItem.subName));
+			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glCallList(displayListMap.get(modelLocation));
 			}
 			
@@ -69,10 +70,10 @@ public class RenderPlayerGun{
 		
 		//Pop translation matrix and reset all states.
 		GL11.glPopMatrix();
-		MasterLoader.renderInterface.resetStates();
+		InterfaceRender.resetStates();
 		
 		//Spawn particles if required.
-		if(MasterLoader.renderInterface.getRenderPass() != 1 && !MasterLoader.clientInterface.isGamePaused()){
+		if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 			entity.spawnParticles();
 		}
 	}

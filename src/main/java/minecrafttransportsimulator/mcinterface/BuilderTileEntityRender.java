@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 			}
 			
 			//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-			int renderPass = MasterInterface.renderInterface.getRenderPass();
+			int renderPass = InterfaceRender.getRenderPass();
 			if(renderPass == -1){
 				renderPass = 2;
 			}
@@ -73,12 +73,12 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 				}
 				
 				//Set lighting and Render the TE.
-				MasterInterface.renderInterface.setLightingToBlock(wrapper.tileEntity.position);
+				InterfaceRender.setLightingToBlock(wrapper.tileEntity.position);
 				render.render(wrapper.tileEntity, partialTicks);
 				
 				//End render matrix and reset states.
 				GL11.glPopMatrix();
-				MasterInterface.renderInterface.resetStates();
+				InterfaceRender.resetStates();
 			}
 		}
 	}

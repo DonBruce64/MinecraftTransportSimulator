@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.Random;
 
@@ -15,7 +15,7 @@ import net.minecraft.world.World;
  *
  * @author don_bruce
  */
-class BuilderBlockFakeLight extends BlockAir{
+public class BuilderBlockFakeLight extends BlockAir{
 	static BuilderBlockFakeLight instance = new BuilderBlockFakeLight();
 	
     BuilderBlockFakeLight(){

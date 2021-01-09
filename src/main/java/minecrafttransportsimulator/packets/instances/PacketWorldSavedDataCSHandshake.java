@@ -1,10 +1,10 @@
-package mcinterface1122;
+package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import mcinterface1122.WrapperWorld.InterfaceWorldSavedData;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperWorld.InterfaceWorldSavedData;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
 /**Packet used to request world NBT data from the server, and to send that data back to clients.
@@ -46,11 +46,11 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
 			//Set the world saved data.
-			((WrapperWorld) world).savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.dataID);
-			((WrapperWorld) world).savedDataAccessor.readFromNBT(((WrapperNBT) data).tag);
+			world.savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.dataID);
+			world.savedDataAccessor.readFromNBT(data.tag);
 		}else{
 			//Send back a packet to the player who requested it.
 			player.sendPacket(new PacketWorldSavedDataCSHandshake(world.getDimensionID(), world.getData()));

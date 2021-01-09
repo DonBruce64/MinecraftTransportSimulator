@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.awt.Color;
 import java.util.Arrays;
@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
-import minecrafttransportsimulator.mcinterface.IInterfaceGUI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -23,12 +22,20 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-class InterfaceGUI implements IInterfaceGUI{
+/**Interface for MC GUI classes.  Allows access to various GUI-specific functions.
+*
+* @author don_bruce
+*/
+public class InterfaceGUI{
 	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
 	
-	@Override
-	public void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack){
+	/**
+	 *  Draws the item's tooltip on the GUI.  This should be
+	 *  the last thing that gets rendered, as otherwise it may render
+	 *  behind other components.
+	 */
+	public static void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack){
 		List<String> tooltipText = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         for(int i = 0; i < tooltipText.size(); ++i){
             if(i == 0){
@@ -40,13 +47,24 @@ class InterfaceGUI implements IInterfaceGUI{
 		GuiUtils.drawHoveringText(stack, tooltipText, mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
 	}
 	
-	@Override
-	public void drawGenericTooltip(AGUIBase gui, int mouseX, int mouseY, String tooltip){
+	/**
+	 *  Draws a tooltip into the GUI.  This is for things that are NOT items, so
+	 *  rather than passing-in item parameters you need to pass in the lines to render.
+	 *  This should be rendered at the end of the render call to prevent the odd texture
+	 *  binding of this method from conflicting from other renders.
+	 */
+	public static void drawGenericTooltip(AGUIBase gui, int mouseX, int mouseY, String tooltip){
 		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
 	}
 	
-	@Override
-	public void drawBasicText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
+	/**
+	 *  Draws the specified text using the MC fontRenderer.  This method can render the text in multiple ways depending
+	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be  the center 
+	 *  point of the string, rather that the top-left of the string like normal.  If wrapWidth is anything else but 0, 
+	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
+	 *  will be bound, so take care when calling this method in the middle of rendering operations.
+	 */
+	public static void drawBasicText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
 		if(fontRenderer == null){
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
 		}
@@ -71,8 +89,12 @@ class InterfaceGUI implements IInterfaceGUI{
 		}
 	}
 	
-	@Override
-	public void drawScaledText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
+	/**
+	 *  Similar to {@link #drawBasicText(String, int, int, Color, TextPosition, int)}, except this method
+	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
+	 *  to get this to work, so it's in it's own method for code simplicity.
+	 */
+	public static void drawScaledText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
 		//Get font renderer, if we don't have it yet.
 		if(fontRenderer == null){
 			fontRenderer = Minecraft.getMinecraft().fontRenderer;
@@ -111,13 +133,17 @@ class InterfaceGUI implements IInterfaceGUI{
 		GL11.glPopMatrix();
 	}
 	
-	@Override
-	public int getStringWidth(String text){
+	/**
+	 *  Returns the width of the passed-in text string.
+	 */
+	public static int getStringWidth(String text){
 		return fontRenderer.getStringWidth(text);
 	}
 	
-	@Override
-	public String getFormattingCode(String color){
+	/**
+	 *  Returns the formatting code for the passed-in color.
+	 */
+	public static String getFormattingCode(String color){
 		for(TextFormatting format : TextFormatting.values()){
 			if(format.name().toLowerCase().equals(color)){
 				return format.toString();
@@ -126,8 +152,12 @@ class InterfaceGUI implements IInterfaceGUI{
 		return "";
 	}
 	
-	@Override
-	public void drawItem(ItemStack stack, int x, int y, float scale){
+	/**
+	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
+	 *  renders all items from their top-left corner, so take this into account when
+	 *  choosing where to put this component in your GUI.
+	 */
+	public static void drawItem(ItemStack stack, int x, int y, float scale){
 		if(itemRenderer == null){
 			itemRenderer = Minecraft.getMinecraft().getRenderItem();
 		}
@@ -148,8 +178,12 @@ class InterfaceGUI implements IInterfaceGUI{
 		}
 	}
 	
-	@Override
-	public void renderSheetTexture(int x, int y, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight){
+	/**
+	 *  Draws the specified portion of the currently-bound texture.  Texture size needs to be
+	 *  passed-in here to allow this method to translate pixels into relative texture coords.  
+	 *  Draw starts at the  bottom-left point and goes counter-clockwise to the top-left point.
+	 */
+	public static void renderSheetTexture(int x, int y, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight){
 	 	float widthPixelPercent = 1.0F/textureWidth;
         float heightPixelPercent = 1.0F/textureHeight;
         Tessellator tessellator = Tessellator.getInstance();
@@ -162,13 +196,19 @@ class InterfaceGUI implements IInterfaceGUI{
         tessellator.draw();
 	}
 	
-	@Override
-	public void renderRectangle(int x, int y, int width, int height, Color color){
+	/**
+	 *  Draws a colored rectangle at the specified point.  This does NOT change the currently-bound
+	 *  texture, nor does it modify any OpelGL states, so it may safely be called during rendering operations.
+	 */
+	public static void renderRectangle(int x, int y, int width, int height, Color color){
 		GuiScreen.drawRect(x, y, x + width, y + height, color.getRGB());
 	}
 	
-	@Override
-	public boolean isGUIActive(Class<? extends AGUIBase> guiClass){
+	/**
+	 *  Returns true if the passed-in GUI is currently active.
+	 *  If null is passed-in, then this method returns true if no GUI is active.
+	 */
+	public static boolean isGUIActive(Class<? extends AGUIBase> guiClass){
 		if(guiClass == null){
 			return Minecraft.getMinecraft().currentScreen == null;
 		}else{
@@ -176,15 +216,19 @@ class InterfaceGUI implements IInterfaceGUI{
 		}
 	}
 	
-	@Override
-	public void closeGUI(){
+	/**
+	 *  Closes the currently-opened GUI, returning back to the main game.
+	 */
+	public static void closeGUI(){
 		//Set current screen to null and clear out the OBJ DisplayLists if we have any.
 		Minecraft.getMinecraft().displayGuiScreen(null);
 		GUIComponentOBJModel.clearDisplayListCaches();
 	}
 	
-	@Override
-	public void openGUI(AGUIBase gui){
+	/**
+	 *  Opens the passed-in GUI, replacing any opened GUI in the process.
+	 */
+	public static void openGUI(AGUIBase gui){
 		FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
 	}
 }

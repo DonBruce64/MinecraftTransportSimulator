@@ -9,11 +9,11 @@ import minecrafttransportsimulator.baseclasses.IGunProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
@@ -34,7 +34,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	
-	public final IWrapperPlayer player;
+	public final WrapperPlayer player;
 	public int hotbarSelected = -1;
 	public ItemStack gunStack;
 	public ItemPart gunItem;
@@ -43,7 +43,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	private static final AnimationsGun animator = new AnimationsGun();
 	
-	public EntityPlayerGun(IWrapperWorld world, IWrapperEntity wrapper, IWrapperPlayer playerSpawning, WrapperNBT data){
+	public EntityPlayerGun(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
 		super(world, wrapper, data);
 		if(playerSpawning != null){
 			//Newly-spawned entity.
@@ -54,11 +54,11 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
 			String playerUUID = data.getString("playerUUID");
-			IWrapperPlayer foundPlayer = null;
-			for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 10, 10, 10))){
-				if(entity instanceof IWrapperPlayer){
-					if(((IWrapperPlayer) entity).getUUID().equals(playerUUID)){
-						foundPlayer = (IWrapperPlayer) entity;
+			WrapperPlayer foundPlayer = null;
+			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 10, 10, 10))){
+				if(entity instanceof WrapperPlayer){
+					if(((WrapperPlayer) entity).getUUID().equals(playerUUID)){
+						foundPlayer = (WrapperPlayer) entity;
 						break;
 					}
 				}
@@ -185,22 +185,22 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	}
 
 	@Override
-	public IWrapperEntity getController(){
+	public WrapperEntity getController(){
 		return player;
 	}
 
 	@Override
-	public boolean isGunActive(IWrapperEntity controller){
+	public boolean isGunActive(WrapperEntity controller){
 		return true;
 	}
 
 	@Override
-	public double getDesiredYaw(IWrapperEntity controller){
+	public double getDesiredYaw(WrapperEntity controller){
 		return 0;
 	}
 
 	@Override
-	public double getDesiredPitch(IWrapperEntity controller){
+	public double getDesiredPitch(WrapperEntity controller){
 		return 0;
 	}
 

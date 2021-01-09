@@ -5,9 +5,9 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -18,17 +18,17 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.fill"));
-		tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.drain"));
+		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.fill"));
+		tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.drain"));
 		if(data.getBoolean("isFull")){
-			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.contains") + MasterLoader.coreInterface.getFluidName(data.getString("fluidName")));
+			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.contains") + InterfaceCore.getFluidName(data.getString("fluidName")));
 		}else{
-			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.jerrycan.empty"));
+			tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.empty"));
 		}
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(!vehicle.world.isClient()){
 			if(rightClick){
 				ItemStack stack = player.getHeldStack();

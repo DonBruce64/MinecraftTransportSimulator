@@ -3,8 +3,8 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 
@@ -19,7 +19,7 @@ public final class BeaconManager{
 	/**
 	 *  Returns the beacon with the specified name from the world, or null if it does not exist.
 	 */
-	public static RadioBeacon getBeacon(IWrapperWorld world, String name){
+	public static RadioBeacon getBeacon(WrapperWorld world, String name){
 		if(!worldBeacons.containsKey(world.getDimensionID())){
 			//No beacons for this world.  Load data.
 			loadBeacons(world);
@@ -35,7 +35,7 @@ public final class BeaconManager{
 	/**
 	 *  Adds the beacon with the specified name to the world.
 	 */
-	public static void addBeacon(IWrapperWorld world, RadioBeacon beacon){
+	public static void addBeacon(WrapperWorld world, RadioBeacon beacon){
 		//Don't add un-named beacons.
 		if(!beacon.name.isEmpty()){
 			worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
@@ -49,7 +49,7 @@ public final class BeaconManager{
 	/**
 	 *  Removes the beacon with the specified name from the world.
 	 */
-	public static void removeBeacon(IWrapperWorld world, String name){
+	public static void removeBeacon(WrapperWorld world, String name){
 		worldBeacons.get(world.getDimensionID()).remove(name);
 		if(!world.isClient()){
 			saveBeacons(world);
@@ -63,7 +63,7 @@ public final class BeaconManager{
 	 *  however, the client may fail to load beacon data if it
 	 *  hasn't gotten its data packet from the server yet.
 	 */
-	private static void loadBeacons(IWrapperWorld world){
+	private static void loadBeacons(WrapperWorld world){
 		WrapperNBT data = world.getData();
 		if(data != null){
 			Map<String, RadioBeacon> beacons = new HashMap<String, RadioBeacon>();
@@ -80,7 +80,7 @@ public final class BeaconManager{
 	 *  Helper method to save beacon data to the world.
 	 *  Call this ONLY on the server.
 	 */
-	private static void saveBeacons(IWrapperWorld world){
+	private static void saveBeacons(WrapperWorld world){
 		if(worldBeacons.containsKey(world.getDimensionID())){
 			WrapperNBT worldData = new WrapperNBT();
 			int beaconIndex=0;

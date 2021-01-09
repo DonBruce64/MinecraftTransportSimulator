@@ -3,15 +3,17 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.controls.ControlSystem;
+import minecrafttransportsimulator.controls.InputSystem;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
@@ -28,12 +30,12 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	public static boolean lockCameraToMovement = true;
 	
-	public EntityVehicleB_Rideable(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 	}
 	
 	@Override
-	public void updateRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//We override the default rider update behavior here as the riders can move depending
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
@@ -72,7 +74,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 					}
 				}
 			}
-            if(controllingGun || !world.isClient() || MasterLoader.clientInterface.inFirstPerson() || lockCameraToMovement){
+            if(controllingGun || !world.isClient() || InterfaceClient.inFirstPerson() || lockCameraToMovement){
             	//Get yaw delta between entity and player from -180 to 180.
             	double playerYawDelta = (360 + (angles.y - rider.getYaw())%360)%360;
             	if(playerYawDelta > 180){
@@ -86,9 +88,9 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.            	
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-			if(world.isClient() && !MasterLoader.clientInterface.isChatOpen() && rider.equals(MasterLoader.clientInterface.getClientPlayer())){
+			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			MasterLoader.inputInterface.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			InputSystem.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -97,7 +99,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		//We override the default rider addition behavior here as we need to rotate
 		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
@@ -119,7 +121,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	}
 	
 	@Override
-	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
@@ -170,22 +172,22 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		rider.setPosition(dismountPosition);
 		
 		//If we are on the client, disable mouse-yoke blocking.
-		if(world.isClient() && MasterLoader.clientInterface.getClientPlayer().equals(rider)){
+		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-			MasterLoader.inputInterface.setMouseEnabled(true);
-			MasterLoader.guiInterface.closeGUI();
+			InputSystem.setMouseEnabled(true);
+			InterfaceGUI.closeGUI();
 		}
 	}
 	
 	/**
 	 *  Helper method used to get the controlling player for this vehicle.
 	 */
-	public IWrapperPlayer getController(){
+	public WrapperPlayer getController(){
 		for(Point3d location : locationRiderMap.keySet()){
 			PartSeat seat = (PartSeat) getPartAtLocation(location);
-			IWrapperEntity rider = locationRiderMap.get(location);
-			if(seat != null && seat.vehicleDefinition.isController && rider instanceof IWrapperPlayer){
-				return (IWrapperPlayer) rider;
+			WrapperEntity rider = locationRiderMap.get(location);
+			if(seat != null && seat.vehicleDefinition.isController && rider instanceof WrapperPlayer){
+				return (WrapperPlayer) rider;
 			}
 		}
 		return null;
@@ -204,9 +206,9 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 		
 		//Add passenger inventory mass as well.
-		for(IWrapperEntity rider : locationRiderMap.values()){
-			if(rider instanceof IWrapperPlayer){
-				currentMass += 100 + ((IWrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
+		for(WrapperEntity rider : locationRiderMap.values()){
+			if(rider instanceof WrapperPlayer){
+				currentMass += 100 + ((WrapperPlayer) rider).getInventory().getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
 			}else{
 				currentMass += 100;
 			}

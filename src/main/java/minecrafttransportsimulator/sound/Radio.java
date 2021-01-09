@@ -103,13 +103,13 @@ public class Radio{
 	/**
 	 * Changes the volume of this radio, and sets the currentSound's volume to that volume.
 	 */
-	public void changeVolume(int volume, boolean sendPacket){
-		this.volume = volume == 0 ? 10 : volume;
+	public void changeVolume(int setVolume, boolean sendPacket){
+		this.volume = setVolume == 0 ? 10 : setVolume;
 		if(currentSound != null){
-			currentSound.volume = volume/10F;
+			currentSound.volume = setVolume/10F;
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			NetworkSystem.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			NetworkSystem.sendToServer(new PacketRadioStateChange(this, currentSource, setVolume, preset));
 		}
 	}
 	

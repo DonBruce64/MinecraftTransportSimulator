@@ -10,8 +10,8 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
@@ -29,7 +29,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	
 	private static final AnimationsDecor animator = new AnimationsDecor();
 	
-	public TileEntityDecor(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityDecor(WrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Add a bounding box for each rotation.
 		this.boundingBoxes[0] = new BoundingBox(new Point3d(0, 0, 0), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
@@ -51,7 +51,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	}
 	
 	@Override
-    public IWrapperWorld getProviderWorld(){
+    public WrapperWorld getProviderWorld(){
 		return world;
 	}
 	

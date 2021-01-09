@@ -3,8 +3,8 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -29,7 +29,7 @@ public class BoundingBox{
 	public final Point3d localCenter;
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
-	public final List<IWrapperBlock> collidingBlocks = new ArrayList<IWrapperBlock>();
+	public final List<WrapperBlock> collidingBlocks = new ArrayList<WrapperBlock>();
 	private final Point3d tempGlobalCenter;
 	
 	public double widthRadius;
@@ -64,19 +64,19 @@ public class BoundingBox{
 	 *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
 	 *  If blocks collided with this box after this method, true is returned.
 	 */
-	public boolean updateCollidingBlocks(IWrapperWorld world, Point3d offset){
+	public boolean updateCollidingBlocks(WrapperWorld world, Point3d offset){
 		return updateCollisions(world, offset, false);
 	}
 	
 	/**
-	 *  Like {@link #updateCollidingBlocks(IWrapperWorld, Point3d)}, but takes movement into account
+	 *  Like {@link #updateCollidingBlocks(WrapperWorld, Point3d)}, but takes movement into account
 	 *  when setting collision depth.
 	 */
-	public boolean updateMovingCollisions(IWrapperWorld world, Point3d offset){
+	public boolean updateMovingCollisions(WrapperWorld world, Point3d offset){
 		return updateCollisions(world, offset, true);
 	}
 	
-	private boolean updateCollisions(IWrapperWorld world, Point3d offset, boolean ignoreIfGreater){
+	private boolean updateCollisions(WrapperWorld world, Point3d offset, boolean ignoreIfGreater){
 		tempGlobalCenter.setTo(globalCenter);
 		globalCenter.add(offset);
 		world.updateBoundingBoxCollisions(this, offset, ignoreIfGreater);

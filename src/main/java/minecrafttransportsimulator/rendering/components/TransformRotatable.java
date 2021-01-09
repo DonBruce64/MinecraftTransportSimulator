@@ -24,7 +24,7 @@ public class TransformRotatable extends ATransform{
 	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
 		//Update tread roller rotation axis, if required.
 		if(this instanceof TransformTreadRoller && rotationAxis.isZero()){
-			((TransformTreadRoller) this).updateRotationAxis((EntityVehicleF_Physics) provider, rotationAxis);
+			((TransformTreadRoller) this).updateRotationAxis((EntityVehicleF_Physics) provider);
 		}
 		
 		//Get rotation.

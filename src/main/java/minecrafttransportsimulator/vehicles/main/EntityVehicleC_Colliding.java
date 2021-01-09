@@ -16,12 +16,13 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -66,7 +67,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<APart, Map<BoundingBox, VehicleDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, VehicleDoor>>();
 	
 	
-	public EntityVehicleC_Colliding(IWrapperWorld world, IWrapperEntity wrapper, WrapperNBT data){
+	public EntityVehicleC_Colliding(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
 		
 		//Create the initial part slots.
@@ -204,7 +205,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//We add these before part boxes so the player can click them before clicking a part.
 		if(world.isClient()){
 			activePartSlotBoxes.clear();
-			IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			if(heldItem instanceof ItemPart){
 				for(Entry<BoundingBox, VehiclePart> partSlotBoxEntry : partSlotBoxes.entrySet()){
@@ -242,7 +243,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//This is dependent on what the current player entity is holding.
 		for(APart part : parts){
 			if(world.isClient()){
-				IWrapperPlayer clientPlayer = MasterLoader.clientInterface.getClientPlayer();
+				WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
 				//If the part is fake, don't add it.
 				if(part.isFake()){
 					continue;
@@ -278,7 +279,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	}
 	
 	@Override
-	public boolean addRider(IWrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(seat.vehicleDefinition.linkedDoors != null){
@@ -314,7 +315,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	}
 	
 	@Override
-	public void removeRider(IWrapperEntity rider, Iterator<IWrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 		if(seat.vehicleDefinition.linkedDoors != null){
 			for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
@@ -436,7 +437,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	 * Returns true if any linked doors are blocking the player from
 	 * accessing the passed-in part slot.
 	 */
-	public boolean areDoorsBlocking(VehiclePart partDef, IWrapperPlayer player){
+	public boolean areDoorsBlocking(VehiclePart partDef, WrapperPlayer player){
 		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
 			for(String door : partDef.linkedDoors){
 				if(variablesOn.contains(door)){
@@ -461,7 +462,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
-			for(IWrapperBlock block : box.collidingBlocks){
+			for(WrapperBlock block : box.collidingBlocks){
 				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
 						hardnessHitThisTick += block.getHardness();
@@ -483,7 +484,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			
 			if(hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
-					destroyAtPosition(box.globalCenter);
+					destroyAt(box.globalCenter);
 				}
 				return -1;
 			}else if(xAxis){
@@ -506,7 +507,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	 * settings or a lack of fuel or explodable cargo.  Call only on the SERVER as this is for item-spawning 
 	 * code and player damage code.
 	 */
-	public void destroyAtPosition(Point3d position){
+	public void destroyAt(Point3d location){
 		this.isValid = false;
 		//Remove all parts from the vehicle and place them as items.
 		for(APart part : parts){
@@ -516,17 +517,17 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(ItemStack craftingStack : MasterLoader.coreInterface.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true)){
+		for(ItemStack craftingStack : InterfaceCore.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true)){
 			if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
-				world.spawnItemStack(craftingStack, position);
+				world.spawnItemStack(craftingStack, location);
 			}
 		}
 		
 		//Damage all riders, including the controller.
-		IWrapperPlayer controller = getController();
+		WrapperPlayer controller = getController();
 		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, null);
 		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, controller);
-		for(IWrapperEntity rider : locationRiderMap.values()){
+		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);
 			}else{
@@ -535,7 +536,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Now remove all riders from the vehicle.
-		Iterator<IWrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
+		Iterator<WrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
 		while(riderIterator.hasNext()){
 			removeRider(riderIterator.next(), riderIterator);
 		}

@@ -6,7 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Helper class for containing lane data.
@@ -42,12 +42,12 @@ public class RoadLane{
 		}
 	}
 	
-	public void connectToPrior(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-		priorConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
+	public void connectToPrior(TileEntityRoad priorRoad, int priorLaneNumber, boolean connectedToStart){
+		priorConnections.add(new RoadLaneConnection(priorRoad.position, priorLaneNumber, connectedToStart));
 	}
 	
-	public void connectToNext(TileEntityRoad road, int laneNumber, boolean connectedToStart){
-		nextConnections.add(new RoadLaneConnection(road.position, laneNumber, connectedToStart));
+	public void connectToNext(TileEntityRoad nextRoad, int nextLaneNumber, boolean connectedToStart){
+		nextConnections.add(new RoadLaneConnection(nextRoad.position, nextLaneNumber, connectedToStart));
 	}
 	
 	public void removeConnections(){
@@ -87,7 +87,7 @@ public class RoadLane{
 				}
 			}
 		}catch(Exception e){
-			MasterLoader.coreInterface.logError("ERROR: Couldn't get TE to break road connection.  Was it changed?");
+			InterfaceCore.logError("ERROR: Couldn't get TE to break road connection.  Was it changed?");
 		}
 	}
 	

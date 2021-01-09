@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -40,7 +40,7 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
@@ -55,13 +55,13 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  *
  * @author don_bruce
  */
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class BuilderEntity extends Entity{
 	/**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
-	static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
+	public static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	AEntityBase entity;
+	public AEntityBase entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
 	/**Last saved explosion position (used for damage calcs).**/
@@ -120,9 +120,9 @@ public class BuilderEntity extends Entity{
     		//This handles dismounting of riders from entities in a non-event-driven way.
     		//We do this because other mods and Sponge like to screw up the events...
     		if(!world.isRemote){
-	    		Iterator<IWrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
+	    		Iterator<WrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
 	    		while(riderIterator.hasNext()){
-	    			WrapperEntity rider = (WrapperEntity) riderIterator.next();
+	    			WrapperEntity rider = riderIterator.next();
 	    			if(!this.equals(rider.entity.getRidingEntity())){
 	    				entity.removeRider(rider, riderIterator);
 	    			}
@@ -248,10 +248,10 @@ public class BuilderEntity extends Entity{
     public void updatePassenger(Entity passenger){
     	//Forward passenger updates to the entity, if it exists.
     	if(entity != null){
-    		Iterator<IWrapperEntity> iterator = entity.locationRiderMap.inverse().keySet().iterator();
+    		Iterator<WrapperEntity> iterator = entity.locationRiderMap.inverse().keySet().iterator();
     		while(iterator.hasNext()){
-    			IWrapperEntity rider = iterator.next();
-    			if(((WrapperEntity) rider).entity.equals(passenger)){
+    			WrapperEntity rider = iterator.next();
+    			if(rider.entity.equals(passenger)){
     				entity.updateRider(rider, iterator);
     				return;
     			}
@@ -412,7 +412,7 @@ public class BuilderEntity extends Entity{
 	    		if(boxClicked != null){
 		    		NetworkSystem.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
-	    			MasterInterface.logger.error("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	    			InterfaceCore.logError("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
 	    		event.setCanceled(true);
 				event.setCancellationResult(EnumActionResult.SUCCESS);
@@ -437,7 +437,7 @@ public class BuilderEntity extends Entity{
     			if(boxClicked != null){
     				NetworkSystem.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
-        			MasterInterface.logger.error("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+        			InterfaceCore.logError("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}
     			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
     		}
@@ -464,6 +464,6 @@ public class BuilderEntity extends Entity{
 		
 		//Now register our own classes.
 		int entityNumber = 0;
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntity.class).id(new ResourceLocation(MasterInterface.MODID, "mts_entity"), entityNumber++).name("mts_entity").tracker(32*16, 5, false).build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntity.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity"), entityNumber++).name("mts_entity").tracker(32*16, 5, false).build());
 	}
 }

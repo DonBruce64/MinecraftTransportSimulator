@@ -12,9 +12,11 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
@@ -64,13 +66,13 @@ public class RenderEventHandler{
      * This is because first-person view is for direct control, while third-person is for passive control.
      * If we do any overriding logic to the camera pitch and yaw, return true.
      */
-    public static boolean onCameraSetup(IWrapperPlayer player, float partialTicks){
+    public static boolean onCameraSetup(WrapperPlayer player, float partialTicks){
 		AEntityBase ridingEntity = player.getEntityRiding();
 		EntityVehicleF_Physics vehicle = ridingEntity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) ridingEntity : null;
 		PartSeat sittingSeat = vehicle != null ? (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(player)) : null;
 		EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getUUID());
 		
-    	if(MasterLoader.clientInterface.inFirstPerson()){
+    	if(InterfaceClient.inFirstPerson()){
     		//If we are sneaking and holding a gun, enable custom cameras.
     		if(playerGunEntity != null && playerGunEntity.gun != null && sittingSeat == null){
     			enableCustomCameras = player.isSneaking();
@@ -216,9 +218,9 @@ public class RenderEventHandler{
             		//If the camera has an FOV override, apply it.
             		if(camera.fovOverride != 0){
             			if(currentFOV == 0){
-            				currentFOV = MasterLoader.clientInterface.getFOV();
+            				currentFOV = InterfaceClient.getFOV();
             			}
-            			MasterLoader.clientInterface.setFOV(camera.fovOverride);
+            			InterfaceClient.setFOV(camera.fovOverride);
             		}
         			
         			//Return true to signal that we overrode the camera movement.
@@ -250,14 +252,14 @@ public class RenderEventHandler{
 			//We wern't running a custom camera.  Set runninv variable to false.
 			enableCustomCameras = false;
 			runningCustomCameras = false;
-    	}else if(MasterLoader.clientInterface.inThirdPerson()){
+    	}else if(InterfaceClient.inThirdPerson()){
     		//If we were running a custom camera, and hit the switch key, increment our camera index.
     		//We then go back to first-person to render the proper camera.
     		//If we weren't running a custom camera, try running one.  This will become active when we
     		//go back into first-person mode.  This only has an effect if we are in a vehicle.
     		if(runningCustomCameras){
     			++customCameraIndex;
-    			MasterLoader.clientInterface.toggleFirstPerson();
+    			InterfaceClient.toggleFirstPerson();
     		}else if(vehicle != null){
     			enableCustomCameras = true;
         		customCameraIndex = 0;
@@ -271,11 +273,11 @@ public class RenderEventHandler{
         	//If we do have custom cameras, use them instead.
         	if(vehicle != null){
 	        	if(vehicle.definition.rendering.cameraObjects != null){
-	        		MasterLoader.clientInterface.toggleFirstPerson();
+	        		InterfaceClient.toggleFirstPerson();
 				}else{
 					for(APart part : vehicle.parts){
 						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-							MasterLoader.clientInterface.toggleFirstPerson();
+							InterfaceClient.toggleFirstPerson();
 							break;
 						}
 					}
@@ -285,13 +287,13 @@ public class RenderEventHandler{
 	        	}
         	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
         		if(playerGunEntity.gunItem.definition.rendering != null && playerGunEntity.gunItem.definition.rendering.cameraObjects != null){
-        			MasterLoader.clientInterface.toggleFirstPerson();
+        			InterfaceClient.toggleFirstPerson();
         		}
         	}
 		}
 		customCameraOverlay = null;
 		if(currentFOV != 0){
-			MasterLoader.clientInterface.setFOV(currentFOV);
+			InterfaceClient.setFOV(currentFOV);
 			currentFOV = 0; 
 		}
 		return false;
@@ -325,9 +327,9 @@ public class RenderEventHandler{
      * it should be returned.  Otherwise, return null.
      */
     public static AGUIBase onOverlayRender(int screenWidth, int screenHeight, float partialTicks, AEntityBase mousedOverEntity, Point3d mousedOverPoint){
-    	IWrapperPlayer player = MasterLoader.clientInterface.getClientPlayer();
+    	WrapperPlayer player = InterfaceClient.getClientPlayer();
     	AEntityBase ridingEntity = player.getEntityRiding();
-    	if(MasterLoader.clientInterface.inFirstPerson() && ridingEntity == null){
+    	if(InterfaceClient.inFirstPerson() && ridingEntity == null){
 			if(mousedOverEntity instanceof EntityVehicleF_Physics){
 				EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
 				for(BoundingBox box : vehicle.interactionBoxes){
@@ -337,7 +339,7 @@ public class RenderEventHandler{
 							FluidTank tank = ((PartInteractable) part).tank;
 							if(tank != null){
 								String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-								MasterLoader.guiInterface.drawBasicText(tankText, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
+								InterfaceGUI.drawBasicText(tankText, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
 								break;
 							}
 						}
@@ -347,21 +349,21 @@ public class RenderEventHandler{
 			currentGUI = null;
 		}
     	if(customCameraOverlay != null){
-			MasterLoader.renderInterface.bindTexture(customCameraOverlay);
-			MasterLoader.renderInterface.setBlendState(true, false);
-			MasterLoader.guiInterface.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
-			MasterLoader.renderInterface.setBlendState(false, false);
+			InterfaceRender.bindTexture(customCameraOverlay);
+			InterfaceRender.setBlendState(true, false);
+			InterfaceGUI.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
+			InterfaceRender.setBlendState(false, false);
 			currentGUI = null;
-		}else if(MasterLoader.clientInterface.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value){
+		}else if(InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value){
 			if(ridingEntity instanceof EntityVehicleF_Physics){
-				for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
+				for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 					if(rider.equals(player)){
 						PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 						//If the seat is controlling a gun, render a text line for it.
-						if(seat.activeGun != null && !MasterLoader.clientInterface.isChatOpen()){
+						if(seat.activeGun != null && !InterfaceClient.isChatOpen()){
 							String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-							MasterLoader.guiInterface.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-							MasterLoader.guiInterface.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							InterfaceGUI.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 						}
 						
 						//If the seat is a controller, render the HUD.

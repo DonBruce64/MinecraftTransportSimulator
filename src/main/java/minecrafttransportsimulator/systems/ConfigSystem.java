@@ -13,7 +13,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
@@ -49,8 +49,8 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
-				MasterLoader.coreInterface.logError(e.getMessage());
+				InterfaceCore.logError("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				InterfaceCore.logError(e.getMessage());
 			}
 		}
 		
@@ -78,8 +78,8 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				MasterLoader.coreInterface.logError("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-				MasterLoader.coreInterface.logError(e.getMessage());
+				InterfaceCore.logError("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+				InterfaceCore.logError(e.getMessage());
 			}
 		}else{
 			//Make the default override file and save it.

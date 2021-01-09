@@ -14,8 +14,9 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
@@ -35,7 +36,7 @@ public class GUIPaintGun extends AGUIBase{
 	//Init variables.
 	private final EntityVehicleF_Physics vehicle;
 	private final TileEntityDecor tile;
-	private final IWrapperPlayer player;
+	private final WrapperPlayer player;
 	
 	//Buttons and labels.
 	private GUIComponentLabel partName;
@@ -56,14 +57,14 @@ public class GUIPaintGun extends AGUIBase{
 	private AItemSubTyped<?> prevSubItem;
 	private AItemSubTyped<?> nextSubItem;
 
-	public GUIPaintGun(EntityVehicleF_Physics vehicle, IWrapperPlayer player){
+	public GUIPaintGun(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
 		this.tile = null;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 	}
 	
-	public GUIPaintGun(TileEntityDecor tile, IWrapperPlayer player){
+	public GUIPaintGun(TileEntityDecor tile, WrapperPlayer player){
 		this.vehicle = null;
 		this.tile = tile;
 		this.player = player;
@@ -110,7 +111,7 @@ public class GUIPaintGun extends AGUIBase{
 				}else{
 					NetworkSystem.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
 				}
-				MasterLoader.guiInterface.closeGUI();
+				InterfaceGUI.closeGUI();
 			}
 		});
 		
@@ -181,7 +182,7 @@ public class GUIPaintGun extends AGUIBase{
 		partName.text = currentItem.getItemName();
 		
 		//Parse crafting items and set icon items.
-		List<ItemStack> craftingMaterials = MasterLoader.coreInterface.parseFromJSON(currentItem, false, true);
+		List<ItemStack> craftingMaterials = InterfaceCore.parseFromJSON(currentItem, false, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < craftingMaterials.size()){
 				craftingItemIcons.get(i).stack = craftingMaterials.get(i);

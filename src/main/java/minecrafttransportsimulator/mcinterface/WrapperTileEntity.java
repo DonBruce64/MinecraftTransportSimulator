@@ -1,8 +1,5 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.mcinterface.IWrapperTileEntity;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
@@ -11,31 +8,51 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.ITickable;
 
-class WrapperTileEntity implements IWrapperTileEntity{
-	final TileEntity tile;
+/**Wrapper for the MC Tile Entity class (called BlockEntity in later MC versions cause
+ * the people who maintain the mappings like to make life difficult through constant
+ * re-naming of things).  This class, unlike {@link BuilderTileEntity}, is responsible
+ * for interfacing with MC Tile Entities.  Because of this, some methods are different
+ * between the two classes.
+ * <br><br>
+ * Note that while this wrapper has an update method, it does not necessarily mean the
+ * TE that is wrapped will be ticked (updated).  Some TEs don't have ticking functionality,
+ * so if the update method is called on one of those then the method call will simply do nothing.
+ *
+ * @author don_bruce
+ */
+public class WrapperTileEntity{
+	public final TileEntity tile;
 	
-	WrapperTileEntity(TileEntity tile){
+	public WrapperTileEntity(TileEntity tile){
 		this.tile = tile;
 	}
 	
-	@Override
+	/**
+	 *  Updates the TE, if the TE supports it.
+	 */
 	public void update(){
 		if(tile instanceof ITickable){
 			((ITickable) tile).update();
 		}
 	}
 	
-	@Override
+	/**
+	 *  Gets the inventory for this TE, or null if it doesn't have one.
+	 */
 	public WrapperInventory getInventory(){
 		return tile instanceof IInventory ? new WrapperInventory((IInventory) tile) : null;
 	}
 	
-	@Override
+	/**
+	 *  Loads the TE data from the passed-in source.
+	 */
 	public void load(WrapperNBT data){
 		tile.readFromNBT(data.tag);
 	}
 	
-	@Override
+	/**
+	 *  Saves the TE to the passed-in NBT Wrapper tag.
+	 */
 	public void save(WrapperNBT data){
 		tile.writeToNBT(data.tag);
 	}

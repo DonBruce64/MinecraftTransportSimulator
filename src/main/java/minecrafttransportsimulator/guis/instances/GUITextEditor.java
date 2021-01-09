@@ -16,7 +16,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
@@ -83,7 +84,7 @@ public class GUITextEditor extends AGUIBase{
 						GL11.glPushMatrix();
 						GL11.glTranslatef(x, y, 0);
 						GL11.glScalef(64F/16F, 64F/16F, 64F/16F);
-						MasterLoader.guiInterface.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
+						InterfaceGUI.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
 						GL11.glPopMatrix();
 				    }
 				};
@@ -125,7 +126,7 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, MasterLoader.coreInterface.translate("gui.trafficsignalcontroller.confirm")){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
 				//First copy all the appropriate text box text to a string list for sending out.
@@ -142,7 +143,7 @@ public class GUITextEditor extends AGUIBase{
 				}else{
 					NetworkSystem.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
 				}
-				MasterLoader.guiInterface.closeGUI();
+				InterfaceGUI.closeGUI();
 			}
 		});
 	}

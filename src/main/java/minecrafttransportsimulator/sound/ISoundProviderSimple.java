@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.sound;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Interface for classes that need to have simple sounds played via the audio system.
  * Designed to be server-safe and only query the class implementing this interface for information
@@ -19,5 +19,5 @@ public interface ISoundProviderSimple{
     /**
 	 *  Return the world this provider is in.
 	 */
-    public IWrapperWorld getProviderWorld();
+    public WrapperWorld getProviderWorld();
 }

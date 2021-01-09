@@ -2,18 +2,19 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.awt.Color;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
+import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -145,9 +146,9 @@ public class PartEngine extends APart implements IParticleProvider{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isClient()){
-					for(IWrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
-						if(entity instanceof IWrapperPlayer){
-							((IWrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
+					for(WrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+						if(entity instanceof WrapperPlayer){
+							((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
 						}
 					}
 				}
@@ -161,9 +162,9 @@ public class PartEngine extends APart implements IParticleProvider{
 				linkedEngine.linkedEngine = null;
 				linkedEngine = null;
 				if(vehicle.world.isClient()){
-					for(IWrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
-						if(entity instanceof IWrapperPlayer){
-							((IWrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
+					for(WrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+						if(entity instanceof WrapperPlayer){
+							((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
 						}
 					}
 				}
@@ -1008,7 +1009,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	public void spawnParticles(){
 		//Render exhaust smoke if we have any exhausts and are running.
 		//If we are starting and have flames set, render those instead.
-		if(vehicleDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+		if(vehicleDefinition.JSONParticleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 			//Render a smoke for every cycle the exhaust makes.
 			//Depending on the number of positions we have, render an exhaust for every one.
 			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1022,19 +1023,19 @@ public class PartEngine extends APart implements IParticleProvider{
 			if(engineCycleTimeMills != 0){
 				long camTime = currentTime%engineCycleTimeMills;
 				
-				boolean singleExhaust = vehicleDefinition.particleObjects.size() == 1;
+				boolean singleExhaust = vehicleDefinition.JSONParticleObjects.size() == 1;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(ParticleObject particle : vehicleDefinition.particleObjects){
+				for(JSONParticleObject particle : vehicleDefinition.JSONParticleObjects){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills/vehicleDefinition.particleObjects.size();
-						long camMin = vehicleDefinition.particleObjects.indexOf(particle)*camOffset;
+						long camOffset = engineCycleTimeMills/vehicleDefinition.JSONParticleObjects.size();
+						long camMin = vehicleDefinition.JSONParticleObjects.indexOf(particle)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
 							continue;
@@ -1050,14 +1051,14 @@ public class PartEngine extends APart implements IParticleProvider{
 					Color particleColor = Color.decode(particle.color);
 					
 					if(state.running){
-						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor.getRed()/255F, particleColor.getGreen()/255F, particleColor.getBlue()/255F, particle.transparency, particle.scale));
+						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, particleColor.getRed()/255F, particleColor.getGreen()/255F, particleColor.getBlue()/255F, particle.transparency, particle.scale));
 						//Also play steam chuff sound if we are a steam engine.
 						if(definition.engine.isSteamPowered){
 							AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
 						}
 					}
 					if(definition.engine.flamesOnStartup && state.esOn){
-						MasterLoader.renderInterface.spawnParticle(new ParticleFlame(vehicle.world, exhaustOffset, velocityOffset, 1.0F));
+						InterfaceRender.spawnParticle(new ParticleFlame(vehicle.world, exhaustOffset, velocityOffset, 1.0F));
 					}
 					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
 				}
@@ -1068,20 +1069,20 @@ public class PartEngine extends APart implements IParticleProvider{
 		//Will be from the engine or the exhaust if we have any.
 		if(backfired){
 			backfired = false;
-			if(vehicleDefinition.particleObjects != null){
-				for(ParticleObject particle : vehicleDefinition.particleObjects){
+			if(vehicleDefinition.JSONParticleObjects != null){
+				for(JSONParticleObject particle : vehicleDefinition.JSONParticleObjects){
 					Point3d exhaustOffset = particle.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
 					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;
 					velocityOffset.y = velocityOffset.y/10D;
 					velocityOffset.z = velocityOffset.z/10D + 0.07 - Math.random()*0.14;
 					for(byte j=0; j<5; ++j){
-						MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, particle.scale*2.5F));
+						InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, particle.scale*2.5F));
 					}
 				}
 			}else{
 				for(byte i=0; i<5; ++i){
-					MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+					InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 				}
 			}
 		}
@@ -1089,12 +1090,12 @@ public class PartEngine extends APart implements IParticleProvider{
 		//Render oil and fuel leak particles.
 		if(oilLeak){
 			if(vehicle.ticksExisted%20 == 0){
-				MasterLoader.renderInterface.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		if(fuelLeak){
 			if((vehicle.ticksExisted + 5)%20 == 0){
-				MasterLoader.renderInterface.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleDrip(vehicle.world, worldPos.copy(), vehicle.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
 			}
 		}
 		
@@ -1104,9 +1105,9 @@ public class PartEngine extends APart implements IParticleProvider{
 			velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
 			velocityOffset.y = velocityOffset.y/10D;
 			velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
-			MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
+			InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
 			if(temp > OVERHEAT_TEMP_2){
-				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
 			}
 		}
 	}

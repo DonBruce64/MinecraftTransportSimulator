@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
@@ -67,7 +67,7 @@ public class GUIComponentLabel{
 	 */
     public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
-			MasterLoader.guiInterface.drawScaledText(text, x, y, color, renderMode, wrapWidth, scale, autoScale);
+			InterfaceGUI.drawScaledText(text, x, y, color, renderMode, wrapWidth, scale, autoScale);
 		}
     }
 }

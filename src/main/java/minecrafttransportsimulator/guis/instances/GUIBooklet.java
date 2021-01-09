@@ -4,13 +4,15 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.controls.InputSystem;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -72,14 +74,14 @@ public class GUIBooklet extends AGUIBase{
 			int leftSideOffset = guiLeft + 20;
 			int rightSideOffset = guiLeft + 155;
 			for(int i=0; i<booklet.definition.booklet.pages.length; ++i){
-				ContentsButton contentsButton = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
+				ContentsButton contentsHyperlink = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
 					@Override
 					public void onClicked(){
 						booklet.pageNumber = contentsIndex + 2;
 					}
 				};
-				contentsButtons.add(contentsButton);
-				addButton(contentsButton);
+				contentsButtons.add(contentsHyperlink);
+				addButton(contentsHyperlink);
 			}
 			
 			//Button on other pages to go back to TOC.
@@ -106,8 +108,8 @@ public class GUIBooklet extends AGUIBase{
 							pageNumber = i + 1;
 						}
 					}
-					MasterLoader.coreInterface.logError("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
-					MasterLoader.coreInterface.logError(e.getMessage());
+					InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
+					InterfaceCore.logError(e.getMessage());
 				}
 			}
 			pageTextLabels.add(pageLabels);
@@ -121,7 +123,7 @@ public class GUIBooklet extends AGUIBase{
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;
 		
 		//Check the mouse to see if it updated and we need to change pages.
-		int wheelMovement = MasterLoader.inputInterface.getTrackedMouseWheel();
+		int wheelMovement = InputSystem.getTrackedMouseWheel();
 		if(wheelMovement < 0 && rightButton.visible){
 			++booklet.pageNumber;
 		}else if(wheelMovement > 0 && leftButton.visible){
@@ -194,7 +196,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		MasterLoader.guiInterface.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		InterfaceGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

@@ -11,7 +11,8 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -39,7 +40,7 @@ public final class RenderInstrument{
      */
 	public static void drawInstrument(ItemInstrument instrument, int partNumber, EntityVehicleF_Physics vehicle){
 		//First bind the texture file for this insturment's pack.
-		MasterLoader.renderInterface.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
+		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
 		//Check if the lights are on.  If so, render the overlays.
 		boolean lightsOn = vehicle.renderTextLit();
@@ -48,7 +49,7 @@ public final class RenderInstrument{
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if(component.overlayTexture ? MasterLoader.renderInterface.getRenderPass() != 0 : MasterLoader.renderInterface.getRenderPass() != 1){
+			if(component.overlayTexture ? InterfaceRender.getRenderPass() != 0 : InterfaceRender.getRenderPass() != 1){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
@@ -62,14 +63,14 @@ public final class RenderInstrument{
 					double textNumeric = vehicle.getAnimationSystem().getRawVariableValue(vehicle, addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
-						MasterLoader.renderInterface.setLightingState(false);
-						MasterLoader.guiInterface.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
-						MasterLoader.renderInterface.setLightingState(true);
+						InterfaceRender.setLightingState(false);
+						InterfaceGUI.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceRender.setLightingState(true);
 					}else{
-						MasterLoader.guiInterface.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceGUI.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 					}
-					MasterLoader.renderInterface.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-					MasterLoader.renderInterface.recallTexture();
+					InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+					InterfaceRender.recallTexture();
 				}else{
 					//Init variables.
 					p1.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
@@ -215,16 +216,16 @@ public final class RenderInstrument{
 						//If the shape is lit, disable lighting.
 						//If the shape is an overlay, do blending.
 						if(component.lightUpTexture && lightsOn){
-							MasterLoader.renderInterface.setLightingState(false);
+							InterfaceRender.setLightingState(false);
 						}
 						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value){
 							GL11.glEnable(GL11.GL_BLEND);
 						}	
-						renderSquareUV(component.textureWidth, component.textureHeight, p1, p2, p3, p4);
+						renderSquareUV(component.textureWidth, component.textureHeight);
 						if(component.lightUpTexture && lightsOn){
-							MasterLoader.renderInterface.setLightingState(true);
+							InterfaceRender.setLightingState(true);
 						}
-						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value && MasterLoader.renderInterface.getRenderPass() != 1){
+						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value && InterfaceRender.getRenderPass() != 1){
 							GL11.glDisable(GL11.GL_BLEND);
 						}
 					}
@@ -264,7 +265,7 @@ public final class RenderInstrument{
      * Renders a textured quad from the current bound texture of a specific width and height.
      * Used for rendering instrument textures off their texture sheets.
      */
-	private static void renderSquareUV(float width, float height, Point3d p1, Point3d p2, Point3d p3, Point3d p4){
+	private static void renderSquareUV(float width, float height){
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2d(p1.x, p1.y);
 		GL11.glNormal3f(0, 0, 1);

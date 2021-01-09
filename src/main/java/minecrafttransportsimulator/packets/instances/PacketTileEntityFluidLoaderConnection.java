@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -42,7 +42,7 @@ public class PacketTileEntityFluidLoaderConnection extends APacketTileEntity<Til
 	}
 	
 	@Override
-	protected boolean handle(IWrapperWorld world, IWrapperPlayer player, TileEntityFluidLoader loader){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFluidLoader loader){
 		for(AEntityBase entity : AEntityBase.createdClientEntities){
 			if(entity.lookupID == vehicleID){
 				EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;

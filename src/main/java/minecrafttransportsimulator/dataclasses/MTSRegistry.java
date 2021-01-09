@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONPack;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 
@@ -26,7 +26,7 @@ public final class MTSRegistry{
 			packDef.internallyGenerated = true;
 			packDef.packID = packID;
 			packDef.fileStructure = 0;
-			packDef.packName = MasterLoader.coreInterface.getModName(packID);
+			packDef.packName = InterfaceCore.getModName(packID);
 			PackParserSystem.packMap.put(packID, packDef);
 		}
 		List<Item> items = new ArrayList<Item>();

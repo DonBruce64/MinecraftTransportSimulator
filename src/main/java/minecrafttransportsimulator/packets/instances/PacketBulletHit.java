@@ -8,11 +8,11 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -35,7 +35,7 @@ public class PacketBulletHit extends APacketBase{
 	private final int hitEntityID;
 	private final int controllerEntityID;
 
-	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, Gun gun, int bulletNumber, IWrapperEntity hitEntity, IWrapperEntity controllerEntity){
+	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, Gun gun, int bulletNumber, WrapperEntity hitEntity, WrapperEntity controllerEntity){
 		super(null);
 		this.gunID = gun.gunID;
 		this.localCenter = box.localCenter;
@@ -75,7 +75,7 @@ public class PacketBulletHit extends APacketBase{
 	}
 	
 	@Override
-	public void handle(IWrapperWorld world, IWrapperPlayer player){
+	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
@@ -94,10 +94,10 @@ public class PacketBulletHit extends APacketBase{
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
-						IWrapperEntity entityHit = world.getEntity(hitEntityID);
+						WrapperEntity entityHit = world.getEntity(hitEntityID);
 						if(entityHit != null){
 							//Create damage object and attack the entity.
-							IWrapperEntity attacker = world.getEntity(controllerEntityID);
+							WrapperEntity attacker = world.getEntity(controllerEntityID);
 							double damageAmount = bulletVelocity*bulletDefinition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
 							Damage damage = new Damage("bullet", damageAmount, box, attacker).ignoreCooldown();
 							if(bulletDefinition.bullet.types.contains("water")){
@@ -127,7 +127,7 @@ public class PacketBulletHit extends APacketBase{
 						}else{
 							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
-							IWrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
+							WrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
 							if(hitBlock != null && hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
 							}else if(bulletDefinition.bullet.types.contains("incendiary")){
@@ -147,7 +147,7 @@ public class PacketBulletHit extends APacketBase{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound and spawn some particles.
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(globalCenter), true);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(globalCenter), true);
 		}
 	}
 }

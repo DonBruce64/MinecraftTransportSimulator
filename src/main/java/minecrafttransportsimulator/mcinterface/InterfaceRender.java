@@ -1,4 +1,4 @@
-package mcinterface1122;
+package minecrafttransportsimulator.mcinterface;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -25,9 +26,6 @@ import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
-import minecrafttransportsimulator.mcinterface.IInterfaceRender;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.components.AParticle;
@@ -78,29 +76,44 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod.EventBusSubscriber(Side.CLIENT)
-class InterfaceRender implements IInterfaceRender{
+/**Interface for the various MC rendering engines.  This class has functions for
+ * binding textures, changing lightmap statuses, and registering rendering systems
+ * for TESRs, items, and entities.
+ *
+ * @author don_bruce
+ */
+@EventBusSubscriber(Side.CLIENT)
+public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
 	private static String pushedTextureLocation;
 	private static BuilderGUI currentGUI = null;
 	
-	@Override
-	public int getRenderPass(){
+	/**
+	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
+	 *  and -1 for end-of world final renders.
+	 */
+	public static int getRenderPass(){
 		return MinecraftForgeClient.getRenderPass();
 	}
 	
-	@Override
-	public boolean shouldRenderBoundingBoxes(){
+	/**
+	 *  Returns true if bounding boxes should be rendered.
+	 */
+	public static boolean shouldRenderBoundingBoxes(){
 		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox() && getRenderPass() != 1;
 	}
 	
-	@Override
-	public void bindTexture(String textureLocation){
+	/**
+	 *  Binds the passed-in texture to be rendered.  The instance of the texture is 
+	 *  cached in this class once created for later use, so feel free to not cache
+	 *  the string values that are passed-in.
+	 */
+	public static void bindTexture(String textureLocation){
 		//If the texture has a colon, it's a short-hand form that needs to be converted.
 		if(textureLocation.indexOf(":") != -1){
 			textureLocation = "/assets/" + textureLocation.replace(":", "/");
@@ -116,34 +129,50 @@ class InterfaceRender implements IInterfaceRender{
 		        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
 		        textures.put(textureLocation, glTexturePointer);
 			}catch(Exception e){
-				MasterInterface.coreInterface.logError("ERROR: Could not find texture: " + textureLocation + " Reverting to fallback texture.");
+				InterfaceCore.logError("ERROR: Could not find texture: " + textureLocation + " Reverting to fallback texture.");
 				textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 			}
 		}
 		GlStateManager.bindTexture(textures.get(textureLocation));
 	}
 	
-	@Override
-	public void setTexture(String textureLocation){
+	/**
+	 *  Like bindTexture, but this method also sets the texture for binding recall later via recallTexture.
+	 *  This allows for us to recall specific textures anywhere in the code.  Useful when we don't know what
+	 *  we will render between this call and another call, but we do know that we want this texture to be
+	 *  re-bound if any other textures were bound.
+	 */
+	public static void setTexture(String textureLocation){
 		pushedTextureLocation = textureLocation;
 		bindTexture(textureLocation);
 	}
 	
-	@Override
-	public void recallTexture(){
+	/**
+	 *  Re-binds the last saved texture.
+	 */
+	public static void recallTexture(){
 		if(pushedTextureLocation != null){
 			GlStateManager.bindTexture(textures.get(pushedTextureLocation));
 		}
 	}
 	
-	@Override
-	public void setLightingState(boolean enabled){
+	/**
+	 *  Helper method to completely disable or enable lighting.
+	 *  This disables both the system lighting and internal lighting.
+	 */
+	public static void setLightingState(boolean enabled){
 		setSystemLightingState(enabled);
 		setInternalLightingState(enabled);
 	}
 	
-	@Override
-	public void setSystemLightingState(boolean enabled){
+	/**
+	 *  Enables or disables OpenGL lighting for this draw sequence.
+	 *  This effectively prevents OpenGL lighting calculations on textures.
+	 *  Do note that the normal internal lightmapping will still be applied.
+	 *  This can be used to prevent OpenGL from doing shadowing on things
+	 *  that it gets wrong, such as text. 
+	 */
+	public static void setSystemLightingState(boolean enabled){
 		if(enabled){
 			GlStateManager.enableLighting();
 		}else{
@@ -151,8 +180,13 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public void setInternalLightingState(boolean enabled){
+	/**
+	 *  Enables or disables internal lighting for this draw sequence.
+	 *  This disables the internal lightmapping, effectively making the rendered
+	 *  texture as bright as it would be during daytime.  Do note that the system
+	 *  lighting calculations for shadowing will still be applied to the model.
+	 */
+	public static void setInternalLightingState(boolean enabled){
 		if(enabled){
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		}else{
@@ -160,18 +194,26 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public void setLightingToEntity(AEntityBase entity){
+	/**
+	 *  Updates the internal lightmap to be consistent with the light at the
+	 *  passed-in entitie's location.  This will also enable lighting should
+	 *  the current render pass be -1.
+	 */
+	public static void setLightingToEntity(AEntityBase entity){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = ((WrapperEntity) entity.wrapper).entity.getBrightnessForRender();
+		int lightVar = entity.wrapper.entity.getBrightnessForRender();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
-	@Override
-	public void setLightingToBlock(Point3i location){
+	/**
+	 *  Updates the internal lightmap to be consistent with the light at the
+	 *  passed-in block's location.  This will also enable lighting should
+	 *  the current render pass be -1.
+	 */
+	public static void setLightingToBlock(Point3i location){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
@@ -180,8 +222,12 @@ class InterfaceRender implements IInterfaceRender{
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
-	@Override
-	public void setBlendState(boolean enabled, boolean brightBlend){
+	/**
+	 *  Sets the blend state to enabled or disabled.  Also allows for
+	 *  the blend state to be set to accommodate beam lights with brightening
+	 *  properties rather than regular alpha blending.
+	 */
+	public static void setBlendState(boolean enabled, boolean brightBlend){
 		if(enabled){
 			GlStateManager.enableBlend();
 			GlStateManager.disableAlpha();
@@ -199,13 +245,20 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public void setColorState(float red, float green, float blue, float alpha){
+	/**
+	 *  Sets MC color to the passed-in color.  Required when needing to keep MC states happy.
+	 *  In particular, this is needed if colors are changed during MC internal draw calls,
+	 *  such as rendering a string, changing the color, and then rendering another string.
+	 */
+	public static void setColorState(float red, float green, float blue, float alpha){
 		GlStateManager.color(red, green, blue, alpha);
 	}
 	
-	@Override
-	public void resetStates(){
+	/**
+	 *  Resets all the rendering states to the appropriate values for the pass we are in.
+	 *  Useful after doing a rendering routine where states may not be correct for the pass.
+	 */
+	public static void resetStates(){
 		//For pass 0, we do lighting but not blending.
 		//For pass 1, we do blending and lighting.
 		//For pass -1, we don't do blending or lighting.
@@ -220,11 +273,14 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public void renderEntityRiders(AEntityBase entity, float partialTicks){
-		for(IWrapperEntity rider : entity.locationRiderMap.values()){
-			Entity riderEntity = ((WrapperEntity) rider).entity;
-			if(!(MasterInterface.gameInterface.getClientPlayer().equals(rider) && MasterInterface.gameInterface.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
+	/**
+	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
+	 *  and the entity and its riders have been culled from rendering.
+	 */
+	public static void renderEntityRiders(AEntityBase entity, float partialTicks){
+		for(WrapperEntity rider : entity.locationRiderMap.values()){
+			Entity riderEntity = rider.entity;
+			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
 				GL11.glPushMatrix();
 				Point3d riderPosition = rider.getRenderedPosition(partialTicks);
 				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
@@ -234,15 +290,23 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public void spawnParticle(AParticle particle){
+	/**
+	 *  Spawns a particle into the world.  Particles are simply entities that are client-side only.
+	 *  This is handy if you have a lot of them flying around but could care less where they are and
+	 *  don't want to hamper the server with tons of ticking entities.
+	 */
+	public static void spawnParticle(AParticle particle){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
 		}
 	}
 	
-	@Override
-	public void spawnBlockBreakParticles(Point3i point, boolean playSound){
+	/**
+	 *  Spawns the particles for the block at the passed-in position.
+	 *  This also allows for playing the block breaking sound.
+	 *  It does not actually break the block.  Such breakage must be done on the server.
+	 */
+	public static void spawnBlockBreakParticles(Point3i point, boolean playSound){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			BlockPos pos = new BlockPos(point.x, point.y, point.z);
 			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
@@ -255,8 +319,12 @@ class InterfaceRender implements IInterfaceRender{
 		}
 	}
 	
-	@Override
-	public boolean renderTextMarkings(ITextProvider provider, String objectRendering){
+	/**
+	 *  Renders all the text markings on the passed-in provider.
+	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
+	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
+	 */
+	public static boolean renderTextMarkings(ITextProvider provider, String objectRendering){
 		if(getRenderPass() != 1){
 			boolean systemLightingEnabled = true;
 			boolean internalLightingEnabled = true;
@@ -298,7 +366,7 @@ class InterfaceRender implements IInterfaceRender{
 					//Finally, render the text.
 					String inheritedColor = provider.getSecondaryTextColor();
 					String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-					MasterInterface.guiInterface.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+					InterfaceGUI.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 					GL11.glPopMatrix();
 				}
 			}
@@ -338,8 +406,8 @@ class InterfaceRender implements IInterfaceRender{
         		Point3d entityAngles = ridingEntity.angles.copy();
         		Point3d ridingAngles = new Point3d(0, 0, 0);
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
-	            	for(IWrapperEntity rider : ridingEntity.locationRiderMap.values()){
-						if(Minecraft.getMinecraft().player.equals(((WrapperEntity) rider).entity)){
+	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
+						if(Minecraft.getMinecraft().player.equals(rider.entity)){
 							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 							ridingAngles = seat.placementRotation.copy().add(seat.getPositionRotation(event.getPartialRenderTick()));
 		            		if(seat.parentPart != null){
@@ -451,7 +519,7 @@ class InterfaceRender implements IInterfaceRender{
 				//Also translate down if we are a half-HUD.
 				GL11.glPushMatrix();
         		GL11.glTranslated(0, 0, 250);
-        		if(currentGUI.gui instanceof GUIHUD && (MasterInterface.gameInterface.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
+        		if(currentGUI.gui instanceof GUIHUD && (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
         			GL11.glTranslated(0, currentGUI.gui.getHeight()/2D, 0);
         		}
         		
@@ -468,7 +536,7 @@ class InterfaceRender implements IInterfaceRender{
         		//Pop the matrix, and set blending and lighting back to normal.
         		GL11.glPopMatrix();
         		GL11.glEnable(GL11.GL_BLEND);
-        		MasterInterface.renderInterface.setInternalLightingState(false);
+        		setInternalLightingState(false);
     		}
     	}
     }
@@ -541,7 +609,7 @@ class InterfaceRender implements IInterfaceRender{
 						}
 						
 						//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-						int renderPass = MasterInterface.renderInterface.getRenderPass();
+						int renderPass = getRenderPass();
 						if(renderPass == -1){
 							renderPass = 2;
 						}
@@ -562,7 +630,7 @@ class InterfaceRender implements IInterfaceRender{
 		//FAR easier than trying to use the bloody bakery system.
 		//Normally we'd add our pack to the current loader, but this gets wiped out during reloads and unless we add our pack to the main list, it won't stick.
 		//To do this, we use reflection to get the field from the main MC class that holds the master list to add our custom ones.
-		//((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterInterface.MODID + "_packs"));
+		//((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).reloadResourcePack(new PackResourcePack(MasterLoader.MODID + "_packs"));
 		List<IResourcePack> defaultPacks = null;
 		for(Field field : Minecraft.class.getDeclaredFields()){
 			if(field.getName().equals("defaultResourcePacks") || field.getName().equals("field_110449_ao")){
@@ -580,13 +648,13 @@ class InterfaceRender implements IInterfaceRender{
 		
 		//Check to make sure we have the pack list before continuing.
 		if(defaultPacks == null){
-			MasterInterface.coreInterface.logError("ERROR: Could not get default pack list. Item icons will be disabled.");
+			InterfaceCore.logError("ERROR: Could not get default pack list. Item icons will be disabled.");
 			return;
 		}
 		
 		//Now that we have the custom resource pack location, add our built-in loader.
 		//This one auto-generates item JSONs.
-		defaultPacks.add(new PackResourcePack(MasterInterface.MODID + "_packs"));
+		defaultPacks.add(new PackResourcePack(MasterLoader.MODID + "_packs"));
 		
 		//Register the core item models.  Some of these are pack-based.
 		//Don't add those as they get added during the pack registration processing. 
@@ -607,12 +675,12 @@ class InterfaceRender implements IInterfaceRender{
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 			//TODO remove this when the internal system actually works.
 			if(PackParserSystem.getPackConfiguration(packItem.definition.packID) == null || PackParserSystem.getPackConfiguration(packItem.definition.packID).internallyGenerated){
-				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
+				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
 			}else{
 				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
 					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
 				}
-				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterInterface.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
+				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 			}
 		}
 		
@@ -624,7 +692,7 @@ class InterfaceRender implements IInterfaceRender{
 	 *  Helper method to register renders.
 	 */
 	private static void registerCoreItemRender(Item item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MasterInterface.MODID + ":" + item.getRegistryName().getPath(), "inventory"));
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MasterLoader.MODID + ":" + item.getRegistryName().getPath(), "inventory"));
 	}
 	
 	/**
@@ -659,7 +727,7 @@ class InterfaceRender implements IInterfaceRender{
 					//JSON reference.  Get the specified file.
 					stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
 					if(stream == null){
-						MasterInterface.coreInterface.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
+						InterfaceCore.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}else{
@@ -705,7 +773,7 @@ class InterfaceRender implements IInterfaceRender{
 							stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 						}
 					}catch(Exception e){
-						MasterInterface.coreInterface.logError("ERROR: Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
+						InterfaceCore.logError("ERROR: Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}
@@ -741,9 +809,9 @@ class InterfaceRender implements IInterfaceRender{
 						stream = getClass().getResourceAsStream(streamJSONLocation);
 						if(stream == null){
 							if(streamLocation != null){
-								MasterInterface.coreInterface.logError("ERROR: Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+								InterfaceCore.logError("ERROR: Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
 							}else{
-								MasterInterface.coreInterface.logError("ERROR: Could not find JSON PNG: " + streamJSONLocation);
+								InterfaceCore.logError("ERROR: Could not find JSON PNG: " + streamJSONLocation);
 							}
 							throw new FileNotFoundException(rawPackInfo);
 						}
@@ -752,7 +820,7 @@ class InterfaceRender implements IInterfaceRender{
 					if(e instanceof FileNotFoundException){
 						throw e;
 					}else{
-						MasterInterface.coreInterface.logError("ERROR: Could not parse which item PNG to get from: " + rawPackInfo);
+						InterfaceCore.logError("ERROR: Could not parse which item PNG to get from: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}
@@ -792,122 +860,4 @@ class InterfaceRender implements IInterfaceRender{
 			return "Internal:" + domain;
 		}
 	}
-	/*
-	private static final ICustomModelLoader packModelLoader = new ICustomModelLoader(){
-
-		@Override
-		public void onResourceManagerReload(IResourceManager resourceManager){
-			//Do nothing.  Packs don't change.
-		}
-
-		@Override
-		public boolean accepts(ResourceLocation modelLocation){
-			return modelLocation.getResourceDomain().equals("mts_packs");
-		}
-
-		@Override
-		public IModel loadModel(ResourceLocation modelLocation) throws Exception{
-			//Get the resource from the path.  Domain is mts_packs always.
-			String resource = modelLocation.getResourcePath();
-			
-			//Strip off the mts_packs: prefix. 
-			resource.substring("mts_packs:".length());
-			
-			//Get the pack information.
-			String packID = resource.substring(0, resource.indexOf('.'));
-			String systemName = resource.substring(resource.indexOf('.') + 1);
-			AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
-			
-			//Add the texture to the sprite system.
-			TextureAtlasSprite itemSprite = new CustomTextureLoader(packItem.getRegistrationName());
-			//TextureMap textureMap = Minecraft.getMinecraft().getTextureMapBlocks().registerSprite(modelLocation);
-			
-			
-			//Return the Un-baked model.
-			return packItem != null ? new UnbakedItemModelWrapper(packItem) : null;
-		}
-	};
-	
-	private static class CustomTextureLoader extends TextureAtlasSprite{
-		public CustomTextureLoader(String spriteName){
-			super(spriteName);
-		}
-	}
-	
-	private static class UnbakedItemModelWrapper implements IModel{
-		private static final List<ResourceLocation> EMPTY_TEXTURE_LIST = new ArrayList<ResourceLocation>();
-		
-		private final AItemPack<?> packItem;
-		
-		UnbakedItemModelWrapper(AItemPack<?> packItem){
-			this.packItem = packItem;
-		}
-		
-		@Override
-		public Collection<ResourceLocation> getTextures(){
-	        return EMPTY_TEXTURE_LIST;
-	    }
-	    
-		@Override
-		public IBakedModel bake(IModelState state, VertexFormat format, Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter){
-			
-			//Get the texture location.
-			final String texturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, packItem.definition.systemName);
-			
-			Minecraft.getMinecraft().getItemRenderer().renderItemInFirstPerson(partialTicks);
-		}
-	};
-	
-	private static class BakedItemModelWrapper implements IBakedModel{
-		private static final List<BakedQuad> EMPTY_QUAD_LIST = new ArrayList<BakedQuad>();
-		
-		
-		@Override
-		public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand){
-			if(side == null){
-				int currentTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-				MasterInterface.renderInterface.bindTexture(texturePath);
-				GL11.glBegin(GL11.GL_TRIANGLES);
-                GL11.glTexCoord2f(0, 0);
-                GL11.glVertex3f(0, 0, 0);
-                GL11.glTexCoord2f(0, 1);
-                GL11.glVertex3f(0, 1, 0);
-                GL11.glTexCoord2f(1, 1);
-                GL11.glVertex3f(1, 1, 0);
-                GL11.glTexCoord2f(1, 0);
-                GL11.glVertex3f(1, 0, 0);
-                GL11.glEnd();
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, currentTexture);
-			}
-			return EMPTY_QUAD_LIST;
-		}
-
-		@Override
-		public boolean isAmbientOcclusion(){
-			//Not a block, don't care.
-			return false;
-		}
-
-		@Override
-		public boolean isGui3d(){
-			//3D models just look better.
-			return true;
-		}
-
-		@Override
-		public boolean isBuiltInRenderer(){
-			//This smells like code that will go away sometime...
-			return false;
-		}
-
-		@Override
-		public TextureAtlasSprite getParticleTexture(){
-			return null;
-		}
-
-		@Override
-		public ItemOverrideList getOverrides(){
-			return ItemOverrideList.NONE;
-		}
-	};*/
 }

@@ -3,9 +3,8 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.HashMap;
 import java.util.Map;
 
-import mcinterface1122.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -89,9 +88,9 @@ public class FluidTank{
 	 *  Manually sets the fluid and level of this tank.  Used for initial filling of the tank when
 	 *  you don't want to sent packets or perform any validity checks.  Do NOT use for normal operations!
 	 */
-	public void manuallySet(String fluidName, double fluidLevel){
+	public void manuallySet(String fluidName, double setLevel){
 		this.currentFluid = fluidName;
-		this.fluidLevel = fluidLevel;
+		this.fluidLevel = setLevel;
 	}
 	
 	/**
@@ -156,7 +155,7 @@ public class FluidTank{
 	 *  or drain the tank into that stack if the player is sneaking.
 	 *  Returns the amount filled or drained if successful.
 	 */
-	public double interactWith(IWrapperPlayer player){
+	public double interactWith(WrapperPlayer player){
 		ItemStack stack = player.getHeldStack();
 		if(stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)){
 			//If we are sneaking, drain this tank.  If we are not, fill it.
@@ -171,7 +170,7 @@ public class FluidTank{
 					if(drainedStack != null){
 						//Was able to provide liquid from item.  Fill the tank.
 						double amountFilled = fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
-						((WrapperPlayer) player).player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+						player.player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
 						return amountFilled;
 					}
 				}
@@ -183,7 +182,7 @@ public class FluidTank{
 				if(amountFilled > 0){
 					//Were able to fill the item.  Apply state change to tank and item.
 					double amountDrained = drain(getFluid(), amountFilled, true);
-					((WrapperPlayer) player).player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+					player.player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
 					return amountDrained;
 				}
 			}

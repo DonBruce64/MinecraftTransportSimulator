@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -83,7 +83,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 			}
 		}else if(part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
-			IWrapperEntity riderForSeat = part.vehicle.locationRiderMap.get(seat.placementOffset);
+			WrapperEntity riderForSeat = part.vehicle.locationRiderMap.get(seat.placementOffset);
 			boolean riderPresent = riderForSeat != null && riderForSeat.isValid();
 			switch(variable){
 				case("seat_occupied"): return riderPresent ? 1 : 0;

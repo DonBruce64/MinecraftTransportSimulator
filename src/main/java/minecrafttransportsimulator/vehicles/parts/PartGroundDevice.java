@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.mcinterface.IWrapperBlock;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
@@ -90,7 +91,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			if(definition.ground.isWheel){
 				if(Math.abs(prevAngularVelocity)/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-					IWrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
+					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
 					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
 						contactThisTick = true;
 					}
@@ -209,7 +210,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	
 	public float getFrictionLoss(){
 		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
-		IWrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
+		WrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
 		if(groundBlock != null){
 			//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
 			return 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
@@ -242,16 +243,16 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 			AudioSystem.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && vehicle.groundDeviceCollective.groundedGroundDevices.contains(this)){
 			for(byte i=0; i<4; ++i){
-				MasterLoader.renderInterface.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			MasterLoader.renderInterface.spawnBlockBreakParticles(new Point3i(worldPos).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(new Point3i(worldPos).add(0, -1, 0), false);
 		}
 	}
 }

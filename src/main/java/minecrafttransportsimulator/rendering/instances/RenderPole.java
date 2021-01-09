@@ -13,7 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Core;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.OBJParser;
@@ -50,8 +50,8 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 			}
 			
 			//Render the connectors.  Don't do this on the blending pass 1.
-			if(MasterLoader.renderInterface.getRenderPass() != 1){
-				MasterLoader.renderInterface.bindTexture(coreComponent.definition.getTextureLocation(coreComponent.item.subName));
+			if(InterfaceRender.getRenderPass() != 1){
+				InterfaceRender.bindTexture(coreComponent.definition.getTextureLocation(coreComponent.item.subName));
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(coreComponent.definition).get(axis));
@@ -118,15 +118,15 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					GL11.glTranslatef(0, 0, tile.definition.general.radius + 0.001F);
 					
 					//Don't do solid model rendering on the blend pass.
-					if(MasterLoader.renderInterface.getRenderPass() != 1){
-						MasterLoader.renderInterface.setTexture(component.definition.getTextureLocation(component.item.subName));
+					if(InterfaceRender.getRenderPass() != 1){
+						InterfaceRender.setTexture(component.definition.getTextureLocation(component.item.subName));
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
 					}
 					
 					//Render any static text.
 					if(component instanceof ITextProvider){
-						if(MasterLoader.renderInterface.renderTextMarkings((ITextProvider) component, null)){
-							MasterLoader.renderInterface.recallTexture();
+						if(InterfaceRender.renderTextMarkings((ITextProvider) component, null)){
+							InterfaceRender.recallTexture();
 						}
 					}
 					

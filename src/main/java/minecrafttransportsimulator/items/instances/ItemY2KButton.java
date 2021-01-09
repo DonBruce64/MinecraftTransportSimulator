@@ -4,10 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -24,12 +24,12 @@ public class ItemY2KButton extends AItemBase{
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		for(byte i=1; i<=4; ++i){
-			tooltipLines.add(MasterLoader.coreInterface.translate("info.item.y2kbutton.line" + String.valueOf(i)));
+			tooltipLines.add(InterfaceCore.translate("info.item.y2kbutton.line" + String.valueOf(i)));
 		}
 	}
 	
 	@Override
-	public boolean onUsed(IWrapperWorld world, IWrapperPlayer player){
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		if(!world.isClient() && player.isOP()){
 			for(AEntityBase entity : AEntityBase.createdServerEntities){
 				if(entity instanceof EntityVehicleF_Physics){

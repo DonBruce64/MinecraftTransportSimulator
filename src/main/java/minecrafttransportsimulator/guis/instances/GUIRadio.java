@@ -8,7 +8,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.mcinterface.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioManager;
@@ -262,14 +262,14 @@ public class GUIRadio extends AGUIBase{
 				
 				//Render a black rectangle between the buttons.
 				int middlePoint = x + width/2;
-				MasterLoader.guiInterface.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
+				InterfaceGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
 				
 				//Now render a red square where the equalizer value is.
 				///Level is between -1.0 and 1.0, so we need to normalize it.
 				int squareSize = 8;
 				float level = (1.0F + radio.currentStation.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
 				int bandCenter = lowerBounds - squareSize + (int)(level*((upperBounds+squareSize/2) - (lowerBounds-squareSize/2)));
-				MasterLoader.guiInterface.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
+				InterfaceGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
 			}
 		}
 	}

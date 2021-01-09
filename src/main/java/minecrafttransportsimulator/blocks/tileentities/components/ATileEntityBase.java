@@ -8,8 +8,8 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	/**Current world for this TileEntity.**/
-	public final IWrapperWorld world;
+	public final WrapperWorld world;
 	/**Current position of this TileEntity.**/
 	public final Point3i position;
 	/**Current position of this TileEntity in Point3d form.**/
@@ -41,7 +41,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
 	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
 	public float lightLevel;
 	
-	public ATileEntityBase(IWrapperWorld world, Point3i position, WrapperNBT data){
+	public ATileEntityBase(WrapperWorld world, Point3i position, WrapperNBT data){
 		this.world = world;
 		this.position = position;
 		this.doublePosition = new Point3d(position);

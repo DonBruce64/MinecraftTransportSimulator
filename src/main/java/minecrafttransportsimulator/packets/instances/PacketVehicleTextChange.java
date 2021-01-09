@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.IWrapperWorld;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -44,7 +44,7 @@ public class PacketVehicleTextChange extends APacketVehicle{
 	}
 	
 	@Override
-	public boolean handle(IWrapperWorld world, IWrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		int linesChecked = 0;
 		for(Entry<JSONText, String> textEntry : vehicle.text.entrySet()){
 			textEntry.setValue(textLines.get(linesChecked));

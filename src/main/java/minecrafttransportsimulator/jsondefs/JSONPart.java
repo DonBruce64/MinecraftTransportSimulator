@@ -7,7 +7,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
 public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
@@ -121,7 +120,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean resetPosition;
     	public float defaultPitch;
     	public float defaultYaw;
-        public List<ParticleObject> particleObjects;
+        public List<JSONParticleObject> JSONParticleObjects;
         
         public boolean handHeld;
     	public Point3d handHeldNormalOffset;
@@ -144,7 +143,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float angleOfAttack;
     	public float proximityFuze;
     	public int airBurstDelay;
-    	public List<ParticleObject> particleObjects;
+    	public List<JSONParticleObject> JSONParticleObjects;
     }
     
     public class JSONPartInteractable{
