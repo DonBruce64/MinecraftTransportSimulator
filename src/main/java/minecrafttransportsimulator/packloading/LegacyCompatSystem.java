@@ -279,7 +279,7 @@ public final class LegacyCompatSystem{
 			
 			//If the part is a ground_ type, and canGoFlat, auto-set flat height.
 			if(definition.general.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
-				definition.ground.flatHeight = definition.ground.flatHeight/2F;
+				definition.ground.flatHeight = definition.ground.height/2F;
 			}
 		}
 		
