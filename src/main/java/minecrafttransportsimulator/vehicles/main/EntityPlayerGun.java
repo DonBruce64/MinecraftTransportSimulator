@@ -164,16 +164,18 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	//----------START OF GUN INTERFACE CODE----------
 	@Override
 	public void reloadGunBullets(){
-		//Check the player's inventory for bullets.
-		IWrapperInventory inventory = player.getInventory();
-		for(int i=0; i<inventory.getSize(); ++i){
-			AItemBase item = inventory.getItemInSlot(i);
-			if(item instanceof ItemPart){
-				if(gun.tryToReload((ItemPart) item)){
-					//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-					//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-					inventory.decrementSlot(i);
-					return;
+		if(gunItem.definition.gun.autoReload || gun.bulletsLeft == 0){
+			//Check the player's inventory for bullets.
+			IWrapperInventory inventory = player.getInventory();
+			for(int i=0; i<inventory.getSize(); ++i){
+				AItemBase item = inventory.getItemInSlot(i);
+				if(item instanceof ItemPart){
+					if(gun.tryToReload((ItemPart) item)){
+						//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+						//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+						inventory.decrementSlot(i);
+						return;
+					}
 				}
 			}
 		}
