@@ -936,7 +936,8 @@ public class WrapperWorld{
 		if(data != null){
 			stack.setTagCompound(data.tag);
 		}
-		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
+		//Spawn 1 block above in case we're right on a block.
+		world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, stack));
 	}
 	
 	/**
