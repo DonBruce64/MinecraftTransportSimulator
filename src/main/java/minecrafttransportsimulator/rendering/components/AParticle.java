@@ -19,7 +19,7 @@ public abstract class AParticle{
 	public final Point3d motion;
 	public final BoundingBox box;
 	public int maxAge;
-	public final JSONParticleObject JSONParticleObject;
+	public final JSONParticleObject definition;
 
 	public float red;
 	public float green;
@@ -40,19 +40,19 @@ public abstract class AParticle{
 		this(world, position, motion, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
-	public AParticle(WrapperWorld world, Point3d position, Point3d motion, JSONParticleObject JSONParticleObject){
+	public AParticle(WrapperWorld world, Point3d position, Point3d motion, JSONParticleObject definition){
 		this.world = world;
 		this.position = position;
 		this.motion = motion;
 		this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
 
-		Color color = JSONParticleObject.color != null ? Color.decode(JSONParticleObject.color) : Color.decode("#FFFFFF");
+		Color color = definition.color != null ? Color.decode(definition.color) : Color.decode("#FFFFFF");
 		this.red = color.getRed()/255F;
 		this.green = color.getGreen()/255F;
 		this.blue = color.getBlue()/255F;
-		this.alpha = JSONParticleObject.transparency;
-		this.scale = JSONParticleObject.scale;
-		this.JSONParticleObject = JSONParticleObject;
+		this.alpha = definition.transparency;
+		this.scale = definition.scale;
+		this.definition = definition;
 		this.maxAge = generateMaxAge();
 		this.setDeltas();
 		this.isValid = true;
@@ -68,7 +68,7 @@ public abstract class AParticle{
 		this.blue = blue;
 		this.alpha = alpha;
 		this.scale = scale;
-		this.JSONParticleObject = null;
+		this.definition = null;
 		this.maxAge = generateMaxAge();
 		this.isValid = true;
 	}
@@ -110,13 +110,13 @@ public abstract class AParticle{
 		//Establish how much to change each tick.
 		float deltaAmount = 1f/(this.maxAge - this.age);
 		
-		Color toColor = JSONParticleObject.toColor != null ? Color.decode(JSONParticleObject.toColor) : Color.decode(JSONParticleObject.color);
+		Color toColor = definition.toColor != null ? Color.decode(definition.toColor) : Color.decode(definition.color);
 		this.deltaRed = (toColor.getRed()/255F - this.red) * deltaAmount;
 		this.deltaGreen = (toColor.getGreen()/255F - this.green) * deltaAmount;
 		this.deltaBlue = (toColor.getBlue()/255F - this.blue) * deltaAmount;
 			
-		this.deltaAlpha = (JSONParticleObject.toTransparency - this.alpha) * deltaAmount;
-		this.deltaScale = (JSONParticleObject.toScale - this.scale) * deltaAmount;
+		this.deltaAlpha = (definition.toTransparency - this.alpha) * deltaAmount;
+		this.deltaScale = (definition.toScale - this.scale) * deltaAmount;
 	};
 	
 	/**

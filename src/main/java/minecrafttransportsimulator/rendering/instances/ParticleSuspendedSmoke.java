@@ -29,7 +29,7 @@ public class ParticleSuspendedSmoke extends AParticle {
 	
 	@Override
 	protected int generateMaxAge(){
-		return JSONParticleObject.duration == 0 ? (int)(8.0D / (Math.random() * 0.8D + 0.2D)) : JSONParticleObject.duration;
+		return definition.duration == 0 ? (int)(8.0D / (Math.random() * 0.8D + 0.2D)) : definition.duration;
 	}
 	
 	@Override

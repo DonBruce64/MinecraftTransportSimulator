@@ -21,6 +21,7 @@ import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**This part class is special, in that it does not extend APart.
  * This is because bullets do not render as vehicle parts, and instead
@@ -81,6 +82,8 @@ public class ParticleBullet extends AParticle{
 		Map<WrapperEntity, BoundingBox> attackedEntities;
 		if(gun.provider instanceof AEntityBase){
 			attackedEntities = world.attackEntities(damage, ((AEntityBase) gun.provider).wrapper, motion);
+		}else if(gun.provider instanceof PartGun){
+			attackedEntities = world.attackEntities(damage, ((PartGun) gun.provider).vehicle.wrapper, motion);
 		}else if(gun.provider instanceof WrapperEntity){
 			attackedEntities = world.attackEntities(damage, (WrapperEntity) gun.provider, motion);
 		}else{
@@ -184,35 +187,35 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	private void spawnParticles() {
-		for(JSONParticleObject JSONParticleObject : this.bullet.definition.bullet.JSONParticleObjects) {
+		for(JSONParticleObject particleObject : this.bullet.definition.bullet.JSONParticleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
-			Point3d particleVelocity = JSONParticleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
+			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = this.position.copy();
-			if(JSONParticleObject.pos != null) {
-				particlePosition.add(JSONParticleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
+			if(particleObject.pos != null) {
+				particlePosition.add(particleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
 			}
 
 			//Spawn the appropriate type and amount of particles.
 			//Change default values from 0 to 1.
-			if(JSONParticleObject.quantity == 0) JSONParticleObject.quantity = 1;
-			if(JSONParticleObject.scale == 0f && JSONParticleObject.toScale == 0f) JSONParticleObject.scale = 1f;
+			if(particleObject.quantity == 0) particleObject.quantity = 1;
+			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
 			AParticle currentParticle;
-			switch(JSONParticleObject.type) {
+			switch(particleObject.type) {
 				case "smoke": {
-					if(JSONParticleObject.transparency == 0f && JSONParticleObject.toTransparency == 0F) JSONParticleObject.transparency = 1f;
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), JSONParticleObject);
+					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), particleObject);
 						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject.scale);
-						currentParticle.deltaScale = (JSONParticleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+					for(int i=0; i<particleObject.quantity; i++) {
+						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
+						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
 						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
