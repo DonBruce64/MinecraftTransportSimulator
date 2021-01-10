@@ -88,8 +88,10 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		this.maxPitchAngle = maxPitchAngle;
 		
 		//Load saved data.
+		this.firing = data.getBoolean("firing");
 		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
+		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentOrientation = data.getPoint3d("currentOrientation");
 		this.prevOrientation = currentOrientation.copy();
 		String loadedBulletPack = data.getString("loadedBulletPack");
@@ -316,9 +318,11 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	}
 	
 	public void save(WrapperNBT data){
+		data.setBoolean("firing", firing);
 		data.setInteger("gunID", gunID);
 		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
+		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setPoint3d("currentOrientation", currentOrientation);
 		if(loadedBullet != null){
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);

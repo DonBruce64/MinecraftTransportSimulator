@@ -116,8 +116,8 @@ public class RenderEventHandler{
 						}
 					}
 				}else if(playerGunEntity != null && playerGunEntity.gun != null){
-					if(playerGunEntity.gunItem.definition.rendering != null && playerGunEntity.gunItem.definition.rendering.cameraObjects != null){
-						for(JSONCameraObject testCamera : playerGunEntity.gunItem.definition.rendering.cameraObjects){
+					if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
+						for(JSONCameraObject testCamera : playerGunEntity.gun.definition.rendering.cameraObjects){
 							if(isCameraActive(testCamera, playerGunEntity, partialTicks)){
 								if(camerasChecked++ == customCameraIndex){
 									camera = testCamera;
@@ -287,7 +287,7 @@ public class RenderEventHandler{
 		        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
 		        	}
 	        	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
-	        		if(playerGunEntity.gunItem.definition.rendering != null && playerGunEntity.gunItem.definition.rendering.cameraObjects != null){
+	        		if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
 	        			InterfaceClient.toggleFirstPerson();
 	        		}
 	        	}

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
+import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
@@ -226,6 +227,11 @@ public class WrapperPlayer extends WrapperEntity{
             		WrapperPlayer playerWrapper = worldWrapper.getWrapperFor(event.player);
             		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, worldWrapper.generateEntity(), playerWrapper, new WrapperNBT());
             		worldWrapper.spawnEntity(entity);
+            	}
+        	}else{
+        		//If we are holding a gun, check for gun controls.
+        		if(EntityPlayerGun.playerClientGuns.containsKey(event.player.getUniqueID().toString())){
+        			ControlSystem.controlPlayerGun(EntityPlayerGun.playerClientGuns.get(event.player.getUniqueID().toString()));
             	}
         	}
         }

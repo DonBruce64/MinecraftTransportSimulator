@@ -223,6 +223,13 @@ public class InputSystem{
 	}
 	
 	/**
+	 *  Returns true if the right mouse-button is down.
+	 */
+	public static boolean isRightMouseButtonDown(){
+		return Minecraft.getMinecraft().gameSettings.keyBindUseItem.isKeyDown();
+	}
+	
+	/**
      * Opens the config screen when the config key is pressed.
      */
     @SubscribeEvent

@@ -17,6 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
@@ -75,6 +76,7 @@ public class NetworkSystem{
 		registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		registerPacket(packetIndex++, PacketPlayerCraftItem.class);
 		registerPacket(packetIndex++, PacketPlayerGunChange.class);
+		registerPacket(packetIndex++, PacketPlayerGunFiring.class);
 		registerPacket(packetIndex++, PacketRadioStateChange.class);
 		registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
 		registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);

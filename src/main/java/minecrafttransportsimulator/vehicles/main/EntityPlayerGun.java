@@ -17,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.rendering.instances.AnimationsGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -34,12 +35,13 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	
-	public final WrapperPlayer player;
-	public int hotbarSelected = -1;
-	public ItemStack gunStack;
-	public ItemPart gunItem;
+	private final WrapperPlayer player;
+	private int hotbarSelected = -1;
+	private ItemStack gunStack;
+	private ItemPart gunItem;
 	public Gun gun;
 	public boolean fireCommand;
+	public String currentSubName;
 	
 	private static final AnimationsGun animator = new AnimationsGun();
 	
@@ -98,15 +100,18 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				//Check to make sure if we had a gun, that it didn't change.
 				if(gun != null && (!gunItem.equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
 					saveGun(true);
+					fireCommand = false;
+					NetworkSystem.sendToAllClients(new PacketPlayerGunFiring(this, false));
 				}
 				
 				//If we don't have a gun yet, try to get the current one if the player is holding one.
 				if(gun == null){
 					AItemBase heldItem = player.getHeldItem();
-					if(heldItem instanceof ItemPart && ((ItemPart) heldItem).isHandHeldGun()){
-						if(!world.isClient()){
+					if(heldItem instanceof ItemPart){
+						ItemPart heldPart = (ItemPart) heldItem;
+						if(heldPart.isHandHeldGun() && !world.isClient()){
 							createNewGun(-1);
-							NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this));
+							NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
 						}
 					}
 				}
@@ -146,11 +151,14 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public void createNewGun(int optionalGunID){
 		gunStack = player.getHeldStack();
 		gunItem = (ItemPart) player.getHeldItem();
+		currentSubName = gunItem.subName;
+		
 		WrapperNBT data = new WrapperNBT(gunStack);
 		if(optionalGunID != -1){
 			data.setInteger("gunID", optionalGunID);
 		}
 		gun = new Gun(this, gunItem.definition, 0, 0, 0, 0, data);
+		gun.firing = fireCommand;
 		hotbarSelected = player.getHotbarIndex();
 	}
 	
@@ -174,8 +182,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				AItemBase item = inventory.getItemInSlot(i);
 				if(item instanceof ItemPart){
 					if(gun.tryToReload((ItemPart) item)){
-						//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-						//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+						//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
 						inventory.decrementSlot(i);
 						return;
 					}

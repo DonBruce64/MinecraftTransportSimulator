@@ -20,9 +20,9 @@ import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 public class PacketPlayerGunChange extends APacketEntity{
 	private final int gunID;
 	
-	public PacketPlayerGunChange(EntityPlayerGun entity){
+	public PacketPlayerGunChange(EntityPlayerGun entity, int gunID){
 		super(entity);
-		this.gunID = entity.gun.gunID;
+		this.gunID = gunID;
 	}
 	
 	public PacketPlayerGunChange(ByteBuf buf){

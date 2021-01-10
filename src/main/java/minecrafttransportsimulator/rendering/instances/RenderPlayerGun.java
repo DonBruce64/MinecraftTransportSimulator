@@ -42,16 +42,16 @@ public class RenderPlayerGun{
         GL11.glRotated(renderRotation.z, 0, 0, 1);
         
 		if(entity.gun != null){
-			String modelLocation = entity.gunItem.definition.getModelLocation();
+			String modelLocation = entity.gun.definition.getModelLocation();
 			if(!displayListMap.containsKey(modelLocation)){
 				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
-				objectListMap.put(modelLocation, OBJParser.generateRenderables(entity, modelLocation, parsedModel, entity.gunItem.definition.rendering != null ? entity.gunItem.definition.rendering.animatedObjects : null));
+				objectListMap.put(modelLocation, OBJParser.generateRenderables(entity, modelLocation, parsedModel, entity.gun.definition.rendering != null ? entity.gun.definition.rendering.animatedObjects : null));
 				displayListMap.put(modelLocation, OBJParser.generateDisplayList(parsedModel));
 			}
 			
 			//Bind the texture and render.
 			//Don't render on the transparent pass.
-			InterfaceRender.setTexture(entity.gunItem.definition.getTextureLocation(entity.gunItem.subName));
+			InterfaceRender.setTexture(entity.gun.definition.getTextureLocation(entity.currentSubName));
 			if(InterfaceRender.getRenderPass() != 1){
 				GL11.glCallList(displayListMap.get(modelLocation));
 			}

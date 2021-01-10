@@ -27,7 +27,6 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatList;
@@ -91,7 +90,7 @@ public class BuilderItem extends Item{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		item.addTooltipLines(tooltipLines, stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound()) : new WrapperNBT(new NBTTagCompound()));
+		item.addTooltipLines(tooltipLines, new WrapperNBT(stack));
 	}
 	
 	/**
@@ -118,13 +117,7 @@ public class BuilderItem extends Item{
 	 */
 	@Override
 	public int getMaxItemUseDuration(ItemStack stack){
-		if(item instanceof IItemFood){
-			return ((IItemFood) item).getTimeToEat();
-		}else if(item instanceof ItemPart && ((ItemPart) item).isHandHeldGun()){
-			return Integer.MAX_VALUE;
-		}else{
-			return 0;
-		}
+		return item instanceof IItemFood ? ((IItemFood) item).getTimeToEat() : 0;
     }
 	
 	/**

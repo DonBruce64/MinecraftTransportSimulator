@@ -186,25 +186,6 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	}
 	
 	@Override
-	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
-		if(isHandHeldGun()){
-			if(!world.isClient()){
-				EntityPlayerGun.playerServerGuns.get(player.getUUID()).fireCommand = true;
-			}
-			return true;
-		}else{
-			return false;
-		}
-    }
-	
-	@Override
-	public void onStoppedUsing(WrapperWorld world, WrapperPlayer player){
-		if(isHandHeldGun() && !world.isClient()){
-			EntityPlayerGun.playerServerGuns.get(player.getUUID()).fireCommand = false;
-		}
-	}
-	
-	@Override
 	public EntityPlayerGun createEntity(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
 		return new EntityPlayerGun(world, wrapper, playerSpawning, data);
 	}

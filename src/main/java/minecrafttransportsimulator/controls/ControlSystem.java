@@ -11,6 +11,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.NetworkSystem;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
+import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
@@ -18,6 +19,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -57,6 +59,12 @@ public final class ControlSystem{
 		ConfigSystem.saveToDisk();
 	}
 
+	
+	public static void controlPlayerGun(EntityPlayerGun entity){
+		if(entity.gun != null){
+			NetworkSystem.sendToServer(new PacketPlayerGunFiring(entity, InputSystem.isRightMouseButtonDown()));
+		}
+	}
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
 		clientPlayer = InterfaceClient.getClientPlayer();
