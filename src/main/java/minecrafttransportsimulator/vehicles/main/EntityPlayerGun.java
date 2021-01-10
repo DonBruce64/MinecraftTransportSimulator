@@ -36,6 +36,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	
 	private final WrapperPlayer player;
+	private int ticksOnGun;
 	private int hotbarSelected = -1;
 	private ItemStack gunStack;
 	private ItemPart gunItem;
@@ -110,8 +111,11 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 					if(heldItem instanceof ItemPart){
 						ItemPart heldPart = (ItemPart) heldItem;
 						if(heldPart.isHandHeldGun() && !world.isClient()){
-							createNewGun(-1);
-							NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
+							if(++ticksOnGun == 5){
+								createNewGun(-1);
+								NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
+								ticksOnGun = 0;
+							}
 						}
 					}
 				}
