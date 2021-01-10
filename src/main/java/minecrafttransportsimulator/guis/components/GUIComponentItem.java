@@ -1,13 +1,18 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.util.List;
+
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import net.minecraft.item.ItemStack;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
- * into the GUI without, or calling any MC methods.  This allows us to use a simple string 
- * name for the render to prevent version changes from causing issues.
+ * or list of stacks into the GUI.  This allows us to use a simple string 
+ * name for the render rather than a bunch of MC calls.
  * Note that the item parameters are not final.  This allows for switching items in GUIs.
  * This is especially useful in crafting GUIs, where you want a static set of item components
- * that switch their states depending on other selections.
+ * that switch their states depending on other selections.  Also note that there is a single
+ * stack and a list of stacks.  If the list is used, the items will cycle through.  This is
+ * useful for crafting GUIs, where multiple items may be used for a single component.
  *
  * @author don_bruce
  */
@@ -16,6 +21,7 @@ public class GUIComponentItem{
 	public final int y;
 	public final float scale;
 	public ItemStack stack;
+	public List<ItemStack> stacks;
 		    	
 	public GUIComponentItem(int x, int y, float scale, ItemStack stack){
 		this.x = x;
@@ -32,6 +38,8 @@ public class GUIComponentItem{
     public void renderItem(){
     	if(stack != null){
     		InterfaceGUI.drawItem(stack, x, y, scale);
+    	}else if(stacks != null && !stacks.isEmpty()){
+    		InterfaceGUI.drawItem(stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*20)/20)), x, y, scale);
     	}
     }
     
@@ -41,10 +49,16 @@ public class GUIComponentItem{
 	 *  instance of {@link AGUIBase} to ensure the tooltip doesn't render off the screen.
 	 */
     public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
+    	ItemStack stackToRender = null;
     	if(stack != null){
+    		stackToRender = stack;
+    	}else if(stacks != null && !stacks.isEmpty()){
+    		stackToRender = stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*20)/20));
+    	}
+    	if(stackToRender != null){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
-    			InterfaceGUI.drawItemTooltip(gui, mouseX, mouseY, stack);
+    			InterfaceGUI.drawItemTooltip(gui, mouseX, mouseY, stackToRender);
     		}
     	}
     }

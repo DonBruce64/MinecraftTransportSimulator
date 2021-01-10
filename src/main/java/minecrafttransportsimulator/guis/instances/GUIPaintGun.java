@@ -15,11 +15,11 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.item.ItemStack;
@@ -182,14 +182,18 @@ public class GUIPaintGun extends AGUIBase{
 		partName.text = currentItem.getItemName();
 		
 		//Parse crafting items and set icon items.
-		List<ItemStack> craftingMaterials = InterfaceCore.parseFromJSON(currentItem, false, true);
+		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			if(i < craftingMaterials.size()){
-				craftingItemIcons.get(i).stack = craftingMaterials.get(i);
+			if(i < materials.size()){
+				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+				for(ItemStack stack : craftingItemIcons.get(i).stacks){
+					stack.setCount(materials.get(i).qty);
+				}
 	    	}else{
-	    		craftingItemIcons.get(i).stack = null;
+	    		craftingItemIcons.get(i).stacks = null;
 	    	}			
 		}
+		
 		
 		//Set model render properties.
 		modelRender.modelLocation = currentItem.definition.getModelLocation();

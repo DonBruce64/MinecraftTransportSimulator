@@ -76,12 +76,6 @@ public abstract class AItemBase{
 	}
 	
 	/**
-	 *  Called when the player releases their right-clicking on this item.
-	 *  This is essentially the "end" call for {@link #onUsed(WrapperWorld, WrapperPlayer)}.
-	 */
-	public void onStoppedUsing(WrapperWorld world, WrapperPlayer player){}
-	
-	/**
 	 *  Returns true if this item can be stacked.  Stacking is left up to the game itself.
 	 */
 	public boolean canBeStacked(){

@@ -5,6 +5,7 @@ import java.util.Map;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -177,12 +178,14 @@ public class WrapperInventory{
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
 	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(ItemStack materialStack : InterfaceCore.parseFromJSON(item, includeMain, includeSub)){
-			int requiredMaterialCount = materialStack.getCount();
-			for(int i=0; i<getSize(); ++i){
-				ItemStack stack = inventory.getStackInSlot(i);
-				if(ItemStack.areItemsEqual(stack, materialStack)){
-					requiredMaterialCount -= stack.getCount();
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub)){
+			int requiredMaterialCount = material.qty;
+			for(ItemStack stack : material.possibleItems){
+				for(int i=0; i<getSize(); ++i){
+					ItemStack testStack = inventory.getStackInSlot(i);
+					if(ItemStack.areItemsEqual(stack, testStack)){
+						requiredMaterialCount -= stack.getCount();
+					}
 				}
 			}
 			if(requiredMaterialCount > 0){
@@ -199,8 +202,10 @@ public class WrapperInventory{
 	 *  result in the this method removing the incorrect number of materials.
 	 */
 	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(ItemStack materialStack : InterfaceCore.parseFromJSON(item, includeMain, includeSub)){
-			removeStack(materialStack, materialStack.getCount());
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub)){
+			for(ItemStack stack : material.possibleItems){
+				removeStack(stack, material.qty);
+			}
 		}
 		inventory.markDirty();
 	}

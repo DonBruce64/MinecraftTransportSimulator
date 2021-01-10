@@ -27,6 +27,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
@@ -384,12 +385,15 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<ItemStack> craftingMaterials = InterfaceCore.parseFromJSON(currentItem, true, true);
+		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, true, true);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			if(i < craftingMaterials.size()){
-				craftingItemIcons.get(i).stack = craftingMaterials.get(i);
+			if(i < materials.size()){
+				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+				for(ItemStack stack : craftingItemIcons.get(i).stacks){
+					stack.setCount(materials.get(i).qty);
+				}
 	    	}else{
-	    		craftingItemIcons.get(i).stack = null;
+	    		craftingItemIcons.get(i).stacks = null;
 	    	}			
 		}
 		

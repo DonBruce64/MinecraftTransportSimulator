@@ -18,11 +18,11 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -518,9 +518,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(ItemStack craftingStack : InterfaceCore.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true)){
-			if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
-				world.spawnItemStack(craftingStack, location);
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true)){
+			for(ItemStack stack : material.possibleItems){
+				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
+					world.spawnItemStack(new ItemStack(stack.getItem(), material.qty, material.meta), location);
+				}
+				break;
 			}
 		}
 		

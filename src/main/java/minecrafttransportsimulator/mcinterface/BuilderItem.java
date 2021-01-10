@@ -160,18 +160,6 @@ public class BuilderItem extends Item{
 	}
 	
 	/**
-	 *  This is called by the main MC system to stop using this item.
-	 *  Forwards this to the main item for processing.
-	 */
-	@Override
-	public void onPlayerStoppedUsing(ItemStack stack, World world, EntityLivingBase entityLiving, int timeLeft){
-		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
-		if(entityLiving instanceof EntityPlayer){
-			item.onStoppedUsing(wrapper, wrapper.getWrapperFor((EntityPlayer) entityLiving));
-		}
-	}
-	
-	/**
 	 *  This is called by the main MC system after the item's use timer has expired.
 	 *  This is normally instant, as {@link #getMaxItemUseDuration(ItemStack)} is 0.
 	 *  If this item is food, and a player is holding the item, have it apply to them. 

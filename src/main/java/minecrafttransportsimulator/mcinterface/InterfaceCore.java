@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -82,45 +78,6 @@ public class InterfaceCore{
     		logError(log);
     	}
     }
-	
-	/**
-	 *  Returns a list of wrappers required to craft the passed-in item.
-	 */
-	public static List<ItemStack> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		List<ItemStack> stackList = new ArrayList<ItemStack>();
-		String currentSubName = "";
-		try{
-			//Get main materials.
-			if(includeMain){
-		    	for(String itemText : item.definition.general.materials){
-					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					
-					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					stackList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
-				}
-			}
-	    	
-	    	//Get subType materials, if required.
-	    	if(includeSub && item instanceof AItemSubTyped){
-		    	for(String itemText : ((AItemSubTyped<?>) item).getExtraMaterials()){
-					int itemQty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					
-					int itemMetadata = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
-					itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-					stackList.add(new ItemStack(Item.getByNameOrId(itemText), itemQty, itemMetadata));
-		    	}
-	    	}
-	    	
-	    	//Return all materials.
-	    	return stackList;
-		}catch(Exception e){
-			e.printStackTrace();
-			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + currentSubName + ".  Report this to the pack author!");
-		}
-	}
 	
 	/**
 	 *  Returns a fake TileEntity created to allow for such a TileEntity to be used on
