@@ -272,7 +272,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 
 	@Override
 	public boolean isLitUp(){
-		return true;
+		return false;
 	}
 
 	@Override
