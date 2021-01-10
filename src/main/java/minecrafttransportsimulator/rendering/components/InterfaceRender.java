@@ -2,9 +2,15 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.imageio.ImageIO;
 
 import org.lwjgl.opengl.GL11;
 
@@ -81,6 +87,56 @@ public class InterfaceRender{
 			}
 		}
 		GlStateManager.bindTexture(textures.get(textureLocation));
+	}
+	
+	/**
+	 *  Binds the passed-in texture to be rendered.  The texture is downloaded from the
+	 *  URL and then added to the texture rendering system.  The integer of the The instance 
+	 *  of the texture is  cached in this class once created for later use, so feel free to not 
+	 *  cache the string URL that is passed-in.  If the texture binding was successful, null is
+	 *  returned.  Otherwise, an error message is returned.
+	 */
+	public static String bindURLTexture(String textureURL){
+		//Bind texture if we have it.
+		if(!textures.containsKey(textureURL)){
+			//Don't have this texture created yet.  Do so now.
+			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
+			//FAR less jank than using MC's resource system.
+			try{
+				URL url = new URL(textureURL);
+				URLConnection connection = url.openConnection();
+				try{
+					List<String> validContentTypes = new ArrayList<String>();
+					for(String imageSuffix : ImageIO.getReaderFileSuffixes()){
+						validContentTypes.add("image/" + imageSuffix);
+					}
+					String contentType = connection.getHeaderField("Content-Type");
+					if(validContentTypes.contains(contentType)){
+						BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
+						int glTexturePointer = TextureUtil.glGenTextures();
+				        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
+				        textures.put(textureURL, glTexturePointer);
+					}else{
+						String errorString = "ERROR: Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+						for(String validType : validContentTypes){
+							errorString += validType + ", ";
+						}
+						textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+						return errorString;
+					}
+				}catch(Exception e){
+					textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+					e.printStackTrace();
+					return "ERROR: Could not parse images.  Error was: " + e.getMessage();
+				}
+			}catch(Exception e){
+				textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+				e.printStackTrace();
+				return "ERROR: Could not open URL for processing.  Error was: " + e.getMessage();
+			}
+		}
+		GlStateManager.bindTexture(textures.get(textureURL));
+		return null;
 	}
 	
 	/**

@@ -57,6 +57,9 @@ public class RenderableModelObject extends RenderableTransform{
 		if(objectName.toLowerCase().contains("window")){
 			transforms.add(new TransformWindow(vertices));
 		}
+		if(objectName.toLowerCase().endsWith("url") && provider instanceof ITextProvider){
+			transforms.add(new TransformOnlineTexture(objectName));
+		}
 	}
 	
 	/**

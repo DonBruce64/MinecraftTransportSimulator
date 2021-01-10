@@ -5,6 +5,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
+import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -25,6 +26,8 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 				return false;
 			}else if(decor.definition.general.itemTypes != null){
 				InterfaceGUI.openGUI(new GUIPartBench(decor, player));
+			}else if(!decor.getText().isEmpty()){
+				InterfaceGUI.openGUI(new GUITextEditor(decor));
 			}
 		}
 		return true;
