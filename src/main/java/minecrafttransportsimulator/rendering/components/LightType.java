@@ -36,7 +36,7 @@ public enum LightType{
 	
 	private LightType(boolean hasBeam){
 		this.hasBeam = hasBeam;
-		this.lowercaseName = name();
+		this.lowercaseName = name().toLowerCase();
 	}
 	
 	public boolean isInCollection(Collection<String> collection){
