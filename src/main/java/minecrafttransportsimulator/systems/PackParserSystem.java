@@ -360,28 +360,32 @@ public final class PackParserSystem{
     private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
-			try{
-				if(subDefinition.extraMaterials != null){
-					AItemPack<?> item;
-					switch(mainDefinition.classification){
-						case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
-						case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
-						case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
-						case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
-						case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
-						default : {
-							throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
+			if(subDefinition != null){
+	    		if(subDefinition.extraMaterials != null){
+					try{
+						AItemPack<?> item;
+						switch(mainDefinition.classification){
+							case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
+							case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
+							case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
+							case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
+							case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
+							default : {
+								throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
+							}
 						}
+						
+						//Add the pack item to the map.  We need to make sure all subDefinitions
+						//are okay before adding the entire definition.
+						packItems.put(item.definition.systemName + subDefinition.subName, item);
+					}catch(Exception e){
+						throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
 					}
-					
-					//Add the pack item to the map.  We need to make sure all subDefinitions
-					//are okay before adding the entire definition.
-					packItems.put(item.definition.systemName + subDefinition.subName, item);
 				}else{
-					throw new NullPointerException();
+					throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to missing materials.");
 				}
-			}catch(Exception e){
-				throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
+			}else{
+				throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to it not existing.  Check your commas!");
 			}
 		}
     	

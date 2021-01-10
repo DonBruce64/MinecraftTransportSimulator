@@ -9,8 +9,7 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTUtil;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class WrapperInventory{
 	private final IInventory inventory;
@@ -138,13 +137,10 @@ public class WrapperInventory{
 	 *  only some of the items were removed.
 	 */
 	public boolean removeStack(ItemStack stack, int qtyToRemove){
-		Item item = stack.getItem();
-		int meta = stack.getMetadata();
-		NBTTagCompound nbt = stack.getTagCompound();
 		int qtyRemoved = 0;
         for(int i=0; i<getSize(); ++i){
             ItemStack currentStack = inventory.getStackInSlot(i);
-            if(currentStack.getItem().equals(item) && (meta <= -1 || currentStack.getMetadata() == meta) && (nbt == null || NBTUtil.areNBTEquals(nbt, currentStack.getTagCompound(), true))){
+            if(OreDictionary.itemMatches(stack, currentStack, false)){
                 int qtyRemovedFromStack = Math.min(qtyToRemove - qtyRemoved, currentStack.getCount());
                 qtyRemoved += qtyRemovedFromStack;
                 if(qtyToRemove != 0){
@@ -178,12 +174,12 @@ public class WrapperInventory{
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
 	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub)){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true)){
 			int requiredMaterialCount = material.qty;
 			for(ItemStack stack : material.possibleItems){
 				for(int i=0; i<getSize(); ++i){
 					ItemStack testStack = inventory.getStackInSlot(i);
-					if(ItemStack.areItemsEqual(stack, testStack)){
+					if(OreDictionary.itemMatches(stack, testStack, false)){
 						requiredMaterialCount -= stack.getCount();
 					}
 				}
@@ -202,7 +198,7 @@ public class WrapperInventory{
 	 *  result in the this method removing the incorrect number of materials.
 	 */
 	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub)){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true)){
 			for(ItemStack stack : material.possibleItems){
 				removeStack(stack, material.qty);
 			}

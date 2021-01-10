@@ -5,8 +5,10 @@ import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.oredict.OreDictionary;
 
 /**
@@ -28,7 +30,22 @@ public class PackMaterialComponent{
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 			meta = 0;
 			String oreName = itemText.substring("oredict:".length());
-			possibleItems.addAll(OreDictionary.getOres(oreName));
+			NonNullList<ItemStack> oreDictMaterials = OreDictionary.getOres(oreName, true);
+			List<ItemStack> possibleMaterials = new ArrayList<ItemStack>();
+			if(oreDictMaterials.isEmpty()){
+				InterfaceCore.logError("ERROR: Could not obtain any materials for oredict ore name:" + oreName);
+			}else{
+				for(ItemStack oreDictMaterial : oreDictMaterials){
+					if(oreDictMaterial.getMetadata() == OreDictionary.WILDCARD_VALUE){
+						//Just get the first material here.
+						//We can't loop over all valid ones as there's not a finite list anywhere.
+						possibleMaterials.add(new ItemStack(oreDictMaterial.getItem(), 1));
+					}else{
+						possibleMaterials.add(oreDictMaterial);
+					}
+				}
+			}
+			possibleItems.addAll(possibleMaterials);
 		}else{
 			qty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
@@ -42,9 +59,10 @@ public class PackMaterialComponent{
 	 *  Returns the Material Components require to craft the passed-in item.  The return value is a list of lists.
 	 *  Each list element corresponds to a single ingredient, with each list itself corresponding to the
 	 *  possible ItemStacks that are valid for that ingredient.  The idea being that OreDict allows for
-	 *  multiple items to be used. 
+	 *  multiple items to be used.  If this component is not for crafting checks, set forCraftingCheck to false.
+	 *  This prevents the returned stacks from having the wildcard value in their metadata and not being actual items.
 	 */
-	public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub){
+	public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forCraftingCheck){
 		List<PackMaterialComponent> components = new ArrayList<PackMaterialComponent>();
 		String currentSubName = "";
 		try{

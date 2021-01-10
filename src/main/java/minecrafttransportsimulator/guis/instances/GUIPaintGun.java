@@ -182,7 +182,7 @@ public class GUIPaintGun extends AGUIBase{
 		partName.text = currentItem.getItemName();
 		
 		//Parse crafting items and set icon items.
-		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true);
+		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true, false);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < materials.size()){
 				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;

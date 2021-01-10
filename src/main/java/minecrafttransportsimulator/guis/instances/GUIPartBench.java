@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -385,7 +386,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, true, true);
+		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < materials.size()){
 				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
@@ -414,7 +415,17 @@ public class GUIPartBench extends AGUIBase{
 	}
 	
 	private boolean isItemValid(AItemPack<?> item){
-		if(item.definition.general.materials != null && !item.definition.general.materials.isEmpty()){
+		boolean hasMaterials = item.definition.general.materials != null && !item.definition.general.materials.isEmpty();
+		if(!hasMaterials && item instanceof AItemSubTyped){
+			AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) item;
+			for(JSONSubDefinition subDefinition : subTypedItem.definition.definitions){
+				if(subDefinition.subName.equals(subTypedItem.subName)){
+					hasMaterials = !subDefinition.extraMaterials.isEmpty();
+				}
+			}
+		}
+		
+		if(hasMaterials){
 			if(decor.definition.general.items != null){
 				return decor.definition.general.items.contains(item.definition.packID + ":" + item.definition.systemName);
 			}else if(decor.definition.general.itemTypes.contains(item.definition.classification.toString().toLowerCase())){

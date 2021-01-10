@@ -518,7 +518,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true)){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true, false)){
 			for(ItemStack stack : material.possibleItems){
 				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnItemStack(new ItemStack(stack.getItem(), material.qty, material.meta), location);
