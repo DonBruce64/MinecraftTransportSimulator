@@ -479,13 +479,6 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the block wrapper at the passed-in location, or null if the block is air.
-	 */
-	public WrapperBlock getWrapperBlock(Point3i point){
-		return isAir(point) ? null : new WrapperBlock(world, new BlockPos(point.x, point.y, point.z));
-	}
-	
-	/**
 	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
 	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
 	 */
@@ -500,6 +493,16 @@ public class WrapperWorld{
 	public float getBlockHardness(Point3i point){
 		BlockPos pos = new BlockPos(point.x, point.y, point.z);
 		return world.getBlockState(pos).getBlockHardness(world, pos);
+	}
+	
+	/**
+	 *  Returns the slipperiness of the block at the passed-in point.
+	 *  0.6 is default slipperiness for blocks.
+	 */
+	public float getBlockSlipperiness(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState state = world.getBlockState(pos);
+		return state.getBlock().getSlipperiness(state, world, pos, null);
 	}
 	
 	/**
@@ -532,17 +535,16 @@ public class WrapperWorld{
 	 *  things placed or connected to it.
 	 */
 	public boolean isBlockSolid(Point3i point){
-		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
-		Block offsetMCBlock = offsetMCState.getBlock();
-        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && offsetMCState.getMaterial().isOpaque() && offsetMCState.isFullCube() && offsetMCState.getMaterial() != Material.GOURD : false;
+		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+		Block offsetMCBlock = state.getBlock();
+        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.getMaterial().isOpaque() && state.isFullCube() && state.getMaterial() != Material.GOURD : false;
 	}
 	
 	/**
 	 *  Returns true if the block is liquid.
 	 */
 	public boolean isBlockLiquid(Point3i point){
-		IBlockState offsetMCState = world.getBlockState(new BlockPos(point.x, point.y, point.z));
-        return offsetMCState.getMaterial().isLiquid();
+        return world.getBlockState(new BlockPos(point.x, point.y, point.z)).getMaterial().isLiquid();
 	}
 	
 	/**
@@ -578,7 +580,7 @@ public class WrapperWorld{
 	 */
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
 		AxisAlignedBB mcBox = convertBox(box);
-		box.collidingBlocks.clear();
+		box.collidingBlockPositions.clear();
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
@@ -590,12 +592,12 @@ public class WrapperWorld{
 	    					int oldCollidingBlockCount = collidingAABBs.size();
 	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
 	    					if(collidingAABBs.size() > oldCollidingBlockCount){
-	    						box.collidingBlocks.add(new WrapperBlock(world, pos));
+	    						box.collidingBlockPositions.add(new Point3i(i, j, k));
 	    					}
 	    				}
 						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
 							collidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
-							box.collidingBlocks.add(new WrapperBlock(world, pos));
+							box.collidingBlockPositions.add(new Point3i(i, j, k));
 						}
     				}
     			}
@@ -652,9 +654,12 @@ public class WrapperWorld{
 	/**
 	 *  Returns the rain strength at the passed-in position.
 	 *  0 is no rain, 1 is rain, and 2 is a thunderstorm.
+	 *  Note that this method offsets the point by 1, as it allows
+	 *  for blocks to query rain strength and not get 0 due to no rain
+	 *  being possible "in" that block.
 	 */
 	public float getRainStrength(Point3i point){
-		return world.isRainingAt(new BlockPos(point.x, point.y, point.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
+		return world.isRainingAt(new BlockPos(point.x, point.y + 1, point.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
 	}
 	
 	/**

@@ -19,7 +19,6 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -117,9 +116,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						for(int i=-1; i<1 && !foundSpot; ++i){
 							for(int j=-1; j<1 && !foundSpot; ++j){
 								blockPlacementPoint.add(i, 0, j);
-								WrapperBlock testBlockWrapper = world.getWrapperBlock(blockPlacementPoint);
-								ABlockBase testBlock = world.getBlock(blockPlacementPoint);
-								if(testBlockWrapper == null || testBlock instanceof BlockRoadCollision){
+								if(world.isAir(blockPlacementPoint) || world.getBlock(blockPlacementPoint) instanceof BlockRoadCollision){
 									foundSpot = true;
 								}else{
 									blockPlacementPoint.add(-i, 0, -j);

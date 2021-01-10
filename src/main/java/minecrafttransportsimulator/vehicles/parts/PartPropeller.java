@@ -98,7 +98,7 @@ public class PartPropeller extends APart{
 				boundingBox.depthRadius -= 0.2;
 				
 				//If the propeller is colliding with blocks, damage it.
-				if(!boundingBox.collidingBlocks.isEmpty()){
+				if(!boundingBox.collidingBlockPositions.isEmpty()){
 					++damageAmount;
 					
 				}

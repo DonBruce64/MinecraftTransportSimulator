@@ -7,14 +7,13 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.sound.InterfaceSound;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -91,8 +90,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			if(definition.ground.isWheel){
 				if(Math.abs(prevAngularVelocity)/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-					WrapperBlock blockBelow = vehicle.world.getWrapperBlock(new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z));
-					if(blockBelow != null && blockBelow.getHardness() >= 1.25){
+					Point3i blockPositionBelow = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
+					if(!vehicle.world.isAir(blockPositionBelow) && vehicle.world.getBlockHardness(blockPositionBelow) >= 1.25){
 						contactThisTick = true;
 					}
 				}
@@ -210,10 +209,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	
 	public float getFrictionLoss(){
 		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
-		WrapperBlock groundBlock = vehicle.world.getWrapperBlock(groundPosition);		
-		if(groundBlock != null){
-			//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-			return 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
+		if(!vehicle.world.isAir(groundPosition)){
+			return 0.6F - vehicle.world.getBlockSlipperiness(groundPosition) + vehicle.world.getRainStrength(groundPosition)*0.1F;
 		}else{
 			return 0;
 		}

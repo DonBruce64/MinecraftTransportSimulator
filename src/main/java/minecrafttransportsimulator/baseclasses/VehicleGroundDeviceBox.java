@@ -3,7 +3,6 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -176,7 +175,7 @@ public class VehicleGroundDeviceBox{
 		if(!groundDevices.isEmpty()){
 			solidBox.globalCenter.setTo(solidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-			isCollided = !solidBox.collidingBlocks.isEmpty();
+			isCollided = !solidBox.collidingBlockPositions.isEmpty();
 			collisionDepth = solidBox.currentCollisionDepth.y;
 			PartGroundDevice.groundOperationOffset.set(0 , -0.5, 0);
 			if(isCollided){
@@ -185,7 +184,7 @@ public class VehicleGroundDeviceBox{
 				solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-				isGrounded = !solidBox.collidingBlocks.isEmpty();
+				isGrounded = !solidBox.collidingBlockPositions.isEmpty();
 				contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
 			}
 			
@@ -196,14 +195,14 @@ public class VehicleGroundDeviceBox{
 				solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-				isAbleToDoGroundOperations = !solidBox.collidingBlocks.isEmpty();
+				isAbleToDoGroundOperations = !solidBox.collidingBlockPositions.isEmpty();
 			}
 		}
 		
 		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 			liquidBox.globalCenter.setTo(liquidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
-			isCollidedLiquid = !liquidBox.collidingBlocks.isEmpty();
+			isCollidedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
 			double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;
 			
 			if(isCollidedLiquid){
@@ -212,7 +211,7 @@ public class VehicleGroundDeviceBox{
 				liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
 				vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
 				liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-				isGroundedLiquid = !liquidBox.collidingBlocks.isEmpty();
+				isGroundedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
 			}
 			
 			if(isCollidedLiquid || isGroundedLiquid){
@@ -222,12 +221,12 @@ public class VehicleGroundDeviceBox{
 				liquidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
 				vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
 				liquidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-				isAbleToDoGroundOperationsLiquid = !liquidBox.collidingBlocks.isEmpty();
+				isAbleToDoGroundOperationsLiquid = !liquidBox.collidingBlockPositions.isEmpty();
 			}
 			
 			isLiquidCollidedWithGround = false;
-			for(WrapperBlock block : liquidBox.collidingBlocks){
-				if(!block.isLiquid()){
+			for(Point3i blockPosition : liquidBox.collidingBlockPositions){
+				if(!vehicle.world.isBlockLiquid(blockPosition)){
 					isLiquidCollidedWithGround = true;
 					break;
 				}

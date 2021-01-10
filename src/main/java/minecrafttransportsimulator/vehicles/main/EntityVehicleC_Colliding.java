@@ -11,6 +11,7 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
@@ -18,7 +19,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -462,14 +462,15 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
-			for(WrapperBlock block : box.collidingBlocks){
-				if(!block.isLiquid() && block.getHardness() <= velocity*currentMass/250F && block.getHardness() >= 0){
+			for(Point3i blockPosition : box.collidingBlockPositions){
+				float blockHardness = world.getBlockHardness(blockPosition);
+				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
-						hardnessHitThisTick += block.getHardness();
-						motion.multiply(Math.max(1.0F - block.getHardness()*0.5F/((1000F + currentMass)/1000F), 0.0F));
+						hardnessHitThisTick += blockHardness;
+						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							if(ticksExisted > 500){
-								world.destroyBlock(block.getPosition());
+								world.destroyBlock(blockPosition);
 							}else{
 								motion.set(0D, 0D, 0D);
 								return -1;

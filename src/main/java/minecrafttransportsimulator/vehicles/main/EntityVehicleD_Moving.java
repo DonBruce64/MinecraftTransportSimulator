@@ -9,7 +9,6 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -275,12 +274,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Get any contributions from the colliding collision bits.
 		for(BoundingBox box : blockCollisionBoxes){
-			if(!box.collidingBlocks.isEmpty()){
+			if(!box.collidingBlockPositions.isEmpty()){
 				Point3i groundPosition = new Point3i(box.globalCenter);
-				WrapperBlock groundBlock = world.getWrapperBlock(groundPosition);
-				if(groundBlock != null){
-					//0.6 is default slipperiness for blocks.  Anything extra should reduce friction, anything less should increase it.
-					float frictionLoss = 0.6F - groundBlock.getSlipperiness() + (groundBlock.isRaining() ? 0.25F : 0);
+				if(!world.isAir(groundPosition)){
+					float frictionLoss = 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
 					brakingFactor += Math.max(2.0 - frictionLoss, 0);
 				}
 			}
