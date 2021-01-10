@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Helper class used to handle rendering operations across multiple passes.  Tracks

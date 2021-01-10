@@ -16,8 +16,8 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
+import minecrafttransportsimulator.rendering.components.InterfaceEventsCamera;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.rendering.components.RenderEventHandler;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -81,10 +81,10 @@ public final class ControlSystem{
 		}
 		
 		if(zoomIn.isPressed()){
-			RenderEventHandler.changeCameraZoom(true);
+			InterfaceEventsCamera.changeCameraZoom(true);
 		}
 		if(zoomOut.isPressed()){
-			RenderEventHandler.changeCameraZoom(false);
+			InterfaceEventsCamera.changeCameraZoom(false);
 		}
 		
 		if(changeView.isPressed()){

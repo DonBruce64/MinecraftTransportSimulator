@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class represents an object that can be rendered from an OBJ model.  This object is a set of
  * faces that are rendered during the main rendering routine.  Various transforms may be performed on
