@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -226,7 +227,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	@Override
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
-			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
+			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).vehicleDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
@@ -244,7 +245,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
-		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value){
+		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 			if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider)){
 				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
 				boolean otherController = false;

@@ -23,8 +23,8 @@ import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.ParticleDrip;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.sound.InterfaceSound;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -53,6 +53,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	private boolean isPropellerInLiquid;
 	private boolean autoStarterEngaged;
 	private int starterLevel;
+	private int autoStarterWindDown;
 	private int shiftCooldown;
 	private int internalFuel;
 	private long lastTimeParticleSpawned;
@@ -182,7 +183,6 @@ public class PartEngine extends APart implements IParticleProvider{
 				if(vehicle.electricPower > 1){
 					starterLevel += 4;
 				}else{
-					autoStarterEngaged = false;
 					setElectricStarterStatus(false);
 				}
 			}
@@ -192,6 +192,12 @@ public class PartEngine extends APart implements IParticleProvider{
 				}
 				if(!isCreative){
 					fuelFlow += vehicle.fuelTank.drain(vehicle.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value, !vehicle.world.isClient());
+				}
+			}
+			if(autoStarterEngaged){
+				++autoStarterWindDown;
+				if((state.running && autoStarterWindDown >= 20) || (rpm > startRPM && autoStarterWindDown >= 40)){
+					setElectricStarterStatus(false);
 				}
 			}
 		}else if(state.hsOn){
@@ -587,6 +593,8 @@ public class PartEngine extends APart implements IParticleProvider{
 					}
 				}
 			}else{
+				starterLevel = 0;
+				autoStarterEngaged = false;
 				if(state.equals(EngineStates.MAGNETO_OFF_ES_ON)){
 					state = EngineStates.ENGINE_OFF;
 				}else if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
@@ -605,13 +613,6 @@ public class PartEngine extends APart implements IParticleProvider{
 			state = EngineStates.RUNNING_ES_ON;
 		}else if(state.equals(EngineStates.MAGNETO_ON_HS_ON)){
 			state = EngineStates.RUNNING;
-		}
-		
-		//Turn starter off.
-		starterLevel = 0;
-		if(autoStarterEngaged){
-			setElectricStarterStatus(false);
-			autoStarterEngaged = false;
 		}
 		
 		//If we are not a steam engine, set oil pressure.
@@ -655,6 +656,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	
 	public void autoStartEngine(){
 		autoStarterEngaged = true;
+		autoStarterWindDown = 0;
 		setMagnetoStatus(true);
 		setElectricStarterStatus(true);
 	}
