@@ -14,7 +14,7 @@ import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
@@ -102,7 +102,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				if(gun != null && (!gunItem.equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
 					saveGun(true);
 					fireCommand = false;
-					NetworkSystem.sendToAllClients(new PacketPlayerGunFiring(this, false));
+					InterfacePacket.sendToAllClients(new PacketPlayerGunFiring(this, false));
 				}
 				
 				//If we don't have a gun yet, try to get the current one if the player is holding one.
@@ -113,7 +113,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 						if(heldPart.isHandHeldGun() && !world.isClient()){
 							if(++ticksOnGun == 5){
 								createNewGun(-1);
-								NetworkSystem.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
+								InterfacePacket.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
 								ticksOnGun = 0;
 							}
 						}
@@ -138,10 +138,10 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 					
 					if(fireCommand && !gun.firing && !world.isClient()){
 						gun.firing = true;
-						NetworkSystem.sendToAllClients(new PacketGunChange(gun, true));
+						InterfacePacket.sendToAllClients(new PacketGunChange(gun, true));
 					}else if(!fireCommand && gun.firing && !world.isClient()){
 						gun.firing = false;
-						NetworkSystem.sendToAllClients(new PacketGunChange(gun, false));
+						InterfacePacket.sendToAllClients(new PacketGunChange(gun, false));
 						saveGun(false);
 					}
 					gun.update();

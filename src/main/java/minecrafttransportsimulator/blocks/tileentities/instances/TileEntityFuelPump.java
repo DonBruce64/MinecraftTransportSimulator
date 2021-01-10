@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -55,7 +55,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 16){
-				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
 					if(entity instanceof WrapperPlayer){
 						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
@@ -74,7 +74,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
 					//No more room in the vehicle.  Disconnect.
-					NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
 					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
@@ -85,7 +85,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
-				NetworkSystem.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
 				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){

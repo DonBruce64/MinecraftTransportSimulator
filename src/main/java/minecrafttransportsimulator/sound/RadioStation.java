@@ -48,7 +48,7 @@ public class RadioStation{
 		}else{
 			musicFiles = new ArrayList<File>();
 		}
-		AudioSystem.addRadioStation(this);
+		InterfaceSound.addRadioStation(this);
 	}
 	
 	/**
@@ -61,7 +61,7 @@ public class RadioStation{
 		ByteBuffer buffer = decoder.readBlock();
 		if(buffer != null){
 			//Get new buffer index from the audio system and add it to our radios.
-			int bufferIndex = AudioSystem.createBuffer(buffer, decoder);
+			int bufferIndex = InterfaceSound.createBuffer(buffer, decoder);
 			activeBuffers.add(bufferIndex);
 			
 			//Update station buffer counts and return buffer index.
@@ -109,10 +109,10 @@ public class RadioStation{
 				//If we have any playing radios, do buffer logic.
 				if(!playingRadios.isEmpty()){
 					//First check if we have any buffers that are done playing that we can re-claim.
-					freeBufferIndex = AudioSystem.getFreeStationBuffer(playingRadios);
+					freeBufferIndex = InterfaceSound.getFreeStationBuffer(playingRadios);
 					if(freeBufferIndex != 0){
 						activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
-						AudioSystem.deleteBuffer(freeBufferIndex);
+						InterfaceSound.deleteBuffer(freeBufferIndex);
 					}
 				}
 				
@@ -121,7 +121,7 @@ public class RadioStation{
 				if((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()){
 					for(Radio radio : queuedRadios){
 						radio.start();
-						AudioSystem.addRadioSound(radio.getPlayingSound(), activeBuffers);
+						InterfaceSound.addRadioSound(radio.getPlayingSound(), activeBuffers);
 						playingRadios.add(radio);
 					}
 					queuedRadios.clear();
@@ -132,7 +132,7 @@ public class RadioStation{
 					int newIndex = generateBufferIndex();
 					if(newIndex != 0){
 						for(Radio radio : playingRadios){
-							AudioSystem.bindBuffer(radio.getPlayingSound(), newIndex);
+							InterfaceSound.bindBuffer(radio.getPlayingSound(), newIndex);
 						}
 					}
 				}
@@ -162,7 +162,7 @@ public class RadioStation{
 	private void startPlayback(){
 		//Delete any buffers we might still have.
 		for(int buffer : activeBuffers){
-			AudioSystem.deleteBuffer(buffer);
+			InterfaceSound.deleteBuffer(buffer);
 		}
 		activeBuffers.clear();
 		

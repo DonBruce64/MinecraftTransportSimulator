@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.sound.InterfaceSound;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used both in model animations, and part movements.
@@ -85,12 +85,12 @@ public class DurationDelayClock{
 				}else{
 					movementFactor = 1;
 					if(!playedForwardsEndSound && provider.getProviderWorld().isClient()){
-						AudioSystem.playQuickSound(new SoundInstance(provider, definition.forwardsEndSound));
+						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsEndSound));
 						playedForwardsEndSound = true;
 					}
 				}
 				if(!playedForwardsStartSound && provider.getProviderWorld().isClient()){
-					AudioSystem.playQuickSound(new SoundInstance(provider, definition.forwardsStartSound));
+					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsStartSound));
 					playedForwardsStartSound = true;
 				}
 			}
@@ -103,12 +103,12 @@ public class DurationDelayClock{
 				}else{
 					movementFactor = 1;
 					if(!playedReverseEndSound && provider.getProviderWorld().isClient()){
-						AudioSystem.playQuickSound(new SoundInstance(provider, definition.reverseEndSound));
+						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseEndSound));
 						playedReverseEndSound = true;
 					}
 				}
 				if(!playedReverseStartSound && provider.getProviderWorld().isClient()){
-					AudioSystem.playQuickSound(new SoundInstance(provider, definition.reverseStartSound));
+					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseStartSound));
 					playedReverseStartSound = true;
 				}
 			}

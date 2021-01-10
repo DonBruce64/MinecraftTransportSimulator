@@ -3,7 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -147,12 +147,12 @@ public class WrapperPlayer extends WrapperEntity{
 	/**
 	 *  Sends a packet to this player over the network.
 	 *  Convenience method so we don't need to call the
-	 *  {@link NetworkSystem} for player-specific packets.
+	 *  {@link InterfacePacket} for player-specific packets.
 	 *  Note that this may ONLY be called on the server, as
 	 *  clients don't know about other player's network pipelines.
 	 */
 	public void sendPacket(APacketBase packet){
-		NetworkSystem.sendToPlayer(packet, this);
+		InterfacePacket.sendToPlayer(packet, this);
 	}
 	
 	/**

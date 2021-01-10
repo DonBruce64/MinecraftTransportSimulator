@@ -4,11 +4,11 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
-import minecrafttransportsimulator.controls.InputSystem;
+import minecrafttransportsimulator.controls.InterfaceInput;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -90,7 +90,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			InputSystem.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -174,7 +174,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//If we are on the client, disable mouse-yoke blocking.
 		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-			InputSystem.setMouseEnabled(true);
+			InterfaceInput.setMouseEnabled(true);
 			InterfaceGUI.closeGUI();
 		}
 	}

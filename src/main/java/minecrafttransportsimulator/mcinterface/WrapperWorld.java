@@ -19,7 +19,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -80,7 +80,7 @@ public class WrapperWorld{
 	private WrapperWorld(World world){
 		this.world = world;
 		if(world.isRemote){
-			NetworkSystem.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
 		}
 	}
 	
@@ -222,7 +222,7 @@ public class WrapperWorld{
 			savedDataAccessor.markDirty();
 			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 		}else{
-			NetworkSystem.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
 		}
 	}
 	
@@ -492,6 +492,14 @@ public class WrapperWorld{
 	public ABlockBase getBlock(Point3i point){
 		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
 		return block instanceof BuilderBlock ? ((BuilderBlock) block).mcBlock : null;
+	}
+	
+	/**
+	 *  Returns the hardness of the block at the passed-in point.
+	 */
+	public float getBlockHardness(Point3i point){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		return world.getBlockState(pos).getBlockHardness(world, pos);
 	}
 	
 	/**

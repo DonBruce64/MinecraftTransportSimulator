@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -41,8 +41,8 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 							}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
 								engine.linkedEngine = lastEngineClicked;
 								lastEngineClicked.linkedEngine = engine;
-								NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(engine, lastEngineClicked));
-								NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(lastEngineClicked, engine));
+								InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(engine, lastEngineClicked));
+								InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(lastEngineClicked, engine));
 								lastEngineClicked = null;
 								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
 							}else{

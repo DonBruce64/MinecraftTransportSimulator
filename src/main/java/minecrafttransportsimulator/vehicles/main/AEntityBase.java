@@ -16,7 +16,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 
@@ -211,7 +211,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 			locationRiderMap.put(riderLocation, rider);
 			if(!world.isClient()){
 				rider.setRiding(this);
-				NetworkSystem.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
+				InterfacePacket.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
 			}
 			return true;
 		}
@@ -231,7 +231,7 @@ public abstract class AEntityBase implements IAnimationProvider{
 			}
 			if(!world.isClient()){
 				rider.setRiding(null);
-				NetworkSystem.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
+				InterfacePacket.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
 			}
 		}
 	}

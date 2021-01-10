@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
@@ -89,7 +89,7 @@ public class Radio{
 			case INTERNET : displayText = "Ready to play from internet streams.\nPress a station number to start.\nOr press SET to set a station URL."; break;
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			NetworkSystem.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
 	
@@ -109,7 +109,7 @@ public class Radio{
 			currentSound.volume = setVolume/10F;
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			NetworkSystem.sendToServer(new PacketRadioStateChange(this, currentSource, setVolume, preset));
+			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, setVolume, preset));
 		}
 	}
 	
@@ -145,7 +145,7 @@ public class Radio{
 			}
 		}
 		if(provider.getProviderWorld().isClient() && sendPacket){
-			NetworkSystem.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
+			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
 	

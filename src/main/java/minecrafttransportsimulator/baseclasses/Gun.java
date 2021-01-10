@@ -13,7 +13,7 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
@@ -21,9 +21,9 @@ import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
-import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.ISoundProviderComplex;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -241,7 +241,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
 			if(windupTimeCurrent == 0 && provider.getProviderWorld().isClient()){
-				AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
 			}
 			++windupTimeCurrent;
 		}else if(!firing && windupTimeCurrent > 0){
@@ -306,9 +306,9 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 					bulletsReloading = part.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
 					if(provider.getProviderWorld().isClient()){
-						AudioSystem.playQuickSound(new SoundInstance(provider, definition.packID + ":" + definition.systemName + "_reloading"));
+						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.packID + ":" + definition.systemName + "_reloading"));
 					}else{
-						NetworkSystem.sendToAllClients(new PacketGunChange(this, loadedBullet));
+						InterfacePacket.sendToAllClients(new PacketGunChange(this, loadedBullet));
 					}
 					return true;
 				}
@@ -363,7 +363,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	@Override
 	public void startSounds(){
 		if(windupTimeCurrent > 0){
-			AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
+			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
 		}
 	}
 		
@@ -423,7 +423,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			}
 			
 			//Do sound and effects.
-			AudioSystem.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
 			if(definition.gun.JSONParticleObjects != null){
 				spawnEffectParticles();
 			}

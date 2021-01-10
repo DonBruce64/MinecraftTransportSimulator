@@ -10,14 +10,14 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -107,9 +107,9 @@ public class GUIPaintGun extends AGUIBase{
 			@Override
 			public void onClicked(){
 				if(vehicle != null){
-					NetworkSystem.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
+					InterfacePacket.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
 				}else{
-					NetworkSystem.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
+					InterfacePacket.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
 				}
 				InterfaceGUI.closeGUI();
 			}

@@ -24,13 +24,13 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
-/**Interface for the audio system.  This is responsible for playing sound from vehicles/interactions.
+/**Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
  * As well as from the internal radio.
  *
  * @author don_bruce
  */
 @EventBusSubscriber(Side.CLIENT)
-public class AudioSystem{
+public class InterfaceSound{
 	/**Flag for game paused state.  Gets set when the game is paused.**/
 	private static boolean isSystemPaused;
 	

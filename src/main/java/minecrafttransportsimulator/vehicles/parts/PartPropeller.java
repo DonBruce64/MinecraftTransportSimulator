@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -43,7 +43,7 @@ public class PartPropeller extends APart{
 			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
 				if(!vehicle.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
-					NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
+					InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
 				}
 				return;
 			}

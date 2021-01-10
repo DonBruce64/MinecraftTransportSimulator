@@ -12,13 +12,13 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -108,7 +108,7 @@ public class GUIInstruments extends AGUIBase{
 				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
 					@Override
 					public void onClicked(){
-						NetworkSystem.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
+						InterfacePacket.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
 						selectedInstrumentOnVehicle = null;
 					}
 					
@@ -135,7 +135,7 @@ public class GUIInstruments extends AGUIBase{
 		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
 			@Override
 			public void onClicked(){
-				NetworkSystem.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
+				InterfacePacket.sendToServer(new PacketVehicleInstruments(vehicle, vehicle.definition.motorized.instruments.indexOf(selectedInstrumentOnVehicle), null));
 				selectedInstrumentOnVehicle = null;
 			}
 		});

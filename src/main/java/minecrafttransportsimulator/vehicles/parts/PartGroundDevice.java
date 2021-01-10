@@ -9,12 +9,12 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -180,7 +180,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	public void setFlatState(boolean setFlat){
 		if(vehicle.world.isClient()){
 			if(setFlat){
-				AudioSystem.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
+				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
 			}
 		}else{
 			//On the server, can we go flat and does the config let us?
@@ -195,7 +195,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			NetworkSystem.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
+			InterfacePacket.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
 		}
 		
 		//Set flat state and new bounding box.
@@ -245,7 +245,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			for(byte i=0; i<4; ++i){
 				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			AudioSystem.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
+			InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && vehicle.groundDeviceCollective.groundedGroundDevices.contains(this)){

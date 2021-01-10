@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -48,7 +48,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 								if(part.worldPos.distanceTo(firstPartClicked.worldPos) < 15){
 									if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 										firstPartClicked.linkedPart = interactable;
-										NetworkSystem.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
+										InterfacePacket.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
 										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
 										firstPartClicked = null;
 									}else{
@@ -68,7 +68,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 						if(vehicle.position.distanceTo(firstPartClicked.worldPos) < 15){
 							if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 								firstPartClicked.linkedVehicle = vehicle;
-								NetworkSystem.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
+								InterfacePacket.sendToAllClients(new PacketVehiclePartInteractable(firstPartClicked));
 								player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
 								firstPartClicked = null;
 							}else{

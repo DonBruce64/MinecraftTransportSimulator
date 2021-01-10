@@ -51,7 +51,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
-public class NetworkSystem{
+/**Interface to the MC networking system.  This interface allows us to send packets
+ * around without actually creating packet classes.  Instead, we simply pass-in an
+ * object to send over, which contains a handler for how to handle said object.
+ * Forge packets do something similar, but Forge can't be bothered to keep networking
+ * code the same, so we roll our own here. 
+ *
+ * @author don_bruce
+ */
+public class InterfacePacket{
 	private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MasterLoader.MODID);
 	private static final BiMap<Byte, Class<? extends APacketBase>> packetMappings = HashBiMap.create();
 	

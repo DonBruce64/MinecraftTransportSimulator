@@ -3,7 +3,6 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 
 /**Custom text box class.  This class is designed to remove the need to check for clicking of
  * text boxes and to manually set their text, as well as the odd getter/setter methods

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.mcinterface;
+package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
 import java.util.Arrays;
@@ -6,9 +6,8 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.mcinterface.BuilderGUI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;

@@ -17,7 +17,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -190,7 +190,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	    		}
 				
 				//Send packet to client with part data.
-				NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem, partData, partToAdd.parentPart));
+				InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem, partData, partToAdd.parentPart));
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
@@ -242,7 +242,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
+				InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
 			}
 		}
 		
@@ -433,7 +433,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						
 						//Send a packet if required.
 						if(sendPacket){
-							NetworkSystem.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
+							InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.

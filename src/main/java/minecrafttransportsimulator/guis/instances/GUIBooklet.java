@@ -4,15 +4,15 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.controls.InputSystem;
+import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -123,7 +123,7 @@ public class GUIBooklet extends AGUIBase{
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;
 		
 		//Check the mouse to see if it updated and we need to change pages.
-		int wheelMovement = InputSystem.getTrackedMouseWheel();
+		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement < 0 && rightButton.visible){
 			++booklet.pageNumber;
 		}else if(wheelMovement > 0 && leftButton.visible){

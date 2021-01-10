@@ -5,7 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 
 /**Class responsible for managing beacons in the world.  Handles access to beacons,
@@ -41,7 +41,7 @@ public final class BeaconManager{
 			worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
 			if(!world.isClient()){
 				saveBeacons(world);
-				NetworkSystem.sendToAllClients(new PacketBeaconListingChange(beacon));
+				InterfacePacket.sendToAllClients(new PacketBeaconListingChange(beacon));
 			}
 		}
 	}
@@ -53,7 +53,7 @@ public final class BeaconManager{
 		worldBeacons.get(world.getDimensionID()).remove(name);
 		if(!world.isClient()){
 			saveBeacons(world);
-			NetworkSystem.sendToAllClients(new PacketBeaconListingChange(name));
+			InterfacePacket.sendToAllClients(new PacketBeaconListingChange(name));
 		}
 	}
 	

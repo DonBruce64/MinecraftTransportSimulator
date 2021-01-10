@@ -40,7 +40,7 @@ public abstract class APacketEntity extends APacketBase{
 			}
 		}
 		if(sendReturnPacket){
-			NetworkSystem.sendToAllClients(this);
+			InterfacePacket.sendToAllClients(this);
 		}
 	}
 	

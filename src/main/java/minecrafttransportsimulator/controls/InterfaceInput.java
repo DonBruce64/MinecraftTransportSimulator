@@ -8,8 +8,8 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.Side;
  * @author don_bruce
  */
 @EventBusSubscriber(Side.CLIENT)
-public class InputSystem{
+public class InterfaceInput{
 	//Common variables.
 	private static KeyBinding configKey;
 	

@@ -21,7 +21,7 @@ import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -41,7 +41,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.13.0-BETA20";
+	public static final String MODVER = "19.13.0-BETA21";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -124,7 +124,7 @@ public class MasterLoader{
 	@EventHandler
 	public void init(FMLInitializationEvent event){
 		//Init networking interface.  This will register packets as well.
-		NetworkSystem.init();
+		InterfacePacket.init();
 	}
 	
 	/**

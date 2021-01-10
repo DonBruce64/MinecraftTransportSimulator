@@ -9,12 +9,11 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
-import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -127,8 +126,8 @@ public class PacketBulletHit extends APacketBase{
 						}else{
 							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
-							WrapperBlock hitBlock = world.getWrapperBlock(hitPosition);
-							if(hitBlock != null && hitBlock.getHardness() > 0 && hitBlock.getHardness() <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
+							float hardnessHit = world.getBlockHardness(hitPosition);
+							if(!world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
 							}else if(bulletDefinition.bullet.types.contains("incendiary")){
 								//Couldn't break block, but we might be able to set it on fire.
@@ -138,7 +137,7 @@ public class PacketBulletHit extends APacketBase{
 								}
 							}else{
 								//Couldn't break the block or set it on fire.  Have clients do effects.
-								NetworkSystem.sendToAllClients(this);
+								InterfacePacket.sendToAllClients(this);
 							}
 						}
 					}

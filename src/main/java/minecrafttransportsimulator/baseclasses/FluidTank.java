@@ -5,7 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
@@ -112,7 +112,7 @@ public class FluidTank{
 				}
 				//Send off packet now that we know what fluid we will have on this tank.
 				if(!onClient){
-					NetworkSystem.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
+					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
 				}
 			}
 			return maxAmount;
@@ -136,7 +136,7 @@ public class FluidTank{
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
 				if(!onClient){
-					NetworkSystem.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
+					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
 				}
 				fluidLevel -= maxAmount;
 				fluidDispensed += maxAmount;

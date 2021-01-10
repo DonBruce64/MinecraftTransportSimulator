@@ -13,7 +13,7 @@ import minecrafttransportsimulator.mcinterface.WrapperBlock;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -423,6 +423,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 			groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 		}
+		
+		//If we are flagged as a two-wheeled try to keep us upright, unless we are turning, in which case turn into the turn.
+		if(definition.motorized.isBike){
+			rotation.z = -angles.z - 2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+			if(Double.isNaN(rotation.z)){
+				rotation.z = 0;
+			}
+		}
 
 		//Now that that the movement has been checked, move the vehicle.
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR);
@@ -430,7 +438,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
-				NetworkSystem.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.
@@ -801,7 +809,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		if(!world.isClient()){
-			NetworkSystem.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
+			InterfacePacket.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
 		}
 	}
 	

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.controls.InputSystem;
+import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
@@ -191,7 +191,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				NetworkSystem.sendToServer(new PacketPlayerCraftItem(currentItem));
+				InterfacePacket.sendToServer(new PacketPlayerCraftItem(currentItem));
 			}
 		});
 		
@@ -219,7 +219,7 @@ public class GUIPartBench extends AGUIBase{
 		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true));
 		
 		//Check the mouse to see if it updated and we need to change items.
-		int wheelMovement = InputSystem.getTrackedMouseWheel();
+		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement < 0 && nextPartButton.enabled){
 			nextPartButton.onClicked();
 		}else if(wheelMovement > 0 && prevPartButton.enabled){

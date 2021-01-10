@@ -38,7 +38,7 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 		if(tile != null && tile.world != null){
 			if(handle(world, player, tile) && !world.isClient()){
 				world.markTileEntityChanged(position);
-				NetworkSystem.sendToAllClients(this);
+				InterfacePacket.sendToAllClients(this);
 			}
 		}
 	}

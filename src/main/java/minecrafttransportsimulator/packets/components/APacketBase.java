@@ -11,7 +11,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import net.minecraft.network.PacketBuffer;
 
 /**Base packet class.  All packets must extend this class to be used with the
- * {@link NetworkSystem}.  This allows for standard packet handling across
+ * {@link InterfacePacket}.  This allows for standard packet handling across
  * all MC versions.
  *
  * @author don_bruce
@@ -35,7 +35,7 @@ public abstract class APacketBase{
 	 *  the buffer so the network knows what packet class this packet goes to!
 	 */
 	public void writeToBuffer(ByteBuf buf){
-		buf.writeByte(NetworkSystem.getPacketIndex(this));
+		buf.writeByte(InterfacePacket.getPacketIndex(this));
 	}
 	
 	/**

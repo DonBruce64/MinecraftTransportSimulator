@@ -15,7 +15,7 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.OBJParser;
@@ -97,11 +97,11 @@ public class ParticleBullet extends AParticle{
 							continue;
 						}
 					}
-					NetworkSystem.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+					InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
 					isValid = false;
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
-					NetworkSystem.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
+					InterfacePacket.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
 					isValid = false;
 				}
 			}
@@ -179,7 +179,7 @@ public class ParticleBullet extends AParticle{
 	
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
 		isValid = false;
-		NetworkSystem.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
+		InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
 	}
 	

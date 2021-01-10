@@ -6,8 +6,8 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehiclePart;
-import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -128,7 +128,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 				}
 				break;
 			}case BAD_SHIFT: {
-				AudioSystem.playQuickSound(new SoundInstance(engine, MasterLoader.resourceDomain + ":engine_shifting_grinding"));
+				InterfaceSound.playQuickSound(new SoundInstance(engine, MasterLoader.resourceDomain + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
 				for(AEntityBase entity : AEntityBase.createdClientEntities){

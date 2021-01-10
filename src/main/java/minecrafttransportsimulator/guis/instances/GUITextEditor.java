@@ -15,10 +15,10 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
@@ -137,11 +137,11 @@ public class GUITextEditor extends AGUIBase{
 				
 				//Now send the appropriate packet.
 				if(pole != null){
-					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
 				}else if(provider instanceof EntityVehicleF_Physics){
-					NetworkSystem.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
+					InterfacePacket.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
 				}else{
-					NetworkSystem.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
+					InterfacePacket.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
 				}
 				InterfaceGUI.closeGUI();
 			}

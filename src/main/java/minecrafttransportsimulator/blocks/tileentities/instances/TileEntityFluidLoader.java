@@ -7,7 +7,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -105,9 +105,9 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		}
 		if(nearestPart != null){
 			connectedPart = nearestPart;
-			NetworkSystem.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, true));
+			InterfacePacket.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, true));
 		}else if(connectedPart != null){
-			NetworkSystem.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, false));
+			InterfacePacket.sendToAllClients(new PacketTileEntityFluidLoaderConnection(this, false));
 			connectedPart = null;
 		}
 	}

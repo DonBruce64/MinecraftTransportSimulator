@@ -5,7 +5,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -52,7 +52,7 @@ public final class PartSeat extends APart{
 						//If we do have an active gun, validate that it's still correct.
 						if(activeGun == null){
 							setNextActiveGun();
-							NetworkSystem.sendToAllClients(new PacketVehiclePartSeat(this));
+							InterfacePacket.sendToAllClients(new PacketVehiclePartSeat(this));
 						}else{
 							for(ItemPart gunType : vehicle.guns.keySet()){
 								for(PartGun gun : vehicle.guns.get(gunType)){
@@ -67,7 +67,7 @@ public final class PartSeat extends APart{
 							//Didn't invalid active gun detected.  Select a new one.
 							activeGun = null;
 							setNextActiveGun();
-							NetworkSystem.sendToAllClients(new PacketVehiclePartSeat(this));
+							InterfacePacket.sendToAllClients(new PacketVehiclePartSeat(this));
 						}
 					}
 				}

@@ -5,8 +5,8 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketVehicle;
-import minecrafttransportsimulator.sound.AudioSystem;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -44,21 +44,21 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 			case P_BRAKE : {
 				//If we are a big truck on a client that just set the brake, play the brake sound.
 				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
-					AudioSystem.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":air_brake_activating"));
+					InterfaceSound.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":air_brake_activating"));
 				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
 			case HORN : {
 				if(world.isClient() && !vehicle.hornOn && controlState){
-					AudioSystem.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
+					InterfaceSound.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
 				}
 				vehicle.hornOn = controlState;
 				break;
 			}
 			case SIREN : {
 				if(world.isClient() && !vehicle.sirenOn && controlState){
-					AudioSystem.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
+					InterfaceSound.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
 				}
 				vehicle.sirenOn = controlState;
 				break;

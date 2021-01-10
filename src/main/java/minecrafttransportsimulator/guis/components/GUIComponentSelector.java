@@ -3,7 +3,6 @@ package minecrafttransportsimulator.guis.components;
 import java.awt.Color;
 
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 
 /**Custom class for selectors.  Selectors are like buttons, except they allow for side-sensitive clicking.
  * Their {@link #onClicked()} method takes a boolean parameter that allows them to perform different actions 

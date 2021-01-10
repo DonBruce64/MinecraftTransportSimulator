@@ -18,7 +18,7 @@ import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import net.minecraft.item.ItemStack;
 
@@ -59,16 +59,16 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals("core");
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
-					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
-					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(!isPlayerHoldingCore){
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
 					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
 						textLines = new WrapperNBT(heldStack).getStrings("textLines", component.definition.rendering.textObjects.size());
 					}
-					NetworkSystem.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
 				}else{
 					return false;
 				}

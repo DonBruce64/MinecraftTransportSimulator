@@ -8,7 +8,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.NetworkSystem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
@@ -35,19 +35,19 @@ public class ItemY2KButton extends AItemBase{
 				if(entity instanceof EntityVehicleF_Physics){
 					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
 					vehicle.throttle = 0;
-					NetworkSystem.sendToAllClients(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, (byte) 0));
+					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, (byte) 0));
 					vehicle.parkingBrakeOn = true;
-					NetworkSystem.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					for(PartEngine engine : vehicle.engines.values()){
 						engine.setMagnetoStatus(false);
-						NetworkSystem.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+						InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
 					}
 					Iterator<String> variableIterator = vehicle.variablesOn.iterator();
 					while(variableIterator.hasNext()){
 						String variableName = variableIterator.next();
 						for(LightType light : LightType.values()){
 							if(light.lowercaseName.equals(variableName)){
-								NetworkSystem.sendToAllClients(new PacketVehicleVariableToggle(vehicle, variableName));
+								InterfacePacket.sendToAllClients(new PacketVehicleVariableToggle(vehicle, variableName));
 								variableIterator.remove();
 								break;
 							}
