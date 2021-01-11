@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemBatteryJumper;
 import minecrafttransportsimulator.items.instances.ItemFuelHose;
 import minecrafttransportsimulator.items.instances.ItemJerrycan;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
@@ -60,6 +61,7 @@ public class MasterLoader{
 		createItem(new ItemKey());
 		createItem(new ItemFuelHose());
 		createItem(new ItemJumperCable());
+		createItem(new ItemBatteryJumper());
 		createItem(new ItemJerrycan());
 		createItem(new ItemPaintGun());
 		createItem(new ItemTicket());

@@ -3,12 +3,13 @@
     "pattern":[
         "aaa",
         "bca",
-        "bcb"
+        "dcd"
     ],
     "key":{
 		"a":{"type": "forge:ore_dict", "ore": "ingotIron"},
 		"b":{"item": "mts:jumpercable"},
-		"c":{"item": "minecraft:dye", "data": 11}
+		"c":{"item": "minecraft:dye", "data": 11},
+		"d":{"item": "minecraft:redstone"}
     },
     "result":{
         "item": "mts:batteryjumper"
