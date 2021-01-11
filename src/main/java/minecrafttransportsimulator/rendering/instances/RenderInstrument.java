@@ -96,7 +96,7 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double value = vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							double value = Math.signum(animation.axis.z)*vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}
