@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -55,7 +54,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	/**Map containing text objects and their current associated text.**/
-	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
+	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
@@ -304,10 +303,9 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 */
 	public WrapperNBT getData(){
 		WrapperNBT data = new WrapperNBT();
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
-			}
+		int lineNumber = 0;
+		for(String textLine : text.values()){
+			data.setString("textLine" + lineNumber++, textLine);
 		}
 		return data;
 	}
@@ -360,7 +358,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	}
 	
 	@Override
-	public Map<JSONText, String> getText(){
+	public LinkedHashMap<JSONText, String> getText(){
 		return text;
 	}
 	

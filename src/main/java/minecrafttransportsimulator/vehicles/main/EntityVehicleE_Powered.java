@@ -31,9 +31,9 @@ import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.IRadioProvider;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -73,7 +73,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	public RadioBeacon selectedBeacon;
 	public FluidTank fuelTank;
 	/**Map containing text lines for saved text.  Note that parts have their own text, so it's not saved here.**/
-	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
+	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	//Part maps.
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
@@ -418,7 +418,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 	}
 	
 	@Override
-	public Map<JSONText, String> getText(){
+	public LinkedHashMap<JSONText, String> getText(){
 		return text;
 	}
 	
@@ -449,10 +449,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving implements I
 		data.setString("selectedBeaconName", selectedBeaconName);
 		fuelTank.save(data);
 		
-		if(definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
-			}
+		int lineNumber = 0;
+		for(String textLine : text.values()){
+			data.setString("textLine" + lineNumber++, textLine);
 		}
 		
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];

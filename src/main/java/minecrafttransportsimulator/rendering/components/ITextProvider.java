@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.Map;
+import java.util.LinkedHashMap;
 
 import minecrafttransportsimulator.jsondefs.JSONText;
 
@@ -17,7 +17,7 @@ public interface ITextProvider{
    	 *  current states of those objects.  If there are no textObjects on this
    	 *  provider, return null;
    	 */
-    public Map<JSONText, String> getText();
+    public LinkedHashMap<JSONText, String> getText();
     
     /**
    	 *  Returns a string that represents this provider's secondary text color.  If this color is set,

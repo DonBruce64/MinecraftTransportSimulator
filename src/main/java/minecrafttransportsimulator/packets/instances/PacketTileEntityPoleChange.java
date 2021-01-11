@@ -100,8 +100,9 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					WrapperNBT data = null;
 					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
 						data = new WrapperNBT();
-						for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
-							data.setString("textLine" + i, ((ITextProvider) component).getText().get(component.definition.rendering.textObjects.get(i)));
+						int lineNumber = 0;
+						for(String textLine : ((ITextProvider) component).getText().values()){
+							data.setString("textLine" + lineNumber++, textLine);
 						}
 					}
 					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.item, data)){

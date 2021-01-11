@@ -94,9 +94,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			data.setString("packID" + axis.ordinal(), component.definition.packID);
 			data.setString("systemName" + axis.ordinal(), component.definition.systemName);
 			if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
-				ITextProvider provider = (ITextProvider) component;
-				for(int i=0; i<component.definition.rendering.textObjects.size(); ++i){
-					data.setString("textLines" + i, provider.getText().get(component.definition.rendering.textObjects.get(i)));
+				int lineNumber = 0;
+				for(String textLine : ((ITextProvider) component).getText().values()){
+					data.setString("textLine" + lineNumber++, textLine);
 				}
 			}
 		}

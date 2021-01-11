@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
@@ -15,7 +14,7 @@ import minecrafttransportsimulator.rendering.components.ITextProvider;
 */
 public class TileEntityPole_Sign extends ATileEntityPole_Component implements ITextProvider{
 	
-	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
+	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	public TileEntityPole_Sign(TileEntityPole core, ItemPoleComponent item){
 		super(core, item);
@@ -33,7 +32,7 @@ public class TileEntityPole_Sign extends ATileEntityPole_Component implements IT
 	}
 
 	@Override
-	public Map<JSONText, String> getText(){
+	public LinkedHashMap<JSONText, String> getText(){
 		return text;
 	}
 

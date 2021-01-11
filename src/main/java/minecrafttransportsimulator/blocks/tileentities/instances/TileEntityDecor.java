@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -25,7 +24,7 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnimationProvider, ITextProvider{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
-	public final Map<JSONText, String> text = new LinkedHashMap<JSONText, String>();
+	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	private static final AnimationsDecor animator = new AnimationsDecor();
 	
@@ -66,7 +65,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	}
 	
 	@Override
-	public Map<JSONText, String> getText(){
+	public LinkedHashMap<JSONText, String> getText(){
 		return text;
 	}
 	
