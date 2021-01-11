@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern":[
+        "aaa",
+        "bca",
+        "bcb"
+    ],
+    "key":{
+		"a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "mts:jumpercable"},
+		"c":{"item": "minecraft:dye", "data": 11}
+    },
+    "result":{
+        "item": "mts:batteryjumper"
+    }
+}

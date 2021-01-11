@@ -170,6 +170,27 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
+	 * Returns true if the boxes in this collective can do roll operations.
+	 * More formally, it checks that they aren't all aligned on the Z-axis.
+	 */
+	public boolean canDoRollChecks(){
+		double xAxisPoint = 0;
+		if(frontLeftGDB != null){
+			xAxisPoint = frontLeftGDB.contactPoint.x;
+		}
+		if(frontRightGDB != null && xAxisPoint == 0){
+			xAxisPoint = frontRightGDB.contactPoint.x;
+		}
+		if(rearLeftGDB != null && xAxisPoint == 0){
+			xAxisPoint = rearLeftGDB.contactPoint.x;
+		}
+		if(rearRightGDB != null && xAxisPoint == 0){
+			xAxisPoint = rearRightGDB.contactPoint.x;
+		}
+		return xAxisPoint != 0;
+	}
+	
+	/**
 	 * Returns true if the passed-in ground device can provide motive force.  This checks the vehicle's drivetrain to see
 	 * if it could power the ground device.  Note that just because the ground device can provide power, doesn't mean it is.
 	 * Wheels in the air don't do much good.  For this reason, ensure checks for force use {@link #groundedGroundDevices}
@@ -275,6 +296,7 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}
+	
 		side1Delta -= groundedSideOffset;
 		side2Delta -= groundedSideOffset;
 		return adjustAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost, true);
@@ -325,6 +347,7 @@ public class VehicleGroundDeviceCollection{
 				testBox2 = frontRightGDB;
 			}
 		}
+		
 		side1Delta -= groundedSideOffset;
 		side2Delta -= groundedSideOffset;
 		return adjustAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost, false);

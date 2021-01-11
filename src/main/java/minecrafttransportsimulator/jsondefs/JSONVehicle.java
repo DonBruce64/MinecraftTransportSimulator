@@ -32,7 +32,6 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     public class VehicleMotorized{
     	public boolean isBigTruck;
     	public boolean isTrailer;
-    	public boolean isBike;
     	public boolean isFrontWheelDrive;
     	public boolean isRearWheelDrive;
     	public boolean hasCruiseControl;
@@ -43,6 +42,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public int gearSequenceDuration;
         public float downForce;
     	public float axleRatio;
+    	public float maxTiltAngle;
     	public float dragCoefficient;
     	public float tailDistance;
     	public float wingSpan;

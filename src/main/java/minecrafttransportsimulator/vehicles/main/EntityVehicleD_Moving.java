@@ -418,12 +418,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			correctCollidingMovement();
 		}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
 			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
-			groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+			//Don't do roll correction if we don't have roll.
+			if(groundDeviceCollective.canDoRollChecks()){
+				groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+			}
 		}
 		
 		//If we are flagged as a two-wheeled try to keep us upright, unless we are turning, in which case turn into the turn.
-		if(definition.motorized.isBike){
-			rotation.z = -angles.z - 2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+		if(definition.motorized.maxTiltAngle != 0){
+			rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle()/(EntityVehicleF_Physics.MAX_RUDDER_ANGLE/10);
 			if(Double.isNaN(rotation.z)){
 				rotation.z = 0;
 			}
