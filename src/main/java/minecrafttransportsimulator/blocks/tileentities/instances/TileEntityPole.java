@@ -41,7 +41,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
 					ITextProvider provider = (ITextProvider) newComponent;
 					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
-						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLines" + i));
+						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLine" + axis.ordinal() + i));
 					}
 				}
 			}
@@ -93,10 +93,10 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			ATileEntityPole_Component component = connectedObjectEntry.getValue();
 			data.setString("packID" + axis.ordinal(), component.definition.packID);
 			data.setString("systemName" + axis.ordinal(), component.definition.systemName);
-			if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
+			if(component instanceof ITextProvider){
 				int lineNumber = 0;
 				for(String textLine : ((ITextProvider) component).getText().values()){
-					data.setString("textLine" + lineNumber++, textLine);
+					data.setString("textLine" + axis.ordinal() + lineNumber++, textLine);
 				}
 			}
 		}
