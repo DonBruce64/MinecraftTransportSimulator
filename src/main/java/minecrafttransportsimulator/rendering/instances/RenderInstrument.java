@@ -96,13 +96,14 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double value = Math.signum(animation.axis.z)*vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							double value = vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}
 							
 							switch(animation.animationType){
 								case("rotation"):{
+									value *= Math.signum(animation.axis.z);
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
