@@ -306,7 +306,7 @@ public final class LegacyCompatSystem{
 		//Convert any old component definitions to the new style.
 		for(JSONInstrument.Component component : definition.components){
 			if(oldDefinition){
-				component.lightUpTexture = !component.lightOverlay;
+				component.lightUpTexture = true;
 				component.overlayTexture = component.lightOverlay;
 				component.lightOverlay = false;
 			}

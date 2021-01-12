@@ -49,7 +49,8 @@ public final class RenderInstrument{
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
-			if(component.overlayTexture ? InterfaceRender.getRenderPass() != 0 : InterfaceRender.getRenderPass() != 1){
+			//If the overlay lights up, only render it when the lights are on.
+			if(component.overlayTexture ? (!component.lightUpTexture || lightsOn) && InterfaceRender.getRenderPass() != 0 : InterfaceRender.getRenderPass() != 1){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
