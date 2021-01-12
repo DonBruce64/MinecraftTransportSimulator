@@ -66,23 +66,49 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 				}
 			}
 			
-			//Iterate through the pack defs to find the index of the pack def for the part we want.
-			for(VehiclePart vehiclePart : vehicle.getAllPossiblePackParts().values()){
-				for(String defPartType : vehiclePart.types){
+			//Iterate through the definitions to find the index of the pack def for the part we want.
+			VehiclePart foundDef = null;
+			for(VehiclePart vehicleDef : vehicle.definition.parts){
+				//If this part is the one we want, get it or add to our index.
+				for(String defPartType : vehicleDef.types){
 					if(partType.equals("part") || defPartType.startsWith(partType)){
 						if(partNumber == 0){
-							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
-							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = vehicle.getPartAtLocation(vehiclePart.pos);
-							if(foundPart != null && partClass.isInstance(foundPart)){
-								return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-							}else{
-								return 0;
-							}
+							foundDef = vehicleDef;
 						}else{
 							--partNumber;
+						}
+						break;
+					}
+				}
+				
+				//Also check additional parts if we have them..
+				if(foundDef == null && vehicleDef.additionalParts != null){
+					for(VehiclePart additionalDef : vehicleDef.additionalParts){
+						for(String defPartType : additionalDef.types){
+							if(partType.equals("part") || defPartType.startsWith(partType)){
+								if(partNumber == 0){
+									foundDef = additionalDef;
+								}else{
+									--partNumber;
+								}
+								break;
+							}
+						}
+						if(foundDef != null){
 							break;
 						}
+					}
+				}
+				
+				//If we found our part, try to get it.
+				if(foundDef != null){
+					//Get the part at this location.  If it's of the same class as what we need, use it for animation.
+					//If it's not, or it doesn't exist, return 0.
+					APart foundPart = vehicle.getPartAtLocation(foundDef.pos);
+					if(foundPart != null && partClass.isInstance(foundPart)){
+						return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+					}else{
+						return 0;
 					}
 				}
 			}
