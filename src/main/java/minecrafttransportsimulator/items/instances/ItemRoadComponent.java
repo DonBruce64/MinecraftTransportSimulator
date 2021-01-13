@@ -177,16 +177,13 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					if(world.setBlock(getBlock(), blockPlacementPoint, player, axis)){
 						TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 						
-						//Now that the road is placed, set the connections to the other roads and lanes.
-						//If we have a dynamic road, set the road curve now.
+						//Now that the road is placed, create all road lanes.
+						//These can't get set in the constructor as it can't take the curve for dynamic roads.
+						//If we have a dynamic road, set the road curve as well.
 						if(definition.general.isDynamic){
 							newRoad.dynamicCurve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
 						}
-						
-						//Create all road lanes.  These can't get set in the constructor as it can't take the curve for dynamic roads.
-						for(int laneNumber=0; laneNumber < newRoad.definition.general.laneOffsets.length; ++laneNumber){
-							newRoad.lanes.add(laneNumber, new RoadLane(newRoad, laneNumber, null));
-						}
+						newRoad.generateLanes(null);
 						
 						//Set the lane connections, as appropriate.
 						//If we are butted-up to a segment, connect the connections in order.

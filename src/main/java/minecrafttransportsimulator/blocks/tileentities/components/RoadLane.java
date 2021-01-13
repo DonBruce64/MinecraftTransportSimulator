@@ -14,13 +14,15 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  */
 public class RoadLane{
 	public final TileEntityRoad road;
+	public final int sectorNumber;
 	public final int laneNumber;
 	public final BezierCurve curve;
 	public RoadLaneConnection priorConnection;
 	public RoadLaneConnection nextConnection;
 	
-	public RoadLane(TileEntityRoad road, int laneNumber, WrapperNBT data){
+	public RoadLane(TileEntityRoad road, int sectorNumber, int laneNumber, WrapperNBT data){
 		this.road = road;
+		this.sectorNumber = sectorNumber;
 		this.laneNumber = laneNumber;
 		this.curve = generateCurve();
 		if(data != null){
@@ -42,7 +44,7 @@ public class RoadLane{
 		if(road.dynamicCurve != null){
 			return new BezierCurve(road.dynamicCurve, road.definition.general.laneOffsets[laneNumber]);
 		}else{
-			JSONLanePointSet points = road.definition.general.lanePoints.get(laneNumber);
+			JSONLanePointSet points = road.definition.general.laneSectors.get(sectorNumber).get(laneNumber);
 			return new BezierCurve(points.startPos, points.endPos, points.startAngle, points.endAngle);
 		}
 	}
@@ -79,6 +81,7 @@ public class RoadLane{
 	}
 	
 	public void save(WrapperNBT data){
+		data.setInteger("sectorNumber", sectorNumber);
 		data.setInteger("laneNumber", laneNumber);
 		if(priorConnection != null){
 			WrapperNBT connectionData = new WrapperNBT();

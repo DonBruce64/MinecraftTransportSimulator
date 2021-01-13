@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -74,22 +75,22 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		components.put(RoadComponent.CORE, (ItemRoadComponent) item);
 		
+		//Get the active state.
+		this.isActive = data.getBoolean("isActive");
+		
 		//Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
 		this.lanes = new ArrayList<RoadLane>();
 		Point3d startingOffset = data.getPoint3d("startingOffset");
 		Point3d endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
 			this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
-			for(int laneNumber=0; laneNumber < definition.general.laneOffsets.length; ++laneNumber){
-				lanes.add(new RoadLane(this, laneNumber, data.getData("lane" + laneNumber)));
-			}
+		}
+		if(isActive){
+			generateLanes(data);
 		}
 		
 		//If we have points for collision due to use creating collision blocks, load them now.
 		this.collisionBlockOffsets = data.getPoints("collisionBlockOffsets");
-		
-		//Get the active state.
-		this.isActive = data.getBoolean("isActive");
 	}
 	
 	@Override
@@ -156,6 +157,25 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	/**
+	 *  Helper method to populate the lanes for this road.  This depends on if we are
+	 *  a static or dynamic road.  Data is passed-in, but may be null if we're generating
+	 *  lanes for the first time.
+	 */
+	public void generateLanes(WrapperNBT data){
+		if(definition.general.isDynamic){
+			for(int i=0; i<definition.general.laneOffsets.length; ++i){
+				lanes.add(new RoadLane(this, 0, i, data));
+			}
+		}else{
+			for(int i=0; i<definition.general.laneSectors.size(); ++i){
+				for(int j=0; j<definition.general.laneSectors.get(i).size(); ++j){
+					lanes.add(new RoadLane(this, i, j, data));
+				}
+			}
+		}
+	}
+	
+	/**
 	 *  Helper method to spawn collision boxes for this road.  Returns true and makes
 	 *  this road non-holographic if the boxes could be spawned.  False if there are
 	 *  blocking blocks.  OP and creative-mode players override blocking block checks.
@@ -163,7 +183,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 */
 	public boolean spawnCollisionBlocks(WrapperPlayer player){
 		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
-		if(dynamicCurve != null){
+		if(definition.general.isDynamic){
 			//Get all the points that make up our collision points for our dynamic curve.
 			//If we find any colliding points, note them.
 			Point3d testOffset = new Point3d(0, 0, 0);
@@ -200,7 +220,28 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			}
 		}else{
 			//Do static block additions for static component.
-			//FIXME do this.
+			for(JSONRoadCollisionArea collisionArea : definition.general.collisionAreas){
+				for(int i=(int) collisionArea.firstCorner.x; i<collisionArea.secondCorner.x; ++i){
+					for(int j=(int) collisionArea.firstCorner.x; j<collisionArea.secondCorner.z; ++j){
+						Point3i testPoint = new Point3i(i, 0, j);
+						
+						if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
+							//Offset the point to the global cordinate space, get the block, and offset back.
+							testPoint.add(position);
+							ABlockBase testBlock = world.getBlock(testPoint);
+							testPoint.subtract(position);
+							if(testBlock == null){
+								//Need a collision box here.
+								collisionBlockOffsets.add(testPoint);
+								collisionHeightMap.put(testPoint, definition.general.collisionHeight);
+							}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
+								//Some block is blocking us that's not part of a road.  Flag it.
+								collidingBlockOffsets.add(testPoint);
+							}
+						}
+					}
+				}
+			}
 		}
 		
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
@@ -239,6 +280,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			data.setDouble("endingRotation", dynamicCurve.endAngle);
 		}
 		
+		//Save isActive state.
+		data.setBoolean("isActive", isActive);
+		
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
 			RoadLane lane = lanes.get(laneNumber);
@@ -249,9 +293,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Save cure collision point data.
 		data.setPoints("collisionBlockOffsets", collisionBlockOffsets);
-		
-		//Save isActive state.
-		data.setBoolean("isActive", isActive);
     }
 	
 	/**
