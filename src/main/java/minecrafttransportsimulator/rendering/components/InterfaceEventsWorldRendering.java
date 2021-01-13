@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
@@ -17,6 +19,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderHandEvent;
@@ -35,6 +38,7 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsWorldRendering{
+	private static final Map<EntityPlayer, ItemStack> tempHeldItemStorage = new HashMap<EntityPlayer, ItemStack>();
 	
 	 /**
      * Pre-post methods for adjusting player angles while seated.
@@ -43,6 +47,16 @@ public class InterfaceEventsWorldRendering{
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
     	EntityPlayer renderedPlayer = event.getEntityPlayer();
+    	
+    	//If we are holding a gun, disable the third-person item icon.
+    	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
+    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(renderedPlayer.getUniqueID().toString());
+    	if(entity != null && entity.gun != null){
+    		tempHeldItemStorage.put(renderedPlayer, renderedPlayer.getHeldItemMainhand());
+    		renderedPlayer.inventory.mainInventory.set(renderedPlayer.inventory.currentItem, ItemStack.EMPTY);
+    	}
+    	
+    	//If we are riding an entity, adjust seating.
     	if(renderedPlayer.getRidingEntity() instanceof BuilderEntity){
         	AEntityBase ridingEntity = ((BuilderEntity) renderedPlayer.getRidingEntity()).entity;
         	GL11.glPushMatrix();
@@ -111,7 +125,12 @@ public class InterfaceEventsWorldRendering{
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
-    	if(event.getEntityPlayer().getRidingEntity() instanceof BuilderEntity){
+    	EntityPlayer renderedPlayer = event.getEntityPlayer();
+    	if(tempHeldItemStorage.containsKey(renderedPlayer)){
+    		renderedPlayer.inventory.mainInventory.set(renderedPlayer.inventory.currentItem, tempHeldItemStorage.get(renderedPlayer));
+    		tempHeldItemStorage.remove(renderedPlayer);
+    	}
+    	if(renderedPlayer.getRidingEntity() instanceof BuilderEntity){
     		GL11.glPopMatrix();
         }
     }
