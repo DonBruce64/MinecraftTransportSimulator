@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
-import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
@@ -53,7 +52,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 						float priorIndex = 0;
 						
 						GL11.glBegin(GL11.GL_TRIANGLES);
-						for(float currentIndex=1; currentIndex<=road.curve.pathLength; ++currentIndex){
+						for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
 							//Copy the master vertices to our transformed ones.
 							transformedVertices.clear();
 							for(Float[][] vertexSet : parsedModel.values()){
@@ -64,10 +63,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							
 							//Get current and prior curve position and rotation.
 							//From this, we know how much to stretch the model to that point's rendering area.
-							road.curve.setPointToPositionAt(priorPosition, priorIndex);
-							road.curve.setPointToRotationAt(priorRotation, priorIndex);
-							road.curve.setPointToPositionAt(position, currentIndex);
-							road.curve.setPointToRotationAt(rotation, currentIndex);
+							road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
+							road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
+							road.dynamicCurve.setPointToPositionAt(position, currentIndex);
+							road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
 							
 							//If we are a really sharp curve, we might have inverted our model at the inner corner.
 							//Check for this, and if we have done so, skip this segment.
@@ -76,9 +75,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							rotationDelta.setTo(rotation).subtract(priorRotation);
 							Point3d testPoint1 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
 							Point3d testPoint2 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(rotation).add(position);
-							if(currentIndex != road.curve.pathLength && (position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0){
-								if(currentIndex != road.curve.pathLength && currentIndex + 3 > road.curve.pathLength){
-									currentIndex = road.curve.pathLength - 1;
+							if(currentIndex != road.dynamicCurve.pathLength && (position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0){
+								if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 3 > road.dynamicCurve.pathLength){
+									currentIndex = road.dynamicCurve.pathLength - 1;
 								}
 								continue;
 							}
@@ -104,8 +103,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							priorIndex = currentIndex;
 							
 							//If we are at the last index, do special logic to get the very end point.
-							if(currentIndex != road.curve.pathLength && currentIndex + 1 > road.curve.pathLength){
-								currentIndex -= ((currentIndex + 1) - road.curve.pathLength);
+							if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 1 > road.dynamicCurve.pathLength){
+								currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
 							}
 						}
 						GL11.glEnd();
@@ -150,26 +149,28 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y, lane.curve.startPos.z);
 				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y + 3, lane.curve.startPos.z);
 				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y + 3, lane.curve.startPos.z);
-				rotation.set(0, road.curve.startAngle, 0);
+				rotation.set(0, lane.curve.startAngle, 0);
 				position.set(0, 0, 2).rotateFine(rotation);
 				GL11.glVertex3d(lane.curve.startPos.x + position.x, lane.curve.startPos.y + 3 + position.y, lane.curve.startPos.z + position.z);
 			}
 			
 			//Render the curves.
-			//First render the actual curve.
-			GL11.glColor3f(0, 1, 0);
-			for(float f=0; f<road.curve.pathLength; f+=0.1){
-				road.curve.setPointToPositionAt(position, f);
-				GL11.glVertex3d(position.x, position.y, position.z);
-				GL11.glVertex3d(position.x, position.y + 1.5, position.z);
+			//First render the actual curve if we are a dynamic road.
+			if(road.dynamicCurve != null){
+				GL11.glColor3f(0, 1, 0);
+				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
+					road.dynamicCurve.setPointToPositionAt(position, f);
+					GL11.glVertex3d(position.x, position.y, position.z);
+					GL11.glVertex3d(position.x, position.y + 1.5, position.z);
+				}
 			}
 			
 			//Now render the outer border bounds.
 			GL11.glColor3f(0, 1, 1);
-			for(float f=0; f<road.curve.pathLength; f+=0.1){
-				road.curve.setPointToRotationAt(rotation, f);
+			for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
+				road.dynamicCurve.setPointToRotationAt(rotation, f);
 				position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
-				road.curve.offsetPointByPositionAt(position, f);
+				road.dynamicCurve.offsetPointByPositionAt(position, f);
 				
 				GL11.glVertex3d(position.x, position.y, position.z);
 				GL11.glVertex3d(position.x, position.y + 1.5, position.z);
@@ -179,7 +180,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			GL11.glColor3f(1, 1, 0);
 			for(RoadLane lane : road.lanes){
 				lane.curve.setPointToPositionAt(position, 0);
-				for(float f=0; f<road.curve.pathLength; f+=0.1){
+				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					lane.curve.setPointToPositionAt(position, f);
 					GL11.glVertex3d(position.x, position.y, position.z);
 					GL11.glVertex3d(position.x, position.y + 1.5, position.z);
@@ -189,17 +190,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//Render the lane connections.
 			GL11.glColor3f(0, 0, 1);
 			for(RoadLane lane : road.lanes){
-				for(RoadLaneConnection connection : lane.priorConnections){
-					TileEntityRoad otherRoad = road.world.getTileEntity(connection.tileLocation);
+				if(lane.priorConnection != null){
+					TileEntityRoad otherRoad = road.world.getTileEntity(lane.priorConnection.tileLocation);
 					if(otherRoad != null){
-						RoadLane otherLane = otherRoad.lanes.get(connection.laneNumber);
+						RoadLane otherLane = otherRoad.lanes.get(lane.priorConnection.laneNumber);
 						if(otherLane != null){
 							//First render our own offset point.
 							lane.curve.setPointToPositionAt(position, 0.5F);
 							GL11.glVertex3d(position.x, position.y + 0.5, position.z);
 							
 							//Now render the connection point.
-							otherLane.curve.setPointToPositionAt(rotation, connection.connectedToStart ? 0.5F : otherLane.curve.pathLength - 0.5F);
+							otherLane.curve.setPointToPositionAt(rotation, lane.priorConnection.connectedToStart ? 0.5F : otherLane.curve.pathLength - 0.5F);
 							GL11.glVertex3d(position.x, position.y + 0.5, position.z);
 						}
 					}

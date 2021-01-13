@@ -8,15 +8,24 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
+	@JSONRequired(dependentField="type", dependentValues={"engine"}, subField="general")
     public JSONPartEngine engine;
+	@JSONRequired(dependentField="type", dependentValues={"ground"}, subField="general")
     public JSONPartGroundDevice ground;
+	@JSONRequired(dependentField="type", dependentValues={"propeller"}, subField="general")
     public JSONPartPropeller propeller;
+	@JSONRequired(dependentField="type", dependentValues={"gun"}, subField="general")
     public JSONPartGun gun;
+	@JSONRequired(dependentField="type", dependentValues={"bullet"}, subField="general")
     public JSONPartBullet bullet;
+	@JSONRequired(dependentField="type", dependentValues={"interactable"}, subField="general")
     public JSONPartInteractable interactable;
+	@JSONRequired(dependentField="type", dependentValues={"effector"}, subField="general")
     public JSONPartEffector effector;
+	@JSONRequired(dependentField="type", dependentValues={"generic"}, subField="general")
     public JSONPartGeneric generic;
     public List<VehiclePart> subParts;
     public List<VehicleCollisionBox> collision;
@@ -37,6 +46,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public PartTread tread;
 
     public class JSONPartGeneral extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>.General{
+    	@JSONRequired
     	public String type;
     	public String customType;
     	public boolean disableMirroring;
@@ -56,15 +66,18 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float jetPowerFactor;
     	public float bypassRatio;
     	public float propellerRatio;
+    	@JSONRequired
     	public float[] gearRatios;
 		public int[] upShiftRPM;
 		public int[] downShiftRPM;
+		@JSONRequired
     	public String fuelType;
 		public float superchargerFuelConsumption;
 		public float superchargerEfficiency;
 		public EngineSound customSoundset[];
 		
 		public class EngineSound{
+			@JSONRequired
 			public String soundName;
 			public float pitchIdle;
 			public float pitchMax;
@@ -120,16 +133,19 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean resetPosition;
     	public float defaultPitch;
     	public float defaultYaw;
-        public List<JSONParticleObject> JSONParticleObjects;
+        public List<JSONParticleObject> particleObjects;
         
         public boolean handHeld;
+        @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	public Point3d handHeldNormalOffset;
+        @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	public Point3d handHeldAimedOffset;
     }
     
     public class JSONPartBullet{
     	@Deprecated
     	public String type;
+    	@JSONRequired
     	public List<String> types;
     	public int quantity;
     	public float diameter;
@@ -143,16 +159,18 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float angleOfAttack;
     	public float proximityFuze;
     	public int airBurstDelay;
-    	public List<JSONParticleObject> JSONParticleObjects;
+    	public List<JSONParticleObject> particleObjects;
     }
     
     public class JSONPartInteractable{
+    	@JSONRequired
     	public String interactionType;
     	public boolean feedsVehicles;
     	public int inventoryUnits;
     }
     
     public class JSONPartEffector{
+    	@JSONRequired
     	public String type;
     	public int blocksWide;
     }

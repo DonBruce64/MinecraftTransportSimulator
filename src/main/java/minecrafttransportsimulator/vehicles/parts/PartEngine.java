@@ -1013,7 +1013,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	public void spawnParticles(){
 		//Render exhaust smoke if we have any exhausts and are running.
 		//If we are starting and have flames set, render those instead.
-		if(vehicleDefinition.JSONParticleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+		if(vehicleDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 			//Render a smoke for every cycle the exhaust makes.
 			//Depending on the number of positions we have, render an exhaust for every one.
 			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1027,19 +1027,19 @@ public class PartEngine extends APart implements IParticleProvider{
 			if(engineCycleTimeMills != 0){
 				long camTime = currentTime%engineCycleTimeMills;
 				
-				boolean singleExhaust = vehicleDefinition.JSONParticleObjects.size() == 1;
+				boolean singleExhaust = vehicleDefinition.particleObjects.size() == 1;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(JSONParticleObject particle : vehicleDefinition.JSONParticleObjects){
+				for(JSONParticleObject particle : vehicleDefinition.particleObjects){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills/vehicleDefinition.JSONParticleObjects.size();
-						long camMin = vehicleDefinition.JSONParticleObjects.indexOf(particle)*camOffset;
+						long camOffset = engineCycleTimeMills/vehicleDefinition.particleObjects.size();
+						long camMin = vehicleDefinition.particleObjects.indexOf(particle)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
 							continue;
@@ -1073,8 +1073,8 @@ public class PartEngine extends APart implements IParticleProvider{
 		//Will be from the engine or the exhaust if we have any.
 		if(backfired){
 			backfired = false;
-			if(vehicleDefinition.JSONParticleObjects != null){
-				for(JSONParticleObject particle : vehicleDefinition.JSONParticleObjects){
+			if(vehicleDefinition.particleObjects != null){
+				for(JSONParticleObject particle : vehicleDefinition.particleObjects){
 					Point3d exhaustOffset = particle.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
 					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;

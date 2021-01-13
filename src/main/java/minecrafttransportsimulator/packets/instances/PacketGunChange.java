@@ -23,6 +23,7 @@ public class PacketGunChange extends APacketBase{
 	private final boolean triggerState;
 	private final String bulletPackID;
 	private final String bulletSystemName;
+	private final String bulletSubName;
 	
 	public PacketGunChange(Gun gun, boolean triggerState){
 		super(null);
@@ -31,6 +32,7 @@ public class PacketGunChange extends APacketBase{
 		this.triggerState = triggerState;
 		this.bulletPackID = null;
 		this.bulletSystemName = null;
+		this.bulletSubName = null;
 	}
 	
 	public PacketGunChange(Gun gun, ItemPart bullet){
@@ -40,6 +42,7 @@ public class PacketGunChange extends APacketBase{
 		this.triggerState = false;
 		this.bulletPackID = bullet.definition.packID;
 		this.bulletSystemName = bullet.definition.systemName;
+		this.bulletSubName = bullet.subName;
 	}
 	
 	public PacketGunChange(ByteBuf buf){
@@ -50,10 +53,12 @@ public class PacketGunChange extends APacketBase{
 			this.triggerState = buf.readBoolean();
 			this.bulletPackID = null;
 			this.bulletSystemName = null;
+			this.bulletSubName = null;
 		}else{
 			this.triggerState = false;
 			this.bulletPackID = readStringFromBuffer(buf);
 			this.bulletSystemName = readStringFromBuffer(buf);
+			this.bulletSubName = readStringFromBuffer(buf);
 		}
 	}
 	
@@ -67,6 +72,7 @@ public class PacketGunChange extends APacketBase{
 		}else{
 			writeStringToBuffer(bulletPackID, buf);
 			writeStringToBuffer(bulletSystemName, buf);
+			writeStringToBuffer(bulletSubName, buf);
 		}
 	}
 	
@@ -77,7 +83,7 @@ public class PacketGunChange extends APacketBase{
 			if(controlPulse){
 				gun.firing = triggerState && gun.active;
 			}else{
-				gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName));
+				gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName, bulletSubName));
 			}
 			if(!world.isClient()){
 				InterfacePacket.sendToAllClients(this);

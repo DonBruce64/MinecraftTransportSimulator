@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONParticleObject{
+	@JSONRequired
 	public String type;
 	public String color;
 	public String toColor;

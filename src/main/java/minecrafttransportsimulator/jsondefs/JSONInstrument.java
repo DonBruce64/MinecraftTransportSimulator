@@ -3,6 +3,8 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
 public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     public List<Component> components = new ArrayList<Component>();
 
@@ -14,12 +16,17 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	public int xCenter;
     	public int yCenter;
     	public float scale;
+    	@JSONRequired
     	public int textureXCenter;
+    	@JSONRequired
     	public int textureYCenter;
+    	@JSONRequired
     	public int textureWidth;
+    	@JSONRequired
     	public int textureHeight;
     	
     	public JSONText textObject;
+    	@JSONRequired(dependentField="textObject")
     	public float textFactor;
     	
     	public boolean rotateWindow;

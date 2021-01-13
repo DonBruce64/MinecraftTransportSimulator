@@ -424,7 +424,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			
 			//Do sound and effects.
 			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
-			if(definition.gun.JSONParticleObjects != null){
+			if(definition.gun.particleObjects != null){
 				spawnEffectParticles();
 			}
 			
@@ -458,35 +458,35 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	 * The actual bullet is spawned in {@link #spawnParticles()}.
 	 */
 	private void spawnEffectParticles(){
-		for(JSONParticleObject JSONParticleObject : definition.gun.JSONParticleObjects){
+		for(JSONParticleObject gunParticle : definition.gun.particleObjects){
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
-			Point3d particleVelocity = JSONParticleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(provider.getProviderRotation());
+			Point3d particleVelocity = gunParticle.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(provider.getProviderRotation());
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = provider.getProviderPosition().copy();
-			if(JSONParticleObject.pos != null) {
-				particlePosition.add(JSONParticleObject.pos.copy().rotateFine(currentOrientation).rotateFine(provider.getProviderRotation()));
+			if(gunParticle.pos != null) {
+				particlePosition.add(gunParticle.pos.copy().rotateFine(currentOrientation).rotateFine(provider.getProviderRotation()));
 			}
 
 			//Spawn the appropriate type and amount of particles.
 			//Change default values from 0 to 1.
-			if(JSONParticleObject.quantity == 0) JSONParticleObject.quantity = 1;
-			if(JSONParticleObject.scale == 0f && JSONParticleObject.toScale == 0f) JSONParticleObject.scale = 1f;
+			if(gunParticle.quantity == 0) gunParticle.quantity = 1;
+			if(gunParticle.scale == 0f && gunParticle.toScale == 0f) gunParticle.scale = 1f;
 			AParticle currentParticle;
-			switch(JSONParticleObject.type) {
+			switch(gunParticle.type) {
 				case "smoke": {
-					if(JSONParticleObject.transparency == 0f && JSONParticleObject.toTransparency == 0F) JSONParticleObject.transparency = 1f;
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(provider.getProviderWorld(), particlePosition, particleVelocity.copy(), JSONParticleObject);
+					if(gunParticle.transparency == 0f && gunParticle.toTransparency == 0F) gunParticle.transparency = 1f;
+					for(int i=0; i<gunParticle.quantity; i++) {
+						currentParticle = new ParticleSuspendedSmoke(provider.getProviderWorld(), particlePosition, particleVelocity.copy(), gunParticle);
 						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case "flame": {
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(provider.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject.scale);
-						currentParticle.deltaScale = (JSONParticleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
+					for(int i=0; i<gunParticle.quantity; i++) {
+						currentParticle = new ParticleFlame(provider.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), gunParticle.scale);
+						currentParticle.deltaScale = (gunParticle.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
 						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;

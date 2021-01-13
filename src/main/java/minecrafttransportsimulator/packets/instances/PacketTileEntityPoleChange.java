@@ -50,7 +50,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 		super(buf);
 		this.axis = Axis.values()[buf.readByte()];
 		if(buf.readBoolean()){
-			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 		}else{
 			this.componentItem = null;
 		}
@@ -74,6 +74,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			buf.writeBoolean(true);
 			writeStringToBuffer(componentItem.definition.packID, buf);
 			writeStringToBuffer(componentItem.definition.systemName, buf);
+			writeStringToBuffer(componentItem.subName, buf);
 		}else{
 			buf.writeBoolean(false);
 		}

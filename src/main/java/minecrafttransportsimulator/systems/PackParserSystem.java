@@ -14,8 +14,6 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.google.gson.Gson;
-
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -39,8 +37,7 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.packloading.JSONTypeAdapters;
-import minecrafttransportsimulator.packloading.LegacyCompatSystem;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
@@ -72,9 +69,6 @@ public final class PackParserSystem{
 	 * because sub-folders only matter for the creative tabs, where all items are together.  Not the benches, where items only
 	 * appear one-at-a-time.**/
 	private static TreeMap<String, TreeMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, TreeMap<String, AItemPack<?>>>();
-
-	/**Custom Gson instance for parsing packs.*/
-	public static final Gson packParser = JSONTypeAdapters.getParserWithAdapters();
 	
 
     //-----START OF NEW INIT LOGIC-----
@@ -118,7 +112,7 @@ public final class PackParserSystem{
 			while(entries.hasMoreElements()){
 				ZipEntry entry = entries.nextElement();
 				if(entry.getName().endsWith("packdefinition.json")){
-					JSONPack packDef = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class);
+					JSONPack packDef = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class);
 					packJarMap.put(packDef.packID, packJar);
 					packMap.put(packDef.packID, packDef);
 				}
@@ -253,8 +247,7 @@ public final class PackParserSystem{
 								//Create the JSON instance.
 								AJSONItem<?> definition;
 								try{
-									definition = packParser.fromJson(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
-									LegacyCompatSystem.performLegacyCompats(definition);
+									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
 								}catch(Exception e){
 									InterfaceCore.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
 						    		InterfaceCore.logError(e.getMessage());
@@ -437,17 +430,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONVehicle definition = packParser.fromJson(jsonReader, JSONVehicle.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
-    		Iterator <JSONSubDefinition> iterator = definition.definitions.iterator();
-    		while(iterator.hasNext()){
-    			JSONSubDefinition subDefinition = iterator.next();
-    			if(subDefinition == null || subDefinition.extraMaterials == null){
-    				iterator.remove();
-    				throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-    			}else{
-	    			setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
-    			}
+    		JSONVehicle definition = JSONParser.parseStream(jsonReader, JSONVehicle.class);
+    		for(JSONSubDefinition subDefinition : definition.definitions){
+    			setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -458,18 +443,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPart definition = packParser.fromJson(jsonReader, JSONPart.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
+    		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		try{
-	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
-		    		}else{
-	    				throw new NullPointerException();
-	    			}
-	    		}catch(Exception e){
-	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-	    		}
+	    		setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -480,8 +456,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONInstrument definition = packParser.fromJson(jsonReader, JSONInstrument.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
+    		JSONInstrument definition = JSONParser.parseStream(jsonReader, JSONInstrument.class);
     		setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT);
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -492,18 +467,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their pole components to the mod.**/
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPoleComponent definition = packParser.fromJson(jsonReader, JSONPoleComponent.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
+    		JSONPoleComponent definition = JSONParser.parseStream(jsonReader, JSONPoleComponent.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		try{
-	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemPoleComponent(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
-		    		}else{
-	    				throw new NullPointerException();
-	    			}
-	    		}catch(Exception e){
-	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-	    		}
+    			setupItem(new ItemPoleComponent(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -519,18 +485,9 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their decor blocks to the mod.**/
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONDecor definition = packParser.fromJson(jsonReader, JSONDecor.class);
-    		LegacyCompatSystem.performLegacyCompats(definition);
+    		JSONDecor definition = JSONParser.parseStream(jsonReader, JSONDecor.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		try{
-	    			if(subDefinition.extraMaterials != null){
-	    				setupItem(new ItemDecor(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
-		    		}else{
-	    				throw new NullPointerException();
-	    			}
-	    		}catch(Exception e){
-	    			throw new NullPointerException("Unable to parse definition #" + (definition.definitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-	    		}
+    			setupItem(new ItemDecor(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
@@ -541,7 +498,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemItem(packParser.fromJson(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
+    		setupItem(new ItemItem(JSONParser.parseStream(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
     	}catch(Exception e){
     		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());

@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>{
+	@JSONRequired
     public VehicleMotorized motorized;
     @Deprecated
     public VehiclePlane plane;
@@ -13,11 +15,14 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     public VehicleBlimp blimp;
     @Deprecated
     public VehicleCar car;
+    @JSONRequired
     public List<VehiclePart> parts;
+    @JSONRequired
     public List<VehicleCollisionBox> collision;
     public List<VehicleDoor> doors;
     public List<VehicleConnection> connections;
     public List<JSONPotionEffect> effects;
+    @JSONRequired
     public VehicleRendering rendering;
     
     public class VehicleGeneral extends AJSONMultiModelProvider<JSONVehicle.VehicleGeneral>.General{
@@ -63,6 +68,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public Point3d hookupPos;
     	@Deprecated
         public String hookupType;
+    	@JSONRequired
         public List<PackInstrument> instruments;
     }
     
@@ -96,6 +102,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     
     public class VehiclePart{
     	public boolean isSubPart;
+    	@JSONRequired
         public Point3d pos;
         public Point3d rot;
         public boolean turnsWithSteer;
@@ -103,6 +110,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public boolean isPermanent;
         public boolean isSpare;
         public boolean inverseMirroring;
+        @JSONRequired
         public List<String> types;
         public List<String> customTypes;
         public float minValue;
@@ -167,7 +175,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public float[] exhaustVelocity;
         @Deprecated
         public List<ExhaustObject> exhaustObjects;
-        public List<JSONParticleObject> JSONParticleObjects;
+        public List<JSONParticleObject> particleObjects;
         public float intakeOffset;
         
         @Deprecated
@@ -180,7 +188,8 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     }
     
     public class VehicleCollisionBox{
-        public Point3d pos;
+    	@JSONRequired
+    	public Point3d pos;
         public float width;
         public float height;
         public boolean isInterior;
@@ -189,9 +198,12 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     }
     
     public class VehicleDoor{
-        public String name;
-    	public Point3d closedPos;
-        public Point3d openPos;
+    	@JSONRequired
+    	public String name;
+        @JSONRequired
+        public Point3d closedPos;
+    	@JSONRequired
+    	public Point3d openPos;
         public float width;
         public float height;
         public boolean closedByDefault;
@@ -202,21 +214,28 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     
     public class VehicleConnection{
     	public boolean hookup;
+    	@JSONRequired
     	public String type;
+    	@JSONRequired
     	public Point3d pos;
     	public boolean mounted;
     	public List<VehicleConnectionConnector> connectors;
     	
     	public class VehicleConnectionConnector{
+    		@JSONRequired
         	public String modelName;
+    		@JSONRequired
         	public Point3d startingPos;
+    		@JSONRequired
         	public Point3d endingPos;
         	public double segmentLength;
         }
     }
     
     public class PackInstrument{
-        public Point3d pos;
+    	@JSONRequired
+    	public Point3d pos;
+    	@JSONRequired
         public Point3d rot;
         public float scale;
         public int hudX;

@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -89,7 +90,7 @@ public class GUIDevEditor extends AGUIBase{
 								continue;
 							}
 							FileWriter writer = new FileWriter(jsonFile);
-							PackParserSystem.packParser.toJson(packItem.definition, packItem.definition.getClass(), writer);
+							JSONParser.exportStream(packItem.definition, writer);
 							lastTimeModified = jsonFile.lastModified();
 							writer.flush();
 							writer.close();
@@ -154,7 +155,7 @@ public class GUIDevEditor extends AGUIBase{
 										try{
 											if(packItem.definition instanceof JSONVehicle){
 												JSONVehicle definition = (JSONVehicle) packItem.definition;
-												JSONVehicle loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONVehicle.class);
+												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class);
 												definition.general = loadedDefinition.general;
 												definition.definitions = loadedDefinition.definitions;
 												definition.motorized = loadedDefinition.motorized;
@@ -167,7 +168,7 @@ public class GUIDevEditor extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONPart){
 												JSONPart definition = (JSONPart) packItem.definition;
-												JSONPart loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONPart.class);
+												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class);
 												definition.general = loadedDefinition.general;
 												definition.engine = loadedDefinition.engine;
 												definition.ground = loadedDefinition.ground;
@@ -186,13 +187,13 @@ public class GUIDevEditor extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;
-												JSONInstrument loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONInstrument.class);
+												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class);
 												definition.general = loadedDefinition.general;
 												definition.components = loadedDefinition.components;
 												
 											}else if(packItem.definition instanceof JSONPoleComponent){
 												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
-												JSONPoleComponent loadedDefinition = PackParserSystem.packParser.fromJson(new FileReader(jsonFile), JSONPoleComponent.class);
+												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class);
 												definition.general = loadedDefinition.general;
 												
 											}else{
@@ -200,7 +201,7 @@ public class GUIDevEditor extends AGUIBase{
 											}
 										}catch(Exception e){
 											//e.printStackTrace();
-											debug.setText(debug.getText() + "\nERROR: could not parse file.  Error is: " + e.getMessage());
+											debug.setText(debug.getText() + "\nERROR: " + e.getMessage());
 										}
 									}
 								}

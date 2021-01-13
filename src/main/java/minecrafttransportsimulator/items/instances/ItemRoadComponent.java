@@ -57,14 +57,16 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					if(clickedRoad.spawnCollisionBlocks(player)){
 						lastRoadClickedData.put(player, clickedRoad.getClickData(point, player, false));
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
+						player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
 					}
 					return true;
 				}
 			}
 			
-			//Didn't click a holographic road.  Do normal functions.
-			if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
+			//Didn't click an inactive road.  Do normal functions.
+			//If we are holding a dynamic road, and don't have a click position or are sneaking, 
+			//set the starting position.
+			if(definition.general.isDynamic && (player.isSneaking() || !lastPositionClicked.containsKey(player))){
 				//Set starting point.  This may or may not be a road segment.
 				lastRotationClicked.put(player, (double) Math.round(player.getYaw()/15)*15);
 				TileEntityRoad clickedRoad;
@@ -85,8 +87,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					lastRoadClickedData.remove(player);
 				}
 				player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.set"));
-			}else{
-				if(point.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_SEGMENT_LENGTH){
+			}else if(!player.isSneaking() && (!definition.general.isDynamic || lastPositionClicked.containsKey(player))){
+				//Clicked with the road not-sneaking with valid points.  If we are dynamic, check end-points.
+				if(!definition.general.isDynamic || point.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_SEGMENT_LENGTH){
 					//Get the road we clicked, if we clicked one.
 					//If we clicked a road for our starting point, then we need to auto-place the new road block.
 					//If not, we place the new road block wherever we clicked.  Find this position now, as well as
@@ -138,18 +141,26 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					
 					//Get the end point and rotation.  This depends if we clicked a road or not.
 					//If we clicked a road, we need to adjust our angle to match the road's angle.
+					//If we are a static road segment, we can skip this step.
 					final Point3d endPosition;
 					final double endRotation;
-					final RoadClickData endingRoadData = lastRoadClickedData.get(player);
-					if(endingRoadData != null){
-						endPosition = endingRoadData.genPosition;
-						endRotation = endingRoadData.genRotation;
+					final RoadClickData endingRoadData;
+					if(definition.general.isDynamic){
+						 endingRoadData = lastRoadClickedData.get(player);
+						 if(endingRoadData != null){
+							 endPosition = endingRoadData.genPosition;
+							 endRotation = endingRoadData.genRotation;
+						 }else{
+							 endPosition = new Point3d(lastPositionClicked.get(player));
+							 endRotation = lastRotationClicked.get(player);
+							 //Need to offset endPosition to the corner of the block we clicked.
+							 //However, this needs to be on the back of the curve, so we need inverted rotation.
+							 endPosition.add(new Point3d(-0.5, 0.0, 0.5).rotateFine(new Point3d(0, endRotation + 180, 0)));
+						 }
 					}else{
-						endPosition = new Point3d(lastPositionClicked.get(player));
-						endRotation = lastRotationClicked.get(player);
-						//Need to offset endPosition to the corner of the block we clicked.
-						//However, this needs to be on the back of the curve, so we need inverted rotation.
-						endPosition.add(new Point3d(-0.5, 0.0, 0.5).rotateFine(new Point3d(0, endRotation + 180, 0)));
+						endPosition = null;
+						endRotation = 0;
+						endingRoadData = null;
 					}
 					
 					
@@ -167,29 +178,32 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 						
 						//Now that the road is placed, set the connections to the other roads and lanes.
-						//First set the curve offset and rotation, and create the curve.
-						newRoad.curve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
+						//If we have a dynamic road, set the road curve now.
+						if(definition.general.isDynamic){
+							newRoad.dynamicCurve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
+						}
 						
-						//Set the road lanes now that we have the curve.
+						//Create all road lanes.  These can't get set in the constructor as it can't take the curve for dynamic roads.
 						for(int laneNumber=0; laneNumber < newRoad.definition.general.laneOffsets.length; ++laneNumber){
-							newRoad.lanes.add(laneNumber, new RoadLane(newRoad, laneNumber));
+							newRoad.lanes.add(laneNumber, new RoadLane(newRoad, laneNumber, null));
 						}
 						
 						//Set the lane connections, as appropriate.
 						//If we are butted-up to a segment, connect the connections in order.
 						//If we are opposite to a segment, connect the connections in opposite pairs.
 						//FIXME need to check for multiple roads with the same points as the clicked road when doing connections.
-						//these need to be connected to as well.  Perhaps make this function generic due to the amount of code?
+						//FIXME need to check for connection possibilities BEFORE spawning this road.
+						/*
 						if(startingRoadData != null){
 							for(int laneNumber=0; laneNumber < newRoad.lanes.size(); ++laneNumber){
 								int connectionLaneNumber = startingRoadData.laneClicked.laneNumber + (startingRoadData.clickedSameDirection ? laneNumber : -laneNumber);
 								if(connectionLaneNumber >= 0 && connectionLaneNumber < startingRoadData.roadClicked.lanes.size()){
 									RoadLane laneToConnect = startingRoadData.roadClicked.lanes.get(connectionLaneNumber);
-									
 									if(startingRoadData.clickedSameDirection){
 										if(startingRoadData.clickedStart){
 											//Clicked the start of the starting road, and in the same direction.
 											//In this case, our road starts at the same position, and needs the same connections.
+											
 											for(RoadLaneConnection connection : laneToConnect.priorConnections){
 												newRoad.lanes.get(laneNumber).priorConnections.add(connection);
 												TileEntityRoad otherRoad = world.getTileEntity(connection.tileLocation);
@@ -276,13 +290,13 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 									}
 								}
 							}
-						}
+						}*/
 						
 						//Try to spawn all the collision blocks for this road.
 						if(newRoad.spawnCollisionBlocks(player)){
 							lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, player, false));
 							lastPositionClicked.put(player, newRoad.position);
-							lastRotationClicked.put(player, newRoad.curve.startAngle + 180D);
+							lastRotationClicked.put(player, startRotation + 180D);
 						}else{
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadtool.blockingblocks"));
 						}

@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLanePointSet;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
-/**Helper class for containing lane data.
+/**Helper class for containing lane data.  Lanes contain a reference to the road
+ * they are a part of,  the lane number they represent, the curve that defines
+ * their path, and the prior and next road segments they are connected to.
  *
  * @author don_bruce
  */
@@ -17,73 +16,61 @@ public class RoadLane{
 	public final TileEntityRoad road;
 	public final int laneNumber;
 	public final BezierCurve curve;
-	public final List<RoadLaneConnection> priorConnections = new ArrayList<RoadLaneConnection>();
-	public final List<RoadLaneConnection> nextConnections = new ArrayList<RoadLaneConnection>();
+	public RoadLaneConnection priorConnection;
+	public RoadLaneConnection nextConnection;
 	
-	public RoadLane(TileEntityRoad road, int laneNumber){
+	public RoadLane(TileEntityRoad road, int laneNumber, WrapperNBT data){
 		this.road = road;
 		this.laneNumber = laneNumber;
-		this.curve = new BezierCurve(road.curve, road.definition.general.laneOffsets[laneNumber]);
+		this.curve = generateCurve();
+		if(data != null){
+			WrapperNBT connectionData = data.getData("priorConnection");
+			if(connectionData != null){
+				priorConnection = new RoadLaneConnection(connectionData);
+			}
+			connectionData = data.getData("nextConnection");
+			if(connectionData != null){
+				nextConnection = new RoadLaneConnection(connectionData);
+			}
+		}
 	}
 	
-	public RoadLane(TileEntityRoad road, WrapperNBT data){
-		this.road = road;
-		this.laneNumber = data.getInteger("laneNumber");
-		this.curve = new BezierCurve(road.curve, road.definition.general.laneOffsets[laneNumber]);
-		int priorConnectionCount = data.getInteger("priorConnectionCount");
-		for(int i=0; i<priorConnectionCount; ++i){
-			WrapperNBT connectionData = data.getData("priorConnection" + i);
-			priorConnections.add(new RoadLaneConnection(connectionData));
-		}
-		int nextConnectionCount = data.getInteger("nextConnectionCount");
-		for(int i=0; i<nextConnectionCount; ++i){
-			WrapperNBT connectionData = data.getData("nextConnection" + i);
-			nextConnections.add(new RoadLaneConnection(connectionData));
+	private BezierCurve generateCurve(){
+		//Curves are generated based on the definition of the road, and the points for our lane.
+		//If we are a dynamic road, then we don't use end points.  Instead, we use an
+		//end offset point.  If we were made from a dynamic road, then the road's curve will be non-null;
+		if(road.dynamicCurve != null){
+			return new BezierCurve(road.dynamicCurve, road.definition.general.laneOffsets[laneNumber]);
+		}else{
+			JSONLanePointSet points = road.definition.general.lanePoints.get(laneNumber);
+			return new BezierCurve(points.startPos, points.endPos, points.startAngle, points.endAngle);
 		}
 	}
 	
 	public void connectToPrior(TileEntityRoad priorRoad, int priorLaneNumber, boolean connectedToStart){
-		priorConnections.add(new RoadLaneConnection(priorRoad.position, priorLaneNumber, connectedToStart));
+		priorConnection = new RoadLaneConnection(priorRoad.position, priorLaneNumber, connectedToStart);
 	}
 	
 	public void connectToNext(TileEntityRoad nextRoad, int nextLaneNumber, boolean connectedToStart){
-		nextConnections.add(new RoadLaneConnection(nextRoad.position, nextLaneNumber, connectedToStart));
+		nextConnection = new RoadLaneConnection(nextRoad.position, nextLaneNumber, connectedToStart);
 	}
 	
 	public void removeConnections(){
 		try{
-			for(RoadLaneConnection connection : priorConnections){
-				TileEntityRoad otherRoad = road.world.getTileEntity(connection.tileLocation);
-				for(RoadLane otherLane : otherRoad.lanes){
-					Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
-					while(iterator.hasNext()){
-						if(iterator.next().tileLocation.equals(road.position)){
-							iterator.remove();
-						}
-					}
-					iterator = otherLane.nextConnections.iterator();
-					while(iterator.hasNext()){
-						if(iterator.next().tileLocation.equals(road.position)){
-							iterator.remove();
-						}
-					}
+			if(priorConnection != null){
+				TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
+				if(priorConnection.connectedToStart){
+					otherRoad.lanes.get(laneNumber).priorConnection = null;
+				}else{
+					otherRoad.lanes.get(laneNumber).nextConnection = null;
 				}
 			}
-			for(RoadLaneConnection connection : nextConnections){
-				TileEntityRoad otherRoad = road.world.getTileEntity(connection.tileLocation);
-				for(RoadLane otherLane : otherRoad.lanes){
-					Iterator<RoadLaneConnection> iterator = otherLane.priorConnections.iterator();
-					while(iterator.hasNext()){
-						if(iterator.next().tileLocation.equals(road.position)){
-							iterator.remove();
-						}
-					}
-					iterator = otherLane.nextConnections.iterator();
-					while(iterator.hasNext()){
-						if(iterator.next().tileLocation.equals(road.position)){
-							iterator.remove();
-						}
-					}
+			if(nextConnection != null){
+				TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
+				if(nextConnection.connectedToStart){
+					otherRoad.lanes.get(laneNumber).priorConnection = null;
+				}else{
+					otherRoad.lanes.get(laneNumber).nextConnection = null;
 				}
 			}
 		}catch(Exception e){
@@ -93,17 +80,15 @@ public class RoadLane{
 	
 	public void save(WrapperNBT data){
 		data.setInteger("laneNumber", laneNumber);
-		data.setInteger("priorConnectionCount", priorConnections.size());
-		for(int i=0; i<priorConnections.size(); ++i){
+		if(priorConnection != null){
 			WrapperNBT connectionData = new WrapperNBT();
-			priorConnections.get(i).save(connectionData);
-			data.setData("priorConnection" + i, connectionData);
+			priorConnection.save(connectionData);
+			data.setData("priorConnection", connectionData);
 		}
-		data.setInteger("nextConnectionCount", nextConnections.size());
-		for(int i=0; i<nextConnections.size(); ++i){
+		if(nextConnection != null){
 			WrapperNBT connectionData = new WrapperNBT();
-			nextConnections.get(i).save(connectionData);
-			data.setData("nextConnection" + i, connectionData);
+			nextConnection.save(connectionData);
+			data.setData("nextConnection", connectionData);
 		}
 	}
 }

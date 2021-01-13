@@ -17,7 +17,7 @@ public final class PartSeat extends APart{
 	
 	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
-		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"));
+		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
 	}
 	
 	@Override
@@ -154,6 +154,7 @@ public final class PartSeat extends APart{
 		if(activeGun != null){
 			data.setString("activeGunPackID", activeGun.definition.packID);
 			data.setString("activeGunSystemName", activeGun.definition.systemName);
+			data.setString("activeGunSubName", activeGun.subName);
 		}
 		return data;
 	}

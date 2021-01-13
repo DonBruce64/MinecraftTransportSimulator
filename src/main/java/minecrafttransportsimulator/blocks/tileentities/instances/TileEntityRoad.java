@@ -47,7 +47,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static variables based on core definition.
 	public final BoundingBox boundingBox;
 	public final List<Point3i> collisionBlockOffsets;
-	public BezierCurve curve;
+	public BezierCurve dynamicCurve;
 	public final List<RoadLane> lanes;
 
 	//Dynamic variables based on states.
@@ -79,9 +79,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		Point3d startingOffset = data.getPoint3d("startingOffset");
 		Point3d endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
-			this.curve = new BezierCurve(startingOffset, endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
+			this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
 			for(int laneNumber=0; laneNumber < definition.general.laneOffsets.length; ++laneNumber){
-				lanes.add(new RoadLane(this, data.getData("lane" + laneNumber)));
+				lanes.add(new RoadLane(this, laneNumber, data.getData("lane" + laneNumber)));
 			}
 		}
 		
@@ -126,9 +126,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Next get the angle between the player and the side of the curve they clicked.
 		double angleDelta;
 		if(clickedStart){
-			angleDelta = player.getYaw() - curve.startAngle;
+			angleDelta = player.getYaw() - dynamicCurve.startAngle;
 		}else{
-			angleDelta = player.getYaw() - curve.endAngle + 180;
+			angleDelta = player.getYaw() - dynamicCurve.endAngle + 180;
 		}
 		while(angleDelta < -180)angleDelta += 360;
 		while(angleDelta > 180)angleDelta -= 360;
@@ -162,40 +162,45 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Road width is considered to extend to the left and right border, minus 1/2 a block.
 	 */
 	public boolean spawnCollisionBlocks(WrapperPlayer player){
-		//Get all the points that make up our collision points.
-		//If we find any colliding points, note them.
-		Point3d testOffset = new Point3d(0, 0, 0);
-		Point3d testRotation = new Point3d(0, 0, 0);
 		Map<Point3i, Integer> collisionHeightMap = new HashMap<Point3i, Integer>();
-		float segmentDelta = (float) (definition.general.borderOffset/(Math.floor(definition.general.borderOffset) + 1));
-		for(float f=0; f<curve.pathLength; f+=0.1){
-			for(float offset=0; offset < definition.general.borderOffset; offset += segmentDelta){
-				curve.setPointToRotationAt(testRotation, f);
-				//We only want yaw for block placement.
-				testRotation.x = 0;
-				testRotation.z = 0;
-				testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(0, definition.general.collisionHeight/16F, 0);
-				curve.offsetPointByPositionAt(testOffset, f);
-				Point3i testPoint = new Point3i((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
-				
-				//If we don't have a block in this position, check if we need one.
-				if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
-					//Offset the point to the global cordinate space, get the block, and offset back.
-					testPoint.add(position);
-					ABlockBase testBlock = world.getBlock(testPoint);
-					testPoint.subtract(position);
-					if(testBlock == null){
-						//Need a collision box here.
-						int collisionBoxIndex = (int) ((testOffset.y - testPoint.y)*16);
-						collisionBlockOffsets.add(testPoint);
-						
-						collisionHeightMap.put(testPoint, collisionBoxIndex);
-					}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
-						//Some block is blocking us that's not part of a road.  Flag it.
-						collidingBlockOffsets.add(testPoint);
+		if(dynamicCurve != null){
+			//Get all the points that make up our collision points for our dynamic curve.
+			//If we find any colliding points, note them.
+			Point3d testOffset = new Point3d(0, 0, 0);
+			Point3d testRotation = new Point3d(0, 0, 0);
+			float segmentDelta = (float) (definition.general.borderOffset/(Math.floor(definition.general.borderOffset) + 1));
+			for(float f=0; f<dynamicCurve.pathLength; f+=0.1){
+				for(float offset=0; offset < definition.general.borderOffset; offset += segmentDelta){
+					dynamicCurve.setPointToRotationAt(testRotation, f);
+					//We only want yaw for block placement.
+					testRotation.x = 0;
+					testRotation.z = 0;
+					testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(0, definition.general.collisionHeight/16F, 0);
+					dynamicCurve.offsetPointByPositionAt(testOffset, f);
+					Point3i testPoint = new Point3i((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
+					
+					//If we don't have a block in this position, check if we need one.
+					if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
+						//Offset the point to the global cordinate space, get the block, and offset back.
+						testPoint.add(position);
+						ABlockBase testBlock = world.getBlock(testPoint);
+						testPoint.subtract(position);
+						if(testBlock == null){
+							//Need a collision box here.
+							int collisionBoxIndex = (int) ((testOffset.y - testPoint.y)*16);
+							collisionBlockOffsets.add(testPoint);
+							
+							collisionHeightMap.put(testPoint, collisionBoxIndex);
+						}else if(!(testBlock instanceof BlockRoadCollision || testBlock instanceof BlockRoad)){
+							//Some block is blocking us that's not part of a road.  Flag it.
+							collidingBlockOffsets.add(testPoint);
+						}
 					}
 				}
 			}
+		}else{
+			//Do static block additions for static component.
+			//FIXME do this.
 		}
 		
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
@@ -227,10 +232,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 		
 		//Save curve data.
-		data.setPoint3d("startingOffset", curve.startPos);
-		data.setPoint3d("endingOffset", curve.endPos);
-		data.setDouble("startingRotation", curve.startAngle);
-		data.setDouble("endingRotation", curve.endAngle);
+		if(dynamicCurve != null){
+			data.setPoint3d("startingOffset", dynamicCurve.startPos);
+			data.setPoint3d("endingOffset", dynamicCurve.endPos);
+			data.setDouble("startingRotation", dynamicCurve.startAngle);
+			data.setDouble("endingRotation", dynamicCurve.endAngle);
+		}
 		
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){

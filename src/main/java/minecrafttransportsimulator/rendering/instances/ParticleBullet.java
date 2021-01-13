@@ -167,7 +167,7 @@ public class ParticleBullet extends AParticle{
 		}
 		
 		//Create trail particles, if defined
-		if (bullet.definition.bullet.JSONParticleObjects != null) {
+		if (bullet.definition.bullet.particleObjects != null) {
 			spawnParticles();
 		}
 		
@@ -187,7 +187,7 @@ public class ParticleBullet extends AParticle{
 	}
 	
 	private void spawnParticles() {
-		for(JSONParticleObject particleObject : this.bullet.definition.bullet.JSONParticleObjects) {
+		for(JSONParticleObject particleObject : this.bullet.definition.bullet.particleObjects) {
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
 			Point3d particleVelocity = particleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D));

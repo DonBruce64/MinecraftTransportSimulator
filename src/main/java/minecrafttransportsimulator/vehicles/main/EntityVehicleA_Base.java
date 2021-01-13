@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -384,7 +385,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		if(correctedPack == null){
 			//Use GSON to make a deep copy of the current pack definition.
 			//Set the sub-part flag to ensure we know this is a subPart for rendering operations.
-			correctedPack = PackParserSystem.packParser.fromJson(PackParserSystem.packParser.toJson(subPack, VehiclePart.class), VehiclePart.class);
+			correctedPack = JSONParser.duplicateJSON(subPack);
 			correctedPack.isSubPart = true;
 			
 			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.

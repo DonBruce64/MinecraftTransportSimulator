@@ -35,7 +35,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
-				ATileEntityPole_Component newComponent = createComponent(PackParserSystem.getItem(packID, systemName));
+				String subName = data.getString("subName" + axis.ordinal());
+				ATileEntityPole_Component newComponent = createComponent(PackParserSystem.getItem(packID, systemName, subName));
 				components.put(axis, newComponent);
 				
 				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
@@ -93,6 +94,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			ATileEntityPole_Component component = connectedObjectEntry.getValue();
 			data.setString("packID" + axis.ordinal(), component.definition.packID);
 			data.setString("systemName" + axis.ordinal(), component.definition.systemName);
+			data.setString("subName" + axis.ordinal(), component.item.subName);
 			if(component instanceof ITextProvider){
 				int lineNumber = 0;
 				for(String textLine : ((ITextProvider) component).getText().values()){

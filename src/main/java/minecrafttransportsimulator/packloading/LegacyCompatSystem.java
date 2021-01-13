@@ -165,8 +165,8 @@ public final class LegacyCompatSystem{
 				definition.bullet.types = new ArrayList<String>();
 				definition.bullet.types.add(definition.bullet.type);
 			}
-			if (definition.bullet.JSONParticleObjects != null) {
-				for (JSONParticleObject particle : definition.bullet.JSONParticleObjects) {
+			if (definition.bullet.particleObjects != null) {
+				for (JSONParticleObject particle : definition.bullet.particleObjects) {
 					if(particle.velocityVector == null) {
 						particle.velocityVector = new Point3d(0, 0, -particle.velocity);
 					}
@@ -459,7 +459,7 @@ public final class LegacyCompatSystem{
 			partDef.linkedDoor = null;
 		}
 		if(partDef.exhaustPos != null){
-			partDef.JSONParticleObjects = new ArrayList<JSONParticleObject>();
+			partDef.particleObjects = new ArrayList<JSONParticleObject>();
 			for(int i=0; i<partDef.exhaustPos.length; i+=3){
 				JSONParticleObject particle = new JSONParticleObject();
 				particle.type = "smoke";
@@ -471,13 +471,13 @@ public final class LegacyCompatSystem{
 				particle.toColor = "#D9D9D9";
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
-				partDef.JSONParticleObjects.add(particle);
+				partDef.particleObjects.add(particle);
 			}
 			partDef.exhaustPos = null;
 			partDef.exhaustVelocity = null;
 		}
 		if(partDef.exhaustObjects != null) {
-			partDef.JSONParticleObjects = new ArrayList<JSONParticleObject>();
+			partDef.particleObjects = new ArrayList<JSONParticleObject>();
 			for(ExhaustObject exhaust : partDef.exhaustObjects) {
 				JSONParticleObject particle = new JSONParticleObject();
 				particle.type = "smoke";
@@ -489,7 +489,7 @@ public final class LegacyCompatSystem{
 				particle.toColor = "#D9D9D9";
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
-				partDef.JSONParticleObjects.add(particle);
+				partDef.particleObjects.add(particle);
 			}
 			partDef.exhaustObjects = null;
 		}

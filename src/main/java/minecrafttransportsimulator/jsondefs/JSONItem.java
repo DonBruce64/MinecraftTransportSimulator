@@ -2,8 +2,12 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
 public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
+	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
 	public JSONBooklet booklet;
+	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="general")
 	public JSONFood food;
 
     public class ItemGeneral extends AJSONItem<JSONItem.ItemGeneral>.General{
