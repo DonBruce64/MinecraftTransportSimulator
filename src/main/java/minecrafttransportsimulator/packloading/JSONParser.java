@@ -280,8 +280,14 @@ public class JSONParser{
 				
 				if(recursiveObject != null){
 					if(recursiveObject instanceof Collection){
+						int index = 0;
 						for(Object objEntry : ((Collection<?>) recursiveObject)){
-							validateFields(objEntry);
+							if(objEntry != null){
+								validateFields(objEntry);
+								++index;
+							}else{
+								throw new NullPointerException("Unable to parse item #" + index + " in variable set '" + field.getName() + "' due to it not existing.  Check your commas!");
+							}
 						}
 					}else{
 						validateFields(recursiveObject);

@@ -52,7 +52,7 @@ public abstract class APacketBase{
 	protected static void writeStringToBuffer(String string, ByteBuf buf){
 		byte[] stringAsBytes = string.getBytes(StandardCharsets.UTF_8);
 		if(stringAsBytes.length > Short.MAX_VALUE){
-			throw new IndexOutOfBoundsException("ERROR: Tried to write a string of: " + stringAsBytes.length + " bytes to a packet.  Max string byte size is: " + Short.MAX_VALUE);
+			throw new IndexOutOfBoundsException("Tried to write a string of: " + stringAsBytes.length + " bytes to a packet.  Max string byte size is: " + Short.MAX_VALUE);
 		}else{
 			buf.writeShort(stringAsBytes.length);
 	        buf.writeBytes(stringAsBytes);

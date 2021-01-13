@@ -33,7 +33,7 @@ public class PackMaterialComponent{
 			NonNullList<ItemStack> oreDictMaterials = OreDictionary.getOres(oreName, true);
 			List<ItemStack> possibleMaterials = new ArrayList<ItemStack>();
 			if(oreDictMaterials.isEmpty()){
-				InterfaceCore.logError("ERROR: Could not obtain any materials for oredict ore name:" + oreName);
+				InterfaceCore.logError("Could not obtain any materials for oredict ore name:" + oreName);
 			}else{
 				for(ItemStack oreDictMaterial : oreDictMaterials){
 					if(oreDictMaterial.getMetadata() == OreDictionary.WILDCARD_VALUE){
@@ -84,7 +84,7 @@ public class PackMaterialComponent{
 	    	return components;
 		}catch(Exception e){
 			e.printStackTrace();
-			throw new NullPointerException("ERROR: Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + currentSubName + ".  Report this to the pack author!");
+			throw new NullPointerException("Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + currentSubName + ".  Report this to the pack author!");
 		}
 	}
 }

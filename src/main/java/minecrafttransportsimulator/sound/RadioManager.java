@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 
 /**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
  * as well as giving said stations to radios when they request them.  This class also interfaces with
@@ -100,8 +101,8 @@ public class RadioManager{
 				return "";
 			}
 		}catch(IOException e){
-			System.err.println("ERROR: Unable to parse radio_stations.txt file.  Is it in use?");
-			System.err.println(e.getMessage());
+			InterfaceCore.logError("Unable to parse radio_stations.txt file.  Is it in use?");
+			InterfaceCore.logError(e.getMessage());
 			return "";
 		}
 	}
@@ -131,9 +132,8 @@ public class RadioManager{
 			}
 			radioStationFileWriter.close();
 		}catch(IOException e){
-			System.err.println("ERROR: Unable to save radio_stations.txt file.  Is it in use?");
-			System.err.println(e.getMessage());
-			e.printStackTrace();
+			InterfaceCore.logError("Unable to save radio_stations.txt file.  Is it in use?");
+			InterfaceCore.logError(e.getMessage());
 		}
 	}
 	

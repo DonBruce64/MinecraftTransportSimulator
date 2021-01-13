@@ -120,7 +120,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					}
 				}
 			}catch(Exception e){
-				InterfaceCore.logError("ERROR: Could not connect trailer to vehicle.  Did the JSON change?");
+				InterfaceCore.logError("Could not connect trailer to vehicle.  Did the JSON change?");
 				towedVehicle = null;
 				activeHitchConnection = null;
 				towedByVehicle = null;

@@ -82,7 +82,7 @@ public class InterfaceRender{
 		        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
 		        textures.put(textureLocation, glTexturePointer);
 			}catch(Exception e){
-				InterfaceCore.logError("ERROR: Could not find texture: " + textureLocation + " Reverting to fallback texture.");
+				InterfaceCore.logError("Could not find texture: " + textureLocation + " Reverting to fallback texture.");
 				textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 			}
 		}
@@ -117,7 +117,7 @@ public class InterfaceRender{
 				        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
 				        textures.put(textureURL, glTexturePointer);
 					}else{
-						String errorString = "ERROR: Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+						String errorString = "Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
 						for(String validType : validContentTypes){
 							errorString += validType + ", ";
 						}
@@ -127,12 +127,12 @@ public class InterfaceRender{
 				}catch(Exception e){
 					textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 					e.printStackTrace();
-					return "ERROR: Could not parse images.  Error was: " + e.getMessage();
+					return "Could not parse images.  Error was: " + e.getMessage();
 				}
 			}catch(Exception e){
 				textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 				e.printStackTrace();
-				return "ERROR: Could not open URL for processing.  Error was: " + e.getMessage();
+				return "Could not open URL for processing.  Error was: " + e.getMessage();
 			}
 		}
 		GlStateManager.bindTexture(textures.get(textureURL));

@@ -45,7 +45,7 @@ public final class AnimationsDecor extends AAnimationsBase<TileEntityDecor>{
 		
 		//Not a base variable, or a decor variable.  Return 0 to prevent crashes, but only if we aren't in devMode.
 		if(ConfigSystem.configObject.clientControls.devMode.value){
-			throw new IllegalArgumentException("ERROR: Was told to find decor variable:" + variable + " for decor:" + decor.definition.packID + ":" + decor.definition.systemName + ", but such a variable does not exist.  Check your spelling and try again.");
+			throw new IllegalArgumentException("Was told to find decor variable:" + variable + " for decor:" + decor.definition.packID + ":" + decor.definition.systemName + ", but such a variable does not exist.  Check your spelling and try again.");
 		}else{
 			return 0;
 		}

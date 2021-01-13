@@ -113,7 +113,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			case("traffic_signal") : return new TileEntityPole_TrafficSignal(this, itemAdded);
 			case("street_light") : return new TileEntityPole_StreetLight(this, itemAdded);
 			case("sign") : return new TileEntityPole_Sign(this, itemAdded);
-			default : throw new IllegalArgumentException("ERROR: Wanted type: " + (itemAdded.definition.general.type != null ? itemAdded.definition.general.type : null) + " for pole:" + itemAdded.definition.packID + ":" + itemAdded.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
+			default : throw new IllegalArgumentException("Wanted type: " + (itemAdded.definition.general.type != null ? itemAdded.definition.general.type : null) + " for pole:" + itemAdded.definition.packID + ":" + itemAdded.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
 		}
 	}
 }

@@ -47,7 +47,7 @@ public class TransformLight extends ATransform{
 			this.renderCover = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
 			this.renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : type.hasBeam;
 		}catch(Exception e){
-			throw new NumberFormatException("ERROR: Attempted to parse light information from " + modelName + ":" + objectName + " but faulted.  This is likely due to a naming convention error.");
+			throw new NumberFormatException("Attempted to parse light information from " + modelName + ":" + objectName + " but faulted.  This is likely due to a naming convention error.");
 		}
 		
 		//If we need to render a flare, cover, or beam, calculate the center points and re-calculate the UV points.
@@ -317,6 +317,6 @@ public class TransformLight extends ATransform{
 				return light;
 			}
 		}
-		throw new IllegalArgumentException("ERROR: Attempted to parse light:" + lightName + ", but no lights exist with this name.  Is this light name spelled correctly?");
+		throw new IllegalArgumentException("Attempted to parse light:" + lightName + ", but no lights exist with this name.  Is this light name spelled correctly?");
 	}
 }

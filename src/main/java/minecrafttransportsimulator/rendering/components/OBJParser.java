@@ -27,7 +27,7 @@ public final class OBJParser{
 		try{
 			reader = new BufferedReader(new InputStreamReader(OBJParser.class.getResourceAsStream(modelLocation)));
 		}catch(Exception e){
-			throw new NullPointerException("ERROR: Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
+			throw new NullPointerException("Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
 		}
 		
 		String partName = null;
@@ -57,7 +57,7 @@ public final class OBJParser{
 					try{
 						partName = line.trim().substring(2, line.length());
 					}catch(Exception e){
-						throw new IllegalArgumentException("ERROR: Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
+						throw new IllegalArgumentException("Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
 					}
 				}
 				if(partName != null){
@@ -70,7 +70,7 @@ public final class OBJParser{
 							coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
 							vertexList.add(coords);
 						}catch(Exception e){
-							throw new NumberFormatException("ERROR: Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
+							throw new NumberFormatException("Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
 						}
 					}else if(line.startsWith("vt ")){
 						try{
@@ -82,7 +82,7 @@ public final class OBJParser{
 							coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
 							textureList.add(coords);
 						}catch(Exception e){
-							throw new NumberFormatException("ERROR: Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
+							throw new NumberFormatException("Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
 						}
 					}else if(line.startsWith("vn ")){
 						try{
@@ -93,7 +93,7 @@ public final class OBJParser{
 							coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
 							normalList.add(coords);
 						}catch(Exception e){
-							throw new NumberFormatException("ERROR: Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
+							throw new NumberFormatException("Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
 						}
 					}else if(line.startsWith("f ")){
 						faceList.add(line.trim().substring(2, line.trim().length()));
@@ -105,13 +105,13 @@ public final class OBJParser{
 			try{
 				partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
 			}catch(Exception e){
-				throw new IllegalArgumentException("ERROR: Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
+				throw new IllegalArgumentException("Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
 			}
 			reader.close();
 			return partMap;
 			
 		}catch(IOException e){
-			throw new IllegalStateException("ERROR: Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
+			throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
 		}
 	}
 	

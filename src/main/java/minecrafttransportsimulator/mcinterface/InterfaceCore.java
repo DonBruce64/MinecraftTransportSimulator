@@ -63,9 +63,9 @@ public class InterfaceCore{
 	 */
 	public static void logError(String message){
 		if(MasterLoader.logger == null){
-			queuedLogs.add(message);
+			queuedLogs.add(MasterLoader.MODID.toUpperCase() + "ERROR: " + message);
 		}else{
-			MasterLoader.logger.error(message);
+			MasterLoader.logger.error(MasterLoader.MODID.toUpperCase() + "ERROR: " + message);
 		}
 	}
 	

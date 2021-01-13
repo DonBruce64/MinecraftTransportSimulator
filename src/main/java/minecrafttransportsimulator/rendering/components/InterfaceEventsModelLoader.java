@@ -120,7 +120,7 @@ public class InterfaceEventsModelLoader{
 		
 		//Check to make sure we have the pack list before continuing.
 		if(defaultPacks == null){
-			InterfaceCore.logError("ERROR: Could not get default pack list. Item icons will be disabled.");
+			InterfaceCore.logError("Could not get default pack list. Item icons will be disabled.");
 			return;
 		}
 		
@@ -199,7 +199,7 @@ public class InterfaceEventsModelLoader{
 					//JSON reference.  Get the specified file.
 					stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
 					if(stream == null){
-						InterfaceCore.logError("ERROR: Could not find JSON-specified file: " + rawPackInfo);
+						InterfaceCore.logError("Could not find JSON-specified file: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}else{
@@ -245,7 +245,7 @@ public class InterfaceEventsModelLoader{
 							stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
 						}
 					}catch(Exception e){
-						InterfaceCore.logError("ERROR: Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
+						InterfaceCore.logError("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}
@@ -281,9 +281,9 @@ public class InterfaceEventsModelLoader{
 						stream = getClass().getResourceAsStream(streamJSONLocation);
 						if(stream == null){
 							if(streamLocation != null){
-								InterfaceCore.logError("ERROR: Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+								InterfaceCore.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
 							}else{
-								InterfaceCore.logError("ERROR: Could not find JSON PNG: " + streamJSONLocation);
+								InterfaceCore.logError("Could not find JSON PNG: " + streamJSONLocation);
 							}
 							throw new FileNotFoundException(rawPackInfo);
 						}
@@ -292,7 +292,7 @@ public class InterfaceEventsModelLoader{
 					if(e instanceof FileNotFoundException){
 						throw e;
 					}else{
-						InterfaceCore.logError("ERROR: Could not parse which item PNG to get from: " + rawPackInfo);
+						InterfaceCore.logError("Could not parse which item PNG to get from: " + rawPackInfo);
 						throw new FileNotFoundException(rawPackInfo);
 					}
 				}

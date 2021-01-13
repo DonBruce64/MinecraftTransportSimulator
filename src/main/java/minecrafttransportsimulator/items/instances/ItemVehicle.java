@@ -95,9 +95,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 									continue;
 								}
 							}catch(NullPointerException e){}
-							throw new IllegalArgumentException("ERROR: Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
+							throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
 						}catch(IndexOutOfBoundsException e){
-							throw new IllegalArgumentException("ERROR: Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
+							throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
 						}
 					}
 				}
@@ -119,7 +119,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 						}
 					}
 					if(newVehicle.fuelTank.getFluid().isEmpty()){
-						throw new IllegalArgumentException("ERROR: A defaultFuelQty was specified for: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
+						throw new IllegalArgumentException("A defaultFuelQty was specified for: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
 					}
 				}
 				

@@ -49,7 +49,7 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				InterfaceCore.logError("ERROR: ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				InterfaceCore.logError("ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
 				InterfaceCore.logError(e.getMessage());
 			}
 		}
@@ -78,7 +78,7 @@ public final class ConfigSystem{
 					}
 				}
 			}catch(Exception e){
-				InterfaceCore.logError("ERROR: ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+				InterfaceCore.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
 				InterfaceCore.logError(e.getMessage());
 			}
 		}else{
@@ -89,8 +89,7 @@ public final class ConfigSystem{
 				writer.flush();
 				writer.close();
 			}catch(Exception e){
-				System.err.println("ERROR: ConfigSystem failed to create fresh crafting overridesg file.  Report to the mod author!");
-				e.printStackTrace();
+				InterfaceCore.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
 			}
 		}
 		
@@ -114,8 +113,7 @@ public final class ConfigSystem{
 			writer.flush();
 			writer.close();
 		}catch(Exception e){
-			System.err.println("ERROR: ConfigSystem failed to save modified config file.  Report to the mod author!");
-			e.printStackTrace();
+			InterfaceCore.logError("ConfigSystem failed to save modified config file.  Report to the mod author!");
 		}
 	}
 }

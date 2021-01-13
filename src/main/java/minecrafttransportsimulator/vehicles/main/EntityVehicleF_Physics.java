@@ -185,7 +185,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//This could lock up a world if not detected!
 		if(towedVehicle != null){
 			if(towedVehiclesCheckedForWeights.contains(this)){
-				InterfaceCore.logError("ERROR: Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+				InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
 				towedVehicle.towedByVehicle = null;
 				towedVehicle = null;
 				return super.getCurrentMass();

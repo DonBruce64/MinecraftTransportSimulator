@@ -85,8 +85,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				Point3d partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, partData, partOffset, true);
 			}catch(Exception e){
-				InterfaceCore.logError("ERROR IN LOADING PART FROM NBT!");
-				e.printStackTrace();
+				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
 			}
 		}
 	}
@@ -453,10 +452,10 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 							addDefaultParts(subPartsToAdd, vehicle, newPart, sendPacket);
 						}
 					}catch(NullPointerException e){
-						throw new IllegalArgumentException("ERROR: Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + " but that part doesn't exist in the pack item registry.");
+						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + " but that part doesn't exist in the pack item registry.");
 					}
 				}catch(IndexOutOfBoundsException e){
-					throw new IllegalArgumentException("ERROR: Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
+					throw new IllegalArgumentException("Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
 				}
 			}
 		}

@@ -76,7 +76,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 				return subDefinition.secondColor;
 			}
 		}
-		throw new IllegalArgumentException("ERROR: Tried to get the definition for a decor of subName:" + currentSubName + ".  But that isn't a valid subName for the decor:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+		throw new IllegalArgumentException("Tried to get the definition for a decor of subName:" + currentSubName + ".  But that isn't a valid subName for the decor:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
 	}
 	
 	@Override

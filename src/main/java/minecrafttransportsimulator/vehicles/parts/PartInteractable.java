@@ -30,7 +30,7 @@ public final class PartInteractable extends APart{
 			case("crafting_table"): this.interactable = null; break;
 			case("furnace"): this.interactable = InterfaceCore.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
 			case("brewing_stand"): this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
-			default: throw new IllegalArgumentException("ERROR: " + definition.interactable.interactionType + " is not a valid type of interactable part.");
+			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
 		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;

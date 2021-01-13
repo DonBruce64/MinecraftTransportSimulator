@@ -108,7 +108,7 @@ public class GUIBooklet extends AGUIBase{
 							pageNumber = i + 1;
 						}
 					}
-					InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN CREATING BOOKLET PAGE: " + pageNumber);
+					InterfaceCore.logError("An error was encountered when creating booklet page #" + pageNumber);
 					InterfaceCore.logError(e.getMessage());
 				}
 			}

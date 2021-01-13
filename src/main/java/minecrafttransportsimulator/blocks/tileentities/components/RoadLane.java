@@ -74,7 +74,7 @@ public class RoadLane{
 				}
 			}
 		}catch(Exception e){
-			InterfaceCore.logError("ERROR: Couldn't get TE to break road connection.  Was it changed?");
+			InterfaceCore.logError("Couldn't get TE to break road connection.  Was it changed?");
 		}
 	}
 	

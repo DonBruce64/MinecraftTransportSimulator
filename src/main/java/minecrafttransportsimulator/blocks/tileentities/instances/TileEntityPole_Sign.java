@@ -43,7 +43,7 @@ public class TileEntityPole_Sign extends ATileEntityPole_Component implements IT
 				return subDefinition.secondColor;
 			}
 		}
-		throw new IllegalArgumentException("ERROR: Tried to get the definition for a pole of subName:" + item.subName + ".  But that isn't a valid subName for the pole:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+		throw new IllegalArgumentException("Tried to get the definition for a pole of subName:" + item.subName + ".  But that isn't a valid subName for the pole:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
 	}
 
 	@Override

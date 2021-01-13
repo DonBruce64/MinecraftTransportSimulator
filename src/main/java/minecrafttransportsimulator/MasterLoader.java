@@ -119,7 +119,7 @@ public class MasterLoader{
 			//Parse the packs.
 			PackParserSystem.parsePacks(packDirectories);
 		}else{
-			InterfaceCore.logError("ERROR: Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+			InterfaceCore.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
 		}
 	}
 	

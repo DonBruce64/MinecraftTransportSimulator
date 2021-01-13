@@ -495,7 +495,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			}else if(zAxis){
 				return box.currentCollisionDepth.z;
 			}else{
-				throw new IllegalArgumentException("ERROR: Collision requested but no axis was specified!");
+				throw new IllegalArgumentException("Collision requested but no axis was specified!");
 			}
 		}else{
 			return 0;

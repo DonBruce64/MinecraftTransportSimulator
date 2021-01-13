@@ -78,7 +78,7 @@ public final class PackResourceLoader{
     		try{
     			return ItemClassification.valueOf(directory.substring(0, directory.length() - "s/".length()).toUpperCase());
     		}catch(Exception e){
-    			throw new IllegalArgumentException("ERROR: Was told to get classification for directory: " + directory + " but none exists.  Contact the mod author!");
+    			throw new IllegalArgumentException("Was told to get classification for directory: " + directory + " but none exists.  Contact the mod author!");
     		}
     	}
     }

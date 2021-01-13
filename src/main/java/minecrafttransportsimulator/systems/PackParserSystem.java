@@ -119,7 +119,7 @@ public final class PackParserSystem{
 			}
 			jarFile.close();
     	}catch(Exception e){
-			InterfaceCore.logError("ERROR: A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+			InterfaceCore.logError("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
 			e.printStackTrace();
 		}
     } 
@@ -224,7 +224,7 @@ public final class PackParserSystem{
 								try{
 									classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
 								}catch(Exception e){
-									InterfaceCore.logError("ERROR: Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+									InterfaceCore.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
 								Class<? extends AJSONItem<?>> jsonClass = null;
@@ -240,7 +240,7 @@ public final class PackParserSystem{
 										case SKIN : jsonClass = JSONSkin.class; break;
 									}
 								}else{
-									InterfaceCore.logError("ERROR: Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
+									InterfaceCore.logError("Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
 								
@@ -249,7 +249,7 @@ public final class PackParserSystem{
 								try{
 									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
 								}catch(Exception e){
-									InterfaceCore.logError("ERROR: Could not parse: " + packDef.packID + ":" + fileName);
+									InterfaceCore.logError("Could not parse: " + packDef.packID + ":" + fileName);
 						    		InterfaceCore.logError(e.getMessage());
 						    		continue;
 								}
@@ -283,7 +283,7 @@ public final class PackParserSystem{
 										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
 										case ITEM : item = new ItemItem((JSONItem) definition); break;
 										default : {
-											throw new IllegalArgumentException("ERROR: No corresponding classification found for asset: " + fileName + " Contact the mod author!");
+											throw new IllegalArgumentException("No corresponding classification found for asset: " + fileName + " Contact the mod author!");
 										}
 									}
 				    				
@@ -306,8 +306,7 @@ public final class PackParserSystem{
 					//Done parsing.  Close the jarfile.
 					jarFile.close();
 				}catch(Exception e){
-					InterfaceCore.logError("ERROR: Could not start parsing of pack: " + packDef.packID);
-					e.printStackTrace();
+					InterfaceCore.logError("Could not start parsing of pack: " + packDef.packID);
 				}
     		}
     	}
@@ -353,33 +352,21 @@ public final class PackParserSystem{
     private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
-			if(subDefinition != null){
-	    		if(subDefinition.extraMaterials != null){
-					try{
-						AItemPack<?> item;
-						switch(mainDefinition.classification){
-							case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
-							case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
-							case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
-							case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
-							case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
-							default : {
-								throw new IllegalArgumentException("ERROR: A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
-							}
-						}
-						
-						//Add the pack item to the map.  We need to make sure all subDefinitions
-						//are okay before adding the entire definition.
-						packItems.put(item.definition.systemName + subDefinition.subName, item);
-					}catch(Exception e){
-						throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to a formatting error.");
-					}
-				}else{
-					throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to missing materials.");
+			AItemPack<?> item;
+			switch(mainDefinition.classification){
+				case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
+				case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
+				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
+				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
+				case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
+				default : {
+					throw new IllegalArgumentException("A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
 				}
-			}else{
-				throw new NullPointerException("Unable to parse definition #" + (subDefinitions.indexOf(subDefinition) + 1) + " due to it not existing.  Check your commas!");
 			}
+			
+			//Add the pack item to the map.  We need to make sure all subDefinitions
+			//are okay before adding the entire definition.
+			packItems.put(item.definition.systemName + subDefinition.subName, item);
 		}
     	
     	//All definitions were okay.  Add items to the registry.
@@ -435,7 +422,7 @@ public final class PackParserSystem{
     			setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
     		}
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }
@@ -448,7 +435,7 @@ public final class PackParserSystem{
 	    		setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
     		}
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }
@@ -459,7 +446,7 @@ public final class PackParserSystem{
     		JSONInstrument definition = JSONParser.parseStream(jsonReader, JSONInstrument.class);
     		setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT);
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }
@@ -472,7 +459,7 @@ public final class PackParserSystem{
     			setupItem(new ItemPoleComponent(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
     		}
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }
@@ -490,7 +477,7 @@ public final class PackParserSystem{
     			setupItem(new ItemDecor(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
     		}
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }
@@ -500,7 +487,7 @@ public final class PackParserSystem{
     	try{
     		setupItem(new ItemItem(JSONParser.parseStream(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
     	}catch(Exception e){
-    		InterfaceCore.logError("AN ERROR WAS ENCOUNTERED WHEN TRY TO PARSE: " + packID + ":" + jsonFileName);
+    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
     }

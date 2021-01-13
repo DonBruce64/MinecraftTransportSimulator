@@ -412,7 +412,7 @@ public class BuilderEntity extends Entity{
 	    		if(boxClicked != null){
 		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
-	    			InterfaceCore.logError("ERROR: A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	    			InterfaceCore.logError("A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
 	    		event.setCanceled(true);
 				event.setCancellationResult(EnumActionResult.SUCCESS);
@@ -437,7 +437,7 @@ public class BuilderEntity extends Entity{
     			if(boxClicked != null){
     				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
-        			InterfaceCore.logError("ERROR: A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+        			InterfaceCore.logError("A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}
     			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
     		}

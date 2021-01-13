@@ -598,7 +598,7 @@ public final class RenderVehicle{
 			TransformTreadRoller[] rollers = new TransformTreadRoller[parsedRollers.size()];
 			for(int i=0; i<parsedRollers.size(); ++ i){
 				if(!parsedRollers.containsKey(i)){
-					throw new IndexOutOfBoundsException("ERROR: Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
+					throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
 				}
 				if(i < parsedRollers.size() - 1){
 					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
