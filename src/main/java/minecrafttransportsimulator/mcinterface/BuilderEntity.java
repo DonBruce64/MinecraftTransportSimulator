@@ -157,7 +157,7 @@ public class BuilderEntity extends Entity{
     		}
     		
     		//Check if we are still valid, or need to be set dead.
-    		if(!entity.isValid || entity.position.y < -5){
+    		if(!entity.isValid){
     			setDead();
     		}
     	}else if(world.isRemote){
