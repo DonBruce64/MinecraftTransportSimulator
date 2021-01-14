@@ -300,7 +300,9 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		data.setString("playerUUID", player.getUUID());
+		if(player != null){
+			data.setString("playerUUID", player.getUUID());
+		}
 		if(gun != null){
 			gun.save(data);
 		}
