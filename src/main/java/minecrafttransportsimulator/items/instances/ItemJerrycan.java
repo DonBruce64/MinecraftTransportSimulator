@@ -68,9 +68,4 @@ public class ItemJerrycan extends AItemBase implements IItemVehicleInteractable{
 		}
 		return CallbackType.NONE;
 	}
-	
-	@Override
-	public boolean canBeStacked(){
-		return false;
-	}
 }

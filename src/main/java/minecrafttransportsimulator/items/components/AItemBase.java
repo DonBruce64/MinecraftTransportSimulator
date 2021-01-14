@@ -76,10 +76,10 @@ public abstract class AItemBase{
 	}
 	
 	/**
-	 *  Returns true if this item can be stacked.  Stacking is left up to the game itself.
+	 *  Returns the stack size for this item.  Defaults to 1, as most items shouldn't be stack-able.
 	 */
-	public boolean canBeStacked(){
-		return true;
+	public int getStackSize(){
+		return 1;
 	}
 	
 	/**

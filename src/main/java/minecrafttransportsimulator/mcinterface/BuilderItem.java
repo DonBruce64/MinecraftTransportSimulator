@@ -64,9 +64,7 @@ public class BuilderItem extends Item{
 		super();
 		this.item = item;
 		setFull3D();
-		if(!item.canBeStacked()){
-			this.setMaxStackSize(1);
-		}
+		this.setMaxStackSize(item.getStackSize());
 		itemMap.put(item, this);
 	}
 	

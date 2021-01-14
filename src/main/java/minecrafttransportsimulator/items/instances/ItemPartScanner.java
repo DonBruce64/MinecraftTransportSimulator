@@ -14,9 +14,4 @@ public class ItemPartScanner extends AItemBase{
 			tooltipLines.add(InterfaceCore.translate("info.item.partscanner.line" + String.valueOf(i)));
 		}
 	}
-	
-	@Override
-	public boolean canBeStacked(){
-		return false;
-	}
 }

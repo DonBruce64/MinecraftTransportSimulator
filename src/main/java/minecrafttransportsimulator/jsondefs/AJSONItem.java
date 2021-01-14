@@ -33,6 +33,7 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
     public class General{    	
     	public String name;
     	public String description;
+    	public int stackSize;
     	public List<String> materials;
     }
 }

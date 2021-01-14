@@ -82,9 +82,4 @@ public class ItemKey extends AItemBase implements IItemVehicleInteractable{
 		}
 		return CallbackType.NONE;
 	}
-	
-	@Override
-	public boolean canBeStacked(){
-		return false;
-	}
 }

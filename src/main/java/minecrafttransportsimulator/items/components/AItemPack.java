@@ -43,6 +43,11 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AIt
 	}
 	
 	@Override
+	public int getStackSize(){
+		return definition.general.stackSize != 0 ? definition.general.stackSize : super.getStackSize();
+	}
+	
+	@Override
 	public String getCreativeTabID(){
 		return definition.packID;
 	}
