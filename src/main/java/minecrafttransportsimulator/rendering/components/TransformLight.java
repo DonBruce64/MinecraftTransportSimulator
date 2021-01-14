@@ -123,7 +123,7 @@ public class TransformLight extends ATransform{
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.
 		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
-		boolean lightActuallyOn = provider.getActiveVariables().contains(type.lowercaseName) && isFlashingLightOn();
+		boolean lightActuallyOn = (type.equals(LightType.GENERICLIGHT) || provider.getActiveVariables().contains(type.lowercaseName)) && isFlashingLightOn();
 		float sunLight = provider.getProviderWorld().getLightBrightness(new Point3i(provider.getProviderPosition()), false);
 		float electricPower = provider.getLightPower();
 		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
