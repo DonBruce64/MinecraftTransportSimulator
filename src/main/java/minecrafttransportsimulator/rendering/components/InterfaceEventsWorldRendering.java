@@ -15,7 +15,9 @@ import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -46,19 +48,26 @@ public class InterfaceEventsWorldRendering{
      */
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
-    	EntityPlayer renderedPlayer = event.getEntityPlayer();
+    	EntityPlayer player = event.getEntityPlayer();
     	
     	//If we are holding a gun, disable the third-person item icon.
     	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
-    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(renderedPlayer.getUniqueID().toString());
-    	if(entity != null && entity.gun != null){
-    		tempHeldItemStorage.put(renderedPlayer, renderedPlayer.getHeldItemMainhand());
-    		renderedPlayer.inventory.mainInventory.set(renderedPlayer.inventory.currentItem, ItemStack.EMPTY);
+    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
+    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
+    	if(gunEntity != null && gunEntity.gun != null){
+    		tempHeldItemStorage.put(player, player.getHeldItemMainhand());
+    		player.inventory.mainInventory.set(player.inventory.currentItem, ItemStack.EMPTY);
+    		event.getRenderer().getMainModel().bipedRightArm.isHidden = true;
+    		event.getRenderer().getMainModel().bipedRightArmwear.isHidden = true;
+    		if(player.isSneaking()){
+    			event.getRenderer().getMainModel().bipedLeftArm.isHidden = true;
+        		event.getRenderer().getMainModel().bipedLeftArmwear.isHidden = true;
+    		}
     	}
     	
     	//If we are riding an entity, adjust seating.
-    	if(renderedPlayer.getRidingEntity() instanceof BuilderEntity){
-        	AEntityBase ridingEntity = ((BuilderEntity) renderedPlayer.getRidingEntity()).entity;
+    	if(player.getRidingEntity() instanceof BuilderEntity){
+        	AEntityBase ridingEntity = ((BuilderEntity) player.getRidingEntity()).entity;
         	GL11.glPushMatrix();
         	if(ridingEntity != null){
         		//Get total angles for the entity the player is riding.
@@ -77,10 +86,10 @@ public class InterfaceEventsWorldRendering{
 	            }
 	            
         		//Set the player yaw offset to 0.  This is needed as we are rotating the player manually.
-	            renderedPlayer.renderYawOffset = 0;
+	            player.renderYawOffset = 0;
 	            
 	            //Set the player's head yaw to the delta between their yaw and their angled yaw.
-	            renderedPlayer.rotationYawHead = (float) (renderedPlayer.rotationYaw + entityAngles.y + ridingAngles.y);
+	            player.rotationYawHead = (float) (player.rotationYaw + entityAngles.y + ridingAngles.y);
 	            
 	            //Now add the rotations.
 	            //We have to do this via OpenGL, as changing the player's pitch doesn't make them tilt in the seat, and roll doesn't exist for them.
@@ -88,14 +97,14 @@ public class InterfaceEventsWorldRendering{
 	            //their actual position.  Means we have to do funky math.
 	            //We also need to check if we are the client player or another player, as other players require a
 	            //different pre-render offset to be performed to get them into the right place. 
-	            if(!renderedPlayer.equals(Minecraft.getMinecraft().player)){
+	            if(!player.equals(Minecraft.getMinecraft().player)){
 	            	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
-	            	double playerDistanceX = renderedPlayer.lastTickPosX + - masterPlayer.lastTickPosX + (renderedPlayer.posX - renderedPlayer.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
-	            	double playerDistanceY = renderedPlayer.lastTickPosY + - masterPlayer.lastTickPosY + (renderedPlayer.posY - renderedPlayer.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
-	            	double playerDistanceZ = renderedPlayer.lastTickPosZ + - masterPlayer.lastTickPosZ + (renderedPlayer.posZ - renderedPlayer.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
+	            	double playerDistanceX = player.lastTickPosX + - masterPlayer.lastTickPosX + (player.posX - player.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
+	            	double playerDistanceY = player.lastTickPosY + - masterPlayer.lastTickPosY + (player.posY - player.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
+	            	double playerDistanceZ = player.lastTickPosZ + - masterPlayer.lastTickPosZ + (player.posZ - player.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
 	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
 	                
-	                GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
+	                GL11.glTranslated(0, player.getEyeHeight(), 0);
 	                GL11.glRotated(entityAngles.y, 0, 1, 0);
 	                GL11.glRotated(entityAngles.x, 1, 0, 0);
 	                GL11.glRotated(entityAngles.z, 0, 0, 1);
@@ -104,11 +113,11 @@ public class InterfaceEventsWorldRendering{
 		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
 		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
 	                }
-	                GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
+	                GL11.glTranslated(0, -player.getEyeHeight(), 0);
 	                
 	                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
 	            }else{
-	            	GL11.glTranslated(0, renderedPlayer.getEyeHeight(), 0);
+	            	GL11.glTranslated(0, player.getEyeHeight(), 0);
 	            	GL11.glRotated(entityAngles.y, 0, 1, 0);
 	                GL11.glRotated(entityAngles.x, 1, 0, 0);
 	                GL11.glRotated(entityAngles.z, 0, 0, 1);
@@ -117,7 +126,7 @@ public class InterfaceEventsWorldRendering{
 		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
 		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
 	                }
-	            	GL11.glTranslated(0, -renderedPlayer.getEyeHeight(), 0);
+	            	GL11.glTranslated(0, -player.getEyeHeight(), 0);
 	            }
         	}
         }
@@ -125,14 +134,71 @@ public class InterfaceEventsWorldRendering{
 
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
-    	EntityPlayer renderedPlayer = event.getEntityPlayer();
-    	if(tempHeldItemStorage.containsKey(renderedPlayer)){
-    		renderedPlayer.inventory.mainInventory.set(renderedPlayer.inventory.currentItem, tempHeldItemStorage.get(renderedPlayer));
-    		tempHeldItemStorage.remove(renderedPlayer);
-    	}
-    	if(renderedPlayer.getRidingEntity() instanceof BuilderEntity){
+    	EntityPlayer player = event.getEntityPlayer();
+    	if(player.getRidingEntity() instanceof BuilderEntity){
     		GL11.glPopMatrix();
         }
+    	
+    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
+    	if(gunEntity != null && gunEntity.gun != null){
+    		//Put item back in the player's slot so client doesn't know it's missing.
+    		player.inventory.mainInventory.set(player.inventory.currentItem, tempHeldItemStorage.get(player));
+    		tempHeldItemStorage.remove(player);
+    		
+    		//Get arm rotations.
+    		Point3d heldVector;
+			if(player.isSneaking()){
+				heldVector = gunEntity.gun.definition.gun.handHeldAimedOffset;
+			}else{
+				heldVector = gunEntity.gun.definition.gun.handHeldNormalOffset;
+			}
+			double heldVectorLength = heldVector.length();
+			double armPitchOffset = -Math.asin(heldVector.y/heldVectorLength);
+			double armYawOffset = -Math.atan2(heldVector.x/heldVectorLength, heldVector.z/heldVectorLength);
+			
+			//Get arms.
+    		ModelRenderer rightArm = event.getRenderer().getMainModel().bipedRightArm;
+    		ModelRenderer rightArmwear = event.getRenderer().getMainModel().bipedRightArmwear;
+    		ModelRenderer leftArm = event.getRenderer().getMainModel().bipedLeftArm;
+    		ModelRenderer leftArmwear = event.getRenderer().getMainModel().bipedLeftArmwear;
+			
+    		//Re-enable arm rendering.
+    		rightArm.isHidden = false;
+    		rightArmwear.isHidden = false;
+    		leftArm.isHidden = false;
+			leftArmwear.isHidden = false;
+    		
+    		//Push matrix and render arm.
+    		GL11.glPushMatrix();
+    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
+    		if(player.isSneaking()){
+    			//Lower arm if sneaking.
+    			GL11.glTranslatef(0.0F, 0.2F, 0.0F);
+    		}
+    		//Rotate arm to current facing direction.
+    		GL11.glRotated(180 + player.rotationYaw, 0, 1, 0);
+    		
+    		//Set rotation points on the model and render.
+    		rightArm.rotateAngleY = (float) armYawOffset;
+    		rightArm.rotateAngleX = (float) (Math.toRadians(-90 + player.rotationPitch) + armPitchOffset);
+    		rightArm.rotateAngleZ = 0;
+    		rightArm.render(scale);
+    		rightArmwear.rotateAngleY = rightArm.rotateAngleY;
+    		rightArmwear.rotateAngleX = rightArm.rotateAngleX;
+    		rightArmwear.rotateAngleZ = rightArm.rotateAngleZ;
+    		rightArmwear.render(scale);
+    		if(player.isSneaking()){
+    			leftArm.rotateAngleY = -rightArm.rotateAngleY;
+    			leftArm.rotateAngleX = rightArm.rotateAngleX;
+    			leftArm.rotateAngleZ = rightArm.rotateAngleZ;
+    			leftArm.render(scale);
+        		leftArmwear.rotateAngleY = leftArm.rotateAngleY;
+        		leftArmwear.rotateAngleX = leftArm.rotateAngleX;
+        		leftArmwear.rotateAngleZ = leftArm.rotateAngleZ;
+        		leftArmwear.render(scale);
+    		}
+    		GL11.glPopMatrix();
+    	}
     }
     
     /**

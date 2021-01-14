@@ -35,7 +35,7 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	
-	private final WrapperPlayer player;
+	public final WrapperPlayer player;
 	private int ticksOnGun;
 	private int hotbarSelected = -1;
 	private ItemStack gunStack;
@@ -124,17 +124,34 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				//Only change firing command on servers to prevent de-syncs.
 				//Packets will get sent to clients to change them.
 				if(gun != null){
-					//Set our position the player's hands.
+					//Set our position relative to the the player's hand.
+					//Center point is at the player's arm, with offset being where the offset is.
+					Point3d heldVector;
 					if(player.isSneaking()){
-						//Set to scope center.
-						angles.set(player.getPitch(), player.getHeadYaw(), 0);
-						position.setTo(gunItem.definition.gun.handHeldAimedOffset).rotateFine(angles).add(player.getPosition()).add(0, player.getEyeHeight(), 0);
+						heldVector = gunItem.definition.gun.handHeldAimedOffset;
 					}else{
-						//Set to hand.
-						angles.set(player.getPitch(), player.getHeadYaw(), 0);
-						position.setTo(gunItem.definition.gun.handHeldNormalOffset).rotateFine(angles).add(player.getPosition()).add(0, player.getEyeHeight(), 0);
+						heldVector = gunItem.definition.gun.handHeldNormalOffset;
 					}
+					angles.set(player.getPitch(), player.getHeadYaw(), 0);
 					
+					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
+					//Sneaking lowers arm by 0.2 blocks.
+					//First rotate point based on pitch.  This is for only the arm movement.
+					Point3d armRotation = new Point3d(angles.x, 0, 0);
+					position.setTo(heldVector).rotateFine(armRotation);
+					
+					//Now rotate based on player yaw.  We need to take the arm offset into account here.
+					armRotation.set(0, angles.y, 0);
+					position.add(-0.3125, 0, 0).rotateFine(armRotation);
+					
+					//Now add the player's position and model center point offsets.
+					position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
+					
+					//If the player is riding something, add to our position the vehicle's motion.
+					//This is because the player gets moved with the vehicle.
+					if(player.getEntityRiding() != null){
+						position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
+					}
 					
 					if(fireCommand && !gun.firing && !world.isClient()){
 						gun.firing = true;

@@ -50,7 +50,6 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	@Override
 	public float getHeadYaw(){
-		//FIXME this is why guns don't stay with the player's hands.
 		//Player head yaw is their actual yaw.  Head is used for the camera.
 		return getYaw();
 	}

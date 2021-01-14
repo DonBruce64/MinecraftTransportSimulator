@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
@@ -23,7 +24,16 @@ public class RenderPlayerGun{
 		Point3d gunPosition = entity.position.copy().subtract(entity.prevPosition).multiply(partialTicks).add(entity.prevPosition);
 		
 		//Subtract the entitie's position by the render entity position to get the delta for translating.
+        //If the player is sneaking, then the eye height is wrong for the player's held gun.
+        //Check if we are that, and if so, add to the render position to bring the gun up to the player's eyes.
 		Point3d renderPosition = gunPosition.copy().subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+		WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+		if(clientPlayer.isSneaking() && InterfaceClient.inFirstPerson()){
+			EntityPlayerGun clientGun = EntityPlayerGun.playerClientGuns.get(clientPlayer.getUUID());
+			if(clientGun != null && clientPlayer.equals(clientGun.player) ){
+				renderPosition.add(0.0, 5.0/16.0, 0);
+			}
+		}
 		
 		//Get the entity rotation.
 		Point3d renderRotation = entity.angles.copy().subtract(entity.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(entity.angles);
@@ -34,7 +44,7 @@ public class RenderPlayerGun{
         //Use smooth shading for main model rendering.
 		GL11.glShadeModel(GL11.GL_SMOOTH);
         
-        //Push the matrix on the stack and translate and rotate to the vehicle's position.
+        //Push the matrix on the stack and translate and rotate to the player's position.
         GL11.glPushMatrix();
         GL11.glTranslated(renderPosition.x, renderPosition.y, renderPosition.z);
         GL11.glRotated(renderRotation.y, 0, 1, 0);
