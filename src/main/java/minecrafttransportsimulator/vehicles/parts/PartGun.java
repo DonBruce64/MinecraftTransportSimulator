@@ -160,7 +160,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		//We aren't making sentry turrets here.... yet.
 		//If this gun type can only have one selected at a time, check that this has the selected index.
 		PartSeat controllerSeat = (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller));
-		return controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
+		return !vehicleDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
 	}
 	
 	@Override
