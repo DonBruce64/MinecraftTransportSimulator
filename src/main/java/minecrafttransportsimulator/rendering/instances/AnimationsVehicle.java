@@ -34,6 +34,35 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 		}
 	}
 	
+	/**
+	 *  Returns the part type prefix for the passed-in variable.
+	 */
+	public static String getPartType(String variable){
+		return variable.substring(0, variable.indexOf('_'));
+	}
+	
+	/**
+	 *  Returns the part class for the variable based on the variable's name prefix, or null
+	 *  if such a class does not exist.
+	 */
+	public static Class<? extends APart> getPartClass(String variable){
+		//Get the part type from the variable.
+		String partType = getPartType(variable);
+		switch(partType){
+			case("interactable"): return PartInteractable.class;	
+			case("engine"): return PartEngine.class;
+			case("gun"): return PartGun.class;
+			case("part"): return APart.class;
+			case("propeller"): return PartPropeller.class;
+			case("ground"): return PartGroundDevice.class;
+			case("seat"): return PartSeat.class;
+			default: if(ConfigSystem.configObject.clientControls.devMode.value){
+				throw new IllegalArgumentException("Was told to find part: " + partType + " for definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?  Or are you trying to name a door with a suffix of a number?  Only part variables can have numbers at the end of their names!");
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public double getRawVariableValue(EntityVehicleF_Physics vehicle, String variable, float partialTicks){
 		//First check if we are a base variable.
@@ -47,68 +76,54 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 		int partNumber = getPartNumber(variable);
 		if(partNumber != -1){
 			//Get the part type from the variable.
-			String partType = variable.substring(0, variable.indexOf('_'));
-			final Class<?> partClass;
-			switch(partType){
-				case("interactable"): partClass = PartInteractable.class; break;	
-				case("engine"): partClass = PartEngine.class; break;
-				case("gun"): partClass = PartGun.class; break;
-				case("part"): partClass = APart.class; break;
-				case("propeller"): partClass = PartPropeller.class; break;
-				case("ground"): partClass = PartGroundDevice.class; break;
-				case("seat"): partClass = PartSeat.class; break;
-				
-				default: if(ConfigSystem.configObject.clientControls.devMode.value){
-					throw new IllegalArgumentException("Was told to find part: " + variable.substring(0, variable.indexOf('_')) + " for rotation definition: " + variable + " but could not as the part isn't a valid part name.  Is your spelling correct?  Or are you trying to name a door with a suffix of a number?  Only part variables can have numbers at the end of their names!");
-				}else{
-					//Don't crash if we have a fault here.  It could be that we have an old pack that has a bad name.
-					return 0;
-				}
-			}
+			String partType = getPartType(variable);
+			Class<? extends APart> partClass = getPartClass(variable);
 			
-			//Iterate through the definitions to find the index of the pack def for the part we want.
-			VehiclePart foundDef = null;
-			for(VehiclePart vehicleDef : vehicle.definition.parts){
-				//If this part is the one we want, get it or add to our index.
-				for(String defPartType : vehicleDef.types){
-					if(partType.equals("part") || defPartType.startsWith(partType)){
-						if(partNumber == 0){
-							foundDef = vehicleDef;
-						}else{
-							--partNumber;
-						}
-						break;
-					}
-				}
-				
-				//Also check additional parts if we have them..
-				if(foundDef == null && vehicleDef.additionalParts != null){
-					for(VehiclePart additionalDef : vehicleDef.additionalParts){
-						for(String defPartType : additionalDef.types){
-							if(partType.equals("part") || defPartType.startsWith(partType)){
-								if(partNumber == 0){
-									foundDef = additionalDef;
-								}else{
-									--partNumber;
-								}
-								break;
+			if(partClass != null){
+				//Iterate through the definitions to find the index of the pack def for the part we want.
+				VehiclePart foundDef = null;
+				for(VehiclePart vehicleDef : vehicle.definition.parts){
+					//If this part is the one we want, get it or add to our index.
+					for(String defPartType : vehicleDef.types){
+						if(partType.equals("part") || defPartType.startsWith(partType)){
+							if(partNumber == 0){
+								foundDef = vehicleDef;
+							}else{
+								--partNumber;
 							}
-						}
-						if(foundDef != null){
 							break;
 						}
 					}
-				}
-				
-				//If we found our part, try to get it.
-				if(foundDef != null){
-					//Get the part at this location.  If it's of the same class as what we need, use it for animation.
-					//If it's not, or it doesn't exist, return 0.
-					APart foundPart = vehicle.getPartAtLocation(foundDef.pos);
-					if(foundPart != null && partClass.isInstance(foundPart)){
-						return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-					}else{
-						return 0;
+					
+					//Also check additional parts if we have them..
+					if(foundDef == null && vehicleDef.additionalParts != null){
+						for(VehiclePart additionalDef : vehicleDef.additionalParts){
+							for(String defPartType : additionalDef.types){
+								if(partType.equals("part") || defPartType.startsWith(partType)){
+									if(partNumber == 0){
+										foundDef = additionalDef;
+									}else{
+										--partNumber;
+									}
+									break;
+								}
+							}
+							if(foundDef != null){
+								break;
+							}
+						}
+					}
+					
+					//If we found our part, try to get it.
+					if(foundDef != null){
+						//Get the part at this location.  If it's of the same class as what we need, use it for animation.
+						//If it's not, or it doesn't exist, return 0.
+						APart foundPart = vehicle.getPartAtLocation(foundDef.pos);
+						if(foundPart != null && partClass.isInstance(foundPart)){
+							return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+						}else{
+							return 0;
+						}
 					}
 				}
 			}
