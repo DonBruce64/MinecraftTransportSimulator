@@ -318,14 +318,14 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	public VehiclePart getPackDefForLocation(Point3d offset){
 		//Check to see if this is a main part.
 		for(VehiclePart packPart : definition.parts){
-			if(isPackAtPosition(packPart, offset)){
+			if(packPart.pos.equals(offset)){
 				return packPart;
 			}
 			
 			//Not a main part.  Check if this is an additional part.
 			if(packPart.additionalParts != null){
 				for(VehiclePart additionalPart : packPart.additionalParts){
-					if(isPackAtPosition(additionalPart, offset)){
+					if(additionalPart.pos.equals(offset)){
 						return additionalPart;
 					}
 				}
@@ -338,7 +338,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					if(isPackAtPosition(correctedPack, offset)){
+					if(correctedPack.pos.equals(offset)){
 						return correctedPack;
 					}
 				}
@@ -351,7 +351,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
 				for(VehiclePart extraPackPart : part.definition.subParts){
 					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					if(isPackAtPosition(correctedPack, offset)){
+					if(correctedPack.pos.equals(offset)){
 						return correctedPack;
 					}
 				}
@@ -359,13 +359,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		}
 		
 		return null;
-	}
-	
-	/**
-	 *Helper method to prevent casting to floats all over for position-specific tests.
-	 */
-	public static boolean isPackAtPosition(VehiclePart packPart, Point3d offset){
-		return packPart.pos.equals(offset);
 	}
 	
 	/**
