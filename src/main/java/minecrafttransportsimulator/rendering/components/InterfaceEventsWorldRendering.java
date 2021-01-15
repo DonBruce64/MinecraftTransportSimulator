@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -17,6 +18,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.entity.Entity;
@@ -49,20 +51,23 @@ public class InterfaceEventsWorldRendering{
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Pre event){
     	EntityPlayer player = event.getEntityPlayer();
+    	ModelPlayer playerModel = event.getRenderer().getMainModel();
     	
-    	//If we are holding a gun, disable the third-person item icon.
-    	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
-    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
-    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-    	if(gunEntity != null && gunEntity.gun != null){
-    		tempHeldItemStorage.put(player, player.getHeldItemMainhand());
-    		player.inventory.mainInventory.set(player.inventory.currentItem, ItemStack.EMPTY);
-    		event.getRenderer().getMainModel().bipedRightArm.isHidden = true;
-    		event.getRenderer().getMainModel().bipedRightArmwear.isHidden = true;
-    		if(player.isSneaking()){
-    			event.getRenderer().getMainModel().bipedLeftArm.isHidden = true;
-        		event.getRenderer().getMainModel().bipedLeftArmwear.isHidden = true;
-    		}
+    	if(ConfigSystem.configObject.clientRendering.gunHandMod.value){
+	    	//If we are holding a gun, disable the third-person item icon.
+	    	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
+	    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
+	    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
+	    	if(gunEntity != null && gunEntity.gun != null){
+	    		tempHeldItemStorage.put(player, player.getHeldItemMainhand());
+	    		player.inventory.mainInventory.set(player.inventory.currentItem, ItemStack.EMPTY);
+	    		playerModel.bipedRightArm.isHidden = true;
+	    		playerModel.bipedRightArmwear.isHidden = true;
+	    		if(player.isSneaking()){
+	    			playerModel.bipedLeftArm.isHidden = true;
+	        		playerModel.bipedLeftArmwear.isHidden = true;
+	    		}
+	    	}
     	}
     	
     	//If we are riding an entity, adjust seating.
@@ -135,69 +140,72 @@ public class InterfaceEventsWorldRendering{
     @SubscribeEvent
     public static void on(RenderPlayerEvent.Post event){
     	EntityPlayer player = event.getEntityPlayer();
+    	ModelPlayer playerModel = event.getRenderer().getMainModel();
     	if(player.getRidingEntity() instanceof BuilderEntity){
     		GL11.glPopMatrix();
         }
     	
-    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-    	if(gunEntity != null && gunEntity.gun != null){
-    		//Put item back in the player's slot so client doesn't know it's missing.
-    		player.inventory.mainInventory.set(player.inventory.currentItem, tempHeldItemStorage.get(player));
-    		tempHeldItemStorage.remove(player);
-    		
-    		//Get arm rotations.
-    		Point3d heldVector;
-			if(player.isSneaking()){
-				heldVector = gunEntity.gun.definition.gun.handHeldAimedOffset;
-			}else{
-				heldVector = gunEntity.gun.definition.gun.handHeldNormalOffset;
-			}
-			double heldVectorLength = heldVector.length();
-			double armPitchOffset = -Math.asin(heldVector.y/heldVectorLength);
-			double armYawOffset = -Math.atan2(heldVector.x/heldVectorLength, heldVector.z/heldVectorLength);
-			
-			//Get arms.
-    		ModelRenderer rightArm = event.getRenderer().getMainModel().bipedRightArm;
-    		ModelRenderer rightArmwear = event.getRenderer().getMainModel().bipedRightArmwear;
-    		ModelRenderer leftArm = event.getRenderer().getMainModel().bipedLeftArm;
-    		ModelRenderer leftArmwear = event.getRenderer().getMainModel().bipedLeftArmwear;
-			
-    		//Re-enable arm rendering.
-    		rightArm.isHidden = false;
-    		rightArmwear.isHidden = false;
-    		leftArm.isHidden = false;
-			leftArmwear.isHidden = false;
-    		
-    		//Push matrix and render arm.
-    		GL11.glPushMatrix();
-    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
-    		if(player.isSneaking()){
-    			//Lower arm if sneaking.
-    			GL11.glTranslatef(0.0F, 0.2F, 0.0F);
-    		}
-    		//Rotate arm to current facing direction.
-    		GL11.glRotated(180 + player.rotationYaw, 0, 1, 0);
-    		
-    		//Set rotation points on the model and render.
-    		rightArm.rotateAngleY = (float) armYawOffset;
-    		rightArm.rotateAngleX = (float) (Math.toRadians(-90 + player.rotationPitch) + armPitchOffset);
-    		rightArm.rotateAngleZ = 0;
-    		rightArm.render(scale);
-    		rightArmwear.rotateAngleY = rightArm.rotateAngleY;
-    		rightArmwear.rotateAngleX = rightArm.rotateAngleX;
-    		rightArmwear.rotateAngleZ = rightArm.rotateAngleZ;
-    		rightArmwear.render(scale);
-    		if(player.isSneaking()){
-    			leftArm.rotateAngleY = -rightArm.rotateAngleY;
-    			leftArm.rotateAngleX = rightArm.rotateAngleX;
-    			leftArm.rotateAngleZ = rightArm.rotateAngleZ;
-    			leftArm.render(scale);
-        		leftArmwear.rotateAngleY = leftArm.rotateAngleY;
-        		leftArmwear.rotateAngleX = leftArm.rotateAngleX;
-        		leftArmwear.rotateAngleZ = leftArm.rotateAngleZ;
-        		leftArmwear.render(scale);
-    		}
-    		GL11.glPopMatrix();
+    	if(ConfigSystem.configObject.clientRendering.gunHandMod.value){
+    		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
+	    	if(gunEntity != null && gunEntity.gun != null){
+	    		//Put item back in the player's slot so client doesn't know it's missing.
+	    		player.inventory.mainInventory.set(player.inventory.currentItem, tempHeldItemStorage.get(player));
+	    		tempHeldItemStorage.remove(player);
+	    		
+	    		//Get arm rotations.
+	    		Point3d heldVector;
+				if(player.isSneaking()){
+					heldVector = gunEntity.gun.definition.gun.handHeldAimedOffset;
+				}else{
+					heldVector = gunEntity.gun.definition.gun.handHeldNormalOffset;
+				}
+				double heldVectorLength = heldVector.length();
+				double armPitchOffset = -Math.asin(heldVector.y/heldVectorLength);
+				double armYawOffset = -Math.atan2(heldVector.x/heldVectorLength, heldVector.z/heldVectorLength);
+				
+				//Get arms.
+	    		ModelRenderer rightArm = playerModel.bipedRightArm;
+	    		ModelRenderer rightArmwear = playerModel.bipedRightArmwear;
+	    		ModelRenderer leftArm = playerModel.bipedLeftArm;
+	    		ModelRenderer leftArmwear = playerModel.bipedLeftArmwear;
+				
+	    		//Re-enable arm rendering.
+	    		rightArm.isHidden = false;
+	    		rightArmwear.isHidden = false;
+	    		leftArm.isHidden = false;
+				leftArmwear.isHidden = false;
+	    		
+	    		//Push matrix and render arm.
+	    		GL11.glPushMatrix();
+	    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
+	    		if(player.isSneaking()){
+	    			//Lower arm if sneaking.
+	    			GL11.glTranslatef(0.0F, 0.2F, 0.0F);
+	    		}
+	    		//Rotate arm to current facing direction.
+	    		GL11.glRotated(180 + player.rotationYaw, 0, 1, 0);
+	    		
+	    		//Set rotation points on the model and render.
+	    		rightArm.rotateAngleY = (float) armYawOffset;
+	    		rightArm.rotateAngleX = (float) (Math.toRadians(-90 + player.rotationPitch) + armPitchOffset);
+	    		rightArm.rotateAngleZ = 0;
+	    		rightArm.render(scale);
+	    		rightArmwear.rotateAngleY = rightArm.rotateAngleY;
+	    		rightArmwear.rotateAngleX = rightArm.rotateAngleX;
+	    		rightArmwear.rotateAngleZ = rightArm.rotateAngleZ;
+	    		rightArmwear.render(scale);
+	    		if(player.isSneaking()){
+	    			leftArm.rotateAngleY = -rightArm.rotateAngleY;
+	    			leftArm.rotateAngleX = rightArm.rotateAngleX;
+	    			leftArm.rotateAngleZ = rightArm.rotateAngleZ;
+	    			leftArm.render(scale);
+	        		leftArmwear.rotateAngleY = leftArm.rotateAngleY;
+	        		leftArmwear.rotateAngleX = leftArm.rotateAngleX;
+	        		leftArmwear.rotateAngleZ = leftArm.rotateAngleZ;
+	        		leftArmwear.render(scale);
+	    		}
+	    		GL11.glPopMatrix();
+	    	}
     	}
     }
     
