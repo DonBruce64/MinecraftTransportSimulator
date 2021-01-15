@@ -127,11 +127,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			//Check to make sure the part is valid.
 			if(partItem.isPartValidForPackDef(packPart)){
 				//Try to find the parent part, if this part would have one.
-				for(VehiclePart packVehicleDef : definition.parts){
-					if(packVehicleDef.additionalParts != null){
-						for(VehiclePart packAdditionalDef : packVehicleDef.additionalParts){
-							if(offset.equals(packAdditionalDef.pos)){
-								parentPart = getPartAtLocation(packVehicleDef.pos);
+				for(VehiclePart vehiclePack : definition.parts){
+					if(vehiclePack.additionalParts != null){
+						for(VehiclePart additionalPack : vehiclePack.additionalParts){
+							if(offset.equals(additionalPack.pos)){
+								parentPart = getPartAtLocation(vehiclePack.pos);
 								break;
 							}
 						}
@@ -148,11 +148,25 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				partsToCheck.addAll(partsFromNBT);
 				for(APart part : partsToCheck){
 					if(part.definition.subParts != null){
-						for(VehiclePart partSubPartPack : part.definition.subParts){
-							VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, partSubPartPack);
+						for(VehiclePart subPartPack : part.definition.subParts){
+							VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, subPartPack);
 							if(offset.equals(correctedPack.pos)){
 								parentPart = part;
 								break;
+							}
+							
+							//Check sub-part additional parts.
+							if(subPartPack.additionalParts != null){
+								for(VehiclePart additionalPack : subPartPack.additionalParts){
+									VehiclePart correctedAdditionalPack = getPackForSubPart(part.vehicleDefinition, additionalPack);
+									if(offset.equals(correctedAdditionalPack.pos)){
+										parentPart = getPartAtLocation(correctedPack.pos);
+										break;
+									}
+								}
+								if(parentPart != null){
+									break;
+								}
 							}
 						}
 						if(parentPart != null){
@@ -289,8 +303,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			if(packPart.additionalParts != null){
 				for(APart part : parts){
 					if(part.placementOffset.equals(packPart.pos)){
-						for(VehiclePart additionalPart : packPart.additionalParts){
-							packParts.put(additionalPart.pos, additionalPart);
+						for(VehiclePart additionalPack : packPart.additionalParts){
+							packParts.put(additionalPack.pos, additionalPack);
 						}
 						break;
 					}
@@ -302,9 +316,23 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		for(APart part : parts){
 			if(part.definition.subParts != null){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-				for(VehiclePart extraPackPart : part.definition.subParts){
-					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+				for(VehiclePart subPartPack : part.definition.subParts){
+					VehiclePart correctedPack = getPackForSubPart(parentPack, subPartPack);
 					packParts.put(correctedPack.pos, correctedPack);
+					
+					//Check to see if we can put a additional parts in this location.
+					//If a part is present at a location that can have an additional parts, we allow them to be placed.
+					if(subPartPack.additionalParts != null){
+						for(APart part2 : parts){
+							if(part2.placementOffset.equals(correctedPack.pos)){
+								for(VehiclePart additionalPack : subPartPack.additionalParts){
+									correctedPack = getPackForSubPart(parentPack, additionalPack);
+									packParts.put(correctedPack.pos, correctedPack);
+								}
+								break;
+							}
+						}
+					}
 				}
 			}
 			
@@ -324,35 +352,36 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			
 			//Not a main part.  Check if this is an additional part.
 			if(packPart.additionalParts != null){
-				for(VehiclePart additionalPart : packPart.additionalParts){
-					if(additionalPart.pos.equals(offset)){
-						return additionalPart;
+				for(VehiclePart additionalPack : packPart.additionalParts){
+					if(additionalPack.pos.equals(offset)){
+						return additionalPack;
 					}
 				}
 			}
 		}
 		
 		//If this is not a main part or an additional part, check the sub-parts.
-		for(APart part : parts){
-			if(part.definition.subParts != null && part.definition.subParts.size() > 0){
+		//We check both the main parts, and those from NBT in case we're in a loading-loop.
+		List<APart> allParts = new ArrayList<APart>();
+		allParts.addAll(parts);
+		allParts.addAll(partsFromNBT);
+		for(APart part : allParts){
+			if(part.definition.subParts != null){
 				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-				for(VehiclePart extraPackPart : part.definition.subParts){
-					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
+				for(VehiclePart subPartPack : part.definition.subParts){
+					VehiclePart correctedPack = getPackForSubPart(parentPack, subPartPack);
 					if(correctedPack.pos.equals(offset)){
 						return correctedPack;
 					}
-				}
-			}
-		}
-		
-		//Also check parts from NBT, in case we're in a loading-loop.
-		for(APart part : partsFromNBT){
-			if(part.definition.subParts != null && part.definition.subParts.size() > 0){
-				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-				for(VehiclePart extraPackPart : part.definition.subParts){
-					VehiclePart correctedPack = getPackForSubPart(parentPack, extraPackPart);
-					if(correctedPack.pos.equals(offset)){
-						return correctedPack;
+					
+					//Check additional part definitions.
+					if(subPartPack.additionalParts != null){
+						for(VehiclePart additionalPack : subPartPack.additionalParts){
+							correctedPack = getPackForSubPart(parentPack, additionalPack);
+							if(correctedPack.pos.equals(offset)){
+								return correctedPack;
+							}
+						}
 					}
 				}
 			}
