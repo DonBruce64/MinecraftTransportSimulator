@@ -217,10 +217,20 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	}
 	
 	public double getDesiredAngularVelocity(){
-		if(vehicle.goingInReverse){
-			return getLongPartOffset() == 0 ? -vehicle.groundVelocity/(getHeight()*Math.PI) : -vehicle.groundVelocity;
+		if(vehicle.skidSteerActive){
+			if(placementOffset.x > 0){
+				return getLongPartOffset() == 0 ? vehicle.rudderAngle/2000D/(getHeight()*Math.PI) : vehicle.rudderAngle/2000D;
+			}else if(placementOffset.x < 0){
+				return getLongPartOffset() == 0 ? -vehicle.rudderAngle/2000D/(getHeight()*Math.PI) : -vehicle.rudderAngle/2000D;
+			}else{
+				return 0;
+			}
 		}else{
-			return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
+			if(vehicle.goingInReverse){
+				return getLongPartOffset() == 0 ? -vehicle.groundVelocity/(getHeight()*Math.PI) : -vehicle.groundVelocity;
+			}else{
+				return getLongPartOffset() == 0 ? vehicle.groundVelocity/(getHeight()*Math.PI) : vehicle.groundVelocity;
+			}
 		}
 	}
 	

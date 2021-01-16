@@ -42,6 +42,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
     	public boolean hasCruiseControl;
     	public boolean hasAutopilot;
     	public boolean hasFlaps;
+    	public boolean hasSkidSteer;
     	public int fuelCapacity;
     	public int defaultFuelQty;
     	public int gearSequenceDuration;

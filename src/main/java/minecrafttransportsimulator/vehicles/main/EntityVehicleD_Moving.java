@@ -17,6 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
@@ -40,6 +41,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Internal states.
 	public boolean goingInReverse;
 	public boolean slipping;
+	public boolean skidSteerActive;
 	public double groundVelocity;
 	
 	//Towing data.
@@ -314,6 +316,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	private double getTurningForce(){
 		float steeringAngle = getSteeringAngle();
+		skidSteerActive = false;
 		if(steeringAngle != 0){
 			double turningDistance = 0;
 			//Check grounded ground devices for turn contributions.
@@ -337,8 +340,38 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 			}			
 			
-			//If we are able to turn, calculate the force we create to do so. 
+			//If we are able to turn, calculate the force we create to do so.
 			if(turningDistance > 0){
+				//If we are vehicle that can do skid-steer, and that's active, do so now.
+				if(definition.motorized.hasSkidSteer){
+					if(groundDeviceCollective.isReady() && groundVelocity < 0.05){
+						boolean foundNeutralEngine = false;
+						boolean leftWheelGrounded = false;
+						boolean rightWheelGrounded = false;
+						for(APart part : parts){
+							if(part instanceof PartGroundDevice){
+								if(groundDeviceCollective.groundedGroundDevices.contains(part)){
+									if(part.placementOffset.x > 0){
+										leftWheelGrounded = true;
+									}else{
+										rightWheelGrounded = true;
+									}
+								}
+							}else if(part instanceof PartEngine){
+								if(((PartEngine) part).currentGear == 0){
+									foundNeutralEngine = true;
+								}
+							}
+						}
+						skidSteerActive = foundNeutralEngine && leftWheelGrounded && rightWheelGrounded;
+					}
+					
+					//If skidSteer is active, do it now.
+					if(skidSteerActive){
+						return steeringAngle/20D;
+					}
+				}
+				
 				//Steering force is initially is the value of the angle, divided by the distance to the wheels.
 				//This means tighter turning for shorter-wheelbase vehicles and more input.
 				//This is opposite of the torque-based forces for control surfaces.
