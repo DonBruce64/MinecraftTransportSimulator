@@ -142,23 +142,29 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 */
 	public void update(){
 		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
-		if(parentPart != null && vehicleDefinition.isSubPart){
-			//First, get the relative distance between our offset and our parent's offset.
-			totalOffset.setTo(getPositionOffset(0)).add(placementOffset).subtract(parentPart.placementOffset);
+		if(vehicleDefinition.isSubPart){
+			APart testParentPart = parentPart;
+			while(testParentPart != null){
+				//First, get the relative distance between our offset and our parent's offset.
+				totalOffset.setTo(getPositionOffset(0)).add(placementOffset).subtract(testParentPart.placementOffset);
+				
+				//Now get our parent's rotation contribution.
+				totalRotation.setTo(testParentPart.getPositionRotation(0)).add(testParentPart.placementRotation);
+				
+				//Rotate our current relative offset by the rotation of the parent to get the correct
+				//offset between us and our paren't position in our parent's coordinate system.
+				totalOffset.rotateFine(totalRotation);
+				
+				//Now that we have the proper relative offset, add our parent's placement and position offsets.
+				//This is our final offset point.
+				totalOffset.add(testParentPart.placementOffset).add(testParentPart.getPositionOffset(0));
+				
+				//Also add our own rotation to our cumulative rotation we got from our parent.
+				totalRotation.add(getPositionRotation(0)).add(placementRotation);
 			
-			//Now get our parent's rotation contribution.
-			totalRotation.setTo(parentPart.getPositionRotation(0)).add(parentPart.placementRotation);
-			
-			//Rotate our current relative offset by the rotation of the parent to get the correct
-			//offset between us and our paren't position in our parent's coordinate system.
-			totalOffset.rotateFine(totalRotation);
-			
-			//Now that we have the proper relative offset, add our parent's placement and position offsets.
-			//This is our final offset point.
-			totalOffset.add(parentPart.placementOffset).add(parentPart.getPositionOffset(0));
-			
-			//Also add our own rotation to our cumulative rotation we got from our parent.
-			totalRotation.add(getPositionRotation(0)).add(placementRotation);
+				//Go up one level for parents and get that information too.
+				testParentPart = testParentPart.parentPart;
+			}
 		}else{
 			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
@@ -223,7 +229,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * It may be used for stacked rotations, and should return the final
 	 * rotation angles for all operations.
 	 */
-	public final Point3d getPositionRotation(float partialTicks){
+	public Point3d getPositionRotation(float partialTicks){
 		boolean inhibitAnimations = false;
 		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
