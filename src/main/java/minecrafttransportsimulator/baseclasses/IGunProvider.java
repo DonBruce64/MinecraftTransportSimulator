@@ -14,9 +14,12 @@ import minecrafttransportsimulator.sound.ISoundProviderComplex;
 public interface IGunProvider extends ISoundProviderComplex, IParticleProvider{
 	
 	 /**
-	 *  Return the rotation of this provider as a Point3d.
+	 *  Rotates the passed-in point to match the provider's orientation.
+	 *  This is done for points relative to the gun's provider to get
+	 *  proper orientation prior to firing, so it should take into account
+	 *  the gun's state in the world.
 	 */
-    public Point3d getProviderRotation();
+    public void orientToProvider(Point3d point);
 	
     /**
 	 *  This is called when the gun needs to reload.  Do so here
@@ -39,14 +42,16 @@ public interface IGunProvider extends ISoundProviderComplex, IParticleProvider{
 	public boolean isGunActive(WrapperEntity controller);
 	
 	/**
-	 *  Returns the desired yaw of the gun.
-	 *  This should take the controller into account.
+	 *  Returns the desired yaw of the gun as defined by the controller.
+	 *  Usually this is just where the controller is looking.  If no controller
+	 *  is present, then this method will not be called.
 	 */
 	public double getDesiredYaw(WrapperEntity controller);
 	
 	/**
-	 *  Returns the desired pitch of the gun.
-	 *  This should take the controller into account.
+	 *  Returns the desired pitch of the gun as defined by the controller.
+	 *  Usually this is just where the controller is looking.  If no controller
+	 *  is present, then this method will not be called.
 	 */
 	public double getDesiredPitch(WrapperEntity controller);
 	

@@ -143,28 +143,33 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	public void update(){
 		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
 		if(vehicleDefinition.isSubPart){
+			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
+			totalRotation.set(0, 0, 0);
 			APart testParentPart = parentPart;
 			while(testParentPart != null){
 				//First, get the relative distance between our offset and our parent's offset.
-				totalOffset.setTo(getPositionOffset(0)).add(placementOffset).subtract(testParentPart.placementOffset);
+				totalOffset.subtract(testParentPart.placementOffset);
 				
 				//Now get our parent's rotation contribution.
-				totalRotation.setTo(testParentPart.getPositionRotation(0)).add(testParentPart.placementRotation);
+				Point3d parentRotation = testParentPart.getPositionRotation(0).add(testParentPart.placementRotation);
 				
 				//Rotate our current relative offset by the rotation of the parent to get the correct
-				//offset between us and our paren't position in our parent's coordinate system.
-				totalOffset.rotateFine(totalRotation);
+				//offset between us and our parent's position in our parent's coordinate system.
+				totalOffset.rotateFine(parentRotation);
+				
+				//Add our parent's rotation to our own.
+				totalRotation.add(parentRotation);
 				
 				//Now that we have the proper relative offset, add our parent's placement and position offsets.
 				//This is our final offset point.
 				totalOffset.add(testParentPart.placementOffset).add(testParentPart.getPositionOffset(0));
-				
-				//Also add our own rotation to our cumulative rotation we got from our parent.
-				totalRotation.add(getPositionRotation(0)).add(placementRotation);
 			
 				//Go up one level for parents and get that information too.
 				testParentPart = testParentPart.parentPart;
 			}
+			//Now that we are done, add our own rotation to our cumulative rotation we got from our parent.
+			totalRotation.add(getPositionRotation(0)).add(placementRotation);
+			
 		}else{
 			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
 			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);

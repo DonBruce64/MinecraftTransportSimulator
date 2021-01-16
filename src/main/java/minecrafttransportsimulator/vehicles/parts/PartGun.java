@@ -77,6 +77,18 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
+	public Point3d getPositionRotation(float partialTicks){
+		Point3d rotation = super.getPositionRotation(partialTicks);
+		if(!definition.gun.yawIsInternal){
+			rotation.add(0, internalGun.prevOrientation.y + (internalGun.currentOrientation.y - internalGun.prevOrientation.y)*partialTicks, 0);
+		}
+		if(!definition.gun.pitchIsInternal){
+			rotation.add(internalGun.prevOrientation.x + (internalGun.currentOrientation.x - internalGun.prevOrientation.x)*partialTicks, 0, 0);
+		}
+		return rotation;
+	}
+	
+	@Override
 	public WrapperNBT getData(){
 		WrapperNBT data = super.getData();
 		internalGun.save(data);
@@ -94,8 +106,8 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public Point3d getProviderRotation(){
-		return vehicle.angles.copy().add(totalRotation);
+	public void orientToProvider(Point3d point){
+		point.rotateFine(totalRotation).rotateFine(vehicle.angles);
 	}
 	
 	@Override
@@ -159,19 +171,31 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		//We flag ourselves as inactive if there are no controllers or the seat isn't set to us.
 		//We aren't making sentry turrets here.... yet.
 		//If this gun type can only have one selected at a time, check that this has the selected index.
-		PartSeat controllerSeat = (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller));
-		return !vehicleDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
+		if(controller != null){
+			PartSeat controllerSeat = (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller));
+			return !vehicleDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
+		}else{
+			return false;
+		}
 	}
 	
 	@Override
 	public double getDesiredYaw(WrapperEntity controller){
-		return controller.getHeadYaw() - (vehicle.angles.y + totalRotation.y);
+		//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
+		//This is because if the gun moves based on those animations, we shouldn't take them into account.
+		double partYawContribution = definition.gun.yawIsInternal ? totalRotation.y : totalRotation.y - internalGun.prevOrientation.y;
+		return controller.getYaw() - (vehicle.angles.y + partYawContribution);
 	}
 	
 	@Override
 	public double getDesiredPitch(WrapperEntity controller){
-		double vehiclePitchContribution = (vehicle.angles.x + totalRotation.x)*Math.cos(Math.toRadians(totalRotation.y + internalGun.currentOrientation.y));
-		double vehicleRollContribution = -(vehicle.angles.z + totalRotation.z)*Math.sin(Math.toRadians(totalRotation.y + internalGun.currentOrientation.y));
+		//For pitch, we need to find the relative angle of the player to the vehicle's 0-pitch plane.
+		//When the player rotates their head, they don't do so relative to the pitch of the vehicle the gun is on, 
+		//so a yaw change can result in a pitch change.
+		double partYawContribution = definition.gun.yawIsInternal ? totalRotation.y : totalRotation.y - internalGun.prevOrientation.y;
+		double partPitchContribution = definition.gun.pitchIsInternal ? totalRotation.x : totalRotation.x - internalGun.prevOrientation.x;
+		double vehiclePitchContribution = (vehicle.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
+		double vehicleRollContribution = (vehicle.angles.z + totalRotation.z)*Math.sin(Math.toRadians(partYawContribution));
 		return controller.getPitch() - (vehiclePitchContribution + vehicleRollContribution);
 	}
 
@@ -209,106 +233,4 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	public void spawnParticles(){
 		internalGun.spawnParticles();
 	}
-	
-	//--------------------START OF GUN SOUND METHODS--------------------
-	//FIXME remove when gun code is good.
-	/*
-	@Override
-	public void spawnParticles(){
-		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire && bulletsLeft > 0){
-			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
-			//Angle is based on the current gun orientation, plus a slight fudge-factor.
-			//This is based on the barrel length and shell size.
-			Point3d vehicleFactoredAngles = vehicle.angles.copy().add((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
-			
-			//Set initial velocity to the vehicle's velocity, plus the gun muzzle velocity at the specified orientation.
-			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles);
-			Point3d bulletVelocity = vehicle.motion.copy().multiply(vehicle.SPEED_FACTOR).add(bulletDirection.multiply(definition.gun.muzzleVelocity/20D/10D));
-			
-			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
-			//Then move the bullet to the appropriate firing position.
-			Point3d bulletPosition = new Point3d(0D, 0D, definition.gun.length).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicleFactoredAngles).add(worldPos);
-			bulletPosition.add(getFiringPosition().rotateFine(totalRotation).rotateFine(vehicleFactoredAngles));
-
-			//Add the bullet as a particle.
-			//If the bullet is a missile, give it a target.
-			if (loadedBullet.definition.bullet.turnFactor > 0) {
-				//First find the block the controller is looking at, if possible
-				double maxDistance = 2000D;
-				Point3d lineOfSight = lastController.getLineOfSight((float) maxDistance);
-				Point3i blockTarget = this.vehicle.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
-				
-				//Try to find the closest entity between the controller and the block
-				//If no block was found, set target position to maxDistance in the direction of the line of sight
-				if(blockTarget != null) {
-					maxDistance = lastController.getPosition().distanceTo(blockTarget);
-				}
-				else {
-					blockTarget = new Point3i(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight));
-				}
-				WrapperEntity entityTarget = this.vehicle.world.getEntityLookingAt(lastController, (float) maxDistance);
-				
-				//Fire a missile with the found entity as its target, if valid
-				//Otherwise, fall back to the block target
-				if(entityTarget != null) {
-					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, entityTarget));
-				}
-				else {
-					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, blockTarget));
-				}
-			}
-			else {
-				InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
-			}
-			MasterLoader.audioInterface.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
-			if(definition.gun.JSONParticleObjects != null) {
-				spawnEffectParticles();
-			}
-			lastTimeFired = timeToFire;
-			
-			//Remove a bullet from the count and add shots fired.
-			--bulletsLeft;
-			++bulletsFired;
-		}
-	}
-	
-	//Rather than spawn a bullet particle, this method spawns
-	//a particle related to some special effect, such as gun smoke.
-	private void spawnEffectParticles() {
-		for(JSONParticleObject JSONParticleObject : definition.gun.JSONParticleObjects) {
-			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
-			//Add a little variation to this.
-			Point3d particleVelocity = JSONParticleObject.velocityVector.copy().multiply(1/20D/10D).rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy());
-			
-			//Get the particle's initial position.
-			Point3d particlePosition = worldPos.copy();
-			if(JSONParticleObject.pos != null) {
-				particlePosition.add(JSONParticleObject.pos.copy().rotateFine(currentOrientation).rotateFine(totalRotation).rotateFine(vehicle.angles.copy()));
-			}
-
-			//Spawn the appropriate type and amount of particles.
-			//Change default values from 0 to 1.
-			if(JSONParticleObject.quantity == 0) JSONParticleObject.quantity = 1;
-			if(JSONParticleObject.scale == 0f && JSONParticleObject.toScale == 0f) JSONParticleObject.scale = 1f;
-			AParticle currentParticle;
-			switch(JSONParticleObject.type) {
-				case "smoke": {
-					if(JSONParticleObject.transparency == 0f && JSONParticleObject.toTransparency == 0F) JSONParticleObject.transparency = 1f;
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(vehicle.world, particlePosition, particleVelocity.copy(), JSONParticleObject);
-						InterfaceRender.spawnParticle(currentParticle);
-					}
-					break;
-				}
-				case "flame": {
-					for(int i=0; i<JSONParticleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(vehicle.world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), JSONParticleObject.scale);
-						currentParticle.deltaScale = (JSONParticleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
-						InterfaceRender.spawnParticle(currentParticle);
-					}
-					break;
-				}
-			}
-		}
-	}*/
 }

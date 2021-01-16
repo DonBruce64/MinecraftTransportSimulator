@@ -112,7 +112,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//First check if we clicked the start or end of the curve.
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		
-		//Next check how many lanes the road the player has is holding and what the first offset is.
+		//Next check how many lanes are in the road the player has is holding and what the first offset is.
 		//This affects which lane we say they clicked, and what position we return for spawning.
 		int lanesOnHeldRoad = 0;
 		float laneOffset = 0;

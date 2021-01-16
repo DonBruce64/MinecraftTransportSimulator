@@ -273,8 +273,8 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	}
 	
 	@Override
-	public Point3d getProviderRotation(){
-		return angles;
+	public void orientToProvider(Point3d point){
+		point.rotateFine(angles);
 	}
 	
 	@Override
