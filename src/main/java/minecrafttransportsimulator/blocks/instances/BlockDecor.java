@@ -24,7 +24,7 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 			if(player.getHeldItem() instanceof ItemPaintGun){
 				//Let the paint gun open the GUI.  To do this, we return false to allow item interaction.
 				return false;
-			}else if(decor.definition.general.itemTypes != null){
+			}else if(decor.definition.general.itemTypes != null || decor.definition.general.items != null){
 				InterfaceGUI.openGUI(new GUIPartBench(decor, player));
 			}else if(!decor.getText().isEmpty()){
 				InterfaceGUI.openGUI(new GUITextEditor(decor));
