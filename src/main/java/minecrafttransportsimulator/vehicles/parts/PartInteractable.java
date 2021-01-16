@@ -57,9 +57,7 @@ public final class PartInteractable extends APart{
 		double explosivePower = getExplosiveContribution();
 		if(explosivePower > 0){
 			vehicle.world.spawnExplosion(vehicle, worldPos, explosivePower, true);
-			//We just set ourselves invalid rather than removing as we might be in a part-loop here.
-			//Doing a removal would get us a CME.
-			isValid = false;
+			vehicle.destroyAt(worldPos);
 		}
 	}
 	
