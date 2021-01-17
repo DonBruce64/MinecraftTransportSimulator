@@ -100,7 +100,6 @@ public abstract class AItemBase{
 	 *  Gets the ID of the creative tab for this item to be displayed on.  Tabs are auto-created as required.
 	 */
 	public String getCreativeTabID(){
-		///TODO make this abstract when we do pack-mods.
 		return MasterLoader.resourceDomain;
 	}
 }

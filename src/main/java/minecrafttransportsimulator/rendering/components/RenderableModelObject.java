@@ -33,19 +33,8 @@ public class RenderableModelObject extends RenderableTransform{
 		
 		if(definition != null){
 			this.applyAfter = definition.applyAfter;
-			//Remove all rotatable transforms and re-create them if we have any tread rollers.
-			//Rollers are special and require special transform constructors.
-			//This happens if a pack has rollers in their JSON manually defined.
-			//TODO should this be removed to force auto-calculation?
-			for(JSONAnimationDefinition animation : definition.animations){
-				if(animation.animationType.equals("animations") && objectName.toLowerCase().contains("roller")){
-					TransformTreadRoller rollerTransform = TransformTreadRoller.create(objectName, animation, vertices);
-					int transformIndex = definition.animations.indexOf(animation);
-					transforms.set(transformIndex, rollerTransform);
-				}
-			}
 		}else{
-			//Roller not in JSON file found.  Create a transform for it.
+			//Roller found.  Create a transform for it.
 			this.applyAfter = null;
 			if(objectName.toLowerCase().contains("roller")){
 				transforms.add(TransformTreadRoller.create(objectName, null, vertices));
