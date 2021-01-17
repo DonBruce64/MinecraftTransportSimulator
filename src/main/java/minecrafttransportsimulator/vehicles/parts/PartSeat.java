@@ -176,14 +176,4 @@ public final class PartSeat extends APart{
 		}
 		return data;
 	}
-
-	@Override
-	public float getWidth(){
-		return 0.75F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 0.75F;
-	}
 }

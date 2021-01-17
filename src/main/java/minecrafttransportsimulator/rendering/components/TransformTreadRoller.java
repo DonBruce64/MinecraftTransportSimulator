@@ -64,7 +64,7 @@ public class TransformTreadRoller extends TransformRotatable{
 			//We don't have a definition for this, auto-create one and return the roller with it.
 			definition = new JSONAnimationDefinition();
 			definition.animationType = "rotation";
-			definition.variable = "engine_driveshaft_rotation_1";
+			definition.variable = "ground_rotation_1";
 			definition.centerPoint = new Point3d(0D, yPos, zPos);
 			definition.axis = new Point3d(0D, 0D, 0D);
 		}

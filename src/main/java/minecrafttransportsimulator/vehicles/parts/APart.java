@@ -324,10 +324,13 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 		return data;
 	}
 	
-	public abstract float getWidth();
+	public float getWidth(){
+		return definition.generic != null ? definition.generic.width : 0.75F;
+	}
 	
-	public abstract float getHeight();
-	
+	public float getHeight(){
+		return definition.generic != null ? definition.generic.height : 0.75F;
+	}
 
 	
 	//--------------------START OF SOUND AND ANIMATION CODE--------------------

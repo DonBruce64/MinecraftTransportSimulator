@@ -255,4 +255,12 @@ public class VehicleGroundDeviceBox{
 	public boolean isReady(){
 		return !groundDevices.isEmpty() || !liquidCollisionBoxes.isEmpty() || !liquidDevices.isEmpty();
 	}
+	
+	/**
+	 * Returns the bounding box that currently represents this box.  This can change depending on what
+	 * ground devices we have and if we are colliding with liquids or solids.
+	 */
+	public BoundingBox getBoundingBox(){
+		return isAbleToDoGroundOperationsLiquid ? liquidBox : solidBox;
+	}
 }

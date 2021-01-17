@@ -129,6 +129,19 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
+	 * Gets the bounding boxes that make up this ground collective.
+	 * This will be the four ground points, or less if we don't have them.
+	 */
+	public List<BoundingBox> getGroundBounds(){
+		List<BoundingBox> groundBoxes = new ArrayList<BoundingBox>();
+		groundBoxes.add(frontLeftGDB.getBoundingBox());
+		groundBoxes.add(frontRightGDB.getBoundingBox());
+		groundBoxes.add(rearLeftGDB.getBoundingBox());
+		groundBoxes.add(rearRightGDB.getBoundingBox());
+		return groundBoxes;
+	}
+	
+	/**
 	 * Returns true if the boxes are ready for ground calculations.  In essence, this checks for a front and back box,
 	 * plus a left or right box if one of those boxes aren't centered.
 	 */

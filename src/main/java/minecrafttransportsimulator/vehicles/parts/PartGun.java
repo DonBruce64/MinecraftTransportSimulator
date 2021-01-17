@@ -96,16 +96,6 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public float getWidth(){
-		return 0.75F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 0.75F;
-	}
-	
-	@Override
 	public void orientToProvider(Point3d point){
 		point.rotateFine(totalRotation).rotateFine(vehicle.angles);
 	}

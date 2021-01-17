@@ -1096,21 +1096,37 @@ public final class RenderVehicle{
 		//Set states for box render.
 		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 		GL11.glLineWidth(3.0F);
 		
 		//Draw collision boxes for the vehicle.
 		for(BoundingBox box : vehicle.interactionBoxes){
+			if(vehicle.partInteractionBoxes.contains(box)){
+				InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
+			}else if(vehicle.vehicleDoorBoxes.containsKey(box) || vehicle.partDoorBoxes.containsKey(box)){
+				InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+			}else if(vehicle.blockCollisionBoxes.contains(box)){
+				InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 1.0F);
+			}else{
+				InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+			}
+			RenderBoundingBox.renderWireframe(box);
+		}
+		
+		//Draw the ground bounding boxes.
+		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
+		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
 			RenderBoundingBox.renderWireframe(box);
 		}
 		
 		//Draw part center points.
-		InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.parts){
-			Point3d partRotatedCenter = part.totalOffset.copy().rotateCoarse(vehicle.angles);
-			GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y - part.getHeight(), partRotatedCenter.z);
-			GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y + part.getHeight(), partRotatedCenter.z);
+			if(!part.isFake()){
+				Point3d partRotatedCenter = part.totalOffset.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
+				GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y - part.getHeight(), partRotatedCenter.z);
+				GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y + part.getHeight(), partRotatedCenter.z);
+			}
 		}
 		GL11.glEnd();
 		GL11.glLineWidth(1.0F);

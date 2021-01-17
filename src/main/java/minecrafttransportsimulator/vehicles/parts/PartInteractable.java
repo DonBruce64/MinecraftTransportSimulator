@@ -131,16 +131,6 @@ public final class PartInteractable extends APart{
 		return data;
 	}
 	
-	@Override
-	public float getWidth(){
-		return 1.0F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 1.0F;
-	}
-	
 	public int getInventoryCount(){
 		int count = 0;
 		if(inventory != null){

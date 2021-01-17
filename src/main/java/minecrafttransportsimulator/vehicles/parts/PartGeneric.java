@@ -10,14 +10,4 @@ public final class PartGeneric extends APart{
 	public PartGeneric(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 	}
-	
-	@Override
-	public float getWidth(){
-		return definition.generic.width;
-	}
-
-	@Override
-	public float getHeight(){
-		return definition.generic.height;
-	}
 }

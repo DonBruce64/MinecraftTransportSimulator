@@ -536,16 +536,6 @@ public class PartEngine extends APart implements IParticleProvider{
 		return data;
 	}
 	
-	@Override
-	public float getWidth(){
-		return 1.0F;
-	}
-
-	@Override
-	public float getHeight(){
-		return 1.0F;
-	}
-	
 	
 	
 	//--------------------START OF ENGINE STATE CHANGE METHODS--------------------
