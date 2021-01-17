@@ -17,15 +17,25 @@ public class JSONRoadComponent extends AJSONMultiModelProvider<JSONRoadComponent
     	public int collisionHeight;
     	
     	//Static variables.
-    	public List<List<JSONLanePointSet>> laneSectors;
+    	public List<JSONLaneSector> sectors;
     	public List<JSONRoadCollisionArea> collisionAreas;
     }
     
-    public class JSONLanePointSet{
+    public class JSONLaneSector{
+    	public Point3d sectorStartPos;
+    	public float sectorStartAngle;
+    	public float borderOffset;
+    	public List<JSONLaneSectorPointSet> lanes;
+    }
+    
+    public class JSONLaneSectorPointSet{
     	public Point3d startPos;
-    	public Point3d endPos;
-    	public float startAngle;
-    	public float endAngle;
+    	public List<JSONLaneSectorPointEntry> endPoints;
+    }
+    
+    public class JSONLaneSectorPointEntry{
+    	public Point3d pos;
+    	public float angle;
     }
     
     public class JSONRoadCollisionArea{

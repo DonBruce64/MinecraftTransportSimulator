@@ -7,8 +7,10 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
@@ -143,65 +145,77 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			GL11.glLineWidth(2);
 			GL11.glBegin(GL11.GL_LINES);
 			
-			//Render the lane start points.
-			GL11.glColor3f(1, 0, 0);
-			for(RoadLane lane : road.lanes){
-				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y, lane.curve.startPos.z);
-				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y + 3, lane.curve.startPos.z);
-				GL11.glVertex3d(lane.curve.startPos.x, lane.curve.startPos.y + 3, lane.curve.startPos.z);
-				rotation.set(0, lane.curve.startAngle, 0);
-				position.set(0, 0, 2).rotateFine(rotation);
-				GL11.glVertex3d(lane.curve.startPos.x + position.x, lane.curve.startPos.y + 3 + position.y, lane.curve.startPos.z + position.z);
-			}
-			
 			//Render the curves.
 			//First render the actual curve if we are a dynamic road.
 			if(road.dynamicCurve != null){
+				//Render actual curve.
 				GL11.glColor3f(0, 1, 0);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToPositionAt(position, f);
 					GL11.glVertex3d(position.x, position.y, position.z);
-					GL11.glVertex3d(position.x, position.y + 1.5, position.z);
+					GL11.glVertex3d(position.x, position.y + 1.0, position.z);
+				}
+				
+				//Render the outer border bounds.
+				GL11.glColor3f(0, 1, 1);
+				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
+					road.dynamicCurve.setPointToRotationAt(rotation, f);
+					position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
+					road.dynamicCurve.offsetPointByPositionAt(position, f);
+					
+					GL11.glVertex3d(position.x, position.y, position.z);
+					GL11.glVertex3d(position.x, position.y + 1.0, position.z);
 				}
 			}
 			
-			//Now render the outer border bounds.
-			GL11.glColor3f(0, 1, 1);
-			for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
-				road.dynamicCurve.setPointToRotationAt(rotation, f);
-				position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
-				road.dynamicCurve.offsetPointByPositionAt(position, f);
-				
-				GL11.glVertex3d(position.x, position.y, position.z);
-				GL11.glVertex3d(position.x, position.y + 1.5, position.z);
-			}
-			
 			//Now render the lane curve segments.
-			GL11.glColor3f(1, 1, 0);
 			for(RoadLane lane : road.lanes){
-				lane.curve.setPointToPositionAt(position, 0);
-				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
-					lane.curve.setPointToPositionAt(position, f);
-					GL11.glVertex3d(position.x, position.y, position.z);
-					GL11.glVertex3d(position.x, position.y + 1.5, position.z);
-				}	
+				for(BezierCurve laneCurve : lane.curves){
+					//Render the curve start point.
+					GL11.glColor3f(1, 0, 0);
+					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y, laneCurve.startPos.z);
+					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
+					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
+					rotation.set(0, laneCurve.startAngle, 0);
+					position.set(0, 0, 2).rotateFine(rotation);
+					GL11.glVertex3d(laneCurve.startPos.x + position.x, laneCurve.startPos.y + 3 + position.y, laneCurve.startPos.z + position.z);
+					
+					//Render all the points on the curve.
+					GL11.glColor3f(1, 1, 0);
+					laneCurve.setPointToPositionAt(position, 0);
+					for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
+						laneCurve.setPointToPositionAt(position, f);
+						GL11.glVertex3d(position.x, position.y, position.z);
+						GL11.glVertex3d(position.x, position.y + 1.0, position.z);
+					}
+				}
 			}
 			
 			//Render the lane connections.
 			GL11.glColor3f(0, 0, 1);
 			for(RoadLane lane : road.lanes){
-				if(lane.priorConnection != null){
-					TileEntityRoad otherRoad = road.world.getTileEntity(lane.priorConnection.tileLocation);
-					if(otherRoad != null){
-						RoadLane otherLane = otherRoad.lanes.get(lane.priorConnection.laneNumber);
-						if(otherLane != null){
-							//First render our own offset point.
-							lane.curve.setPointToPositionAt(position, 0.5F);
-							GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-							
-							//Now render the connection point.
-							otherLane.curve.setPointToPositionAt(rotation, lane.priorConnection.connectedToStart ? 0.5F : otherLane.curve.pathLength - 0.5F);
-							GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+				for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
+					BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
+					for(RoadLaneConnection priorConnection : curvePriorConnections){
+						TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
+						if(otherRoad != null){
+							RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
+							if(otherLane != null){
+								BezierCurve otherCurve = otherLane.curves.get(priorConnection.curveNumber);
+								
+								//First render our own offset point.
+								currentCurve.setPointToPositionAt(position, 0.5F);
+								GL11.glVertex3d(position.x, position.y + 3.0, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								
+								//Now render the connection point.
+								otherCurve.setPointToPositionAt(position, priorConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
+								position.add(otherLane.road.position).subtract(road.position);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 2.0, position.z);
+							}
 						}
 					}
 				}

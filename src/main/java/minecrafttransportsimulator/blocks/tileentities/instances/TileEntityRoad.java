@@ -17,10 +17,11 @@ import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointSet;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -108,52 +109,23 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
-	public RoadClickData getClickData(Point3i blockOffsetClicked, WrapperPlayer player, boolean curveStart){
-		//First check if we clicked the start or end of the curve.
+	public RoadClickData getClickData(Point3i blockOffsetClicked, boolean curveStart){
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
-		
-		//Next check how many lanes are in the road the player has is holding and what the first offset is.
-		//This affects which lane we say they clicked, and what position we return for spawning.
-		int lanesOnHeldRoad = 0;
-		float laneOffset = 0;
-		AItemBase heldItem = player.getHeldItem();
-		if(heldItem instanceof ItemRoadComponent){
-			if(((ItemRoadComponent) heldItem).definition.general.laneOffsets != null){
-				lanesOnHeldRoad = ((ItemRoadComponent) heldItem).definition.general.laneOffsets.length;
-				laneOffset = ((ItemRoadComponent) heldItem).definition.general.laneOffsets[0];
+		JSONLaneSector closestSector = null;
+		if(!definition.general.isDynamic){
+			double closestSectorDistance = Double.MAX_VALUE;
+			for(JSONLaneSector sector : definition.general.sectors){
+				for(JSONLaneSectorPointSet lanePoints : sector.lanes){
+					//Only check start points.  End points are for other sectors.
+					double distanceToSectorStart = lanePoints.startPos.distanceTo(blockOffsetClicked);
+					if(distanceToSectorStart < closestSectorDistance){
+						closestSectorDistance = distanceToSectorStart;
+						closestSector = sector;
+					}
+				}
 			}
 		}
-		
-		//Next get the angle between the player and the side of the curve they clicked.
-		double angleDelta;
-		if(clickedStart){
-			angleDelta = player.getYaw() - dynamicCurve.startAngle;
-		}else{
-			angleDelta = player.getYaw() - dynamicCurve.endAngle + 180;
-		}
-		while(angleDelta < -180)angleDelta += 360;
-		while(angleDelta > 180)angleDelta -= 360;
-		
-		//Based on the angle, and the lane on our held item, and what side we clicked, return click data.
-		//Try to keep the lane in the center by applying an offset if we're clicking with a road with only a few lanes.
-		//FIXME check math here later.  Clicker doesn't like inverted connections...
-		boolean clickedSameDirection = Math.abs(angleDelta) > 90;
-		int laneClicked = 0;
-		/*
-		if(clickedForward){
-			laneClicked = (int) angleDelta/25;
-			if(lanesOnHeldRoad < lanes.size()){
-				laneClicked += (lanes.size() - lanesOnHeldRoad)/2;
-			}
-		}else{
-			laneClicked = lanes.size() - (int) angleDelta/25;
-			if(lanesOnHeldRoad < lanes.size()){
-				laneClicked -= (lanes.size() - lanesOnHeldRoad)/2;
-			}
-		}*/
-		
-		//Finally, return the data in object form.
-		return new RoadClickData(this, lanes.get(laneClicked), clickedStart, clickedSameDirection, curveStart, laneOffset);
+		return new RoadClickData(this, closestSector, clickedStart, curveStart);
 	}
 	
 	/**
@@ -164,12 +136,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public void generateLanes(WrapperNBT data){
 		if(definition.general.isDynamic){
 			for(int i=0; i<definition.general.laneOffsets.length; ++i){
-				lanes.add(new RoadLane(this, 0, i, data));
+				lanes.add(new RoadLane(this, 0, i, data != null ? data.getData("lane" + i) : null));
 			}
 		}else{
-			for(int i=0; i<definition.general.laneSectors.size(); ++i){
-				for(int j=0; j<definition.general.laneSectors.get(i).size(); ++j){
-					lanes.add(new RoadLane(this, i, j, data));
+			for(int i=0; i<definition.general.sectors.size(); ++i){
+				for(int j=0; j<definition.general.sectors.get(i).lanes.size(); ++j){
+					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + i) : null));
 				}
 			}
 		}
@@ -244,7 +216,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			}
 		}
 		
-		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
+		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP() && !definition.general.isDynamic)){
 			for(Point3i offset : collisionBlockOffsets){
 				Point3i testPoint = offset.copy().add(position);
 				world.setBlock(BlockRoadCollision.blockInstances.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
