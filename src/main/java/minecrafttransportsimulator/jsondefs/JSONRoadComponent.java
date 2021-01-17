@@ -29,11 +29,11 @@ public class JSONRoadComponent extends AJSONMultiModelProvider<JSONRoadComponent
     }
     
     public class JSONLaneSectorPointSet{
-    	public Point3d startPos;
-    	public List<JSONLaneSectorPointEntry> endPoints;
+    	public Point3d startPoint;
+    	public List<JSONLaneSectorEndPoint> endPoints;
     }
     
-    public class JSONLaneSectorPointEntry{
+    public class JSONLaneSectorEndPoint{
     	public Point3d pos;
     	public float angle;
     }

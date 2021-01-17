@@ -172,6 +172,12 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							}
 						}
 						
+						//Check if the start and end position are the same.
+						if(startPosition.equals(endPosition)){
+							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.sameblock"));
+							return true;
+						}
+						
 						
 						//Now that we have the position for our block and curve points, create the new road segment.
 						//This creation may require over-riding one of the collision blocks of the clicked road.
@@ -252,6 +258,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 				}else{
 					player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
 				}
+				return true;
 			}
 		}
 		return false;

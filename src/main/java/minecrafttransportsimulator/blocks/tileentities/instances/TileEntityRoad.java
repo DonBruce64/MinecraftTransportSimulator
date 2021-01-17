@@ -21,7 +21,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointSet;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -114,14 +113,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		JSONLaneSector closestSector = null;
 		if(!definition.general.isDynamic){
 			double closestSectorDistance = Double.MAX_VALUE;
-			for(JSONLaneSector sector : definition.general.sectors){
-				for(JSONLaneSectorPointSet lanePoints : sector.lanes){
-					//Only check start points.  End points are for other sectors.
-					double distanceToSectorStart = lanePoints.startPos.distanceTo(blockOffsetClicked);
-					if(distanceToSectorStart < closestSectorDistance){
-						closestSectorDistance = distanceToSectorStart;
-						closestSector = sector;
-					}
+			for(RoadLane lane : lanes){
+				//Only check start points.  End points are for other sectors.
+				double distanceToSectorStart = lane.curves.get(0).startPos.distanceTo(blockOffsetClicked);
+				if(distanceToSectorStart < closestSectorDistance){
+					closestSectorDistance = distanceToSectorStart;
+					closestSector = definition.general.sectors.get(lane.sectorNumber);
 				}
 			}
 		}
@@ -141,7 +138,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			for(int i=0; i<definition.general.sectors.size(); ++i){
 				for(int j=0; j<definition.general.sectors.get(i).lanes.size(); ++j){
-					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + i) : null));
+					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + i + "_" + j) : null));
 				}
 			}
 		}
@@ -193,9 +190,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			//Do static block additions for static component.
 			for(JSONRoadCollisionArea collisionArea : definition.general.collisionAreas){
-				for(int i=(int) collisionArea.firstCorner.x; i<collisionArea.secondCorner.x; ++i){
-					for(int j=(int) collisionArea.firstCorner.x; j<collisionArea.secondCorner.z; ++j){
-						Point3i testPoint = new Point3i(i, 0, j);
+				for(int i=(int) collisionArea.firstCorner.x; i<=collisionArea.secondCorner.x; ++i){
+					for(int j=(int) collisionArea.firstCorner.z; j<=collisionArea.secondCorner.z; ++j){
+						Point3i testPoint = new Point3i(new Point3d(i, 0, j).rotateY(rotation));
 						
 						if(!collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
 							//Offset the point to the global cordinate space, get the block, and offset back.
@@ -216,7 +213,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			}
 		}
 		
-		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP() && !definition.general.isDynamic)){
+		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
 			for(Point3i offset : collisionBlockOffsets){
 				Point3i testPoint = offset.copy().add(position);
 				world.setBlock(BlockRoadCollision.blockInstances.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
@@ -260,7 +257,11 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			RoadLane lane = lanes.get(laneNumber);
 			WrapperNBT laneData = new WrapperNBT();
 			lane.save(laneData);
-			data.setData("lane" + laneNumber, laneData);
+			if(definition.general.isDynamic){
+				data.setData("lane" + laneNumber, laneData);
+			}else{
+				data.setData("lane" + lane.sectorNumber + "_" + laneNumber, laneData);
+			}
 		}
 		
 		//Save cure collision point data.

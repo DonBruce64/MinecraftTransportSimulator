@@ -34,7 +34,7 @@ public class RoadClickData{
 				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.dynamicCurve.startAngle + 180;
 				if(curveStart){
-					genPosition = new Point3d(-(roadClicked.definition.general.borderOffset), 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.dynamicCurve.startPos);
+					genPosition = new Point3d(-(roadClicked.definition.general.borderOffset), 0, 0).rotateY(genRotation).add(roadClicked.position).add(roadClicked.dynamicCurve.startPos);
 				}else{
 					genPosition = new Point3d(roadClicked.position).add(roadClicked.dynamicCurve.startPos);
 				}
@@ -47,7 +47,7 @@ public class RoadClickData{
 				if(curveStart){
 					genPosition = new Point3d(roadClicked.position).add(roadClicked.dynamicCurve.endPos);
 				}else{
-					genPosition = new Point3d((roadClicked.definition.general.borderOffset), 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(roadClicked.dynamicCurve.endPos);
+					genPosition = new Point3d((roadClicked.definition.general.borderOffset), 0, 0).rotateY(genRotation).add(roadClicked.position).add(roadClicked.dynamicCurve.endPos);
 				}
 			}
 		}else{
@@ -55,11 +55,11 @@ public class RoadClickData{
 			//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
 			//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
 			//Rotation here needs to be the opposite of the start rotation of the starting sector segment, as our curve is going the opposite direction.
-			genRotation = sectorClicked.sectorStartAngle + 180;
+			genRotation = (float) (sectorClicked.sectorStartAngle + roadClicked.rotation + 180);
 			if(curveStart){
-				genPosition = new Point3d(-(sectorClicked.borderOffset), 0, 0).rotateFine(new Point3d(0, genRotation, 0)).add(roadClicked.position).add(sectorClicked.sectorStartPos);
+				genPosition = new Point3d(-(sectorClicked.borderOffset), 0, 0).rotateY(genRotation).add(roadClicked.position).add(sectorClicked.sectorStartPos.copy().rotateY(roadClicked.rotation));
 			}else{
-				genPosition = new Point3d(roadClicked.position).add(sectorClicked.sectorStartPos);
+				genPosition = new Point3d(roadClicked.position).add(sectorClicked.sectorStartPos.copy().rotateY(roadClicked.rotation));
 			}
 		}
 	}

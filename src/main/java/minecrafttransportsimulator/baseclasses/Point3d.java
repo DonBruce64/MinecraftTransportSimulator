@@ -334,6 +334,23 @@ public class Point3d{
 		return this;
 	}
 	
+	/**
+     * Rotates this point about the passed-in angle on the Y-axis.  Useful for single-plane rotations,
+     * as the Y=axis is also the first rotation to be performed on a point in all systems.
+     * Uses "fine" rotation calculations.
+     */
+	public Point3d rotateY(double angle){
+		if(angle != 0){
+			double cosY = Math.cos(Math.toRadians(angle));//C
+			double sinY = Math.sin(Math.toRadians(angle));//D
+			set(x*cosY + z*sinY,
+				y,
+				x*-sinY	+ z*cosY
+			);
+		}
+		return this;
+	}
+	
 	/*For reference, here are the rotation matrixes.
 	 * Note that the resultant rotation matrix follows the Yaw*Pitch*Roll format.
 	 * Rx=[[1,0,0],[0,cos(P),-sin(P)],[0,sin(P),cos(P)]]

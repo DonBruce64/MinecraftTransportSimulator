@@ -43,70 +43,84 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
-						//Core components need to be transformed to wedges.
-						List<Float[]> transformedVertices = new ArrayList<Float[]>();
 						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation());
-						
-						Point3d priorPosition = new Point3d(0, 0, 0);
-						Point3d priorRotation = new Point3d(0, 0, 0);
-						Point3d rotationDelta = new Point3d(0, 0, 0);
-						float priorIndex = 0;
-						
 						GL11.glBegin(GL11.GL_TRIANGLES);
-						for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
-							//Copy the master vertices to our transformed ones.
-							transformedVertices.clear();
+						
+						//If we are a dynamic curve, cache the dynamic vertex paths.
+						//If we are static, just render the model as-is.
+						if(road.definition.general.isDynamic && road.dynamicCurve != null){
+							//Core components need to be transformed to wedges.
+							List<Float[]> transformedVertices = new ArrayList<Float[]>();
+							Point3d priorPosition = new Point3d(0, 0, 0);
+							Point3d priorRotation = new Point3d(0, 0, 0);
+							Point3d rotationDelta = new Point3d(0, 0, 0);
+							float priorIndex = 0;
+							
+							for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
+								//Copy the master vertices to our transformed ones.
+								transformedVertices.clear();
+								for(Float[][] vertexSet : parsedModel.values()){
+									for(Float[] vertex : vertexSet){
+										transformedVertices.add(new Float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
+									}
+								}
+								
+								//Get current and prior curve position and rotation.
+								//From this, we know how much to stretch the model to that point's rendering area.
+								road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
+								road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
+								road.dynamicCurve.setPointToPositionAt(position, currentIndex);
+								road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
+								
+								//If we are a really sharp curve, we might have inverted our model at the inner corner.
+								//Check for this, and if we have done so, skip this segment.
+								//If we detect this in the last 3 segments, skip right to the end.
+								//This prevents a missing end segment due to collision.
+								rotationDelta.setTo(rotation).subtract(priorRotation);
+								Point3d testPoint1 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
+								Point3d testPoint2 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(rotation).add(position);
+								if(currentIndex != road.dynamicCurve.pathLength && (position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0){
+									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 3 > road.dynamicCurve.pathLength){
+										currentIndex = road.dynamicCurve.pathLength - 1;
+									}
+									continue;
+								}
+								
+								//Depending on the vertex position in the model, transform it to match with the offset rotation.
+								//This depends on how far the vertex is from the origin of the model, and how big the delta is.
+								//For all points, their magnitude depends on how far away they are on the Z-axis.
+								for(Float[] vertex : transformedVertices){
+									Point3d vertexOffsetPrior = new Point3d(vertex[0], vertex[1], 0);
+									vertexOffsetPrior.rotateFine(priorRotation).add(priorPosition);
+									Point3d vertexOffsetCurrent = new Point3d(vertex[0], vertex[1], vertex[2]);
+									vertexOffsetCurrent.rotateFine(rotation).add(position);
+									
+									Point3d segmentVector = vertexOffsetPrior.copy().subtract(vertexOffsetCurrent).multiply(Math.abs(vertex[2]));
+									Point3d renderedVertex = vertexOffsetCurrent.copy().add(segmentVector);
+									
+									GL11.glTexCoord2f(vertex[3], vertex[4]);
+									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+									GL11.glVertex3d(renderedVertex.x, renderedVertex.y, renderedVertex.z);
+								}
+								
+								//Set the last index.
+								priorIndex = currentIndex;
+								
+								//If we are at the last index, do special logic to get the very end point.
+								if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 1 > road.dynamicCurve.pathLength){
+									currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
+								}
+							}
+						}else if(!road.definition.general.isDynamic){
+							rotation.set(0, road.rotation, 0);
 							for(Float[][] vertexSet : parsedModel.values()){
 								for(Float[] vertex : vertexSet){
-									transformedVertices.add(new Float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
+									GL11.glTexCoord2f(vertex[3], vertex[4]);
+									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+									position.set(vertex[0], vertex[1], vertex[2]);
+									position.rotateFine(rotation);
+									GL11.glVertex3d(position.x, position.y, position.z);
 								}
-							}
-							
-							//Get current and prior curve position and rotation.
-							//From this, we know how much to stretch the model to that point's rendering area.
-							road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
-							road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
-							road.dynamicCurve.setPointToPositionAt(position, currentIndex);
-							road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
-							
-							//If we are a really sharp curve, we might have inverted our model at the inner corner.
-							//Check for this, and if we have done so, skip this segment.
-							//If we detect this in the last 3 segments, skip right to the end.
-							//This prevents a missing end segment due to collision.
-							rotationDelta.setTo(rotation).subtract(priorRotation);
-							Point3d testPoint1 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
-							Point3d testPoint2 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(rotation).add(position);
-							if(currentIndex != road.dynamicCurve.pathLength && (position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0){
-								if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 3 > road.dynamicCurve.pathLength){
-									currentIndex = road.dynamicCurve.pathLength - 1;
-								}
-								continue;
-							}
-							
-							//Depending on the vertex position in the model, transform it to match with the offset rotation.
-							//This depends on how far the vertex is from the origin of the model, and how big the delta is.
-							//For all points, their magnitude depends on how far away they are on the Z-axis.
-							for(Float[] vertex : transformedVertices){
-								Point3d vertexOffsetPrior = new Point3d(vertex[0], vertex[1], 0);
-								vertexOffsetPrior.rotateFine(priorRotation).add(priorPosition);
-								Point3d vertexOffsetCurrent = new Point3d(vertex[0], vertex[1], vertex[2]);
-								vertexOffsetCurrent.rotateFine(rotation).add(position);
-								
-								Point3d segmentVector = vertexOffsetPrior.copy().subtract(vertexOffsetCurrent).multiply(Math.abs(vertex[2]));
-								Point3d renderedVertex = vertexOffsetCurrent.copy().add(segmentVector);
-								
-								GL11.glTexCoord2f(vertex[3], vertex[4]);
-								GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-								GL11.glVertex3d(renderedVertex.x, renderedVertex.y, renderedVertex.z);
-							}
-							
-							//Set the last index.
-							priorIndex = currentIndex;
-							
-							//If we are at the last index, do special logic to get the very end point.
-							if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 1 > road.dynamicCurve.pathLength){
-								currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
 							}
 						}
 						GL11.glEnd();
@@ -183,7 +197,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					//Render all the points on the curve.
 					GL11.glColor3f(1, 1, 0);
 					laneCurve.setPointToPositionAt(position, 0);
-					for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
+					for(float f=0; f<laneCurve.pathLength; f+=0.1){
 						laneCurve.setPointToPositionAt(position, f);
 						GL11.glVertex3d(position.x, position.y, position.z);
 						GL11.glVertex3d(position.x, position.y + 1.0, position.z);

@@ -8,7 +8,7 @@ import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointEntry;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorEndPoint;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointSet;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -72,10 +72,10 @@ public class RoadLane{
 			//Generate all curves for our lane as defined by the static mapping.
 			JSONLaneSector sector = road.definition.general.sectors.get(sectorNumber);
 			JSONLaneSectorPointSet points = sector.lanes.get(laneNumber);
-			for(JSONLaneSectorPointEntry endPoint : points.endPoints){
-				curves.add(new BezierCurve(points.startPos, endPoint.pos, sector.sectorStartAngle, endPoint.angle));
+			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
+				curves.add(new BezierCurve(points.startPoint.copy().rotateY(road.rotation), endPoint.pos.copy().rotateY(road.rotation), sector.sectorStartAngle + (float) road.rotation, endPoint.angle + (float) road.rotation));
 			}
-			return points.startPos;
+			return points.startPoint;
 		}
 	}
 	
