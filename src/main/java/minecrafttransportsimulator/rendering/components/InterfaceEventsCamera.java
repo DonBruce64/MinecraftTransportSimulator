@@ -69,6 +69,13 @@ public class InterfaceEventsCamera{
 	    			enableCustomCameras = player.isSneaking() && !InterfaceRender.shadersDetected;
 	    			customCameraIndex = 0;
 	    		}
+	    		
+	    		//If our seat is set to automatically use custom cameras try to get one.
+        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.vehicleDefinition.forceCameras){
+    				enableCustomCameras = true;
+	    			customCameraIndex = 0;
+        		}
+	    		
 				//Do custom camera, or do normal rendering.
 				if(enableCustomCameras){
 			    	//Get cameras from vehicle or hand-held gun.
