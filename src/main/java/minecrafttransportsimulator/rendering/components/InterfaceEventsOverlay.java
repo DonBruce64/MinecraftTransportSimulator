@@ -109,62 +109,63 @@ public class InterfaceEventsOverlay{
 				}
 			}
 	    	
-	    	//If we are in first-person, and have HUD rendering enabled, do that rendering if we need to.
-	    	if(InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value){
-				if(ridingEntity instanceof EntityVehicleF_Physics){
-					for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
-						if(rider.equals(player)){
-							//Get seat we are in.
-							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-							
-							//If we are in a seat controlling a gun, render a text line for it.
-							if(seat.activeGun != null && !InterfaceClient.isChatOpen()){
-								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								InterfaceGUI.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+	    	//Do HUD rendering for vehicles.
+			if(ridingEntity instanceof EntityVehicleF_Physics){
+				for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
+					if(rider.equals(player)){
+						//Get seat we are in.
+						PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
+						
+						//If we are in a seat controlling a gun, render a text line for it.
+						if(seat.activeGun != null && !InterfaceClient.isChatOpen()){
+							String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
+							InterfaceGUI.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+						}
+						
+						//If the seat is a controller, render the HUD if it's set.
+						if(seat.vehicleDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+							//Create a new GUI for the HUD if we don't have one or if we changed from first-person to third-person.
+							if(currentGUI == null || (inFirstPersonLastRender ^ InterfaceClient.inFirstPerson())){
+								currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);
+								currentBuilder = new BuilderGUI(currentGUI);
+								currentBuilder.initGui();
+								currentBuilder.setWorldAndResolution(Minecraft.getMinecraft(), screenWidth, screenHeight);
 							}
 							
-							//If the seat is a controller, render the HUD.
-							if(seat.vehicleDefinition.isController){
-								//Create a new GUI for the HUD if we don't have one or if we changed from first-person to third-person.
-								if(currentGUI == null || (inFirstPersonLastRender ^ InterfaceClient.inFirstPerson())){
-									currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);
-									currentBuilder = new BuilderGUI(currentGUI);
-									currentBuilder.initGui();
-									currentBuilder.setWorldAndResolution(Minecraft.getMinecraft(), screenWidth, screenHeight);
-								}
-								
-								//Render the HUD now.  This is based on settings in the config.
-								//Translate far enough to not render behind the items.
-								//Also translate down if we are a half-HUD.
-								GL11.glPushMatrix();
-				        		GL11.glTranslated(0, 0, 250);
-				        		if(currentGUI instanceof GUIHUD && (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
-				        			GL11.glTranslated(0, currentGUI.getHeight()/2D, 0);
-				        		}
-				        		
-				        		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
-				        		//We don't want to enable blending though, as that's on-demand.
-				        		//Just in case it is enabled, however, disable it.
-				        		//This ensures the blending state is as it will be for the main rendering pass of -1.
-				        		GL11.glDisable(GL11.GL_BLEND);
-				        		GL11.glEnable(GL11.GL_ALPHA_TEST);
-				        		
-				        		//Draw the GUI.
-				        		currentBuilder.drawScreen(0, 0, event.getPartialTicks());
-				        		
-				        		//Pop the matrix, and set blending and lighting back to normal.
-				        		GL11.glPopMatrix();
-				        		GL11.glEnable(GL11.GL_BLEND);
-				        		InterfaceRender.setInternalLightingState(false);
-							}
+							//Render the HUD now.  This is based on settings in the config.
+							//Translate far enough to not render behind the items.
+							//Also translate down if we are a half-HUD.
+							GL11.glPushMatrix();
+			        		GL11.glTranslated(0, 0, 250);
+			        		if(currentGUI instanceof GUIHUD && (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
+			        			GL11.glTranslated(0, currentGUI.getHeight()/2D, 0);
+			        		}
+			        		
+			        		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
+			        		//We don't want to enable blending though, as that's on-demand.
+			        		//Just in case it is enabled, however, disable it.
+			        		//This ensures the blending state is as it will be for the main rendering pass of -1.
+			        		GL11.glDisable(GL11.GL_BLEND);
+			        		GL11.glEnable(GL11.GL_ALPHA_TEST);
+			        		
+			        		//Draw the GUI.
+			        		currentBuilder.drawScreen(0, 0, event.getPartialTicks());
+			        		
+			        		//Pop the matrix, and set blending and lighting back to normal.
+			        		GL11.glPopMatrix();
+			        		GL11.glEnable(GL11.GL_BLEND);
+			        		InterfaceRender.setInternalLightingState(false);
+			        		
+			        		//Return to prevent resetting the GUI.
+			        		return;
 						}
 					}
-				}else{
-					//Not riding a vehicle.  Reset GUI.
-					resetGUI();
 				}
 			}
+			
+			//Not riding a vehicle.  Reset GUI.
+			resetGUI();
     	}
     }
 }
