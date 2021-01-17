@@ -117,10 +117,14 @@ public class InterfaceEventsOverlay{
 						PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
 						
 						//If we are in a seat controlling a gun, render a text line for it.
-						if(seat.activeGun != null && !InterfaceClient.isChatOpen()){
-							String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
+						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
 							InterfaceGUI.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
-							InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							if(seat.activeGun != null){
+								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
+								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							}else{
+								InterfaceGUI.drawBasicText("None", screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							}
 						}
 						
 						//If the seat is a controller, render the HUD if it's set.

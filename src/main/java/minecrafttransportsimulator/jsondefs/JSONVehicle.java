@@ -111,6 +111,7 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public boolean isPermanent;
         public boolean isSpare;
         public boolean inverseMirroring;
+        public boolean canDisableGun;
         @JSONRequired
         public List<String> types;
         public List<String> customTypes;

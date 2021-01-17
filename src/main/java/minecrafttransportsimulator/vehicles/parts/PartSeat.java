@@ -12,12 +12,14 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartSeat extends APart{
+	public boolean canControlGuns;
 	public ItemPart activeGun;
 	public int gunIndex;
 	
 	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
+		canControlGuns = activeGun != null;
 	}
 	
 	@Override
@@ -64,7 +66,7 @@ public final class PartSeat extends APart{
 								}
 							}
 							
-							//Didn't invalid active gun detected.  Select a new one.
+							//Invalid active gun detected.  Select a new one.
 							activeGun = null;
 							setNextActiveGun();
 							InterfacePacket.sendToAllClients(new PacketVehiclePartSeat(this));
@@ -99,42 +101,52 @@ public final class PartSeat extends APart{
 		}else{
 			ItemPart firstPossibleGun = null;
 			ItemPart currentGun = activeGun;
-			activeGun = null;
+			ItemPart nextActiveGun = null;
 			boolean pastActiveGun = false;
 			for(ItemPart gunType : vehicle.guns.keySet()){
 				for(PartGun gun : vehicle.guns.get(gunType)){
 					if(rider.equals(gun.getController())){
 						if(pastActiveGun){
-							activeGun = gunType;
-							return;
+							nextActiveGun = gunType;
+							break;
 						}else{
 							if(firstPossibleGun == null){
 								firstPossibleGun = gunType;
 							}
 							if(gunType.equals(currentGun)){
-								if (gunType.definition.gun.fireSolo) {
+								if(gunType.definition.gun.fireSolo){
 									//If this type of gun can't be grouped, iterate through the different instances.
 									//Once we run out of this type, move onto the next type.
-									if(vehicle.guns.get(gunType).size() <= ++gunIndex) {
+									if(vehicle.guns.get(gunType).size() <= ++gunIndex){
 										pastActiveGun = true;
+									}else{
+										nextActiveGun = gunType;
 									}
-									else {
-										activeGun = gunType;
-									}
-								}
-								else {
+								}else{
 									pastActiveGun = true;
 								}
 							}
 						}
 						break;
 					}
+					if(nextActiveGun != null){
+						break;
+					}
 				}
 			}
-			//If the active gun is null, we just set it to the first possible gun as we've gone around.
-			if(activeGun == null){
-				activeGun = firstPossibleGun;
+			//If we didn't find an active gun, try to get another one.
+			//This will be our first gun, unless we had an active gun and we can disable our gun.
+			//In this case, we will just set our active gun to null.
+			if(nextActiveGun == null){
+				if(activeGun == null || !vehicleDefinition.canDisableGun){
+					activeGun = firstPossibleGun;
+				}else{
+					activeGun = null;
+				}
 				gunIndex = 0;
+			}else{
+				canControlGuns = true;
+				activeGun = nextActiveGun;
 			}
 		}
 	}
