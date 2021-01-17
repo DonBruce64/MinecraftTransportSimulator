@@ -281,6 +281,11 @@ public final class LegacyCompatSystem{
 			if(definition.general.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
 				definition.ground.flatHeight = definition.ground.height/2F;
 			}
+			
+			//If the part is a seat, and doesn't have a seat sub-section, add one.
+			if(definition.general.type.startsWith("seat") && definition.seat == null){
+				definition.seat = definition.new JSONPartSeat();
+			}
 		}
 		
 		if(definition.subParts != null){

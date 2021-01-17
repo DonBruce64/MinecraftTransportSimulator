@@ -17,6 +17,8 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public JSONPartGroundDevice ground;
 	@JSONRequired(dependentField="type", dependentValues={"propeller"}, subField="general")
     public JSONPartPropeller propeller;
+	@JSONRequired(dependentField="type", dependentValues={"seat"}, subField="general")
+    public JSONPartSeat seat;
 	@JSONRequired(dependentField="type", dependentValues={"gun"}, subField="general")
     public JSONPartGun gun;
 	@JSONRequired(dependentField="type", dependentValues={"bullet"}, subField="general")
@@ -113,6 +115,11 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public short pitch;
     	public int diameter;
     	public int startingHealth;
+    }
+    
+    public class JSONPartSeat{
+    	public boolean standing;
+    	public float scale;
     }
     
     public class JSONPartGun{

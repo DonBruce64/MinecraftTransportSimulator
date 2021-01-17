@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
+import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
 import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -259,6 +260,11 @@ public class BuilderEntity extends Entity{
     		//Couldn't find rider in entity list.  Add them as a passenger.
     		entity.addRider(passenger instanceof EntityPlayer ? WrapperWorld.getWrapperFor(world).getWrapperFor((EntityPlayer)passenger) : WrapperWorld.getWrapperFor(world).getWrapperFor(passenger), null);
     	}
+    }
+    
+    @Override
+    public boolean shouldRiderSit(){
+    	return entity != null ? InterfaceEventsPlayerRendering.renderCurrentRiderSitting : super.shouldRiderSit();
     }
     
     @Override

@@ -173,6 +173,7 @@ public class GUIDevEditor extends AGUIBase{
 												definition.engine = loadedDefinition.engine;
 												definition.ground = loadedDefinition.ground;
 												definition.propeller = loadedDefinition.propeller;
+												definition.seat = loadedDefinition.seat;
 												definition.gun = loadedDefinition.gun;
 												definition.bullet = loadedDefinition.bullet;
 												definition.interactable = loadedDefinition.interactable;
