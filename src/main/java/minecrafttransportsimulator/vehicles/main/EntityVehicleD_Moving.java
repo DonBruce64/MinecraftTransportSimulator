@@ -326,10 +326,19 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Check grounded ground devices for turn contributions.
 			//Their distance from the center of the vehicle defines our turn arc.
 			//Don't use fake ground devices here as it'll mess up math for vehicles.
+			boolean treadsOnly = true;
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
 				if(groundDevice.vehicleDefinition.turnsWithSteer && !groundDevice.isFake()){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
+					if(treadsOnly && !groundDevice.definition.ground.isTread){
+						treadsOnly = false;
+					}
 				}
+			}
+			
+			//If we only have treads, double the distance.  This accounts for tracked-only vehicles.
+			if(treadsOnly){
+				turningDistance *= 2;
 			}
 			
 			//If we didn't find any ground devices to make us turn, check propellers in the water.
