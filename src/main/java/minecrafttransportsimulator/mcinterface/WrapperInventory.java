@@ -239,7 +239,8 @@ public class WrapperInventory{
 			if(item instanceof ItemPart){
 				ItemPart part = ((ItemPart) item);
 				if(part.definition.bullet != null){
-					explosivePower += getStackInSlot(i).getCount()*part.definition.bullet.diameter/10D;
+					double blastSize = part.definition.bullet.blastStrength == 0 ? part.definition.bullet.diameter/10D : part.definition.bullet.blastStrength;
+					explosivePower += getStackInSlot(i).getCount()*blastSize/10D;
 				}
 			}
 		}

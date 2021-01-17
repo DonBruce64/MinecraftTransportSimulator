@@ -172,6 +172,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							}
 						}
 						
+						//FIXME check if the roads we want to connect to already have connections.
+						
 						//Check if the start and end position are the same.
 						if(startPosition.equals(endPosition)){
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.sameblock"));
