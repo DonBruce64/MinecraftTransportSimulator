@@ -424,7 +424,7 @@ public final class RenderVehicle{
 			GL11.glRotated(positionRotation.z, 0, 0, 1);
 		}
 
-		Point3d renderingRotation = part.getRenderingRotation(partialTicks);
+		Point3d renderingRotation = part.getRenderingRotation(partialTicks, false);
 		if(!renderingRotation.isZero()){
 			GL11.glRotated(renderingRotation.y, 0, 1, 0);
 			GL11.glRotated(renderingRotation.x, 1, 0, 0);

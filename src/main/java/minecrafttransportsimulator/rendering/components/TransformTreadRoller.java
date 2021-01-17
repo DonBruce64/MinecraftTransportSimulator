@@ -2,9 +2,6 @@ package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
 /**A specific class of {@link TransformRotatable2}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -33,6 +30,14 @@ public class TransformTreadRoller extends TransformRotatable{
 		this.yPos = yPos;
 		this.radius = radius;
 		this.circumference = circumference;
+		
+		//360 degrees is 1 block, so if we have a roller of circumference of 1,
+		//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
+		//Knowing this, we can calculate the linear velocity for this roller, as a roller with
+		//half the circumference needs double the factor, and vice-versa.  Basically, we get
+		//the ratio of the two circumferences of the "standard" roller and our roller.
+		definition.axis.x = (1.0D/Math.PI)/(radius*2D);
+		this.rotationAxis.x = 1.0;
 	}
 	
 	/**
@@ -134,29 +139,6 @@ public class TransformTreadRoller extends TransformRotatable{
 			endZ = zPos + radius*Math.sin(Math.toRadians(endAngle));
 			nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
 			nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
-		}
-	}
-	
-	/**
-	 *  Manual helper function for updating the rotaitonAxis of a part prior to rendering.
-	 *  Required for auto-rotations.  This function should return true if the axis was updated
-	 *  to allow the calling method to save the axis state.
-	 */
-	protected void updateRotationAxis(EntityVehicleF_Physics vehicle){
-		//Set the rotatableModelObject rotation point to be based on the tread height if we haven't put a tread on yet.
-		if(rotationAxis.x == 0){
-			for(APart part : vehicle.parts){
-				if(part instanceof PartGroundDevice && part.definition.ground.isTread){
-					//360 degrees is 1 block, so if we have a roller of circumference of 1,
-					//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
-					//Knowing this, we can calculate the linear velocity for this roller, as a roller with
-					//half the circumference needs double the factor, and vice-versa.  Basically, we get
-					//the ratio of the two circumferences of the "standard" roller and our roller.
-					definition.axis.x = (1.0D/Math.PI)/(radius*2D);
-					this.rotationAxis.x = 1.0;
-					return;
-				}
-			}
 		}
 	}
 }

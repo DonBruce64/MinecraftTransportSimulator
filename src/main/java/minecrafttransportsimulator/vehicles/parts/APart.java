@@ -268,7 +268,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * Gets the rotation angles for the part as a vector.
 	 * This rotation is only for custom rendering operations, and cannot be modified via JSON.
 	 */
-	public Point3d getRenderingRotation(float partialTicks){
+	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
 		return ZERO_POINT;
 	}
 	

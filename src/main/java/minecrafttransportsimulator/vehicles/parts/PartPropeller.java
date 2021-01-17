@@ -139,7 +139,7 @@ public class PartPropeller extends APart{
 	}
 
 	@Override
-	public Point3d getRenderingRotation(float partialTicks){
+	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
 		if(definition.propeller.isRotor){
 			Point3d rotations = new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
 			if(vehicle.isVTOL){
@@ -194,7 +194,7 @@ public class PartPropeller extends APart{
 				Point3d propellerThrustVector = new Point3d(0D, 0D, thrust);
 				if(definition.propeller.isRotor){
 					//Get the X and Y coords of the action rotation for thrust vectoring on rotors.
-					Point3d propellerActionRotation = getRenderingRotation(0);
+					Point3d propellerActionRotation = getRenderingRotation(0, false);
 					propellerActionRotation.z = 0;
 					propellerThrustVector.rotateCoarse(propellerActionRotation); 
 				}

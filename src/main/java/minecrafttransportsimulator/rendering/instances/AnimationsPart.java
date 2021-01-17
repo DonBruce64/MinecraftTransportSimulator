@@ -125,7 +125,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 		}else if(part instanceof PartGroundDevice){
 			PartGroundDevice groundDevice = (PartGroundDevice) part;
 			switch(variable){
-				case("ground_rotation"): return groundDevice.getRenderingRotation(partialTicks).x;
+				case("ground_rotation"): return groundDevice.getRenderingRotation(partialTicks, true).x;
 				case("ground_onground"): return part.vehicle.groundDeviceCollective.groundedGroundDevices.contains(groundDevice) ? 1 : 0;
 				case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
 				case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
