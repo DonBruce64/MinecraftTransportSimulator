@@ -213,7 +213,7 @@ public class JSONParser{
 			LegacyCompatSystem.performLegacyCompats((AJSONItem<?>) retObj);
 		}
 		//Check for proper fields.
-		validateFields(retObj);
+		validateFields(retObj, "/");
 		return retObj;
 	}
 	
@@ -226,7 +226,7 @@ public class JSONParser{
 		return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
 	}
 	
-	private static void validateFields(Object obj){
+	private static void validateFields(Object obj, String priorObjects){
 		//First get all fields that have the annotation with no values.
 		for(Field field : obj.getClass().getFields()){
 			if(field.isAnnotationPresent(JSONRequired.class)){
@@ -253,17 +253,17 @@ public class JSONParser{
 						if(depObj != null){
 							//Have object.  If the object has to be a set of values to throw an error, check this.
 							if(annotation.dependentValues().length == 0){
-								throw new NullPointerException("'" + field.getName() + "' is required when '" + dependentVarName + "' is present!");
+								throw new NullPointerException(priorObjects+ field.getName() + " is required when '" + dependentVarName + "' is present!");
 							}else{
 								for(String possibleValue : annotation.dependentValues()){
 									if(depObj.toString().startsWith(possibleValue)){
-										throw new NullPointerException("'" + field.getName() + "' is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!");
+										throw new NullPointerException(priorObjects + field.getName() + " is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!");
 									}
 								}
 							}
 						}
 					}else{
-						throw new NullPointerException("'" + field.getName() + "' is missing from the JSON and is required!");
+						throw new NullPointerException(priorObjects + field.getName() + " is missing from the JSON and is required!");
 					}
 				}
 			}
@@ -283,14 +283,14 @@ public class JSONParser{
 						int index = 0;
 						for(Object objEntry : ((Collection<?>) recursiveObject)){
 							if(objEntry != null){
-								validateFields(objEntry);
+								validateFields(objEntry, priorObjects + field.getName() + "/");
 								++index;
 							}else{
-								throw new NullPointerException("Unable to parse item #" + index + " in variable set '" + field.getName() + "' due to it not existing.  Check your commas!");
+								throw new NullPointerException("Unable to parse item #" + index + " in variable set " + priorObjects + field.getName() + " due to it not existing.  Check your commas!");
 							}
 						}
 					}else{
-						validateFields(recursiveObject);
+						validateFields(recursiveObject, priorObjects + field.getName() + "/");
 					}
 				}
 			}
