@@ -59,6 +59,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	public final Point3d totalOffset;
+	public final Point3d prevTotalRotation;
 	public final Point3d totalRotation;
 	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
@@ -75,6 +76,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
 		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d(0, 0, 0);
 		this.totalRotation = placementRotation.copy();
+		this.prevTotalRotation = totalRotation.copy();
 		this.currentSubName = item.subName;
 		this.isValid = true;
 		
@@ -141,6 +143,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * Removing the part during this loop will earn you a CME.
 	 */
 	public void update(){
+		prevTotalRotation.setTo(totalRotation);
 		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
 		if(vehicleDefinition.isSubPart){
 			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);

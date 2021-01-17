@@ -19,7 +19,6 @@ public final class PartSeat extends APart{
 	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
-		canControlGuns = activeGun != null;
 	}
 	
 	@Override
@@ -145,9 +144,16 @@ public final class PartSeat extends APart{
 				}
 				gunIndex = 0;
 			}else{
-				canControlGuns = true;
 				activeGun = nextActiveGun;
 			}
+		}
+	}
+	
+	@Override
+	public void update(){
+		super.update();
+		if(!canControlGuns && activeGun != null){
+			canControlGuns = true;
 		}
 	}
 	

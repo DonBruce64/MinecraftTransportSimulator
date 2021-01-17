@@ -178,7 +178,9 @@ public class InterfaceEventsCamera{
 	    				if(provider instanceof APart){
 	    					APart part = (APart) provider;
 		    				if(part != null){
-		    					cameraPosition.rotateFine(part.totalRotation).add(part.totalOffset);
+		    					Point3d factoredRotation = part.totalRotation.copy().subtract(part.prevTotalRotation).multiply(partialTicks).add(part.prevTotalRotation);
+		    					cameraPosition.rotateFine(factoredRotation).add(part.totalOffset);
+		    					cameraRotation.add(factoredRotation);
 							}
 	    				}
 	    				
