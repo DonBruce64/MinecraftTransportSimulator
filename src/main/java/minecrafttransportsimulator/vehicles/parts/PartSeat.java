@@ -84,10 +84,9 @@ public final class PartSeat extends APart{
 	 * see if this rider can control them.  If so, then the active gun is set to that gun type.
 	 */
 	public void setNextActiveGun(){
-		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
-		//Iterate over all the gun types, attempting to get the type after our selected type.
 		//If we don't have an active gun, just get the next possible unit.
 		if(activeGun == null){
+			WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
 			for(ItemPart gunType : vehicle.guns.keySet()){
 				for(PartGun gun : vehicle.guns.get(gunType)){
 					if(rider.equals(gun.getController())){
@@ -98,55 +97,58 @@ public final class PartSeat extends APart{
 				}
 			}
 		}else{
-			ItemPart firstPossibleGun = null;
-			ItemPart currentGun = activeGun;
-			ItemPart nextActiveGun = null;
-			boolean pastActiveGun = false;
-			for(ItemPart gunType : vehicle.guns.keySet()){
-				for(PartGun gun : vehicle.guns.get(gunType)){
-					if(rider.equals(gun.getController())){
-						if(pastActiveGun){
-							nextActiveGun = gunType;
-							break;
-						}else{
-							if(firstPossibleGun == null){
-								firstPossibleGun = gunType;
-							}
-							if(gunType.equals(currentGun)){
-								if(gunType.definition.gun.fireSolo){
-									//If this type of gun can't be grouped, iterate through the different instances.
-									//Once we run out of this type, move onto the next type.
-									if(vehicle.guns.get(gunType).size() <= ++gunIndex){
-										pastActiveGun = true;
-									}else{
-										nextActiveGun = gunType;
-									}
-								}else{
+			//If we didn't find an active gun, try to get another one.
+			//This will be our first gun, unless we had an active gun and we can disable our gun.
+			//In this case, we will just set our active gun to null.
+			activeGun = getNextActiveGun();
+		}
+	}
+	
+	/**
+	 * Helper method to get the next active gun in the gun listings.
+	 */
+	public ItemPart getNextActiveGun(){
+		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+		boolean pastActiveGun = false;
+		ItemPart firstPossibleGun = null;
+		
+		//Iterate over all the gun types, attempting to get the type after our selected type.
+		for(ItemPart gunType : vehicle.guns.keySet()){
+			for(PartGun gun : vehicle.guns.get(gunType)){
+				//Can the player control this gun, or is it for another seat?
+				if(rider.equals(gun.getController())){
+					//If we already found our active gun in our gun list, we use the next entry as our next gun.
+					if(pastActiveGun){
+						return gunType;
+					}else{
+						//Add the first possible gun in case we go all the way around.
+						if(firstPossibleGun == null){
+							firstPossibleGun = gunType;
+						}
+						//If the gun type is the same as the active gun, check if it's set to fireSolo.
+						//If we, we didn't group it and need to go to the next active gun with that type.
+						if(gunType.equals(activeGun)){
+							if(gunType.definition.gun.fireSolo){
+								if(vehicle.guns.get(gunType).size() <= ++gunIndex){
+									gunIndex = 0;
 									pastActiveGun = true;
+								}else{
+									return gunType;
 								}
+							}else{
+								pastActiveGun = true;
 							}
 						}
 						break;
 					}
-					if(nextActiveGun != null){
-						break;
-					}
 				}
-			}
-			//If we didn't find an active gun, try to get another one.
-			//This will be our first gun, unless we had an active gun and we can disable our gun.
-			//In this case, we will just set our active gun to null.
-			if(nextActiveGun == null){
-				if(activeGun == null || !vehicleDefinition.canDisableGun){
-					activeGun = firstPossibleGun;
-				}else{
-					activeGun = null;
-				}
-				gunIndex = 0;
-			}else{
-				activeGun = nextActiveGun;
 			}
 		}
+		
+		//Got down here.  Either we don't have a gun, or we need the first.
+		//If our current gun is active, and we have the first, and we can disable guns,
+		//return null.  This will make the guns inactive this cycle.
+		return vehicleDefinition.canDisableGun && activeGun != null ? null : firstPossibleGun;
 	}
 	
 	@Override
