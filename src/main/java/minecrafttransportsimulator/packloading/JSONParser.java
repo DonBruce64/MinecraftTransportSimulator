@@ -206,6 +206,15 @@ public class JSONParser{
 		String subField() default "";
     }
 	
+	@Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+	public static @interface JSONDescription{
+		/**
+         * Description for this field.
+         */
+		String value() default "";
+    }
+	
 	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass){
 		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
 		//Do legacy compats if we need before validating the JSON.
@@ -217,8 +226,8 @@ public class JSONParser{
 		return retObj;
 	}
 	
-	public static void exportStream(AJSONItem<?> json, OutputStreamWriter jsonWriter){
-		packParser.toJson(json, json.getClass(), jsonWriter);
+	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
+		packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
 	}
 	
 	@SuppressWarnings("unchecked")

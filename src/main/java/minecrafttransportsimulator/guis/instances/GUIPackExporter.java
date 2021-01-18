@@ -25,13 +25,14 @@ import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-/**This is a special GUI that is called in devMode to allow vehicle editing.
- * The idea is that pack authors can use it to modify their vehicle's JSON
+/**This GUI is normally locked, and is only available in devMode.  It allows
+ * pack importing and exporting to and from files.  The idea is that pack authors 
+ * can use it to export the JSON that was loaded, edit it, and then import it again
  * and see the effects without rebooting the game.
  * 
  * @author don_bruce
  */
-public class GUIDevEditor extends AGUIBase{
+public class GUIPackExporter extends AGUIBase{
 	
 	//Main screen components.
 	private GUIComponentButton modelRenderButton;
@@ -47,7 +48,7 @@ public class GUIDevEditor extends AGUIBase{
 	private GUIComponentButton confirmButton;
 	private GUIComponentOBJModel componentItemModel;
 	
-	public GUIDevEditor(EntityVehicleF_Physics vehicleClicked){
+	public GUIPackExporter(EntityVehicleF_Physics vehicleClicked){
 		this.vehicleClicked = vehicleClicked;
 	}
 	

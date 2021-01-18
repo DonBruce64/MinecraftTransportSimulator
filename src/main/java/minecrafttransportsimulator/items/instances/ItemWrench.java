@@ -3,8 +3,9 @@ package minecrafttransportsimulator.items.instances;
 import java.util.List;
 
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUIDevEditor;
+import minecrafttransportsimulator.guis.instances.GUIPackExporter;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
+import minecrafttransportsimulator.guis.instances.GUIPackEditor;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
@@ -37,7 +38,8 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 			if(rightClick){
 				if(vehicle.world.isClient()){
 					if(ConfigSystem.configObject.clientControls.devMode.value && vehicle.equals(player.getEntityRiding())){
-						InterfaceGUI.openGUI(new GUIDevEditor(vehicle));
+						InterfaceGUI.openGUI(new GUIPackExporter(vehicle));
+						new GUIPackEditor(); 
 					}else if(player.isSneaking()){
 						InterfaceGUI.openGUI(new GUITextEditor(vehicle));
 					}else{
