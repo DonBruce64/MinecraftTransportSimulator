@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,10 +30,13 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ToolTipManager;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
@@ -52,7 +55,7 @@ public class GUIPackEditor extends JFrame{
 	private static final Font NORMAL_FONT = new Font("Arial", Font.PLAIN, 15);
 	private static final Dimension NUMBER_TEXT_BOX_DIM = new Dimension(100, NORMAL_FONT.getSize() + 5);
 	private static final Dimension STRING_TEXT_BOX_DIM = new Dimension(200, NORMAL_FONT.getSize() + 5);
-	private static final Border LABEL_PADDING = BorderFactory.createEmptyBorder(2, 2, 0, 16);
+	private static final Border LABEL_PADDING = BorderFactory.createEmptyBorder(2, 0, 2, 16);
 	
 	//Run-time variables.
 	private Class<?> currentJSONClass = null;
@@ -66,6 +69,8 @@ public class GUIPackEditor extends JFrame{
 		setTitle("MTS Pack Edtior");  
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+        ToolTipManager.sharedInstance().setInitialDelay(0);
+        ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
         
         //Create a panel to hold the file I/O components.
         JPanel filePanel = new JPanel();
@@ -146,6 +151,8 @@ public class GUIPackEditor extends JFrame{
         Map<String, Class<?>> jsonClasses = new LinkedHashMap<String, Class<?>>();
         jsonClasses.put("JSON Type - Select first!.", null);
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
+        jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
+        jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
         jsonClasses.put(JSONText.class.getSimpleName(), JSONText.class);
         
         //Create the box itself.
@@ -194,11 +201,11 @@ public class GUIPackEditor extends JFrame{
 		editingPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), "Editing: " + currentJSON.getClass().getSimpleName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
 		//editingPanel.setMinimumSize(new Dimension(0, 600));
 		editingPanel.removeAll();
-		populateContainer(editingPanel, currentJSON);
+		populatePanel(editingPanel, currentJSON);
         pack();
 	}
 	
-	private void populateContainer(Container container, Object objectToParse){
+	private void populatePanel(JPanel panel, Object objectToParse){
 		
 		
 		//Create scroll pane.
@@ -208,100 +215,125 @@ public class GUIPackEditor extends JFrame{
 		
 		for(Field field : objectToParse.getClass().getFields()){
 			try{
-				Object obj = field.get(currentJSON);
-				JComponent newComponent;
-				if(field.getType().equals(Boolean.TYPE)){
-					JCheckBox checkBox = new JCheckBox();
-					checkBox.setSelected((Boolean) obj);
-					checkBox.addActionListener(new ActionListener(){
-						@Override
-						public void actionPerformed(ActionEvent event){
-							try{
-								field.set(objectToParse, checkBox.isSelected());
-							}catch(Exception e){
+				if(field.isAnnotationPresent(JSONDescription.class)){
+					Object obj = field.get(objectToParse);
+					Class<?> fieldClass = field.getType();
+					String annotationText = field.getAnnotation(JSONDescription.class).value();
+					
+					JComponent newComponent;
+					if(fieldClass.equals(Boolean.TYPE)){
+						JCheckBox checkBox = new JCheckBox();
+						checkBox.setSelected((Boolean) obj);
+						checkBox.addActionListener(new ActionListener(){
+							@Override
+							public void actionPerformed(ActionEvent event){
+								try{
+									field.set(objectToParse, checkBox.isSelected());
+								}catch(Exception e){
+								}
+							}
+				        });
+						newComponent = checkBox;
+					}else if(fieldClass.equals(Integer.TYPE)){
+						JTextField textBox = new JTextField();
+						textBox.setText(String.valueOf(obj));
+						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Integer.class));
+						newComponent = textBox;
+					}else if(fieldClass.equals(Float.TYPE)){
+						JTextField textBox = new JTextField();
+						textBox.setText(String.valueOf(obj));
+						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Float.class));
+						newComponent = textBox;
+					}else if(fieldClass.equals(String.class)){
+						JTextField textBox = new JTextField();
+						textBox.setPreferredSize(STRING_TEXT_BOX_DIM);
+						if(obj != null){
+							textBox.setText(String.valueOf(obj));
+						}else{
+							textBox.setText("");
+						}
+						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, String.class));
+						newComponent = textBox;
+					}else if(fieldClass.equals(Point3d.class)){
+						JPanel pointPanel = new JPanel();
+						pointPanel.setLayout(new FlowLayout());
+						pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+						FieldChanger changer = new FieldChanger(pointPanel, field, objectToParse, Point3d.class);
+						pointPanel.addFocusListener(changer);
+						
+						JLabel xLabel = new JLabel("X:"); 
+						xLabel.setFont(NORMAL_FONT);
+						JTextField xText = new JTextField();
+						xText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+						xText.addFocusListener(new FocusForwarder(changer));
+						
+						JLabel yLabel = new JLabel("Y:"); 
+						yLabel.setFont(NORMAL_FONT);
+						JTextField yText = new JTextField();
+						yText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+						yText.addFocusListener(new FocusForwarder(changer));
+						
+						JLabel zLabel = new JLabel("Z:"); 
+						zLabel.setFont(NORMAL_FONT);
+						JTextField zText = new JTextField();
+						zText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+						zText.addFocusListener(new FocusForwarder(changer));
+						
+						if(obj != null){
+							Point3d point = ((Point3d) obj);
+							xText.setText(String.valueOf(point.x));
+							yText.setText(String.valueOf(point.x));
+							zText.setText(String.valueOf(point.x));
+						}else{
+							xText.setText(String.valueOf(0.0));
+							yText.setText(String.valueOf(0.0));
+							zText.setText(String.valueOf(0.0));
+						}
+						
+						pointPanel.add(xLabel);
+						pointPanel.add(xText);
+						pointPanel.add(yLabel);
+						pointPanel.add(yText);
+						pointPanel.add(zLabel);
+						pointPanel.add(zText);
+						newComponent = pointPanel;
+					}else if(fieldClass.isInstance(Collection.class)){
+						continue;
+					}else{
+						if(obj == null){
+							if(JSONParser.checkRequiredState(field, obj, "") != null){
+								//If we are a member class, check for an extended class in our object.
+								if(fieldClass.isMemberClass()){
+									for(Class<?> objectClass : objectToParse.getClass().getDeclaredClasses()){
+										if(fieldClass.isAssignableFrom(objectClass)){
+											obj = objectClass.getConstructor(objectToParse.getClass()).newInstance(objectToParse);
+										}
+									}
+								}else{
+									obj = fieldClass.getConstructor(objectToParse.getClass()).newInstance(objectToParse);
+								}
+							}else{
+								continue;
 							}
 						}
-			        });
-					newComponent = checkBox;
-				}else if(field.getType().equals(Integer.TYPE)){
-					JTextField textBox = new JTextField();
-					textBox.setText(String.valueOf(obj));
-					textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-					textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Integer.class));
-					newComponent = textBox;
-				}else if(field.getType().equals(Float.TYPE)){
-					JTextField textBox = new JTextField();
-					textBox.setText(String.valueOf(obj));
-					textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-					textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Float.class));
-					newComponent = textBox;
-				}else if(field.getType().equals(String.class)){
-					JTextField textBox = new JTextField();
-					textBox.setPreferredSize(STRING_TEXT_BOX_DIM);
-					if(obj != null){
-						textBox.setText(String.valueOf(obj));
-					}else{
-						textBox.setText("");
-					}
-					textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, String.class));
-					newComponent = textBox;
-				}else if(field.getType().equals(Point3d.class)){
-					
-					JPanel pointPanel = new JPanel();
-					pointPanel.setLayout(new FlowLayout());
-					FieldChanger changer = new FieldChanger(pointPanel, field, objectToParse, Point3d.class);
-					pointPanel.addFocusListener(changer);
-					
-					JLabel xLabel = new JLabel("X:"); 
-					xLabel.setFont(NORMAL_FONT);
-					JTextField xText = new JTextField();
-					xText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-					xText.addFocusListener(new FocusForwarder(changer));
-					
-					JLabel yLabel = new JLabel("Y:"); 
-					yLabel.setFont(NORMAL_FONT);
-					JTextField yText = new JTextField();
-					yText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-					yText.addFocusListener(new FocusForwarder(changer));
-					
-					JLabel zLabel = new JLabel("Z:"); 
-					zLabel.setFont(NORMAL_FONT);
-					JTextField zText = new JTextField();
-					zText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-					zText.addFocusListener(new FocusForwarder(changer));
-					
-					if(obj != null){
-						Point3d point = ((Point3d) obj);
-						xText.setText(String.valueOf(point.x));
-						yText.setText(String.valueOf(point.x));
-						zText.setText(String.valueOf(point.x));
-					}else{
-						xText.setText(String.valueOf(0.0));
-						yText.setText(String.valueOf(0.0));
-						zText.setText(String.valueOf(0.0));
+							
+						JPanel subPanel = new JPanel();
+						subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), annotationText, TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+						subPanel.setLayout(new GridBagLayout());
+				        populatePanel(subPanel, obj);
+				        newComponent = subPanel;
 					}
 					
-					
-					pointPanel.add(xLabel);
-					pointPanel.add(xText);
-					pointPanel.add(yLabel);
-					pointPanel.add(yText);
-					pointPanel.add(zLabel);
-					pointPanel.add(zText);
-					newComponent = pointPanel;
-				}else{
-					continue;
-				}
-				
-				//Add label before adding component.
-				//This gets the tooltip.
-				JLabel componentLabel = new JLabel(field.getName() + ":"); 
-				componentLabel.setFont(NORMAL_FONT);
-				componentLabel.setBorder(LABEL_PADDING);
-		        container.add(componentLabel, labelConstraint);
-		        if(field.isAnnotationPresent(JSONDescription.class)){
+					//Add label before adding component.
+					//This gets the tooltip.
+					JLabel componentLabel = new JLabel(field.getName() + ":"); 
+					componentLabel.setFont(NORMAL_FONT);
+					componentLabel.setBorder(LABEL_PADDING);
+			        panel.add(componentLabel, labelConstraint);
+			        
 					//Need to split the string to prevent long tooltips.
-					String annotationText = field.getAnnotation(JSONDescription.class).value();
 					String tooltipText = "<html>";
 					int breakIndex = annotationText.indexOf(" ", 100);
 					while(breakIndex != -1){
@@ -311,11 +343,11 @@ public class GUIPackEditor extends JFrame{
 					}
 					tooltipText += annotationText + "</html>";
 					componentLabel.setToolTipText(tooltipText);
+			        
+			        //Add component.
+					newComponent.setFont(NORMAL_FONT);
+					panel.add(newComponent, fieldConstraint);
 				}
-		        
-		        //Add component.
-				newComponent.setFont(NORMAL_FONT);
-				container.add(newComponent, fieldConstraint);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
@@ -353,7 +385,6 @@ public class GUIPackEditor extends JFrame{
 						field.set(objectToParse, ((JTextField) component).getText());
 					}
 				}else if(caster.equals(Point3d.class)){
-					System.out.println("FOC");
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -372,6 +403,7 @@ public class GUIPackEditor extends JFrame{
 						}else{
 							field.set(objectToParse, newPoint);
 						}
+						return;
 					}catch(Exception e){
 						component.getComponent(fieldChecking).setBackground(Color.RED);
 						return;

@@ -182,6 +182,25 @@ public class JSONParser{
 				.create();
 	}
 	
+	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass){
+		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
+		//Do legacy compats if we need before validating the JSON.
+		if(retObj instanceof AJSONItem){
+			LegacyCompatSystem.performLegacyCompats((AJSONItem<?>) retObj);
+		}
+		//Check for proper fields.
+		validateFields(retObj, "/");
+		return retObj;
+	}
+	
+	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
+		packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <JSONClass extends Object> JSONClass duplicateJSON(JSONClass objToDuplicate){
+		return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
+	}
 	
 	@Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
@@ -215,66 +234,54 @@ public class JSONParser{
 		String value() default "";
     }
 	
-	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass){
-		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
-		//Do legacy compats if we need before validating the JSON.
-		if(retObj instanceof AJSONItem){
-			LegacyCompatSystem.performLegacyCompats((AJSONItem<?>) retObj);
+	public static String checkRequiredState(Field field, Object objectOn, String pathPrefix){
+		if(field.isAnnotationPresent(JSONRequired.class)){
+			Object testObj = null;
+			try{
+				testObj = field.get(objectOn);
+			}catch(Exception e){}
+			
+			if(testObj == null){
+				JSONRequired annotation = field.getAnnotation(JSONRequired.class);
+				//If we need another field, get it to check.
+				String dependentVarName = annotation.dependentField();
+				if(!dependentVarName.isEmpty()){
+					Object depObj = null;
+					try{
+						if(annotation.subField().isEmpty()){
+							depObj = objectOn.getClass().getField(dependentVarName).get(objectOn);
+						}else{
+							depObj = objectOn.getClass().getField(annotation.subField()).get(objectOn);
+							depObj = depObj.getClass().getField(dependentVarName).get(depObj);
+						}
+					}catch(Exception e){e.printStackTrace();}
+					
+					if(depObj != null){
+						//Have object.  If the object has to be a set of values to throw an error, check this.
+						if(annotation.dependentValues().length == 0){
+							return pathPrefix + field.getName() + " is required when '" + dependentVarName + "' is present!";
+						}else{
+							for(String possibleValue : annotation.dependentValues()){
+								if(depObj.toString().startsWith(possibleValue)){
+									return pathPrefix + field.getName() + " is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!";
+								}
+							}
+						}
+					}
+				}else{
+					return pathPrefix + field.getName() + " is missing from the JSON and is required!";
+				}
+			}
 		}
-		//Check for proper fields.
-		validateFields(retObj, "/");
-		return retObj;
-	}
-	
-	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
-		packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <JSONClass extends Object> JSONClass duplicateJSON(JSONClass objToDuplicate){
-		return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
+		return null;
 	}
 	
 	private static void validateFields(Object obj, String priorObjects){
 		//First get all fields that have the annotation with no values.
 		for(Field field : obj.getClass().getFields()){
-			if(field.isAnnotationPresent(JSONRequired.class)){
-				Object testObj = null;
-				try{
-					testObj = field.get(obj);
-				}catch(Exception e){}
-				
-				if(testObj == null){
-					JSONRequired annotation = field.getAnnotation(JSONRequired.class);
-					//If we need another field, get it to check.
-					String dependentVarName = annotation.dependentField();
-					if(!dependentVarName.isEmpty()){
-						Object depObj = null;
-						try{
-							if(annotation.subField().isEmpty()){
-								depObj = obj.getClass().getField(dependentVarName).get(obj);
-							}else{
-								depObj = obj.getClass().getField(annotation.subField()).get(obj);
-								depObj = depObj.getClass().getField(dependentVarName).get(depObj);
-							}
-						}catch(Exception e){e.printStackTrace();}
-						
-						if(depObj != null){
-							//Have object.  If the object has to be a set of values to throw an error, check this.
-							if(annotation.dependentValues().length == 0){
-								throw new NullPointerException(priorObjects+ field.getName() + " is required when '" + dependentVarName + "' is present!");
-							}else{
-								for(String possibleValue : annotation.dependentValues()){
-									if(depObj.toString().startsWith(possibleValue)){
-										throw new NullPointerException(priorObjects + field.getName() + " is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!");
-									}
-								}
-							}
-						}
-					}else{
-						throw new NullPointerException(priorObjects + field.getName() + " is missing from the JSON and is required!");
-					}
-				}
+			String errorValue = checkRequiredState(field, obj, priorObjects);
+			if(errorValue != null){
+				throw new NullPointerException(errorValue);
 			}
 			
 			//Check all fields of this field.
