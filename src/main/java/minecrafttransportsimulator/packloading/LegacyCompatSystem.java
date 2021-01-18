@@ -119,11 +119,19 @@ public final class LegacyCompatSystem{
 		}
 		
 		for(VehiclePart partDef : definition.parts){
-			performVehiclePartDefLegacyCompats(partDef);
+			try{
+				performVehiclePartDefLegacyCompats(partDef);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
 		}
 		
 		if(definition.rendering != null){
-			performAnimationLegacyCompats(definition.rendering);
+			try{
+				performAnimationLegacyCompats(definition.rendering);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
 		}
     }
 	
@@ -290,12 +298,20 @@ public final class LegacyCompatSystem{
 		
 		if(definition.subParts != null){
     		for(VehiclePart subPartDef : definition.subParts){
-    			performVehiclePartDefLegacyCompats(subPartDef);
+    			try{
+    				performVehiclePartDefLegacyCompats(subPartDef);
+    			}catch(Exception e){
+    				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.subParts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+    			}
     		}
 		}
 		
 		if(definition.rendering != null){
-			performAnimationLegacyCompats(definition.rendering);
+			try{
+				performAnimationLegacyCompats(definition.rendering);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
 		}
 	}
 	
