@@ -44,6 +44,7 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import net.minecraft.client.Minecraft;
 
@@ -60,7 +61,6 @@ public class GUIPackEditor extends JFrame{
 	private static final Font NORMAL_FONT = new Font("Arial", Font.PLAIN, 15);
 	private static final Dimension NUMBER_TEXT_BOX_DIM = new Dimension(100, NORMAL_FONT.getSize() + 5);
 	private static final Dimension STRING_TEXT_BOX_DIM = new Dimension(200, NORMAL_FONT.getSize() + 5);
-	private static final Border BLANK_PADDING = BorderFactory.createEmptyBorder(2, 0, 2, 16);
 	private static final GridBagConstraints LABEL_CONSTRAINTS = new GridBagConstraints();
 	private static final GridBagConstraints FIELD_CONSTRAINTS = new GridBagConstraints();
 	
@@ -81,7 +81,7 @@ public class GUIPackEditor extends JFrame{
         
         //Create a panel to hold the file I/O components.
         JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.Y_AXIS));
+        filePanel.setLayout(new FlowLayout());
         filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), "File Selection", TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
         add(filePanel, BorderLayout.PAGE_START);
 
@@ -162,7 +162,6 @@ public class GUIPackEditor extends JFrame{
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
-        jsonClasses.put(JSONText.class.getSimpleName(), JSONText.class);
         
         //Create the box itself.
         JComboBox<String> typeComboBox = new JComboBox<String>();
@@ -234,7 +233,6 @@ public class GUIPackEditor extends JFrame{
 					//This gets the tooltip.
 					JLabel componentLabel = new JLabel(field.getName() + ":"); 
 					componentLabel.setFont(NORMAL_FONT);
-					componentLabel.setBorder(BLANK_PADDING);
 			        panel.add(componentLabel, LABEL_CONSTRAINTS);
 			        
 					//Need to split the string to prevent long tooltips.
@@ -266,7 +264,7 @@ public class GUIPackEditor extends JFrame{
 		Class<?> fieldClass = field.getType();
 		if(List.class.isAssignableFrom(fieldClass)){
 			if(obj == null){
-				if(JSONParser.checkRequiredState(field, obj, "") != null){
+				if(JSONParser.checkRequiredState(field, obj, "") != null || field.isAnnotationPresent(JSONAutoGenerate.class)){
 					obj = new ArrayList<>();
 				}else{
 					return null;
@@ -310,18 +308,22 @@ public class GUIPackEditor extends JFrame{
 	        return listObjectPanel;
 		}else{
 			if(obj == null){
-				if(JSONParser.checkRequiredState(field, obj, "") != null){
+				if(JSONParser.checkRequiredState(field, obj, "") != null || field.isAnnotationPresent(JSONAutoGenerate.class)){
 					//If we are a member class, check for an extended class in our object.
 					try{
-					if(fieldClass.isMemberClass()){
-						for(Class<?> objectClass : declaringObject.getClass().getDeclaredClasses()){
-							if(fieldClass.isAssignableFrom(objectClass)){
-								obj = objectClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
+						if(fieldClass.isMemberClass()){
+							for(Class<?> objectClass : declaringObject.getClass().getDeclaredClasses()){
+								if(fieldClass.isAssignableFrom(objectClass)){
+									obj = objectClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
+								}
+							}
+						}else{
+							if(fieldClass.getConstructors()[0].getParameterCount() == 0){
+								obj = fieldClass.getConstructor().newInstance();
+							}else{
+								obj = fieldClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
 							}
 						}
-					}else{
-						obj = fieldClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
-					}
 					}catch(Exception e){
 						e.printStackTrace();
 						return null;
@@ -441,7 +443,6 @@ public class GUIPackEditor extends JFrame{
 				buttonPanel.add(newComponent);
 			}else{
 				setLayout(new GridBagLayout());
-				setBorder(BLANK_PADDING);
 				populatePanel(this, listEntry);
 			}
 			JPanel thisPanel = this;
@@ -486,6 +487,7 @@ public class GUIPackEditor extends JFrame{
 
 		private final JComponent component;
 		private final Class<?> objectClass;
+		@SuppressWarnings("unused")
 		private Object obj;
 		
 		private FieldChanger(JComponent component, Object obj, Class<?> objectClass){
@@ -502,9 +504,10 @@ public class GUIPackEditor extends JFrame{
 			try{
 				if(objectClass.equals(Boolean.TYPE)){
 					obj = ((JCheckBox) component).isSelected();
+					return;
 				}if(objectClass.equals(Integer.TYPE)){
 					obj = Integer.valueOf(((JTextField) component).getText());
-				}else if(obj.getClass().equals(Float.TYPE)){
+				}else if(objectClass.equals(Float.TYPE)){
 					obj = Float.valueOf(((JTextField) component).getText());
 				}else if(objectClass.equals(String.class)){
 					if(((JTextField) component).getText().isEmpty()){
@@ -533,12 +536,14 @@ public class GUIPackEditor extends JFrame{
 						}
 						return;
 					}catch(Exception e){
+						e.printStackTrace();
 						component.getComponent(fieldChecking).setBackground(Color.RED);
 						return;
 					}
 				}
 				component.setBackground(Color.WHITE);
 			}catch(Exception e){
+				e.printStackTrace();
 				component.setBackground(Color.RED);
 			}
 		}

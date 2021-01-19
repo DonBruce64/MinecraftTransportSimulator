@@ -182,6 +182,9 @@ public class JSONParser{
 				.create();
 	}
 	
+	/**
+	 *  Parses the passed in stream to the passed-in JSON type.
+	 */
 	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass){
 		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
 		//Do legacy compats if we need before validating the JSON.
@@ -193,10 +196,16 @@ public class JSONParser{
 		return retObj;
 	}
 	
+	/**
+	 *  Exports the passed-JSON to the passed-in stream.
+	 */
 	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
 		packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
 	}
 	
+	/**
+	 *  Duplicates the passed-in JSON, returning a new instance with a deep copy.
+	 */
 	@SuppressWarnings("unchecked")
 	public static <JSONClass extends Object> JSONClass duplicateJSON(JSONClass objToDuplicate){
 		return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
@@ -234,6 +243,15 @@ public class JSONParser{
 		String value() default "";
     }
 	
+	@Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+	public static @interface JSONAutoGenerate{
+    }
+	
+	/**
+	 *  Checks to see if the passed-in field is required, and is missing or corrupt.  If so, 
+	 *  a text-based error message is returned.  If not, null is returned.
+	 */
 	public static String checkRequiredState(Field field, Object objectOn, String pathPrefix){
 		if(field.isAnnotationPresent(JSONRequired.class)){
 			Object testObj = null;
@@ -276,6 +294,9 @@ public class JSONParser{
 		return null;
 	}
 	
+	/**
+	 *  Helper method to validate fields.  Used for recursion.
+	 */
 	private static void validateFields(Object obj, String priorObjects){
 		//First get all fields that have the annotation with no values.
 		for(Field field : obj.getClass().getFields()){
