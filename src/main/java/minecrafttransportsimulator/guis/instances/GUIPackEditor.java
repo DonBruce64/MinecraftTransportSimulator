@@ -217,163 +217,18 @@ public class GUIPackEditor extends JFrame{
 	
 	private static void populatePanel(JPanel panel, Object objectToParse){
 		for(Field field : objectToParse.getClass().getFields()){
-			try{
-				if(field.isAnnotationPresent(JSONDescription.class)){
-					Object obj = field.get(objectToParse);
-					Class<?> fieldClass = field.getType();
-					String annotationText = field.getAnnotation(JSONDescription.class).value();
-					
-					JComponent newComponent;
-					if(fieldClass.equals(Boolean.TYPE)){
-						JCheckBox checkBox = new JCheckBox();
-						checkBox.setSelected((Boolean) obj);
-						checkBox.addActionListener(new ActionListener(){
-							@Override
-							public void actionPerformed(ActionEvent event){
-								try{
-									field.set(objectToParse, checkBox.isSelected());
-								}catch(Exception e){
-								}
-							}
-				        });
-						newComponent = checkBox;
-					}else if(fieldClass.equals(Integer.TYPE)){
-						JTextField textBox = new JTextField();
-						textBox.setFont(NORMAL_FONT);
-						textBox.setText(String.valueOf(obj));
-						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Integer.class));
-						newComponent = textBox;
-					}else if(fieldClass.equals(Float.TYPE)){
-						JTextField textBox = new JTextField();
-						textBox.setFont(NORMAL_FONT);
-						textBox.setText(String.valueOf(obj));
-						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Float.class));
-						newComponent = textBox;
-					}else if(fieldClass.equals(String.class)){
-						JTextField textBox = new JTextField();
-						textBox.setPreferredSize(STRING_TEXT_BOX_DIM);
-						if(obj != null){
-							textBox.setText(String.valueOf(obj));
-						}else{
-							textBox.setText("");
-						}
-						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, String.class));
-						newComponent = textBox;
-					}else if(fieldClass.equals(Point3d.class)){
-						JPanel pointPanel = new JPanel();
-						pointPanel.setLayout(new FlowLayout());
-						pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
-						FieldChanger changer = new FieldChanger(pointPanel, field, objectToParse, Point3d.class);
-						pointPanel.addFocusListener(changer);
-						
-						JLabel xLabel = new JLabel("X:"); 
-						xLabel.setFont(NORMAL_FONT);
-						JTextField xText = new JTextField();
-						xText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-						xText.addFocusListener(new FocusForwarder(changer));
-						
-						JLabel yLabel = new JLabel("Y:"); 
-						yLabel.setFont(NORMAL_FONT);
-						JTextField yText = new JTextField();
-						yText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-						yText.addFocusListener(new FocusForwarder(changer));
-						
-						JLabel zLabel = new JLabel("Z:"); 
-						zLabel.setFont(NORMAL_FONT);
-						JTextField zText = new JTextField();
-						zText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-						zText.addFocusListener(new FocusForwarder(changer));
-						
-						if(obj != null){
-							Point3d point = ((Point3d) obj);
-							xText.setText(String.valueOf(point.x));
-							yText.setText(String.valueOf(point.x));
-							zText.setText(String.valueOf(point.x));
-						}else{
-							xText.setText(String.valueOf(0.0));
-							yText.setText(String.valueOf(0.0));
-							zText.setText(String.valueOf(0.0));
-						}
-						
-						pointPanel.add(xLabel);
-						pointPanel.add(xText);
-						pointPanel.add(yLabel);
-						pointPanel.add(yText);
-						pointPanel.add(zLabel);
-						pointPanel.add(zText);
-						newComponent = pointPanel;
-					}else if(List.class.isAssignableFrom(fieldClass)){
-						if(obj == null){
-							if(JSONParser.checkRequiredState(field, obj, "") != null){
-								obj = new ArrayList<>();
-							}else{
-								continue;
-							}
-						}
-						Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-						List<?> listObject = (List<?>) obj;
-						
-						//Create the main list panel for the whole list object.
-						JPanel listObjectPanel = new JPanel();
-						listObjectPanel.setLayout(new BorderLayout());
-						listObjectPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
-						
-						//Create the inner window for the list panel's content.
-						//This will contain all the list element sub-panels.
-						
-						JPanel listContentsPanel = new JPanel();
-						listContentsPanel.setLayout(new BoxLayout(listContentsPanel, BoxLayout.Y_AXIS));
-						for(Object listEntry : listObject){
-							ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, false);
-						}
-						listObjectPanel.add(listContentsPanel, BorderLayout.CENTER);
-						
-						//Now create an add button for the main panel.  This will allow for adding of elements.
-						JButton newEntryButton = new JButton();
-				        newEntryButton.setFont(NORMAL_FONT);
-				        newEntryButton.setText("New Entry");
-				        newEntryButton.addActionListener(new ActionListener(){
-							@Override
-							public void actionPerformed(ActionEvent event){
-								try{
-									Object listEntry = paramClass.newInstance();
-									ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, true);
-									listContentsPanel.revalidate();
-									listContentsPanel.repaint();
-								}catch(Exception e){}
-							}
-				        });
-				        listObjectPanel.add(newEntryButton, BorderLayout.PAGE_START);
-				        
-				        //Done with the list object.  Set it as the object to be added.
-				        newComponent = listObjectPanel;
-					}else{
-						if(obj == null){
-							if(JSONParser.checkRequiredState(field, obj, "") != null){
-								//If we are a member class, check for an extended class in our object.
-								if(fieldClass.isMemberClass()){
-									for(Class<?> objectClass : objectToParse.getClass().getDeclaredClasses()){
-										if(fieldClass.isAssignableFrom(objectClass)){
-											obj = objectClass.getConstructor(objectToParse.getClass()).newInstance(objectToParse);
-										}
-									}
-								}else{
-									obj = fieldClass.getConstructor(objectToParse.getClass()).newInstance(objectToParse);
-								}
-							}else{
-								continue;
-							}
-						}
-							
-						JPanel subPanel = new JPanel();
-						subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
-						subPanel.setFont(NORMAL_FONT);
-						subPanel.setLayout(new GridBagLayout());
-				        populatePanel(subPanel, obj);
-				        newComponent = subPanel;
+			if(field.isAnnotationPresent(JSONDescription.class)){
+				JComponent newComponent = null;
+				try{
+					newComponent = getComponentForObject(field.get(objectToParse), field.getType());
+					if(newComponent == null){
+						newComponent = getPanelForField(field, objectToParse);
 					}
+				}catch(Exception e){}
+				
+				
+				if(newComponent != null){
+					String annotationText = field.getAnnotation(JSONDescription.class).value();
 					
 					//Add label before adding component.
 					//This gets the tooltip.
@@ -396,40 +251,208 @@ public class GUIPackEditor extends JFrame{
 			        //Add component.
 					panel.add(newComponent, FIELD_CONSTRAINTS);
 				}
-			}catch(Exception e){
-				e.printStackTrace();
 			}
 		}
 	}
 	
-	private static class ListPanel<ListObject extends Object> extends JPanel{	
+	private static JPanel getPanelForField(Field field, Object declaringObject){
+		Object obj;
+		try{
+			obj = field.get(declaringObject);
+		}catch(Exception e){
+			return null;
+		}
+		
+		Class<?> fieldClass = field.getType();
+		if(List.class.isAssignableFrom(fieldClass)){
+			if(obj == null){
+				if(JSONParser.checkRequiredState(field, obj, "") != null){
+					obj = new ArrayList<>();
+				}else{
+					return null;
+				}
+			}
+			Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+			List<?> listObject = (List<?>) obj;
+			
+			//Create the main list panel for the whole list object.
+			JPanel listObjectPanel = new JPanel();
+			listObjectPanel.setLayout(new BorderLayout());
+			listObjectPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+			
+			//Create the inner window for the list panel's content.
+			//This will contain all the list element sub-panels.
+			JPanel listContentsPanel = new JPanel();
+			listContentsPanel.setLayout(new BoxLayout(listContentsPanel, BoxLayout.Y_AXIS));
+			for(Object listEntry : listObject){
+				ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, false);
+			}
+			listObjectPanel.add(listContentsPanel, BorderLayout.CENTER);
+			
+			//Now create an add button for the main panel.  This will allow for adding of elements.
+			JButton newEntryButton = new JButton();
+	        newEntryButton.setFont(NORMAL_FONT);
+	        newEntryButton.setText("New Entry");
+	        newEntryButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent event){
+					try{
+						Object listEntry = paramClass.newInstance();
+						ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, true);
+						listContentsPanel.revalidate();
+						listContentsPanel.repaint();
+					}catch(Exception e){}
+				}
+	        });
+	        listObjectPanel.add(newEntryButton, BorderLayout.PAGE_START);
+	        
+	        //Done with the list object.  Set it as the object to be added.
+	        return listObjectPanel;
+		}else{
+			if(obj == null){
+				if(JSONParser.checkRequiredState(field, obj, "") != null){
+					//If we are a member class, check for an extended class in our object.
+					try{
+					if(fieldClass.isMemberClass()){
+						for(Class<?> objectClass : declaringObject.getClass().getDeclaredClasses()){
+							if(fieldClass.isAssignableFrom(objectClass)){
+								obj = objectClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
+							}
+						}
+					}else{
+						obj = fieldClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
+					}
+					}catch(Exception e){
+						e.printStackTrace();
+						return null;
+					}
+				}else{
+					return null;
+				}
+			}
+				
+			JPanel subPanel = new JPanel();
+			subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+			subPanel.setFont(NORMAL_FONT);
+			subPanel.setLayout(new GridBagLayout());
+	        populatePanel(subPanel, obj);
+	        return subPanel;
+		}
+	}
+	
+	private static JComponent getComponentForObject(Object obj, Class<?> objectClass){
+		if(objectClass.equals(Boolean.TYPE)){
+			JCheckBox checkBox = new JCheckBox();
+			checkBox.setSelected((Boolean) obj);
+			checkBox.addFocusListener(new FieldChanger(checkBox, obj, objectClass));
+			return checkBox;
+		}else if(objectClass.equals(Integer.TYPE)){
+			JTextField textBox = new JTextField();
+			textBox.setFont(NORMAL_FONT);
+			textBox.setText(String.valueOf(obj));
+			textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+			textBox.addFocusListener(new FieldChanger(textBox, obj, objectClass));
+			return textBox;
+		}else if(objectClass.equals(Float.TYPE)){
+			JTextField textBox = new JTextField();
+			textBox.setFont(NORMAL_FONT);
+			textBox.setText(String.valueOf(obj));
+			textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+			textBox.addFocusListener(new FieldChanger(textBox, obj, objectClass));
+			return textBox;
+		}else if(objectClass.equals(String.class)){
+			JTextField textBox = new JTextField();
+			textBox.setPreferredSize(STRING_TEXT_BOX_DIM);
+			if(obj != null){
+				textBox.setText(String.valueOf(obj));
+			}else{
+				textBox.setText("");
+			}
+			textBox.addFocusListener(new FieldChanger(textBox, obj, objectClass));
+			return textBox;
+		}else if(objectClass.equals(Point3d.class)){
+			JPanel pointPanel = new JPanel();
+			pointPanel.setLayout(new FlowLayout());
+			pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+			FieldChanger changer = new FieldChanger(pointPanel, obj, objectClass);
+			pointPanel.addFocusListener(changer);
+			
+			JLabel xLabel = new JLabel("X:"); 
+			xLabel.setFont(NORMAL_FONT);
+			JTextField xText = new JTextField();
+			xText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+			xText.addFocusListener(new FocusForwarder(changer));
+			
+			JLabel yLabel = new JLabel("Y:"); 
+			yLabel.setFont(NORMAL_FONT);
+			JTextField yText = new JTextField();
+			yText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+			yText.addFocusListener(new FocusForwarder(changer));
+			
+			JLabel zLabel = new JLabel("Z:"); 
+			zLabel.setFont(NORMAL_FONT);
+			JTextField zText = new JTextField();
+			zText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
+			zText.addFocusListener(new FocusForwarder(changer));
+			
+			if(obj != null){
+				Point3d point = ((Point3d) obj);
+				xText.setText(String.valueOf(point.x));
+				yText.setText(String.valueOf(point.x));
+				zText.setText(String.valueOf(point.x));
+			}else{
+				xText.setText(String.valueOf(0.0));
+				yText.setText(String.valueOf(0.0));
+				zText.setText(String.valueOf(0.0));
+			}
+			
+			pointPanel.add(xLabel);
+			pointPanel.add(xText);
+			pointPanel.add(yLabel);
+			pointPanel.add(yText);
+			pointPanel.add(zLabel);
+			pointPanel.add(zText);
+			return pointPanel;
+		}else{
+			return null;
+		}
+	}
+	
+	private static class ListPanel<ListEntry extends Object> extends JPanel{	
 		@SuppressWarnings("unchecked")
-		private static <ListObject extends Object> void generateAndAdd(Object obj, List<?> list, JPanel parentPanel, boolean addToList){
-			ListPanel<ListObject> newPanel = new ListPanel<ListObject>((ListObject) obj, (List<ListObject>) list, parentPanel);
+		private static <ListObject extends Object> void generateAndAdd(Object listEntry, List<?> list, JPanel parentPanel, boolean addToList){
+			ListPanel<ListObject> newPanel = new ListPanel<ListObject>((ListObject) listEntry, (List<ListObject>) list, parentPanel);
 			parentPanel.add(newPanel);
 			if(addToList){
-				((List<ListObject>) list).add((ListObject) obj);
+				((List<ListObject>) list).add((ListObject) listEntry);
 			}
 		}
 		
-		private ListPanel(ListObject obj, List<ListObject> list, JPanel parentPanel){
-			//Set main items and entries.
-			setBorder(BLANK_PADDING);
-			setLayout(new GridBagLayout());
-			populatePanel(this, obj);
-			JPanel thisPanel = this;
-			
+		private ListPanel(ListEntry listEntry, List<ListEntry> list, JPanel parentPanel){
 			//Create new box container for holding buttons.
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 			
+			//Set main states.
+			//If we are a list entry for a single field, add that to the buttonPanel.
+			//If not, we need to parse our fields and add them in their own layout.
+			JComponent newComponent = getComponentForObject(listEntry, listEntry.getClass());
+			if(newComponent != null){
+				buttonPanel.add(newComponent);
+			}else{
+				setLayout(new GridBagLayout());
+				setBorder(BLANK_PADDING);
+				populatePanel(this, listEntry);
+			}
+			JPanel thisPanel = this;
+			
 			JButton deleteEntryButton = new JButton();
 	        deleteEntryButton.setFont(NORMAL_FONT);
-	        deleteEntryButton.setText("Delete Entry");
+	        deleteEntryButton.setText("Delete");
 	        deleteEntryButton.addActionListener(new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent event){
-					list.remove(obj);
+					list.remove(listEntry);
 					parentPanel.remove(thisPanel);
 					parentPanel.revalidate();
 					parentPanel.repaint();
@@ -439,15 +462,15 @@ public class GUIPackEditor extends JFrame{
 	        
 	        JButton copyEntryButton = new JButton();
 	        copyEntryButton.setFont(NORMAL_FONT);
-	        copyEntryButton.setText("Copy Entry");
+	        copyEntryButton.setText("Copy");
 	        copyEntryButton.addActionListener(new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent event){
 					try{
 						@SuppressWarnings("unchecked")
-						ListObject newObj = (ListObject) obj.getClass().newInstance();
+						ListEntry newObj = (ListEntry) listEntry.getClass().newInstance();
 						list.add(newObj);
-						parentPanel.add(new ListPanel<ListObject>(newObj, list, parentPanel));
+						parentPanel.add(new ListPanel<ListEntry>(newObj, list, parentPanel));
 						parentPanel.revalidate();
 						parentPanel.repaint();
 					}catch(Exception e){}
@@ -462,15 +485,13 @@ public class GUIPackEditor extends JFrame{
 	private static class FieldChanger implements FocusListener{
 
 		private final JComponent component;
-		private final Field field;
-		private final Object objectToParse;
-		private final Object caster;
+		private final Class<?> objectClass;
+		private Object obj;
 		
-		private FieldChanger(JComponent component, Field field, Object objectToParse, Object caster){
+		private FieldChanger(JComponent component, Object obj, Class<?> objectClass){
 			this.component = component;
-			this.field = field;
-			this.objectToParse = objectToParse;
-			this.caster = caster;
+			this.obj = obj;
+			this.objectClass = objectClass;
 		}
 		
 		@Override
@@ -479,17 +500,19 @@ public class GUIPackEditor extends JFrame{
 		@Override
 		public void focusLost(FocusEvent arg0){
 			try{
-				if(caster.equals(Integer.class)){
-					field.set(objectToParse, Integer.valueOf(((JTextField) component).getText()));
-				}else if(caster.equals(Float.class)){
-					field.set(objectToParse, Float.valueOf(((JTextField) component).getText()));
-				}else if(caster.equals(String.class)){
+				if(objectClass.equals(Boolean.TYPE)){
+					obj = ((JCheckBox) component).isSelected();
+				}if(objectClass.equals(Integer.TYPE)){
+					obj = Integer.valueOf(((JTextField) component).getText());
+				}else if(obj.getClass().equals(Float.TYPE)){
+					obj = Float.valueOf(((JTextField) component).getText());
+				}else if(objectClass.equals(String.class)){
 					if(((JTextField) component).getText().isEmpty()){
-						field.set(objectToParse, null);
+						obj = null;
 					}else{
-						field.set(objectToParse, ((JTextField) component).getText());
+						obj = ((JTextField) component).getText();
 					}
-				}else if(caster.equals(Point3d.class)){
+				}else if(objectClass.equals(Point3d.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -504,9 +527,9 @@ public class GUIPackEditor extends JFrame{
 						
 						Point3d newPoint = new Point3d(x, y, z);
 						if(newPoint.isZero()){
-							field.set(objectToParse, null);
+							obj = null;
 						}else{
-							field.set(objectToParse, newPoint);
+							obj = newPoint;
 						}
 						return;
 					}catch(Exception e){
