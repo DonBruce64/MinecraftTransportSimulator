@@ -15,8 +15,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.lang.reflect.Field;
-import java.util.Collection;
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -29,11 +31,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ToolTipManager;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
@@ -41,6 +45,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import net.minecraft.client.Minecraft;
 
 /**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
  * libraries to allow for an interactive JSON editor.  This allows pack authors to edit
@@ -55,20 +60,22 @@ public class GUIPackEditor extends JFrame{
 	private static final Font NORMAL_FONT = new Font("Arial", Font.PLAIN, 15);
 	private static final Dimension NUMBER_TEXT_BOX_DIM = new Dimension(100, NORMAL_FONT.getSize() + 5);
 	private static final Dimension STRING_TEXT_BOX_DIM = new Dimension(200, NORMAL_FONT.getSize() + 5);
-	private static final Border LABEL_PADDING = BorderFactory.createEmptyBorder(2, 0, 2, 16);
+	private static final Border BLANK_PADDING = BorderFactory.createEmptyBorder(2, 0, 2, 16);
+	private static final GridBagConstraints LABEL_CONSTRAINTS = new GridBagConstraints();
+	private static final GridBagConstraints FIELD_CONSTRAINTS = new GridBagConstraints();
 	
 	//Run-time variables.
+	private static File lastDirectoryAccessed = new File(MasterLoader.gameDirectory);
 	private Class<?> currentJSONClass = null;
 	private Object currentJSON = null;
 	private final JPanel editingPanel;
-	private final GridBagConstraints labelConstraint;
-	private final GridBagConstraints fieldConstraint;
 	
 	public GUIPackEditor(){
 		//Init master settings.
 		setTitle("MTS Pack Edtior");  
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+        setMaximumSize(new Dimension(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight));
         ToolTipManager.sharedInstance().setInitialDelay(0);
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
         
@@ -105,7 +112,7 @@ public class GUIPackEditor extends JFrame{
         openButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				JFileChooser fileSelection = new JFileChooser();
+				JFileChooser fileSelection = lastDirectoryAccessed != null ? new JFileChooser(lastDirectoryAccessed) : new JFileChooser();
 		        fileSelection.setFont(MAIN_BUTTON_FONT);
 		        fileSelection.setDialogTitle(openButton.getText());
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
@@ -114,6 +121,7 @@ public class GUIPackEditor extends JFrame{
 			        	FileReader reader = new FileReader(file);
 			            currentJSON = JSONParser.parseStream(reader, currentJSONClass);
 			            reader.close();
+			            lastDirectoryAccessed = file.getParentFile();
 			            if(currentJSON != null){
 			            	initEditor();
 			            }
@@ -131,7 +139,7 @@ public class GUIPackEditor extends JFrame{
         saveButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				JFileChooser fileSelection = new JFileChooser();
+				JFileChooser fileSelection = lastDirectoryAccessed != null ? new JFileChooser(lastDirectoryAccessed) : new JFileChooser();
 		        fileSelection.setFont(MAIN_BUTTON_FONT);
 		        fileSelection.setDialogTitle(saveButton.getText());
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
@@ -140,6 +148,7 @@ public class GUIPackEditor extends JFrame{
 			        	FileWriter writer = new FileWriter(file);
 			        	JSONParser.exportStream(currentJSON, writer);
 			            writer.close();
+			            lastDirectoryAccessed = file.getParentFile();
 		        	}catch(Exception e){}
 		        }
 			}
@@ -183,14 +192,16 @@ public class GUIPackEditor extends JFrame{
         //We don't add this to the main container.  Instead, we create a scroll frame to render it.
         editingPanel = new JPanel();
         editingPanel.setLayout(new GridBagLayout());
-        add(editingPanel, BorderLayout.CENTER);
+        JScrollPane editingPane = new JScrollPane();
+		editingPane.add(editingPanel);
+		editingPane.setViewportView(editingPanel);
+		editingPane.getVerticalScrollBar().setUnitIncrement(20);
+        add(editingPane, BorderLayout.CENTER);
         
-        //Create panel constraints and other constants.
-		labelConstraint = new GridBagConstraints();
-		labelConstraint.anchor = GridBagConstraints.LINE_END;
-		fieldConstraint = new GridBagConstraints();
-		fieldConstraint.anchor = GridBagConstraints.LINE_START;
-		fieldConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        //Set constraint properties.
+		LABEL_CONSTRAINTS.anchor = GridBagConstraints.LINE_END;
+		FIELD_CONSTRAINTS.anchor = GridBagConstraints.LINE_START;
+		FIELD_CONSTRAINTS.gridwidth = GridBagConstraints.REMAINDER;
         
         //Make the editor visible.
         pack();
@@ -199,20 +210,12 @@ public class GUIPackEditor extends JFrame{
 	
 	private void initEditor(){
 		editingPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), "Editing: " + currentJSON.getClass().getSimpleName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
-		//editingPanel.setMinimumSize(new Dimension(0, 600));
 		editingPanel.removeAll();
 		populatePanel(editingPanel, currentJSON);
         pack();
 	}
 	
-	private void populatePanel(JPanel panel, Object objectToParse){
-		
-		
-		//Create scroll pane.
-		//JScrollPane listScroller = new JScrollPane(container);
-		//listScroller.setPreferredSize(new Dimension(250, 80));
-		//container.add(listScroller);
-		
+	private static void populatePanel(JPanel panel, Object objectToParse){
 		for(Field field : objectToParse.getClass().getFields()){
 			try{
 				if(field.isAnnotationPresent(JSONDescription.class)){
@@ -236,12 +239,14 @@ public class GUIPackEditor extends JFrame{
 						newComponent = checkBox;
 					}else if(fieldClass.equals(Integer.TYPE)){
 						JTextField textBox = new JTextField();
+						textBox.setFont(NORMAL_FONT);
 						textBox.setText(String.valueOf(obj));
 						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
 						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Integer.class));
 						newComponent = textBox;
 					}else if(fieldClass.equals(Float.TYPE)){
 						JTextField textBox = new JTextField();
+						textBox.setFont(NORMAL_FONT);
 						textBox.setText(String.valueOf(obj));
 						textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
 						textBox.addFocusListener(new FieldChanger(textBox, field, objectToParse, Float.class));
@@ -299,8 +304,51 @@ public class GUIPackEditor extends JFrame{
 						pointPanel.add(zLabel);
 						pointPanel.add(zText);
 						newComponent = pointPanel;
-					}else if(fieldClass.isInstance(Collection.class)){
-						continue;
+					}else if(List.class.isAssignableFrom(fieldClass)){
+						if(obj == null){
+							if(JSONParser.checkRequiredState(field, obj, "") != null){
+								obj = new ArrayList<>();
+							}else{
+								continue;
+							}
+						}
+						Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+						List<?> listObject = (List<?>) obj;
+						
+						//Create the main list panel for the whole list object.
+						JPanel listObjectPanel = new JPanel();
+						listObjectPanel.setLayout(new BorderLayout());
+						listObjectPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+						
+						//Create the inner window for the list panel's content.
+						//This will contain all the list element sub-panels.
+						
+						JPanel listContentsPanel = new JPanel();
+						listContentsPanel.setLayout(new BoxLayout(listContentsPanel, BoxLayout.Y_AXIS));
+						for(Object listEntry : listObject){
+							ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, false);
+						}
+						listObjectPanel.add(listContentsPanel, BorderLayout.CENTER);
+						
+						//Now create an add button for the main panel.  This will allow for adding of elements.
+						JButton newEntryButton = new JButton();
+				        newEntryButton.setFont(NORMAL_FONT);
+				        newEntryButton.setText("New Entry");
+				        newEntryButton.addActionListener(new ActionListener(){
+							@Override
+							public void actionPerformed(ActionEvent event){
+								try{
+									Object listEntry = paramClass.newInstance();
+									ListPanel.generateAndAdd(listEntry, listObject, listContentsPanel, true);
+									listContentsPanel.revalidate();
+									listContentsPanel.repaint();
+								}catch(Exception e){}
+							}
+				        });
+				        listObjectPanel.add(newEntryButton, BorderLayout.PAGE_START);
+				        
+				        //Done with the list object.  Set it as the object to be added.
+				        newComponent = listObjectPanel;
 					}else{
 						if(obj == null){
 							if(JSONParser.checkRequiredState(field, obj, "") != null){
@@ -320,7 +368,8 @@ public class GUIPackEditor extends JFrame{
 						}
 							
 						JPanel subPanel = new JPanel();
-						subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), annotationText, TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+						subPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK, 2), field.getName(), TitledBorder.LEFT, TitledBorder.TOP, NORMAL_FONT));
+						subPanel.setFont(NORMAL_FONT);
 						subPanel.setLayout(new GridBagLayout());
 				        populatePanel(subPanel, obj);
 				        newComponent = subPanel;
@@ -330,8 +379,8 @@ public class GUIPackEditor extends JFrame{
 					//This gets the tooltip.
 					JLabel componentLabel = new JLabel(field.getName() + ":"); 
 					componentLabel.setFont(NORMAL_FONT);
-					componentLabel.setBorder(LABEL_PADDING);
-			        panel.add(componentLabel, labelConstraint);
+					componentLabel.setBorder(BLANK_PADDING);
+			        panel.add(componentLabel, LABEL_CONSTRAINTS);
 			        
 					//Need to split the string to prevent long tooltips.
 					String tooltipText = "<html>";
@@ -345,8 +394,7 @@ public class GUIPackEditor extends JFrame{
 					componentLabel.setToolTipText(tooltipText);
 			        
 			        //Add component.
-					newComponent.setFont(NORMAL_FONT);
-					panel.add(newComponent, fieldConstraint);
+					panel.add(newComponent, FIELD_CONSTRAINTS);
 				}
 			}catch(Exception e){
 				e.printStackTrace();
@@ -354,7 +402,64 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 	
-	private class FieldChanger implements FocusListener{
+	private static class ListPanel<ListObject extends Object> extends JPanel{	
+		@SuppressWarnings("unchecked")
+		private static <ListObject extends Object> void generateAndAdd(Object obj, List<?> list, JPanel parentPanel, boolean addToList){
+			ListPanel<ListObject> newPanel = new ListPanel<ListObject>((ListObject) obj, (List<ListObject>) list, parentPanel);
+			parentPanel.add(newPanel);
+			if(addToList){
+				((List<ListObject>) list).add((ListObject) obj);
+			}
+		}
+		
+		private ListPanel(ListObject obj, List<ListObject> list, JPanel parentPanel){
+			//Set main items and entries.
+			setBorder(BLANK_PADDING);
+			setLayout(new GridBagLayout());
+			populatePanel(this, obj);
+			JPanel thisPanel = this;
+			
+			//Create new box container for holding buttons.
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+			
+			JButton deleteEntryButton = new JButton();
+	        deleteEntryButton.setFont(NORMAL_FONT);
+	        deleteEntryButton.setText("Delete Entry");
+	        deleteEntryButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent event){
+					list.remove(obj);
+					parentPanel.remove(thisPanel);
+					parentPanel.revalidate();
+					parentPanel.repaint();
+				}
+	        });
+	        buttonPanel.add(deleteEntryButton);
+	        
+	        JButton copyEntryButton = new JButton();
+	        copyEntryButton.setFont(NORMAL_FONT);
+	        copyEntryButton.setText("Copy Entry");
+	        copyEntryButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent event){
+					try{
+						@SuppressWarnings("unchecked")
+						ListObject newObj = (ListObject) obj.getClass().newInstance();
+						list.add(newObj);
+						parentPanel.add(new ListPanel<ListObject>(newObj, list, parentPanel));
+						parentPanel.revalidate();
+						parentPanel.repaint();
+					}catch(Exception e){}
+				}
+	        });
+	        buttonPanel.add(copyEntryButton);
+	        
+	        add(buttonPanel);
+		}
+	}
+	
+	private static class FieldChanger implements FocusListener{
 
 		private final JComponent component;
 		private final Field field;
@@ -416,7 +521,7 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 	
-	private class FocusForwarder implements FocusListener{
+	private static class FocusForwarder implements FocusListener{
 		
 		private final FocusListener target;
 		

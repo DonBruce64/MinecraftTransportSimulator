@@ -31,7 +31,7 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
 	/**Generic variable used to represent the general properties of this pack item.  Extend this and
 	 * reference it in the generic for all sub-classes.*/
 	@JSONRequired
-	@JSONDescription("Common and core content.")
+	@JSONDescription("Common and core content to all JSONs, plus any additional core parameters that are JSON-sepecific and not in their own sub-section.")
 	public GeneralConfig general;
 
     public class General{
