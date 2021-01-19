@@ -185,8 +185,17 @@ public final class RenderInstrument{
 									break;
 								}
 								case("inhibitor"):{
-									//Skip further operations if this is false.
-									skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
+									//Skip further operations if this is true.
+									if(!skipFurtherTransforms){
+										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
+									}
+									break;
+								}
+								case("activator"):{
+									//Prevent skipping  further operations if this is true.
+									if(skipFurtherTransforms){
+										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
+									}
 									break;
 								}
 							}
