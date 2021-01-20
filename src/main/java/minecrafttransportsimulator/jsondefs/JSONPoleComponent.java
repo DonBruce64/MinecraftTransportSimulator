@@ -5,6 +5,8 @@ import java.util.List;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONPoleComponent extends AJSONMultiModelProvider<JSONPoleComponent.PoleGeneral>{
+	@JSONAutoGenerate
+	@JSONDescription("Optional rendering properties for this pole component.")
 	public JSONRendering rendering;
 	
     public class PoleGeneral extends AJSONMultiModelProvider<JSONPoleComponent.PoleGeneral>.General{
