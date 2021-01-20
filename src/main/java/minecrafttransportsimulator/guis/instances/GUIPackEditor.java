@@ -34,14 +34,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ToolTipManager;
-import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
@@ -160,6 +159,7 @@ public class GUIPackEditor extends JFrame{
         Map<String, Class<?>> jsonClasses = new LinkedHashMap<String, Class<?>>();
         jsonClasses.put("JSON Type - Select first!.", null);
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
+        jsonClasses.put(JSONInstrument.class.getSimpleName(), JSONInstrument.class);
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
         
@@ -236,14 +236,18 @@ public class GUIPackEditor extends JFrame{
 			        panel.add(componentLabel, LABEL_CONSTRAINTS);
 			        
 					//Need to split the string to prevent long tooltips.
+			        //Fist split based on the newlines.
 					String tooltipText = "<html>";
-					int breakIndex = annotationText.indexOf(" ", 100);
-					while(breakIndex != -1){
-						tooltipText += annotationText.substring(0, breakIndex) + "<br>";
-						annotationText = annotationText.substring(breakIndex);
-						breakIndex = annotationText.indexOf(" ", 100);
+					for(String annotationSegment : annotationText.split("\n")){
+						int breakIndex = annotationSegment.indexOf(" ", 100);
+						while(breakIndex != -1){
+							tooltipText += annotationSegment.substring(0, breakIndex) + "<br>";
+							annotationSegment = annotationSegment.substring(breakIndex);
+							breakIndex = annotationSegment.indexOf(" ", 100);
+						}
+						tooltipText += annotationSegment  + "<br><br>";
 					}
-					tooltipText += annotationText + "</html>";
+					tooltipText += "</html>";
 					componentLabel.setToolTipText(tooltipText);
 			        
 			        //Add component.
@@ -443,6 +447,7 @@ public class GUIPackEditor extends JFrame{
 				buttonPanel.add(newComponent);
 			}else{
 				setLayout(new GridBagLayout());
+				setBorder(BorderFactory.createLineBorder(Color.BLACK));
 				populatePanel(this, listEntry);
 			}
 			JPanel thisPanel = this;
