@@ -30,11 +30,11 @@ public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
     	public BookletPage[] pages;
     	
     	public class BookletPage{
-		@JSONDescription("The name of the texture for this page.  Each page may use a different texture, if desired.<br><br>However, all textures MUST be the same resolution as defined by textureWidth and textureHeight")
+		@JSONDescription("The name of the texture for this page.  Each page may use a different texture, if desired.\nHowever, all textures MUST be the same resolution as defined by textureWidth and textureHeight")
         	public String pageTexture;
 		@JSONDescription("The title for this page that will be used to make the Table of Contents.  May be omitted if the Table of Contents is disabled.")
         	public String title;
-		@JSONDescription("An array of text objects that make up the text for the page. These follow the same format as textObjects.<br><br>The only difference between these and vehicles is the z-coord should always be 0, and the defaultText parameter is what will be rendered in the booklet.")
+		@JSONDescription("An array of text objects that make up the text for the page. These follow the same format as textObjects.\nThe only difference between these and vehicles is the z-coord should always be 0, and the defaultText parameter is what will be rendered in the booklet.")
         	public JSONText[] pageText;
         }
     }
