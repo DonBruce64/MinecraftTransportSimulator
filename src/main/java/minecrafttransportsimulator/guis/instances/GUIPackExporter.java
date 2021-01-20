@@ -54,7 +54,7 @@ public class GUIPackExporter extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
-		int buttonWidth = getWidth()/3;
+		int buttonWidth = getWidth()/4;
 		addButton(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, "EXPORT PACKS", 20, true){
 			@Override
 			public void onClicked(){
@@ -235,6 +235,13 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
+		addButton(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, "PACK EDITOR", 20, true){
+			@Override
+			public void onClicked(){
+				new GUIPackEditor();
+			}
+		});
+		
 		addButton(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, "BACK", 20, true){
 			@Override
 			public void onClicked(){
