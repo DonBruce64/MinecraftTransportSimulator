@@ -2,6 +2,7 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -30,6 +32,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -40,10 +43,10 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import net.minecraft.client.Minecraft;
 
@@ -163,6 +166,7 @@ public class GUIPackEditor extends JFrame{
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
         jsonClasses.put(JSONInstrument.class.getSimpleName(), JSONInstrument.class);
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
+        jsonClasses.put(JSONPoleComponent.class.getSimpleName(), JSONPoleComponent.class);
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
         
         //Create the box itself.
@@ -239,21 +243,7 @@ public class GUIPackEditor extends JFrame{
 					JLabel componentLabel = new JLabel(field.getName() + ":"); 
 					componentLabel.setFont(NORMAL_FONT);
 			        panel.add(componentLabel, LABEL_CONSTRAINTS);
-			        
-					//Need to split the string to prevent long tooltips.
-			        //Fist split based on the newlines.
-					String tooltipText = "<html>";
-					for(String annotationSegment : annotationText.split("\n")){
-						int breakIndex = annotationSegment.indexOf(" ", 100);
-						while(breakIndex != -1){
-							tooltipText += annotationSegment.substring(0, breakIndex) + "<br>";
-							annotationSegment = annotationSegment.substring(breakIndex);
-							breakIndex = annotationSegment.indexOf(" ", 100);
-						}
-						tooltipText += annotationSegment  + "<br><br>";
-					}
-					tooltipText += "</html>";
-					componentLabel.setToolTipText(tooltipText);
+					componentLabel.setToolTipText(formatTooltipText(annotationText));
 			        
 			        //Add component.
 					panel.add(newComponent, FIELD_CONSTRAINTS);
@@ -273,11 +263,7 @@ public class GUIPackEditor extends JFrame{
 		Class<?> fieldClass = field.getType();
 		if(List.class.isAssignableFrom(fieldClass)){
 			if(obj == null){
-				if(JSONParser.checkRequiredState(field, obj, "") != null || field.isAnnotationPresent(JSONAutoGenerate.class)){
-					obj = new ArrayList<>();
-				}else{
-					return null;
-				}
+				obj = new ArrayList<>();
 			}
 			Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
 			@SuppressWarnings("unchecked")
@@ -321,12 +307,7 @@ public class GUIPackEditor extends JFrame{
 	        return listObjectPanel;
 		}else{
 			if(obj == null){
-				if(JSONParser.checkRequiredState(field, obj, "") != null || field.isAnnotationPresent(JSONAutoGenerate.class)){
-					//If we are a member class, check for an extended class in our object.
-					obj = createNewObjectInstance(fieldClass, declaringObject);
-				}else{
-					return null;
-				}
+				obj = createNewObjectInstance(fieldClass, declaringObject);
 			}
 				
 			JPanel subPanel = new JPanel();
@@ -409,9 +390,38 @@ public class GUIPackEditor extends JFrame{
 			pointPanel.add(zLabel);
 			pointPanel.add(zText);
 			return pointPanel;
+		}else if(objectClass.isEnum()){
+			return createNewEnumBox(obj, objectClass, listener);
 		}else{
 			return null;
 		}
+	}
+	
+	private static <EnumType> JComboBox<EnumType> createNewEnumBox(Object obj, Class<EnumType> objectClass, FocusListener listener){
+		JComboBox<EnumType> comboBox = new JComboBox<EnumType>();
+		comboBox.setFont(NORMAL_FONT);
+		comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
+		EnumType[] enumConstants = objectClass.getEnumConstants();
+		for(EnumType enumConstant : enumConstants){
+			comboBox.addItem(enumConstant);
+		}
+		comboBox.addFocusListener(listener);
+		comboBox.setRenderer(new DefaultListCellRenderer(){
+		    @Override
+		    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus){
+		        JComponent comp = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		        if(index > -1){
+		        	EnumType currentEnum = enumConstants[index];
+		        	try{
+		        		String enumName = ((Enum<?>) currentEnum).name();
+		        		String tooltipText = formatTooltipText(currentEnum.getClass().getField(enumName).getAnnotation(JSONDescription.class).value());
+		        		list.setToolTipText(tooltipText);
+		        	}catch(Exception e){}
+		        }
+		        return comp;
+		    }
+		});
+		return comboBox;
 	}
 	
 	private static Object createNewObjectInstance(Class<?> fieldClass, Object declaringObject){
@@ -424,9 +434,9 @@ public class GUIPackEditor extends JFrame{
 				}
 				return null;
 			}else{
-				if(fieldClass.getConstructors()[0].getParameterCount() == 0){
-					return fieldClass.getConstructor().newInstance();
-				}else{
+				try{
+					return fieldClass.getConstructor().newInstance(); 
+				}catch(Exception e){
 					return fieldClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
 				}
 			}
@@ -434,6 +444,20 @@ public class GUIPackEditor extends JFrame{
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	private static String formatTooltipText(String annotationText){
+		String tooltipText = "<html>";
+		for(String annotationSegment : annotationText.split("\n")){
+			int breakIndex = annotationSegment.indexOf(" ", 100);
+			while(breakIndex != -1){
+				tooltipText += annotationSegment.substring(0, breakIndex) + "<br>";
+				annotationSegment = annotationSegment.substring(breakIndex);
+				breakIndex = annotationSegment.indexOf(" ", 100);
+			}
+			tooltipText += annotationSegment  + "<br><br>";
+		}
+		return tooltipText + "</html>";
 	}
 	
 	private static class ListPanel extends JPanel{
@@ -490,6 +514,65 @@ public class GUIPackEditor extends JFrame{
 	        buttonPanel.add(copyEntryButton);
 	        
 	        add(buttonPanel);
+		}
+	}
+	
+	private static class ListElementChanger implements FocusListener{
+		
+		private final List<Object> list;
+		private final Class<?> objectClass;
+		private final int index;
+		private JComponent component;
+		
+		private ListElementChanger(List<Object> list, Object obj){
+			this.list = list;
+			this.objectClass = obj.getClass();
+			this.index = list.indexOf(obj);
+			
+		}
+		
+		@Override
+		public void focusGained(FocusEvent arg0){}
+
+		@Override
+		public void focusLost(FocusEvent arg0){
+			try{
+				if(objectClass.equals(Boolean.TYPE)){
+					list.set(index, ((JCheckBox) component).isSelected());
+					return;
+				}if(objectClass.equals(Integer.TYPE)){
+					list.set(index, Integer.valueOf(((JTextField) component).getText()));
+				}else if(objectClass.equals(Float.TYPE)){
+					list.set(index, Float.valueOf(((JTextField) component).getText()));
+				}else if(objectClass.equals(String.class)){
+					list.set(index, ((JTextField) component).getText());
+				}else if(objectClass.equals(Point3d.class)){
+					//Don't want to change the color of the whole panel.  Just the box we are in.
+					int fieldChecking = 1;
+					try{
+						double x = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+						component.getComponent(fieldChecking).setBackground(Color.WHITE);
+						fieldChecking += 2;
+						double y = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+						component.getComponent(fieldChecking).setBackground(Color.WHITE);
+						fieldChecking += 2;
+						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+						component.getComponent(fieldChecking).setBackground(Color.WHITE);
+						
+						Point3d newPoint = new Point3d(x, y, z);
+						list.set(index, newPoint);
+						return;
+					}catch(Exception e){
+						e.printStackTrace();
+						component.getComponent(fieldChecking).setBackground(Color.RED);
+						return;
+					}
+				}
+				component.setBackground(Color.WHITE);
+			}catch(Exception e){
+				e.printStackTrace();
+				component.setBackground(Color.RED);
+			}
 		}
 	}
 	
@@ -550,65 +633,8 @@ public class GUIPackEditor extends JFrame{
 						component.getComponent(fieldChecking).setBackground(Color.RED);
 						return;
 					}
-				}
-				component.setBackground(Color.WHITE);
-			}catch(Exception e){
-				e.printStackTrace();
-				component.setBackground(Color.RED);
-			}
-		}
-	}
-	
-	private static class ListElementChanger implements FocusListener{
-		
-		private final List<Object> list;
-		private final Class<?> objectClass;
-		private final int index;
-		private JComponent component;
-		
-		private ListElementChanger(List<Object> list, Object obj){
-			this.list = list;
-			this.objectClass = obj.getClass();
-			this.index = list.indexOf(obj);
-			
-		}
-		
-		@Override
-		public void focusGained(FocusEvent arg0){}
-
-		@Override
-		public void focusLost(FocusEvent arg0){
-			try{
-				if(objectClass.equals(Boolean.TYPE)){
-					list.set(index, ((JCheckBox) component).isSelected());
-					return;
-				}if(objectClass.equals(Integer.TYPE)){
-					list.set(index, Integer.valueOf(((JTextField) component).getText()));
-				}else if(objectClass.equals(Float.TYPE)){
-					list.set(index, Float.valueOf(((JTextField) component).getText()));
-				}else if(objectClass.equals(String.class)){
-					list.set(index, ((JTextField) component).getText());
-				}else if(objectClass.equals(Point3d.class)){
-					//Don't want to change the color of the whole panel.  Just the box we are in.
-					int fieldChecking = 1;
-					try{
-						double x = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
-						component.getComponent(fieldChecking).setBackground(Color.WHITE);
-						fieldChecking += 2;
-						double y = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
-						component.getComponent(fieldChecking).setBackground(Color.WHITE);
-						fieldChecking += 2;
-						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
-						component.getComponent(fieldChecking).setBackground(Color.WHITE);
-						
-						Point3d newPoint = new Point3d(x, y, z);
-						list.set(index, newPoint);
-						return;
-					}catch(Exception e){
-						e.printStackTrace();
-						component.getComponent(fieldChecking).setBackground(Color.RED);
-						return;
-					}
+				}else if(objectClass.isEnum()){
+					objectField.set(declaringObject, ((JComboBox<?>) component).getSelectedItem());
 				}
 				component.setBackground(Color.WHITE);
 			}catch(Exception e){
