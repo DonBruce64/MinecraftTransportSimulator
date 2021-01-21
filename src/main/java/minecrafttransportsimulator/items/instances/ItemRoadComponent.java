@@ -155,14 +155,14 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						//Check the start and end roads, if we have them, and make sure they match our lane setup.
 						if(startingRoadData != null){
 							RoadGeneral roadGeneralDefinition = startingRoadData.roadClicked.definition.general;
-							if(roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length != definition.general.laneOffsets.length : startingRoadData.sectorClicked.lanes.size() != definition.general.laneOffsets.length){
+							if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
 								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchstart"));
 								return true;
 							}
 						}
 						if(endingRoadData != null){
 							RoadGeneral roadGeneralDefinition = endingRoadData.roadClicked.definition.general;
-							if(roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length != definition.general.laneOffsets.length : endingRoadData.sectorClicked.lanes.size() != definition.general.laneOffsets.length){
+							if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : endingRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
 								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchend"));
 								return true;
 							}

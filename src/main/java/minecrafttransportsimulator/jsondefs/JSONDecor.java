@@ -3,12 +3,10 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
-import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONDecor extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>{
-	@JSONAutoGenerate
 	@JSONDescription("Optional rendering properties for this decor.")
 	public JSONRendering rendering;
 

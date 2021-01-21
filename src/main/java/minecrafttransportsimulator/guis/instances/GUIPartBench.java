@@ -416,7 +416,7 @@ public class GUIPartBench extends AGUIBase{
 	}
 	
 	private boolean isItemValid(AItemPack<?> item){
-		boolean hasMaterials = item.definition.general.materials != null && !item.definition.general.materials.isEmpty();
+		boolean hasMaterials = !item.definition.general.materials.isEmpty();
 		if(!hasMaterials && item instanceof AItemSubTyped){
 			AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) item;
 			for(JSONSubDefinition subDefinition : subTypedItem.definition.definitions){

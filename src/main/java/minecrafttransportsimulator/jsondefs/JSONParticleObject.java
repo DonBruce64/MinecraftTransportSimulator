@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.jsondefs;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -28,7 +27,6 @@ public class JSONParticleObject{
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.\nDefaults to 0.0, so it will shrink to nothing if this is not set. Not valid for engines.")
 	public float toScale;
 	
-	@JSONAutoGenerate
 	@JSONDescription("The position where this particle should be spawned relative to the vehicle or bullet.  May be left out if the particle should spawn at the same position.")
 	public Point3d pos;
 	

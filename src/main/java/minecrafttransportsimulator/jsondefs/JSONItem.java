@@ -3,21 +3,20 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
-import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
-	@JSONAutoGenerate
 	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
+	@JSONDescription("Booklet-specific item section.")
 	public JSONBooklet booklet;
 	
-	@JSONAutoGenerate
 	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="general")
+	@JSONDescription("Food-specific item section.")
 	public JSONFood food;
 
     public class ItemGeneral extends AJSONItem<JSONItem.ItemGeneral>.General{
-    	@JSONDescription("This parameter is optional.  If included, the item will be created with specific functionality.")
+    	@JSONDescription("The functionality to give this item.")
     	public ItemComponentType type;
     }
     
@@ -65,7 +64,6 @@ public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
     	@JSONDescription("How much saturation this food has.  May be a decimal.")
     	public float saturationAmount;
     	
-    	@JSONAutoGenerate
     	@JSONDescription("A optional list of effects that this food item provides.")
     	public List<JSONPotionEffect> effects;
     }

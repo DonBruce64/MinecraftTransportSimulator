@@ -377,7 +377,7 @@ public class InterfaceRender{
 					//First rotate 180 along the X-axis to get us rendering right-side up.
 					GL11.glRotatef(180F, 1, 0, 0);
 					//Next, apply rotations.  Y is inverted due to the inverted X axis.
-					if(textDefinition.rot != null && !textDefinition.rot.isZero()){
+					if(!textDefinition.rot.isZero()){
 						GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
 						GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
 						GL11.glRotated(textDefinition.rot.z, 0, 0, 1);

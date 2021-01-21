@@ -283,12 +283,17 @@ public class JSONParser{
 		/**
          * Description for this field.
          */
-		String value() default "";
+		String value();
     }
 	
 	@Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-	public static @interface JSONAutoGenerate{
+	public static @interface JSONDefaults{
+		/**
+         * Default values for this field.  Values are not exclusive to ALL values for this field.
+         * Rather, they are the known values that are assured to be select-able.
+         */
+		Class<? extends Enum<?>> value();
     }
 	
 	/**

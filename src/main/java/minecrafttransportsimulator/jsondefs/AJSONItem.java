@@ -37,11 +37,15 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
     public class General{
     	@JSONDescription("The name of this content.  Will be displayed in item form.  Note that if the content is a type that has a set of definitions, then this name is ignored and the appropriate definition name is used instead.")
     	public String name;
+    	
     	@JSONDescription("An optional description.  Will be rendered as an item tooltip.  Unlike the name parameter, descriptions on definitions are appended to this description, and do not overwrite it.  The idea behind this is that some variants need extra text to tell why they are different from one another, but shouldn't require re-writing the main description.")
     	public String description;
+    	
     	@JSONDescription("The optional stack size for this item.  Items with this set will stack to the size specified, up to the standard stack size of 64.  This of course won't work if the item has NBT on it, such as used engines.")
     	public int stackSize;
-    	@JSONDescription("A list of materials that are required to create this component.  The format for this list is [GiveString:Metadata:Qty], where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials (and no extraMaterials, if it uses definitions) it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter.")
+    	
+    	@JSONRequired
+    	@JSONDescription("A list of materials that are required to create this component.  The format for this list is [GiveString:Metadata:Qty], where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials in this list, and no extraMaterials if it uses definitions, it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter.")
     	public List<String> materials;
     }
 }

@@ -25,15 +25,19 @@ public class JSONInstrument extends AJSONItem<JSONInstrument.InstrumentGeneral>{
     	@JSONDescription("The optional scale to render this component at.  If not included, then the scale will be 1.0.")
     	public float scale;
     	
+    	@JSONRequired
         @JSONDescription("This is the center of the texture location of the X axis on the texture sheet.  Units are in pixels.")
     	public int textureXCenter;
     	
+    	@JSONRequired
         @JSONDescription("This is the center of the texture location of the Y axis on the texture sheet.  Units are in pixels.")
     	public int textureYCenter;
     	
+    	@JSONRequired
         @JSONDescription("The width, in pixels, of the texture section to render.")
     	public int textureWidth;
     	
+    	@JSONRequired
         @JSONDescription("The height, in pixels, of the texture section to render.")
     	public int textureHeight;
     	

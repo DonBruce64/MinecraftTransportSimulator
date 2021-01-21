@@ -9,11 +9,14 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -43,6 +46,10 @@ public final class LegacyCompatSystem{
 			performPoleLegacyCompats((JSONPoleComponent) definition);
 		}else if(definition instanceof JSONDecor){
 			performDecorLegacyCompats((JSONDecor) definition);
+		}else if(definition instanceof JSONItem){
+			performItemLegacyCompats((JSONItem) definition);
+		}else if(definition instanceof JSONSkin){
+			performSkinLegacyCompats((JSONSkin) definition);
 		}
 	}
 	
@@ -425,6 +432,15 @@ public final class LegacyCompatSystem{
 			definition.rendering.textObjects = definition.general.textObjects;
 			definition.general.textObjects = null;
 		}
+		
+		//Set default text to blank for sign text objects.
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(JSONText text : definition.rendering.textObjects){
+				if(text.defaultText == null){
+					text.defaultText = "";
+				}
+			}
+		}
 	}
 	
 	private static void performDecorLegacyCompats(JSONDecor definition){
@@ -468,6 +484,34 @@ public final class LegacyCompatSystem{
 			definition.rendering.textObjects = definition.general.textObjects;
 			definition.general.textObjects = null;
 		}
+		
+		//Set default text to blank for decor text objects.
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(JSONText text : definition.rendering.textObjects){
+				if(text.defaultText == null){
+					text.defaultText = "";
+				}
+			}
+		}
+	}
+	
+	private static void performItemLegacyCompats(JSONItem definition){
+		//Add blank fieldNames for booklets, as they shouldn't exist.
+		if(definition.booklet != null){
+			for(JSONText text : definition.booklet.titleText){
+				text.fieldName = "";
+			}
+			for(BookletPage page : definition.booklet.pages){
+				for(JSONText text : page.pageText){
+					text.fieldName = "";
+				}
+			}
+		}
+	}
+	
+	private static void performSkinLegacyCompats(JSONSkin definition){
+		//Make the materials empty, as the parser doesn't like them null.
+		definition.general.materials = new ArrayList<String>();
 	}
 	
 	private static void performVehiclePartDefLegacyCompats(VehiclePart partDef){

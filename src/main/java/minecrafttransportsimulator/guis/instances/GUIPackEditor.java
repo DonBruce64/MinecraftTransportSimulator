@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -44,10 +46,13 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import net.minecraft.client.Minecraft;
 
 /**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
@@ -168,6 +173,7 @@ public class GUIPackEditor extends JFrame{
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
         jsonClasses.put(JSONPoleComponent.class.getSimpleName(), JSONPoleComponent.class);
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
+        jsonClasses.put(JSONPotionEffect.class.getSimpleName(), JSONPotionEffect.class);
         
         //Create the box itself.
         JComboBox<String> typeComboBox = new JComboBox<String>();
@@ -226,11 +232,19 @@ public class GUIPackEditor extends JFrame{
 				JComponent newComponent = null;
 				try{
 					FieldChanger listenter = new FieldChanger(field, objectToParse);
-					newComponent = getComponentForObject(field.get(objectToParse), field.getType(), listenter);
+					if(field.isAnnotationPresent(JSONDefaults.class)){
+						newComponent = createNewStringBox(field.getAnnotation(JSONDefaults.class).value(), listenter);
+					}else{
+						newComponent = getComponentForObject(field.get(objectToParse), field.getType(), listenter);
+					}
+					
 					if(newComponent == null){
-						newComponent = getPanelForField(field, objectToParse);
+						newComponent = getComponentForField(field, objectToParse);
 					}else{
 						listenter.component = newComponent;
+						if(field.isAnnotationPresent(JSONRequired.class)){
+							newComponent.setBackground(Color.CYAN);
+						}
 					}
 				}catch(Exception e){}
 				
@@ -252,7 +266,7 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 	
-	private static JPanel getPanelForField(Field field, Object declaringObject){
+	private static JComponent getComponentForField(Field field, Object declaringObject){
 		Object obj;
 		try{
 			obj = field.get(declaringObject);
@@ -279,7 +293,7 @@ public class GUIPackEditor extends JFrame{
 			JPanel listContentsPanel = new JPanel();
 			listContentsPanel.setLayout(new BoxLayout(listContentsPanel, BoxLayout.Y_AXIS));
 			for(Object listEntry : listObject){
-				ListPanel newPanel = new ListPanel(listContentsPanel, listObject, listEntry);
+				ListElementPanel newPanel = new ListElementPanel(listContentsPanel, listObject, listEntry);
 				listContentsPanel.add(newPanel);
 			}
 			listObjectPanel.add(listContentsPanel, BorderLayout.CENTER);
@@ -293,7 +307,7 @@ public class GUIPackEditor extends JFrame{
 				public void actionPerformed(ActionEvent event){
 					try{
 						Object listEntry = createNewObjectInstance(paramClass, declaringObject);
-						ListPanel newPanel = new ListPanel(listContentsPanel, listObject, listEntry);
+						ListElementPanel newPanel = new ListElementPanel(listContentsPanel, listObject, listEntry);
 						listContentsPanel.add(newPanel);
 						listObject.add(listEntry);
 						listContentsPanel.revalidate();
@@ -391,13 +405,13 @@ public class GUIPackEditor extends JFrame{
 			pointPanel.add(zText);
 			return pointPanel;
 		}else if(objectClass.isEnum()){
-			return createNewEnumBox(obj, objectClass, listener);
+			return createNewEnumBox(objectClass, listener);
 		}else{
 			return null;
 		}
 	}
 	
-	private static <EnumType> JComboBox<EnumType> createNewEnumBox(Object obj, Class<EnumType> objectClass, FocusListener listener){
+	private static <EnumType> JComboBox<EnumType> createNewEnumBox(Class<EnumType> objectClass, FocusListener listener){
 		JComboBox<EnumType> comboBox = new JComboBox<EnumType>();
 		comboBox.setFont(NORMAL_FONT);
 		comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
@@ -406,22 +420,43 @@ public class GUIPackEditor extends JFrame{
 			comboBox.addItem(enumConstant);
 		}
 		comboBox.addFocusListener(listener);
-		comboBox.setRenderer(new DefaultListCellRenderer(){
+		comboBox.setRenderer(generateEnumTooltipRenderer(enumConstants));
+		return comboBox;
+	}
+	
+	private static <EnumType> JComboBox<String> createNewStringBox(Class<EnumType> objectClass, ItemListener listener){
+		JComboBox<String> comboBox = new JComboBox<String>();
+		comboBox.setEditable(true);
+		comboBox.setFont(NORMAL_FONT);
+		comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
+		EnumType[] enumConstants = objectClass.getEnumConstants();
+		for(EnumType enumConstant : enumConstants){
+			comboBox.addItem(((Enum<?>) enumConstant).name().toLowerCase());
+		}
+		comboBox.addItemListener(listener);
+		comboBox.setRenderer(generateEnumTooltipRenderer(enumConstants));
+		return comboBox;
+	}
+	
+	private static <EnumType> DefaultListCellRenderer generateEnumTooltipRenderer(EnumType[] enumConstants){
+		return new DefaultListCellRenderer(){
 		    @Override
 		    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus){
-		        JComponent comp = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-		        if(index > -1){
+		        JComponent component = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		        if(index > -1 && index < enumConstants.length){
 		        	EnumType currentEnum = enumConstants[index];
 		        	try{
 		        		String enumName = ((Enum<?>) currentEnum).name();
-		        		String tooltipText = formatTooltipText(currentEnum.getClass().getField(enumName).getAnnotation(JSONDescription.class).value());
-		        		list.setToolTipText(tooltipText);
+		        		Field enumField = currentEnum.getClass().getField(enumName);
+		        		if(enumField.isAnnotationPresent(JSONDescription.class)){
+		        			String tooltipText = formatTooltipText(enumField.getAnnotation(JSONDescription.class).value());
+			        		list.setToolTipText(tooltipText);
+		        		}
 		        	}catch(Exception e){}
 		        }
-		        return comp;
+		        return component;
 		    }
-		});
-		return comboBox;
+		};
 	}
 	
 	private static Object createNewObjectInstance(Class<?> fieldClass, Object declaringObject){
@@ -460,9 +495,9 @@ public class GUIPackEditor extends JFrame{
 		return tooltipText + "</html>";
 	}
 	
-	private static class ListPanel extends JPanel{
+	private static class ListElementPanel extends JPanel{
 		
-		private ListPanel(JPanel parentPanel, List<Object> list, Object listEntry){
+		private ListElementPanel(JPanel parentPanel, List<Object> list, Object listEntry){
 			//Create new box container for holding buttons.
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
@@ -505,7 +540,7 @@ public class GUIPackEditor extends JFrame{
 					try{
 						Object newObj = JSONParser.duplicateJSON(listEntry);
 						list.add(newObj);
-						parentPanel.add(new ListPanel(parentPanel, list, newObj));
+						parentPanel.add(new ListElementPanel(parentPanel, list, newObj));
 						parentPanel.revalidate();
 						parentPanel.repaint();
 					}catch(Exception e){}
@@ -567,6 +602,8 @@ public class GUIPackEditor extends JFrame{
 						component.getComponent(fieldChecking).setBackground(Color.RED);
 						return;
 					}
+				}else if(objectClass.isEnum()){
+					list.set(index, ((JComboBox<?>) component).getSelectedItem());
 				}
 				component.setBackground(Color.WHITE);
 			}catch(Exception e){
@@ -576,7 +613,7 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 	
-	private static class FieldChanger implements FocusListener{
+	private static class FieldChanger implements FocusListener, ItemListener{
 
 		private final Field objectField;
 		private final Class<?> objectClass;
@@ -603,10 +640,11 @@ public class GUIPackEditor extends JFrame{
 				}else if(objectClass.equals(Float.TYPE)){
 					objectField.set(declaringObject, Float.valueOf(((JTextField) component).getText()));
 				}else if(objectClass.equals(String.class)){
-					if(((JTextField) component).getText().isEmpty()){
+					String text = ((JTextField) component).getText();
+					if(text.isEmpty()){
 						objectField.set(declaringObject, null);
 					}else{
-						objectField.set(declaringObject, ((JTextField) component).getText());
+						objectField.set(declaringObject, text);
 					}
 				}else if(objectClass.equals(Point3d.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
@@ -629,7 +667,6 @@ public class GUIPackEditor extends JFrame{
 						}
 						return;
 					}catch(Exception e){
-						e.printStackTrace();
 						component.getComponent(fieldChecking).setBackground(Color.RED);
 						return;
 					}
@@ -638,8 +675,29 @@ public class GUIPackEditor extends JFrame{
 				}
 				component.setBackground(Color.WHITE);
 			}catch(Exception e){
-				e.printStackTrace();
 				component.setBackground(Color.RED);
+			}
+		}
+
+		@Override
+		public void itemStateChanged(ItemEvent event){
+			System.out.println("VERE");
+			if(event.getStateChange() == ItemEvent.DESELECTED){
+				try{
+					if(component instanceof JComboBox){
+						String text = ((JComboBox<?>) component).getSelectedItem().toString();
+						System.out.println(text);
+						if(text == null || text.isEmpty()){
+							objectField.set(declaringObject, null);
+						}else{
+							objectField.set(declaringObject, text);
+						}
+						component.setBackground(Color.WHITE);
+					}
+				}catch(Exception e){
+					e.printStackTrace();
+					component.setBackground(Color.RED);
+				}
 			}
 		}
 	}

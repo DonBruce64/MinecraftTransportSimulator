@@ -6,11 +6,11 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONAnimationDefinition{
 	@JSONRequired
-	@JSONDescription("The type of animation this definition will perform.  Valid types are “rotation”, “translation”, “visibility”, “inhibitor”, and “activator”. Inhibitors and activators are somewhat unique in that they doesn’t actually cause an animation. Rather, an inhibitor prevents any animations that come after it if the criteria (clamps) are met, and an activator negates the effects of a previous inhibitor if its criteria are met. Combined, these allow for complex logic.")
+	@JSONDescription("The type of animation this definition will perform.")
 	public AnimationComponentType animationType;
 	
 	@JSONRequired
-	@JSONDescription("The variable to use in animation.  See the variable information for more details.")
+	@JSONDescription("The variable to use in animation.")
 	public String variable;
 	
 	@JSONRequired(dependentField="animationType", dependentValues={"rotation"})

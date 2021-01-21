@@ -54,6 +54,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 	}
 	
 	public static enum ItemComponentType{
+		@JSONDescription("Creates an item with no functionality.")
+		NONE,
 		@JSONDescription("Creates a booklet, which is a book-like item.")
 		BOOKLET,
 		@JSONDescription("Creates an item that can be eaten.")
