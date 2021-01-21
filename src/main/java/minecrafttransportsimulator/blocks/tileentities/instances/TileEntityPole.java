@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -36,7 +37,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + axis.ordinal());
 				String subName = data.getString("subName" + axis.ordinal());
-				ATileEntityPole_Component newComponent = createComponent(PackParserSystem.getItem(packID, systemName, subName));
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(packID, systemName, subName));
 				components.put(axis, newComponent);
 				
 				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
@@ -51,7 +52,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//If we don't have our core component on the NONE axis, add it now based on our definition.
 		//This is done for ease of rendering and lookup routines.
 		if(!components.containsKey(Axis.NONE)){
-			components.put(Axis.NONE, createComponent(((ItemPoleComponent) this.item)));
+			components.put(Axis.NONE, PoleComponentType.createComponent(this, ((ItemPoleComponent) this.item)));
 		}
 	}
 	
@@ -104,16 +105,29 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		}
     }
 	
-	/**
-	 *  Helper method to create a component for this TE.  Does not add the component.
-	 */
-	public ATileEntityPole_Component createComponent(ItemPoleComponent itemAdded){
-		switch(itemAdded.definition.general.type){
-			case("core") : return new TileEntityPole_Core(this, itemAdded);	
-			case("traffic_signal") : return new TileEntityPole_TrafficSignal(this, itemAdded);
-			case("street_light") : return new TileEntityPole_StreetLight(this, itemAdded);
-			case("sign") : return new TileEntityPole_Sign(this, itemAdded);
-			default : throw new IllegalArgumentException("Wanted type: " + (itemAdded.definition.general.type != null ? itemAdded.definition.general.type : null) + " for pole:" + itemAdded.definition.packID + ":" + itemAdded.definition.systemName +", but such a type is not a valid pole component.  Contact the pack author." );
+	public static enum PoleComponentType{
+		@JSONDescription("The base of any pole system is the core type. This is the central structure that connects to other pole bits and allows placement of components on it.  You cannot place other components without placing one of these first.")
+		CORE,
+		@JSONDescription("Perhaps the most standard of lights, traffic signals consist of a main model (named anything you like), plus the lights (see the lights section).  You may omit any or all lights should you wish to change your sinal's behavior.  This may include making fewer or more bulbs than the standard 3 light.  Say a 2-light unit for a crossing signal.")
+		TRAFFIC_SIGNAL,
+		@JSONDescription("These are the simplest type of lights.  Designed for street accents, the lights normally don't change state.  However, signal controllers can turn their light off via a redstone input.")
+		STREET_LIGHT,
+		@JSONDescription("Signs are the third pole component you can create, and perhaps one of the most overlooked pack-based things in MTS.  Signs may have lights on them as well, and behave the same as street lights; the only exception being that their lights cannot be controlled by signal controllers.  If a sign has textObjects in its rendering section, then it will allow for editing that text via GUI.  This allows for dynamic route and speed limit signs, among others.")
+		SIGN;
+		
+		/**
+		 *  Helper method to create a component for the passed-in pole.  Does not add the component
+		 *  to the pole, only creates it.
+		 */
+		public static ATileEntityPole_Component createComponent(TileEntityPole pole, ItemPoleComponent item){
+			switch(item.definition.general.type){
+				case CORE : return new TileEntityPole_Core(pole, item);	
+				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, item);
+				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, item);
+				case SIGN : return new TileEntityPole_Sign(pole, item);
+			}
+			//We'll never get here.
+			return null;
 		}
 	}
 }

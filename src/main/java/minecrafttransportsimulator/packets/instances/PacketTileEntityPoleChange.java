@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
@@ -137,7 +138,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 				}
 			}else if(componentItem != null && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ATileEntityPole_Component newComponent = pole.createComponent(componentItem);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, componentItem);
 				pole.components.put(axis, newComponent);
 				if(textLines != null && newComponent instanceof ITextProvider){
 					int linesChecked = 0;

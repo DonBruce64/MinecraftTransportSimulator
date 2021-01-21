@@ -361,9 +361,11 @@ public class InterfaceRender{
 					//First rotate 180 along the X-axis to get us rendering right-side up.
 					GL11.glRotatef(180F, 1, 0, 0);
 					//Next, apply rotations.  Y is inverted due to the inverted X axis.
-					GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
-					GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
-					GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
+					if(textDefinition.rot != null && !textDefinition.rot.isZero()){
+						GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
+						GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
+						GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
+					}
 					//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
 					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 					//Finally, render the text.

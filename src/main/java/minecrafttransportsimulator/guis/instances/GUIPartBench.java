@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
 import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -404,7 +405,7 @@ public class GUIPartBench extends AGUIBase{
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.
-			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals("sign"));
+			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals(PoleComponentType.SIGN));
 		}else{
 			itemRender.stack = currentItem.getNewStack();
 			modelRender.modelLocation = null;

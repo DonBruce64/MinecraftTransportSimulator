@@ -10,11 +10,14 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -167,6 +170,45 @@ public class JSONParser{
 		}
 	};
 	
+	private static final TypeAdapterFactory lowercaseEnumFactory = new TypeAdapterFactory(){
+		@Override
+		public <EnumType> TypeAdapter<EnumType> create(Gson gson, TypeToken<EnumType> type){
+			@SuppressWarnings("unchecked")
+			Class<EnumType> rawType = (Class<EnumType>) type.getRawType();
+			if(!rawType.isEnum()){
+				return null;
+			}else{
+				//Create a map lookup for the enums to speed up processing.
+				final Map<String, EnumType> lowercaseToEnum = new HashMap<String, EnumType>();
+				for(EnumType enumConstant : rawType.getEnumConstants()){
+					lowercaseToEnum.put(enumConstant.toString().toLowerCase(), enumConstant);
+				}
+				
+				//Return the new type adapter.
+				return new TypeAdapter<EnumType>(){
+					@Override
+					public void write(JsonWriter writer, EnumType value) throws IOException{
+						if(value == null){
+							writer.nullValue();
+						}else{
+							writer.value(value.toString().toLowerCase());
+						}
+					}
+					
+					@Override
+					public EnumType read(JsonReader reader) throws IOException{
+						if(reader.peek() == JsonToken.NULL){
+							reader.nextNull();
+							return null;
+						}else{
+							return lowercaseToEnum.get(reader.nextString());
+						}
+					}
+				};
+			}
+		}
+	};
+	
 	//This needs to go down here AFTER we create the type adapters.
 	private static final Gson packParser = getParserWithAdapters();
 	
@@ -179,6 +221,7 @@ public class JSONParser{
 				.registerTypeAdapter(Float.class, floatAdapter)
 				.registerTypeAdapter(Point3d.class, point3dAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
+				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				.create();
 	}
 	

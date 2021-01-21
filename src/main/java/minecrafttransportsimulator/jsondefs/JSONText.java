@@ -9,7 +9,6 @@ public class JSONText{
 	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where the text should render.  Text may be left or right aligned by specifying the proper parameter.")
 	public Point3d pos;
 	
-	@JSONRequired
 	@JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this text.  By default all text faces +z, on the model.")
     public Point3d rot;
 	

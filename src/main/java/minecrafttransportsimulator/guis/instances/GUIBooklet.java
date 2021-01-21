@@ -28,7 +28,7 @@ public class GUIBooklet extends AGUIBase{
 	
 	public GUIBooklet(ItemItem booklet){
 		this.booklet = booklet;
-		this.totalPages = booklet.definition.booklet.disableTOC ? 1 + booklet.definition.booklet.pages.length : 2 + booklet.definition.booklet.pages.length;
+		this.totalPages = booklet.definition.booklet.disableTOC ? 1 + booklet.definition.booklet.pages.size() : 2 + booklet.definition.booklet.pages.size();
 	}
 	
 	@Override 
@@ -73,7 +73,7 @@ public class GUIBooklet extends AGUIBase{
 			contentsButtons.clear();
 			int leftSideOffset = guiLeft + 20;
 			int rightSideOffset = guiLeft + 155;
-			for(int i=0; i<booklet.definition.booklet.pages.length; ++i){
+			for(int i=0; i<booklet.definition.booklet.pages.size(); ++i){
 				ContentsButton contentsHyperlink = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
 					@Override
 					public void onClicked(){
@@ -103,8 +103,8 @@ public class GUIBooklet extends AGUIBase{
 					addLabel(pageLabel);
 				}catch(Exception e){
 					int pageNumber = -1;
-					for(byte i=0;i<booklet.definition.booklet.pages.length; ++i){
-						if(booklet.definition.booklet.pages[i].equals(page)){
+					for(byte i=0;i<booklet.definition.booklet.pages.size(); ++i){
+						if(booklet.definition.booklet.pages.get(i).equals(page)){
 							pageNumber = i + 1;
 						}
 					}
@@ -164,12 +164,12 @@ public class GUIBooklet extends AGUIBase{
 			return booklet.definition.booklet.coverTexture;
 		}else if(!booklet.definition.booklet.disableTOC){
 			if(booklet.pageNumber == 1){
-				return booklet.definition.booklet.pages[0].pageTexture;
+				return booklet.definition.booklet.pages.get(0).pageTexture;
 			}else{
-				return booklet.definition.booklet.pages[booklet.pageNumber - 2].pageTexture;
+				return booklet.definition.booklet.pages.get(booklet.pageNumber - 2).pageTexture;
 			}
 		}else{
-			return booklet.definition.booklet.pages[booklet.pageNumber - 1].pageTexture;
+			return booklet.definition.booklet.pages.get(booklet.pageNumber - 1).pageTexture;
 		}
 	}
 	
@@ -183,7 +183,7 @@ public class GUIBooklet extends AGUIBase{
 		protected final int contentsIndex;
 
 		public ContentsButton(int x, int y, int contentsIndex){
-			super(x, y, 110, (contentsIndex + 1) + ": " + booklet.definition.booklet.pages[contentsIndex].title, 10, false);
+			super(x, y, 110, (contentsIndex + 1) + ": " + booklet.definition.booklet.pages.get(contentsIndex).title, 10, false);
 			this.contentsIndex = contentsIndex;
 		}
 
@@ -196,7 +196,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		InterfaceGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages[contentsIndex].pageText[0].color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		InterfaceGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

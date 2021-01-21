@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -18,7 +19,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 	
 	@Override
 	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
-		if(definition.general.type.equals("core")){
+		if(definition.general.type.equals(PoleComponentType.CORE)){
 			return ((IItemBlock) this).placeBlock(world, player, point, axis);
 		}else{
 			return false;

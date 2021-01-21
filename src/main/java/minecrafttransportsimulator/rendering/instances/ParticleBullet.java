@@ -195,7 +195,7 @@ public class ParticleBullet extends AParticle{
 			//Get the particle's initial position.
 			Point3d particlePosition = this.position.copy();
 			if(particleObject.pos != null) {
-				particlePosition.add(particleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0d)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
+				particlePosition.add(particleObject.pos.copy().rotateFine(new Point3d(0D, this.getYaw(), 0D)).rotateFine(new Point3d(this.getPitch(), 0D, 0D)));
 			}
 
 			//Spawn the appropriate type and amount of particles.

@@ -11,6 +11,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
@@ -56,7 +57,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerClickingEditableSign = clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null;
-			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals("core");
+			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals(PoleComponentType.CORE);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
