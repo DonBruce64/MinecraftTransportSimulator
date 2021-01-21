@@ -21,15 +21,13 @@ public abstract class APacketTileEntity<TileEntityType extends ATileEntityBase<?
 	
 	public APacketTileEntity(ByteBuf buf){
 		super(buf);
-		this.position = new Point3i(buf.readInt(), buf.readInt(), buf.readInt());
+		this.position = readPoint3iFromBuffer(buf);
 	};
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(position.x);
-		buf.writeInt(position.y);
-		buf.writeInt(position.z);
+		writePoint3iToBuffer(position, buf);
 	}
 	
 	@Override

@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -84,6 +85,22 @@ public abstract class APacketBase{
 	 */
 	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
 		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+	}
+	
+	/**
+	 *  Helper method to write a Point3i to the buffer.
+	 */
+	protected static void writePoint3iToBuffer(Point3i point, ByteBuf buf){
+		buf.writeInt(point.x);
+		buf.writeInt(point.y);
+		buf.writeInt(point.z);
+	}
+	
+	/**
+	 *  Helper method to read a Point3i from the buffer.
+	 */
+	protected static Point3i readPoint3iFromBuffer(ByteBuf buf){
+		return new Point3i(buf.readInt(), buf.readInt(), buf.readInt());
 	}
 	
 	/**

@@ -46,17 +46,13 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
 		//Only do logic on the server.
 		if(!world.isClient()){
-			//If we clicked an inactive road, try to spawn collision blocks.
+			//If we clicked an inactive road, don't do anything.
+			//The road block will handle this operation.
 			ABlockBase clickedBlock = world.getBlock(point);
 			if(clickedBlock instanceof BlockRoad){
 				TileEntityRoad clickedRoad = world.getTileEntity(point);
 				if(!clickedRoad.isActive){
-					if(clickedRoad.spawnCollisionBlocks(player)){
-						lastRoadClickedData.put(player, clickedRoad.getClickData(point, false));
-					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
-					}
-					return true;
+					return false;
 				}
 			}
 			
@@ -194,39 +190,38 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						if(world.setBlock(getBlock(), blockPlacementPoint, player, axis)){
 							TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 							
-							//Now that the road is placed, create all road lanes.
+							//Now that the road is placed, create the dynamic curve.
 							//These can't get set in the constructor as it can't take the curve for dynamic roads.
 							newRoad.dynamicCurve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
-							newRoad.generateLanes(null);
-							
-							//Set the lane connections, as appropriate.
-							if(startingRoadData != null){
-								for(RoadLane lane : newRoad.lanes){
-									lane.connectToPrior(startingRoadData.roadClicked);
-								}
-								for(RoadLane lane : startingRoadData.roadClicked.lanes){
-									lane.connectToPrior(newRoad);
-									lane.connectToNext(newRoad);
-								}
-							}
-							if(endingRoadData != null){
-								for(RoadLane lane : newRoad.lanes){
-									lane.connectToNext(endingRoadData.roadClicked);
-								}
-								for(RoadLane lane : endingRoadData.roadClicked.lanes){
-									lane.connectToPrior(newRoad);
-									lane.connectToNext(newRoad);
-								}
-							}
-							//FIXME need a way to update lane connections client-side.  Need a packet.
 							
 							//Try to spawn all the collision blocks for this road.
+							//If we spawn blocks, we create all collision points and join the road's connections.
 							if(newRoad.spawnCollisionBlocks(player)){
+								//Set the lane connections, as appropriate.
+								if(startingRoadData != null){
+									for(RoadLane lane : newRoad.lanes){
+										lane.connectToPrior(startingRoadData.roadClicked);
+									}
+									for(RoadLane lane : startingRoadData.roadClicked.lanes){
+										lane.connectToPrior(newRoad);
+										lane.connectToNext(newRoad);
+									}
+								}
+								if(endingRoadData != null){
+									for(RoadLane lane : newRoad.lanes){
+										lane.connectToNext(endingRoadData.roadClicked);
+									}
+									for(RoadLane lane : endingRoadData.roadClicked.lanes){
+										lane.connectToPrior(newRoad);
+										lane.connectToNext(newRoad);
+									}
+								}
+								//FIXME need a way to update lane connections client-side.  Need a packet.
+								
+								//Set new points.
 								lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
 								lastPositionClicked.put(player, newRoad.position);
 								lastRotationClicked.put(player, startRotation + 180D);
-							}else{
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
 							}
 						}else{
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
@@ -246,16 +241,11 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 				if(world.setBlock(getBlock(), blockPlacementPoint, player, axis)){
 					TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 					
-					//Now that the road is placed, create all road lanes.
-					newRoad.generateLanes(null);
-					
 					//Try to spawn all the collision blocks for this road.
 					if(newRoad.spawnCollisionBlocks(player)){
 						lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
 						lastPositionClicked.put(player, newRoad.position);
 						lastRotationClicked.put(player, Math.round(player.getYaw()/15)*15 + 180D);
-					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
 					}
 				}else{
 					player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));

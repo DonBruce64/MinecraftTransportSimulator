@@ -31,7 +31,14 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
-		return false;
+		if(!world.isClient()){
+			//Check if we aren't active.  If not, try to spawn collision again.
+			TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
+	    	if(road != null && !road.isActive){
+	    		road.spawnCollisionBlocks(player);
+	    	}
+		}
+		return true;
 	}
 	
 	@Override

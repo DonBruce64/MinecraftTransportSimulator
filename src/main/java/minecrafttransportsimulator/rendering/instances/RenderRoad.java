@@ -8,7 +8,9 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -34,6 +36,18 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		if(!roadDisplayListMap.containsKey(road)){
 			roadDisplayListMap.put(road, new HashMap<RoadComponent, Integer>());
 		}
+		
+		//If the road is inactive, we render everything as a hologram.
+		if(!road.isActive){
+			if(InterfaceRender.getRenderPass() != 0){
+				InterfaceRender.setBlendState(true, false);
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 0.5F);
+			}else{
+				return;
+			}
+		}
+		
 		Map<RoadComponent, Integer> displayListMap = roadDisplayListMap.get(road);
 		for(RoadComponent component : road.components.keySet()){
 			ItemRoadComponent componentItem = road.components.get(component);
@@ -146,12 +160,26 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				displayListMap.put(component, displayListIndex);
 			}
 			
-			InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
+			if(road.isActive){
+				InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
+			}
 			GL11.glCallList(displayListMap.get(component));
 		}
 		
-		//If we are inactive, or in devMode, render road bounds and colliding boxes.
-		if(!road.isActive || ConfigSystem.configObject.clientControls.devMode.value){
+		//If we are inactive render the blocking blocks and the main block.
+		if(!road.isActive){
+			InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 0.5F);
+			for(Point3i location : road.collidingBlockOffsets){
+				BoundingBox blockingBox = new BoundingBox(new Point3d(location).add(0, 0.5, 0), 0.55, 0.55, 0.55);
+				RenderBoundingBox.renderSolid(blockingBox); 
+			}
+			InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 0.5F);
+			BoundingBox mainBlockBox = new BoundingBox(new Point3d(0, 0, 0).add(0, 0.75, 0), 0.15, 1.5, 0.15);
+			RenderBoundingBox.renderSolid(mainBlockBox);
+		}
+		
+		//If we are in devMode, render road bounds and colliding boxes.
+		if(ConfigSystem.configObject.clientControls.devMode.value){
 			//Render the information hashes.
 			//First set states.
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -163,7 +191,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//First render the actual curve if we are a dynamic road.
 			if(road.dynamicCurve != null){
 				//Render actual curve.
-				GL11.glColor3f(0, 1, 0);
+				InterfaceRender.setColorState(0, 1, 0, 1);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToPositionAt(position, f);
 					GL11.glVertex3d(position.x, position.y, position.z);
@@ -171,7 +199,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				}
 				
 				//Render the outer border bounds.
-				GL11.glColor3f(0, 1, 1);
+				InterfaceRender.setColorState(0, 1, 1, 1);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToRotationAt(rotation, f);
 					position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
@@ -186,7 +214,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			for(RoadLane lane : road.lanes){
 				for(BezierCurve laneCurve : lane.curves){
 					//Render the curve start point.
-					GL11.glColor3f(1, 0, 0);
+					InterfaceRender.setColorState(1, 0, 0, 1);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
@@ -195,7 +223,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					GL11.glVertex3d(laneCurve.startPos.x + position.x, laneCurve.startPos.y + 3 + position.y, laneCurve.startPos.z + position.z);
 					
 					//Render all the points on the curve.
-					GL11.glColor3f(1, 1, 0);
+					InterfaceRender.setColorState(1, 1, 0, 1);
 					laneCurve.setPointToPositionAt(position, 0);
 					for(float f=0; f<laneCurve.pathLength; f+=0.1){
 						laneCurve.setPointToPositionAt(position, f);
@@ -206,7 +234,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			}
 			
 			//Render the lane connections.
-			GL11.glColor3f(0, 0, 1);
+			InterfaceRender.setColorState(0, 0, 1, 1);
 			for(RoadLane lane : road.lanes){
 				for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
 					BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
@@ -237,9 +265,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			
 			//Set states back to normal.
 			GL11.glEnd();
-			GL11.glColor3f(1, 1, 1);
-			GL11.glEnable(GL11.GL_LIGHTING);
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			InterfaceRender.resetStates();
 		}
 	}
 	
