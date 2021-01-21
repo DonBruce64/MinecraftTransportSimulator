@@ -2,7 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;

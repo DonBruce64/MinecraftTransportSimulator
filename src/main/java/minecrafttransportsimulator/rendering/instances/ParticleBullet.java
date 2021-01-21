@@ -204,7 +204,7 @@ public class ParticleBullet extends AParticle{
 			if(particleObject.scale == 0f && particleObject.toScale == 0f) particleObject.scale = 1f;
 			AParticle currentParticle;
 			switch(particleObject.type) {
-				case "smoke": {
+				case SMOKE: {
 					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
 					for(int i=0; i<particleObject.quantity; i++) {
 						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), particleObject);
@@ -212,7 +212,7 @@ public class ParticleBullet extends AParticle{
 					}
 					break;
 				}
-				case "flame": {
+				case FLAME: {
 					for(int i=0; i<particleObject.quantity; i++) {
 						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
 						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);

@@ -10,6 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -483,7 +484,7 @@ public final class LegacyCompatSystem{
 			partDef.particleObjects = new ArrayList<JSONParticleObject>();
 			for(int i=0; i<partDef.exhaustPos.length; i+=3){
 				JSONParticleObject particle = new JSONParticleObject();
-				particle.type = "smoke";
+				particle.type = ParticleComponentType.SMOKE;
 				particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
 				particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
 				particle.scale = 1.0F;
@@ -501,7 +502,7 @@ public final class LegacyCompatSystem{
 			partDef.particleObjects = new ArrayList<JSONParticleObject>();
 			for(ExhaustObject exhaust : partDef.exhaustObjects) {
 				JSONParticleObject particle = new JSONParticleObject();
-				particle.type = "smoke";
+				particle.type = ParticleComponentType.SMOKE;
 				particle.pos = exhaust.pos;
 				particle.velocityVector = exhaust.velocity;
 				particle.scale = exhaust.scale;

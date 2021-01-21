@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -16,8 +17,8 @@ public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
 	public JSONFood food;
 
     public class ItemGeneral extends AJSONItem<JSONItem.ItemGeneral>.General{
-    	@JSONDescription("This parameter is optional.  If included, the item will be created with specific functionality.  The following special types are currently supported: \"booklet\" and \"food\".")
-    	public String type;
+    	@JSONDescription("This parameter is optional.  If included, the item will be created with specific functionality.")
+    	public ItemComponentType type;
     }
     
     public class JSONBooklet{

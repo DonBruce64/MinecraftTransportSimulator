@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.sound.InterfaceSound;
+import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used both in model animations, and part movements.

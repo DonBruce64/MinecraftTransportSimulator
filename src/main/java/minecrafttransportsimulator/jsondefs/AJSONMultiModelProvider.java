@@ -2,9 +2,9 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 
 public abstract class AJSONMultiModelProvider<GeneralConfig extends AJSONMultiModelProvider<GeneralConfig>.General> extends AJSONItem<GeneralConfig>{

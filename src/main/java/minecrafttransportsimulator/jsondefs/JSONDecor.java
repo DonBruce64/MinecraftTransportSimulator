@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONAutoGenerate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -12,8 +13,8 @@ public class JSONDecor extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>{
 	public JSONRendering rendering;
 
     public class DecorGeneral extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>.General{
-		@JSONDescription("An optional type for this decor to give it functionality.  Valid functions are: [beacon, fuel_pump, fluid_loader, signal_controller, radio]")
-    	public String type;
+		@JSONDescription("An optional type for this decor to give it functionality.")
+    	public DecorComponentType type;
     	
 		@JSONRequired
     	@JSONDescription("How wide a decor is.  1 is a full block width.  Numbers over 1 will result in unpredictable operations, so don't use them.")

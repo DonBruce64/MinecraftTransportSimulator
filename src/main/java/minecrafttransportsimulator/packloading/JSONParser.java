@@ -264,7 +264,7 @@ public class JSONParser{
 		
 		/**
          * Optional parameter for the optional variable value.  This field will only be marked as required if the 
-         * {@link #dependentField()} has one of these values.  This allows for this field to be null as long as
+         * {@link #dependentField()} starts with one of these values.  This allows for this field to be null as long as
          * the dependent doesn't have one of these values.  If this annotation element is not specified, then the
          * field must always be non-null.
          */

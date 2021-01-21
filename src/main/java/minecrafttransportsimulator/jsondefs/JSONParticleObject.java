@@ -7,8 +7,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONParticleObject{
 	@JSONRequired
-	@JSONDescription("A string describing which type of particle to use. Currently this can be \"smoke\" or \"flame\".")
-	public String type;
+	@JSONDescription("Which type of particle to use.")
+	public ParticleComponentType type;
 	
 	@JSONDescription("A string in hexadecimal format representing the particle's color.  Only valid for smoke.")
 	public String color;
@@ -44,4 +44,10 @@ public class JSONParticleObject{
 	@Deprecated
 	public float velocity;
 	
+	public static enum ParticleComponentType{
+		@JSONDescription("The standard smoke particle.")
+		SMOKE,
+		@JSONDescription("The standard (torch) flame particle.")
+		FLAME;
+	}
 }

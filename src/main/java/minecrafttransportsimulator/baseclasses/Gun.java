@@ -487,7 +487,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			if(gunParticle.scale == 0f && gunParticle.toScale == 0f) gunParticle.scale = 1f;
 			AParticle currentParticle;
 			switch(gunParticle.type) {
-				case "smoke": {
+				case SMOKE: {
 					if(gunParticle.transparency == 0f && gunParticle.toTransparency == 0F) gunParticle.transparency = 1f;
 					for(int i=0; i<gunParticle.quantity; i++) {
 						currentParticle = new ParticleSuspendedSmoke(provider.getProviderWorld(), particlePosition, particleVelocity.copy(), gunParticle);
@@ -495,7 +495,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 					}
 					break;
 				}
-				case "flame": {
+				case FLAME: {
 					for(int i=0; i<gunParticle.quantity; i++) {
 						currentParticle = new ParticleFlame(provider.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), gunParticle.scale);
 						currentParticle.deltaScale = (gunParticle.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);

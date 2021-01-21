@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole.PoleComponentType;
 import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -16,6 +15,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
