@@ -7,7 +7,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 public class JSONAnimationDefinition{
 	@JSONRequired
 	@JSONDescription("The type of animation this definition will perform.  Valid types are “rotation”, “translation”, “visibility”, “inhibitor”, and “activator”. Inhibitors and activators are somewhat unique in that they doesn’t actually cause an animation. Rather, an inhibitor prevents any animations that come after it if the criteria (clamps) are met, and an activator negates the effects of a previous inhibitor if its criteria are met. Combined, these allow for complex logic.")
-	public String animationType;
+	public AnimationComponentType animationType;
 	
 	@JSONRequired
 	@JSONDescription("The variable to use in animation.  See the variable information for more details.")
@@ -58,4 +58,17 @@ public class JSONAnimationDefinition{
 	
 	@JSONDescription("Like forwardsEndSound, but for reverse.")
 	public String reverseEndSound;
+	
+	public static enum AnimationComponentType{
+		@JSONDescription("This animation moves this component in the X/Y/Z direction based on the axis value, with the component moving the total distance specified when the value of the variable is 1.")
+		TRANSLATION,
+		@JSONDescription("This animation rotates this component around the X/Y/Z-axis by the number of degrees specified.  This rotation is offset by the centerPoint parameter.  Note: most animations are done in sequence, where rotation is first done around the Y-axis, then the X-axis, and then the Z-axis.  However, for the rendering of OBJ model objects, the rotation is done all at once, with the rotation assuming that the axis parameter is a vector to rotate around and the length of that vector being the amount to rotate.  This won't matter in single-axis and some double-axis rotation, but it will cause differences in movement in triple-axis rotation.  In particular is the movement of parts on vehicles versus the movement of the OBJ model components.")
+		ROTATION,
+		@JSONDescription("This isn't as much an animation as it is a requirement for this component to be rendered.  If the value of the variable is outside the min and max clamps, the component will not be rendered.")
+		VISIBILITY,
+		@JSONDescription("This animation will block, or inhibit, any animations after it if the variable value is inside the min and max clamp.  Useful for disabling animations if things aren't present or in the right sequence.")
+		INHIBITOR,
+		@JSONDescription("Like Inhibitor, but in this case this animation will be resumed if it was inhibited.  There is no change if the animation wasn't inhibited to begin with.")
+		ACTIVATOR;
+	}
 }

@@ -191,37 +191,52 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 			for(DurationDelayClock clock : clocks){
 				JSONAnimationDefinition animation = clock.definition;
-				if(animation.animationType.equals("inhibitor")){
-					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-						inhibitAnimations = true;
-					}
-				}else if(animation.animationType.equals("activator")){
-					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-						inhibitAnimations = false;
-					}
-				}else if(!inhibitAnimations){
-					if(animation.animationType.equals("rotation")){
-						//Found rotation.  Get angles that needs to be applied.
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
-						
-						//Check if we need to apply a translation based on this rotation.
-						if(!animation.centerPoint.isZero()){
-							//Use the center point as a vector we rotate to get the applied offset.
-							//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-							rollingOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(rollingRotation));
+				switch(animation.animationType){
+					case TRANSLATION :{
+						if(!inhibitAnimations){
+							//Found translation.  This gets applied in the translation axis direction directly.
+							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
+							rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
 						}
-						
-						//Apply rotation.
-						rollingRotation.add(appliedRotation);
-					}else if(animation.animationType.equals("translation")){
-						//Found translation.  This gets applied in the translation axis direction directly.
-						//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
+						break;
+					}
+					case ROTATION :{
+						if(!inhibitAnimations){
+							//Found rotation.  Get angles that needs to be applied.
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+							Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
+							
+							//Check if we need to apply a translation based on this rotation.
+							if(!animation.centerPoint.isZero()){
+								//Use the center point as a vector we rotate to get the applied offset.
+								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
+								rollingOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(rollingRotation));
+							}
+							
+							//Apply rotation.
+							rollingRotation.add(appliedRotation);
+						}
+						break;
+					}
+					case VISIBILITY :{
+						//Do nothing.
+						break;
+					}
+					case INHIBITOR :{
 						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
-						rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
+						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+							inhibitAnimations = true;
+						}
+						break;
+					}
+					case ACTIVATOR :{
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+							inhibitAnimations = false;
+						}
+						break;
 					}
 				}
 			}
@@ -243,21 +258,37 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 		if(!clocks.isEmpty()){
 			for(DurationDelayClock clock : clocks){
 				JSONAnimationDefinition animation = clock.definition;
-				if(animation.animationType.equals("inhibitor")){
-					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-						inhibitAnimations = true;
+				switch(animation.animationType){
+					case TRANSLATION :{
+						//Do nothing.
+						break;
 					}
-				}else if(animation.animationType.equals("activator")){
-					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-						inhibitAnimations = false;
+					case ROTATION :{
+						if(!inhibitAnimations){
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+							Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
+							rollingRotation.add(appliedRotation.x, appliedRotation.y, appliedRotation.z);
+						}
+						break;
 					}
-				}
-				if(!inhibitAnimations && animation.animationType.equals("rotation")){
-					double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-					Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
-					rollingRotation.add(appliedRotation.x, appliedRotation.y, appliedRotation.z);
+					case VISIBILITY :{
+						//Do nothing.
+						break;
+					}
+					case INHIBITOR :{
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+							inhibitAnimations = true;
+						}
+						break;
+					}
+					case ACTIVATOR :{
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+							inhibitAnimations = false;
+						}
+						break;
+					}
 				}
 			}
 		}

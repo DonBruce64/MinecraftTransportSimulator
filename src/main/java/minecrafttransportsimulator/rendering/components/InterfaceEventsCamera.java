@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -148,17 +149,16 @@ public class InterfaceEventsCamera{
 							boolean inhibitAnimations = false;
 	        				for(JSONAnimationDefinition animation : camera.animations){
 	        					double variableValue= provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
-	        					if(animation.animationType.equals("inhibitor")){
-	        						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-	        							inhibitAnimations = true;
-	        						}
-	        					}else if(animation.animationType.equals("activator")){
-	        						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-	        							inhibitAnimations = false;
-	        						}
-	        					}else if(!inhibitAnimations){
-	        						if(animation.animationType.equals("rotation")){
-	            						if(variableValue != 0){
+	        					switch(animation.animationType){
+		        					case TRANSLATION :{
+	            						if(!inhibitAnimations && variableValue != 0){
+	            							Point3d translationAmount = animation.axis.copy().normalize().multiply(variableValue).rotateFine(cameraRotation);
+	            							cameraPosition.add(translationAmount);
+	            						}
+	            						break;
+	            					}
+		        					case ROTATION :{
+		        						if(!inhibitAnimations && variableValue != 0){
 	            							Point3d rotationAmount = animation.axis.copy().normalize().multiply(variableValue);
 	            							Point3d rotationOffset = camera.pos.copy().subtract(animation.centerPoint);
 	            							if(!rotationOffset.isZero()){
@@ -166,12 +166,24 @@ public class InterfaceEventsCamera{
 	            							}
 	            							cameraRotation.add(rotationAmount);
 	            						}
-	            					}else if(animation.animationType.equals("translation")){
-	            						if(variableValue != 0){
-	            							Point3d translationAmount = animation.axis.copy().normalize().multiply(variableValue).rotateFine(cameraRotation);
-	            							cameraPosition.add(translationAmount);
-	            						}
-	            					}
+		        						break;
+		        					}
+		        					case VISIBILITY :{
+		        						//Do nothing.  We checked this earlier.
+		        						break;
+		        					}
+		        					case INHIBITOR :{
+		        						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+		        							inhibitAnimations = true;
+		        						}
+		        						break;
+		        					}
+		        					case ACTIVATOR :{
+		        						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+		        							inhibitAnimations = false;
+		        						}
+		        						break;
+		        					}
 	        					}
 	        				}
 	        			}
@@ -306,7 +318,7 @@ public class InterfaceEventsCamera{
     private static boolean isCameraActive(JSONCameraObject camera, IAnimationProvider provider, float partialTicks){
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
-				if(animation.animationType.equals("visibility")){
+				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
 					double value = provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;

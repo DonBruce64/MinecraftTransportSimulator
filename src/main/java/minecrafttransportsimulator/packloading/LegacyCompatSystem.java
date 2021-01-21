@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -335,7 +336,7 @@ public final class LegacyCompatSystem{
 			if(component.rotationVariable != null){
 				component.animations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.animationType = "rotation";
+				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = component.rotationVariable;
 				animation.centerPoint = new Point3d(0, 0, 0);
 				animation.axis = new Point3d(0, 0, component.rotationFactor);
@@ -362,7 +363,7 @@ public final class LegacyCompatSystem{
 					component.animations = new ArrayList<JSONAnimationDefinition>();
 				}
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.animationType = "translation";
+				animation.animationType = AnimationComponentType.TRANSLATION;
 				animation.variable = component.translationVariable;
 				if(component.translateHorizontal){
 					animation.axis = new Point3d(component.translationFactor, 0, 0);
@@ -518,7 +519,7 @@ public final class LegacyCompatSystem{
 		if(partDef.rotationVariable != null){
 			partDef.animations = new ArrayList<JSONAnimationDefinition>();
 			JSONAnimationDefinition animation = new JSONAnimationDefinition();
-			animation.animationType = "rotation";
+			animation.animationType = AnimationComponentType.ROTATION;
 			animation.variable = partDef.rotationVariable;
 			animation.centerPoint = partDef.rotationPosition;
 			animation.axis = partDef.rotationAngles;
@@ -538,7 +539,7 @@ public final class LegacyCompatSystem{
 				partDef.animations = new ArrayList<JSONAnimationDefinition>();
 			}
 			JSONAnimationDefinition animation = new JSONAnimationDefinition();
-			animation.animationType = "translation";
+			animation.animationType = AnimationComponentType.TRANSLATION;
 			animation.variable = partDef.translationVariable;
 			animation.axis = partDef.translationPosition;
 			animation.clampMin = partDef.translationClampMin;
@@ -574,7 +575,7 @@ public final class LegacyCompatSystem{
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.centerPoint = new Point3d(0, 0, 0);
 				animation.axis = new Point3d(0, -1, 0);
-				animation.animationType = "rotation";
+				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = "rudder";
 				partDef.animations.add(animation);
 			}
@@ -628,7 +629,7 @@ public final class LegacyCompatSystem{
     			}
     			
     			JSONAnimationDefinition animation = new JSONAnimationDefinition();
-    			animation.animationType = "rotation";
+    			animation.animationType = AnimationComponentType.ROTATION;
     	    	animation.variable = rotatable.rotationVariable;
     	    	animation.centerPoint = rotatable.rotationPoint;
     	    	animation.axis = rotatable.rotationAxis;
@@ -666,7 +667,7 @@ public final class LegacyCompatSystem{
     			}
     			
     			JSONAnimationDefinition animation = new JSONAnimationDefinition();
-    			animation.animationType = "translation";
+    			animation.animationType = AnimationComponentType.TRANSLATION;
     	    	animation.variable = translatable.translationVariable;
     	    	animation.axis = translatable.translationAxis;
     	    	animation.clampMin = translatable.translationClampMin;

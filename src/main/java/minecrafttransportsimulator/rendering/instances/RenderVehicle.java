@@ -19,6 +19,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
@@ -169,7 +170,7 @@ public final class RenderVehicle{
 				boolean shouldRender = true;
 				if(part.vehicleDefinition.animations != null){
 					for(JSONAnimationDefinition animation : part.vehicleDefinition.animations){
-						if(animation.animationType.equals("visibility")){
+						if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
 							double value = part.getAnimationSystem().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
 							if(value < animation.clampMin || value > animation.clampMax){
 								shouldRender = false;
@@ -359,7 +360,7 @@ public final class RenderVehicle{
 					boolean shouldRender = true;
 					if(childPart.vehicleDefinition.animations != null){
 						for(JSONAnimationDefinition animation : childPart.vehicleDefinition.animations){
-							if(animation.animationType.equals("visibility")){
+							if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
 								double value = childPart.getAnimationSystem().getAnimatedVariableValue(childPart, animation, 0, null, partialTicks);
 								if(value < animation.clampMin || value > animation.clampMax){
 									shouldRender = false;

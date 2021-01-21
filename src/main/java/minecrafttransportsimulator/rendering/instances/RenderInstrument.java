@@ -103,7 +103,7 @@ public final class RenderInstrument{
 							}
 							
 							switch(animation.animationType){
-								case("rotation"):{
+								case ROTATION :{
 									value *= Math.signum(animation.axis.z);
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
@@ -134,7 +134,7 @@ public final class RenderInstrument{
 									}
 									break;
 								}
-								case("translation"):{
+								case TRANSLATION :{
 									//Offset the coords based on the translated amount.
 									//Adjust the window to either move or scale depending on settings.
 									double axisLength = animation.axis.length();
@@ -178,20 +178,20 @@ public final class RenderInstrument{
 									}
 									break;
 								}
-								case("visibility"):{
+								case VISIBILITY:{
 									//Skip rendering this component if this is false.
 									skipRender = value < animation.clampMin || value > animation.clampMax;
 									skipFurtherTransforms = skipRender;
 									break;
 								}
-								case("inhibitor"):{
+								case INHIBITOR:{
 									//Skip further operations if this is true.
 									if(!skipFurtherTransforms){
 										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
 									}
 									break;
 								}
-								case("activator"):{
+								case ACTIVATOR:{
 									//Prevent skipping  further operations if this is true.
 									if(skipFurtherTransforms){
 										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;

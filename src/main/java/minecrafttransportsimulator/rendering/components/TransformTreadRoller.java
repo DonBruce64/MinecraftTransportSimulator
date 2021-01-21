@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 
 /**A specific class of {@link TransformRotatable2}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -63,7 +64,7 @@ public class TransformTreadRoller extends TransformRotatable{
 		if(definition == null){
 			//We don't have a definition for this, auto-create one and return the roller with it.
 			definition = new JSONAnimationDefinition();
-			definition.animationType = "rotation";
+			definition.animationType = AnimationComponentType.ROTATION;
 			definition.variable = "ground_rotation_1";
 			definition.centerPoint = new Point3d(0D, yPos, zPos);
 			definition.axis = new Point3d(0D, 0D, 0D);

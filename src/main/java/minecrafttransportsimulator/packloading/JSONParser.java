@@ -235,7 +235,7 @@ public class JSONParser{
 			LegacyCompatSystem.performLegacyCompats((AJSONItem<?>) retObj);
 		}
 		//Check for proper fields.
-		validateFields(retObj, "/");
+		validateFields(retObj, "/", 1);
 		return retObj;
 	}
 	
@@ -292,10 +292,50 @@ public class JSONParser{
     }
 	
 	/**
+	 *  Helper method to validate fields.  Used for recursion.
+	 */
+	private static void validateFields(Object obj, String priorObjects, int index){
+		//First get all fields that have the annotation with no values.
+		for(Field field : obj.getClass().getFields()){
+			String errorValue = checkRequiredState(field, obj, priorObjects, index);
+			if(errorValue != null){
+				throw new NullPointerException(errorValue);
+			}
+			
+			//Check all fields of this field.
+			//If we are a collection, validate each entry in ourselves rather than ourselves.
+			//Only check for objects that are defined in the jsondefs class file.
+			//If we extend recursion to others, it could get nasty...
+			if(obj.getClass().getPackage().getName().contains("jsondefs")){
+				Object recursiveObject = null;
+				try{
+					recursiveObject = field.get(obj);
+				}catch(Exception e){}
+				
+				if(recursiveObject != null){
+					if(recursiveObject instanceof Collection){
+						int collectionIndex = 1;
+						for(Object objEntry : ((Collection<?>) recursiveObject)){
+							if(objEntry != null){
+								validateFields(objEntry, priorObjects + field.getName() + "/", collectionIndex);
+								++collectionIndex;
+							}else{
+								throw new NullPointerException("Unable to parse entry #" + collectionIndex + " in variable set " + priorObjects + field.getName() + " due to it not existing.  Check your commas!");
+							}
+						}
+					}else if(!recursiveObject.getClass().isEnum()){
+						validateFields(recursiveObject, priorObjects + field.getName() + "/", 1);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	 *  Checks to see if the passed-in field is required, and is missing or corrupt.  If so, 
 	 *  a text-based error message is returned.  If not, null is returned.
 	 */
-	public static String checkRequiredState(Field field, Object objectOn, String pathPrefix){
+	private static String checkRequiredState(Field field, Object objectOn, String pathPrefix, int index){
 		if(field.isAnnotationPresent(JSONRequired.class)){
 			Object testObj = null;
 			try{
@@ -320,60 +360,20 @@ public class JSONParser{
 					if(depObj != null){
 						//Have object.  If the object has to be a set of values to throw an error, check this.
 						if(annotation.dependentValues().length == 0){
-							return pathPrefix + field.getName() + " is required when '" + dependentVarName + "' is present!";
+							return pathPrefix + field.getName() + ", entry #" + index + ", is required when '" + dependentVarName + "' is present!";
 						}else{
 							for(String possibleValue : annotation.dependentValues()){
 								if(depObj.toString().startsWith(possibleValue)){
-									return pathPrefix + field.getName() + " is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!";
+									return pathPrefix + field.getName() + ", entry #" + index + ", is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!";
 								}
 							}
 						}
 					}
 				}else{
-					return pathPrefix + field.getName() + " is missing from the JSON and is required!";
+					return pathPrefix + field.getName() + ", entry #" + index + ", is missing from the JSON and is required!";
 				}
 			}
 		}
 		return null;
-	}
-	
-	/**
-	 *  Helper method to validate fields.  Used for recursion.
-	 */
-	private static void validateFields(Object obj, String priorObjects){
-		//First get all fields that have the annotation with no values.
-		for(Field field : obj.getClass().getFields()){
-			String errorValue = checkRequiredState(field, obj, priorObjects);
-			if(errorValue != null){
-				throw new NullPointerException(errorValue);
-			}
-			
-			//Check all fields of this field.
-			//If we are a collection, validate each entry in ourselves rather than ourselves.
-			//Only check for objects that are defined in the jsondefs class file.
-			//If we extend recursion to others, it could get nasty...
-			if(obj.getClass().getPackage().getName().contains("jsondefs")){
-				Object recursiveObject = null;
-				try{
-					recursiveObject = field.get(obj);
-				}catch(Exception e){}
-				
-				if(recursiveObject != null){
-					if(recursiveObject instanceof Collection){
-						int index = 0;
-						for(Object objEntry : ((Collection<?>) recursiveObject)){
-							if(objEntry != null){
-								validateFields(objEntry, priorObjects + field.getName() + "/");
-								++index;
-							}else{
-								throw new NullPointerException("Unable to parse item #" + index + " in variable set " + priorObjects + field.getName() + " due to it not existing.  Check your commas!");
-							}
-						}
-					}else{
-						validateFields(recursiveObject, priorObjects + field.getName() + "/");
-					}
-				}
-			}
-		}
 	}
 }

@@ -20,23 +20,23 @@ public class RenderableTransform{
 	public RenderableTransform(List<JSONAnimationDefinition> animations){
 		for(JSONAnimationDefinition animation : animations){
 			switch(animation.animationType){
-				case("translation") :{
+				case TRANSLATION :{
 					transforms.add(new TransformTranslatable(animation));
 					break;
 				}
-				case("rotation") :{
+				case ROTATION :{
 					transforms.add(new TransformRotatable(animation));
 					break;
 				}
-				case("visibility") :{
+				case VISIBILITY :{
 					transforms.add(new TransformVisibile(animation));
 					break;
 				}
-				case("inhibitor") :{
+				case INHIBITOR :{
 					transforms.add(new TransformInhibitor(animation));
 					break;
 				}
-				case("activator") :{
+				case ACTIVATOR :{
 					transforms.add(new TransformActivator(animation));
 					break;
 				}
