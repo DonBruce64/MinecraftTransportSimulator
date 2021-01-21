@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
@@ -23,6 +25,7 @@ import minecrafttransportsimulator.mcinterface.BuilderParticle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
@@ -43,6 +46,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
  */
 public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
+	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
 	public static boolean shadersDetected;
 	
@@ -98,7 +102,7 @@ public class InterfaceRender{
 	 */
 	public static String bindURLTexture(String textureURL){
 		//Bind texture if we have it.
-		if(!textures.containsKey(textureURL)){
+		if(!textures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)){
 			//Don't have this texture created yet.  Do so now.
 			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
 			//FAR less jank than using MC's resource system.
@@ -112,10 +116,17 @@ public class InterfaceRender{
 					}
 					String contentType = connection.getHeaderField("Content-Type");
 					if(validContentTypes.contains(contentType)){
-						BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
-						int glTexturePointer = TextureUtil.glGenTextures();
-				        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-				        textures.put(textureURL, glTexturePointer);
+						if(contentType.endsWith("gif")){
+							ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
+						    ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
+						    reader.setInput(stream);
+						    animatedGIFs.put(textureURL, GIFParser.parseGIF(reader));
+						}else{
+							BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
+							int glTexturePointer = TextureUtil.glGenTextures();
+					        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
+					        textures.put(textureURL, glTexturePointer);
+						}
 					}else{
 						String errorString = "Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
 						for(String validType : validContentTypes){
@@ -135,7 +146,12 @@ public class InterfaceRender{
 				return "Could not open URL for processing.  Error was: " + e.getMessage();
 			}
 		}
-		GlStateManager.bindTexture(textures.get(textureURL));
+		if(textures.containsKey(textureURL)){
+			GlStateManager.bindTexture(textures.get(textureURL));
+		}else{
+			ParsedGIF parsedGIF = animatedGIFs.get(textureURL);
+			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
+		}
 		return null;
 	}
 	
