@@ -14,7 +14,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
-import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
+import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -327,8 +327,8 @@ public class BuilderBlock extends Block{
 		}
 		
 		//Register the collision blocks.
-		for(int i=0; i<BlockRoadCollision.blockInstances.size(); ++i){
-			BlockRoadCollision collisionBlock = BlockRoadCollision.blockInstances.get(i);
+		for(int i=0; i<BlockCollision.blockInstances.size(); ++i){
+			BlockCollision collisionBlock = BlockCollision.blockInstances.get(i);
 			BuilderBlock wrapper = new BuilderBlock(collisionBlock);
 			String name = collisionBlock.getClass().getSimpleName();
 			name = MasterLoader.MODID + ":" + name.substring("Block".length()) + i;

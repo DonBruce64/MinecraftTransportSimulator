@@ -46,7 +46,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
@@ -173,7 +172,6 @@ public class GUIPackEditor extends JFrame{
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
         jsonClasses.put(JSONPoleComponent.class.getSimpleName(), JSONPoleComponent.class);
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
-        jsonClasses.put(JSONPotionEffect.class.getSimpleName(), JSONPotionEffect.class);
         
         //Create the box itself.
         JComboBox<String> typeComboBox = new JComboBox<String>();

@@ -34,7 +34,7 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 		if(!world.isClient()){
 			//Check if we aren't active.  If not, try to spawn collision again.
 			TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
-	    	if(road != null && !road.isActive){
+	    	if(road != null && !road.isActive()){
 	    		road.spawnCollisionBlocks(player);
 	    	}
 		}
@@ -44,9 +44,9 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	@Override
     public void onBroken(WrapperWorld world, Point3i location){
 		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
-		if(road != null && road.isActive){
+		if(road != null && road.isActive()){
 			//Set the TE to inactive and remove all road connections.
-			road.isActive = false;
+			road.setActive(false);
 			for(RoadLane lane : road.lanes){
 				lane.removeConnections();
 			}
@@ -56,7 +56,7 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 				Point3i blockLocation = location.copy().add(blockOffset);
 				//Check to make sure we don't destroy non-road blocks.
 				//This is required in case our TE is corrupt or someone messes with it.
-				if(world.getBlock(blockLocation) instanceof BlockRoadCollision){
+				if(world.getBlock(blockLocation) instanceof BlockCollision){
 					world.destroyBlock(blockLocation);
 				}
 			}

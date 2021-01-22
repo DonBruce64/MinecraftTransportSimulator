@@ -5,28 +5,28 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
 
-/**Packet sent to roads when their collision data changes.  This can either be the blocks that make up the
- * road's collision, blocks blocking the collision, or the active state in general.  This is sent from servers
- * to all clients when collision checks are requested for roads.
+/**Packet sent to multiblocks when their collision data changes.  This can either be the blocks that make up the
+ * multiblock's collision, blocks blocking the collision, or the active state in general.  This is sent from servers
+ * to all clients when collision checks are requested for multiblocks.
  * 
  * @author don_bruce
  */
-public class PacketTileEntityRoadCollisionUpdate extends APacketTileEntity<TileEntityRoad>{
+public class PacketTileEntityMultiblockCollisionUpdate extends APacketTileEntity<ATileEntityMultiblock<?>>{
 	private final List<Point3i> collisionBlockOffsets;
 	private final List<Point3i> collidingBlockOffsets;
 	
-	public PacketTileEntityRoadCollisionUpdate(TileEntityRoad road){
-		super(road);
-		collisionBlockOffsets = road.collisionBlockOffsets;
-		collidingBlockOffsets = road.collidingBlockOffsets;
+	public PacketTileEntityMultiblockCollisionUpdate(ATileEntityMultiblock<?> multiblock){
+		super(multiblock);
+		collisionBlockOffsets = multiblock.collisionBlockOffsets;
+		collidingBlockOffsets = multiblock.collidingBlockOffsets;
 	}
 	
-	public PacketTileEntityRoadCollisionUpdate(ByteBuf buf){
+	public PacketTileEntityMultiblockCollisionUpdate(ByteBuf buf){
 		super(buf);
 		this.collisionBlockOffsets = new ArrayList<Point3i>();
 		int collisionBlockOffsetCount = buf.readInt();
@@ -56,14 +56,13 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketTileEntity<TileE
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityRoad road){
-		road.collisionBlockOffsets.clear();
-		road.collisionBlockOffsets.addAll(collisionBlockOffsets);
-		road.collidingBlockOffsets.clear();
-		road.collidingBlockOffsets.addAll(collidingBlockOffsets);
-		if(!road.isActive && road.collidingBlockOffsets.isEmpty()){
-			road.isActive = true;
-			road.generateLanes(null);
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, ATileEntityMultiblock<?> multiblock){
+		multiblock.collisionBlockOffsets.clear();
+		multiblock.collisionBlockOffsets.addAll(collisionBlockOffsets);
+		multiblock.collidingBlockOffsets.clear();
+		multiblock.collidingBlockOffsets.addAll(collidingBlockOffsets);
+		if(!multiblock.isActive() && multiblock.collidingBlockOffsets.isEmpty()){
+			multiblock.setActive(true);
 		}
 		return false;
 	}

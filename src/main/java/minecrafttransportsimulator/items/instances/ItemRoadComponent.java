@@ -9,8 +9,9 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.instances.BlockRoad;
-import minecrafttransportsimulator.blocks.instances.BlockRoadCollision;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -51,7 +52,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 			ABlockBase clickedBlock = world.getBlock(point);
 			if(clickedBlock instanceof BlockRoad){
 				TileEntityRoad clickedRoad = world.getTileEntity(point);
-				if(!clickedRoad.isActive){
+				if(!clickedRoad.isActive()){
 					return false;
 				}
 			}
@@ -68,8 +69,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					TileEntityRoad clickedRoad;
 					if(clickedBlock instanceof BlockRoad){
 						clickedRoad = world.getTileEntity(point);
-					}else if(clickedBlock instanceof BlockRoadCollision){
-						clickedRoad = ((BlockRoadCollision) clickedBlock).getRoadForBlock(world, point);
+					}else if(clickedBlock instanceof BlockCollision){
+						clickedRoad = (TileEntityRoad) ((BlockCollision) clickedBlock).getMasterBlock(world, point);
 					}else{
 						clickedRoad = null;
 						lastPositionClicked.put(player, point.copy().add(0, 1, 0));
@@ -85,7 +86,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.set"));
 				}else if(!player.isSneaking() && lastPositionClicked.containsKey(player)){
 					//Clicked with the road not-sneaking with valid points.  Check end-points to make sure we aren't too long.
-					if(point.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_SEGMENT_LENGTH){
+					if(point.distanceTo(lastPositionClicked.get(player)) < ATileEntityMultiblock.MAX_COLLISION_DISTANCE){
 						//Get the road we clicked, if we clicked one.
 						//If we clicked a road for our starting point, then we need to auto-place the new road block.
 						//If not, we place the new road block wherever we clicked.  Find this position now, as well as
@@ -98,8 +99,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						if(clickedBlock instanceof BlockRoad){
 							TileEntityRoad startingRoad = world.getTileEntity(point);
 							startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), true);
-						}else if(clickedBlock instanceof BlockRoadCollision){
-							TileEntityRoad startingRoad = ((BlockRoadCollision) clickedBlock).getRoadForBlock(world, point);
+						}else if(clickedBlock instanceof BlockCollision){
+							TileEntityRoad startingRoad = (TileEntityRoad) ((BlockCollision) clickedBlock).getMasterBlock(world, point);
 							startingRoadData = startingRoad.getClickData(point.copy().subtract(startingRoad.position), true);
 						}else{
 							startingRoadData = null;
@@ -181,8 +182,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						//This creation may require over-riding one of the collision blocks of the clicked road.
 						//If so, we need to remove that collision box spot from the list of collision bits.
 						ABlockBase oldBlock = world.getBlock(blockPlacementPoint);
-						if(oldBlock instanceof BlockRoadCollision){
-							TileEntityRoad road = ((BlockRoadCollision) oldBlock).getRoadForBlock(world, point);
+						if(oldBlock instanceof BlockCollision){
+							TileEntityRoad road = (TileEntityRoad) ((BlockCollision) oldBlock).getMasterBlock(world, point);
 							road.collisionBlockOffsets.remove(blockPlacementPoint.copy().subtract(road.position));
 						}
 						

@@ -38,7 +38,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		}
 		
 		//If the road is inactive, we render everything as a hologram.
-		if(!road.isActive){
+		if(!road.isActive()){
 			if(InterfaceRender.getRenderPass() != 0){
 				InterfaceRender.setBlendState(true, false);
 				GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -160,14 +160,14 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				displayListMap.put(component, displayListIndex);
 			}
 			
-			if(road.isActive){
+			if(road.isActive()){
 				InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 			}
 			GL11.glCallList(displayListMap.get(component));
 		}
 		
 		//If we are inactive render the blocking blocks and the main block.
-		if(!road.isActive){
+		if(!road.isActive()){
 			InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 0.5F);
 			for(Point3i location : road.collidingBlockOffsets){
 				BoundingBox blockingBox = new BoundingBox(new Point3d(location).add(0, 0.5, 0), 0.55, 0.55, 0.55);

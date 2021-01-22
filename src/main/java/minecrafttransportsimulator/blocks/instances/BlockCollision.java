@@ -8,15 +8,15 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockRoadCollision extends ABlockBase{
-	public static List<BlockRoadCollision> blockInstances = createCollisionBlocks();
+public class BlockCollision extends ABlockBase{
+	public static List<BlockCollision> blockInstances = createCollisionBlocks();
 	private final BoundingBox blockBounds;
 	
-    public BlockRoadCollision(int collisionHeightInPixels){
+    public BlockCollision(int collisionHeightInPixels){
     	super(10.0F, 5.0F);
     	if(collisionHeightInPixels == 0){
     		collisionHeightInPixels = 1;
@@ -33,13 +33,13 @@ public class BlockRoadCollision extends ABlockBase{
     
     @Override
     public void onBroken(WrapperWorld world, Point3i location){
-    	TileEntityRoad road = getRoadForBlock(world, location);
-    	if(road != null && road.isActive){
+    	ATileEntityMultiblock<?> masterBlock = getMasterBlock(world, location);
+    	if(masterBlock != null && masterBlock.isActive()){
     		//We belong to this TE.  Destroy the block.  This will end up
 			//destroying all collisions, including this one.  However, since
 			//we check if the road block is isActive, and that gets set before destroying
 			//all collision blocks, the recursive call won't make it down here.
-			world.destroyBlock(road.position);
+			world.destroyBlock(((ATileEntityBase<?>) masterBlock).position);
 			return;
     	}
     }
@@ -49,18 +49,24 @@ public class BlockRoadCollision extends ABlockBase{
 		collidingBoxes.add(blockBounds);
 	}
     
-    public TileEntityRoad getRoadForBlock(WrapperWorld world, Point3i location){
+    /**
+	 *  Helper method to get the master block instance given the position of a block in the world.
+	 *  This is made non-static simply to ensure people obtain a reference to an actual collision block
+	 *  prior to trying to call this method, as there aren't any bound-able checks we can do on the two
+	 *  input variables.
+	 */
+    public ATileEntityMultiblock<?> getMasterBlock(WrapperWorld world, Point3i location){
     	Point3i blockOffset = new Point3i(0, 0, 0);
     	Point3i testPoint = new Point3i(0, 0, 0);
-    	for(int i=-TileEntityRoad.MAX_SEGMENT_LENGTH; i<2*TileEntityRoad.MAX_SEGMENT_LENGTH; ++i){
-    		for(int j=-TileEntityRoad.MAX_SEGMENT_LENGTH; j<2*TileEntityRoad.MAX_SEGMENT_LENGTH; ++j){
-    			for(int k=-TileEntityRoad.MAX_SEGMENT_LENGTH; k<2*TileEntityRoad.MAX_SEGMENT_LENGTH; ++k){
+    	for(int i=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; i<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++i){
+    		for(int j=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; j<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++j){
+    			for(int k=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; k<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++k){
     				blockOffset.set(i, j, k);
     				testPoint.setTo(location).subtract(blockOffset);
             		ATileEntityBase<?> testTile = world.getTileEntity(testPoint);
-            		if(testTile instanceof TileEntityRoad){
-            			if(((TileEntityRoad) testTile).collisionBlockOffsets.contains(blockOffset)){
-            				return (TileEntityRoad) testTile;
+            		if(testTile instanceof ATileEntityMultiblock){
+            			if(((ATileEntityMultiblock<?>) testTile).collisionBlockOffsets.contains(blockOffset)){
+            				return (ATileEntityMultiblock<?>) testTile;
             			}
             		}
             	}
@@ -69,10 +75,10 @@ public class BlockRoadCollision extends ABlockBase{
     	return null;
     }
     
-    private static final List<BlockRoadCollision> createCollisionBlocks(){
-    	List<BlockRoadCollision> blocks = new ArrayList<BlockRoadCollision>();
+    private static final List<BlockCollision> createCollisionBlocks(){
+    	List<BlockCollision> blocks = new ArrayList<BlockCollision>();
     	for(int i=0; i<16; ++ i){
-    		blocks.add(new BlockRoadCollision(i));
+    		blocks.add(new BlockCollision(i));
     	}
     	return blocks;
     }

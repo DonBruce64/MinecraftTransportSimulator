@@ -25,7 +25,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoader
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityMultiblockCollisionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
@@ -91,9 +91,9 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);
 		registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
 		registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
+		registerPacket(packetIndex++, PacketTileEntityMultiblockCollisionUpdate.class);
 		registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
 		registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
-		registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
 		registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
 		registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
 		registerPacket(packetIndex++, PacketVehicleColorChange.class);
