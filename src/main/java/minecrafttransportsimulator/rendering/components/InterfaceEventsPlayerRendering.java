@@ -68,7 +68,8 @@ public class InterfaceEventsPlayerRendering{
     	//If we are riding an entity, adjust seating.
     	if(player.getRidingEntity() instanceof BuilderEntity){
         	AEntityBase ridingEntity = ((BuilderEntity) player.getRidingEntity()).entity;
-        	float playerScale = 1.0F;
+        	float playerWidthScale = 1.0F;
+        	float playerHeightScale = 1.0F;
         	GL11.glPushMatrix();
         	if(ridingEntity != null){
         		//Get total angles for the entity the player is riding.
@@ -86,11 +87,15 @@ public class InterfaceEventsPlayerRendering{
 		            		
 		            		//Set sitting mode to the seat we are sitting in.
 		            		//If we aren't standing, we'll need to adjust the legs.
+		            		if(!seat.definition.seat.standing){
+		            			if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
+		            				disableLegs(playerModel);
+		            			}
+		    	            	renderCurrentRiderSitting = true;
+		            		}
+		            		
+		            		//Check if arms need to be set for adjustment.
 		            		if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
-			            		if(!seat.definition.seat.standing){
-			    	            	disableLegs(playerModel);
-			    	            	renderCurrentRiderSitting = true;
-			            		}
 			            		if(seat.vehicleDefinition.isController){
 			            			disableBothArms(playerModel, player, false);
 			            			renderCurrentRiderControlling = true;
@@ -98,8 +103,11 @@ public class InterfaceEventsPlayerRendering{
 		            		}
 		            		
 		            		//Get seat scale, if we have it.
-		            		if(seat.definition.seat.scale != 0){
-		            			playerScale = seat.definition.seat.scale; 
+		            		if(seat.definition.seat.widthScale != 0){
+		            			playerWidthScale = seat.definition.seat.widthScale; 
+		            		}
+		            		if(seat.definition.seat.heightScale != 0){
+		            			playerHeightScale = seat.definition.seat.heightScale; 
 		            		}
 		            		break;
 						}
@@ -134,10 +142,10 @@ public class InterfaceEventsPlayerRendering{
 		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
 		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
 	                }
-	                GL11.glTranslated(0, -player.getEyeHeight()*playerScale, 0);
+	                GL11.glTranslated(0, -player.getEyeHeight()*playerHeightScale, 0);
 	                
 	                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
-	                GL11.glScalef(playerScale, playerScale, playerScale);
+	                GL11.glScalef(playerWidthScale, playerHeightScale, playerWidthScale);
 	            }else{
 	            	GL11.glTranslated(0, player.getEyeHeight(), 0);
 	            	GL11.glRotated(entityAngles.y, 0, 1, 0);
@@ -148,8 +156,8 @@ public class InterfaceEventsPlayerRendering{
 		                GL11.glRotated(ridingAngles.x, 1, 0, 0);
 		                GL11.glRotated(ridingAngles.z, 0, 0, 1);
 	                }
-	            	GL11.glTranslated(0, -player.getEyeHeight()*playerScale, 0);
-	            	GL11.glScalef(playerScale, playerScale, playerScale);
+	            	GL11.glTranslated(0, -player.getEyeHeight()*playerHeightScale, 0);
+	            	GL11.glScalef(playerWidthScale, playerHeightScale, playerWidthScale);
 	            }
         	}
         }
@@ -171,8 +179,10 @@ public class InterfaceEventsPlayerRendering{
     	//Reset limb states to normal.
 		resetAllLimbs(playerModel, player);
     	
-    	//If we are holding a gun, get arm angles.
+    	//Do manual player model rendering.
     	if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
+    		
+    		//If we are holding a gun, get arm angles.
     		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
 	    	if(gunEntity != null && gunEntity.gun != null){	    		
 	    		//Get arm rotations.
@@ -196,42 +206,43 @@ public class InterfaceEventsPlayerRendering{
     				leftArmAngles = new Point3d(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
     	        }
 	    	}
-    	}
-    	
-    	//Do player model rendering.
-    	if(renderCurrentRiderSitting || rightArmAngles != null){
-    		//Push matrix to start rendering.
-    		GL11.glPushMatrix();
-    		
-    		//Get model scale.
-    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
-    		
-    		//Bind texture in case it's been un-bound by something.
-    		event.getRenderer().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
-    		
-    		//Rotate 180 as rendering is inverted.
-    		GL11.glRotated(180, 0, 1, 0);
-    		if(renderCurrentRiderSitting){
-    			renderLegsSitting(playerModel, scale);
-    		}
-    		
-    		if(rightArmAngles != null){
-    			//Rotate to match player's facing direction if we aren't in a vehicle
-    			if(!renderCurrentRiderControlling){
-	    			if(ridingEntity != null){
-	    	    		GL11.glRotated(player.rotationYaw + ridingEntity.angles.y, 0, 1, 0);
-	    	        }else{
-	    	        	GL11.glRotated(player.rotationYaw, 0, 1, 0);
-	    	        }
-    			}
-    			
-	    		if(player.isSneaking()){
-	    			//Lower arm if sneaking.
-	    			GL11.glTranslatef(0.0F, 0.2F, 0.0F);
+	    	
+	    	//If we are sitting, adjust legs and possibly arms.
+	    	//Also adjust if we have a gun.
+	    	if(renderCurrentRiderSitting || rightArmAngles != null){
+	    		//Push matrix to start rendering.
+	    		GL11.glPushMatrix();
+	    		
+	    		//Get model scale.
+	    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
+	    		
+	    		//Bind texture in case it's been un-bound by something.
+	    		event.getRenderer().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+	    		
+	    		//Rotate 180 as rendering is inverted.
+	    		GL11.glRotated(180, 0, 1, 0);
+	    		if(renderCurrentRiderSitting){
+	    			renderLegsSitting(playerModel, scale);
 	    		}
-	    		renderArmsAtAngles(playerModel, scale, rightArmAngles, leftArmAngles);
-    		}
-    		GL11.glPopMatrix();
+	    		
+	    		if(rightArmAngles != null){
+	    			//Rotate to match player's facing direction if we aren't in a vehicle
+	    			if(!renderCurrentRiderControlling){
+		    			if(ridingEntity != null){
+		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.angles.y, 0, 1, 0);
+		    	        }else{
+		    	        	GL11.glRotated(player.rotationYaw, 0, 1, 0);
+		    	        }
+	    			}
+	    			
+		    		if(player.isSneaking()){
+		    			//Lower arm if sneaking.
+		    			GL11.glTranslatef(0.0F, 0.2F, 0.0F);
+		    		}
+		    		renderArmsAtAngles(playerModel, scale, rightArmAngles, leftArmAngles);
+	    		}
+	    		GL11.glPopMatrix();
+	    	}
     	}
     	
     	//Pop the final matrix.

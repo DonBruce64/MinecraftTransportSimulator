@@ -120,7 +120,8 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     
     public class JSONPartSeat{
     	public boolean standing;
-    	public float scale;
+    	public float widthScale;
+    	public float heightScale;
     }
     
     public class JSONPartGun{

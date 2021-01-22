@@ -61,8 +61,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 
 			//Now set the actual position/motion for the seat.
 			double seatYPos = rider.getEyeHeight() + rider.getSeatOffset();
-			if(seat.definition.seat.scale != 0){
-				seatYPos *= seat.definition.seat.scale;
+			if(seat.definition.seat.heightScale != 0){
+				seatYPos *= seat.definition.seat.heightScale;
 			}
 			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset);
