@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -14,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 public class RoadClickData{
 	public final TileEntityRoad roadClicked;
 	public final JSONLaneSector sectorClicked;
+	public final boolean lanesOccupied;
 	public final boolean clickedStart;
 	public final Point3d genPosition;
 	public final float genRotation;
@@ -50,6 +53,7 @@ public class RoadClickData{
 					genPosition = new Point3d((roadClicked.definition.general.borderOffset), 0, 0).rotateY(genRotation).add(roadClicked.position).add(roadClicked.dynamicCurve.endPos);
 				}
 			}
+			lanesOccupied = areDynamicLanesOccupied();
 		}else{
 			//Get the first lane of the road sector, and use it for the rotation and positional data.
 			//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
@@ -61,6 +65,31 @@ public class RoadClickData{
 			}else{
 				genPosition = new Point3d(roadClicked.position).add(sectorClicked.sectorStartPos.copy().rotateY(roadClicked.rotation));
 			}
+			lanesOccupied = areStaticLanesOccupied();
 		}
+	}
+	
+	private boolean areDynamicLanesOccupied(){
+		for(RoadLane lane : roadClicked.lanes){
+			for(List<RoadLaneConnection> curveConnections : (clickedStart ? lane.priorConnections : lane.nextConnections)){
+				if(!curveConnections.isEmpty()){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean areStaticLanesOccupied(){
+		for(RoadLane lane : roadClicked.lanes){
+			if(lane.sectorNumber == roadClicked.definition.general.sectors.indexOf(sectorClicked)){
+				for(List<RoadLaneConnection> curveConnections : lane.priorConnections){
+					if(!curveConnections.isEmpty()){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

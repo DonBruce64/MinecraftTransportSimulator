@@ -78,6 +78,17 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					
 					//If we clicked a road, get the lane number clicked.
 					if(clickedRoad != null){
+						//Check validity of our connection
+						RoadClickData clickedRoadData = clickedRoad.getClickData(point.copy().subtract(clickedRoad.position), false);
+						RoadGeneral roadGeneralDefinition = clickedRoadData.roadClicked.definition.general;
+						if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
+							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchend"));
+							return true;
+						}else if(clickedRoadData.lanesOccupied){
+							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.alreadyconnected"));
+							return true;
+						}
+						
 						lastPositionClicked.put(player, point);
 						lastRoadClickedData.put(player, clickedRoad.getClickData(point.copy().subtract(clickedRoad.position), false));
 					}else{
@@ -107,6 +118,17 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						}
 						
 						if(startingRoadData != null){
+							//Check the road we clicked, if it exists, and make sure we aren't doing a bad connection.
+							RoadGeneral roadGeneralDefinition = startingRoadData.roadClicked.definition.general;
+							if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
+								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatch"));
+								return true;
+							}else if(startingRoadData.lanesOccupied){
+								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.alreadyconnected"));
+								return true;
+							}
+							
+							//Valid data.  Generate start and end positions.
 							startPosition = startingRoadData.genPosition;
 							startRotation = startingRoadData.genRotation;
 							
@@ -152,31 +174,11 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							endPosition.add(new Point3d(-0.5, 0.0, 0.5).rotateFine(new Point3d(0, endRotation + 180, 0)));
 						}
 						
-						
-						//Check the start and end roads, if we have them, and make sure they match our lane setup.
-						if(startingRoadData != null){
-							RoadGeneral roadGeneralDefinition = startingRoadData.roadClicked.definition.general;
-							if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchstart"));
-								return true;
-							}
-						}
-						if(endingRoadData != null){
-							RoadGeneral roadGeneralDefinition = endingRoadData.roadClicked.definition.general;
-							if((roadGeneralDefinition.isDynamic ? roadGeneralDefinition.laneOffsets.length : endingRoadData.sectorClicked.lanes.size()) != definition.general.laneOffsets.length){
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchend"));
-								return true;
-							}
-						}
-						
-						//FIXME check if the roads we want to connect to already have connections.
-						
 						//Check if the start and end position are the same.
 						if(startPosition.equals(endPosition)){
 							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.sameblock"));
 							return true;
 						}
-						
 						
 						//Now that we have the position for our block and curve points, create the new road segment.
 						//This creation may require over-riding one of the collision blocks of the clicked road.

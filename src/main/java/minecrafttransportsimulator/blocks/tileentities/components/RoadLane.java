@@ -157,6 +157,15 @@ public class RoadLane{
 				}
 			}
 		}
+		for(List<RoadLaneConnection> curveNextConnections : nextConnections){
+			Iterator<RoadLaneConnection> iterator = curveNextConnections.iterator();
+			while(iterator.hasNext()){
+				RoadLaneConnection nextConnection = iterator.next();
+				if(nextConnection.tileLocation.equals(otherRoad.position)){
+					iterator.remove();
+				}
+			}
+		}
 	}
 	
 	public void save(WrapperNBT data){
