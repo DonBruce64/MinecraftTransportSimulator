@@ -67,6 +67,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	
 	//These variables are used during firing and will be reset on loading.
 	public boolean firing;
+	public boolean firedThisCommand;
 	public boolean active;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
@@ -273,7 +274,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
-		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0){
+		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
 			//First update gun number so we know if we need to apply a cam offset.
 			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 			//Make sure to add-on an offset to our firing point to allow for multi-gun units.
@@ -281,6 +282,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			cooldownTimeRemaining = definition.gun.fireDelay;
 			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
 			lastController = controller;
+			firedThisCommand = true;
 			if(!provider.getProviderWorld().isClient()){
 				//Only remove bullets from the server.  We remove them from the client when they spawn.
 				--bulletsLeft;
@@ -291,6 +293,10 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 			}
 		}
 		
+		//Reset fire command bit if we aren't firing.
+		if(!firing){
+			firedThisCommand = false;
+		}
 		
 		//If we can accept bullets, and aren't currently loading any, re-load ourselves from any vehicle inventories.
 		//While the reload method checks for reload time, we check here to save on code processing.

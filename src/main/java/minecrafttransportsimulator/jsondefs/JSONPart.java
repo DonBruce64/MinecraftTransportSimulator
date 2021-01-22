@@ -57,7 +57,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     
     public class JSONPartEngine{
     	public boolean isAutomatic;
-	public boolean isSemiAuto;
     	public boolean isSteamPowered;
     	public boolean flamesOnStartup;
     	public boolean isCrankingNotPitched;
@@ -125,6 +124,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     
     public class JSONPartGun{
     	public boolean autoReload;
+    	public boolean isSemiAuto;
     	public boolean yawIsInternal;
     	public boolean pitchIsInternal;
     	public int capacity;
