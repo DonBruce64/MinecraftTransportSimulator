@@ -60,6 +60,9 @@ public final class ConfigSystem{
 			configObject = new JSONConfig();
 		}
 		
+		//Put all liquids into the config file for use by modpack makers.
+		configObject.fuel.lastLoadedFluids = InterfaceCore.getAllFluids();
+		
 		//After parsing the config save it.  This allows new entries to be populated.
 		saveToDisk();
 		

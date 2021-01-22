@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -47,6 +48,13 @@ public class InterfaceCore{
 	 */
 	public static String getFluidName(String fluidID){
 		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
+	}
+	
+	/**
+	 *  Returns all fluids currently in the game.
+	 */
+	public static Collection<String> getAllFluids(){
+		return FluidRegistry.getRegisteredFluids().keySet();
 	}
 
 	/**
