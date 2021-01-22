@@ -74,8 +74,10 @@ public class BuilderTileEntityRender extends TileEntitySpecialRenderer<BuilderTi
 				}
 				
 				//Set lighting and Render the TE.
+				GL11.glShadeModel(GL11.GL_SMOOTH);
 				InterfaceRender.setLightingToBlock(wrapper.tileEntity.position);
 				render.render(wrapper.tileEntity, partialTicks);
+				GL11.glShadeModel(GL11.GL_FLAT);
 				
 				//End render matrix and reset states.
 				GL11.glPopMatrix();
