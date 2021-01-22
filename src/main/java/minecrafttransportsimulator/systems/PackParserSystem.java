@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
@@ -26,6 +27,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -402,6 +404,21 @@ public final class PackParserSystem{
     			MasterLoader.createItem(item);
     		}
     	}
+    	
+		//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
+    	boolean newFuel = false;
+    	if(ConfigSystem.configObject.fuel.fuels == null){
+    		ConfigSystem.configObject.fuel.fuels = new HashMap<String, Map<String, Double>>();
+    	}
+		for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
+			if(!ConfigSystem.configObject.fuel.fuels.containsKey(fuelValues.getKey())){
+				ConfigSystem.configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
+				newFuel = true;
+			}
+		}
+		if(newFuel){
+			ConfigSystem.saveToDisk();
+		}
     }
 	
     //-----START OF OLD INIT LOGIC-----
