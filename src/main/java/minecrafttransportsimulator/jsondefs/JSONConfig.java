@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -84,7 +82,7 @@ public class JSONConfig{
 		public String comment3 = "You can make engines take different types of fluids for their fuels by editing these values.  See the in-game handbook for more information.";
 		public String comment4 = "If you are having troubles getting the name for a particular fluid, run the game with the mods you want and check the 'lastLoadedFluids' list.  This contains all the fluids that were present during the last run of the game.";
 		public Map<String, Map<String, Double>> fuels = getDefaultFuels();
-		public Collection<String> lastLoadedFluids;
+		public Map<String, String> lastLoadedFluids;
 		
 		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();

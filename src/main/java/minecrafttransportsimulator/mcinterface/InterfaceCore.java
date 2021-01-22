@@ -1,8 +1,9 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
@@ -53,8 +54,12 @@ public class InterfaceCore{
 	/**
 	 *  Returns all fluids currently in the game.
 	 */
-	public static Collection<String> getAllFluids(){
-		return FluidRegistry.getRegisteredFluids().keySet();
+	public static Map<String, String> getAllFluids(){
+		Map<String, String> fluidIDsToNames = new HashMap<String, String>();
+		for(String fluidID : FluidRegistry.getRegisteredFluids().keySet()){
+			fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
+		}
+		return fluidIDsToNames;
 	}
 
 	/**
