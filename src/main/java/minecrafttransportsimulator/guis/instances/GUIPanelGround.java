@@ -227,7 +227,12 @@ public class GUIPanelGround extends AGUIPanel{
 	@Override
 	protected void setupGeneralComponents(int guiLeft, int guiTop){
 		//Create the 8 trailer selectors.  Note that not all may be rendered.
-		for(int i=0; i<8; ++i){			
+		for(int i=0; i<8; ++i){
+			//Go to next column if we are on our 4th trailer selector.
+			if(i == 4){
+				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
+			}
+			
 			GUIComponentSelector trailerSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.trailer") + "#" + i, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -244,10 +249,6 @@ public class GUIPanelGround extends AGUIPanel{
 			};
 			trailerSelectors.add(trailerSelector);
 			addSelector(trailerSelector);
-			//Go to next column if we are on our 4th trailer selector.
-			if(i == 4){
-				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
-			}
 		}
 		
 		//If we have gear, add a selector for it.
