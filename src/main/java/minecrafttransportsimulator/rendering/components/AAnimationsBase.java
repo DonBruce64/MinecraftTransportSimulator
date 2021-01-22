@@ -25,7 +25,7 @@ public abstract class AAnimationsBase<ProviderClass extends IAnimationProvider>{
 				value = animation.clampMax;
 			}
 		}
-		return value;
+		return animation.absolute ? Math.abs(value) : value;
 	}
 	
 	/**
