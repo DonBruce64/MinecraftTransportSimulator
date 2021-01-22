@@ -129,7 +129,6 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	@Override
 	@Nullable
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
-		RayTraceResult result = null;
 		lastBoxRayTraced = null;
 		//Check all the bounding boxes for collision to see if we hit one of them.
 		Point3d start = new Point3d(vecA.x, vecA.y, vecA.z);
@@ -161,7 +160,7 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 		if(intersection != null){
 			return new RayTraceResult(new Vec3d(intersection.x, intersection.y, intersection.z), sideHit);
 		}else{
-			return result;
+			return null;
 		}
 	}   
 }

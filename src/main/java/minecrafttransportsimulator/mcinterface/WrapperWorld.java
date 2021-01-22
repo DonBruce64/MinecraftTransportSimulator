@@ -323,32 +323,50 @@ public class WrapperWorld{
 	 *  want players firing weapons to hit themselves or the vehicle.
 	 *  Note that if this is called on clients, then this method will not attack
 	 *  any entities. Instead, it will return a map of all entities that could have
-	 *  been attacked with the bounding box attacked if they are of type 
-	 *  {@link BuilderEntity} as the value to the entity key.
+	 *  been attacked with the bounding boxes attacked if they are of type 
+	 *  {@link BuilderEntity} (returned in wrapper form) as the value and the key being the boxes hit.
 	 *  This is because attacking cannot be done on clients, but it may be useful to 
 	 *  know what entities could have been attacked should the call have been made on a server.
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, BoundingBox> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
+	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
 		AxisAlignedBB mcBox = convertBox(damage.box);
 		List<Entity> collidedEntities;
-		List<Point3d> rayTraceHits = new ArrayList<Point3d>();;
+		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
 		if(motion != null){
 			mcBox = mcBox.expand(motion.x, motion.y, motion.z);
 			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+			//Create variables.
+			Point3d startPoint = damage.box.globalCenter;
+			Point3d endPoint = damage.box.globalCenter.copy().add(motion);
+			Vec3d start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
+			Vec3d end = start.add(endPoint.x, endPoint.y, endPoint.z);
+			
 			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
-			Vec3d start = new Vec3d(damage.box.globalCenter.x, damage.box.globalCenter.y, damage.box.globalCenter.z);
-			Vec3d end = start.add(motion.x, motion.y, motion.z);
 			Iterator<Entity> iterator = collidedEntities.iterator();
 			while(iterator.hasNext()){
 				Entity entity = iterator.next();
-				RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(start, end); 
-				if(rayTrace == null){
+				List<BoundingBox> hitBoxes = null;
+				if(entity instanceof BuilderEntity){
+					AEntityBase baseEntity = ((BuilderEntity) entity).entity;
+					hitBoxes = new ArrayList<BoundingBox>();
+					for(BoundingBox box : baseEntity.interactionBoxes){
+						if(box.getIntersectionPoint(startPoint, endPoint) != null){
+							hitBoxes.add(box);
+						}
+					}
+				}else{
+					RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(start, end);
+					if(rayTrace == null){
+						iterator.remove();
+					}
+				}
+				
+				if(hitBoxes.isEmpty()){
 					iterator.remove();
 				}else{
-					Point3d hitPoint = new Point3d(rayTrace.hitVec.x, rayTrace.hitVec.y, rayTrace.hitVec.z);
-					rayTraceHits.add(hitPoint);
+					rayTraceHits.put(getWrapperFor(entity), hitBoxes);
 				}
 			}
 		}else{
@@ -366,15 +384,18 @@ public class WrapperWorld{
 					if(entity instanceof BuilderEntity){
 						AEntityBase testSource = ((BuilderEntity) entity).entity;
 						if(damageSource.equals(testSource.wrapper)){
+							//Don't attack ourselves if we are a builder damage.
 							iterator.remove();
 						}
 					}else if(entity.getRidingEntity() instanceof BuilderEntity){
 						AEntityBase testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
 						if(damageSource.equals(testSource.wrapper)){
+							//Don't attack the entity we are riding a builder.
 							iterator.remove();
 						}
 					}else{
 						if(damageSource.entity.equals(entity)){
+							//Don't attack ourselves if we hit ourselves.
 							iterator.remove();
 						}
 					}
@@ -391,28 +412,7 @@ public class WrapperWorld{
 		
 		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
 		if(isClient()){
-			Map<WrapperEntity, BoundingBox> entities = new HashMap<WrapperEntity, BoundingBox>();
-			for(Entity entity : collidedEntities){
-				if(entity instanceof BuilderEntity){
-					//Need to check which box we hit for this entity.
-					for(BoundingBox box : ((BuilderEntity) entity).entity.interactionBoxes){
-						if(motion == null){
-							if(box.intersects(damage.box)){
-								entities.put(getWrapperFor(entity), box);
-								break;
-							}
-						}else{
-							if(box.isPointInside(rayTraceHits.get(collidedEntities.indexOf(entity)))){
-								entities.put(getWrapperFor(entity), box);
-								break;
-							}
-						}
-					}
-				}else{
-					entities.put(getWrapperFor(entity), null);
-				}
-			}
-			return entities;
+			return rayTraceHits;
 		}else{
 			return null;
 		}

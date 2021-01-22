@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -21,6 +22,7 @@ import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**This part class is special, in that it does not extend APart.
@@ -79,7 +81,7 @@ public class ParticleBullet extends AParticle{
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
-		Map<WrapperEntity, BoundingBox> attackedEntities;
+		Map<WrapperEntity, List<BoundingBox>> attackedEntities;
 		if(gun.provider instanceof AEntityBase){
 			attackedEntities = world.attackEntities(damage, ((AEntityBase) gun.provider).wrapper, motion);
 		}else if(gun.provider instanceof PartGun){
@@ -93,15 +95,20 @@ public class ParticleBullet extends AParticle{
 		if(!attackedEntities.isEmpty()){
 			for(WrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
-					BoundingBox hitBox = attackedEntities.get(entity);
-					if(hitBox.armorThickness != 0){
-						if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
-							armorPenetrated += hitBox.armorThickness;
+					AEntityBase baseEntity = entity.getBaseEntity();
+					for(BoundingBox hitBox : attackedEntities.get(entity)){
+						if(hitBox.armorThickness != 0){
+							if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
+								armorPenetrated += hitBox.armorThickness;
+								continue;
+							}
+						}else if(!(baseEntity instanceof EntityVehicleF_Physics) || ((EntityVehicleF_Physics) baseEntity).getPartAtLocation(hitBox.localCenter) == null){
 							continue;
 						}
+						InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+						isValid = false;
+						break;
 					}
-					InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
-					isValid = false;
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
 					InterfacePacket.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));

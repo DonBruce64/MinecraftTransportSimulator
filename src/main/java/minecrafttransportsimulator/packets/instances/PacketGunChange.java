@@ -88,8 +88,6 @@ public class PacketGunChange extends APacketBase{
 			if(!world.isClient()){
 				InterfacePacket.sendToAllClients(this);
 			}
-		}else{
-			System.out.println("NULL GUN" + gunID);
 		}
 	}
 }
