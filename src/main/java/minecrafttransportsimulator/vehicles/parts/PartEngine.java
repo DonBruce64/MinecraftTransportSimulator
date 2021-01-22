@@ -37,6 +37,8 @@ public class PartEngine extends APart implements IParticleProvider{
 	public boolean brokenStarter;
 	public byte reverseGears;
 	public byte currentGear;
+	public int upshiftCountdown;
+	public int downshiftCountdown;
 	public double hours;
 	public double rpm;
 	public double temp = 20;
@@ -137,6 +139,14 @@ public class PartEngine extends APart implements IParticleProvider{
 		super.update();
 		//Set fuel flow to 0 for the start of this cycle.
 		fuelFlow = 0;
+		
+		//Remove values from shifting times if applicable.
+		if(upshiftCountdown > 0){
+			--upshiftCountdown;
+		}
+		if(downshiftCountdown > 0){
+			--downshiftCountdown;
+		}
 		
 		//Set current gear ratio based on current gear.
 		currentGearRatio = definition.engine.gearRatios[currentGear + reverseGears];
@@ -746,6 +756,7 @@ public class PartEngine extends APart implements IParticleProvider{
 			}
 			if(doShift || vehicle.world.isClient()){
 				currentGear = nextGear;
+				upshiftCountdown = definition.engine.clutchTime;
 			}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
 				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 			}
@@ -769,6 +780,7 @@ public class PartEngine extends APart implements IParticleProvider{
 			}
 			if(doShift || vehicle.world.isClient()){
 				currentGear = nextGear;
+				downshiftCountdown = definition.engine.clutchTime;
 				//If we are a big truck, turn on the backup beeper.
 				if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
 					InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));

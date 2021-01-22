@@ -62,6 +62,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean isCrankingNotPitched;
     	public int starterPower;
     	public int shiftSpeed;
+    	public int clutchTime;
     	public int revResistance;
     	public int maxRPM;
     	public float fuelConsumption;

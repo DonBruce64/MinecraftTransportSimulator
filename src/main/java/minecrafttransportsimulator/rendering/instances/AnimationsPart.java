@@ -97,6 +97,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_gearshift"): return engine.getGearshiftRotation();
 				case("engine_gearshift_hvertical"): return engine.getGearshiftPosition_Vertical();
 				case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
+				case("engine_clutch_upshift"): return engine.upshiftCountdown > 0 ? 1 : 0;
+				case("engine_clutch_downshift"): return engine.downshiftCountdown > 0 ? 1 : 0;
 				case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 				case("engine_starter"): return engine.state.esOn ? 1 : 0;
 				case("engine_running"): return engine.state.running ? 1 : 0;
