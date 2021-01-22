@@ -360,7 +360,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		//First check to see if we need to check driven wheels.
 		//While doing this we also get the friction those wheels are providing.
 		//This is used later in force calculations.
-		if(vehicle.definition.motorized.isFrontWheelDrive || vehicle.definition.motorized.isRearWheelDrive){
+		if(definition.engine.jetPowerFactor == 0 && (vehicle.definition.motorized.isFrontWheelDrive || vehicle.definition.motorized.isRearWheelDrive)){
 			lowestWheelVelocity = 999F;
 			desiredWheelVelocity = -999F;
 			wheelFriction = 0;
@@ -733,20 +733,22 @@ public class PartEngine extends APart implements IParticleProvider{
 	public boolean shiftUp(boolean autoShift){
 		byte nextGear = 0;
 		boolean doShift = false;
-		if(currentGear < 0){//Reverse to neutral or higher reverse.
-			doShift = true;
-			nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
-		}else if(currentGear == 0){//Neutral to 1st.
-			nextGear = 1;
-			doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicle.goingInReverse;
-		}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
-			doShift = !definition.engine.isAutomatic || (autoShift && !vehicle.world.isClient());
-			nextGear = (byte) (currentGear + 1);
-		}
-		if(doShift || vehicle.world.isClient()){
-			currentGear = nextGear;
-		}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
-			InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+		if(definition.engine.jetPowerFactor == 0){
+			if(currentGear < 0){//Reverse to neutral or higher reverse.
+				doShift = true;
+				nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
+			}else if(currentGear == 0){//Neutral to 1st.
+				nextGear = 1;
+				doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicle.goingInReverse;
+			}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
+				doShift = !definition.engine.isAutomatic || (autoShift && !vehicle.world.isClient());
+				nextGear = (byte) (currentGear + 1);
+			}
+			if(doShift || vehicle.world.isClient()){
+				currentGear = nextGear;
+			}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
+				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+			}
 		}
 		return doShift;
 	}
@@ -754,24 +756,26 @@ public class PartEngine extends APart implements IParticleProvider{
 	public boolean shiftDown(boolean autoShift){
 		byte nextGear = 0;
 		boolean doShift = false;
-		if(currentGear >= 1){//Forwards gear to lower forwards gear or neutral.
-			doShift = true;
-			nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
-		}else if(currentGear == 0){//Neutral to reverse.
-			nextGear = -1;
-			doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicle.goingInReverse;
-		}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
-			doShift = true;
-			nextGear = (byte) (currentGear - 1);
-		}
-		if(doShift || vehicle.world.isClient()){
-			currentGear = nextGear;
-			//If we are a big truck, turn on the backup beeper.
-			if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
-				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
+		if(definition.engine.jetPowerFactor == 0){
+			if(currentGear >= 1){//Forwards gear to lower forwards gear or neutral.
+				doShift = true;
+				nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
+			}else if(currentGear == 0){//Neutral to reverse.
+				nextGear = -1;
+				doShift = vehicle.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicle.goingInReverse;
+			}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
+				doShift = true;
+				nextGear = (byte) (currentGear - 1);
 			}
-		}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
-			InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+			if(doShift || vehicle.world.isClient()){
+				currentGear = nextGear;
+				//If we are a big truck, turn on the backup beeper.
+				if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
+					InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
+				}
+			}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
+				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+			}
 		}
 		return doShift;
 	}
@@ -807,7 +811,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	public Point3d getForceOutput(){
 		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
-		if(wheelFriction != 0){
+		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
