@@ -62,8 +62,14 @@ public abstract class AAnimationsBase<ProviderClass extends IAnimationProvider>{
 			case("tick_cos"): return Math.cos(Math.toRadians(provider.getProviderWorld().getTick()));
 			case("time"): return provider.getProviderWorld().getTime();
 			case("rain_strength"): return (int) provider.getProviderWorld().getRainStrength(new Point3i(provider.getProviderPosition()));
-			case("rain_sin"): return (1.0 - Math.sin(((int) provider.getProviderWorld().getRainStrength(new Point3i(provider.getProviderPosition())))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D;
-			case("rain_cos"): return (1.0 - Math.cos(((int) provider.getProviderWorld().getRainStrength(new Point3i(provider.getProviderPosition())))*Math.toRadians(360*System.currentTimeMillis()/1000)))/2D;	
+			case("rain_sin"): {
+				int rainStrength = (int) provider.getProviderWorld().getRainStrength(new Point3i(provider.getProviderPosition())); 
+				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5: 0;
+			}
+			case("rain_cos"): {
+				int rainStrength = (int) provider.getProviderWorld().getRainStrength(new Point3i(provider.getProviderPosition())); 
+				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5 : 0;
+			}	
 			case("light_sunlight"): return provider.getProviderWorld().getLightBrightness(new Point3i(provider.getProviderPosition()), false);
 			case("light_total"): return provider.getProviderWorld().getLightBrightness(new Point3i(provider.getProviderPosition()), true);
 		}
