@@ -39,7 +39,7 @@ public class GUIComponentItem{
     	if(stack != null){
     		InterfaceGUI.drawItem(stack, x, y, scale);
     	}else if(stacks != null && !stacks.isEmpty()){
-    		InterfaceGUI.drawItem(stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*20)/20)), x, y, scale);
+    		InterfaceGUI.drawItem(stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*10)/10)), x, y, scale);
     	}
     }
     

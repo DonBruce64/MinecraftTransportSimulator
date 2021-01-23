@@ -24,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -67,6 +68,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Crafting components.
 	private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
+	private List<PackMaterialComponent> materials;
 	
 	//Renders for the item.
 	private GUIComponentItem itemRender;
@@ -217,6 +219,23 @@ public class GUIPartBench extends AGUIBase{
 		switchInfoButton.visible = currentItem instanceof ItemVehicle;
 		partInfo.visible = !displayVehicleInfo;
 		vehicleInfo.visible = displayVehicleInfo;
+		
+		//Set materials.
+		//Get the offset index based on the clock-time and the number of materials.
+		int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
+		materialOffset = (int) (InterfaceClient.getClientWorld().getTick()%(materialOffset*100)/100);
+		materialOffset *= craftingItemIcons.size();
+		for(byte i=0; i<craftingItemIcons.size(); ++i){
+			int materialIndex = i + materialOffset;
+			if(materialIndex < materials.size()){
+				craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
+				for(ItemStack stack : craftingItemIcons.get(i).stacks){
+					stack.setCount(materials.get(materialIndex).qty);
+				}
+	    	}else{
+	    		craftingItemIcons.get(i).stacks = null;
+	    	}			
+		}
 		
 		//Set confirm button based on if player has materials.
 		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true));
@@ -387,17 +406,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
-		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			if(i < materials.size()){
-				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
-				for(ItemStack stack : craftingItemIcons.get(i).stacks){
-					stack.setCount(materials.get(i).qty);
-				}
-	    	}else{
-	    		craftingItemIcons.get(i).stacks = null;
-	    	}			
-		}
+		materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
 		
 		//Enable render based on what component we have.
 		if(currentItem instanceof AItemSubTyped){
