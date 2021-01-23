@@ -54,38 +54,23 @@ public class BezierCurve{
 	}
 	
 	/**
-	 * Generates an offset curve by the passed-in offset.  Does not return a curve with a different
-	 * pathLength, even if that curve's true pathLength is different.  This essentially just offsets
-	 * all the points in the curve to make a parallel path without re-computing any of them.
-	 * Used to create parallel paths.
+	 * Generates an offset curve by the passed-in offset.  The curve may or may not have a different
+	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
-	public BezierCurve(BezierCurve copyCurve, float offset){
-		Point3d testPosition = new Point3d(0, 0, 0);
+	public BezierCurve generateOffsetCurve(float offset){
 		Point3d testRotation = new Point3d(0, 0, 0);
-		this.pathLength = copyCurve.pathLength;
 		
-		testPosition.set(offset, 0, 0);
-		copyCurve.setPointToRotationAt(testRotation, 0);
-		testPosition.rotateFine(testRotation);
-		copyCurve.offsetPointByPositionAt(testPosition, 0);
-		this.startPos = testPosition.copy();
-		this.startAngle = copyCurve.startAngle;
+		Point3d newStartPos = new Point3d(offset, 0, 0);
+		setPointToRotationAt(testRotation, 0);
+		newStartPos.rotateFine(testRotation);
+		offsetPointByPositionAt(newStartPos, 0);
 		
-		testPosition.set(offset, 0, 0);
-		copyCurve.setPointToRotationAt(testRotation, copyCurve.pathLength);
-		testPosition.rotateFine(testRotation);
-		copyCurve.offsetPointByPositionAt(testPosition, copyCurve.pathLength);
-		this.endPos = testPosition.copy();
-		this.endAngle = copyCurve.endAngle;
+		Point3d newEndPos = new Point3d(offset, 0, 0);
+		setPointToRotationAt(testRotation, pathLength);
+		newEndPos.rotateFine(testRotation);
+		offsetPointByPositionAt(newEndPos, pathLength);
 		
-		this.cachedPathPoints = new float[copyCurve.cachedPathPoints.length][3];
-		for(int i=0; i<copyCurve.cachedPathPoints.length; ++i){
-			testPosition.set(offset, 0, 0);
-			testRotation.set(copyCurve.cachedPathRotations[i][0], copyCurve.cachedPathRotations[i][1], copyCurve.cachedPathRotations[i][2]);
-			testPosition.rotateFine(testRotation).add(copyCurve.cachedPathPoints[i][0], copyCurve.cachedPathPoints[i][1], copyCurve.cachedPathPoints[i][2]);
-			cachedPathPoints[i] = new float[]{(float) testPosition.x, (float) testPosition.y, (float) testPosition.z};
-		}
-		this.cachedPathRotations = copyCurve.cachedPathRotations;
+		return new BezierCurve(newStartPos, newEndPos, startAngle, endAngle);
 	}
 	
 	/**

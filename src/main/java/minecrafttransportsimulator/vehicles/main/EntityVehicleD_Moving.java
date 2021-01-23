@@ -499,9 +499,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Also set motion Y to 0 in case we were doing ground device things.
 				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
 				motion.y = 0;
-				if(roadMotion.length() > 2){
-					roadMotion.multiply(0.5);
-				}
 				
 				//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
 				//Desired angle is the one that gives us the vector between the front and rear points.
