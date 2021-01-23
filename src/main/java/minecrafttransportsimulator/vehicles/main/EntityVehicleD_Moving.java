@@ -3,10 +3,17 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockCollision;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -58,6 +65,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private int activeHookupConnectionSavedIndex;
 	private Point3d activeHookupPartSavedOffset;
 	
+	//Road-following data.
+	public RoadFollowingState frontFollower;
+	public RoadFollowingState rearFollower;
+	
+	
 	//Internal movement variables.
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
@@ -65,6 +77,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d clientDeltaR;
 	private final Point3d clientDeltaMApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d clientDeltaRApplied = new Point3d(0D, 0D, 0D);
+	private final Point3d roadMotion = new Point3d(0, 0, 0);
+	private final Point3d roadRotation = new Point3d(0, 0, 0);
 	private final Point3d motionApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d rotationApplied = new Point3d(0D, 0D, 0D);
 	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
@@ -167,6 +181,44 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		super.removePart(part, iterator);
 		groundDeviceCollective.updateMembers();
 		groundDeviceCollective.updateBounds();
+	}
+	
+	/**
+	 * Returns the follower for either the front or rear of the vehicle.
+	 */
+	private RoadFollowingState getFollower(boolean front){
+		Point3d contactPoint = groundDeviceCollective.getContactPoint(front);
+		if(contactPoint != null){
+			contactPoint.rotateCoarse(angles).add(position);
+			Point3d testPoint = new Point3d(0, 0, 0);
+			Point3i checkLocation = new Point3i(contactPoint);
+			ABlockBase block =  world.getBlock(checkLocation);
+			if(block instanceof BlockCollision){
+				ATileEntityMultiblock<?> multiblock = ((BlockCollision) block).getMasterBlock(world, checkLocation);
+				if(multiblock instanceof TileEntityRoad){
+					TileEntityRoad road = (TileEntityRoad) multiblock;
+					//Check to see which lane we are on, if any.
+					for(RoadLane lane : road.lanes){
+						//Check path-points on the curve.  If our angles and position are close, set this as the curve.
+						for(BezierCurve curve : lane.curves){
+							for(float f=0; f<curve.pathLength; ++f){
+								curve.setPointToPositionAt(testPoint, f);
+								testPoint.add(road.position.x, road.position.y, road.position.z);
+								if(testPoint.distanceTo(contactPoint) < 1){
+									curve.setPointToRotationAt(testPoint, f);
+									boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
+									boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
+									if(sameDirection || oppositeDirection){
+										return new RoadFollowingState(lane, curve, sameDirection, f);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -411,76 +463,122 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//First, update the vehicle ground device boxes.
 		groundDeviceCollective.updateCollisions();
 		
-		//If any ground devices are collided after our movement, apply corrections to prevent this.
-		//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
-		//have been moved into the ground by the application of our motion and rotation.  We do this before collision
-		//boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
-		//all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
-		//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
-		//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
-		//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
-		//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
+		//If we aren't on a road, try to find one.
+		//Only do this if we aren't turning.
+		if(Math.abs(getSteeringAngle()) > 10 || towedByVehicle != null){
+			frontFollower = null;
+			rearFollower = null;
+		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
+			frontFollower = getFollower(true);
+			rearFollower = getFollower(false);
+		}
+		
+		//If we are on a road, we need to bypass the logic for pitch/yaw/roll checks, and GDB checks.
+		//This is because if we are on a road we need to follow the road's curve.
+		//If we have both followers, do road-following logic.
+		//If we don't, or we're turning off the road, do normal vehicle logic.
+		roadMotion.set(0, 0, 0);
+		roadRotation.set(0, 0, 0);
+		if(frontFollower != null && rearFollower != null){
+			//FIXME allow curve selection.
+			float segmentDelta = (float) (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR);
+			RoadFollowingState.rcount = 0;
+			frontFollower = frontFollower.updateCurvePoints(segmentDelta, 0);
+			rearFollower = rearFollower.updateCurvePoints(segmentDelta, 0);
+			Point3d rearPoint = groundDeviceCollective.getContactPoint(false);
+			
+			//Check to make sure followers are still valid, and do logic.
+			if(frontFollower != null && rearFollower != null && rearPoint != null){
+				//Set our position so we're aligned with the road.
+				//To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
+				//First get the rear point.  This defines the delta for the movement of the vehicle.
+				rearPoint.rotateFine(angles).add(position);
+				Point3d rearDesiredPoint = rearFollower.getCurrentPoint();
+				
+				//Apply the motion based on the delta between the actual and desired.
+				//Also set motion Y to 0 in case we were doing ground device things.
+				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
+				motion.y = 0;
+				if(roadMotion.length() > 2){
+					roadMotion.multiply(0.5);
+				}
+				
+				//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
+				//Desired angle is the one that gives us the vector between the front and rear points.
+				Point3d desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
+				double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
+				double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
+				double rollDelta = 0;
+				roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
+				roadRotation.y = roadRotation.getClampedYDelta(angles.y);
+			}else{
+				//Set followers to null, as something is invalid.
+				frontFollower = null;
+				rearFollower = null;
+			}
+		}
+		
+		
 		double groundCollisionBoost = 0;
-		if(towedByVehicle == null){
-			groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
-			if(groundCollisionBoost > 0){
-				//If adding our boost would make motion.y positive, set our boost to the positive component.
-				//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
-				//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
-				//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
-				if(motion.y + groundCollisionBoost > 0){
-					groundCollisionBoost = Math.min(groundCollisionBoost, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
-					motion.y += groundCollisionBoost;
-					groundCollisionBoost = motion.y;
-				}else{
-					motion.y += groundCollisionBoost;
-					groundCollisionBoost = 0;
-				}
-				groundDeviceCollective.updateCollisions();
-			}
-		}
-		
-		//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
-		//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
-		//If we hit something, however, we need to inhibit the movement so we don't do that.
-		//This prevents vehicles from phasing through walls even though they are driving on the ground.
-		//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
-		//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
-		boolean collisionBoxCollided = false;
-		if(towedByVehicle == null){
-			tempBoxAngles.setTo(rotation).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
-				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-				if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-					collisionBoxCollided = true;
-					break;
-				}
-			}
-		}
-		
-		//Handle collision box collisions, if we have any.  Otherwise do ground device operations as normal.
 		double groundRotationBoost = 0;
-		if(collisionBoxCollided){
-			correctCollidingMovement();
-		}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
-			groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
-			//Don't do roll correction if we don't have roll.
-			if(groundDeviceCollective.canDoRollChecks()){
-				groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+		//If followers aren't valid, do normal logic.
+		if(frontFollower == null || rearFollower == null){
+			//If any ground devices are collided after our movement, apply corrections to prevent this.
+			//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
+			//have been moved into the ground by the application of our motion and rotation.  We do this before collision
+			//boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
+			//all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
+			//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
+			//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
+			//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
+			//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
+			if(towedByVehicle == null){
+				groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
+				if(groundCollisionBoost > 0){
+					//If adding our boost would make motion.y positive, set our boost to the positive component.
+					//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
+					//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
+					//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
+					if(motion.y + groundCollisionBoost > 0){
+						groundCollisionBoost = Math.min(groundCollisionBoost, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
+						motion.y += groundCollisionBoost;
+						groundCollisionBoost = motion.y;
+					}else{
+						motion.y += groundCollisionBoost;
+						groundCollisionBoost = 0;
+					}
+					groundDeviceCollective.updateCollisions();
+				}
 			}
-		}
-		
-		//If we are flagged as a two-wheeled try to keep us upright, unless we are turning, in which case turn into the turn.
-		if(definition.motorized.maxTiltAngle != 0){
-			rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle()/(EntityVehicleF_Physics.MAX_RUDDER_ANGLE/10);
-			if(Double.isNaN(rotation.z)){
-				rotation.z = 0;
+			
+			//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
+			//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
+			//If we hit something, however, we need to inhibit the movement so we don't do that.
+			//This prevents vehicles from phasing through walls even though they are driving on the ground.
+			//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
+			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
+			if(isCollisionBoxCollided()){
+				correctCollidingMovement();
+			}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
+				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
+				//Don't do roll correction if we don't have roll.
+				if(groundDeviceCollective.canDoRollChecks()){
+					groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+				}
+				
+				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
+				if(definition.motorized.maxTiltAngle != 0){
+					rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle()/(EntityVehicleF_Physics.MAX_RUDDER_ANGLE/10);
+					if(Double.isNaN(rotation.z)){
+						rotation.z = 0;
+					}
+				}
 			}
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
-		motionApplied.setTo(motion).multiply(SPEED_FACTOR);
-		rotationApplied.setTo(rotation);
+		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion);
+		rotationApplied.setTo(rotation).add(roadRotation);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);
@@ -505,7 +603,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 				clientDeltaRApplied.multiply(1D/25D);
+				//Only apply delta y if it's less than 5.
+				//If they're higher, we could have bad packets or a re-do of rotations.
 				rotationApplied.add(clientDeltaRApplied);
+				if(rotationApplied.y > 5){
+					rotationApplied.y = 5;
+				}else if(rotationApplied.y < -5){
+					rotationApplied.y = -5;
+				}
 				
 				//Add actual movement to client deltas to prevent further corrections.
 				clientDeltaM.add(motionApplied);
@@ -530,6 +635,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//We need to strip away any positive motion.y we gave the vehicle to get it out of the ground if it
 		//collided on its ground devices, as well as any motion.y we added when doing rotation adjustments.
 		motion.y -= (groundCollisionBoost + groundRotationBoost);
+	}
+	
+	/**
+	 *  Checks if we have a collided collision box.  If so, true is returned.
+	 */
+	private boolean isCollisionBoxCollided(){
+		if(towedByVehicle == null){
+			tempBoxAngles.setTo(rotation).add(angles);
+			for(BoundingBox box : blockCollisionBoxes){
+				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+				if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -840,6 +961,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			trailer.activeHookupPart = optionalHookupPart;
 			trailer.parkingBrakeOn = false;
 			if(activeHitchConnection.mounted){
+				//FIXME we prolly don't need this now that we know why yaw is going NaN.
 				trailer.angles.setTo(angles);
 				trailer.prevAngles.setTo(prevAngles);
 				if(activeHitchPart != null){

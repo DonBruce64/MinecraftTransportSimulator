@@ -142,6 +142,44 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
+	 * Return the following point for this collective for either the front or rear vehicle points.
+	 * This is based on the average of the contact points for the ground devices.
+	 * If there are no ground devices for the contact point, null is returned.
+	 * Note that this point is in the vehicle's local coordinates.
+	 */
+	public Point3d getContactPoint(boolean front){
+		if(front){
+			if(frontLeftGDB.contactPoint.isZero()){
+				if(frontRightGDB.contactPoint.isZero()){
+					return null;
+				}else{
+					return frontRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+				}
+			}else{
+				if(frontRightGDB.contactPoint.isZero()){
+					return frontRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+				}else{
+					return frontRightGDB.contactPoint.copy().subtract(frontLeftGDB.contactPoint).multiply(0.5).add(frontLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+				}
+			}
+		}else{
+			if(rearLeftGDB.contactPoint.isZero()){
+				if(rearRightGDB.contactPoint.isZero()){
+					return null;
+				}else{
+					return rearRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+				}
+			}else{
+				if(rearRightGDB.contactPoint.isZero()){
+					return rearRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
+				}else{
+					return rearRightGDB.contactPoint.copy().subtract(rearLeftGDB.contactPoint).multiply(0.5).add(rearLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Returns true if the boxes are ready for ground calculations.  In essence, this checks for a front and back box,
 	 * plus a left or right box if one of those boxes aren't centered.
 	 */

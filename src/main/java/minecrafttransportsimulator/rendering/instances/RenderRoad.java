@@ -262,6 +262,34 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					}
 				}
 			}
+			InterfaceRender.setColorState(0.5F, 0.0F, 1.0F, 1);
+			for(RoadLane lane : road.lanes){
+				for(List<RoadLaneConnection> curveNextConnections : lane.nextConnections){
+					BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));
+					for(RoadLaneConnection nextConnection : curveNextConnections){
+						TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
+						if(otherRoad != null){
+							RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
+							if(otherLane != null){
+								BezierCurve otherCurve = otherLane.curves.get(nextConnection.curveNumber);
+								
+								//First render our own offset point.
+								currentCurve.setPointToPositionAt(position, currentCurve.pathLength - 0.5F);
+								GL11.glVertex3d(position.x, position.y + 3.0, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								
+								//Now render the connection point.
+								otherCurve.setPointToPositionAt(position, nextConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
+								position.add(otherLane.road.position).subtract(road.position);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 0.5, position.z);
+								GL11.glVertex3d(position.x, position.y + 2.0, position.z);
+							}
+						}
+					}
+				}
+			}
 			
 			//Set states back to normal.
 			GL11.glEnd();

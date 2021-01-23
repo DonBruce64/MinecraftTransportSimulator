@@ -168,6 +168,20 @@ public class RoadLane{
 		}
 	}
 	
+	/**
+	 * Returns the next curve for the passed-in curve, or null if it doesn't exist.
+	 * If the requested curve number is too high for the number of curves, then
+	 * the highest-indexed curve is returned instead.
+	 */
+	public RoadLaneConnection getConnection(BezierCurve curve, int requestedNextCurve, boolean nextCurve){
+		List<RoadLaneConnection> connections = nextCurve ? nextConnections.get(curves.indexOf(curve)) : priorConnections.get(curves.indexOf(curve));
+		if(connections.size() > requestedNextCurve){
+			return connections.isEmpty() ? null : connections.get(connections.size() - 1);
+		}else{
+			return connections.isEmpty() ? null : connections.get(requestedNextCurve);
+		}
+	}
+	
 	public void save(WrapperNBT data){
 		data.setInteger("sectorNumber", sectorNumber);
 		data.setInteger("laneNumber", laneNumber);
