@@ -180,7 +180,7 @@ public class WrapperInventory{
 				for(int i=0; i<getSize(); ++i){
 					ItemStack testStack = inventory.getStackInSlot(i);
 					if(OreDictionary.itemMatches(stack, testStack, false)){
-						requiredMaterialCount -= stack.getCount();
+						requiredMaterialCount -= testStack.getCount();
 					}
 				}
 			}
