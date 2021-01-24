@@ -68,9 +68,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private Point3d activeHookupPartSavedOffset;
 	
 	//Road-following data.
-	public RoadFollowingState frontFollower;
-	public RoadFollowingState rearFollower;
-	
+	protected RoadFollowingState frontFollower;
+	protected RoadFollowingState rearFollower;
 	
 	//Internal movement variables.
 	private final Point3d serverDeltaM;
@@ -186,10 +185,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	}
 	
 	/**
-	 * Returns the follower for either the front or rear of the vehicle.
+	 * Returns the follower for the rear of the vehicle.  Front follower should
+	 * be obtained by getting the point from this follower the distance away from the
+	 * front and the rear position.  This may be the same curve, this may not.
 	 */
-	private RoadFollowingState getFollower(boolean front){
-		Point3d contactPoint = groundDeviceCollective.getContactPoint(front);
+	private RoadFollowingState getFollower(){
+		Point3d contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
 			contactPoint.rotateCoarse(angles).add(position);
 			Point3d testPoint = new Point3d(0, 0, 0);
@@ -471,8 +472,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
-			frontFollower = getFollower(true);
-			rearFollower = getFollower(false);
+			rearFollower = getFollower();
+			if(rearFollower != null){
+				double pointDelta = groundDeviceCollective.getContactPoint(false).distanceTo(groundDeviceCollective.getContactPoint(true));
+				frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints((float) pointDelta, LaneSelectionRequest.NONE);
+			}
 		}
 		
 		//If we are on a road, we need to bypass the logic for pitch/yaw/roll checks, and GDB checks.
@@ -498,25 +502,30 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				
 				//Apply the motion based on the delta between the actual and desired.
 				//Also set motion Y to 0 in case we were doing ground device things.
-				//FIXME need to add syncing data for which curve/sector/segment we are on to prevent nasty de-syncs.
 				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
-				motion.y = 0;
-				
-				//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
-				//Desired angle is the one that gives us the vector between the front and rear points.
-				Point3d desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
-				double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
-				double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
-				double rollDelta = 0;
-				roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
-				roadRotation.y = roadRotation.getClampedYDelta(angles.y);
+				if(roadMotion.length() > 10){
+					roadMotion.set(0, 0, 0);
+					frontFollower = null;
+					rearFollower = null;
+				}else{
+					motion.y = 0;
+					
+					//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
+					//Desired angle is the one that gives us the vector between the front and rear points.
+					Point3d desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
+					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
+					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
+					double rollDelta = 0;
+					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
+					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
+				}
 			}else{
 				//Set followers to null, as something is invalid.
+				//InterfaceChunkloader.removeEntityTicket(this);
 				frontFollower = null;
 				rearFollower = null;
 			}
 		}
-		
 		
 		double groundCollisionBoost = 0;
 		double groundRotationBoost = 0;
@@ -960,7 +969,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			trailer.activeHookupPart = optionalHookupPart;
 			trailer.parkingBrakeOn = false;
 			if(activeHitchConnection.mounted){
-				//FIXME we prolly don't need this now that we know why yaw is going NaN.
 				trailer.angles.setTo(angles);
 				trailer.prevAngles.setTo(prevAngles);
 				if(activeHitchPart != null){

@@ -21,13 +21,16 @@ import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
+import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
@@ -42,11 +45,14 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.14.0-BETA23";
+	public static final String MODVER = "19.14.0-BETA24";
 	
 	public static Logger logger;
 	public static String resourceDomain;
 	public static String gameDirectory;
+	
+	@Instance(MODID)
+	public static MasterLoader INSTANCE;
 	
 	static{
 		//Enable universal bucket so we can use buckets on fuel pumps.
@@ -127,6 +133,9 @@ public class MasterLoader{
 	public void init(FMLInitializationEvent event){
 		//Init networking interface.  This will register packets as well.
 		InterfacePacket.init();
+		
+		//Init chunkloader system.
+		ForgeChunkManager.setForcedChunkLoadingCallback(INSTANCE, InterfaceChunkloader.INSTANCE);
 	}
 	
 	/**

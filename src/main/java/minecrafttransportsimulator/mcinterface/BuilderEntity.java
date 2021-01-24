@@ -187,6 +187,7 @@ public class BuilderEntity extends Entity{
 		//Mark entity as invalid and remove from maps.
 		if(entity != null){
 			entity.isValid = false;
+			InterfaceChunkloader.removeEntityTicket(entity);
 			if(world.isRemote){
 				AEntityBase.createdClientEntities.remove(entity);
 			}else{
