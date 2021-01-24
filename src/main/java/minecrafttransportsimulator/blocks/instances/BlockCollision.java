@@ -49,6 +49,11 @@ public class BlockCollision extends ABlockBase{
 		collidingBoxes.add(blockBounds);
 	}
     
+    @Override
+    public BoundingBox getCollisionBounds(){
+		return blockBounds;
+	}
+    
     /**
 	 *  Helper method to get the master block instance given the position of a block in the world.
 	 *  This is made non-static simply to ensure people obtain a reference to an actual collision block

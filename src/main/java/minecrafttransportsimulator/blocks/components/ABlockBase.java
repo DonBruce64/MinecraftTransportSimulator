@@ -70,6 +70,17 @@ public abstract class ABlockBase{
 	}
 	
 	/**
+	 *  Returns the main bounding box for this block.  This should normally be the standard full-block size
+	 *  to ensure all the appropriate collision checks are done.  However, should the block have a collision
+	 *  mapping smaller than this, then a smaller box should be returned.  This prevents the block from 
+	 *  interfering with player clicking actions and Bad Mods doing Bad Stuff by checking this rather than 
+	 *  the collision box listing.
+	 */
+	public BoundingBox getCollisionBounds(){
+		return SINGLE_BLOCK_BOUNDS;
+	}
+	
+	/**
 	 *  Enums for side-specific stuff.
 	 */
 	public static enum Axis{

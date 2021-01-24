@@ -7,6 +7,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
+import net.minecraft.util.math.AxisAlignedBB;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
  * without the need to make a new instance every time.  Also is based on a center point and
@@ -242,4 +243,34 @@ public class BoundingBox{
 		}
 		return intersection;
     }
+	
+	/**
+	 *  Helper method to convert the BoundingBox to an AxisAlignedBB.
+	 */
+	public AxisAlignedBB convert(){
+		return new AxisAlignedBB(
+			globalCenter.x - widthRadius,
+			globalCenter.y - heightRadius,
+			globalCenter.z - depthRadius,
+			globalCenter.x + widthRadius,
+			globalCenter.y + heightRadius,
+			globalCenter.z + depthRadius
+		);
+	}
+	
+	/**
+	 *  Helper method to convert the BoundingBox to an AxisAlignedBB.
+	 *  This method allows for an offset to the conversion, to prevent
+	 *  creating two AABBs (the conversion and the offset box).
+	 */
+	public AxisAlignedBB convertWithOffset(double x, double y, double z){
+		return new AxisAlignedBB(
+			x + globalCenter.x - widthRadius,
+			y + globalCenter.y - heightRadius,
+			z + globalCenter.z - depthRadius,
+			x + globalCenter.x + widthRadius,
+			y + globalCenter.y + heightRadius,
+			z + globalCenter.z + depthRadius
+		);
+	}
 }

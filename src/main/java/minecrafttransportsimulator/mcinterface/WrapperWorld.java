@@ -241,7 +241,7 @@ public class WrapperWorld{
 	 */
 	public List<WrapperEntity> getEntitiesWithin(BoundingBox box){
 		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
-		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, convertBox(box))){
+		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
 			entities.add(getWrapperFor(entity));
 		}
 		return entities;
@@ -331,7 +331,7 @@ public class WrapperWorld{
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
 	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
-		AxisAlignedBB mcBox = convertBox(damage.box);
+		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
 		if(motion != null){
@@ -428,7 +428,7 @@ public class WrapperWorld{
 		for(BoundingBox box : boxesToCheck){
 			//Check if we collide with any entities.
 			//We expand the passed-in box by 0.25 in the Y direction to "grab" any entities that might be above us.
-			for(Entity entity : world.getEntitiesWithinAABB(Entity.class, convertBox(box).expand(0, 0.25, 0))){
+			for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert().expand(0, 0.25, 0))){
 				//Don't move riding entities or our own builders, or entities we've already moved.
 				if(!movedEntities.contains(entity)){
 					if(!(entity instanceof BuilderEntity) && entity.getRidingEntity() == null){
@@ -461,7 +461,7 @@ public class WrapperWorld{
 	 *  Only non-hostile mobs will be loaded.
 	 */
 	public void loadEntities(BoundingBox box, AEntityBase vehicle){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(vehicle.wrapper.entity, convertBox(box))){
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(vehicle.wrapper.entity, box.convert())){
 			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : vehicle.ridableLocations){
 					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
@@ -579,7 +579,7 @@ public class WrapperWorld{
 	 * collisionDepth be set for that axis.
 	 */
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
-		AxisAlignedBB mcBox = convertBox(box);
+		AxisAlignedBB mcBox = box.convert();
 		box.collidingBlockPositions.clear();
 		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
@@ -976,20 +976,6 @@ public class WrapperWorld{
 	 */
 	public void spawnExplosion(WrapperEntity entity, Point3d location, double strength, boolean flames){
 		world.newExplosion(entity.entity, location.x, location.y, location.z, (float) strength, flames, true);
-	}
-	
-	/**
-	 *  Helper method to convert a BoundingBox to an AxisAlignedBB.
-	 */
-	private static AxisAlignedBB convertBox(BoundingBox box){
-		return new AxisAlignedBB(
-			box.globalCenter.x - box.widthRadius,
-			box.globalCenter.y - box.heightRadius,
-			box.globalCenter.z - box.depthRadius,
-			box.globalCenter.x + box.widthRadius,
-			box.globalCenter.y + box.heightRadius,
-			box.globalCenter.z + box.depthRadius
-		);
 	}
 	
 	/**

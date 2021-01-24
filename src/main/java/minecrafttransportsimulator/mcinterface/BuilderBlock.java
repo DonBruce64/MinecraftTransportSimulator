@@ -71,6 +71,8 @@ public class BuilderBlock extends Block{
 	/**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
+	/**Map to hold AABB representations of BB states.  Used to prevent re-creating them every check.**/
+	private static final Map<BoundingBox, AxisAlignedBB> boundingBoxMap = new HashMap<BoundingBox, AxisAlignedBB>();
 	/**Internal property for rotation of this block.**/
 	protected static final PropertyDirection FACING = BlockHorizontal.FACING;
 	
@@ -200,17 +202,21 @@ public class BuilderBlock extends Block{
     	List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
     	mcBlock.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
     	for(BoundingBox box : collisionBoxes){
-    		AxisAlignedBB mcBox = new AxisAlignedBB(
-				pos.getX() + 0.5D + box.globalCenter.x - box.widthRadius, 
-				pos.getY() + 0.5D + box.globalCenter.y - box.heightRadius, 
-				pos.getZ() + 0.5D + box.globalCenter.z - box.depthRadius, 
-				pos.getX() + 0.5D + box.globalCenter.x + box.widthRadius, 
-				pos.getY() + 0.5D + box.globalCenter.y + box.heightRadius, 
-				pos.getZ() + 0.5D + box.globalCenter.z + box.depthRadius);
+    		AxisAlignedBB mcBox = box.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			if(mcBox.intersects(entityBox)){
 				collidingBoxes.add(mcBox);
 			}
     	}
+    }
+    
+    @Override
+	@SuppressWarnings("deprecation")
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos){
+        BoundingBox box = mcBlock.getCollisionBounds();
+        if(!boundingBoxMap.containsKey(box)){
+        	boundingBoxMap.put(box, box.convertWithOffset(0.5D, 0.5D, 0.5D));
+        }
+        return boundingBoxMap.get(box);
     }
     
 	@Override
