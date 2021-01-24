@@ -341,32 +341,37 @@ public class WrapperWorld{
 			Point3d startPoint = damage.box.globalCenter;
 			Point3d endPoint = damage.box.globalCenter.copy().add(motion);
 			Vec3d start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
-			Vec3d end = start.add(endPoint.x, endPoint.y, endPoint.z);
+			Vec3d end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
 			
 			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
 			Iterator<Entity> iterator = collidedEntities.iterator();
 			while(iterator.hasNext()){
 				Entity entity = iterator.next();
-				List<BoundingBox> hitBoxes = null;
+				//If we hit a builder, get all the collision for it and check it all.
 				if(entity instanceof BuilderEntity){
 					AEntityBase baseEntity = ((BuilderEntity) entity).entity;
-					hitBoxes = new ArrayList<BoundingBox>();
+					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
 					for(BoundingBox box : baseEntity.interactionBoxes){
 						if(box.getIntersectionPoint(startPoint, endPoint) != null){
 							hitBoxes.add(box);
 						}
 					}
-				}else{
-					RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(start, end);
-					if(rayTrace == null){
+					
+					//If we hit any box on this entity, add it to the map.
+					//If not, remove it as we didn't hit it.
+					if(hitBoxes.isEmpty()){
 						iterator.remove();
+					}else{
+						rayTraceHits.put(getWrapperFor(entity), hitBoxes);
 					}
-				}
-				
-				if(hitBoxes.isEmpty()){
-					iterator.remove();
 				}else{
-					rayTraceHits.put(getWrapperFor(entity), hitBoxes);
+					//Didn't hit a builder. Do normal raytracing.
+					//If we didn't hit anything, remove the entity from the list. 
+					if(entity.getEntityBoundingBox().calculateIntercept(start, end) == null){
+						iterator.remove();
+					}else{
+						rayTraceHits.put(getWrapperFor(entity), null);
+					}
 				}
 			}
 		}else{
