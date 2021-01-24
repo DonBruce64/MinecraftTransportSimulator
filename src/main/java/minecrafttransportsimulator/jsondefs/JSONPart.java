@@ -140,6 +140,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public float minYaw;
     	public float maxYaw;
     	public float diameter;
+	public float caseLength;
     	public float length;
     	public boolean fireSolo;
     	public boolean resetPosition;
@@ -161,6 +162,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public List<String> types;
     	public int quantity;
     	public float diameter;
+	public float caseLength;
     	public float blastStrength;
     	public float armorPenetration;
     	public int burnTime;
