@@ -311,10 +311,10 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	 * and was loaded, false if not.  Provider methods are then called for packet callbacks.
 	 */
 	public boolean tryToReload(ItemPart part){
-		//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
+		//Only fill bullets if we match the bullet already in the gun, or if our diameter and our caseLength matches, or if we got a signal on the client.
 		//Also don't fill bullets if we are currently reloading bullets.
 		if(part.definition.bullet != null){
-			if((bulletsReloading == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter : loadedBullet.equals(part))) || provider.getProviderWorld().isClient()){
+			if((bulletsReloading == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter && part.definition.bullet.caseLength == definition.gun.caseLength : loadedBullet.equals(part))) || provider.getProviderWorld().isClient()){
 				//Make sure we don't over-fill the gun.
 				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || provider.getProviderWorld().isClient()){
 					loadedBullet = part;
