@@ -200,26 +200,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							//Try to spawn all the collision blocks for this road.
 							//If we spawn blocks, we create all collision points and join the road's connections.
 							if(newRoad.spawnCollisionBlocks(player)){
-								//Set the lane connections, as appropriate.
-								if(startingRoadData != null){
-									for(RoadLane lane : newRoad.lanes){
-										lane.connectToPrior(startingRoadData.roadClicked);
-									}
-									for(RoadLane lane : startingRoadData.roadClicked.lanes){
-										lane.connectToPrior(newRoad);
-										lane.connectToNext(newRoad);
-									}
+								for(RoadLane lane : newRoad.lanes){
+									lane.generateConnections();
 								}
-								if(endingRoadData != null){
-									for(RoadLane lane : newRoad.lanes){
-										lane.connectToNext(endingRoadData.roadClicked);
-									}
-									for(RoadLane lane : endingRoadData.roadClicked.lanes){
-										lane.connectToPrior(newRoad);
-										lane.connectToNext(newRoad);
-									}
-								}
-								//FIXME need a way to update lane connections client-side.  Need a packet.
 								
 								//Set new points.
 								lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
@@ -246,6 +229,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					
 					//Try to spawn all the collision blocks for this road.
 					if(newRoad.spawnCollisionBlocks(player)){
+						for(RoadLane lane : newRoad.lanes){
+							lane.generateConnections();
+						}
+						
 						lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
 						lastPositionClicked.put(player, newRoad.position);
 						lastRotationClicked.put(player, Math.round(player.getYaw()/15)*15 + 180D);

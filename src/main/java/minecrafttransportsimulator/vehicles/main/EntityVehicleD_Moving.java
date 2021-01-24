@@ -497,6 +497,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				
 				//Apply the motion based on the delta between the actual and desired.
 				//Also set motion Y to 0 in case we were doing ground device things.
+				//FIXME need to add syncing data for which curve/sector/segment we are on to prevent nasty de-syncs.
 				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
 				motion.y = 0;
 				

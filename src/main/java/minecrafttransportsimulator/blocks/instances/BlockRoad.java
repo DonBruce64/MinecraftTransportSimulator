@@ -49,7 +49,6 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 			road.setActive(false);
 			for(RoadLane lane : road.lanes){
 				lane.removeConnections();
-				//FIXME send packet here to update connections on the client.
 			}
 			
 			//Now remove all collision blocks.

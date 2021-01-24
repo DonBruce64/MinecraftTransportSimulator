@@ -126,12 +126,12 @@ public class TileEntityRoad extends ATileEntityMultiblock<JSONRoadComponent>{
 	public void generateLanes(WrapperNBT data){
 		if(definition.general.isDynamic){
 			for(int i=0; i<definition.general.laneOffsets.length; ++i){
-				lanes.add(new RoadLane(this, 0, i, data != null ? data.getData("lane" + i) : null));
+				lanes.add(new RoadLane(this, 0, lanes.size(), data != null ? data.getData("lane" + lanes.size()) : null));
 			}
 		}else{
 			for(int i=0; i<definition.general.sectors.size(); ++i){
 				for(int j=0; j<definition.general.sectors.get(i).lanes.size(); ++j){
-					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + i + "_" + j) : null));
+					lanes.add(new RoadLane(this, i, lanes.size(), data != null ? data.getData("lane" + lanes.size()) : null));
 				}
 			}
 		}
@@ -219,7 +219,7 @@ public class TileEntityRoad extends ATileEntityMultiblock<JSONRoadComponent>{
 			if(definition.general.isDynamic){
 				data.setData("lane" + laneNumber, laneData);
 			}else{
-				data.setData("lane" + lane.sectorNumber + "_" + laneNumber, laneData);
+				data.setData("lane" + laneNumber, laneData);
 			}
 		}
     }

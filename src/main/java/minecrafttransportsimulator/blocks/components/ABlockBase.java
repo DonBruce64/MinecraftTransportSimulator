@@ -46,6 +46,7 @@ public abstract class ABlockBase{
 	 *  Called when this block is removed from the world.  This occurs when the block is broken
 	 *  by a player, explosion, vehicle, etc.  This method is called prior to the Tile Entity being
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
+	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
 	public void onBroken(WrapperWorld world, Point3i location){}
 

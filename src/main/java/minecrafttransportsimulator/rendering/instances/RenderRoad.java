@@ -213,14 +213,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//Now render the lane curve segments.
 			for(RoadLane lane : road.lanes){
 				for(BezierCurve laneCurve : lane.curves){
-					//Render the curve start point.
+					//Render the curve bearing indicator
 					InterfaceRender.setColorState(1, 0, 0, 1);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
-					rotation.set(0, laneCurve.startAngle, 0);
-					position.set(0, 0, 2).rotateFine(rotation);
-					GL11.glVertex3d(laneCurve.startPos.x + position.x, laneCurve.startPos.y + 3 + position.y, laneCurve.startPos.z + position.z);
+					Point3d bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
+					GL11.glVertex3d(bearingPos.x, bearingPos.y + 3, bearingPos.z);
 					
 					//Render all the points on the curve.
 					InterfaceRender.setColorState(1, 1, 0, 1);
@@ -234,7 +233,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			}
 			
 			//Render the lane connections.
-			InterfaceRender.setColorState(0, 0, 1, 1);
+			InterfaceRender.setColorState(1.0F, 0.7F, 0.7F, 1);
 			for(RoadLane lane : road.lanes){
 				for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
 					BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));

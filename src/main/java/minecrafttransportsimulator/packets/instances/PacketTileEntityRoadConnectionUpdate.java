@@ -1,49 +1,84 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
-import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketTileEntity;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
-/**Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
- * Packet is sent to the server to change the road state to match what item the player is holding.
- * If the player isn't holding an item, they may have wreneched the component to remove it.
+/**Packet sent to road lanes to change their connections.  This is sent from servers to all clients
+ * when a connection state changes.  The data sent consists of the lane/curve that we need
+ * to update the connection for, as well as connection data to update it with.  If this data
+ * is null, then we just remove the specified connection.  Note that the road/lane we are connecting
+ * to with this data MAY not be loaded.  This is due to chunk populations on servers/clients being different.
  * 
  * @author don_bruce
  */
 public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<TileEntityRoad>{
-	private final RoadComponent componentType;
-	private final ItemRoadComponent componentItem;
+	private final int laneNumber;
+	private final int curveNumber;
+	private final boolean connectedToStart;
 	
-	public PacketTileEntityRoadConnectionUpdate(TileEntityRoad road, RoadComponent componentType, ItemRoadComponent componentItem){
-		super(road);
-		this.componentType = componentType;
-		this.componentItem = componentItem;
+	private final Point3i otherPosition;
+	private final int otherLaneNumber;
+	private final int otherCurveNumber;
+	private final boolean otherConnectedToStart;
+	
+	public PacketTileEntityRoadConnectionUpdate(RoadLane lane, int curveNumber, boolean connectedToStart, RoadLane otherLane, int otherCurveNumber, boolean otherConnectedToStart){
+		super(lane.road);
+		this.laneNumber = lane.laneNumber;
+		this.curveNumber = curveNumber;
+		this.connectedToStart = connectedToStart;
+		if(otherLane != null){
+			this.otherPosition = otherLane.road.position;
+			this.otherLaneNumber = otherLane.laneNumber;
+			this.otherCurveNumber = otherCurveNumber;
+			this.otherConnectedToStart = otherConnectedToStart;
+		}else{
+			this.otherPosition = null;
+			this.otherLaneNumber = 0;
+			this.otherCurveNumber = 0;
+			this.otherConnectedToStart = false;
+		}
+	}
+	
+	public PacketTileEntityRoadConnectionUpdate(RoadLane lane,int curveNumber, boolean priorConnection){
+		this(lane, curveNumber, priorConnection, null, 0, false);
 	}
 	
 	public PacketTileEntityRoadConnectionUpdate(ByteBuf buf){
 		super(buf);
-		this.componentType = RoadComponent.values()[buf.readByte()];
+		this.laneNumber = buf.readInt();
+		this.curveNumber = buf.readInt();
+		this.connectedToStart = buf.readBoolean();
 		if(buf.readBoolean()){
-			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+			this.otherPosition = readPoint3iFromBuffer(buf);
+			this.otherLaneNumber = buf.readInt();
+			this.otherCurveNumber = buf.readInt();
+			this.otherConnectedToStart = buf.readBoolean();
 		}else{
-			this.componentItem = null;
+			this.otherPosition = null;
+			this.otherLaneNumber = 0;
+			this.otherCurveNumber = 0;
+			this.otherConnectedToStart = false;
 		}
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeByte(componentType.ordinal());
-		if(componentItem != null){
+		buf.writeInt(laneNumber);
+		buf.writeInt(curveNumber);
+		buf.writeBoolean(connectedToStart);
+		if(otherPosition != null){
 			buf.writeBoolean(true);
-			writeStringToBuffer(componentItem.definition.packID, buf);
-			writeStringToBuffer(componentItem.definition.systemName, buf);
+			writePoint3iToBuffer(otherPosition, buf);
+			buf.writeInt(otherLaneNumber);
+			buf.writeInt(otherCurveNumber);
+			buf.writeBoolean(otherConnectedToStart);
 		}else{
 			buf.writeBoolean(false);
 		}
@@ -51,24 +86,22 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 	
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityRoad road){
-		if(componentItem != null){
-			//Player clicked with a component.  Add/change it.
-			road.components.put(componentType, componentItem);
-			if(!player.isCreative()){
-				player.getInventory().removeStack(player.getHeldStack(), 1);
+		RoadLane lane = road.lanes.get(laneNumber);
+		if(otherPosition != null){
+			//Connecting to another curve.  Create connection from this curve to the other one.
+			if(connectedToStart){
+				lane.priorConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherConnectedToStart));
+			}else{
+				lane.nextConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherConnectedToStart));
 			}
-			return true;
 		}else{
-			//Player clicked with a wrench, try to remove the component.
-			if(road.components.containsKey(componentType)){
-				ItemRoadComponent component = road.components.get(componentType);
-				WrapperNBT data = null;
-				if(world.isClient() || player.isCreative() || player.getInventory().addItem(component, data)){
-					road.components.remove(componentType);
-					return true;
-				}
+			//No other curve.  This is a connection deletion request.
+			if(connectedToStart){
+				lane.priorConnections.get(curveNumber).clear();
+			}else{
+				lane.nextConnections.get(curveNumber).clear();
 			}
 		}
-		return false;
+		return true;
 	}
 }
