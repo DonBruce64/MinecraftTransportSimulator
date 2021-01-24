@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -22,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -480,11 +482,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		roadMotion.set(0, 0, 0);
 		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
-			//FIXME allow curve selection.
+			LaneSelectionRequest requestedSegment = variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) ? LaneSelectionRequest.LEFT : (variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName) ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.NONE);
 			float segmentDelta = (float) (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR);
-			RoadFollowingState.rcount = 0;
-			frontFollower = frontFollower.updateCurvePoints(segmentDelta, 0);
-			rearFollower = rearFollower.updateCurvePoints(segmentDelta, 0);
+			frontFollower = frontFollower.updateCurvePoints(segmentDelta, requestedSegment);
+			rearFollower = rearFollower.updateCurvePoints(segmentDelta, requestedSegment);
 			Point3d rearPoint = groundDeviceCollective.getContactPoint(false);
 			
 			//Check to make sure followers are still valid, and do logic.

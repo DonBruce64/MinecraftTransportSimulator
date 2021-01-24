@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
@@ -126,7 +127,6 @@ public class RoadLane{
 			}
 			
 			Point3i blockTestPoint = new Point3i(offsetPoint);
-			System.out.println("TESTING " + (checkingStart ? "PRIRO" : "NEXT") + "  AT POINT " + blockTestPoint);
 			ABlockBase block = road.world.getBlock(blockTestPoint);
 			
 			if(block instanceof BlockCollision){
@@ -146,31 +146,38 @@ public class RoadLane{
 								//before the packet gets to it, so it won't execute.  By sending the packet
 								//to the other curve, we update it, and then let the normal NBT data sync
 								//transfer work for this lane/road's new generated connections.
+								//We also don't want to connect to the end curve of static roads.
+								//This is due to how junctions are handled, where we don't want to
+								//end up going backwards on one of them.
 								if(checkingStart){
 									//For the start connections, we add these connections to all connections.
 									//This is because we call this method only once for all curves.
 									if(ownCurvePoint.distanceTo(otherCurveStart) < CURVE_CONNECTION_MAX_DISTANCE){
 										//Start to start connection.
-										priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane.road.position, otherRoadLane.laneNumber, otherCurveNumber, true));
-										otherRoadLane.priorConnections.get(otherCurveNumber).add(new RoadLaneConnection(road.position, laneNumber, curveNumber, true));
-										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, this, curveNumber, true));
+										priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
+										RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
+										otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
+										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
 									}else if(ownCurvePoint.distanceTo(otherCurveEnd) < CURVE_CONNECTION_MAX_DISTANCE){
 										//Start to end connection.
-										priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane.road.position, otherRoadLane.laneNumber, otherCurveNumber, false));
-										otherRoadLane.nextConnections.get(otherCurveNumber).add(new RoadLaneConnection(road.position, laneNumber, curveNumber, true));
-										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, this, curveNumber, true));
+										priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
+										RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
+										otherRoadLane.nextConnections.get(otherCurveNumber).add(ourConnection);
+										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
 									}
 								}else{
 									if(ownCurvePoint.distanceTo(otherCurveStart) < CURVE_CONNECTION_MAX_DISTANCE){
 										//End to start connection.
-										nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane.road.position, otherRoadLane.laneNumber, otherCurveNumber, true));
-										otherRoadLane.priorConnections.get(otherCurveNumber).add(new RoadLaneConnection(road.position, laneNumber, curveNumber, false));
-										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, this, curveNumber, false));
+										nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
+										RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);
+										otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
+										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
 									}else if(ownCurvePoint.distanceTo(otherCurveEnd) < CURVE_CONNECTION_MAX_DISTANCE){
 										//End to end connection.
-										nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane.road.position, otherRoadLane.laneNumber, otherCurveNumber, false));
-										otherRoadLane.nextConnections.get(otherCurveNumber).add(new RoadLaneConnection(road.position, laneNumber, curveNumber, false));
-										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, this, curveNumber, false));
+										nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
+										RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);
+										otherRoadLane.nextConnections.get(otherCurveNumber).add(ourConnection);
+										InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
 									}
 								}
 							}
@@ -240,17 +247,27 @@ public class RoadLane{
 	}
 	
 	/**
-	 * Returns the next curve for the passed-in curve, or null if it doesn't exist.
-	 * If the requested curve number is too high for the number of curves, then
-	 * the highest-indexed curve is returned instead.
+	 * Returns the next curve for the passed-in curve and request, or null if it doesn't exist.
 	 */
-	public RoadLaneConnection getConnection(BezierCurve curve, int requestedNextCurve, boolean nextCurve){
+	public RoadLaneConnection getConnection(BezierCurve curve, LaneSelectionRequest requestedNextCurve, boolean nextCurve){
 		List<RoadLaneConnection> connections = nextCurve ? nextConnections.get(curves.indexOf(curve)) : priorConnections.get(curves.indexOf(curve));
-		if(connections.size() > requestedNextCurve){
-			return connections.isEmpty() ? null : connections.get(connections.size() - 1);
-		}else{
-			return connections.isEmpty() ? null : connections.get(requestedNextCurve);
+		if(!connections.isEmpty()){
+			//Sort the connections by curve net angle.
+			connections.sort(new Comparator<RoadLaneConnection>(){
+				@Override
+				public int compare(RoadLaneConnection arg0, RoadLaneConnection arg1){
+					return arg0.curveNetAngle < arg1.curveNetAngle ? -1 : (arg0.curveNetAngle > arg1.curveNetAngle ? 1 : 0);
+				}
+			});	
+			
+			//Get the connection requested.
+			switch(requestedNextCurve){
+				case LEFT: return connections.get(connections.size() - 1);	
+				case RIGHT: return connections.get(0);
+				case NONE: return connections.get(connections.size()/2);
+			}
 		}
+		return null;
 	}
 	
 	public void save(WrapperNBT data){
@@ -273,5 +290,11 @@ public class RoadLane{
 			}
 			data.setInteger("numberNextConnections" + i, nextCurveConnections.size());
 		}
+	}
+	
+	public static enum LaneSelectionRequest{
+		LEFT,
+		RIGHT,
+		NONE;
 	}
 }

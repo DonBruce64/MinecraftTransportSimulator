@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 
 /**Helper class for containing the following state of a road.
@@ -17,7 +18,6 @@ public class RoadFollowingState{
 	public final BezierCurve curve;
 	public final boolean goingForwards;
 	public float currentSegment;
-	public static int rcount = 0;
 	
 	
 	public RoadFollowingState(RoadLane lane, BezierCurve curve, boolean goingForwards, float currentSegment){
@@ -33,7 +33,7 @@ public class RoadFollowingState{
 	 * follower is returned instead.  If no follower is present because this is the
 	 * end of the curve, null is returned.
 	 */
-	public RoadFollowingState updateCurvePoints(float segmentDelta, int requestedNextCurve){
+	public RoadFollowingState updateCurvePoints(float segmentDelta, LaneSelectionRequest requestedNextCurve){
 		//Check that our TE is still active.  It might have been destroyed.
 		if(lane.road.isActive()){
 			currentSegment += goingForwards ? segmentDelta : -segmentDelta;

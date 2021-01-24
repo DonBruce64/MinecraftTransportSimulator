@@ -25,28 +25,31 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 	private final Point3i otherPosition;
 	private final int otherLaneNumber;
 	private final int otherCurveNumber;
+	private final float otherCurveNetAngle;
 	private final boolean otherConnectedToStart;
 	
-	public PacketTileEntityRoadConnectionUpdate(RoadLane lane, int curveNumber, boolean connectedToStart, RoadLane otherLane, int otherCurveNumber, boolean otherConnectedToStart){
+	public PacketTileEntityRoadConnectionUpdate(RoadLane lane, int curveNumber, boolean connectedToStart, RoadLaneConnection otherConnection){
 		super(lane.road);
 		this.laneNumber = lane.laneNumber;
 		this.curveNumber = curveNumber;
 		this.connectedToStart = connectedToStart;
-		if(otherLane != null){
-			this.otherPosition = otherLane.road.position;
-			this.otherLaneNumber = otherLane.laneNumber;
-			this.otherCurveNumber = otherCurveNumber;
-			this.otherConnectedToStart = otherConnectedToStart;
+		if(otherConnection != null){
+			this.otherPosition = otherConnection.tileLocation;
+			this.otherLaneNumber = otherConnection.laneNumber;
+			this.otherCurveNumber = otherConnection.curveNumber;
+			this.otherCurveNetAngle = otherConnection.curveNetAngle;
+			this.otherConnectedToStart = otherConnection.connectedToStart;
 		}else{
 			this.otherPosition = null;
 			this.otherLaneNumber = 0;
 			this.otherCurveNumber = 0;
+			this.otherCurveNetAngle = 0;
 			this.otherConnectedToStart = false;
 		}
 	}
 	
 	public PacketTileEntityRoadConnectionUpdate(RoadLane lane,int curveNumber, boolean priorConnection){
-		this(lane, curveNumber, priorConnection, null, 0, false);
+		this(lane, curveNumber, priorConnection, null);
 	}
 	
 	public PacketTileEntityRoadConnectionUpdate(ByteBuf buf){
@@ -58,11 +61,13 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 			this.otherPosition = readPoint3iFromBuffer(buf);
 			this.otherLaneNumber = buf.readInt();
 			this.otherCurveNumber = buf.readInt();
+			this.otherCurveNetAngle = buf.readFloat();
 			this.otherConnectedToStart = buf.readBoolean();
 		}else{
 			this.otherPosition = null;
 			this.otherLaneNumber = 0;
 			this.otherCurveNumber = 0;
+			this.otherCurveNetAngle = 0;
 			this.otherConnectedToStart = false;
 		}
 	}
@@ -78,6 +83,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 			writePoint3iToBuffer(otherPosition, buf);
 			buf.writeInt(otherLaneNumber);
 			buf.writeInt(otherCurveNumber);
+			buf.writeFloat(otherCurveNetAngle);
 			buf.writeBoolean(otherConnectedToStart);
 		}else{
 			buf.writeBoolean(false);
@@ -90,9 +96,9 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 		if(otherPosition != null){
 			//Connecting to another curve.  Create connection from this curve to the other one.
 			if(connectedToStart){
-				lane.priorConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherConnectedToStart));
+				lane.priorConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherCurveNetAngle, otherConnectedToStart));
 			}else{
-				lane.nextConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherConnectedToStart));
+				lane.nextConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherCurveNetAngle, otherConnectedToStart));
 			}
 		}else{
 			//No other curve.  This is a connection deletion request.
