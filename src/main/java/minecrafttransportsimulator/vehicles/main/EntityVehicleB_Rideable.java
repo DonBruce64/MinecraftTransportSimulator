@@ -41,16 +41,14 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
 		Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
-		if(rider.isValid()){
+		PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
+		if(rider.isValid() && seat != null){
 			//Add all vehicle-wide effects to the rider
 			if(this.definition.effects != null) {
 				for(JSONPotionEffect effect: this.definition.effects){
 					rider.addPotionEffect(effect);
 				}
 			}
-			
-			//Get the part (seat) this rider is riding.
-			PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
 			
 			//Add all seat-specific effects to the rider
 			if(seat.vehicleDefinition.seatEffects != null) {
