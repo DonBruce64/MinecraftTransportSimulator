@@ -202,7 +202,19 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	@Override
 	protected float getSteeringAngle(){
-		return -rudderAngle/10F;
+		return -rudderAngle/(float)MAX_RUDDER_ANGLE;
+	}
+	
+	@Override
+	protected void addToSteeringAngle(float degrees){
+		short delta = (short) (-degrees*10);
+		if(rudderAngle + delta > MAX_RUDDER_ANGLE){
+			delta = (short) (MAX_RUDDER_ANGLE - rudderAngle);
+		}else if(rudderAngle + delta < -MAX_RUDDER_ANGLE){
+			delta = (short) (-MAX_RUDDER_ANGLE - rudderAngle);
+		}
+		rudderAngle += delta;
+		InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, delta, (byte) 20));
 	}
 	
 	@Override

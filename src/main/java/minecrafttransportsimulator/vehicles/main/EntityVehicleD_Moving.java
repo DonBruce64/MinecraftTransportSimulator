@@ -184,6 +184,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundDeviceCollective.updateBounds();
 	}
 	
+	@Override
+	public boolean needsChunkloading(){
+		return rearFollower != null || (towedByVehicle != null && towedByVehicle.rearFollower != null);
+	}
+	
 	/**
 	 * Returns the follower for the rear of the vehicle.  Front follower should
 	 * be obtained by getting the point from this follower the distance away from the
@@ -374,7 +379,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * A 0 value indicates no yaw change.
 	 */
 	private double getTurningForce(){
-		float steeringAngle = getSteeringAngle();
+		float steeringAngle = getSteeringAngle()*45;
 		skidSteerActive = false;
 		if(steeringAngle != 0){
 			double turningDistance = 0;
@@ -467,8 +472,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		groundDeviceCollective.updateCollisions();
 		
 		//If we aren't on a road, try to find one.
-		//Only do this if we aren't turning.
-		if(Math.abs(getSteeringAngle()) > 10 || towedByVehicle != null){
+		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
+		if(towedByVehicle != null || definition.general.isAircraft){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
@@ -486,7 +491,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		roadMotion.set(0, 0, 0);
 		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
-			LaneSelectionRequest requestedSegment = variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) ? LaneSelectionRequest.LEFT : (variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName) ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.NONE);
+			LaneSelectionRequest requestedSegment;
+			if(!(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) ^ variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName))){
+				requestedSegment = LaneSelectionRequest.NONE;
+			}else if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+				requestedSegment = LaneSelectionRequest.LEFT;
+			}else{
+				requestedSegment = LaneSelectionRequest.RIGHT;
+			}
 			float segmentDelta = (float) (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR);
 			frontFollower = frontFollower.updateCurvePoints(segmentDelta, requestedSegment);
 			rearFollower = rearFollower.updateCurvePoints(segmentDelta, requestedSegment);
@@ -503,7 +515,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				//Apply the motion based on the delta between the actual and desired.
 				//Also set motion Y to 0 in case we were doing ground device things.
 				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
-				if(roadMotion.length() > 10){
+				if(roadMotion.length() > 1){
 					roadMotion.set(0, 0, 0);
 					frontFollower = null;
 					rearFollower = null;
@@ -518,6 +530,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					double rollDelta = 0;
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
+					addToSteeringAngle((float) roadRotation.y);
 				}
 			}else{
 				//Set followers to null, as something is invalid.
@@ -576,7 +589,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
 				if(definition.motorized.maxTiltAngle != 0){
-					rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle()/(EntityVehicleF_Physics.MAX_RUDDER_ANGLE/10);
+					rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
 					if(Double.isNaN(rotation.z)){
 						rotation.z = 0;
 					}
@@ -988,17 +1001,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 	}
 	
-	/**
-	 * Emum for easier functions for trailer connections.
-	 */
-	public static enum TrailerConnectionResult{
-		NO_TRAILER_NEARBY,
-		TRAILER_TOO_FAR,
-		TRAILER_WRONG_HITCH,
-		TRAILER_CONNECTED;
-	}
-	
-	
 	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded){
 		serverDeltaM.add(motionAdded);
 		serverDeltaR.add(rotationAdded);
@@ -1006,8 +1008,18 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	/**
 	 * Method block for getting the steering angle of this vehicle.
+	 * This returns the normalized steering angle, from -1.0 to 1.0;
 	 */
 	protected abstract float getSteeringAngle();
+	
+	/**
+	 * Adds to the steering angle.  Passed-in value is the number
+	 * of degrees to add.  Clamping may be applied if required.
+	 * Note: this will only be called on the server from internal
+	 * methods.  Clients should be sent a packet based on the
+	 * actual state changes.
+	 */
+	protected abstract void addToSteeringAngle(float degrees);
 	
 	/**
 	 * Method block for force and motion calculations.
@@ -1047,5 +1059,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
+	}
+	
+	/**
+	 * Emum for easier functions for trailer connections.
+	 */
+	public static enum TrailerConnectionResult{
+		NO_TRAILER_NEARBY,
+		TRAILER_TOO_FAR,
+		TRAILER_WRONG_HITCH,
+		TRAILER_CONNECTED;
 	}
 }

@@ -33,6 +33,7 @@ public class JSONConfig{
 		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks.");
 		public ConfigBoolean noclipVehicles = new ConfigBoolean(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
 		public ConfigBoolean creativeDamage = new ConfigBoolean(false, "If true, damage from vehicles and guns will be applied to creative players.");
+		public ConfigBoolean chunkloadVehicles = new ConfigBoolean(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
 		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public ConfigDouble hitboxClamp = new ConfigDouble(0.1D, "This value defines the minimum delta for hitboxes.  This prevents hitboxes from moving if too little movement of the vehicle has been performed.  Clamping helps to reduce Floating-Point errors and The Shakes when on vehicles.  Lower values offer more accurate hitbox detection, at an increased cost of getting stuck in vehicles.");
 		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");

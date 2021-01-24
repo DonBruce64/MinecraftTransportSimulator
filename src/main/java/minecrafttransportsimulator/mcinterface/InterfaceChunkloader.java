@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -28,7 +27,7 @@ public class InterfaceChunkloader implements LoadingCallback{
 	@Override
 	public void ticketsLoaded(List<Ticket> tickets, World world){
 		for(Ticket modTicket : tickets){
-			if(modTicket.getModId().equals(MasterLoader.MODID)){
+			if(modTicket.getModId().equals(MasterLoader.MODID) && ConfigSystem.configObject.general.chunkloadVehicles.value){
 				modTicket.setChunkListDepth(1);
 				if(modTicket.getType().equals(Type.ENTITY)){
 					entityTickets.put((BuilderEntity) modTicket.getEntity(), modTicket);
@@ -37,11 +36,11 @@ public class InterfaceChunkloader implements LoadingCallback{
 		}
 	}
 	
-	public static void removeEntityTicket(AEntityBase entity){
-		if(!entity.world.world.isRemote){
-			if(entityTickets.containsKey(entity.wrapper.entity)){
-				ForgeChunkManager.releaseTicket(entityTickets.get(entity.wrapper.entity));
-				entityTickets.remove(entity.wrapper.entity);
+	public static void removeEntityTicket(BuilderEntity entity){
+		if(!entity.world.isRemote){
+			if(entityTickets.containsKey(entity)){
+				ForgeChunkManager.releaseTicket(entityTickets.get(entity));
+				entityTickets.remove(entity);
 			}
 		}
 	}
@@ -68,24 +67,25 @@ public class InterfaceChunkloader implements LoadingCallback{
 		//Need to tick event this, as entities in unloaded chunks don't get update calls, so we need
 		//to ensure when they do move into one, they force the update.
 		//To prevent CMEs here, we use an indexed checker.
-		if(!event.world.isRemote){
+		if(!event.world.isRemote && ConfigSystem.configObject.general.chunkloadVehicles.value){
 			for(int i=0; i<event.world.loadedEntityList.size(); ++i){
 				Entity entity = event.world.loadedEntityList.get(i);
 				if(entity instanceof BuilderEntity){
-					if(((BuilderEntity) entity).entity instanceof EntityVehicleF_Physics){
-						if(entityTickets.containsKey(entity)){
-							if(!entity.isDead){
-								ForgeChunkManager.forceChunk(entityTickets.get(entity), new ChunkPos(entity.chunkCoordX, entity.chunkCoordZ));
+					BuilderEntity builder = (BuilderEntity) entity;
+					if(builder.entity != null){
+						if(!builder.isDead && builder.entity.needsChunkloading()){
+							if(entityTickets.containsKey(builder)){
+								ForgeChunkManager.forceChunk(entityTickets.get(builder), new ChunkPos(builder.chunkCoordX, builder.chunkCoordZ));
 							}else{
-								removeEntityTicket(((BuilderEntity) entity).entity);
+								Ticket ticket = ForgeChunkManager.requestTicket(MasterLoader.INSTANCE, builder.world, Type.ENTITY);
+								if(ticket != null){
+									ticket.setChunkListDepth(1);
+									ticket.bindEntity(builder);
+									entityTickets.put(builder, ticket);
+								}
 							}
 						}else{
-							Ticket ticket = ForgeChunkManager.requestTicket(MasterLoader.INSTANCE, entity.world, Type.ENTITY);
-							if(ticket != null){
-								ticket.setChunkListDepth(1);
-								ticket.bindEntity(entity);
-								entityTickets.put((BuilderEntity) entity, ticket);
-							}
+							removeEntityTicket(builder);
 						}
 					}
 				}

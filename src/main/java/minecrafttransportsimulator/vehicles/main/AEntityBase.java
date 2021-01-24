@@ -250,6 +250,15 @@ public abstract class AEntityBase implements IAnimationProvider{
 	public abstract boolean isLitUp();
 	
 	/**
+	 *  This method returns true if this entity needs to be chunkloaded.  This will prevent it from
+	 *  being unloaded server-side.  Client-side entities will still unload as clients unload their
+	 *  own chunks.
+	 */
+	public boolean needsChunkloading(){
+		return false;
+	}
+	
+	/**
 	 *  Called to render this entity.  No actual rendering should be done in this method, as doing so
 	 *  could result in classed being imported during object instantiation on the server for graphics
 	 *  libraries that do not exist.  Instead, all render calls should be forwarded to self-contained
