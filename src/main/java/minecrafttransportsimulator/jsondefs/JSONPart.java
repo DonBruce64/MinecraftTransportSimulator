@@ -156,99 +156,219 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartGroundDevice{
+		@JSONDescription("")
     	public boolean isWheel;
+		
+		@JSONDescription("")
     	public boolean isTread;
+		
+		@JSONDescription("")
     	public boolean canFloat;
+		
     	@Deprecated
+		@JSONDescription("")
 		public boolean canGoFlat;
+		
+		@JSONDescription("")
     	public float width;
+		
+		@JSONDescription("")
     	public float height;
+		
+		@JSONDescription("")
     	public float flatHeight;
+		
+		@JSONDescription("")
     	public float motiveFriction;
+		
+		@JSONDescription("")
         public float lateralFriction;
+		
+		@JSONDescription("")
         public float extraCollisionBoxOffset;
+		
+		@JSONDescription("")
         public float spacing;
     }
     
     public class JSONPartPropeller{
+		@JSONDescription("")
     	public boolean isDynamicPitch;
+		
+		@JSONDescription("")
     	public boolean isRotor;
+		
+		@JSONDescription("")
     	public short pitch;
+		
+		@JSONDescription("")
     	public int diameter;
+		
+		@JSONDescription("")
     	public int startingHealth;
     }
     
     public class JSONPartSeat{
+		@JSONDescription("")
     	public boolean standing;
+		
+		@JSONDescription("")
     	public float widthScale;
+		
+		@JSONDescription("")
     	public float heightScale;
     }
     
     public class JSONPartGun{
+		@JSONDescription("")
     	public boolean autoReload;
+		
+		@JSONDescription("")
     	public boolean isSemiAuto;
+		
+		@JSONDescription("")
     	public boolean yawIsInternal;
+		
+		@JSONDescription("")
     	public boolean pitchIsInternal;
+		
+		@JSONDescription("")
     	public int capacity;
+		
+		@JSONDescription("")
     	public int fireDelay;
+		
+		@JSONDescription("")
     	public int reloadTime;
+		
+		@JSONDescription("")
     	public int windupTime;
+		
+		@JSONDescription("")
     	public int muzzleVelocity;
+		
+		@JSONDescription("")
     	public List<Point3d> muzzlePositions;
+		
+		@JSONDescription("")
     	public float minPitch;
+		
+		@JSONDescription("")
     	public float maxPitch;
+		
+		@JSONDescription("")
     	public float minYaw;
+		
+		@JSONDescription("")
     	public float maxYaw;
+		
+		@JSONDescription("")
     	public float diameter;
+		
+		@JSONDescription("")
     	public float length;
+		
+		@JSONDescription("")
     	public boolean fireSolo;
+		
+		@JSONDescription("")
     	public boolean resetPosition;
+		
+		@JSONDescription("")
     	public float defaultPitch;
+		
+		@JSONDescription("")
     	public float defaultYaw;
+		
+		@JSONDescription("")
         public List<JSONParticleObject> particleObjects;
         
+		@JSONDescription("")
         public boolean handHeld;
+		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
-    	public Point3d handHeldNormalOffset;
+    	@JSONDescription("")
+		public Point3d handHeldNormalOffset;
+		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
-    	public Point3d handHeldAimedOffset;
+    	@JSONDescription("")
+		public Point3d handHeldAimedOffset;
     }
     
     public class JSONPartBullet{
     	@Deprecated
     	public String type;
+		
     	@JSONRequired
+		@JSONDescription("")
     	public List<String> types;
+		
+		@JSONDescription("")
     	public int quantity;
+		
+		@JSONDescription("")
     	public float diameter;
+		
+		@JSONDescription("")
     	public float blastStrength;
+		
+		@JSONDescription("")
     	public float armorPenetration;
+		
+		@JSONDescription("")
     	public int burnTime;
+		
+		@JSONDescription("")
     	public int accelerationTime;
+		
+		@JSONDescription("")
     	public int maxVelocity;
+		
+		@JSONDescription("")
     	public float maxOffAxis;
+		
+		@JSONDescription("")
     	public float turnFactor;
+		
+		@JSONDescription("")
     	public float angleOfAttack;
+		
+		@JSONDescription("")
     	public float proximityFuze;
+		
+		@JSONDescription("")
     	public int airBurstDelay;
+		
+		@JSONDescription("")
     	public List<JSONParticleObject> particleObjects;
     }
     
     public class JSONPartInteractable{
     	@JSONRequired
+		@JSONDescription("")
     	public String interactionType;
+		
+		@JSONDescription("")
     	public boolean feedsVehicles;
+		
+		@JSONDescription("")
     	public int inventoryUnits;
     }
     
     public class JSONPartEffector{
     	@JSONRequired
+		@JSONDescription("")
     	public String type;
+		
+		@JSONDescription("")
     	public int blocksWide;
     }
     
     public class JSONPartGeneric{
+		@JSONDescription("")
     	public float width;
+		
+		@JSONDescription("")
     	public float height;
     }
     
