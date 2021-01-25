@@ -77,15 +77,15 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	}
 	
 	@Override
-	public Point3d getPositionRotation(float partialTicks){
-		Point3d rotation = super.getPositionRotation(partialTicks);
+	public void updatePositionAndRotation(){
+		super.updatePositionAndRotation();
+		//Need to use prev orientation here, as otherwise we get into a feedback loop.
 		if(!definition.gun.yawIsInternal){
-			rotation.add(0, internalGun.prevOrientation.y + (internalGun.currentOrientation.y - internalGun.prevOrientation.y)*partialTicks, 0);
+			totalRotation.add(0, internalGun.prevOrientation.y, 0);
 		}
 		if(!definition.gun.pitchIsInternal){
-			rotation.add(internalGun.prevOrientation.x + (internalGun.currentOrientation.x - internalGun.prevOrientation.x)*partialTicks, 0, 0);
+			totalRotation.add(internalGun.prevOrientation.x, 0, 0);
 		}
-		return rotation;
 	}
 	
 	@Override

@@ -59,8 +59,9 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	public final Point3d totalOffset;
-	public final Point3d prevTotalRotation;
+	public final Point3d prevTotalOffset;
 	public final Point3d totalRotation;
+	public final Point3d prevTotalRotation;
 	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
 	public String currentSubName;
@@ -70,6 +71,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 		this.vehicle = vehicle;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
+		this.prevTotalOffset = totalOffset.copy();
 		this.definition = item.definition;;
 		this.vehicleDefinition = packVehicleDef;
 		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
@@ -143,52 +145,46 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * Removing the part during this loop will earn you a CME.
 	 */
 	public void update(){
+		prevTotalOffset.setTo(totalOffset);
 		prevTotalRotation.setTo(totalRotation);
-		//Set the updated totalOffset and worldPos.  This is used for part position, but not rendering.
-		if(vehicleDefinition.isSubPart){
-			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
-			totalRotation.set(0, 0, 0);
-			APart testParentPart = parentPart;
-			while(testParentPart != null){
-				//First, get the relative distance between our offset and our parent's offset.
-				totalOffset.subtract(testParentPart.placementOffset);
-				
-				//Now get our parent's rotation contribution.
-				Point3d parentRotation = testParentPart.getPositionRotation(0).add(testParentPart.placementRotation);
-				
-				//Rotate our current relative offset by the rotation of the parent to get the correct
-				//offset between us and our parent's position in our parent's coordinate system.
-				totalOffset.rotateFine(parentRotation);
-				
-				//Add our parent's rotation to our own.
-				totalRotation.add(parentRotation);
-				
-				//Now that we have the proper relative offset, add our parent's placement and position offsets.
-				//This is our final offset point.
-				totalOffset.add(testParentPart.placementOffset).add(testParentPart.getPositionOffset(0));
+		updatePositionAndRotation();
+		//If we have a parent part, we need to change our offsets to be relative to it.
+		if(parentPart != null){
+			//Get parent offset and rotation.  The parent will have been updated already as it has
+			//to be placed on the vehicle before us, and as such will be before us in the parts list.
+			//Our initial offset needs to be relative to the position of the part on the parent, so 
+			//we need to start with that delta.
+			totalOffset.subtract(parentPart.placementOffset);
 			
-				//Go up one level for parents and get that information too.
-				testParentPart = testParentPart.parentPart;
-			}
-			//Now that we are done, add our own rotation to our cumulative rotation we got from our parent.
-			totalRotation.add(getPositionRotation(0)).add(placementRotation);
+			//Rotate our current relative offset by the rotation of the parent to get the correct
+			//offset between us and our parent's position in our parent's coordinate system.
+			totalOffset.rotateFine(parentPart.totalRotation);
 			
-		}else{
-			totalOffset.setTo(getPositionOffset(0)).add(placementOffset);
-			totalRotation.setTo(getPositionRotation(0)).add(placementRotation);
+			//Add our parent's rotation to our own so we have a cumulative rotation.
+			//This has the potential for funny rotations if we're both rotated, as we should
+			//apply this rotation about our parent's rotated axis, not our own, but for most situations,
+			//it's close enough.
+			totalRotation.add(parentPart.totalRotation);
+			
+			//Now that we have the proper relative offset, add our parent's offset to get our next offset.
+			//This is our final offset point.
+			totalOffset.add(parentPart.totalOffset);
 		}
+		
+		//Set worldpos to our net offset pos on the vehicle..
 		worldPos.setTo(totalOffset).rotateFine(vehicle.angles).add(vehicle.position);
 	}
 	
 	/**
-	 * Gets the movement position offset for the part as a vector.
-	 * This offset is an addition to the main placement offset defined by the JSON.
+	 * Updates the position and rotation totals to the current position and rotation, 
+	 * as defined by the various animations and offsets defined in the JSON.
+	 * This may be extended by parts to modify this behavior.
 	 */
-	public final Point3d getPositionOffset(float partialTicks){
+	protected void updatePositionAndRotation(){
 		boolean inhibitAnimations = false;
-		Point3d rollingOffset = new Point3d(0D, 0D, 0D);
+		totalOffset.set(0D, 0D, 0D);
+		totalRotation.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
-			Point3d rollingRotation = new Point3d(0D, 0D, 0D);
 			for(DurationDelayClock clock : clocks){
 				JSONAnimationDefinition animation = clock.definition;
 				switch(animation.animationType){
@@ -196,27 +192,27 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
-							rollingOffset.add(appliedTranslation.rotateFine(rollingRotation));
+							totalOffset.add(appliedTranslation.rotateFine(totalRotation));
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 							Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-								rollingOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(rollingRotation));
+								totalOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(totalRotation));
 							}
 							
-							//Apply rotation.
-							rollingRotation.add(appliedRotation);
+							//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
+							totalRotation.add(appliedRotation);
 						}
 						break;
 					}
@@ -225,14 +221,14 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 						break;
 					}
 					case INHIBITOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 							inhibitAnimations = true;
 						}
 						break;
 					}
 					case ACTIVATOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 							inhibitAnimations = false;
 						}
@@ -242,65 +238,18 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 			}
 		}
 		
-		//Return the net offset from rotation and translation.
-		return rollingOffset;
-	}
-	
-	/**
-	 * Gets the rotation angles for the part as a vector.
-	 * This rotation is used to rotate the part prior to translation.
-	 * It may be used for stacked rotations, and should return the final
-	 * rotation angles for all operations.
-	 */
-	public Point3d getPositionRotation(float partialTicks){
-		boolean inhibitAnimations = false;
-		Point3d rollingRotation = new Point3d(0D, 0D, 0D);
-		if(!clocks.isEmpty()){
-			for(DurationDelayClock clock : clocks){
-				JSONAnimationDefinition animation = clock.definition;
-				switch(animation.animationType){
-					case TRANSLATION :{
-						//Do nothing.
-						break;
-					}
-					case ROTATION :{
-						if(!inhibitAnimations){
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-							Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
-							rollingRotation.add(appliedRotation.x, appliedRotation.y, appliedRotation.z);
-						}
-						break;
-					}
-					case VISIBILITY :{
-						//Do nothing.
-						break;
-					}
-					case INHIBITOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-							inhibitAnimations = true;
-						}
-						break;
-					}
-					case ACTIVATOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
-						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-							inhibitAnimations = false;
-						}
-						break;
-					}
-				}
-			}
-		}
-		return rollingRotation;
+		//Add on the placement offset and rotation  now that we have our dynamic values.
+		totalOffset.add(placementOffset);
+		totalRotation.add(placementRotation);
 	}
 	
 	/**
 	 * Gets the rotation angles for the part as a vector.
 	 * This rotation is only for custom rendering operations, and cannot be modified via JSON.
+	 * If we have a parent part and this part is on it, use its rotation.
 	 */
 	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
-		return ZERO_POINT;
+		return parentPart != null ? parentPart.getRenderingRotation(partialTicks, animationValue) : ZERO_POINT;
 	}
 	
 	/**

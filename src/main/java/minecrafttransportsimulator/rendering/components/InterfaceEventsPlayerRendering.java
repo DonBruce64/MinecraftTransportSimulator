@@ -80,10 +80,7 @@ public class InterfaceEventsPlayerRendering{
 	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 						if(player.equals(rider.entity)){
 							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-							ridingAngles = seat.placementRotation.copy().add(seat.getPositionRotation(event.getPartialRenderTick()));
-		            		if(seat.parentPart != null){
-		            			ridingAngles.add(seat.parentPart.placementRotation).add(seat.parentPart.getPositionRotation(event.getPartialRenderTick()));
-			            	}
+							ridingAngles = seat.prevTotalRotation.getInterpolatedPoint(seat.totalRotation, event.getPartialRenderTick());
 		            		
 		            		//Set sitting mode to the seat we are sitting in.
 		            		//If we aren't standing, we'll need to adjust the legs.

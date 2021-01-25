@@ -136,13 +136,13 @@ public final class RenderVehicle{
 	public static void render(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Get the render offset.
 		//This is the interpolated movement, plus the prior position.
-		Point3d vehiclePosition = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
+		Point3d vehiclePosition = vehicle.prevPosition.getInterpolatedPoint(vehicle.position, partialTicks);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
 		Point3d renderPosition = vehiclePosition.copy().subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the vehicle rotation.
-		Point3d renderRotation = vehicle.angles.copy().subtract(vehicle.prevAngles).multiply(1D - partialTicks).multiply(-1D).add(vehicle.angles);
+		Point3d renderRotation = vehicle.prevAngles.getInterpolatedPoint(vehicle.angles, partialTicks);
        
         //Set up lighting.
         InterfaceRender.setLightingToEntity(vehicle);
@@ -165,7 +165,7 @@ public final class RenderVehicle{
 		//Render all the parts.  Parts get translated to their offset position prior to rendering.
 		for(APart part : vehicle.parts){
 			//Only render real parts that aren't sub parts.  SubParts need to be rendered relative to their main part.
-			if(!part.isFake() && !part.vehicleDefinition.isSubPart){
+			if(!part.isFake()){
 				//Check to see if the part has a visibility animation and it's set to not be visible.
 				boolean shouldRender = true;
 				if(part.vehicleDefinition.animations != null){
@@ -187,7 +187,7 @@ public final class RenderVehicle{
 						GL11.glTranslated(part.placementOffset.x, 0, 0);
 						renderPart(part, partialTicks);
 					}else{
-						Point3d offset = part.getPositionOffset(partialTicks).add(part.placementOffset);
+						Point3d offset = part.prevTotalOffset.getInterpolatedPoint(part.totalOffset, partialTicks);
 						GL11.glTranslated(offset.x, offset.y, offset.z);
 						renderPart(part, partialTicks);
 					}
@@ -320,7 +320,7 @@ public final class RenderVehicle{
 		
 		//Mirror the model if we need to do so.
 		//If we are a sub-part, don't mirror as we'll already be mirrored.
-		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring && !part.vehicleDefinition.isSubPart;
+		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring;
 		if(mirrored){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			GL11.glCullFace(GL11.GL_FRONT);
@@ -352,45 +352,6 @@ public final class RenderVehicle{
 					modelObject.render(part, partialTicks, modelObjects);
 				}
 			}
-			
-			//Now that we have rendered this part, render any sub-part children.
-			for(APart childPart : part.childParts){
-				if(!childPart.isFake() && childPart.vehicleDefinition.isSubPart){
-					//Check if we should render.
-					boolean shouldRender = true;
-					if(childPart.vehicleDefinition.animations != null){
-						for(JSONAnimationDefinition animation : childPart.vehicleDefinition.animations){
-							if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-								double value = childPart.getAnimationSystem().getAnimatedVariableValue(childPart, animation, 0, null, partialTicks);
-								if(value < animation.clampMin || value > animation.clampMax){
-									shouldRender = false;
-									break;
-								}
-							}
-						}
-					}
-					
-					if(shouldRender){
-						//Get the relative distance between our offset and our parent's offset.
-						Point3d relativeOffset = childPart.getPositionOffset(partialTicks).add(childPart.placementOffset).subtract(part.placementOffset);
-						
-						//Translate to our new center and render.
-						//If we are mirroring, and are a child part that shouldn't mirror, don't do so.
-						GL11.glPushMatrix();
-						GL11.glTranslated(mirrored ? -relativeOffset.x : relativeOffset.x, relativeOffset.y, relativeOffset.z);
-						if(mirrored && childPart.disableMirroring){
-							GL11.glScalef(-1.0F, 1.0F, 1.0F);
-							GL11.glCullFace(GL11.GL_BACK);
-							renderPart(childPart, partialTicks);
-							GL11.glScalef(-1.0F, 1.0F, 1.0F);
-							GL11.glCullFace(GL11.GL_FRONT);
-						}else{
-							renderPart(childPart, partialTicks);
-						}
-						GL11.glPopMatrix();
-					}
-				}
-			}
 		}
 		//Set cullface back to normal if we switched it and pop matrix.
 		if(mirrored){
@@ -402,23 +363,10 @@ public final class RenderVehicle{
 	/**
 	 *  Rotates a part on the model.  The rotation takes into account the vehicle, static, JSON-applied rotation, 
 	 *  as well as the dynamic rotation that depend on the part itself.  Rotation needs to be done after translation
-	 *   to the part's position to avoid coordinate system conflicts.  Note that yaw rotations are inverted, as MC's
-	 *   Y axis rotation is backwards from RHR convention.
+	 *   to the part's position to avoid coordinate system conflicts.
 	 */
 	private static void rotatePart(APart part, float partialTicks){
-		if(!part.placementRotation.isZero()){
-			if(part.parentPart != null && part.vehicleDefinition.isSubPart){
-				GL11.glRotated(part.placementRotation.y - part.parentPart.placementRotation.y, 0, 1, 0);
-				GL11.glRotated(part.placementRotation.x - part.parentPart.placementRotation.x, 1, 0, 0);
-				GL11.glRotated(part.placementRotation.z - part.parentPart.placementRotation.z, 0, 0, 1);
-			}else{
-				GL11.glRotated(part.placementRotation.y, 0, 1, 0);
-				GL11.glRotated(part.placementRotation.x, 1, 0, 0);
-				GL11.glRotated(part.placementRotation.z, 0, 0, 1);
-			}
-		}
-		
-		Point3d positionRotation = part.getPositionRotation(partialTicks);
+		Point3d positionRotation = part.prevTotalRotation.getInterpolatedPoint(part.totalRotation, partialTicks);
 		if(!positionRotation.isZero()){
 			GL11.glRotated(positionRotation.y, 0, 1, 0);
 			GL11.glRotated(positionRotation.x, 1, 0, 0);

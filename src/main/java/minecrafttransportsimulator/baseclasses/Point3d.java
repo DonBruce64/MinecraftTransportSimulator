@@ -198,6 +198,15 @@ public class Point3d{
 	}
 	
 	/**
+	 * Returns an interpolated point whose value is between this point and the next point
+	 * with the value being defined by the normalized distance between them and the passed-in
+	 * factor. 
+	 */
+	public Point3d getInterpolatedPoint(Point3d endPoint, double factor){
+		return endPoint.copy().subtract(this).multiply(factor).add(this);
+	}
+	
+	/**
      * Returns the difference between the passed-in value and this point's Y value, between
      * the range of -180 to 180.  Placed here as Y is frequently used in yaw angle for in-game
      * entities and needs to be clamped to this domain for calculations.
