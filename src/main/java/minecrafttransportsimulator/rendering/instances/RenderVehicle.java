@@ -80,8 +80,6 @@ public final class RenderVehicle{
 				modelObject.resetDisplayList();
 			}
 			vehicleObjectLists.remove(definition.systemName);
-			treadDeltas.remove(definition.systemName);
-			treadPoints.remove(definition.systemName);
 			vehicleInstrumentTransforms.remove(definition.systemName);
 		}
 	}
@@ -139,7 +137,7 @@ public final class RenderVehicle{
 		Point3d vehiclePosition = vehicle.prevPosition.getInterpolatedPoint(vehicle.position, partialTicks);
 		
 		//Subtract the vehcle's position by the render entity position to get the delta for translating.
-		Point3d renderPosition = vehiclePosition.copy().subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+		vehiclePosition.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 		
 		//Get the vehicle rotation.
 		Point3d renderRotation = vehicle.prevAngles.getInterpolatedPoint(vehicle.angles, partialTicks);
@@ -152,9 +150,7 @@ public final class RenderVehicle{
         
         //Push the matrix on the stack and translate and rotate to the vehicle's position.
         GL11.glPushMatrix();
-        GL11.glTranslated(renderPosition.x, renderPosition.y, renderPosition.z);
-        
-        GL11.glPushMatrix();
+        GL11.glTranslated(vehiclePosition.x, vehiclePosition.y, vehiclePosition.z);
         GL11.glRotated(renderRotation.y, 0, 1, 0);
         GL11.glRotated(renderRotation.x, 1, 0, 0);
         GL11.glRotated(renderRotation.z, 0, 0, 1);
@@ -204,18 +200,6 @@ public final class RenderVehicle{
 		
 		//Render all instruments on the vehicle.
 		renderInstruments(vehicle);
-		
-		//Pop vehicle rotation matrix as the following calls use world coords.
-		GL11.glPopMatrix();
-		
-		//Check to see if we need to manually render riders.
-		//This happens if we force-render this vehicle in pass -1.
-		if(InterfaceRender.getRenderPass() == -1){
-			InterfaceRender.renderEntityRiders(vehicle, partialTicks);
-		}
-		
-		//Translate the vehicle's world position to render the hitboxes as they use global coords.
-        GL11.glTranslated(-vehiclePosition.x, -vehiclePosition.y, -vehiclePosition.z);
 		
 		//Render holograms for missing parts.
 		renderPartBoxes(vehicle);
@@ -1058,13 +1042,24 @@ public final class RenderVehicle{
 			}else{
 				InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 			}
+			GL11.glPushMatrix();
+			GL11.glTranslated(box.localCenter.x, box.localCenter.y, box.localCenter.z);
+			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+			GL11.glTranslated(-box.localCenter.x, -box.localCenter.y, -box.localCenter.z);
 			RenderBoundingBox.renderWireframe(box);
+			GL11.glPopMatrix();
 		}
 		
 		//Draw the ground bounding boxes.
 		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
+		
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
+			GL11.glPushMatrix();
+			GL11.glTranslated(box.localCenter.x, box.localCenter.y, box.localCenter.z);
+			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+			GL11.glTranslated(-box.localCenter.x, -box.localCenter.y, -box.localCenter.z);
 			RenderBoundingBox.renderWireframe(box);
+			GL11.glPopMatrix();
 		}
 		
 		//Draw part center points.
@@ -1072,9 +1067,8 @@ public final class RenderVehicle{
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.parts){
 			if(!part.isFake()){
-				Point3d partRotatedCenter = part.totalOffset.copy().rotateCoarse(vehicle.angles).add(vehicle.position);
-				GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y - part.getHeight(), partRotatedCenter.z);
-				GL11.glVertex3d(partRotatedCenter.x, partRotatedCenter.y + part.getHeight(), partRotatedCenter.z);
+				GL11.glVertex3d(part.totalOffset.x, part.totalOffset.y - part.getHeight(), part.totalOffset.z);
+				GL11.glVertex3d(part.totalOffset.x, part.totalOffset.y + part.getHeight(), part.totalOffset.z);
 			}
 		}
 		GL11.glEnd();
