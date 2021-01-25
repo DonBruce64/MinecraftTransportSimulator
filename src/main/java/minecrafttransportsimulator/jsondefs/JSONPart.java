@@ -56,41 +56,101 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartEngine{
+		@JSONDescription("")
     	public boolean isAutomatic;
+		
+		//FIXME add description
     	public boolean isSteamPowered;
+		
+		@JSONDescription("")
     	public boolean flamesOnStartup;
+		
+		@JSONDescription("")
     	public boolean isCrankingNotPitched;
+		
+		@JSONDescription("")
     	public int starterPower;
+		
+		@JSONDescription("")
     	public int shiftSpeed;
+		
+		@JSONDescription("")
     	public int clutchTime;
+		
+		@JSONDescription("")
     	public int revResistance;
+		
+		@JSONDescription("")
     	public int maxRPM;
+		
+		@JSONDescription("")
     	public float fuelConsumption;
+		
+		@JSONDescription("")
     	public float jetPowerFactor;
+		
+		@JSONDescription("")
     	public float bypassRatio;
+		
+		@JSONDescription("")
     	public float propellerRatio;
+		
     	@JSONRequired
-    	public float[] gearRatios;
+    	@JSONDescription("")
+		public float[] gearRatios;
+		
+		@JSONDescription("")
 		public int[] upShiftRPM;
+		
+		@JSONDescription("")
 		public int[] downShiftRPM;
+		
 		@JSONRequired
-    	public String fuelType;
+    	@JSONDescription("")
+		public String fuelType;
+		
+		@JSONDescription("")
 		public float superchargerFuelConsumption;
+		
+		@JSONDescription("")
 		public float superchargerEfficiency;
+		
+		@JSONDescription("")
 		public EngineSound customSoundset[];
 		
 		public class EngineSound{
 			@JSONRequired
+			@JSONDescription("")
 			public String soundName;
+			
+			@JSONDescription("")
 			public float pitchIdle;
+			
+			@JSONDescription("")
 			public float pitchMax;
+			
+			@JSONDescription("")
 			public float pitchLength;
+			
+			@JSONDescription("")
 			public float volumeIdle;
+			
+			@JSONDescription("")
 			public float volumeMax;
+			
+			@JSONDescription("")
 			public float volumeLength;
+			
+			@JSONDescription("")
 			public int pitchCenter;
+			
+			@JSONDescription("")
 			public int volumeCenter;
+			
+			@JSONDescription("")
 			public boolean pitchAdvanced;
+			
+			@JSONDescription("")
 			public boolean volumeAdvanced;
 		}
     }
