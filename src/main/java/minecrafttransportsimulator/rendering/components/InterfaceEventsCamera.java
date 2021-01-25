@@ -140,8 +140,8 @@ public class InterfaceEventsCamera{
 						customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
 	        			
 						//Set variables for camera position and rotation.
-						Point3d cameraPosition = new Point3d(0, 0, 0);
-						Point3d cameraRotation = new Point3d(0, 0, 0);
+						Point3d cameraPosition = new Point3d();
+						Point3d cameraRotation = new Point3d();
 						
 						//Apply transforms.
 						//These happen in-order to ensure proper rendering sequencing.

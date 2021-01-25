@@ -30,22 +30,22 @@ public class TileEntityBeacon extends TileEntityDecor{
 		//Manually add textLines, as these won't be in the JSON.
 		this.nameTextObject = new JSONText();
 		nameTextObject.attachedTo = "NULL";
-		nameTextObject.pos = new Point3d(0, 0, 0);
-		nameTextObject.rot = new Point3d(0, 0, 0);
+		nameTextObject.pos = new Point3d();
+		nameTextObject.rot = new Point3d();
 		nameTextObject.fieldName = "Beacon Name";
 		nameTextObject.maxLength = 5;
 		
 		this.glideslopeTextObject = new JSONText();
 		glideslopeTextObject.attachedTo = "NULL";
-		glideslopeTextObject.pos = new Point3d(0, 0, 0);
-		glideslopeTextObject.rot = new Point3d(0, 0, 0);
+		glideslopeTextObject.pos = new Point3d();
+		glideslopeTextObject.rot = new Point3d();
 		glideslopeTextObject.fieldName = "Glide Slope (Deg)";
 		glideslopeTextObject.maxLength = 5;
 		
 		this.bearingTextObject = new JSONText();
 		bearingTextObject.attachedTo = "NULL";
-		bearingTextObject.pos = new Point3d(0, 0, 0);
-		bearingTextObject.rot = new Point3d(0, 0, 0);
+		bearingTextObject.pos = new Point3d();
+		bearingTextObject.rot = new Point3d();
 		bearingTextObject.fieldName = "Bearing (Deg)";
 		bearingTextObject.maxLength = 5;
 		

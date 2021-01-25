@@ -20,7 +20,7 @@ public abstract class ABlockBase{
 	public final float hardness;
 	public final float blastResistance;
 	
-	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(new Point3d(0, 0, 0), 0.5D, 0.5D, 0.5D);
+	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(new Point3d(), 0.5D, 0.5D, 0.5D);
 	
 	public ABlockBase(float hardness, float blastResistance){
 		this.hardness = hardness;

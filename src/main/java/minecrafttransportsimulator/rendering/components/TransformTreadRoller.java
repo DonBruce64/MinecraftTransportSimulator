@@ -67,7 +67,7 @@ public class TransformTreadRoller extends TransformRotatable{
 			definition.animationType = AnimationComponentType.ROTATION;
 			definition.variable = "ground_rotation_1";
 			definition.centerPoint = new Point3d(0D, yPos, zPos);
-			definition.axis = new Point3d(0D, 0D, 0D);
+			definition.axis = new Point3d();
 		}
 		
 		//Return the created roller.

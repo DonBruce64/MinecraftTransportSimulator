@@ -48,7 +48,7 @@ public class BoundingBox{
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
-		this.currentCollisionDepth = new Point3d(0D, 0D, 0D);
+		this.currentCollisionDepth = new Point3d();
 		this.widthRadius = widthRadius;
 		this.heightRadius = heightRadius;
 		this.depthRadius = depthRadius;

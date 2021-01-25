@@ -345,7 +345,7 @@ public final class LegacyCompatSystem{
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = component.rotationVariable;
-				animation.centerPoint = new Point3d(0, 0, 0);
+				animation.centerPoint = new Point3d();
 				animation.axis = new Point3d(0, 0, component.rotationFactor);
 				animation.offset = component.rotationOffset;
 				animation.clampMin = component.rotationClampMin;
@@ -417,7 +417,7 @@ public final class LegacyCompatSystem{
 				object.scale = line.scale;
 				object.maxLength = line.characters;
 				object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.01D);
-				object.rot = new Point3d(0, 0, 0);
+				object.rot = new Point3d();
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);
 			}
@@ -465,7 +465,7 @@ public final class LegacyCompatSystem{
 				object.scale = line.scale;
 				if(lineNumber++ < 3){
 					object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.0001D);
-					object.rot = new Point3d(0, 0, 0);
+					object.rot = new Point3d();
 				}else{
 					object.pos = new Point3d(line.xPos, line.yPos, line.zPos - 0.0001D);
 					object.rot = new Point3d(0, 180, 0);
@@ -617,7 +617,7 @@ public final class LegacyCompatSystem{
 			if(partName.equals("ground_wheel") && partDef.turnsWithSteer && partDef.animations == null){
 				partDef.animations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.centerPoint = new Point3d(0, 0, 0);
+				animation.centerPoint = new Point3d();
 				animation.axis = new Point3d(0, -1, 0);
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = "rudder";

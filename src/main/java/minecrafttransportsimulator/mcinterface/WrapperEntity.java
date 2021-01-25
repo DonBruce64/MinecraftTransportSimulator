@@ -126,7 +126,7 @@ public class WrapperEntity{
 		mutablePosition.set(entity.posX, entity.posY, entity.posZ);
 		return mutablePosition;
 	}
-	private final Point3d mutablePosition = new Point3d(0D, 0D, 0D);
+	private final Point3d mutablePosition = new Point3d();
 	
 	/**
 	 *  Sets the entity's position to the passed-in point.
@@ -144,7 +144,7 @@ public class WrapperEntity{
 		mutableVelocity.set(entity.motionX, entity.motionY, entity.motionZ);
 		return mutableVelocity;
 	}
-	private final Point3d mutableVelocity = new Point3d(0D, 0D, 0D);
+	private final Point3d mutableVelocity = new Point3d();
 	
 	/**
 	 *  Sets the entity's velocity to the passed-in vector.
@@ -324,7 +324,7 @@ public class WrapperEntity{
 		mutableRenderPosition.z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
 		return mutableRenderPosition;
 	}
-	private final Point3d mutableRenderPosition = new Point3d(0D, 0D, 0D);
+	private final Point3d mutableRenderPosition = new Point3d();
 	
 	/**
 	 * Adds the potion effect with the specified name to the entity.  Only valid for living entities that

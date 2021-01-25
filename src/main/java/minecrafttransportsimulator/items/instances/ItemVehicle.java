@@ -45,10 +45,10 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			
 			//Make sure we don't restore any wold-based entity properties.
 			data.setInteger("lookupID", 0);
-			data.setPoint3d("position", new Point3d(0D, 0D, 0D));
-			data.setPoint3d("motion", new Point3d(0D, 0D, 0D));
-			data.setPoint3d("angles", new Point3d(0D, 0D, 0D));
-			data.setPoint3d("rotation", new Point3d(0D, 0D, 0D));
+			data.setPoint3d("position", new Point3d());
+			data.setPoint3d("motion", new Point3d());
+			data.setPoint3d("angles", new Point3d());
+			data.setPoint3d("rotation", new Point3d());
 			
 			
 			//First construct the class.

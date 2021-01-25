@@ -74,7 +74,7 @@ public class InterfaceEventsPlayerRendering{
         	if(ridingEntity != null){
         		//Get total angles for the entity the player is riding.
         		Point3d entityAngles = ridingEntity.angles.copy();
-        		Point3d ridingAngles = new Point3d(0, 0, 0);
+        		Point3d ridingAngles = new Point3d();
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
 	            	//Set our angles to match the seat we are riding in.
 	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){

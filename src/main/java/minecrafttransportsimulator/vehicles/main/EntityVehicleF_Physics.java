@@ -88,11 +88,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private double rudderForce;//kg*m/ticks^2
 	private double ballastForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
-	private Point3d thrustForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
-	private Point3d totalAxialForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
-	private Point3d totalMotiveForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
-	private Point3d totalGlobalForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
-	private Point3d totalForce = new Point3d(0D, 0D, 0D);//kg*m/ticks^2
+	private Point3d thrustForce = new Point3d();//kg*m/ticks^2
+	private Point3d totalAxialForce = new Point3d();//kg*m/ticks^2
+	private Point3d totalMotiveForce = new Point3d();//kg*m/ticks^2
+	private Point3d totalGlobalForce = new Point3d();//kg*m/ticks^2
+	private Point3d totalForce = new Point3d();//kg*m/ticks^2
 	
 	//Torques.
 	private double momentRoll;//kg*m^2
@@ -101,9 +101,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
-	private Point3d thrustTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
-	private Point3d totalTorque = new Point3d(0D, 0D, 0D);//kg*m^2/ticks^2
-	private Point3d rotorRotation = new Point3d(0D, 0D, 0D);//degrees
+	private Point3d thrustTorque = new Point3d();//kg*m^2/ticks^2
+	private Point3d totalTorque = new Point3d();//kg*m^2/ticks^2
+	private Point3d rotorRotation = new Point3d();//degrees
 
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);

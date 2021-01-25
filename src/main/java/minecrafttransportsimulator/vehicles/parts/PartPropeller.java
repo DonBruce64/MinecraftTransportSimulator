@@ -19,7 +19,7 @@ public class PartPropeller extends APart{
 	public short currentPitch;
 	
 	private final PartEngine connectedEngine;
-	private final Point3d propellerForce = new Point3d(0D, 0D, 0D);
+	private final Point3d propellerForce = new Point3d();
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	

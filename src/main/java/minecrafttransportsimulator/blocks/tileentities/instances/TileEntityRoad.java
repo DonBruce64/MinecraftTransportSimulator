@@ -151,8 +151,8 @@ public class TileEntityRoad extends ATileEntityMultiblock<JSONRoadComponent>{
 		if(definition.general.isDynamic){
 			//Get all the points that make up our collision points for our dynamic curve.
 			//If we find any colliding points, note them.
-			Point3d testOffset = new Point3d(0, 0, 0);
-			Point3d testRotation = new Point3d(0, 0, 0);
+			Point3d testOffset = new Point3d();
+			Point3d testRotation = new Point3d();
 			float segmentDelta = (float) (definition.general.borderOffset/(Math.floor(definition.general.borderOffset) + 1));
 			for(float f=0; f<dynamicCurve.pathLength; f+=0.1){
 				for(float offset=0; offset < definition.general.borderOffset; offset += segmentDelta){

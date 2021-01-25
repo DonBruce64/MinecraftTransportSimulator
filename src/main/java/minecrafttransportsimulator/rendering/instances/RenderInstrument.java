@@ -25,11 +25,11 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  */
 public final class RenderInstrument{
 	private static final Map<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>> clocks = new HashMap<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>>();
-	private static final Point3d p1 = new Point3d(0, 0, 0);
-	private static final Point3d p2 = new Point3d(0, 0, 0);
-	private static final Point3d p3 = new Point3d(0, 0, 0);
-	private static final Point3d p4 = new Point3d(0, 0, 0);
-	private static final Point3d r = new Point3d(0, 0, 0);
+	private static final Point3d p1 = new Point3d();
+	private static final Point3d p2 = new Point3d();
+	private static final Point3d p3 = new Point3d();
+	private static final Point3d p4 = new Point3d();
+	private static final Point3d r = new Point3d();
 	
 	/**
      * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 

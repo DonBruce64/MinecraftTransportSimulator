@@ -58,7 +58,7 @@ public class BezierCurve{
 	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
 	public BezierCurve generateOffsetCurve(float offset){
-		Point3d testRotation = new Point3d(0, 0, 0);
+		Point3d testRotation = new Point3d();
 		
 		Point3d newStartPos = new Point3d(offset, 0, 0);
 		setPointToRotationAt(testRotation, 0);

@@ -9,11 +9,15 @@ package minecrafttransportsimulator.baseclasses;
  * @author don_bruce
  */
 public class Point3d{
-	private static final Point3d ZERO = new Point3d(0D, 0D, 0D);
+	private static final Point3d ZERO = new Point3d();
 	
 	public double x;
 	public double y;
 	public double z;
+	
+	public Point3d(){
+		this(0, 0, 0);
+	}
 	
 	public Point3d(double x, double y, double z){
 		this.x = x;

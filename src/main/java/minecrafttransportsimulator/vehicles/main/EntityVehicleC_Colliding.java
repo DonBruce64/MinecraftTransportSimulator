@@ -47,10 +47,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public double currentMass;
 	public double velocity;
 	public double axialVelocity;
-	public final Point3d headingVector = new Point3d(0, 0, 0);
-	public final Point3d verticalVector = new Point3d(0, 0, 0);
-	public final Point3d sideVector = new Point3d(0, 0, 0);
-	public final Point3d normalizedVelocityVector = new Point3d(0, 0, 0);
+	public final Point3d headingVector = new Point3d();
+	public final Point3d verticalVector = new Point3d();
+	public final Point3d sideVector = new Point3d();
+	public final Point3d normalizedVelocityVector = new Point3d();
 	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;

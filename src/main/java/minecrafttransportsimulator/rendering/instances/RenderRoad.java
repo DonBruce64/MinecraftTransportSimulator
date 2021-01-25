@@ -28,8 +28,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	public void render(TileEntityRoad road, float partialTicks){
 		//Render road components.
 		//First set helper variables.
-		Point3d position = new Point3d(0, 0, 0);
-		Point3d rotation = new Point3d(0, 0, 0);
+		Point3d position = new Point3d();
+		Point3d rotation = new Point3d();
 		
 		//If we haven't rendered the road yet, do so now.
 		//We cache it in a DisplayList, as there are a LOT of transforms done each component.
@@ -65,9 +65,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 						if(road.definition.general.isDynamic && road.dynamicCurve != null){
 							//Core components need to be transformed to wedges.
 							List<Float[]> transformedVertices = new ArrayList<Float[]>();
-							Point3d priorPosition = new Point3d(0, 0, 0);
-							Point3d priorRotation = new Point3d(0, 0, 0);
-							Point3d rotationDelta = new Point3d(0, 0, 0);
+							Point3d priorPosition = new Point3d();
+							Point3d priorRotation = new Point3d();
+							Point3d rotationDelta = new Point3d();
 							float priorIndex = 0;
 							
 							for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
@@ -174,7 +174,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				RenderBoundingBox.renderSolid(blockingBox); 
 			}
 			InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 0.5F);
-			BoundingBox mainBlockBox = new BoundingBox(new Point3d(0, 0, 0).add(0, 0.75, 0), 0.15, 1.5, 0.15);
+			BoundingBox mainBlockBox = new BoundingBox(new Point3d(0, 0.75, 0), 0.15, 1.5, 0.15);
 			RenderBoundingBox.renderSolid(mainBlockBox);
 		}
 		

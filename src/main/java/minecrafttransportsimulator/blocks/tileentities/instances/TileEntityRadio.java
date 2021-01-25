@@ -21,7 +21,7 @@ public class TileEntityRadio extends TileEntityDecor implements IRadioProvider{
 	//Internal radio variables.
 	private final Radio radio;
 	private final FloatBuffer soundPosition;
-	private final Point3d soundVelocity = new Point3d(0D, 0D, 0D);
+	private final Point3d soundVelocity = new Point3d();
 	
 	public TileEntityRadio(WrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);

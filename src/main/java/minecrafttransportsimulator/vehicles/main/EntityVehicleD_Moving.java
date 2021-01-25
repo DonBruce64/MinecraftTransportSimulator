@@ -76,16 +76,16 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d serverDeltaR;
 	private final Point3d clientDeltaM;
 	private final Point3d clientDeltaR;
-	private final Point3d clientDeltaMApplied = new Point3d(0D, 0D, 0D);
-	private final Point3d clientDeltaRApplied = new Point3d(0D, 0D, 0D);
-	private final Point3d roadMotion = new Point3d(0, 0, 0);
-	private final Point3d roadRotation = new Point3d(0, 0, 0);
-	private final Point3d motionApplied = new Point3d(0D, 0D, 0D);
-	private final Point3d rotationApplied = new Point3d(0D, 0D, 0D);
-	private final Point3d tempBoxPosition = new Point3d(0D, 0D, 0D);
-	private final Point3d tempBoxAngles = new Point3d(0D, 0D, 0D);
-	private final Point3d normalizedGroundVelocityVector = new Point3d(0, 0, 0);
-	private final Point3d normalizedGroundHeadingVector = new Point3d(0, 0, 0);
+	private final Point3d clientDeltaMApplied = new Point3d();
+	private final Point3d clientDeltaRApplied = new Point3d();
+	private final Point3d roadMotion = new Point3d();
+	private final Point3d roadRotation = new Point3d();
+	private final Point3d motionApplied = new Point3d();
+	private final Point3d rotationApplied = new Point3d();
+	private final Point3d tempBoxPosition = new Point3d();
+	private final Point3d tempBoxAngles = new Point3d();
+	private final Point3d normalizedGroundVelocityVector = new Point3d();
+	private final Point3d normalizedGroundHeadingVector = new Point3d();
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
 	public EntityVehicleD_Moving(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
@@ -198,7 +198,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		Point3d contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
 			contactPoint.rotateCoarse(angles).add(position);
-			Point3d testPoint = new Point3d(0, 0, 0);
+			Point3d testPoint = new Point3d();
 			Point3i checkLocation = new Point3i(contactPoint);
 			ABlockBase block =  world.getBlock(checkLocation);
 			if(block instanceof BlockCollision){

@@ -72,7 +72,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
-	private final Point3d engineForce = new Point3d(0D, 0D, 0D);
+	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
 	private final int startRPM;
