@@ -17,7 +17,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 	public int pageNumber;
 	
 	public ItemItem(JSONItem definition){
-		super(definition);
+		super(definition, null);
 	}
 	
 	@Override

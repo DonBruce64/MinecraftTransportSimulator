@@ -270,6 +270,7 @@ public final class PackParserSystem{
 										if(!skinMap.containsKey(skinDef.general.packID)){
 											skinMap.put(skinDef.general.packID, new HashMap<String, JSONSkin>());
 										}
+										definition.packID = packDef.packID;
 										skinMap.get(skinDef.general.packID).put(skinDef.general.systemName, skinDef);
 									}else{
 										//Set code-based definition values prior to parsing all definitions out.
@@ -277,7 +278,7 @@ public final class PackParserSystem{
 					    		    	definition.systemName = fileName.substring(0, fileName.length() - ".json".length());
 					    		    	definition.prefixFolders = assetPath;
 					    		    	definition.classification = classification;
-										parseAllDefinitions((AJSONMultiModelProvider<?>) definition, ((AJSONMultiModelProvider<?>) definition).definitions);
+										parseAllDefinitions((AJSONMultiModelProvider<?>) definition, ((AJSONMultiModelProvider<?>) definition).definitions, definition.packID);
 									}
 								}else{
 									AItemPack<?> item;
@@ -334,7 +335,7 @@ public final class PackParserSystem{
     						//Parse and create all of the new definitions.
     						AJSONMultiModelProvider<?> oldDefinition = (AJSONMultiModelProvider<?>) packItem.definition;
     						List<JSONSubDefinition> newDefinitions = skinMap.get(packID).get(systemName).definitions;
-    						parseAllDefinitions(oldDefinition, newDefinitions);
+    						parseAllDefinitions(oldDefinition, newDefinitions, skinMap.get(packID).get(systemName).packID);
     						
         					//Add the new definitions to the existing definitions of the existing item.
         					//This ensures the skins appear in the same tab as the existing item.
@@ -351,16 +352,16 @@ public final class PackParserSystem{
      * Helper method to parse multi-definition pack items.
      * Generated items are added to the passed-in list.
      */
-    private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions){
+    private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
 			AItemPack<?> item;
 			switch(mainDefinition.classification){
-				case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName); break;
-				case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName); break;
-				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName); break;
-				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName); break;
-				case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName); break;
+				case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
 				default : {
 					throw new IllegalArgumentException("A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
 				}
@@ -436,7 +437,7 @@ public final class PackParserSystem{
     	try{
     		JSONVehicle definition = JSONParser.parseStream(jsonReader, JSONVehicle.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemVehicle(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
+    			setupItem(new ItemVehicle(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
@@ -449,7 +450,7 @@ public final class PackParserSystem{
     	try{
     		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		setupItem(new ItemPart(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
+	    		setupItem(new ItemPart(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
@@ -473,7 +474,7 @@ public final class PackParserSystem{
     	try{
     		JSONPoleComponent definition = JSONParser.parseStream(jsonReader, JSONPoleComponent.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemPoleComponent(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
+    			setupItem(new ItemPoleComponent(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
@@ -491,7 +492,7 @@ public final class PackParserSystem{
     	try{
     		JSONDecor definition = JSONParser.parseStream(jsonReader, JSONDecor.class);
     		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemDecor(definition, subDefinition.subName), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
+    			setupItem(new ItemDecor(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
     		}
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);

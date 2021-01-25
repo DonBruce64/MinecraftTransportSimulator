@@ -9,8 +9,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider<?>> extends AItemPack<JSONDefinition>{
 	public final String subName;
 	
-	public AItemSubTyped(JSONDefinition definition, String subName){
-		super(definition);
+	public AItemSubTyped(JSONDefinition definition, String subName, String sourcePackID){
+		super(definition, sourcePackID);
 		this.subName = subName;
 	}
 	

@@ -27,8 +27,8 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
 public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProvider<EntityPlayerGun>{
 	private final String partPrefix;
 	
-	public ItemPart(JSONPart definition, String subName){
-		super(definition, subName);
+	public ItemPart(JSONPart definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
 		if(definition.general.type.indexOf("_") != -1){
 			this.partPrefix = definition.general.type.substring(0, definition.general.type.indexOf("_"));
 		}else{

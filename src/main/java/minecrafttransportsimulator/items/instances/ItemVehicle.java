@@ -25,8 +25,8 @@ import net.minecraft.item.ItemStack;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
 	
-	public ItemVehicle(JSONVehicle definition, String subName){
-		super(definition, subName);
+	public ItemVehicle(JSONVehicle definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
 	}
 	
 	@Override

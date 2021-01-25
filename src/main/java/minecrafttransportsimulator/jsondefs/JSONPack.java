@@ -12,6 +12,8 @@ public class JSONPack{
 	@JSONRequired
 	public String packName;
 	public int fileStructure;
+	public boolean externalSkinsInOwnTab;
+	public boolean internalSkinsInOwnTab;
 	public Map<String, List<String>> activators;
 	public Map<String, List<String>> blockers;
 	public List<String> dependents;

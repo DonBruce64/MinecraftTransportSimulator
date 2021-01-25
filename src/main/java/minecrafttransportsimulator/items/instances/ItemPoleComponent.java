@@ -19,8 +19,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 
 public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implements IItemBlock{
 	
-	public ItemPoleComponent(JSONPoleComponent definition, String subName){
-		super(definition, subName);
+	public ItemPoleComponent(JSONPoleComponent definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
 	}
 	
 	@Override

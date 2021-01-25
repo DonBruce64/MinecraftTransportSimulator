@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -15,10 +16,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AItemBase{
 	public static final String PACKID_SEPARATOR = ".";
 	public final JSONDefinition definition;
+	private final String sourcePackID;
 	
-	public AItemPack(JSONDefinition definition){
+	public AItemPack(JSONDefinition definition, String sourcePackID){
 		super();
 		this.definition = definition;
+		this.sourcePackID = sourcePackID;
 	}
 	
 	@Override
@@ -49,6 +52,21 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AIt
 	
 	@Override
 	public String getCreativeTabID(){
-		return definition.packID;
+		String owningPackID = definition.packID;
+		String generatingPackID = sourcePackID != null ? sourcePackID : definition.packID;
+		JSONPack owningConfiguration = PackParserSystem.getPackConfiguration(definition.packID);
+		JSONPack generatingConfiguration = PackParserSystem.getPackConfiguration(generatingPackID);
+		//TODO remove this when the old loaders are gone.
+		if(owningConfiguration == null){
+			return owningPackID;
+		}else{
+			if(owningConfiguration.externalSkinsInOwnTab){
+				return generatingPackID;
+			}else if(generatingConfiguration.internalSkinsInOwnTab){
+				return generatingPackID;
+			}else{
+				return owningPackID;
+			}
+		}
 	}
 }

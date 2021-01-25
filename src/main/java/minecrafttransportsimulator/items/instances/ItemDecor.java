@@ -21,8 +21,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
  */
 public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	
-	public ItemDecor(JSONDecor definition, String subName){
-		super(definition, subName);
+	public ItemDecor(JSONDecor definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
 	}
 	
 	@Override

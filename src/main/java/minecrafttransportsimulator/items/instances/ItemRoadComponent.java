@@ -30,8 +30,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	private final Map<WrapperPlayer, Double> lastRotationClicked = new HashMap<WrapperPlayer, Double>();
 	private final Map<WrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<WrapperPlayer, RoadClickData>();
 	
-	public ItemRoadComponent(JSONRoadComponent definition, String subName){
-		super(definition, subName);
+	public ItemRoadComponent(JSONRoadComponent definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
 	}
 	
 	@Override
