@@ -80,7 +80,7 @@ public class WrapperWorld{
 	private WrapperWorld(World world){
 		this.world = world;
 		if(world.isRemote){
-			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), null));
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake((WrapperNBT)null));
 		}
 	}
 	
@@ -143,6 +143,15 @@ public class WrapperWorld{
 			return wrapper;
 		}else{
 			return null;
+		}
+	}
+	
+	@Override
+	public boolean equals(Object otherWorld){
+		if(otherWorld instanceof WrapperWorld){
+			return ((WrapperWorld) otherWorld).world.provider.getDimension() == world.provider.getDimension();
+		}else{
+			return false;
 		}
 	}
 	
@@ -222,7 +231,7 @@ public class WrapperWorld{
 			savedDataAccessor.markDirty();
 			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 		}else{
-			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(getDimensionID(), data));
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(data));
 		}
 	}
 	

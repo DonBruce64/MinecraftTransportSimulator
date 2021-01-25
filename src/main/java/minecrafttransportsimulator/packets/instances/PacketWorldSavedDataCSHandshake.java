@@ -14,18 +14,15 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  * @author don_bruce
  */
 public class PacketWorldSavedDataCSHandshake extends APacketBase{
-	private final int worldID;
 	private final WrapperNBT data;
 	
-	public PacketWorldSavedDataCSHandshake(int worldID, WrapperNBT data){
+	public PacketWorldSavedDataCSHandshake(WrapperNBT data){
 		super(null);
-		this.worldID = worldID;
 		this.data = data;
 	}
 	
 	public PacketWorldSavedDataCSHandshake(ByteBuf buf){
 		super(buf);
-		this.worldID = buf.readInt();
 		if(buf.readBoolean()){
 			this.data = readDataFromBuffer(buf);
 		}else{
@@ -36,7 +33,6 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(worldID);
 		if(data != null){
 			buf.writeBoolean(true);
 			writeDataToBuffer(data, buf);
@@ -53,7 +49,7 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 			world.savedDataAccessor.readFromNBT(data.tag);
 		}else{
 			//Send back a packet to the player who requested it.
-			player.sendPacket(new PacketWorldSavedDataCSHandshake(world.getDimensionID(), world.getData()));
+			player.sendPacket(new PacketWorldSavedDataCSHandshake(world.getData()));
 		}
 	}
 }
