@@ -477,7 +477,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
-			rearFollower = getFollower();
+			//rearFollower = getFollower();
 			if(rearFollower != null){
 				double pointDelta = groundDeviceCollective.getContactPoint(false).distanceTo(groundDeviceCollective.getContactPoint(true));
 				frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints((float) pointDelta, LaneSelectionRequest.NONE);
