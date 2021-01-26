@@ -14,22 +14,22 @@ import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
  * @author don_bruce
  */
 public final class BeaconManager{
-	private static final Map<Integer, Map<String, RadioBeacon>> worldBeacons = new HashMap<Integer, Map<String, RadioBeacon>>();
+	private static final Map<WrapperWorld, Map<String, RadioBeacon>> worldBeacons = new HashMap<WrapperWorld, Map<String, RadioBeacon>>();
 	
 	/**
 	 *  Returns the beacon with the specified name from the world, or null if it does not exist.
 	 */
 	public static RadioBeacon getBeacon(WrapperWorld world, String name){
-		if(!worldBeacons.containsKey(world.getDimensionID())){
+		if(!worldBeacons.containsKey(world)){
 			//No beacons for this world.  Load data.
 			loadBeacons(world);
 			
 			//Check to make sure we actually loaded data before trying to get it.
-			if(!worldBeacons.containsKey(world.getDimensionID())){
+			if(!worldBeacons.containsKey(world)){
 				return null;
 			}
 		}
-		return worldBeacons.get(world.getDimensionID()).get(name);
+		return worldBeacons.get(world).get(name);
 	}
 	
 	/**
@@ -38,7 +38,7 @@ public final class BeaconManager{
 	public static void addBeacon(WrapperWorld world, RadioBeacon beacon){
 		//Don't add un-named beacons.
 		if(!beacon.name.isEmpty()){
-			worldBeacons.get(world.getDimensionID()).put(beacon.name, beacon);
+			worldBeacons.get(world).put(beacon.name, beacon);
 			if(!world.isClient()){
 				saveBeacons(world);
 				InterfacePacket.sendToAllClients(new PacketBeaconListingChange(beacon));
@@ -50,7 +50,7 @@ public final class BeaconManager{
 	 *  Removes the beacon with the specified name from the world.
 	 */
 	public static void removeBeacon(WrapperWorld world, String name){
-		worldBeacons.get(world.getDimensionID()).remove(name);
+		worldBeacons.get(world).remove(name);
 		if(!world.isClient()){
 			saveBeacons(world);
 			InterfacePacket.sendToAllClients(new PacketBeaconListingChange(name));
@@ -72,7 +72,7 @@ public final class BeaconManager{
 				RadioBeacon beacon = new RadioBeacon(data.getData("radioBeacon_" + i));
 				beacons.put(beacon.name, beacon);
 			}
-			worldBeacons.put(world.getDimensionID(), beacons);
+			worldBeacons.put(world, beacons);
 		}
 	}
 	
@@ -81,10 +81,10 @@ public final class BeaconManager{
 	 *  Call this ONLY on the server.
 	 */
 	private static void saveBeacons(WrapperWorld world){
-		if(worldBeacons.containsKey(world.getDimensionID())){
+		if(worldBeacons.containsKey(world)){
 			WrapperNBT worldData = new WrapperNBT();
 			int beaconIndex=0;
-			for(RadioBeacon beacon : worldBeacons.get(world.getDimensionID()).values()){
+			for(RadioBeacon beacon : worldBeacons.get(world).values()){
 				WrapperNBT beaconData = new WrapperNBT();
 				beacon.save(beaconData);
 				worldData.setData("radioBeacon_" + beaconIndex++, beaconData);

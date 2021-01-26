@@ -75,7 +75,7 @@ public class WrapperWorld{
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
-	public static final String dataID = MasterLoader.MODID + "_WORLD_DATA";
+	public static final String STORED_WORLD_DATA_ID = MasterLoader.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -146,15 +146,6 @@ public class WrapperWorld{
 		}
 	}
 	
-	@Override
-	public boolean equals(Object otherWorld){
-		if(otherWorld instanceof WrapperWorld){
-			return ((WrapperWorld) otherWorld).world.provider.getDimension() == world.provider.getDimension();
-		}else{
-			return false;
-		}
-	}
-	
 	/**
 	 *  Returns true if this is a client world, false if we're on the server.
 	 */
@@ -211,9 +202,9 @@ public class WrapperWorld{
 	public WrapperNBT getData(){
 		if(!world.isRemote){
 			if(savedDataAccessor == null){
-				savedDataAccessor = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, dataID);
+				savedDataAccessor = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, STORED_WORLD_DATA_ID);
 				if(savedDataAccessor == null){
-					savedDataAccessor = new InterfaceWorldSavedData(dataID);
+					savedDataAccessor = new InterfaceWorldSavedData(STORED_WORLD_DATA_ID);
 				}
 			}
 		}else if(savedDataAccessor == null){
@@ -224,15 +215,12 @@ public class WrapperWorld{
 	
 	/**
 	 *  Saves the passed-in data as the world's additional saved data.
+	 *  Do NOT call this on clients.
 	 */
 	public void setData(WrapperNBT data){
-		if(!world.isRemote){
-			savedDataAccessor.internalData = data.tag;
-			savedDataAccessor.markDirty();
-			world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
-		}else{
-			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(data));
-		}
+		savedDataAccessor.internalData = data.tag;
+		savedDataAccessor.markDirty();
+		world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
 	}
 	
 	/**

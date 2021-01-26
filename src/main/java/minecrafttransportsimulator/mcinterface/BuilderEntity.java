@@ -381,7 +381,7 @@ public class BuilderEntity extends Entity{
 		Iterator<AEntityBase> entityIterator = event.getWorld().isRemote ? AEntityBase.createdClientEntities.iterator() : AEntityBase.createdServerEntities.iterator();
 		while(entityIterator.hasNext()){
 			AEntityBase entity = entityIterator.next();
-			if(entity.world.getDimensionID() == event.getWorld().provider.getDimension()){
+			if(event.getWorld().equals(entity.world.world)){
 				entityIterator.remove();
 			}
 		}

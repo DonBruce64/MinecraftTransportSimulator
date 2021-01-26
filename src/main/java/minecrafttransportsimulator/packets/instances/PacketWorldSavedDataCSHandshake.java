@@ -45,11 +45,13 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
 			//Set the world saved data.
-			world.savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.dataID);
+			world.savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.STORED_WORLD_DATA_ID);
 			world.savedDataAccessor.readFromNBT(data.tag);
 		}else{
 			//Send back a packet to the player who requested it.
-			player.sendPacket(new PacketWorldSavedDataCSHandshake(world.getData()));
+			WrapperNBT savedData = new WrapperNBT();
+			world.savedDataAccessor.writeToNBT(savedData.tag);
+			player.sendPacket(new PacketWorldSavedDataCSHandshake(savedData));
 		}
 	}
 }

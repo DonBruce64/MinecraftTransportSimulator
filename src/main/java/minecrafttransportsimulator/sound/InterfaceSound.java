@@ -418,12 +418,12 @@ public class InterfaceSound{
     	if(event.getWorld().isRemote){
     		Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
-    			if(iterator.next().provider.getProviderWorld().getDimensionID() == event.getWorld().provider.getDimension()){
+    			if(event.getWorld().equals(iterator.next().provider.getProviderWorld().world)){
     				iterator.remove();
     			}
     		}
     		for(SoundInstance playingSound : playingSounds){
-    			if(playingSound.provider.getProviderWorld().getDimensionID() == event.getWorld().provider.getDimension()){
+    			if(event.getWorld().equals(playingSound.provider.getProviderWorld().world)){
     				if(playingSound.radio != null){
     					playingSound.radio.stop();
     				}else{
