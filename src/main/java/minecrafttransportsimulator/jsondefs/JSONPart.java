@@ -191,7 +191,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartPropeller{
-		@JSONDescription("")
+		@JSONDescription("If this is present and set, the propeller will have a dynamic pitch.  Propellers with dynamic pitch automatically change their pitch to keep their speed at the top end of the max RPM of the engine.  Below that range their pitch will decrease to a minimum of 45, and above that range it will increase to whatever value is specified by the “pitch” parameter.  Dynamic pitch propellers are also able to provide reverse thrust, though at a significantly reduced power level to their forward-thrust capabilities.")
     	public boolean isDynamicPitch;
 		
 		@JSONDescription("If true, MTS will consider this propeller a rotor and will angle it when the aircraft control keys are pressed.  This will cause the thrust to be vectored in different directions.  Designed for helicopters, which use rotors to control their movement.")
@@ -208,89 +208,89 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartSeat{
-		@JSONDescription("")
+		@JSONDescription("If true, the player will stand in this seat rather than sit.  Note that some mods may mess this up and force the player to sit, so be advised of this.")
     	public boolean standing;
 		
-		@JSONDescription("")
+		@JSONDescription("If included, the player's width will be scaled to this value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.  Keep in mind, however, that this parameter changes the eye position of the player, so the lower you set this the lower they sit!")
     	public float widthScale;
 		
-		@JSONDescription("")
+		@JSONDescription("If included, the player's height will be scaled to this value when sitting in this seat.  Similar to widthScale, but this parameter will also affect the player's eye height.  Keep this in mind, as the lower you set this the lower they sit!")
     	public float heightScale;
     }
     
     public class JSONPartGun{
-		@JSONDescription("")
+		@JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
     	public boolean autoReload;
 		
-		@JSONDescription("")
+		@JSONDescription("If set, the gun will only be able to be fired once per button press.")
     	public boolean isSemiAuto;
 		
-		@JSONDescription("")
+		@JSONDescription("Normally, guns will physically move themselves when the player looks to the right or left.  If you want this to be a virtual movement, say for a casement-mounted Stug gun, then set this to true.  This will make the yaw applied only internally and won't modify the gun's actual position.")
     	public boolean yawIsInternal;
 		
-		@JSONDescription("")
+		@JSONDescription("The same as above, just for pitch.  You'll likely want this on all turret-mounted guns to prevent the entire turret from moving.")
     	public boolean pitchIsInternal;
 		
-		@JSONDescription("")
+		@JSONDescription("The capacity of the gun, in number of bullets.")
     	public int capacity;
 		
-		@JSONDescription("")
+		@JSONDescription("The delay, in ticks, between the firing of bullets.  Setting this value to 1 or less will make a bullet fire every tick.  This means that the max firing rate for guns is 1200 rounds a minute.  While this is less than some guns in real-life, this is also Minecraft and spawning things between ticks and at rapid rates leads to lag.  And that's more deadly than a gun.")
     	public int fireDelay;
 		
-		@JSONDescription("")
+		@JSONDescription("How long, in ticks, this gun takes to reload.  This is applied for hand-held reloading as well as automatic reloading.  This value should be similar to the duration of your gun _reloading sound to ensure players don't get confused about why they can't fire their guns.")
     	public int reloadTime;
 		
-		@JSONDescription("")
+		@JSONDescription("How long, in ticks, this gun takes to start firing after pulling the trigger.  This is designed for chain-gun type guns that need a short period of wind-up before they can start firing.  When the trigger is released, the gun will wind-down for the same amount of time it took to wind up.  If the gun doesn’t wind all the way down before pulling the trigger again, it will start to wind back up from that point rather than 0.")
     	public int windupTime;
 		
-		@JSONDescription("")
+		@JSONDescription("How fast, in m/s, the bullet will exit the barrel of this gun.  May be 0 in cases where bombers are concerned, as the exit velocity of the barrel is this value PLUS the velocity of the vehicle that's firing the bullet.")
     	public int muzzleVelocity;
 		
-		@JSONDescription("")
+		@JSONDescription("An optional list of positions. Bullets will be fired the defined positions (or the origin if no positions are defined) plus one barrel-length in the +Z axis in the direction the gun is rotated. There are 2 possible cases when using muzzlePositions:\nIf there are the same number of muzzlePositions as the capacity of the gun, the gun will cycle through each of the muzzle positions in order. The order will be the same every time, and reloading will reset the order proportionate to how many bullets were reloaded. This is useful for rocket pods, missile launchers, and bombs.\nIf the number of muzzlePositions doesn’t match the capacity, the gun will cycle through the positions, resetting to the first muzzle once the last one has been used. This is useful for guns with multiple barrels, like anti-air/flak guns and some airplane turrets. If only one muzzle position is defined, it will use the same position every time.")
     	public List<Point3d> muzzlePositions;
 		
-		@JSONDescription("")
+		@JSONDescription("The minimum pitch this gun can angle downwards when controlled.")
     	public float minPitch;
 		
-		@JSONDescription("")
+		@JSONDescription("The maximum pitch this gun can angle upwards when controlled.")
     	public float maxPitch;
 		
-		@JSONDescription("")
+		@JSONDescription("The minimum yaw this gun can turn counter-clockwise when controlled.")
     	public float minYaw;
 		
-		@JSONDescription("")
+		@JSONDescription("The maximum yaw this gun can turn clockwise when controlled.")
     	public float maxYaw;
 		
-		@JSONDescription("")
+		@JSONDescription("The diameter of this gun.  This defines what ammo diameter may be used with it, and is what corresponds to the min-max parameters in the vehicle JSON.  It is also used to calculate rotation speed.  Units are in mm.")
     	public float diameter;
 		
-		@JSONDescription("")
+		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns, but greater accuracy at long ranges.  Units are in meters.")
     	public float length;
 		
-		@JSONDescription("")
+		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
     	public boolean fireSolo;
 		
-		@JSONDescription("")
+		@JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
     	public boolean resetPosition;
 		
-		@JSONDescription("")
+		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultPitch;
 		
-		@JSONDescription("")
+		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultYaw;
 		
-		@JSONDescription("")
+		@JSONDescription("A list of particleObjects.  If present in a gun JSON, these particles will be spawned as a bullet is fired. This allows things like gun smoke.")
         public List<JSONParticleObject> particleObjects;
         
-		@JSONDescription("")
+		@JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
         public boolean handHeld;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
-    	@JSONDescription("")
+    	@JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
 		public Point3d handHeldNormalOffset;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
-    	@JSONDescription("")
+    	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
 		public Point3d handHeldAimedOffset;
     }
     
@@ -299,75 +299,75 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public String type;
 		
     	@JSONRequired
-		@JSONDescription("")
+		@JSONDescription("A list of strings describing the bullet.  This defines how it inflicts damage on whatever it hits.")
     	public List<String> types;
 		
-		@JSONDescription("")
+		@JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
     	public int quantity;
 		
-		@JSONDescription("")
+		@JSONDescription("The diameter of the bullet.  This determines what guns can fire it, as well as the damage it inflicts.")
     	public float diameter;
 		
-		@JSONDescription("")
+		@JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
     	public float blastStrength;
 		
-		@JSONDescription("")
+		@JSONDescription("How much armor this bullet can penetrate.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
     	public float armorPenetration;
 		
-		@JSONDescription("")
+		@JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
     	public int burnTime;
 		
-		@JSONDescription("")
+		@JSONDescription("How long, in ticks, the bullet should take to accelerate from its initial velocity to its maxVelocity (if maxVelocity is used). Note that if this is greater than burnTime, it will not continue to accelerate once burnTime has expired.")
     	public int accelerationTime;
 		
-		@JSONDescription("")
+		@JSONDescription("The maximum velocity of this bullet, in m/s. If this and accelerationTime are used, the bullet will be spawned with the gun’s muzzleVelocity + the vehicle’s motion, then it will accelerate at a constant rate and reach maxVelocity when the accelerationTime is about to expire.")
     	public int maxVelocity;
 		
-		@JSONDescription("")
+		//FIXME add description
     	public float maxOffAxis;
 		
-		@JSONDescription("")
+		@JSONDescription("If used and set to anything greater than 0, the bullet will have guided behavior like a missile, and turnFactor will affect how quickly it can turn. When fired, the bullet will try to find an entity or block that the player is looking at, up to 2000 blocks away. While in the air, it will constantly try to turn and fly toward the target it was given at the time of firing. A good baseline turnFactor is 1.0. Higher values will cause the bullet to turn more quickly, while values between 0 and 1 will turn more slowly.")
     	public float turnFactor;
 		
-		@JSONDescription("")
+		@JSONDescription("If used, this defines the size of the vertical angle (in degrees), from which a guided bullet will try to approach its target. The bullet will stay level or even climb up to come down on its target on this angle. This works like a Javelin missile in Call of Duty, and it’s useful for making sure that the bullet doesn’t hit the ground before it reaches your target. Note that this only affects bullets where the turnFactor is > 1, and this should be a positive number.")
     	public float angleOfAttack;
 		
-		@JSONDescription("")
+		@JSONDescription("If this is a guided bullet, it will detonate this many meters away from its target. For a non-guided bullet, it will detonate when it has a block this many meters or less in front of it. This allows things like missiles and artillery rounds that blow up in the air right above the target or the ground, ensuring that the target receives some of the blast rather than it all going into the ground. If used on a non-explosive bullet, it will not detonate, but will despawn at this distance.")
     	public float proximityFuze;
 		
-		@JSONDescription("")
+		@JSONDescription("Causes the bullet to explode or despawn after this many ticks. This is a “dumber” cousin of the proximityFuze, but may be useful for anti-aircraft rounds that explode in mid-air.")
     	public int airBurstDelay;
 		
-		@JSONDescription("")
+		@JSONDescription("A list of particleObject. If present in a bullet JSON, these particles will be spawned as the bullet flies, like a rocket leaving a trail of smoke. If the bullet’s type is “smoke”, these particles will just be spawned at the gun, so that the gun will create a stream of smoke.")
     	public List<JSONParticleObject> particleObjects;
     }
     
     public class JSONPartInteractable{
     	@JSONRequired
-		@JSONDescription("")
+		@JSONDescription(" What this interactable does when interacted with.  Valid types are:")
     	public String interactionType;
 		
-		@JSONDescription("")
+		@JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
     	public boolean feedsVehicles;
 		
-		@JSONDescription("")
+		@JSONDescription("If this part is a crate or barrel, this defines the size of its inventory. This is also what is used for min/max value calculations on vehicles.  For crates, this is how many rows (of 9 slots) the inventory has.  For barrels, this is how many buckets the barrel can store x10.  The idea being that 1 unit for crates holds a bit less than 1 unit of barrels, as with barrels you're storing the raw material, and not the container.")
     	public int inventoryUnits;
     }
     
     public class JSONPartEffector{
     	@JSONRequired
-		@JSONDescription("")
+		@JSONDescription("The type of the effector.  This defines what this effector does.  Valid types are:")
     	public String type;
 		
-		@JSONDescription("")
+		@JSONDescription("This determines the width of the part and how wide an area it effects.  This should be an odd number (1, 3, 5, etc.), as it's centered on the part point.  Even numbers may work, but will cause un-defined behavior.  Use with caution.")
     	public int blocksWide;
     }
     
     public class JSONPartGeneric{
-		@JSONDescription("")
+		@JSONDescription("The width of the part.")
     	public float width;
 		
-		@JSONDescription("")
+		@JSONDescription("The height of the part.")
     	public float height;
     }
     
