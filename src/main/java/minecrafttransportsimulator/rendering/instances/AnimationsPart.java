@@ -27,51 +27,58 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 			return value;
 		}
 		
-		//If we are a sub-part, check if we need to check for part-specific animations.
-		if(part.vehicleDefinition.isSubPart){
-			//If the variable is prefixed with "parent_", then we need to get our parent's value.
-			if(variable.startsWith("parent_")){
-				return getRawVariableValue(part.parentPart, variable.substring("parent_".length()), partialTicks);
-			}else{
-				int partNumber = AnimationsVehicle.getPartNumber(variable);
-				if(partNumber != -1){
-					//Get the part type from the variable.
-					String partType = AnimationsVehicle.getPartType(variable);
-					Class<? extends APart> partClass = AnimationsVehicle.getPartClass(variable);
-					
-					if(partClass != null){
-						//Iterate through the other sub-parts of our parent to find the index of the pack def for the part we want.
-						VehiclePart foundDef = null;
-						for(VehiclePart subPartDef : part.parentPart.definition.subParts){
-							//If this part is the one we want, get it or add to our index.
-							for(String defPartType : subPartDef.types){
-								if(partType.equals("part") || defPartType.startsWith(partType)){
-									if(partNumber == 0){
-										foundDef = subPartDef;
-									}else{
-										--partNumber;
-									}
-									break;
-								}
-							}
-							
-							//If we found our part, try to get it.
-							if(foundDef != null){
-								//Get the part at this location.  If it's of the same class as what we need, use it for animation.
-								//If it's not, or it doesn't exist, return 0.
-								APart foundPart = part.vehicle.getPartAtLocation(part.vehicle.getPackForSubPart(part.parentPart.vehicleDefinition, foundDef).pos);
-								if(foundPart != null && partClass.isInstance(foundPart)){
-									return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-								}else{
-									return 0;
-								}
-							}
+		
+		//If the variable is prefixed with "parent_", then we need to get our parent's value.
+		if(variable.startsWith("parent_")){
+			return getRawVariableValue(part.parentPart, variable.substring("parent_".length()), partialTicks);
+		}else{
+			int partNumber = AnimationsVehicle.getPartNumber(variable);
+			if(partNumber != -1){
+				//Get the part type from the variable.
+				String partType = AnimationsVehicle.getPartType(variable);
+				Class<? extends APart> partClass = AnimationsVehicle.getPartClass(variable);
+				
+				if(partClass != null){
+					if(part.definition.subParts == null){
+						//Send this to the parent part or vehicle for processing if we have it.
+						if(part.parentPart != null){
+							return getRawVariableValue(part.parentPart, variable, partialTicks);
+						}else{
+							return part.vehicle.getAnimationSystem().getRawVariableValue(part.vehicle, variable, partialTicks);
 						}
 					}
 					
-					//We couldn't find the part we were supposed to.  Likely because it hasn't been placed yet.
-					return 0;
+					//Iterate through our parts to find the index of the pack def for the part we want.
+					VehiclePart foundDef = null;
+					for(VehiclePart subPartDef : part.definition.subParts){
+						//If this part is the one we want, get it or add to our index.
+						for(String defPartType : subPartDef.types){
+							if(partType.equals("part") || defPartType.startsWith(partType)){
+								if(partNumber == 0){
+									foundDef = subPartDef;
+								}else{
+									--partNumber;
+								}
+								break;
+							}
+						}
+						
+						//If we found our part, try to get it.
+						if(foundDef != null){
+							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
+							//If it's not, or it doesn't exist, return 0.
+							APart foundPart = part.vehicle.getPartAtLocation(part.vehicle.getPackForSubPart(part.vehicleDefinition, foundDef).pos);
+							if(foundPart != null && partClass.isInstance(foundPart)){
+								return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+							}else{
+								return 0;
+							}
+						}
+					}
 				}
+				
+				//We couldn't find the part we were supposed to.  Likely because it hasn't been placed yet.
+				return 0;
 			}
 		}
 				
