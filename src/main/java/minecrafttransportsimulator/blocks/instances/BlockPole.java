@@ -85,7 +85,7 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
 		if(pole != null){
 			for(Axis axis : Axis.values()){
-				if(world.getBlock(axis.getOffsetPoint(location)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(location)) || pole.components.containsKey(axis)){
+				if(world.getBlock(axis.getOffsetPoint(location)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(location), axis.getOpposite()) || pole.components.containsKey(axis)){
 					collidingBoxes.add(axisBounds.get(axis));
 				}
 			}

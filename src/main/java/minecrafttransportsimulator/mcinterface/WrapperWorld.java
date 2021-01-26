@@ -532,14 +532,16 @@ public class WrapperWorld{
     }
 	
     /**
-	 *  Returns true if the block at the passed-in location is solid.  Solid means
-	 *  that said block can be collided with, is a cube, and is generally able to have
+	 *  Returns true if the block at the passed-in location is solid at the passed-in axis.
+	 *  Solid means that said block can be collided with, is a cube, and is generally able to have
 	 *  things placed or connected to it.
 	 */
-	public boolean isBlockSolid(Point3i point){
-		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+	public boolean isBlockSolid(Point3i point, Axis axis){
+		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+		IBlockState state = world.getBlockState(pos);
 		Block offsetMCBlock = state.getBlock();
-        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.getMaterial().isOpaque() && state.isFullCube() && state.getMaterial() != Material.GOURD : false;
+		EnumFacing facing = EnumFacing.valueOf(axis.name());
+        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing) : false;
 	}
 	
 	/**
