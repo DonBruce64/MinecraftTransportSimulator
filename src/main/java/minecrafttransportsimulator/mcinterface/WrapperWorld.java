@@ -713,7 +713,7 @@ public class WrapperWorld{
 				            		}
 		            			}
 		            		}
-		            		data.setDouble("rotation", player.getHeadYaw()%360);
+		            		data.setDouble("rotation", Math.round(player.getHeadYaw()/15)*15%360);
 		            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
 		            		
 		            	}

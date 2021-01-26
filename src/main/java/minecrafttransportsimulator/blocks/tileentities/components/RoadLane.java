@@ -86,7 +86,8 @@ public class RoadLane{
 			JSONLaneSector sector = road.definition.general.sectors.get(sectorNumber);
 			JSONLaneSectorPointSet points = sector.lanes.get(offsetSectorLaneNumber);
 			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
-				curves.add(new BezierCurve(points.startPoint.copy().rotateY(road.rotation), endPoint.pos.copy().rotateY(road.rotation), sector.sectorStartAngle + (float) road.rotation, endPoint.angle + (float) road.rotation));
+				//Need to offset by 0.5 to account for the position of the TE being centered in the block.
+				curves.add(new BezierCurve(points.startPoint.copy().add(-0.5, 0.0, -0.5).rotateY(road.rotation), endPoint.pos.copy().add(-0.5, 0.0, -0.5).rotateY(road.rotation), sector.sectorStartAngle + (float) road.rotation, endPoint.angle + (float) road.rotation));
 			}
 			return points.startPoint;
 		}

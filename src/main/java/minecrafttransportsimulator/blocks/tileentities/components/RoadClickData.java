@@ -60,10 +60,9 @@ public class RoadClickData{
 			//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
 			//Rotation here needs to be the opposite of the start rotation of the starting sector segment, as our curve is going the opposite direction.
 			genRotation = (float) (sectorClicked.sectorStartAngle + roadClicked.rotation + 180);
+			genPosition = sectorClicked.sectorStartPos.copy().add(-0.5, 0, -0.5).rotateY(roadClicked.rotation).add(roadClicked.position);
 			if(curveStart){
-				genPosition = new Point3d(-(sectorClicked.borderOffset), 0, 0).rotateY(genRotation).add(roadClicked.position).add(sectorClicked.sectorStartPos.copy().rotateY(roadClicked.rotation));
-			}else{
-				genPosition = new Point3d(roadClicked.position).add(sectorClicked.sectorStartPos.copy().rotateY(roadClicked.rotation));
+				genPosition.add(new Point3d(-(sectorClicked.borderOffset), 0, 0).rotateY(genRotation));
 			}
 			lanesOccupied = areStaticLanesOccupied();
 		}

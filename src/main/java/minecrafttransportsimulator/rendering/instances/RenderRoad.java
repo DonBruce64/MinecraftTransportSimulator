@@ -126,13 +126,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								}
 							}
 						}else if(!road.definition.general.isDynamic){
-							rotation.set(0, road.rotation, 0);
 							for(Float[][] vertexSet : parsedModel.values()){
 								for(Float[] vertex : vertexSet){
 									GL11.glTexCoord2f(vertex[3], vertex[4]);
 									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-									position.set(vertex[0], vertex[1], vertex[2]);
-									position.rotateFine(rotation);
+									//Need to offset by 0.5 to match the offset of the TE as we're block-aligned.
+									position.set(vertex[0] - 0.5, vertex[1], vertex[2] - 0.5);
+									position.rotateY(road.rotation);
 									GL11.glVertex3d(position.x, position.y, position.z);
 								}
 							}
