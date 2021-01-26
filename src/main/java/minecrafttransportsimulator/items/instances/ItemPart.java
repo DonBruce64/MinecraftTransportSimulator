@@ -6,6 +6,7 @@ import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -158,9 +159,9 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 				break;
 			}
 			case("interactable") : {
-				if(definition.interactable.interactionType.equals("crate")){
+				if(definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 					tooltipLines.add(InterfaceCore.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*9);
-				}else if(definition.interactable.interactionType.equals("barrel")){
+				}else if(definition.interactable.interactionType.equals(InteractableComponentType.BARREL)){
 					tooltipLines.add(InterfaceCore.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*10000 + "mb");
 				}
 				break;

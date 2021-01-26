@@ -16,7 +16,7 @@ public class PartPropeller extends APart{
 	public double angularPosition;
 	public double angularVelocity;
 	public double damageAmount;
-	public short currentPitch;
+	public int currentPitch;
 	
 	private final PartEngine connectedEngine;
 	private final Point3d propellerForce = new Point3d();

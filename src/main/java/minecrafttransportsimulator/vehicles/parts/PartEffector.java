@@ -6,6 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -30,7 +31,7 @@ public class PartEffector extends APart{
 			int xOffset = startingIndex + i;
 			Point3d partAffectorPosition = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(worldPos);
 			affectedBlocks[i] = new Point3i(partAffectorPosition);
-			if(definition.effector.type.equals("planter") || definition.effector.type.equals("plow")){
+			if(definition.effector.type.equals(EffectorComponentType.PLANTER) || definition.effector.type.equals(EffectorComponentType.PLOW)){
 				affectedBlocks[i].add(0, -1, 0);
 			}
 		}
@@ -38,7 +39,7 @@ public class PartEffector extends APart{
 		for(byte i=0; i<affectedBlocks.length; ++i){
 			if(!affectedBlocks[i].equals(lastBlocksModified[i])){
 				switch(definition.effector.type){
-					case("fertilizer"): {
+					case FERTILIZER: {
 						//Search all inventories for fertilizer and try to use it.
 						for(APart part : vehicle.parts){
 							if(part instanceof PartInteractable){
@@ -55,7 +56,7 @@ public class PartEffector extends APart{
 						}
 						break;
 					}
-					case("harvester"): {
+					case HARVESTER: {
 						//Harvest drops, and add to inventories.
 						List<ItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
 						if(drops != null){
@@ -84,7 +85,7 @@ public class PartEffector extends APart{
 						}
 						break;
 					}
-					case("planter"): {
+					case PLANTER: {
 						//Search all inventories for seeds and try to plant them.
 						for(APart part : vehicle.parts){
 							if(part instanceof PartInteractable){
@@ -101,7 +102,7 @@ public class PartEffector extends APart{
 						}
 						break;
 					}
-					case("plow"):{
+					case PLOW:{
 						vehicle.world.plowBlock(affectedBlocks[i]);
 						break;
 					}

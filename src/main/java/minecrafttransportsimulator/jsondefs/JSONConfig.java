@@ -101,38 +101,42 @@ public class JSONConfig{
 						//Default fuel list depends on the fuel name.
 						if(!fuels.containsKey(part.definition.engine.fuelType)){
 							Map<String, Double> fluids = new HashMap<String, Double>();
-							switch(part.definition.engine.fuelType){
-								case "gasoline" :{
-									fluids.put("lava", 1.0);
-									fluids.put("gasoline", 1.0);
-									fluids.put("ethanol", 0.85);
-									break;
+							try{
+								switch(FuelDefaults.valueOf(part.definition.engine.fuelType)){
+									case GASOLINE :{
+										fluids.put("lava", 1.0);
+										fluids.put("gasoline", 1.0);
+										fluids.put("ethanol", 0.85);
+										break;
+									}
+									case DIESEL :{
+										fluids.put("lava", 1.0);
+										fluids.put("diesel", 1.0);
+										fluids.put("biodiesel", 0.8);
+										fluids.put("oil", 0.5);
+										break;
+									}
+									case AVGAS :{
+										fluids.put("lava", 1.0);
+										fluids.put("gasoline", 1.0);
+										break;
+									}
+									case REDSTONE :{
+										fluids.put("lava", 1.0);
+										fluids.put("redstone", 1.0);
+										fluids.put("moltenredstone", 1.0);
+										fluids.put("molten_redstone", 1.0);
+										fluids.put("redstonemolten", 1.0);
+										fluids.put("redstone_fluid", 1.0);
+										fluids.put("fluidredstone", 1.0);
+										fluids.put("fluid_redstone", 1.0);
+										fluids.put("destabilized_redstone", 1.0);
+										break;
+									}
+									default: fluids.put("lava", 1.0);
 								}
-								case "diesel" :{
-									fluids.put("lava", 1.0);
-									fluids.put("diesel", 1.0);
-									fluids.put("biodiesel", 0.8);
-									fluids.put("oil", 0.5);
-									break;
-								}
-								case "avgas" :{
-									fluids.put("lava", 1.0);
-									fluids.put("gasoline", 1.0);
-									break;
-								}
-								case "redstone" :{
-									fluids.put("lava", 1.0);
-									fluids.put("redstone", 1.0);
-									fluids.put("moltenredstone", 1.0);
-									fluids.put("molten_redstone", 1.0);
-									fluids.put("redstonemolten", 1.0);
-									fluids.put("redstone_fluid", 1.0);
-									fluids.put("fluidredstone", 1.0);
-									fluids.put("fluid_redstone", 1.0);
-									fluids.put("destabilized_redstone", 1.0);
-									break;
-								}
-								default: fluids.put("lava", 1.0); break;
+							}catch(Exception e){
+								fluids.put("lava", 1.0);
 							}
 							fuels.put(part.definition.engine.fuelType, fluids);
 						}
@@ -140,6 +144,13 @@ public class JSONConfig{
 				}
 			}
 			return fuels;
+		}
+		
+		public static enum FuelDefaults{
+			GASOLINE,
+			DIESEL,
+			AVGAS,
+			REDSTONE;
 		}
 	}
 	

@@ -12,6 +12,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -235,53 +237,53 @@ public final class LegacyCompatSystem{
 				}case("crate"):{
 					definition.general.type = "interactable_crate";
 					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = "crate";
+					definition.interactable.interactionType = InteractableComponentType.CRATE;
 					definition.interactable.inventoryUnits = 1;
 					definition.interactable.feedsVehicles = true;
 					break;
 				}case("barrel"):{
 					definition.general.type = "interactable_barrel";
 					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = "barrel";
+					definition.interactable.interactionType = InteractableComponentType.BARREL;
 					definition.interactable.inventoryUnits = 1;
 					break;
 				}case("crafting_table"):{
 					definition.general.type = "interactable_crafting_table";
 					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = "crafting_table";
+					definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
 					break;
 				}case("furnace"):{
 					definition.general.type = "interactable_furnace";
 					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = "furnace";
+					definition.interactable.interactionType = InteractableComponentType.FURNACE;
 					break;
 				}case("brewing_stand"):{
 					definition.general.type = "interactable_brewing_stand";
 					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = "brewing_stand";
+					definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
 					break;
 				}case("fertilizer"):{
 					definition.general.type = "effector_fertilizer";
 					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = "fertilizer";
+					definition.effector.type = EffectorComponentType.FERTILIZER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("harvester"):{
 					definition.general.type = "effector_harvester";
 					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = "harvester";
+					definition.effector.type = EffectorComponentType.HARVESTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("planter"):{
 					definition.general.type = "effector_planter";
 					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = "planter";
+					definition.effector.type = EffectorComponentType.PLANTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("plow"):{
 					definition.general.type = "effector_plow";
 					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = "plow";
+					definition.effector.type = EffectorComponentType.PLOW;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("custom"):{
@@ -313,14 +315,6 @@ public final class LegacyCompatSystem{
     				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.subParts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
     			}
     		}
-		}
-		
-		if(definition.rendering != null){
-			try{
-				performAnimationLegacyCompats(definition.rendering);
-			}catch(Exception e){
-				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
-			}
 		}
 	}
 	

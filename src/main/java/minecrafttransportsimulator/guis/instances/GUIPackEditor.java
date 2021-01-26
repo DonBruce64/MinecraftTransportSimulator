@@ -45,6 +45,7 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -168,6 +169,7 @@ public class GUIPackEditor extends JFrame{
         Map<String, Class<?>> jsonClasses = new LinkedHashMap<String, Class<?>>();
         jsonClasses.put("JSON Type - Select first!.", null);
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
+        jsonClasses.put(JSONPart.class.getSimpleName(), JSONPart.class);
         jsonClasses.put(JSONInstrument.class.getSimpleName(), JSONInstrument.class);
         jsonClasses.put(JSONDecor.class.getSimpleName(), JSONDecor.class);
         jsonClasses.put(JSONPoleComponent.class.getSimpleName(), JSONPoleComponent.class);

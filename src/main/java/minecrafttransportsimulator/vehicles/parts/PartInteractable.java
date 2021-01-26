@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -25,11 +26,11 @@ public final class PartInteractable extends APart{
 	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		switch(definition.interactable.interactionType){
-			case("crate"): this.interactable = InterfaceCore.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
-			case("barrel"): this.interactable = null; break;
-			case("crafting_table"): this.interactable = null; break;
-			case("furnace"): this.interactable = InterfaceCore.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
-			case("brewing_stand"): this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
+			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
+			case BARREL: this.interactable = null; break;
+			case CRAFTING_TABLE: this.interactable = null; break;
+			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
+			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
@@ -39,7 +40,7 @@ public final class PartInteractable extends APart{
 	@Override
 	public boolean interact(WrapperPlayer player){
 		if(!vehicle.locked){
-			if(definition.interactable.interactionType.equals("crafting_table")){
+			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);

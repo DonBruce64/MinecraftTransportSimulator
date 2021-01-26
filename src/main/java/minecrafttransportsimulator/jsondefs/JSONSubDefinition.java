@@ -10,7 +10,7 @@ public class JSONSubDefinition{
 	@JSONDescription("This text value will be appended to the JSON filename to get the name of the component.  This name is then used to tell MTS the name of the texture and item to use when rendering this component.  Remember, the subName is APPENDED to the JSON file name.  If you name your textures off the sub name MTS will not be able to find them!  If you are making a single-variant model you can leave this field empty (“”), but it must be present otherwise MTS will crash on load.")
 	public String subName;
 	
-	@JSONDescription("his parameter is optional, and is only used for vehicles.  If set, when the vehicle's color is changed with the paint gun to this variant, all parts that have this subType will have their subType changed to this value.  Allows for two-tone vehicles, where you want seats and accessories to not be the same color as the vehicle, but still be based off the vehicle's color.")
+	@JSONDescription("This parameter is optional, and is only used for vehicles and parts.  If set, when the vehicle's color is changed with the paint gun the new color's definition is checked for a secondTone.  If one is found, all parts will be checked.  If any part has definition with a subName matching the vehicle's secondTone, then the part will be swapped for the one with the appropriate definition.")
 	public String secondTone;
 	
 	@JSONDescription("This parameter is optional.  If set, any textObjects marked as colorInherited will use this color rather than their own.  Useful when you have multiple textures for your model that would cause issues with a single text color.")
