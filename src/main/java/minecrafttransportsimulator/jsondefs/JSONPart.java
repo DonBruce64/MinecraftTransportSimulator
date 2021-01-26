@@ -156,35 +156,34 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     }
     
     public class JSONPartGroundDevice{
-		@JSONDescription("")
+		@JSONDescription("If true, then this part will be considered a wheel.  Wheels can transmit power from engines to the ground, making them the go-to choice for ground-based vehicles.")
     	public boolean isWheel;
 		
 		@JSONDescription("")
     	public boolean isTread;
 		
-		@JSONDescription("")
+		@JSONDescription("If true, then this part will consider water blocks solid and will float on the top of them.  This may be used in conjunction with floating hitboxes.")
     	public boolean canFloat;
 		
     	@Deprecated
-		@JSONDescription("")
 		public boolean canGoFlat;
 		
-		@JSONDescription("")
+		@JSONDescription("How wide this part is.  Used for collision detection.")
     	public float width;
 		
-		@JSONDescription("")
+		@JSONDescription("How tall this part is.  This is used as the min-max parameter.  In cars, this also affects the max ground speed as the rotation of a larger wheel will cause more movement than the rotation of a smaller wheel.")
     	public float height;
 		
-		@JSONDescription("")
+		@JSONDescription("If set, then this part can go “flat”, and the height of the part will be set to this.  This also reduces the friction it provides.")
     	public float flatHeight;
 		
-		@JSONDescription("")
+		@JSONDescription("How much friction this part has for forwards movement. Used in cars to determine how much grip wheels have with the ground and if they should spin out, and used with all vehicles when brakes are applied to determine how much force they should be able to apply.")
     	public float motiveFriction;
 		
-		@JSONDescription("")
+		@JSONDescription("How much friction this part has for sideways movement. Used during turning operations to determine how much the vehicle will skid sideways when turning at speed.")
         public float lateralFriction;
 		
-		@JSONDescription("")
+		@JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for longer parts like pontoons or helicopter landing skids.  Note that if this parameter is set in the vehicle JSON the vehicle value will override this value.")
         public float extraCollisionBoxOffset;
 		
 		@JSONDescription("")
@@ -195,16 +194,16 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 		@JSONDescription("")
     	public boolean isDynamicPitch;
 		
-		@JSONDescription("")
+		@JSONDescription("If true, MTS will consider this propeller a rotor and will angle it when the aircraft control keys are pressed.  This will cause the thrust to be vectored in different directions.  Designed for helicopters, which use rotors to control their movement.")
     	public boolean isRotor;
 		
-		@JSONDescription("")
+		@JSONDescription("Pitch is a critical defining characteristic of this part.  In essence, pitch is how far forward, in inches, the propeller tries to move in one revolution.  This, coupled with the RPM and gear ratio of the engine, determines the max possible speed of the aircraft this propeller is attached to.  Note, however, that propellers with higher pitches are less efficient at slower speeds so they require a longer runway.  This should be considered carefully before designing a propeller with a high pitch...")
     	public short pitch;
 		
-		@JSONDescription("")
+		@JSONDescription("The diameter of this propeller, in inches.  Higher-diameter propellers provide more thrust at the same RPM as lower-diameter units.  However, the higher the diameter the more force they take to turn and the more powerful an engine will need to be to drive them (some low-power engines may not even be able to start with large propellers on them).  Additionally, the higher the diameter the lower the maximum RPM the propeller can turn.  Should the propeller exceed this speed it will break off and the engine it was attached to will suddenly not have a load and will rev up rapidly.")
     	public int diameter;
 		
-		@JSONDescription("")
+		@JSONDescription("How much health this propeller has when first created.  This value is decreased every time the propeller is damaged by something (arrows, swords, Anti-Aircraft Flak, etc.).  It is also lowered every time the propeller is hitting the ground while turning.  Once this value reaches 0, the propeller will break off.")
     	public int startingHealth;
     }
     
