@@ -4,7 +4,8 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
-import minecrafttransportsimulator.items.instances.ItemJerrycan;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -38,7 +39,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 			}
 			
 			//Check if the item is a jerrycan.
-			if(player.getHeldItem() instanceof ItemJerrycan){
+			if(player.getHeldItem() instanceof ItemItem && ItemComponentType.JERRYCAN.equals(((ItemItem) player.getHeldItem()).definition.general.type)){
 				WrapperNBT data = new WrapperNBT(stack);
 				if(!data.getBoolean("isFull")){
 					if(tank.getFluidLevel() >= 1000){

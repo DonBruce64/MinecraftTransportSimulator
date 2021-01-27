@@ -2,8 +2,8 @@
 	"parent": "minecraft:block/block",
   "credit": "Made with Blockbench",
   "textures": {
-    "0": "mts:items/jerrycan",
-    "particle": "mts:items/jerrycan"
+    "0": "mts:items/items/jerrycan",
+    "particle": "mts:items/items/jerrycan"
   },
 	"elements": [
     {

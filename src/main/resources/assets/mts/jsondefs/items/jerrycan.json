@@ -1,0 +1,7 @@
+{
+  "general": {
+	"name" : "Jerrycan",
+	"materials" : ["oredict:ingotIron:7", "oredict:dyeRed:2"],
+	"type" : "jerrycan"
+  }
+}
