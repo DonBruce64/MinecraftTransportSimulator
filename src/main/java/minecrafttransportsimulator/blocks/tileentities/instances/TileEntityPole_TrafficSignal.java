@@ -16,6 +16,7 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	public TileEntityPole_TrafficSignal(TileEntityPole core, ItemPoleComponent item){
 		super(core, item);
 		lightOn = LightType.UNLINKEDLIGHT;
+		activeVariables.add(lightOn.lowercaseName);
 	}
 
 	@Override
