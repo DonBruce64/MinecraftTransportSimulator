@@ -214,7 +214,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			delta = (short) (-MAX_RUDDER_ANGLE - rudderAngle);
 		}
 		rudderAngle += delta;
-		InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, delta, (byte) 20));
+		rudderCooldown = 20;
+		InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, delta, rudderCooldown));
 	}
 	
 	@Override

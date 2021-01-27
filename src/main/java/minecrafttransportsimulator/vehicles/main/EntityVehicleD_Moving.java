@@ -530,7 +530,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					double rollDelta = 0;
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
-					addToSteeringAngle((float) roadRotation.y);
+					if(!world.isClient()){
+						addToSteeringAngle((float) roadRotation.y);
+					}
 				}
 			}else{
 				//Set followers to null, as something is invalid.
