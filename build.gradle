@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.12.2-19.15.0-BETA1"
+version = "1.12.2-19.15.0-BETA5"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
@@ -37,11 +37,20 @@ shadowJar {
 	classifier ''
 	//Need to shadow javazoom (jlayer) for MP3 support.
 	relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
+	//Need to jcraft for internal OGG support.
+	relocate 'jcraft', 'minecrafttransportsimulator.shadowed.jcraft'
 	exclude 'dummyThing'
+}
+
+repositories {
+	maven { 
+		url 'https://mvnrepository.com/artifact/org.jcraft/jorbis'
+	}
 }
 
 dependencies {
   compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
+	compile group: 'org.jcraft', name: 'jorbis', version: '0.0.17'
 }
 
 
