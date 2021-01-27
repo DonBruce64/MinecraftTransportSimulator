@@ -26,7 +26,12 @@ public class PacketVehiclePartSeat extends APacketVehiclePart{
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
-		((PartSeat) vehicle.getPartAtLocation(offset)).setNextActiveGun();
-		return true;
+		PartSeat seat = ((PartSeat) vehicle.getPartAtLocation(offset));
+		if(seat != null){
+			seat.setNextActiveGun();
+			return true;
+		}else{
+			return false;
+		}
 	}
 }

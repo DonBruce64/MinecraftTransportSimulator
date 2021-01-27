@@ -317,7 +317,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-		if(seat.vehicleDefinition.linkedDoors != null){
+		if(seat != null && seat.vehicleDefinition.linkedDoors != null){
 			for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
 				if(!variablesOn.contains(linkedDoor)){
 					for(VehicleDoor doorDef : definition.doors){
