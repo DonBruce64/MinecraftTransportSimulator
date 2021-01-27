@@ -31,7 +31,11 @@ public class ItemPaintGun extends AItemBase implements IItemVehicleInteractable{
 		if(!ownerState.equals(PlayerOwnerState.USER)){
 			if(rightClick){
 				if(vehicle.world.isClient()){
-					InterfaceGUI.openGUI(new GUIPaintGun(vehicle, player));
+					if(part != null){
+						InterfaceGUI.openGUI(new GUIPaintGun(part, player));
+					}else{
+						InterfaceGUI.openGUI(new GUIPaintGun(vehicle, player));
+					}
 				}else{
 					return CallbackType.PLAYER;
 				}

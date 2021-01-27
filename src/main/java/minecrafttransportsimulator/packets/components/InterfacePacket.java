@@ -35,6 +35,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
@@ -104,6 +105,7 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
 		registerPacket(packetIndex++, PacketVehiclePartChange.class);
+		registerPacket(packetIndex++, PacketVehiclePartColorChange.class);
 		registerPacket(packetIndex++, PacketVehiclePartEngine.class);
 		registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
 		registerPacket(packetIndex++, PacketVehiclePartInteractable.class);

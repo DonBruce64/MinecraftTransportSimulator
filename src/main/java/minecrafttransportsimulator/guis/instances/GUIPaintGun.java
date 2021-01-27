@@ -14,14 +14,17 @@ import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
+import minecrafttransportsimulator.packets.instances.PacketVehiclePartColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
@@ -35,6 +38,7 @@ public class GUIPaintGun extends AGUIBase{
 	
 	//Init variables.
 	private final EntityVehicleF_Physics vehicle;
+	private final APart part;
 	private final TileEntityDecor tile;
 	private final WrapperPlayer player;
 	
@@ -59,13 +63,23 @@ public class GUIPaintGun extends AGUIBase{
 
 	public GUIPaintGun(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
+		this.part = null;
 		this.tile = null;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 	}
 	
+	public GUIPaintGun(APart part, WrapperPlayer player){
+		this.vehicle = null;
+		this.part = part;
+		this.tile = null;
+		this.player = player;
+		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(part.definition.packID, part.definition.systemName, part.currentSubName);
+	}
+	
 	public GUIPaintGun(TileEntityDecor tile, WrapperPlayer player){
 		this.vehicle = null;
+		this.part = null;
 		this.tile = tile;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(tile.definition.packID, tile.definition.systemName, tile.currentSubName);
@@ -108,6 +122,8 @@ public class GUIPaintGun extends AGUIBase{
 			public void onClicked(){
 				if(vehicle != null){
 					InterfacePacket.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
+				}else if(part != null){
+					InterfacePacket.sendToServer(new PacketVehiclePartColorChange(part, (ItemPart) currentItem));
 				}else{
 					InterfacePacket.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
 				}
