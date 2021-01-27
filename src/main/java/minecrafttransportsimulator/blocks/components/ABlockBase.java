@@ -84,24 +84,33 @@ public abstract class ABlockBase{
 	 *  Enums for side-specific stuff.
 	 */
 	public static enum Axis{
-		NONE(0, 0, 0, 0),
-		UP(0, 1, 0, 0),
-		DOWN(0, -1, 0, 0),
-		NORTH(0, 0, -1, 180),
-		SOUTH(0, 0, 1, 0),
-		EAST(1, 0, 0, 90),
-		WEST(-1, 0, 0, 270);
+		NONE(0, 0, 0, 0, false, false),
+		UP(0, 1, 0, 0, true, false),
+		DOWN(0, -1, 0, 0, true, false),
+		NORTH(0, 0, -1, 180, true, true),
+		SOUTH(0, 0, 1, 0, true, true),
+		EAST(1, 0, 0, 90, true, true),
+		WEST(-1, 0, 0, 270, true, true),
+		
+		NORTHEAST(0, 0, -1, 135, false, true),
+		SOUTHEAST(0, 0, 1, 45, false, true),
+		NORTHWEST(0, 0, -1, 225, false, true),
+		SOUTHWEST(0, 0, 1, 315, false, true);
 		
 		public final int xOffset;
 		public final int yOffset;
 		public final int zOffset;
 		public final int yRotation;
+		public final boolean blockBased;
+		public final boolean xzPlanar;
 		
-		private Axis(int xOffset, int yOffset, int zOffset, int yRotation){
+		private Axis(int xOffset, int yOffset, int zOffset, int yRotation, boolean blockBased, boolean xzPlanar){
 			this.xOffset = xOffset;
 			this.yOffset = yOffset;
 			this.zOffset = zOffset;
 			this.yRotation = yRotation;
+			this.blockBased = blockBased;
+			this.xzPlanar = xzPlanar;
 		}
 		
 		public Point3i getOffsetPoint(Point3i point){
@@ -116,8 +125,26 @@ public abstract class ABlockBase{
 				case SOUTH: return NORTH;
 				case EAST: return WEST;
 				case WEST: return EAST;
+				case NORTHEAST: return SOUTHWEST;
+				case SOUTHEAST: return NORTHWEST;
+				case NORTHWEST: return SOUTHEAST;
+				case SOUTHWEST: return NORTHEAST;
 				default: return NONE;
 			}
+		}
+		
+		public static Axis getFromRotation(double rotation){
+			rotation = rotation%360;
+			if(rotation < 0){
+				rotation += 360;
+			}
+			int degRotation = (int) (Math.round(rotation/45)*45);
+			for(Axis axis : values()){
+				if(axis.xzPlanar && axis.yRotation == degRotation){
+					return axis;
+				}
+			}
+			return Axis.NONE;
 		}
 	}
 }

@@ -55,7 +55,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(coreComponent.definition).get(axis));
-					}else{
+					}else if(axis.blockBased){
 						Point3i offset = axis.getOffsetPoint(tile.position);
 						boolean adjacentPole = tile.world.getBlock(offset) instanceof BlockPole;
 						boolean solidBlock = tile.world.isBlockSolid(offset, axis.getOpposite());

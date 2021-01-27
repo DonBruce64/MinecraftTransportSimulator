@@ -35,6 +35,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Axis axis : Axis.values()){
 			String packID = data.getString("packID" + axis.ordinal());
 			if(!packID.isEmpty()){
+				//TODO remove this a few major versions down the road when we don't need to convert things.
 				String systemName = data.getString("systemName" + axis.ordinal());
 				String subName = data.getString("subName" + axis.ordinal());
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(packID, systemName, subName));
@@ -44,6 +45,21 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					ITextProvider provider = (ITextProvider) newComponent;
 					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
 						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLine" + axis.ordinal() + i));
+					}
+				}
+			}
+			
+			packID = data.getString("packID" + axis.name());
+			if(!packID.isEmpty()){
+				String systemName = data.getString("systemName" + axis.name());
+				String subName = data.getString("subName" + axis.name());
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(packID, systemName, subName));
+				components.put(axis, newComponent);
+				
+				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
+					ITextProvider provider = (ITextProvider) newComponent;
+					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
+						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLine" + axis.name() + i));
 					}
 				}
 			}
@@ -93,13 +109,13 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
 			Axis axis = connectedObjectEntry.getKey();
 			ATileEntityPole_Component component = connectedObjectEntry.getValue();
-			data.setString("packID" + axis.ordinal(), component.definition.packID);
-			data.setString("systemName" + axis.ordinal(), component.definition.systemName);
-			data.setString("subName" + axis.ordinal(), component.item.subName);
+			data.setString("packID" + axis.name(), component.definition.packID);
+			data.setString("systemName" + axis.name(), component.definition.systemName);
+			data.setString("subName" + axis.name(), component.item.subName);
 			if(component instanceof ITextProvider){
 				int lineNumber = 0;
 				for(String textLine : ((ITextProvider) component).getText().values()){
-					data.setString("textLine" + axis.ordinal() + lineNumber++, textLine);
+					data.setString("textLine" + axis.name() + lineNumber++, textLine);
 				}
 			}
 		}
