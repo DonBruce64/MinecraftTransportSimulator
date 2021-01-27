@@ -70,6 +70,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Road-following data.
 	protected RoadFollowingState frontFollower;
 	protected RoadFollowingState rearFollower;
+	protected LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
 	
 	//Internal movement variables.
 	private final Point3d serverDeltaM;
@@ -491,17 +492,23 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		roadMotion.set(0, 0, 0);
 		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
+			//Check for the potential to change the requested segment.
+			//We can only do this if both our followers are on the same semgnt.
 			LaneSelectionRequest requestedSegment;
 			if(!(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) ^ variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName))){
 				requestedSegment = LaneSelectionRequest.NONE;
 			}else if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
-				requestedSegment = LaneSelectionRequest.LEFT;
+				requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
 			}else{
-				requestedSegment = LaneSelectionRequest.RIGHT;
+				requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
 			}
+			if(frontFollower.equals(rearFollower)){
+				selectedSegment = requestedSegment;
+			}
+			
 			float segmentDelta = (float) (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR);
-			frontFollower = frontFollower.updateCurvePoints(segmentDelta, requestedSegment);
-			rearFollower = rearFollower.updateCurvePoints(segmentDelta, requestedSegment);
+			frontFollower = frontFollower.updateCurvePoints(segmentDelta, selectedSegment);
+			rearFollower = rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
 			Point3d rearPoint = groundDeviceCollective.getContactPoint(false);
 			
 			//Check to make sure followers are still valid, and do logic.

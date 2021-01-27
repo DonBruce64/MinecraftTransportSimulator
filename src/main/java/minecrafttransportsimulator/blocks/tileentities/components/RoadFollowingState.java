@@ -27,6 +27,16 @@ public class RoadFollowingState{
 		this.currentSegment = currentSegment;
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof RoadFollowingState){
+			RoadFollowingState other = (RoadFollowingState) obj;
+			return this.lane.equals(other.lane) && this.curve.equals(other.curve);
+		}else{
+			return false;
+		}
+	}
+	
 	/**
 	 * Updates this curve to the proper point, returning itself.
 	 * If the point delta requested has gone past the curve's bounds, then the next
