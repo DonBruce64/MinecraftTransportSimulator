@@ -3,7 +3,6 @@ package minecrafttransportsimulator.rendering.instances;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
@@ -282,20 +281,7 @@ public class ParticleBullet extends AParticle{
 		}
         //Parse the model if we haven't already.
         if(!bulletDisplayLists.containsKey(bullet)){
-        	Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(bullet.definition.getModelLocation());
-        	int displayListIndex = GL11.glGenLists(1);
-    		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-    		GL11.glBegin(GL11.GL_TRIANGLES);
-    		for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-				for(Float[] vertex : entry.getValue()){
-					GL11.glTexCoord2f(vertex[3], vertex[4]);
-					GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-					GL11.glVertex3f(-vertex[0], vertex[1], vertex[2]);
-				}
-    		}
-    		GL11.glEnd();
-    		GL11.glEndList();
-        	bulletDisplayLists.put(bullet, displayListIndex);
+        	bulletDisplayLists.put(bullet, OBJParser.generateDisplayList(OBJParser.parseOBJModel(bullet.definition.getModelLocation())));
         }
         
         //Bind the texture for this bullet.
