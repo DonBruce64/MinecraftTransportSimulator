@@ -538,7 +538,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
 					if(!world.isClient()){
-						addToSteeringAngle((float) roadRotation.y);
+						addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y));
 					}
 				}
 			}else{
