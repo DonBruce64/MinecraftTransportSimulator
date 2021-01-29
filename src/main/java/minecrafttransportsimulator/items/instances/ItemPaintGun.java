@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIPaintGun;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -52,6 +53,13 @@ public class ItemPaintGun extends AItemBase implements IItemVehicleInteractable{
 			ATileEntityBase<?> tile = world.getTileEntity(point);
 			if(tile instanceof TileEntityDecor){
 				InterfaceGUI.openGUI(new GUIPaintGun((TileEntityDecor) tile, player));
+				return true;
+			}else if(tile instanceof TileEntityPole){
+				//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
+				axis = Axis.getFromRotation(player.getYaw()).getOpposite();
+				if(((TileEntityPole) tile).components.containsKey(axis)){
+					InterfaceGUI.openGUI(new GUIPaintGun((TileEntityPole) tile, axis, player));
+				}
 				return true;
 			}
 		}

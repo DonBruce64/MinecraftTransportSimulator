@@ -107,7 +107,7 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 							data.setString("textLine" + lineNumber++, textLine);
 						}
 					}
-					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.item, data)){
+					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.getItem(), data)){
 						pole.components.remove(axis);
 						pole.updateLightState();
 						return true;
@@ -152,7 +152,10 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 					player.getInventory().removeStack(player.getHeldStack(), 1);
 				}
 				return true;
-			} 
+			}else if(componentItem != null && pole.components.containsKey(axis)){
+				//Player clicked an existing sign to change the definition.  Do so now.
+				pole.components.get(axis).currentSubName = componentItem.subName;
+			}
 		}
 		return false;
 	}

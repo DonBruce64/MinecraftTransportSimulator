@@ -4,7 +4,10 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -15,10 +18,12 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
@@ -39,7 +44,9 @@ public class GUIPaintGun extends AGUIBase{
 	//Init variables.
 	private final EntityVehicleF_Physics vehicle;
 	private final APart part;
-	private final TileEntityDecor tile;
+	private final TileEntityDecor decor;
+	private final TileEntityPole pole;
+	private final Axis axis;
 	private final WrapperPlayer player;
 	
 	//Buttons and labels.
@@ -64,7 +71,9 @@ public class GUIPaintGun extends AGUIBase{
 	public GUIPaintGun(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
 		this.part = null;
-		this.tile = null;
+		this.decor = null;
+		this.pole = null;
+		this.axis = null;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
 	}
@@ -72,17 +81,32 @@ public class GUIPaintGun extends AGUIBase{
 	public GUIPaintGun(APart part, WrapperPlayer player){
 		this.vehicle = null;
 		this.part = part;
-		this.tile = null;
+		this.decor = null;
+		this.pole = null;
+		this.axis = null;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(part.definition.packID, part.definition.systemName, part.currentSubName);
 	}
 	
-	public GUIPaintGun(TileEntityDecor tile, WrapperPlayer player){
+	public GUIPaintGun(TileEntityDecor decor, WrapperPlayer player){
 		this.vehicle = null;
 		this.part = null;
-		this.tile = tile;
+		this.decor = decor;
+		this.pole = null;
+		this.axis = null;
 		this.player = player;
-		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(tile.definition.packID, tile.definition.systemName, tile.currentSubName);
+		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(decor.definition.packID, decor.definition.systemName, decor.currentSubName);
+	}
+	
+	public GUIPaintGun(TileEntityPole pole, Axis axis, WrapperPlayer player){
+		this.vehicle = null;
+		this.part = null;
+		this.decor = null;
+		this.pole = pole;
+		this.axis = axis;
+		this.player = player;
+		ATileEntityPole_Component component = pole.components.get(axis);
+		this.currentItem = component.getItem();
 	}
 
 	@Override
@@ -124,8 +148,10 @@ public class GUIPaintGun extends AGUIBase{
 					InterfacePacket.sendToServer(new PacketVehicleColorChange(vehicle, (ItemVehicle) currentItem));
 				}else if(part != null){
 					InterfacePacket.sendToServer(new PacketVehiclePartColorChange(part, (ItemPart) currentItem));
+				}else if(decor != null){
+					InterfacePacket.sendToServer(new PacketTileEntityDecorColorChange(decor, (ItemDecor) currentItem));
 				}else{
-					InterfacePacket.sendToServer(new PacketTileEntityDecorColorChange(tile, (ItemDecor) currentItem));
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, (ItemPoleComponent) currentItem, null, false));
 				}
 				InterfaceGUI.closeGUI();
 			}

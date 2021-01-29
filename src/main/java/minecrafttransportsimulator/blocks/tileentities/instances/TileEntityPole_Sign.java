@@ -39,11 +39,11 @@ public class TileEntityPole_Sign extends ATileEntityPole_Component implements IT
 	@Override
 	public String getSecondaryTextColor(){
 		for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(item.subName)){
+			if(subDefinition.subName.equals(currentSubName)){
 				return subDefinition.secondColor;
 			}
 		}
-		throw new IllegalArgumentException("Tried to get the definition for a pole of subName:" + item.subName + ".  But that isn't a valid subName for the pole:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+		throw new IllegalArgumentException("Tried to get the definition for a pole of subName:" + currentSubName + ".  But that isn't a valid subName for the pole:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
 	}
 
 	@Override

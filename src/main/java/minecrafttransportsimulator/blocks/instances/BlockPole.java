@@ -60,13 +60,14 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerClickingEditableSign = clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null;
-			boolean isPlayerHoldingCore = heldItem instanceof ItemPoleComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals(PoleComponentType.CORE);
+			boolean isPlayerHoldingComponent = heldItem instanceof ItemPoleComponent;
+			boolean isPlayerHoldingCore = isPlayerHoldingComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals(PoleComponentType.CORE);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
-				}else if(heldItem != null && !isPlayerHoldingCore){
+				}else if(isPlayerHoldingComponent && !isPlayerHoldingCore){
 					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
 					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){

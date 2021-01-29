@@ -91,7 +91,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		List<AItemPack<JSONPoleComponent>> drops = new ArrayList<AItemPack<JSONPoleComponent>>();
 		for(Axis axis : Axis.values()){
 			if(components.containsKey(axis)){
-				drops.add(components.get(axis).item);
+				drops.add(components.get(axis).getItem());
 			}
 		}
 		return drops;
@@ -111,7 +111,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			ATileEntityPole_Component component = connectedObjectEntry.getValue();
 			data.setString("packID" + axis.name(), component.definition.packID);
 			data.setString("systemName" + axis.name(), component.definition.systemName);
-			data.setString("subName" + axis.name(), component.item.subName);
+			data.setString("subName" + axis.name(), component.currentSubName);
 			if(component instanceof ITextProvider){
 				int lineNumber = 0;
 				for(String textLine : ((ITextProvider) component).getText().values()){

@@ -68,11 +68,11 @@ public class GUISignalController extends AGUIBase{
 			if(tile instanceof TileEntityPole){
 				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 					if(component instanceof TileEntityPole_TrafficSignal){
-						trafficSignalItemTemp = component.item.getNewStack();
+						trafficSignalItemTemp = component.getItem().getNewStack();
 						++trafficSignals;
 						componentLocations.add(location);
 					}else if(component instanceof TileEntityPole_StreetLight){
-						streetLightItemTemp = component.item.getNewStack();
+						streetLightItemTemp = component.getItem().getNewStack();
 						++streetLights;
 						componentLocations.add(location);
 					}
@@ -98,11 +98,11 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										trafficSignalItem.stack = component.item.getNewStack();
+										trafficSignalItem.stack = component.getItem().getNewStack();
 										++trafficSignals;
 										componentLocations.add(location);
 									}else if(component instanceof TileEntityPole_StreetLight){
-										streetLightItem.stack = component.item.getNewStack();
+										streetLightItem.stack = component.getItem().getNewStack();
 										++streetLights;
 										componentLocations.add(location);
 									}

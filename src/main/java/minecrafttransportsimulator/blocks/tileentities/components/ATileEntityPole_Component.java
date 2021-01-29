@@ -10,6 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.IAnimationProvider;
 import minecrafttransportsimulator.rendering.instances.AnimationsPole;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
  * 
@@ -17,16 +18,23 @@ import minecrafttransportsimulator.rendering.instances.AnimationsPole;
  */
 public abstract class ATileEntityPole_Component implements IAnimationProvider{
 	public final TileEntityPole core;
-	public final ItemPoleComponent item;
 	public final JSONPoleComponent definition;
 	public final Set<String> activeVariables = new HashSet<String>();
+	public String currentSubName;
 	
 	private static final AnimationsPole animator = new AnimationsPole();
 	
 	public ATileEntityPole_Component(TileEntityPole core, ItemPoleComponent item){
 		this.core = core;
-		this.item = item;
 		this.definition = item.definition;
+		this.currentSubName = item.subName;
+	}
+	
+	/**
+	 *  Returns the current item that makes up this pole component.
+	 */
+	public ItemPoleComponent getItem(){
+		return PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName);
 	}
 	
 	/**

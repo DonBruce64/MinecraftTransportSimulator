@@ -51,7 +51,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 			
 			//Render the connectors.  Don't do this on the blending pass 1.
 			if(InterfaceRender.getRenderPass() != 1){
-				InterfaceRender.bindTexture(coreComponent.definition.getTextureLocation(coreComponent.item.subName));
+				InterfaceRender.bindTexture(coreComponent.definition.getTextureLocation(coreComponent.currentSubName));
 				for(Axis axis : Axis.values()){
 					if(axis.equals(Axis.NONE)){
 						GL11.glCallList(connectorDisplayListMap.get(coreComponent.definition).get(axis));
@@ -119,7 +119,7 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					
 					//Don't do solid model rendering on the blend pass.
 					if(InterfaceRender.getRenderPass() != 1){
-						InterfaceRender.setTexture(component.definition.getTextureLocation(component.item.subName));
+						InterfaceRender.setTexture(component.definition.getTextureLocation(component.currentSubName));
 						GL11.glCallList(componentDisplayListMap.get(component.definition));
 					}
 					

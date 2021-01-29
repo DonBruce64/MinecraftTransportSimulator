@@ -66,7 +66,7 @@ public class GUITextEditor extends AGUIBase{
 			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
 			modelRender.modelLocation = component.definition.getModelLocation();
-			modelRender.textureLocation = component.definition.getTextureLocation(component.item.subName);
+			modelRender.textureLocation = component.definition.getTextureLocation(component.currentSubName);
 			
 			//Set text and text objects.
 			textObjects = new ArrayList<JSONText>();
