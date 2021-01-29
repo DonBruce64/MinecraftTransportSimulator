@@ -976,8 +976,8 @@ public final class RenderVehicle{
 					//To do this, we first need to translate to the top-center of the bounding box.
 					//We also rotate to face the player.
 					GL11.glPushMatrix();
-					GL11.glTranslated(highlightedBox.globalCenter.x, highlightedBox.globalCenter.y + highlightedBox.heightRadius, highlightedBox.globalCenter.z);
-					GL11.glRotated(player.getHeadYaw(), 0, 1, 0);
+					GL11.glTranslated(highlightedBox.localCenter.x, highlightedBox.localCenter.y + highlightedBox.heightRadius, highlightedBox.localCenter.z);
+					GL11.glRotated(player.getHeadYaw() - vehicle.angles.y, 0, 1, 0);
 					
 					//Rotate by 180 on the z-axis.  This changes the X and Y coords from GUI to world coords. 
 					GL11.glRotated(180, 0, 0, 1);
