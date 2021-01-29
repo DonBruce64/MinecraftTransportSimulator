@@ -1027,6 +1027,9 @@ public final class RenderVehicle{
 	 */
 	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
 		//Set states for box render.
+		GL11.glPushMatrix();
+		//Need to undo rotation so boxes render as axis-aligned.
+		GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glLineWidth(3.0F);
@@ -1043,24 +1046,20 @@ public final class RenderVehicle{
 				InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
 			}
 			GL11.glPushMatrix();
-			GL11.glTranslated(box.localCenter.x, box.localCenter.y, box.localCenter.z);
-			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
-			GL11.glTranslated(-box.localCenter.x, -box.localCenter.y, -box.localCenter.z);
+			GL11.glTranslated(box.globalCenter.x - vehicle.position.x, box.globalCenter.y - vehicle.position.y, box.globalCenter.z - vehicle.position.z);
 			RenderBoundingBox.renderWireframe(box);
 			GL11.glPopMatrix();
 		}
 		
 		//Draw the ground bounding boxes.
 		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
-		
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
 			GL11.glPushMatrix();
-			GL11.glTranslated(box.localCenter.x, box.localCenter.y, box.localCenter.z);
-			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
-			GL11.glTranslated(-box.localCenter.x, -box.localCenter.y, -box.localCenter.z);
+			GL11.glTranslated(box.globalCenter.x - vehicle.position.x, box.globalCenter.y - vehicle.position.y, box.globalCenter.z - vehicle.position.z);
 			RenderBoundingBox.renderWireframe(box);
 			GL11.glPopMatrix();
 		}
+		GL11.glPopMatrix();
 		
 		//Draw part center points.
 		InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);

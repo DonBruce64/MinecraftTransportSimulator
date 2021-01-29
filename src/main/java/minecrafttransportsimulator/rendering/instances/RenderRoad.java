@@ -171,11 +171,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 0.5F);
 			for(Point3i location : road.collidingBlockOffsets){
 				BoundingBox blockingBox = new BoundingBox(new Point3d(location).add(0, 0.5, 0), 0.55, 0.55, 0.55);
-				RenderBoundingBox.renderSolid(blockingBox); 
+				GL11.glPushMatrix();
+				GL11.glTranslated(location.x, location.y, location.z);
+				RenderBoundingBox.renderSolid(blockingBox);
+				GL11.glPopMatrix();
 			}
 			InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 0.5F);
 			BoundingBox mainBlockBox = new BoundingBox(new Point3d(0, 0.75, 0), 0.15, 1.5, 0.15);
+			GL11.glPushMatrix();
+			GL11.glTranslated(mainBlockBox.localCenter.x, mainBlockBox.localCenter.y, mainBlockBox.localCenter.z);
 			RenderBoundingBox.renderSolid(mainBlockBox);
+			GL11.glPopMatrix();
 		}
 		
 		//If we are in devMode, render road bounds and colliding boxes.
