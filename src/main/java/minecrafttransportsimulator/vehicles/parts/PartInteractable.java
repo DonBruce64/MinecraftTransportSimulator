@@ -21,6 +21,7 @@ public final class PartInteractable extends APart{
 	public final WrapperInventory inventory;
 	public final FluidTank tank;
 	public PartInteractable linkedPart;
+	public String jerrycanFluid;
 	public EntityVehicleF_Physics linkedVehicle;
 	
 	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
@@ -31,10 +32,12 @@ public final class PartInteractable extends APart{
 			case CRAFTING_TABLE: this.interactable = null; break;
 			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
 			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
+			case JERRYCAN: this.interactable = null; break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
-		this.tank = definition.interactable.interactionType.equals("barrel") ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;
+		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;
+		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	
 	@Override
@@ -42,6 +45,9 @@ public final class PartInteractable extends APart{
 		if(!vehicle.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
+			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+				vehicle.removePart(this, null);
+				vehicle.world.spawnItem(getItem(), getData(), worldPos);
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
@@ -128,6 +134,8 @@ public final class PartInteractable extends APart{
 			interactable.save(data);
 		}else if(tank != null){
 			tank.save(data);
+		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+			data.setString("jerrycanFluid", jerrycanFluid);
 		}
 		return data;
 	}

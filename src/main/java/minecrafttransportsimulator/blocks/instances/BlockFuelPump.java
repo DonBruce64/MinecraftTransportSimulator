@@ -4,8 +4,9 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
-import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -34,22 +35,25 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 			
 			//If we are holding an item, interact with the pump.
 			ItemStack stack = player.getHeldStack();
+			AItemBase item = player.getHeldItem();
 			if(tank.interactWith(player) > 0){
 				return true;
 			}
 			
 			//Check if the item is a jerrycan.
-			if(player.getHeldItem() instanceof ItemItem && ItemComponentType.JERRYCAN.equals(((ItemItem) player.getHeldItem()).definition.general.type)){
-				WrapperNBT data = new WrapperNBT(stack);
-				if(!data.getBoolean("isFull")){
-					if(tank.getFluidLevel() >= 1000){
-						data.setBoolean("isFull", true);
-						data.setString("fluidName", tank.getFluid());
-						stack.setTagCompound(data.tag);
-						tank.drain(tank.getFluid(), 1000, true);
+			if(item instanceof ItemPart){
+				ItemPart part = (ItemPart) item;
+				if(part.definition.interactable != null && part.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+					WrapperNBT data = new WrapperNBT(stack);
+					if(data.getString("jerrycanFluid").isEmpty()){
+						if(tank.getFluidLevel() >= 1000){
+							data.setString("jerrycanFluid", tank.getFluid());
+							stack.setTagCompound(data.tag);
+							tank.drain(tank.getFluid(), 1000, true);
+						}
 					}
+					return true;
 				}
-				return true;
 			}
         	
 			//We don't have a vehicle connected.  Try to connect one now.

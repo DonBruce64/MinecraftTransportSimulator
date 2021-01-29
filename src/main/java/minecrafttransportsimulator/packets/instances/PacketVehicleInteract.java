@@ -11,7 +11,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.items.components.IItemVehicleInteractable.CallbackType;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
@@ -60,9 +59,29 @@ public class PacketVehicleInteract extends APacketVehicle{
 		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
 		ItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = player.getHeldItem();
-		APart part = vehicle.getPartAtLocation(hitPosition);
 		
+		//Check if we clicked a part slot box.  This takes priority as part placement
+		//should always be checked before part interaction.
+		for(BoundingBox slotBox : vehicle.partSlotBoxes.keySet()){
+			if(slotBox.localCenter.equals(hitPosition)){
+				//Only owners can add vehicle parts.
+				if(!canPlayerEditVehicle){
+					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+				}else{
+					//Attempt to add a part.  Vehicle is responsible for callback packet here.
+					if(heldItem instanceof ItemPart){
+						if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitPosition, false) && !player.isCreative()){				
+							player.getInventory().removeStack(heldStack, 1);
+						}
+					}
+				}
+				return false;
+			}
+		}
+		
+		//Didn't click a slot.  Check to see if we clicked a part directly.
 		//If our part is null, see if we clicked a part's collision box instead.
+		APart part = vehicle.getPartAtLocation(hitPosition);
 		if(part == null){
 			for(Entry<APart, List<BoundingBox>> partCollisionEntry : vehicle.partCollisionBoxes.entrySet()){
 				for(BoundingBox box : partCollisionEntry.getValue()){
@@ -78,65 +97,47 @@ public class PacketVehicleInteract extends APacketVehicle{
 		}
 		
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
-		//Otherwise, try to do part-based interaction.
+		//If the item doesn't or couldn't interact with the vehicle, check for other interactions.
 		if(heldItem instanceof IItemVehicleInteractable){
-			CallbackType callback = ((IItemVehicleInteractable) heldItem).doVehicleInteraction(vehicle, part, player, ownerState, rightClick);
-			if(callback.equals(CallbackType.ALL)){
-				return true;
-			}else if(callback.equals(CallbackType.PLAYER)){
-				player.sendPacket(this);
+			switch(((IItemVehicleInteractable) heldItem).doVehicleInteraction(vehicle, part, player, ownerState, rightClick)){
+				case ALL: return true;
+				case PLAYER: player.sendPacket(this); return false;
+				case NONE: return false;
+				case SKIP: //Don't return anything, continue processing.
+			}
+		}
+		
+		//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself.
+		if(part != null){
+			if(rightClick){
+				part.interact(player);
+			}else{
+				part.attack(new Damage("player", 1.0F, part.boundingBox, player));
 			}
 		}else{
-			//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself.
-			if(part != null){
-				if(rightClick){
-					part.interact(player);
-				}else{
-					part.attack(new Damage("player", 1.0F, part.boundingBox, player));
-				}
-			}else{
-				//Check if we clicked a part slot box.
-				for(BoundingBox slotBox : vehicle.partSlotBoxes.keySet()){
-					if(slotBox.localCenter.equals(hitPosition)){
-						//Only owners can add vehicle parts.
-						if(!canPlayerEditVehicle){
-							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+			//Check if we clicked a door.
+			Map<BoundingBox, VehicleDoor> allDoors = new HashMap<BoundingBox, VehicleDoor>();
+			allDoors.putAll(vehicle.vehicleDoorBoxes);
+			for(Map<BoundingBox, VehicleDoor> doorMap : vehicle.partDoorBoxes.values()){
+				allDoors.putAll(doorMap);
+			}
+			for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
+				if(doorEntry.getKey().localCenter.equals(hitPosition)){
+					if(!doorEntry.getValue().ignoresClicks){
+						//Can't open locked vehicles.
+						if(vehicle.locked){
+							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
 						}else{
-							//Attempt to add a part.  Vehicle is responsible for callback packet here.
-							if(heldItem instanceof ItemPart){
-								if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitPosition, false) && !player.isCreative()){				
-									player.getInventory().removeStack(heldStack, 1);
-								}
-							}
-						}
-						return false;
-					}
-				}
-				
-				//Check if we clicked a door.
-				Map<BoundingBox, VehicleDoor> allDoors = new HashMap<BoundingBox, VehicleDoor>();
-				allDoors.putAll(vehicle.vehicleDoorBoxes);
-				for(Map<BoundingBox, VehicleDoor> doorMap : vehicle.partDoorBoxes.values()){
-					allDoors.putAll(doorMap);
-				}
-				for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
-					if(doorEntry.getKey().localCenter.equals(hitPosition)){
-						if(!doorEntry.getValue().ignoresClicks){
-							//Can't open locked vehicles.
-							if(vehicle.locked){
-								player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+							//Open or close the clicked door.
+							if(vehicle.variablesOn.contains(doorEntry.getValue().name)){
+								vehicle.variablesOn.remove(doorEntry.getValue().name);
 							}else{
-								//Open or close the clicked door.
-								if(vehicle.variablesOn.contains(doorEntry.getValue().name)){
-									vehicle.variablesOn.remove(doorEntry.getValue().name);
-								}else{
-									vehicle.variablesOn.add(doorEntry.getValue().name);
-								}
-								return true;
+								vehicle.variablesOn.add(doorEntry.getValue().name);
 							}
+							return true;
 						}
-						return false;
 					}
+					return false;
 				}
 			}
 		}

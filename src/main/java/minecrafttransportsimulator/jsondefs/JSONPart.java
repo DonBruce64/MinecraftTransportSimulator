@@ -77,7 +77,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 
     public class JSONPartGeneral extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>.General{
     	@JSONRequired
-    	@JSONDefaults(TypeDefaults.class)
+    	@JSONDefaults(PartType.class)
     	@JSONDescription("The type-name for this part.  This MUST start with the name of the part section you are wanting to make.  For example engine_somename, gun_othername.  Other than that, there are no restrictions.  There is, however, a generally-agreed on naming format for most parts made in community packs, so check with the community if you want inter-pack compatibility.  All possible prefixes are in the default list, so while you may use any type you want, it should start with one of these.")
     	public String type;
     	@JSONDescription("NOTE: Using a unique 'type' name is preferred over customType parameters.  See the various part conventions ebfore using this!\n\nThis parameter is optional and should only be used for parts that you need in specific places.  This will restrict this part to only work in part definitions with customTypes defined, and only if they contain this customType.")
@@ -88,7 +88,7 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     	public boolean useVehicleTexture;
     }
     
-    public static enum TypeDefaults{
+    public static enum PartType{
 		ENGINE,
 		GROUND,
 		PROPELLER,
@@ -406,7 +406,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 		@JSONDescription("Works as a standard furnace when clicked.  Required standard fuel for furnace operations; does not use vehicle fuel for smelting operations.")
 		FURNACE,
 		@JSONDescription("Works as a standard brewing stand when clicked.")
-		BREWING_STAND;
+		BREWING_STAND,
+		@JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
+		JERRYCAN;
 	}
     
     public class JSONPartEffector{
