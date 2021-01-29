@@ -210,6 +210,15 @@ public class InterfaceEventsPlayerRendering{
 	    		//Push matrix to start rendering.
 	    		GL11.glPushMatrix();
 	    		
+	    		//Need to offset the position if we're rendering another player.
+	    		if(!player.equals(Minecraft.getMinecraft().player)){
+	            	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
+	            	double playerDistanceX = player.lastTickPosX + - masterPlayer.lastTickPosX + (player.posX - player.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
+	            	double playerDistanceY = player.lastTickPosY + - masterPlayer.lastTickPosY + (player.posY - player.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
+	            	double playerDistanceZ = player.lastTickPosZ + - masterPlayer.lastTickPosZ + (player.posZ - player.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
+	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
+	            }
+	    		
 	    		//Get model scale.
 	    		float scale = event.getRenderer().prepareScale((AbstractClientPlayer) player, event.getPartialRenderTick());
 	    		
