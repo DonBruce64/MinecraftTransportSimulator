@@ -48,17 +48,6 @@ public class WrapperPlayer extends WrapperEntity{
 		return -12D/16D;
 	}
 	
-	@Override
-	public float getHeadYaw(){
-		//Player head yaw is their actual yaw.  Head is used for the camera.
-		return getYaw();
-	}
-	
-	@Override
-	public void setHeadYaw(double yaw){
-		setYaw(yaw);
-	}
-	
 	/**
 	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
 	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.
