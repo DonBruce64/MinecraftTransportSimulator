@@ -182,6 +182,7 @@ public class GUIPackEditor extends JFrame{
         for(String className : jsonClasses.keySet()){
         	typeComboBox.addItem(className);
         }
+        typeComboBox.setRenderer(generateClassTooltipRenderer(jsonClasses.values().toArray(new Class<?>[jsonClasses.size()])));
         typeComboBox.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e){
@@ -452,6 +453,23 @@ public class GUIPackEditor extends JFrame{
 		        			String tooltipText = formatTooltipText(enumField.getAnnotation(JSONDescription.class).value());
 			        		list.setToolTipText(tooltipText);
 		        		}
+		        	}catch(Exception e){}
+		        }
+		        return component;
+		    }
+		};
+	}
+	
+	private static DefaultListCellRenderer generateClassTooltipRenderer(Class<?>[] classes){
+		return new DefaultListCellRenderer(){
+		    @Override
+		    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus){
+		        JComponent component = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		        if(index > -1 && index < classes.length){
+		        	Class<?> currentClass = classes[index];
+		        	try{
+		        		String tooltipText = formatTooltipText(currentClass.getAnnotation(JSONDescription.class).value());
+		        		list.setToolTipText(tooltipText);
 		        	}catch(Exception e){}
 		        }
 		        return component;

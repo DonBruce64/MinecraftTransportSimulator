@@ -6,6 +6,7 @@ import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
+@JSONDescription("Sometimes, you just want to have something shiny to place in the world that can't be driven away by a pesky thief.  In this case, decor is the go-to choice.  Decors are essentially block-based OBJ models that can be placed down.  These come with full animation support, and can even have some additional functions built-in to justify the cost of crafting them.")
 public class JSONDecor extends AJSONMultiModelProvider<JSONDecor.DecorGeneral>{
 	@JSONDescription("Optional rendering properties for this decor.")
 	public JSONRendering rendering;

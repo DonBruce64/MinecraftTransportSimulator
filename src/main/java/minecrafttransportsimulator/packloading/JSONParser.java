@@ -278,7 +278,7 @@ public class JSONParser{
     }
 	
 	@Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.FIELD)
+    @Target({ElementType.TYPE, ElementType.FIELD})
 	public static @interface JSONDescription{
 		/**
          * Description for this field.
