@@ -213,7 +213,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	@Override
 	public void getDataBlocks(List<WrapperNBT> dataBlocks){
 		//If this is an engine, add a creative variant.
-		if(partType.equals("engine")){
+		if(partType.equals(PartType.ENGINE)){
 			WrapperNBT data = new WrapperNBT();
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
