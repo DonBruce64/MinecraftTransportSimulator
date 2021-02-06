@@ -929,13 +929,17 @@ public final class RenderVehicle{
 					}
 							
 					if(isHoldingPart){
+						BoundingBox partBox = partSlotEntry.getKey();
+						GL11.glPushMatrix();
+						GL11.glTranslated(partBox.localCenter.x, partBox.localCenter.y, partBox.localCenter.z);
 						if(isPartValid){
 							InterfaceRender.setColorState(0, 1, 0, 0.5F);
-							RenderBoundingBox.renderSolid(partSlotEntry.getKey());
+							RenderBoundingBox.renderSolid(partBox);
 						}else{
 							InterfaceRender.setColorState(1, 0, 0, 0.5F);
-							RenderBoundingBox.renderSolid(partSlotEntry.getKey());
+							RenderBoundingBox.renderSolid(partBox);
 						}
+						GL11.glPopMatrix();
 					}
 				}
 			}else if(heldItem instanceof ItemPartScanner){
@@ -945,7 +949,10 @@ public final class RenderVehicle{
 				for(Entry<BoundingBox, VehiclePart> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
 					InterfaceRender.setColorState(0, 0, 1, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
+					GL11.glPushMatrix();
+					GL11.glTranslated(currentBox.localCenter.x, currentBox.localCenter.y, currentBox.localCenter.z);
 					RenderBoundingBox.renderSolid(currentBox);
+					GL11.glPopMatrix();
 					if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
 						if(highlightedBox == null || (currentBox.globalCenter.distanceTo(playerEyes) < highlightedBox.globalCenter.distanceTo(playerEyes))){
 							highlightedBox = currentBox;
@@ -1030,6 +1037,7 @@ public final class RenderVehicle{
 		GL11.glPushMatrix();
 		//Need to undo rotation so boxes render as axis-aligned.
 		GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+		GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
 		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glLineWidth(3.0F);
