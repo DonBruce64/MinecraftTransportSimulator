@@ -3,9 +3,11 @@ package minecrafttransportsimulator.guis.instances;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
@@ -259,7 +261,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		//Add custom selectors if we have any.
 		//These are the right-most selector and are vehicle-specific.
 		//We render two rows of side-by-side selectors here.
-		List<String> customVariables = new ArrayList<String>();
+		Set<String> customVariables = new LinkedHashSet<String>();
 		if(vehicle.definition.rendering.customVariables != null){
 			customVariables.addAll(vehicle.definition.rendering.customVariables);
 		}
@@ -268,8 +270,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 				customVariables.addAll(part.definition.rendering.customVariables);
 			}
 		}
-		for(int i=0; i<customVariables.size(); ++i){
-			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset + (i%2)*SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + (i/2)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariables.get(i), vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		
+		int variableNumber = 0;
+		for(String customVariable : customVariables){
+			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset + (variableNumber%2)*SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + (variableNumber/2)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariable, vehicle.definition.rendering.panelTextColor, vehicle.definition.rendering.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, this.text));
@@ -280,6 +284,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			};
 			customSelectors.add(customSelector);
 			addSelector(customSelector);
+			++variableNumber;
 		}
 		
 		//Add beacon text box.  This is stacked below the custom selectors.
