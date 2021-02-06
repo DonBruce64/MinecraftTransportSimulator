@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 
 public class JSONRendering{
@@ -16,4 +18,46 @@ public class JSONRendering{
 	
 	@JSONDescription("A list of custom variable names.  Currently only supported on vehicles, and will appear as switches in the panel with the names below them.  These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined definitions.  You may have up to 4 custom variables on any vehicle.  Surely, that's enough?")
     public List<String> customVariables;
+	
+
+	//Moved from old vehicle rendering classes.
+    @Deprecated
+    public int displayTextMaxLength;
+    @Deprecated
+    public boolean textLighted;
+    @Deprecated
+    public String defaultDisplayText;
+    @Deprecated
+    public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
+    @Deprecated
+    public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+    @Deprecated
+    public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    
+    @Deprecated
+    public class VehicleDisplayText{
+    	public Point3d pos;
+        public Point3d rot;
+        public float scale;
+        public String color;
+    }
+    @Deprecated
+    public class VehicleRotatableModelObject{
+    	public String partName;
+    	public Point3d rotationPoint;
+    	public Point3d rotationAxis;
+    	public String rotationVariable;
+    	public float rotationClampMin;
+    	public float rotationClampMax;
+    	public boolean absoluteValue;
+    }
+    @Deprecated
+    public class VehicleTranslatableModelObject{
+    	public String partName;
+    	public Point3d translationAxis;
+    	public String translationVariable;
+    	public float translationClampMin;
+    	public float translationClampMax;
+    	public boolean absoluteValue;
+    }
 }

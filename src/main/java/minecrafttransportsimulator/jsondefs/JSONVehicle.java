@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -254,44 +253,5 @@ public class JSONVehicle extends AJSONMultiModelProvider<JSONVehicle.VehicleGene
         public String panelTexture;
         public String panelTextColor;
         public String panelLitTextColor;
-        
-        @Deprecated
-        public int displayTextMaxLength;
-        @Deprecated
-        public boolean textLighted;
-        @Deprecated
-        public String defaultDisplayText;
-        @Deprecated
-        public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
-        @Deprecated
-        public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
-        @Deprecated
-        public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
-    }
-    @Deprecated
-    public class VehicleDisplayText{
-    	public Point3d pos;
-        public Point3d rot;
-        public float scale;
-        public String color;
-    }
-    @Deprecated
-    public class VehicleRotatableModelObject{
-    	public String partName;
-    	public Point3d rotationPoint;
-    	public Point3d rotationAxis;
-    	public String rotationVariable;
-    	public float rotationClampMin;
-    	public float rotationClampMax;
-    	public boolean absoluteValue;
-    }
-    @Deprecated
-    public class VehicleTranslatableModelObject{
-    	public String partName;
-    	public Point3d translationAxis;
-    	public String translationVariable;
-    	public float translationClampMin;
-    	public float translationClampMax;
-    	public boolean absoluteValue;
     }
 }

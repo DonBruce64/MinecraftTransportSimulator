@@ -25,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRendering;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -315,6 +314,14 @@ public final class LegacyCompatSystem{
     				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.subParts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
     			}
     		}
+		}
+		
+		if(definition.rendering != null){
+			try{
+				performAnimationLegacyCompats(definition.rendering);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
 		}
 	}
 	
@@ -627,10 +634,10 @@ public final class LegacyCompatSystem{
 		}
 	}
     
-    private static void performAnimationLegacyCompats(VehicleRendering rendering){
+    private static void performAnimationLegacyCompats(JSONRendering rendering){
     	if(rendering.textMarkings != null){
     		rendering.textObjects = new ArrayList<JSONText>();
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDisplayText marking : rendering.textMarkings){
+    		for(JSONRendering.VehicleDisplayText marking : rendering.textMarkings){
 				JSONText object = new JSONText();
 				object.lightsUp = rendering.textLighted;
 				object.color = marking.color;
@@ -651,7 +658,7 @@ public final class LegacyCompatSystem{
     		if(rendering.animatedObjects == null){
     			rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
     		}
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects){
+    		for(JSONRendering.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects){
     			JSONAnimatedObject object = null;
     			for(JSONAnimatedObject testObject : rendering.animatedObjects){
     				if(testObject.objectName.equals(rotatable.partName)){
@@ -689,7 +696,7 @@ public final class LegacyCompatSystem{
     		if(rendering.animatedObjects == null){
     			rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
     		}
-    		for(minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects){
+    		for(JSONRendering.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects){
     			JSONAnimatedObject object = null;
     			for(JSONAnimatedObject testObject : rendering.animatedObjects){
     				if(testObject.objectName.equals(translatable.partName)){
