@@ -51,7 +51,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	        allRedTime = data.getInteger("allRedTime");
 		}
         componentLocations.clear();
-        componentLocations.addAll(data.getPoints("componentLocations"));
+        componentLocations.addAll(data.getPoint3is("componentLocations"));
 	}
 	
 	@Override
@@ -222,7 +222,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         data.setInteger("yellowMainTime", yellowMainTime);
         data.setInteger("yellowCrossTime", yellowCrossTime);
         data.setInteger("allRedTime", allRedTime);
-        data.setPoints("componentLocations", componentLocations);
+        data.setPoint3is("componentLocations", componentLocations);
     }
 	
 	public static enum OpMode{

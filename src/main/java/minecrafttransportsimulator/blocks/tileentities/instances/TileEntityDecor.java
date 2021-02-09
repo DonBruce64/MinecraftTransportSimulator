@@ -22,7 +22,7 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  *
  * @author don_bruce
  */
-public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnimationProvider, ITextProvider{
+public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITextProvider{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
@@ -31,8 +31,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnim
 	public TileEntityDecor(WrapperWorld world, Point3i position, WrapperNBT data){
 		super(world, position, data);
 		//Add a bounding box for each rotation.
-		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
-		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
+		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.decor.width/2D, definition.decor.height/2D, definition.decor.depth/2D);
+		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.decor.depth/2D, definition.decor.height/2D, definition.decor.width/2D);
 		this.boundingBoxes[2] = boundingBoxes[0];
 		this.boundingBoxes[3] = boundingBoxes[1];
 		

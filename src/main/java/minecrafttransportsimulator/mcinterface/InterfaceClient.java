@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
+import org.lwjgl.openal.AL;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -98,5 +100,13 @@ public class InterfaceClient{
 	public static WrapperEntity getRenderViewEntity(){
 		Entity entity = Minecraft.getMinecraft().getRenderViewEntity();
 		return WrapperWorld.getWrapperFor(entity.world).getWrapperFor(entity);
+	}
+	
+	/**
+	 *  Returns true OpenAL is ready to play sounds.  This may be changed by mods, so
+	 *  this method is here rather than a direct call.
+	 */
+	public static boolean isSoundSystemReady(){
+		return AL.isCreated();
 	}
 }

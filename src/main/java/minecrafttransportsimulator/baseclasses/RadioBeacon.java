@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Beacon class.  Responsible for containing the state of a beacon, which includes
  * the beacon's position, and other properties.
@@ -28,7 +27,7 @@ public class RadioBeacon{
 		this.location = location;
 	}
 	
-	public double getBearingDelta(AEntityBase entity){
+	public double getBearingDelta(AEntityB_Existing<?> entity){
 		//Add 180 to the bearing, as players enter the direction to land, but the bearing delta needs to return the
 		//delta between the entity and the beacon's "beam".  This requires the beam to be opposite of the landing direction.
 		//Normally we'd subtract the bearing here, but MC inverts y-coords, so players enter the bearing backwards.

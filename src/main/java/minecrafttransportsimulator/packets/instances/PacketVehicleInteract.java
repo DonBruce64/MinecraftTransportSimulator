@@ -13,7 +13,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -116,12 +116,12 @@ public class PacketVehicleInteract extends APacketVehicle{
 			}
 		}else{
 			//Check if we clicked a door.
-			Map<BoundingBox, VehicleDoor> allDoors = new HashMap<BoundingBox, VehicleDoor>();
+			Map<BoundingBox, JSONDoor> allDoors = new HashMap<BoundingBox, JSONDoor>();
 			allDoors.putAll(vehicle.vehicleDoorBoxes);
-			for(Map<BoundingBox, VehicleDoor> doorMap : vehicle.partDoorBoxes.values()){
+			for(Map<BoundingBox, JSONDoor> doorMap : vehicle.partDoorBoxes.values()){
 				allDoors.putAll(doorMap);
 			}
-			for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
+			for(Entry<BoundingBox, JSONDoor> doorEntry : allDoors.entrySet()){
 				if(doorEntry.getKey().localCenter.equals(hitPosition)){
 					if(!doorEntry.getValue().ignoresClicks){
 						//Can't open locked vehicles.

@@ -1,14 +1,17 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.IGunProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -20,7 +23,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.rendering.instances.AnimationsGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
-import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraft.item.ItemStack;
 
 /**Entity class responsible for storing and syncing information about the current gun
@@ -31,7 +33,7 @@ import net.minecraft.item.ItemStack;
  *  
  * @author don_bruce
  */
-public class EntityPlayerGun extends AEntityBase implements IGunProvider{
+public class EntityPlayerGun extends AEntityB_Existing implements IGunProvider{
 	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	
@@ -251,19 +253,9 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	
 	
 	//----------START OF SOUND INTERFACE CODE----------
-	
 	@Override
-	public void startSounds(){
-		if(gun != null){
-			gun.startSounds();
-		}
-	}
-
-	@Override
-	public void updateProviderSound(SoundInstance sound){
-		if(gun != null){
-			gun.startSounds();
-		}
+	public List<JSONSound> getSoundDefinitions(){
+		return gun != null ? gun.getSoundDefinitions() : null;
 	}
 	
 	//----------START OF RENDERING INTERFACE CODE----------

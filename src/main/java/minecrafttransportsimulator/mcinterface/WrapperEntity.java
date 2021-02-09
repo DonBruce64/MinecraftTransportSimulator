@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -71,8 +72,8 @@ public class WrapperEntity{
 	 *  the entity is not riding any MTS entity (rider may will be riding
 	 *  a vanilla entity).
 	 */
-	public AEntityBase getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntity ? ((BuilderEntity) entity.getRidingEntity()).entity : null;
+	public AEntityD_Interactable<?> getEntityRiding(){
+		return entity.getRidingEntity() instanceof BuilderEntity ? (AEntityD_Interactable<?>) ((BuilderEntity) entity.getRidingEntity()).entity : null;
 	}
 	
 	/**
@@ -80,7 +81,7 @@ public class WrapperEntity{
 	 *  If null is passed-in, then this rider will stop riding whatever entity it
 	 *  is riding, if it was riding any entity.
 	 */
-	public void setRiding(AEntityBase entityToRide){
+	public void setRiding(AEntityD_Interactable<?> entityToRide){
 		if(entityToRide != null){
 			entity.startRiding(entityToRide.wrapper.entity, true);
 		}else{
@@ -92,7 +93,7 @@ public class WrapperEntity{
 	 *  If the wrapped entity is an AEntityBase, return that
 	 *  base entity. Otherwise return null.
 	 */
-	public AEntityBase getBaseEntity(){
+	public AEntityA_Base getBaseEntity(){
 		return entity instanceof BuilderEntity ? ((BuilderEntity) entity).entity : null;
 	}
 	
@@ -263,8 +264,10 @@ public class WrapperEntity{
 	public void attack(Damage damage){
 		//If this entity is one of ours, just forward the damage and exit.
 		if(entity instanceof BuilderEntity){
-			((BuilderEntity) entity).entity.attack(damage);
-			return;
+			if(((BuilderEntity) entity).entity instanceof AEntityD_Interactable){
+				((AEntityD_Interactable<?>) ((BuilderEntity) entity).entity).attack(damage);
+				return;
+			}
 		}
 		DamageSource newSource = new DamageSource(damage.name){
 			@Override

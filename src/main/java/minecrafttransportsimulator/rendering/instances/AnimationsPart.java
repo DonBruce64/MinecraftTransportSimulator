@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -39,8 +39,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				Class<? extends APart> partClass = AnimationsVehicle.getPartClass(variable);
 				
 				if(partClass != null){
-					if(part.definition.subParts == null){
-						//Send this to the parent part or vehicle for processing if we have it.
+					if(part.definition.parts == null){
+						//Send this to the parent part or entity for processing if we have it.
 						if(part.parentPart != null){
 							return getRawVariableValue(part.parentPart, variable, partialTicks);
 						}else{
@@ -49,8 +49,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 					}
 					
 					//Iterate through our parts to find the index of the pack def for the part we want.
-					VehiclePart foundDef = null;
-					for(VehiclePart subPartDef : part.definition.subParts){
+					JSONPartDefinition foundDef = null;
+					for(JSONPartDefinition subPartDef : part.definition.parts){
 						//If this part is the one we want, get it or add to our index.
 						for(String defPartType : subPartDef.types){
 							if(partType.equals("part") || defPartType.startsWith(partType)){
@@ -67,7 +67,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 						if(foundDef != null){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = part.vehicle.getPartAtLocation(part.vehicle.getPackForSubPart(part.vehicleDefinition, foundDef).pos);
+							APart foundPart = part.entityOn.getPartAtLocation(part.entityOn.getPackForSubPart(part.partDefinition, foundDef).pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 							}else{
@@ -107,8 +107,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_clutch_upshift"): return engine.upshiftCountdown > 0 ? 1 : 0;
 				case("engine_clutch_downshift"): return engine.downshiftCountdown > 0 ? 1 : 0;
 				case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
-				case("engine_starter"): return engine.state.esOn ? 1 : 0;
-				case("engine_running"): return engine.state.running ? 1 : 0;
+				case("engine_starter"): return engine.state.esOn || engine.state.hsOn ? 1 : 0;
+				case("engine_running"): return engine.state.running || engine.internalFuel > 0 ? 1 : 0;
 				case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
 				case("engine_hours"): return engine.hours;
 			}
@@ -141,13 +141,13 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 			}
 		}else if(part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
-			WrapperEntity riderForSeat = part.vehicle.locationRiderMap.get(seat.placementOffset);
+			WrapperEntity riderForSeat = part.entityOn.locationRiderMap.get(seat.placementOffset);
 			boolean riderPresent = riderForSeat != null && riderForSeat.isValid();
 			switch(variable){
 				case("seat_occupied"): return riderPresent ? 1 : 0;
 				case("seat_rider_yaw"): {
 					if(riderPresent){
-						double riderYaw = riderForSeat.getHeadYaw() - part.vehicle.angles.y;
+						double riderYaw = riderForSeat.getHeadYaw() - part.entityOn.angles.y;
 						while(riderYaw < -180) riderYaw += 360;
 						while(riderYaw > 180) riderYaw -= 360;
 						return riderYaw;
@@ -157,9 +157,9 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				}
 				case("seat_rider_pitch"): {
 					if(riderPresent) {
-						double pitch = part.vehicle.angles.x;
-		            	double roll = part.vehicle.angles.z;
-		            	double riderYaw = riderForSeat.getHeadYaw() - part.vehicle.angles.y;
+						double pitch = part.entityOn.angles.x;
+		            	double roll = part.entityOn.angles.z;
+		            	double riderYaw = riderForSeat.getHeadYaw() - part.entityOn.angles.y;
 		            	while(pitch > 180){pitch -= 360;}
 		    			while(pitch < -180){pitch += 360;}
 		    			while(roll > 180){roll -= 360;}

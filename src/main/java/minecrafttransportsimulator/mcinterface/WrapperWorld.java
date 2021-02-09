@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -21,7 +23,6 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -292,7 +293,7 @@ public class WrapperWorld{
 	
 	/**
 	 *  Generates a new wrapper to be used for entity tracking.
-	 *  This should be fed into the constructor of {@link AEntityBase}
+	 *  This should be fed into the constructor of {@link AEntityB_Existing}
 	 *  at construction time to allow it to interface with the world.
 	 */
 	public WrapperEntity generateEntity(){
@@ -305,7 +306,7 @@ public class WrapperWorld{
 	 *  Spawns the entity into the world.  Only valid for entities that
 	 *  have had their wrapper set from {@link #generateEntity()}
 	 */
-	public void spawnEntity(AEntityBase entity){
+	public void spawnEntity(AEntityB_Existing entity){
 		BuilderEntity builder = (BuilderEntity) entity.wrapper.entity;
 		builder.entity = entity;
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
@@ -346,11 +347,13 @@ public class WrapperWorld{
 				Entity entity = iterator.next();
 				//If we hit a builder, get all the collision for it and check it all.
 				if(entity instanceof BuilderEntity){
-					AEntityBase baseEntity = ((BuilderEntity) entity).entity;
 					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
-					for(BoundingBox box : baseEntity.interactionBoxes){
-						if(box.getIntersectionPoint(startPoint, endPoint) != null){
-							hitBoxes.add(box);
+					AEntityB_Existing baseEntity = ((BuilderEntity) entity).entity;
+					if(baseEntity instanceof AEntityD_Interactable){
+						for(BoundingBox box : ((AEntityD_Interactable<?>) baseEntity).interactionBoxes){
+							if(box.getIntersectionPoint(startPoint, endPoint) != null){
+								hitBoxes.add(box);
+							}
 						}
 					}
 					
@@ -384,13 +387,13 @@ public class WrapperWorld{
 				while(iterator.hasNext()){
 					Entity entity = iterator.next();
 					if(entity instanceof BuilderEntity){
-						AEntityBase testSource = ((BuilderEntity) entity).entity;
+						AEntityB_Existing testSource = ((BuilderEntity) entity).entity;
 						if(damageSource.equals(testSource.wrapper)){
 							//Don't attack ourselves if we are a builder damage.
 							iterator.remove();
 						}
 					}else if(entity.getRidingEntity() instanceof BuilderEntity){
-						AEntityBase testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
+						AEntityB_Existing testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
 						if(damageSource.equals(testSource.wrapper)){
 							//Don't attack the entity we are riding a builder.
 							iterator.remove();
@@ -462,17 +465,17 @@ public class WrapperWorld{
 	 *  Loads all entities that are in the passed-in range into the passed-in entity.
 	 *  Only non-hostile mobs will be loaded.
 	 */
-	public void loadEntities(BoundingBox box, AEntityBase vehicle){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(vehicle.wrapper.entity, box.convert())){
+	public void loadEntities(BoundingBox box, AEntityD_Interactable<?> entityToLoad){
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(entityToLoad.wrapper.entity, box.convert())){
 			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
-				for(Point3d ridableLocation : vehicle.ridableLocations){
-					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
-						if(vehicle instanceof EntityVehicleF_Physics){
-							if(((EntityVehicleF_Physics) vehicle).getPartAtLocation(ridableLocation).vehicleDefinition.isController){
+				for(Point3d ridableLocation : entityToLoad.ridableLocations){
+					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
+						if(entityToLoad instanceof EntityVehicleF_Physics){
+							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).partDefinition.isController){
 								continue;
 							}
 						}
-						vehicle.addRider(new WrapperEntity(entity), ridableLocation);
+						entityToLoad.addRider(new WrapperEntity(entity), ridableLocation);
 						break;
 					}
 				}
@@ -682,7 +685,7 @@ public class WrapperWorld{
 	 *  for the player reference.
 	 */
 	@SuppressWarnings("unchecked")
-	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer playerWrapper, Axis axis){
+	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer playerWrapper, Axis axis){
     	if(!world.isRemote){
     		BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
     		BlockPos pos = new BlockPos(location.x, location.y, location.z);
@@ -970,7 +973,7 @@ public class WrapperWorld{
 	 *  Spawns an explosion of the specified strength at the passed-in point.
 	 *  Explosion in this case is from an internal entity.
 	 */
-	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
+	public void spawnExplosion(AEntityB_Existing source, Point3d location, double strength, boolean flames){
 		world.newExplosion(source.wrapper.entity, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	

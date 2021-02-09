@@ -93,7 +93,7 @@ public class InterfaceEventsPlayerRendering{
 		            		
 		            		//Check if arms need to be set for adjustment.
 		            		if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
-			            		if(seat.vehicleDefinition.isController){
+			            		if(seat.partDefinition.isController){
 			            			disableBothArms(playerModel, player, false);
 			            			renderCurrentRiderControlling = true;
 			            		}

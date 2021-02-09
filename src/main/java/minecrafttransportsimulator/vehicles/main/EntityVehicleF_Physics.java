@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -11,7 +12,9 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -21,12 +24,11 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 /**This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
  * well as helper functions and logic for controlling those surfaces.
+ * Note that angle variables here should be divided by 10 to get actual angle.
  * 
  * @author don_bruce
  */
 public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
-	//Note that angle variable should be divided by 10 to get actual angle.
-	
 	//Aileron.
 	public static final short MAX_AILERON_ANGLE = 250;
 	public static final short MAX_AILERON_TRIM = 100;
@@ -104,6 +106,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d thrustTorque = new Point3d();//kg*m^2/ticks^2
 	private Point3d totalTorque = new Point3d();//kg*m^2/ticks^2
 	private Point3d rotorRotation = new Point3d();//degrees
+	
+	//Animator for vehicles
+	private static final AnimationsVehicle animator = new AnimationsVehicle();
 
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
@@ -224,7 +229,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
 			//Set moments.
-			momentRoll = definition.general.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
+			momentRoll = definition.motorized.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
 			momentPitch = 2D*currentMass;
 			momentYaw = 3D*currentMass;
 			
@@ -283,7 +288,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Get forces.  Some forces are specific to JSON sections.
 			//First get gravity.
 			gravitationalForce = definition.motorized.ballastVolume == 0 ? currentMass*(9.8/400) : 0;
-			if(!definition.general.isAircraft){
+			if(!definition.motorized.isAircraft){
 				gravitationalForce *= ConfigSystem.configObject.general.gravityFactor.value;
 			}
 			
@@ -298,7 +303,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
 			
 			//Set blimp-specific states before calculating forces.
-			if(definition.general.isBlimp){
+			if(definition.motorized.isBlimp){
 				//Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
 				//we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
 				//which key is pressed, they both activate the rudder for turning.
@@ -318,7 +323,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Get the drag coefficient and force.
-			if(definition.general.isAircraft){
+			if(definition.motorized.isAircraft){
 				//Aircraft are 0.03 by default, or whatever is specified.
 				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
 			}else{
@@ -374,7 +379,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Do more blimp-specific things for the forces.
-			if(definition.general.isBlimp){
+			if(definition.motorized.isBlimp){
 				//Roll and pitch are applied only if we aren't level.
 				//This only happens if we fall out of the sky and land on the ground and tilt.
 				if(angles.z > 0){
@@ -595,6 +600,11 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	@Override
 	public void render(float partialTicks){
 		RenderVehicle.render(this, partialTicks);
+	}
+	
+    @Override
+	public double getAnimationValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
+		return animator.getAnimatedVariableValue(this, animation, offset, clock, partialTicks);
 	}
 	
 	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){

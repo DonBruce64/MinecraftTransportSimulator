@@ -14,7 +14,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public final class PackResourceLoader{
 	
-    public static String getPackResource(AJSONItem<?> definition, ResourceType type, String name){
+    public static String getPackResource(AJSONItem definition, ResourceType type, String name){
     	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
     		case DEFAULT : {
     			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + name + type.normalSuffix;

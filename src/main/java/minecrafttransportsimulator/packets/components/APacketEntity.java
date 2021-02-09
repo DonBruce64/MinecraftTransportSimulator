@@ -1,46 +1,41 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet class that includes a default implementation for transmitting an entity
  * to allow entity-specific interactions on the other side of the network.
  *
  * @author don_bruce
  */
-public abstract class APacketEntity extends APacketBase{
-	private final int entityID;
+public abstract class APacketEntity<EntityType extends AEntityA_Base> extends APacketBase{
+	private final int lookupID;
 	
-	public APacketEntity(AEntityBase entity){
+	public APacketEntity(AEntityA_Base entity){
 		super(null);
-		this.entityID = entity.lookupID;
+		this.lookupID = entity.lookupID;
 	}
 	
 	public APacketEntity(ByteBuf buf){
 		super(buf);
-		this.entityID = buf.readInt();
+		this.lookupID = buf.readInt();
 	};
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(entityID);
+		buf.writeInt(lookupID);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		boolean sendReturnPacket = false;
-		for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
-			if(entity.lookupID == entityID){
-				if(handle(world, player, entity) && !world.isClient()){
-					sendReturnPacket = true;
-				}
+		EntityType entity = AEntityA_Base.getEntity(world, lookupID);
+		if(entity != null && handle(world, player, entity)){
+			if(!world.isClient()){
+				InterfacePacket.sendToAllClients(this);
 			}
-		}
-		if(sendReturnPacket){
-			InterfacePacket.sendToAllClients(this);
 		}
 	}
 	
@@ -52,5 +47,5 @@ public abstract class APacketEntity extends APacketBase{
 	 *   to an issue) return false.  Otherwise, return true to send this packet on to all clients.  
 	 *   Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity);
+	protected abstract boolean handle(WrapperWorld world, WrapperPlayer player, EntityType entity);
 }

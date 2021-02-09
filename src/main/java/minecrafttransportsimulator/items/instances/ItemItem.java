@@ -22,7 +22,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 	
 	@Override
 	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
-		if(world.isClient() && ItemComponentType.BOOKLET.equals(definition.general.type)){
+		if(world.isClient() && ItemComponentType.BOOKLET.equals(definition.item.type)){
 			InterfaceGUI.openGUI(new GUIBooklet(this));
 		}
         return true;
@@ -30,7 +30,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 
 	@Override
 	public int getTimeToEat(){
-		return ItemComponentType.FOOD.equals(definition.general.type) ? definition.food.timeToEat : 0;
+		return ItemComponentType.FOOD.equals(definition.item.type) ? definition.food.timeToEat : 0;
 	}
 	
 	@Override

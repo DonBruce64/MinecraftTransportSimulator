@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.sound;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -13,7 +14,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * @author don_bruce
  */
 public class SoundInstance{
-	public final ISoundProviderSimple provider;
+	public final AEntityB_Existing entity;
 	public final String soundName;
 	public final boolean looping;
 	public final Radio radio;
@@ -24,22 +25,22 @@ public class SoundInstance{
 	public float pitch = 1.0F;
 	public boolean stopSound = false;
 	
-	public SoundInstance(ISoundProviderSimple provider, String soundName){
-		this.provider = provider;
+	public SoundInstance(AEntityB_Existing entity, String soundName){
+		this.entity = entity;
 		this.soundName = soundName;
 		this.looping = false;
 		this.radio = null;
 	}
 	
-	public SoundInstance(ISoundProviderComplex provider, String soundName, boolean looping){
-		this.provider = provider;
+	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping){
+		this.entity = entity;
 		this.soundName = soundName;
 		this.looping = looping;
 		this.radio = null;
 	}
 
-	public SoundInstance(IRadioProvider provider, String soundName, boolean looping, Radio radio){
-		this.provider = provider;
+	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping, Radio radio){
+		this.entity = entity;
 		this.soundName = soundName;
 		this.looping = looping;
 		this.radio = radio;
@@ -60,7 +61,8 @@ public class SoundInstance{
 	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
 	 */
 	public boolean shouldBeDampened(){
+		//FIXME move this into main entity sound update volume code.
 		AEntityBase entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
-		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.general.openTop && InterfaceClient.inFirstPerson() && (radio == null || !entityRiding.equals(provider));
+		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.openTop && InterfaceClient.inFirstPerson() && (radio == null || !entityRiding.equals(entity));
 	}
 }

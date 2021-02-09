@@ -23,7 +23,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 
     public TileEntityFluidLoader(WrapperWorld world, Point3i position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new FluidTank(data, 1000, world.isClient());
+    	this.tank = new FluidTank(world, data, 1000);
     	this.unloadMode = data.getBoolean("unloadMode");
     }
 	

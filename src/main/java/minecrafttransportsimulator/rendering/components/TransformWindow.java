@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents a window object of a model.  The only transform this applies is binding
@@ -9,7 +10,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-public class TransformWindow extends ATransform{
+public class TransformWindow<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	private final Float[][] vertices;
 	
 	public TransformWindow(Float[][] vertices){
@@ -18,12 +19,12 @@ public class TransformWindow extends ATransform{
 	}
 	
 	@Override
-	public boolean shouldRender(IAnimationProvider provider, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, float partialTicks){
 		return ConfigSystem.configObject.clientRendering.renderWindows.value;
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		if(InterfaceRender.getRenderPass() != 1){
 			InterfaceRender.bindTexture("mts:textures/rendering/glass.png");
 		}
@@ -31,7 +32,7 @@ public class TransformWindow extends ATransform{
 	}
 	
 	@Override
-	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
+	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
 		if(InterfaceRender.getRenderPass() != 1){
 			//Render inner windows, if set.
 			if(ConfigSystem.configObject.clientRendering.innerWindows.value){

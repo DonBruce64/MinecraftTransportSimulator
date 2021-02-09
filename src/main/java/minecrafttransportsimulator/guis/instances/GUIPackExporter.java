@@ -180,7 +180,7 @@ public class GUIPackExporter extends AGUIBase{
 												definition.interactable = loadedDefinition.interactable;
 												definition.effector = loadedDefinition.effector;
 												definition.generic = loadedDefinition.generic;
-												definition.subParts = loadedDefinition.subParts;
+												definition.parts = loadedDefinition.parts;
 												definition.collision = loadedDefinition.collision;
 												definition.doors = loadedDefinition.doors;
 												definition.connections = loadedDefinition.connections;

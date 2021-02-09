@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartSeat extends APacketVehiclePart{
+public class PacketVehiclePartSeat extends APacketMultipartPart{
 	
 	public PacketVehiclePartSeat(PartSeat seat){
 		super(seat.vehicle, seat.placementOffset);

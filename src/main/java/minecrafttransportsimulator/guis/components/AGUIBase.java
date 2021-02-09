@@ -3,10 +3,10 @@ package minecrafttransportsimulator.guis.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Base GUI class.  This type is used in conjunction with {@link InterfaceGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
@@ -74,7 +74,7 @@ public abstract class AGUIBase{
 	 *  Returns the source of where to calculate the light for this GUI.  This is required
 	 *  if {@link #getGUILightMode()} is any value other than {@link GUILightingMode#NONE}.
 	 */
-	public AEntityBase getGUILightSource(){
+	public AEntityB_Existing<?> getGUILightSource(){
 		return null;
 	}
 	

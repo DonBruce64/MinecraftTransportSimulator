@@ -6,11 +6,11 @@ import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -73,7 +73,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				newVehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recursion.
-				EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null, false);
+				newVehicle.addDefaultParts(newVehicle.definition.parts, null, false);
 
 				//Set default vehicle text.
 				if(newVehicle.definition.rendering.textObjects != null){
@@ -125,7 +125,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				
 				//Open all doors.  This lets players know we can close them and put things in slots.
 				if(definition.doors != null){
-					for(VehicleDoor door : definition.doors){
+					for(JSONDoor door : definition.doors){
 						if(!door.closedByDefault){
 							newVehicle.variablesOn.add(door.name);
 						}
@@ -133,7 +133,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				}
 				for(APart part : newVehicle.parts){
 					if(part.definition.doors != null){
-						for(VehicleDoor door : part.definition.doors){
+						for(JSONDoor door : part.definition.doors){
 							if(!door.closedByDefault){
 								newVehicle.variablesOn.add(door.name);
 							}
@@ -145,7 +145,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
 			//First boost Y based on collision boxes.
 			double furthestDownPoint = 0;
-			for(VehicleCollisionBox collisionBox : newVehicle.definition.collision){
+			for(JSONCollisionBox collisionBox : newVehicle.definition.collision){
 				furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
 			}
 			
@@ -184,13 +184,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 
 	@Override
 	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, wrapper, data);
-		//Need to wait for vehicle to load-in before we try to add saved parts.
-		for(APart part : vehicle.partsFromNBT){
-			vehicle.addPart(part);
-		}
-		vehicle.partsFromNBT.clear();
-		return vehicle;
+		return new EntityVehicleF_Physics(world, wrapper, data);
 	}
 
 	@Override

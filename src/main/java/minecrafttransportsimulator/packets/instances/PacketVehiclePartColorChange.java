@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartColorChange extends APacketVehiclePart{
+public class PacketVehiclePartColorChange extends APacketMultipartPart{
 	private final ItemPart newPartItem;
 	
 	public PacketVehiclePartColorChange(APart part, ItemPart newPartItem){

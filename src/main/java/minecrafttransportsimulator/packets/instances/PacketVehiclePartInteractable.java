@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartInteractable extends APacketVehiclePart{
+public class PacketVehiclePartInteractable extends APacketMultipartPart{
 	private final int linkedID;
 	private final Point3d linkedOffset;
 	

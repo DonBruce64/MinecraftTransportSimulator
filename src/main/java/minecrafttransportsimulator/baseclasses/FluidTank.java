@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -21,31 +21,18 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
  *
  * @author don_bruce
  */
-public class FluidTank{
-	public static final Map<Integer, FluidTank> createdClientTanks = new HashMap<Integer, FluidTank>();
-	public static final Map<Integer, FluidTank> createdServerTanks = new HashMap<Integer, FluidTank>();
-	/**Internal counter for tank IDs.  Increments each time an tank is created, and only valid on the server.**/
-	private static int idCounter = 1;
-	
-	public final int tankID;
+public class FluidTank extends AEntityA_Base{
 	private final int maxLevel;
-	private final boolean onClient;
 	private String currentFluid;
 	private double fluidLevel;
 	private double fluidDispensed;
 	
-	public FluidTank(WrapperNBT data, int maxLevel, boolean onClient){
-		this.tankID = onClient ? data.getInteger("tankID") : idCounter++;
+	public FluidTank(WrapperWorld world, WrapperNBT data, int maxLevel){
+		super(world, data);
 		this.maxLevel = maxLevel;
-		this.onClient = onClient;
 		this.currentFluid = data.getString("currentFluid");
 		this.fluidLevel = data.getDouble("fluidLevel");
 		this.fluidDispensed = data.getDouble("fluidDispensed");
-		if(onClient){
-			createdClientTanks.put(tankID, this);
-		}else{
-			createdServerTanks.put(tankID, this);
-		}
 	}
 	
 	/**
@@ -111,7 +98,7 @@ public class FluidTank{
 					currentFluid = fluid;
 				}
 				//Send off packet now that we know what fluid we will have on this tank.
-				if(!onClient){
+				if(!world.isClient()){
 					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
 				}
 			}
@@ -135,7 +122,7 @@ public class FluidTank{
 			}
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
-				if(!onClient){
+				if(!world.isClient()){
 					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
 				}
 				fluidLevel -= maxAmount;
@@ -214,8 +201,9 @@ public class FluidTank{
 	/**
 	 *  Saves tank data to the passed-in NBT.
 	 */
+	@Override
 	public void save(WrapperNBT data){
-		data.setInteger("tankID", tankID);
+		super.save(data);
 		data.setString("currentFluid", currentFluid);
 		data.setDouble("fluidLevel", fluidLevel);
 		data.setDouble("fluidDispensed", fluidDispensed);

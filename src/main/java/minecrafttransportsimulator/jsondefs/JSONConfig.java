@@ -90,7 +90,7 @@ public class JSONConfig{
 			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 				if(packItem instanceof ItemPart){
 					ItemPart part = (ItemPart) packItem;
-					if(part.definition.general.type.startsWith("engine")){
+					if(part.definition.generic.type.startsWith("engine")){
 						//For old packs, if we don't have a fuelType set it to diesel.
 						//This is because it's the most versatile fuel, and all the old packs have heavy equipment.
 						if(part.definition.engine.fuelType == null){

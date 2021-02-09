@@ -3,6 +3,7 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -116,9 +117,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//We need to wait on this in case the vehicle didn't load at the same time.
 		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
 			try{
-				for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
-					if(entity.uniqueUUID.equals(towedVehicleSavedID)){
-						towedVehicle = (EntityVehicleF_Physics) entity;
+				if(!towedVehicleSavedID.isEmpty()){
+					towedVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
+					if(towedVehicle != null){
 						if(!activeHitchPartSavedOffset.isZero()){
 							activeHitchPart = getPartAtLocation(activeHitchPartSavedOffset);
 							activeHitchConnection = activeHitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
@@ -126,16 +127,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 							activeHitchConnection = definition.connections.get(activeHitchConnectionSavedIndex);
 						}
 						towedVehicleSavedID = "";
-					}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
-						towedByVehicle = (EntityVehicleF_Physics) entity;
-						if(!activeHookupPartSavedOffset.isZero()){
-							activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
-							activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
-						}else{
-							activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
-						}
-						towedByVehicleSavedID = "";
 					}
+				}
+				if(!towedByVehicleSavedID.isEmpty()){
+					towedByVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
+					if(!activeHookupPartSavedOffset.isZero()){
+						activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
+						activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
+					}else{
+						activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
+					}
+					towedByVehicleSavedID = "";
 				}
 			}catch(Exception e){
 				InterfaceCore.logError("Could not connect trailer to vehicle.  Did the JSON change?");
@@ -389,7 +391,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Don't use fake ground devices here as it'll mess up math for vehicles.
 			boolean treadsOnly = true;
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-				if(groundDevice.vehicleDefinition.turnsWithSteer && !groundDevice.isFake()){
+				if(groundDevice.partDefinition.turnsWithSteer && !groundDevice.isFake()){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 					if(treadsOnly && !groundDevice.definition.ground.isTread){
 						treadsOnly = false;
@@ -474,7 +476,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//If we aren't on a road, try to find one.
 		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
-		if(towedByVehicle != null || definition.general.isAircraft){
+		if(towedByVehicle != null || definition.motorized.isAircraft){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){

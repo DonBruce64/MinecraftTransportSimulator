@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -9,15 +10,14 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public final class PartSeat extends APart{
 	public boolean canControlGuns;
 	public ItemPart activeGun;
 	public int gunIndex;
 	
-	public PartSeat(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
 	}
 	
@@ -25,8 +25,8 @@ public final class PartSeat extends APart{
 	public boolean interact(WrapperPlayer player){
 		//See if we can interact with the seats of this vehicle.
 		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
-		if(!vehicle.locked || vehicle.equals(player.getEntityRiding())){
-			WrapperEntity riderForSeat = vehicle.locationRiderMap.get(placementOffset);
+		if(!vehicle.locked || entityOn.equals(player.getEntityRiding())){
+			WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
 			if(riderForSeat != null){
 				//We already have a rider for this seat.  If it's not us, mark the seat as taken.
 				//If it's an entity that can be leashed, dismount the entity and leash it.
@@ -42,12 +42,12 @@ public final class PartSeat extends APart{
 				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
 				WrapperEntity leashedEntity = player.getLeashedEntity();
 				if(leashedEntity != null){
-					vehicle.addRider(leashedEntity, placementOffset);
+					entityOn.addRider(leashedEntity, placementOffset);
 				}else{
 					//Didn't find an animal.  Just mount the player.
 					//Don't mount them if they are sneaking, however.  This will confuse MC.
 					if(!player.isSneaking()){
-						vehicle.addRider(player, placementOffset);
+						entityOn.addRider(player, placementOffset);
 						//If this seat can control a gun, and isn't controlling one, set it now.
 						//This prevents the need to select a gun when initially mounting.
 						//If we do have an active gun, validate that it's still correct.
@@ -86,7 +86,7 @@ public final class PartSeat extends APart{
 	public void setNextActiveGun(){
 		//If we don't have an active gun, just get the next possible unit.
 		if(activeGun == null){
-			WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+			WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 			for(ItemPart gunType : vehicle.guns.keySet()){
 				for(PartGun gun : vehicle.guns.get(gunType)){
 					if(rider.equals(gun.getController())){
@@ -108,7 +108,7 @@ public final class PartSeat extends APart{
 	 * Helper method to get the next active gun in the gun listings.
 	 */
 	public ItemPart getNextActiveGun(){
-		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		boolean pastActiveGun = false;
 		ItemPart firstPossibleGun = null;
 		
@@ -148,7 +148,7 @@ public final class PartSeat extends APart{
 		//Got down here.  Either we don't have a gun, or we need the first.
 		//If our current gun is active, and we have the first, and we can disable guns,
 		//return null.  This will make the guns inactive this cycle.
-		return vehicleDefinition.canDisableGun && activeGun != null ? null : firstPossibleGun;
+		return partDefinition.canDisableGun && activeGun != null ? null : firstPossibleGun;
 	}
 	
 	@Override
@@ -162,9 +162,9 @@ public final class PartSeat extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		WrapperEntity rider = vehicle.locationRiderMap.get(placementOffset);
+		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		if(rider != null){
-			vehicle.removeRider(rider, null);
+			entityOn.removeRider(rider, null);
 		}
 	}
 	

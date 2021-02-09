@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -18,7 +19,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
-import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -62,7 +62,7 @@ public class BuilderEntity extends Entity{
 	public static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	public AEntityBase entity;
+	public AEntityB_Existing entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
 	/**Last saved explosion position (used for damage calcs).**/
@@ -184,18 +184,13 @@ public class BuilderEntity extends Entity{
 		if(fakeLightPosition != null){
 			world.setBlockToAir(fakeLightPosition);
 		}
-		//Mark entity as invalid and remove from maps.
+		
+		//Stop chunkloading of this entity.
+		InterfaceChunkloader.removeEntityTicket(this);
+		
+		//Notify internal entity of it being invalid.
 		if(entity != null){
-			entity.isValid = false;
-			InterfaceChunkloader.removeEntityTicket(this);
-			if(world.isRemote){
-				AEntityBase.createdClientEntities.remove(entity);
-			}else{
-				AEntityBase.createdServerEntities.remove(entity);
-			}
-			if(entity instanceof IRadioProvider && world.isRemote){
-				((IRadioProvider) entity).getRadio().stop();
-			}
+			entity.remove();
 		}
 	}
     
@@ -419,7 +414,7 @@ public class BuilderEntity extends Entity{
 	    		if(boxClicked != null){
 		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
-	    			InterfaceCore.logError("A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	    			InterfaceCore.logError("A entity was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
 	    		event.setCanceled(true);
 				event.setCancellationResult(EnumActionResult.SUCCESS);
@@ -444,7 +439,7 @@ public class BuilderEntity extends Entity{
     			if(boxClicked != null){
     				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
-        			InterfaceCore.logError("A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+        			InterfaceCore.logError("A entity was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}
     			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
     		}

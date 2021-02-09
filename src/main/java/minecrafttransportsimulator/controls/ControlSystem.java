@@ -68,7 +68,7 @@ public final class ControlSystem{
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
 		clientPlayer = InterfaceClient.getClientPlayer();
-		if(vehicle.definition.general.isAircraft){
+		if(vehicle.definition.motorized.isAircraft){
 			controlAircraft(vehicle, isPlayerController);
 		}else{
 			controlGroundVehicle(vehicle, isPlayerController);

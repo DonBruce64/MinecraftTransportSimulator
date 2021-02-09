@@ -3,7 +3,6 @@ package minecrafttransportsimulator.baseclasses;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
-import minecrafttransportsimulator.sound.ISoundProviderComplex;
 
 /**Interface that allows an object to provide and control a {@link Gun}.
  * This object may only have one gun on it, and should keep a reference
@@ -11,7 +10,7 @@ import minecrafttransportsimulator.sound.ISoundProviderComplex;
  *
  * @author don_bruce
  */
-public interface IGunProvider extends ISoundProviderComplex, IParticleProvider{
+public interface IGunProvider extends IParticleProvider{
 	
 	 /**
 	 *  Rotates the passed-in point to match the provider's orientation.

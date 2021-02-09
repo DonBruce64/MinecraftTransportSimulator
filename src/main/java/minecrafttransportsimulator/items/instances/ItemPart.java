@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -10,7 +11,7 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.PartType;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -36,27 +37,27 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	public ItemPart(JSONPart definition, String subName, String sourcePackID){
 		super(definition, subName, sourcePackID);
 		try{
-			if(definition.general.type.indexOf("_") != -1){
-				this.partType = PartType.valueOf(definition.general.type.substring(0, definition.general.type.indexOf("_")).toUpperCase());
+			if(definition.generic.type.indexOf("_") != -1){
+				this.partType = PartType.valueOf(definition.generic.type.substring(0, definition.generic.type.indexOf("_")).toUpperCase());
 			}else{
-				this.partType = PartType.valueOf(definition.general.type.toUpperCase());
+				this.partType = PartType.valueOf(definition.generic.type.toUpperCase());
 			}
 		}catch(Exception e){
-			throw new IllegalArgumentException(definition.general.type + " is not a valid type for creating a part.");
+			throw new IllegalArgumentException(definition.generic.type + " is not a valid type for creating a part.");
 		}
 	}
 	
-	public boolean isPartValidForPackDef(VehiclePart packVehicleDef){
+	public boolean isPartValidForPackDef(JSONPartDefinition packVehicleDef){
 		//First make sure we are the right type.
-		if(packVehicleDef.types.contains(definition.general.type)){
+		if(packVehicleDef.types.contains(definition.generic.type)){
 			//Check if our custom type matches, or if we aren't a custom type and the definition doesn't care.
 			boolean customTypesValid;
 			if(packVehicleDef.customTypes == null){
-				customTypesValid = definition.general.customType == null;
-			}else if(definition.general.customType == null){
+				customTypesValid = definition.generic.customType == null;
+			}else if(definition.generic.customType == null){
 				customTypesValid = packVehicleDef.customTypes == null || packVehicleDef.customTypes.contains("");
 			}else{
-				customTypesValid = packVehicleDef.customTypes.contains(definition.general.customType);
+				customTypesValid = packVehicleDef.customTypes.contains(definition.generic.customType);
 			}
 			
 			if(customTypesValid){
@@ -77,19 +78,19 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 		return false;
 	}
 	
-	public APart createPart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, WrapperNBT partData, APart parentPart){
+	public APart createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		switch(partType){
-			case GENERIC : return new PartGeneric(vehicle, packVehicleDef, this, partData, parentPart);
+			case GENERIC : return new PartGeneric(entity, packVehicleDef, this, partData, parentPart);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			case BULLET : return null;
-			case EFFECTOR : return new PartEffector(vehicle, packVehicleDef, this, partData, parentPart);
-			case ENGINE : return new PartEngine(vehicle, packVehicleDef, this, partData, parentPart);
-			case GROUND : return new PartGroundDevice(vehicle, packVehicleDef, this, partData, parentPart);
-			case GUN : return new PartGun(vehicle, packVehicleDef, this, partData, parentPart);
-			case INTERACTABLE : return new PartInteractable(vehicle, packVehicleDef, this, partData, parentPart);
-			case PROPELLER : return new PartPropeller(vehicle, packVehicleDef, this, partData, parentPart);
-			case SEAT : return new PartSeat(vehicle, packVehicleDef, this, partData, parentPart);
+			case EFFECTOR : return new PartEffector(entity, packVehicleDef, this, partData, parentPart);
+			case ENGINE : return new PartEngine(entity, packVehicleDef, this, partData, parentPart);
+			case GROUND : return new PartGroundDevice(entity, packVehicleDef, this, partData, parentPart);
+			case GUN : return new PartGun(entity, packVehicleDef, this, partData, parentPart);
+			case INTERACTABLE : return new PartInteractable(entity, packVehicleDef, this, partData, parentPart);
+			case PROPELLER : return new PartPropeller(entity, packVehicleDef, this, partData, parentPart);
+			case SEAT : return new PartSeat(entity, packVehicleDef, this, partData, parentPart);
 		}
 		//We'll never get here, but it makes the complier happy.
 		return null;
@@ -158,7 +159,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 				break;
 			}
 			case GUN : {
-				tooltipLines.add(InterfaceCore.translate("info.item.gun.type." + definition.general.type.substring("gun_".length())));
+				tooltipLines.add(InterfaceCore.translate("info.item.gun.type." + definition.generic.type.substring("gun_".length())));
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.diameter") + definition.gun.diameter);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.length") + definition.gun.length);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.fireDelay") + definition.gun.fireDelay);

@@ -37,8 +37,8 @@ public abstract class ATileEntityMultiblock<JSONDefinition extends AJSONMultbloc
 		this.isActive = data.getBoolean("isActive");
 		
 		//If we have points for collision due to use creating collision blocks, load them now.
-		this.collisionBlockOffsets = data.getPoints("collisionBlockOffsets");
-		this.collidingBlockOffsets = data.getPoints("collidingBlockOffsets");
+		this.collisionBlockOffsets = data.getPoint3is("collisionBlockOffsets");
+		this.collidingBlockOffsets = data.getPoint3is("collidingBlockOffsets");
 	}
 	
 	/**
@@ -123,7 +123,7 @@ public abstract class ATileEntityMultiblock<JSONDefinition extends AJSONMultbloc
 		data.setBoolean("isActive", isActive);
 		
 		//Save cure collision point data.
-		data.setPoints("collisionBlockOffsets", collisionBlockOffsets);
-		data.setPoints("collidingBlockOffsets", collidingBlockOffsets);
+		data.setPoint3is("collisionBlockOffsets", collisionBlockOffsets);
+		data.setPoint3is("collidingBlockOffsets", collidingBlockOffsets);
     }
 }

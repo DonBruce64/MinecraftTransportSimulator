@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
@@ -13,7 +13,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartGroundDevice extends APacketVehiclePart{
+public class PacketVehiclePartGroundDevice extends APacketMultipartPart{
 	final boolean flat;
 	
 	public PacketVehiclePartGroundDevice(PartGroundDevice groundDevice, boolean flat){

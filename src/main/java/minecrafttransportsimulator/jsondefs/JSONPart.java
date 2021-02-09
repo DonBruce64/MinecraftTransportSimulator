@@ -4,67 +4,56 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 @JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the “generic” section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
-public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
+public class JSONPart extends AJSONPartProvider{
+	
+	@JSONRequired(dependentField="type", dependentValues={"generic"}, subField="general")
+	@JSONDescription("Properties for all parts.")
+    public JSONPartGeneric generic;
+	
 	@JSONRequired(dependentField="type", dependentValues={"engine"}, subField="general")
-	@JSONDescription("Engines are the most complex JSON in MTS.  While all engines use the same generic code under the hood, each application has specific tweaks that will need to be made.  For example, an aircraft engine that has propellers on it will need to have a propeller subPart to allow for a propeller to be placed on it, or an additionalPart on the vehicle, should the propeller be a vehicle option rather than an engine option (such as a car that has a boat propeller for water travel).  Because of this, the forces that come out of your engine depend on what it's put in and what's attached to it more than anything else.\nWhile engines have a “type” parameter, this is only used for classifying engines into distinct categories to prevent users from putting jet engines on semi trucks.")
+	@JSONDescription("Properties for engines.")
     public JSONPartEngine engine;
 	
 	@JSONRequired(dependentField="type", dependentValues={"ground"}, subField="general")
-	@JSONDescription("It's a device, that touches the ground.  Therefore, it's a ground device part.  Simple, no?  Ground devices come in all shapes and sizes.  From the pinnacle of modern motion, wheels, to simple devices like pontoons, ground devices are the bread and butter of movement in MTS.  Unless you're making a boat, you'll probably need a few of these.")
+	@JSONDescription("Properties for ground devices.")
     public JSONPartGroundDevice ground;
 	
 	@JSONRequired(dependentField="type", dependentValues={"propeller"}, subField="general")
-	@JSONDescription("This part is used on aircraft and is designed to fit on aircraft engines.  It is unique in that it must either be a sub-part of an engine part, or an additional part of an engine.")
+	@JSONDescription("Properties for propellers.")
     public JSONPartPropeller propeller;
 	
 	@JSONRequired(dependentField="type", dependentValues={"seat"}, subField="general")
-	@JSONDescription("Seats allow users to ride vehicles.  While most seats won't have anything special about them, there are a few parameters that you set to change how they function.")
+	@JSONDescription("Properties for seats.")
     public JSONPartSeat seat;
 	
 	@JSONRequired(dependentField="type", dependentValues={"gun"}, subField="general")
-	@JSONDescription("What's a vehicle without guns?  That's right: it's a target!  Guns may either be placed on vehicles or held in the player's hand to allow them to shoot things.\nNote that if a gun is placed as a subPart of a seat or an additionalPart on a vehicle where a seat is required to place it, then the gun will be controlled by the player in the seat.  The player may then rotate the gun to the direction they are facing.  The limits of how far the gun rotates and the speed at which it rotates is dictated by both the gun's parameters, and the seat's parameters.  Should a gun be placed on a vehicle normally it will be controlled by players in seats marked as controllers.  These guns can also rotate, though, so be mindful of this when designing tanks and other such vehicles.\n")
+	@JSONDescription("Properties for guns.")
     public JSONPartGun gun;
 	
 	@JSONRequired(dependentField="type", dependentValues={"bullet"}, subField="general")
-	@JSONDescription("Unlike guns, bullets are pretty simple.  They only have a few parameters that define their basic properties, as the good chunk of the complex work of actually firing the bullet is done by the gun.  As to damage dealt, that is dependent on the speed and size of the bullet, and cannot be directly configured in the JSON (though some bullet types will do more damage than others).")
+	@JSONDescription("Properties for bullets.")
     public JSONPartBullet bullet;
 	
 	@JSONRequired(dependentField="type", dependentValues={"interactable"}, subField="general")
-	@JSONDescription("Interactable is a generic bucket for parts that can be interacted with.  These parts don't do anything to the vehicle.  Rather, they are mainly for player interaction.  They may display a GUI for the player to use, store items, or run tasks set by the player.  Exactly what they do depends on the interactionType parameter.")
+	@JSONDescription("Properties for interactables.")
     public JSONPartInteractable interactable;
 	
 	@JSONRequired(dependentField="type", dependentValues={"effector"}, subField="general")
-	@JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
+	@JSONDescription("Properties for effectors.")
     public JSONPartEffector effector;
-	
-	@JSONRequired(dependentField="type", dependentValues={"generic"}, subField="general")
-	@JSONDescription("This isn't so much a part as it is an add-on component to your main vehicle.  Generic parts don't do anything and can't be interacted with, but that's actually a GOOD thing as they won't try to move your vehicle or let players sit in random locations.\nWant a set of spoilers to add to your sports cars without making new models?  Generic parts.\nWant to make a freight vehicle like the GMC with different rear-ends?  Generic parts.\nWant to make different tops for your Jeep?  Generic parts.\nGeneric parts are particularly versatile when combined with sub-parts.  In this capacity they can be used to add truck beds with places to put crates for cargo slots, axles to allow for more wheels and mounts for guns that wouldn't normally be on the vehicle.\nIf you do plan on using the generic type, it is highly suggested that you give them a unique, yet common, type name.  For example, generic_bumpersticker, or generic_pickupbed.  This will not only ensure that other generic parts will go on your vehicle, but also lets other packs have the same generic parts for cross-pack compatibility.")
-    public JSONPartGeneric generic;
-    
-	@JSONDescription("The various sub-parts that can go on this part.")
-	public List<VehiclePart> subParts;
-	
-	@JSONDescription("The collision boxes for this part. May be empty if no collision boxes are desired.")
-    public List<VehicleCollisionBox> collision;
-	
-	@JSONDescription("The doors this part has.  These will become part of the vehicle's door set when this part is added.")
-    public List<VehicleDoor> doors;
 	
 	@JSONDescription("The connections this part has.  These will allow the vehicle to connect to other vehicles when this part is present.")
     public List<VehicleConnection> connections;
-	
-	@JSONDescription("The rendering properties for this part.")
-    public JSONRendering rendering;
     
+
+	@Deprecated
+	public List<JSONPartDefinition> subParts;
     @Deprecated
     public PartCustom custom;
     @Deprecated
@@ -75,31 +64,49 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
     public PartSkid skid;
     @Deprecated
     public PartTread tread;
-
-    public class JSONPartGeneral extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>.General{
+    
+    public static enum PartType{
+    	@JSONDescription("This isn't so much a part as it is an add-on component to your main vehicle.  Generic parts don't do anything and can't be interacted with, but that's actually a GOOD thing as they won't try to move your vehicle or let players sit in random locations.\nWant a set of spoilers to add to your sports cars without making new models?  Generic parts.\nWant to make a freight vehicle like the GMC with different rear-ends?  Generic parts.\nWant to make different tops for your Jeep?  Generic parts.\nGeneric parts are particularly versatile when combined with sub-parts.  In this capacity they can be used to add truck beds with places to put crates for cargo slots, axles to allow for more wheels and mounts for guns that wouldn't normally be on the vehicle.\nIf you do plan on using the generic type, it is highly suggested that you give them a unique, yet common, type name.  For example, generic_bumpersticker, or generic_pickupbed.  This will not only ensure that other generic parts will go on your vehicle, but also lets other packs have the same generic parts for cross-pack compatibility.")
+		GENERIC,
+    	@JSONDescription("Engines are the most complex JSON in MTS.  While all engines use the same generic code under the hood, each application has specific tweaks that will need to be made.  For example, an aircraft engine that has propellers on it will need to have a propeller subPart to allow for a propeller to be placed on it, or an additionalPart on the vehicle, should the propeller be a vehicle option rather than an engine option (such as a car that has a boat propeller for water travel).  Because of this, the forces that come out of your engine depend on what it's put in and what's attached to it more than anything else.\nWhile engines have a “type” parameter, this is only used for classifying engines into distinct categories to prevent users from putting jet engines on semi trucks.")
+		ENGINE,
+		@JSONDescription("It's a device, that touches the ground.  Therefore, it's a ground device part.  Simple, no?  Ground devices come in all shapes and sizes.  From the pinnacle of modern motion, wheels, to simple devices like pontoons, ground devices are the bread and butter of movement in MTS.  Unless you're making a boat, you'll probably need a few of these.")
+		GROUND,
+		@JSONDescription("This part is used on aircraft and is designed to fit on aircraft engines.  It is unique in that it must either be a sub-part of an engine part, or an additional part of an engine.")
+		PROPELLER,
+		@JSONDescription("Seats allow users to ride vehicles.  While most seats won't have anything special about them, there are a few parameters that you set to change how they function.")
+		SEAT,
+		@JSONDescription("What's a vehicle without guns?  That's right: it's a target!  Guns may either be placed on vehicles or held in the player's hand to allow them to shoot things.\nNote that if a gun is placed as a subPart of a seat or an additionalPart on a vehicle where a seat is required to place it, then the gun will be controlled by the player in the seat.  The player may then rotate the gun to the direction they are facing.  The limits of how far the gun rotates and the speed at which it rotates is dictated by both the gun's parameters, and the seat's parameters.  Should a gun be placed on a vehicle normally it will be controlled by players in seats marked as controllers.  These guns can also rotate, though, so be mindful of this when designing tanks and other such vehicles.")
+		GUN,
+		@JSONDescription("Unlike guns, bullets are pretty simple.  They only have a few parameters that define their basic properties, as the good chunk of the complex work of actually firing the bullet is done by the gun.  As to damage dealt, that is dependent on the speed and size of the bullet, and cannot be directly configured in the JSON (though some bullet types will do more damage than others).")
+		BULLET,
+		@JSONDescription("Interactable is a generic bucket for parts that can be interacted with.  These parts don't do anything to the vehicle.  Rather, they are mainly for player interaction.  They may display a GUI for the player to use, store items, or run tasks set by the player.  Exactly what they do depends on the interactionType parameter.")
+		INTERACTABLE,
+		@JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
+		EFFECTOR;
+	}
+    
+    public class JSONPartGeneric{
     	@JSONRequired
     	@JSONDefaults(PartType.class)
     	@JSONDescription("The type-name for this part.  This MUST start with the name of the part section you are wanting to make.  For example engine_somename, gun_othername.  Other than that, there are no restrictions.  There is, however, a generally-agreed on naming format for most parts made in community packs, so check with the community if you want inter-pack compatibility.  All possible prefixes are in the default list, so while you may use any type you want, it should start with one of these.")
     	public String type;
+    	
     	@JSONDescription("NOTE: Using a unique 'type' name is preferred over customType parameters.  See the various part conventions ebfore using this!\n\nThis parameter is optional and should only be used for parts that you need in specific places.  This will restrict this part to only work in part definitions with customTypes defined, and only if they contain this customType.")
     	public String customType;
+    	
     	@JSONDescription("This parameter is optional.  If included and set to true, this part, and all sub-parts, will not be mirrored, no matter the settings in the vehicle JSON. Useful on things like lights and signage, where mirroring would make the lights or signs render backwards, or on turrets where you don't want seats to mirror themselves.")
     	public boolean disableMirroring;
+    	
     	@JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
     	public boolean useVehicleTexture;
+    	
+		@JSONDescription("The width of the part.")
+    	public float width;
+		
+		@JSONDescription("The height of the part.")
+    	public float height;
     }
-    
-    public static enum PartType{
-		ENGINE,
-		GROUND,
-		PROPELLER,
-		SEAT,
-		GUN,
-		BULLET,
-		INTERACTABLE,
-		EFFECTOR,
-		GENERIC;
-	}
     
     public class JSONPartEngine{
 		@JSONDescription("Should the engine change gears on its own.  This only affects cars and will prevent users from shifting into higher or lower gears using shiftUp and shiftDown. Instead, the engine will attempt to choose the best gear for the situation.  Note that MTS's automatic transmission system isn't the best and may get confused when gear ratios are close together.  For this reason, it is recommended to either use manual transmissions on vehicles with more than 5-6 gears, or to define the RPM at which a gear is shifted up or down via upShiftRPM and downShiftRPM.")
@@ -109,9 +116,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 		
 		@JSONDescription("Should the engine spawn flames when starting?  If true, flames will be spawned at the exhaustPos on the vehicle this engine is in.  Note that if the vehicle doesn't have any exhaustPos, no flames will be spawned, even if this is set.")
     	public boolean flamesOnStartup;
-		
-		@JSONDescription("If your cranking sound is pitched or not. Useful for sounds that are designed in a particular way that smoothly transition from cranking to idle.  This does not affect the pitch change incurred due to a low battery; this only affects the pitch change that naturally happens due to RPM increases during engine startup.")
-    	public boolean isCrankingNotPitched;
 		
 		@JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
     	public int starterPower;
@@ -160,6 +164,9 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 		
 		@JSONDescription("The efficiency of the supercharger on this engine (if any). The supercharger fuel consumption of this engine (but not the base fuel consumption) will be multiplied by this value. A value of 1 will make the supercharger add the same amount of power for its fuel consumption as adding that number to the base fuel consumption, so make sure to set it to greater than that if you want your supercharger to have any power benefits!\nThis also affects the engine wear calculations, with a value of 1 or below leaving them the same as what it would be without a supercharger. By setting this value to significantly below 1 you can simulate inefficient, gas-guzzling engines if you have a high supercharger fuel consumption, as it won't add much power but will make the engine use a lot more fuel.\nAs a final note: supercharged engines heat up faster than non-supercharged engines. A supercharger efficiency of 0 would make the calculations the same as a non-supercharged engine in this case; setting it to 1 will not make the engine heat up twice as fast. This is intended behavior, as real supercharged engines heat up faster than naturally aspirated ones even if the supercharger itself isn't very efficient.  This variable can be omitted if your engine doesn't have a supercharger.")
 		public float superchargerEfficiency;
+
+		@Deprecated
+    	public boolean isCrankingNotPitched;
 		
 		@JSONDescription("This parameter is a list of sounds and properties that may be used in lieu of the default MTS sound set.  If this is included, neither the _running nor _supercharger sound will be played.  Instead, MTS will use the definitions set in this list to play the sounds.  Each entry is one sound.  When the engine starts, all sounds will be set to play, though it is quite possible to not hear multiple sounds in the set if their volume ends up at 0.\nNote that to get the actual volume and pitch of the sound, interpolation is done between the min and max values.  So if your min volume is 0, and the max volume is 0.5 at 3000RPM, then at 1500RPM the volume would be 0.25.  Volume itself is clamped from 0.0 to 1.0, while pitch is clamped from 0.0-Infinity.  This means that you can make a sound that plays only at higher RPMs by giving it a negative value for volumeMin, which will cause the interpolation to clamp the volume to 0 far above the idle RPM.")
 		public EngineSound customSoundset[];
@@ -431,14 +438,6 @@ public class JSONPart extends AJSONMultiModelProvider<JSONPart.JSONPartGeneral>{
 		@JSONDescription("Turns dirt and grass into farmland, and coarse dirt into dirt.")
 		PLOW;
 	}
-    
-    public class JSONPartGeneric{
-		@JSONDescription("The width of the part.")
-    	public float width;
-		
-		@JSONDescription("The height of the part.")
-    	public float height;
-    }
     
     @Deprecated
     public class PartCustom{

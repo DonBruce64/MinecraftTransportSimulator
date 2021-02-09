@@ -19,6 +19,9 @@ public class JSONRendering{
 	@JSONDescription("A list of custom variable names.  Currently only supported on vehicles, and will appear as switches in the panel with the names below them.  These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined definitions.  You may have up to 4 custom variables on any vehicle.  Surely, that's enough?")
     public List<String> customVariables;
 	
+	@JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.")
+    public List<JSONSound> sounds;
+	
 
 	//Moved from old vehicle rendering classes.
     @Deprecated
@@ -33,6 +36,14 @@ public class JSONRendering{
     public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
     @Deprecated
     public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    @Deprecated
+    public String hudTexture;
+    @Deprecated
+    public String panelTexture;
+    @Deprecated
+    public String panelTextColor;
+    @Deprecated
+    public String panelLitTextColor;
     
     @Deprecated
     public class VehicleDisplayText{

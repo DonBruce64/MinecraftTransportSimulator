@@ -72,7 +72,7 @@ public class InterfaceEventsCamera{
 	    		}
 	    		
 	    		//If our seat is set to automatically use custom cameras try to get one.
-        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.vehicleDefinition.forceCameras){
+        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.partDefinition.forceCameras){
     				enableCustomCameras = true;
 	    			customCameraIndex = 0;
         		}

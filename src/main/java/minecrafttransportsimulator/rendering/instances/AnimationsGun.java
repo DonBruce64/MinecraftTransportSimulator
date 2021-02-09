@@ -45,11 +45,11 @@ public final class AnimationsGun extends AAnimationsBase<EntityPlayerGun>{
 				case("gun_firing"): return gun.firing ? 1 : 0;
 				case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
 				case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
-				case("gun_cooldown"): return gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+				case("gun_cooldown"): return gun.cooldownTimeRemaining > 0 ? 1 : 0;
 				case("gun_windup_time"): return gun.windupTimeCurrent;
 				case("gun_windup_rotation"): return gun.windupRotation;
 				case("gun_windup_complete"): return gun.windupTimeCurrent == gun.definition.gun.windupTime ? 1 : 0;
-				case("gun_reload"): return gun.reloadTimeRemaining/(double)gun.definition.gun.reloadTime;
+				case("gun_reload"): return gun.reloadTimeRemaining > 0 ? 1 : 0;
 				case("gun_ammo_count"): return gun.bulletsLeft;
 				case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
 			}

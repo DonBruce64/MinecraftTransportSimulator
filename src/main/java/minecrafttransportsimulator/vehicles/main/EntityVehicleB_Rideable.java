@@ -2,12 +2,14 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -27,8 +29,11 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
+abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
+	
+	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
+	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
 	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
@@ -51,8 +56,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 			
 			//Add all seat-specific effects to the rider
-			if(seat.vehicleDefinition.seatEffects != null) {
-				for(JSONPotionEffect effect: seat.vehicleDefinition.seatEffects){
+			if(seat.partDefinition.seatEffects != null) {
+				for(JSONPotionEffect effect: seat.partDefinition.seatEffects){
 					rider.addPotionEffect(effect);
 				}
 			}
@@ -91,8 +96,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
-    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.partDefinition.isController);
+    			InterfaceInput.setMouseEnabled(!(seat.partDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -138,7 +143,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 		
 		//Get rid of any potion effects that were caused by the seat
-		VehiclePart packPart = getPackDefForLocation(riderLocation);
+		JSONPartDefinition packPart = getPackDefForLocation(riderLocation);
 		if(packPart.seatEffects != null) {
 			for(JSONPotionEffect effect: packPart.seatEffects){
 				rider.removePotionEffect(effect);
@@ -188,7 +193,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		for(Point3d location : locationRiderMap.keySet()){
 			PartSeat seat = (PartSeat) getPartAtLocation(location);
 			WrapperEntity rider = locationRiderMap.get(location);
-			if(seat != null && seat.vehicleDefinition.isController && rider instanceof WrapperPlayer){
+			if(seat != null && seat.partDefinition.isController && rider instanceof WrapperPlayer){
 				return (WrapperPlayer) rider;
 			}
 		}
@@ -200,7 +205,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	 * Includes core mass, player weight (including inventory), and cargo.
 	 */
 	protected float getCurrentMass(){
-		int currentMass = definition.general.emptyMass;
+		int currentMass = definition.motorized.emptyMass;
 		for(APart part : parts){
 			if(part instanceof PartInteractable){
 				currentMass += ((PartInteractable) part).getInventoryWeight();

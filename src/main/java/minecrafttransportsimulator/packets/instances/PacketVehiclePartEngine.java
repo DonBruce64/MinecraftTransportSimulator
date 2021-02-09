@@ -5,7 +5,7 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.AEntityBase;
@@ -20,7 +20,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartEngine extends APacketVehiclePart{
+public class PacketVehiclePartEngine extends APacketMultipartPart{
 	private final Signal packetType;
 	private final double hours;
 	private final boolean oilLeak;

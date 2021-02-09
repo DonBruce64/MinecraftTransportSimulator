@@ -1,11 +1,12 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
@@ -43,8 +44,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
@@ -141,7 +142,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 		super.remove();
 		if(fakePart != null){
 			fakePart.isValid = false;
-			vehicle.removePart(fakePart, null);
+			entityOn.removePart(fakePart, null);
 		}
 	}
 	
@@ -177,7 +178,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	 * sure the ground device can actually go flat if it is being requested to do so.
 	 */
 	public void setFlatState(boolean setFlat){
-		if(vehicle.world.isClient()){
+		if(world.isClient()){
 			if(setFlat){
 				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
 			}
@@ -209,8 +210,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	
 	public float getFrictionLoss(){
 		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
-		if(!vehicle.world.isAir(groundPosition)){
-			return 0.6F - vehicle.world.getBlockSlipperiness(groundPosition) + vehicle.world.getRainStrength(groundPosition)*0.1F;
+		if(!world.isAir(groundPosition)){
+			return 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
 		}else{
 			return 0;
 		}
@@ -243,21 +244,21 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	}
 		
 	public float getLongPartOffset(){
-		return vehicleDefinition.extraCollisionBoxOffset != 0 ? vehicleDefinition.extraCollisionBoxOffset : definition.ground.extraCollisionBoxOffset;
+		return partDefinition.extraCollisionBoxOffset != 0 ? partDefinition.extraCollisionBoxOffset : definition.ground.extraCollisionBoxOffset;
 	}
 	
 	@Override
 	public void spawnParticles(){
 		if(contactThisTick){
 			for(byte i=0; i<4; ++i){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 			InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 			contactThisTick = false;
 		}
 		if(skipAngularCalcs && vehicle.groundDeviceCollective.groundedGroundDevices.contains(this)){
 			for(byte i=0; i<4; ++i){
-				InterfaceRender.spawnParticle(new ParticleSmoke(vehicle.world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+				InterfaceRender.spawnParticle(new ParticleSmoke(world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
 			InterfaceRender.spawnBlockBreakParticles(new Point3i(worldPos).add(0, -1, 0), false);
 		}

@@ -9,14 +9,12 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-/**GUI for interfacing with radios.  Radios are stored on classes that
- * extend {@link IRadioProvider} and are obtained via {@link IRadioProvider#getRadio()}.
- * This GUI allows for state changes to those objects.  Those changes are then
+/**GUI for interfacing with radios.
+ * This GUI allows for state changes to radios, which are then
  * picked up by the audio system to affect the playing song.
 *
 * @author don_bruce
@@ -48,8 +46,8 @@ public class GUIRadio extends AGUIBase{
 	private static boolean equalizerMode = false;
 	private static boolean teachMode = false;
 	
-	public GUIRadio(IRadioProvider provider){
-		this.radio = provider.getRadio();
+	public GUIRadio(Radio radio){
+		this.radio = radio;
 		this.bandsToSkip = 4;
 		this.bandsToShow = 32/bandsToSkip;
 		this.bandButtonSize = 20;

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,40 +7,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartChange;
+import minecrafttransportsimulator.packets.instances.PacketMultipartPartChange;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
-/**Base vehicle class.  All vehicle entities should extend this class.
- * It is primarily responsible for the adding and removal of parts.
- * It is NOT responsible for custom data sets, sounds, or movement.
- * That should be done in sub-classes to keep methods segregated.
+/**Base class for multipart entities.  These entities hold other, part-based entities.  These part
+ * entities may be added or removed from this entity based on the implementation, but assurances
+ * are made with how they are stored and how they are accessed.
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleA_Base extends AEntityBase{
-	/**The pack definition for this vehicle.*/
-	public final JSONVehicle definition;
+public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityD_Interactable<JSONDefinition>{
 	
-	/**The current subName for this vehicle.  Used to select which definition represents this vehicle.*/
-	public String currentSubName;
-	
-	/**This list contains all parts this vehicle has.  Do NOT directly modify this list.  Instead,
+	/**This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
 	 * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
 	 * operations are performed.  Note that if you are iterating over this list when you call one of those
 	 * methods, and you don't pass the method an iterator instance, you will get a CME!.
@@ -48,36 +38,24 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	public final List<APart> parts = new ArrayList<APart>();
 	
 	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
-	 * due to the various sub-classed variables not being ready yet.  To compensate, we add the parts we
-	 * wish to add to this list.  At the end of construction, these will be added to this vehicle, preventing NPEs.
-	 * This means that any top-level classes MUST iterate over this list and add parts after construction!
+	 * due to the potential of various sub-class variables not being ready at construction time.  To compensate, we add the parts we
+	 * wish to add to this list.  Post-construction these will be added to this entity, preventing NPEs.
 	 */
-	public final List<APart> partsFromNBT = new ArrayList<APart>();
+	private final List<APart> partsFromNBT = new ArrayList<APart>();
 	
-	/**Cached pack definition mappings for sub-part packs.  First key is the parent vehicle part definition, which links to a map..
-	 * This second map is keyed by a part vehicle definition, with the value equal to a corrected vehicle definition.  This means that
-	 * in total, this object contains all sub-packs created on any vehicle for any part with sub-packs.  This is done as parts with
-	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any vehicle part location.*/
-	private static final Map<VehiclePart, Map<VehiclePart, VehiclePart>> SUBPACK_MAPPINGS = new HashMap<VehiclePart, Map<VehiclePart, VehiclePart>>();
+	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
+	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
+	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
+	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
+	private static final Map<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>> SUBPACK_MAPPINGS = new HashMap<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>>();
 	
-	/**Animator for vehicles.*/
-	private static final AnimationsVehicle animator = new AnimationsVehicle();
-	
-	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
-	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
-	
-	public EntityVehicleA_Base(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
+	public AEntityE_Multipart(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
 		super(world, wrapper, data);
-		//Set definition and current subName.
-		ItemVehicle item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName")); 
-		this.definition = item.definition;
-		this.currentSubName = item.subName;
-		
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
 		for(int i=0; i<data.getInteger("totalParts"); ++i){
-			//Use a try-catch for parts in case they've changed since this vehicle was last placed.
+			//Use a try-catch for parts in case they've changed since this entity was last placed.
 			//Don't want crashes due to pack updates.
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
@@ -92,9 +70,17 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	
 	@Override
 	public void update(){
+		//If we have any NBT parts, add them now.
+		if(!partsFromNBT.isEmpty()){
+			for(APart part : partsFromNBT){
+				addPart(part);
+			}
+			partsFromNBT.clear();
+		}
+		
 		//Send update call down to all parts.
 		//They need to get processed first to handle hitbox logic, or removal based on damage.
-		//We call this before we call the super as they need to know the prev statuses..
+		//We call this before we call the super as they need to know the new statuses.
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -109,8 +95,8 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	}
     
     /**
-	 * Adds the passed-part to this vehicle.  This method will check at the passed-in point
-	 * if the item-based part can go to this vehicle.  If so, it is constructed and added,
+	 * Adds the passed-part to this entity.  This method will check at the passed-in point
+	 * if the item-based part can go to this entity.  If so, it is constructed and added,
 	 * and a packet is sent to all clients to inform them of this change.  Returns true
 	 * if all operations completed, false if the part was not able to be added.
 	 * If the part is being added during construction, set doingConstruction to true to
@@ -119,19 +105,19 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 */
     public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean doingConstruction){
     	//Get the part pack to add.
-		VehiclePart packPart = getPackDefForLocation(offset);
+		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
 		APart parentPart = null;
 		//Check to make sure the spot is free.
 		if(getPartAtLocation(offset) == null){
 			//Check to make sure the part is valid.
-			if(partItem.isPartValidForPackDef(packPart)){
+			if(partItem.isPartValidForPackDef(newPartDef)){
 				//Try to find the parent part, if this part would have one.
-				for(VehiclePart vehiclePack : definition.parts){
-					if(vehiclePack.additionalParts != null){
-						for(VehiclePart additionalPack : vehiclePack.additionalParts){
-							if(offset.equals(additionalPack.pos)){
-								parentPart = getPartAtLocation(vehiclePack.pos);
+				for(JSONPartDefinition partDef : definition.parts){
+					if(partDef.additionalParts != null){
+						for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
+							if(offset.equals(additionalPartDef.pos)){
+								parentPart = getPartAtLocation(partDef.pos);
 								break;
 							}
 						}
@@ -147,20 +133,20 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				partsToCheck.addAll(parts);
 				partsToCheck.addAll(partsFromNBT);
 				for(APart part : partsToCheck){
-					if(part.definition.subParts != null){
-						for(VehiclePart subPartPack : part.definition.subParts){
-							VehiclePart correctedPack = getPackForSubPart(part.vehicleDefinition, subPartPack);
-							if(offset.equals(correctedPack.pos)){
+					if(part.definition.parts != null){
+						for(JSONPartDefinition subPartDef : part.definition.parts){
+							JSONPartDefinition correctedDef = getPackForSubPart(part.partDefinition, subPartDef);
+							if(offset.equals(correctedDef.pos)){
 								parentPart = part;
 								break;
 							}
 							
 							//Check sub-part additional parts.
-							if(subPartPack.additionalParts != null){
-								for(VehiclePart additionalPack : subPartPack.additionalParts){
-									VehiclePart correctedAdditionalPack = getPackForSubPart(part.vehicleDefinition, additionalPack);
-									if(offset.equals(correctedAdditionalPack.pos)){
-										parentPart = getPartAtLocation(correctedPack.pos);
+							if(subPartDef.additionalParts != null){
+								for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
+									JSONPartDefinition correctedAdditionalDef = getPackForSubPart(part.partDefinition, additionalPartDef);
+									if(offset.equals(correctedAdditionalDef.pos)){
+										parentPart = getPartAtLocation(correctedDef.pos);
 										break;
 									}
 								}
@@ -176,11 +162,11 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 				}
 				
 				//Part is valid.  Create it.
-				partToAdd = partItem.createPart((EntityVehicleF_Physics) this, packPart, partData != null ? partData : new WrapperNBT(), parentPart); 
+				partToAdd = partItem.createPart(this, newPartDef, partData != null ? partData : new WrapperNBT(), parentPart); 
 			}
 		}
     	
-    	//If the part isn't null, add it to the vehicle.
+    	//If the part isn't null, add it to the entity.
 		//If we're in construction, it goes in the NBT maps and we need to add a rider position if it's a seat.
 		//Otherwise, we use the regular add method.
     	if(partToAdd != null){
@@ -204,16 +190,16 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	    		}
 				
 				//Send packet to client with part data.
-				InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, offset, partItem, partData, partToAdd.parentPart));
+				InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, offset, partItem, partData, partToAdd.parentPart));
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
-				if(newPart && partToAdd.definition.subParts != null){
-					List<VehiclePart> subPartsToAdd = new ArrayList<VehiclePart>();
-					for(VehiclePart subPartPack : partToAdd.definition.subParts){
-						subPartsToAdd.add(this.getPackForSubPart(partToAdd.vehicleDefinition, subPartPack));
+				if(newPart && partToAdd.definition.parts != null){
+					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
+					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
+						subPartsToAdd.add(this.getPackForSubPart(partToAdd.partDefinition, subPartPack));
 					}
-					addDefaultParts(subPartsToAdd, this, partToAdd, true);
+					addDefaultParts(subPartsToAdd, partToAdd, true);
 				}
     		}
 			return true;
@@ -223,7 +209,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
     }
 	
     /**
-   	 * Adds the passed-in part to the vehicle.  Also is responsible for modifying
+   	 * Adds the passed-in part to the entity.  Also is responsible for modifying
    	 * and lists or maps that may have changed from adding the part.
    	 */
 	public void addPart(APart part){
@@ -236,7 +222,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	}
 	
 	/**
-   	 * Removes the passed-in part to the vehicle.  Calls the part's {@link APart#remove()} method to
+   	 * Removes the passed-in part from the entity.  Calls the part's {@link APart#remove()} method to
    	 * let the part handle removal code.  Iterator is optional, but if you're in any code block that
    	 * is iterating over the parts list, and you don't pass that iterator in, you'll get a CME.
    	 */
@@ -256,7 +242,7 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) this, part.placementOffset));
+				InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, part.placementOffset));
 			}
 		}
 		
@@ -286,25 +272,25 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	}
 	
 	/**
-	 * Gets all possible pack parts.  This includes additional parts on the vehicle
+	 * Gets all possible pack parts.  This includes additional parts on the entity
 	 * and extra parts of parts on other parts.  Map returned is the position of the
 	 * part positions and the part pack information at those positions.
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public LinkedHashMap<Point3d, VehiclePart> getAllPossiblePackParts(){
-		LinkedHashMap<Point3d, VehiclePart> packParts = new LinkedHashMap<Point3d, VehiclePart>();
+	public LinkedHashMap<Point3d, JSONPartDefinition> getAllPossiblePackParts(){
+		LinkedHashMap<Point3d, JSONPartDefinition> partDefs = new LinkedHashMap<Point3d, JSONPartDefinition>();
 		//First get all the regular part spots.
-		for(VehiclePart packPart : definition.parts){
-			packParts.put(packPart.pos, packPart);
+		for(JSONPartDefinition partDef : definition.parts){
+			partDefs.put(partDef.pos, partDef);
 			
 			//Check to see if we can put a additional parts in this location.
 			//If a part is present at a location that can have an additional parts, we allow them to be placed.
-			if(packPart.additionalParts != null){
+			if(partDef.additionalParts != null){
 				for(APart part : parts){
-					if(part.placementOffset.equals(packPart.pos)){
-						for(VehiclePart additionalPack : packPart.additionalParts){
-							packParts.put(additionalPack.pos, additionalPack);
+					if(part.placementOffset.equals(partDef.pos)){
+						for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
+							partDefs.put(additionalPartDef.pos, additionalPartDef);
 						}
 						break;
 					}
@@ -314,20 +300,20 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		
 		//Next get any sub parts on parts that are present.
 		for(APart part : parts){
-			if(part.definition.subParts != null){
-				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-				for(VehiclePart subPartPack : part.definition.subParts){
-					VehiclePart correctedPack = getPackForSubPart(parentPack, subPartPack);
-					packParts.put(correctedPack.pos, correctedPack);
+			if(part.definition.parts != null){
+				JSONPartDefinition parentPartDef = getPackDefForLocation(part.placementOffset);
+				for(JSONPartDefinition subPartDef : part.definition.parts){
+					JSONPartDefinition correctedPartDef = getPackForSubPart(parentPartDef, subPartDef);
+					partDefs.put(correctedPartDef.pos, correctedPartDef);
 					
 					//Check to see if we can put a additional parts in this location.
 					//If a part is present at a location that can have an additional parts, we allow them to be placed.
-					if(subPartPack.additionalParts != null){
+					if(subPartDef.additionalParts != null){
 						for(APart part2 : parts){
-							if(part2.placementOffset.equals(correctedPack.pos)){
-								for(VehiclePart additionalPack : subPartPack.additionalParts){
-									correctedPack = getPackForSubPart(parentPack, additionalPack);
-									packParts.put(correctedPack.pos, correctedPack);
+							if(part2.placementOffset.equals(correctedPartDef.pos)){
+								for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
+									correctedPartDef = getPackForSubPart(parentPartDef, additionalPartDef);
+									partDefs.put(correctedPartDef.pos, correctedPartDef);
 								}
 								break;
 							}
@@ -337,24 +323,24 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 			}
 			
 		}
-		return packParts;
+		return partDefs;
 	}
 	
 	/**
 	 * Gets the pack definition at the specified location.
 	 */
-	public VehiclePart getPackDefForLocation(Point3d offset){
+	public JSONPartDefinition getPackDefForLocation(Point3d offset){
 		//Check to see if this is a main part.
-		for(VehiclePart packPart : definition.parts){
-			if(packPart.pos.equals(offset)){
-				return packPart;
+		for(JSONPartDefinition partDef : definition.parts){
+			if(partDef.pos.equals(offset)){
+				return partDef;
 			}
 			
 			//Not a main part.  Check if this is an additional part.
-			if(packPart.additionalParts != null){
-				for(VehiclePart additionalPack : packPart.additionalParts){
-					if(additionalPack.pos.equals(offset)){
-						return additionalPack;
+			if(partDef.additionalParts != null){
+				for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
+					if(additionalPartDef.pos.equals(offset)){
+						return additionalPartDef;
 					}
 				}
 			}
@@ -366,20 +352,20 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		allParts.addAll(parts);
 		allParts.addAll(partsFromNBT);
 		for(APart part : allParts){
-			if(part.definition.subParts != null){
-				VehiclePart parentPack = getPackDefForLocation(part.placementOffset);
-				for(VehiclePart subPartPack : part.definition.subParts){
-					VehiclePart correctedPack = getPackForSubPart(parentPack, subPartPack);
-					if(correctedPack.pos.equals(offset)){
-						return correctedPack;
+			if(part.definition.parts != null){
+				JSONPartDefinition parentPartDef = getPackDefForLocation(part.placementOffset);
+				for(JSONPartDefinition subPartDef : part.definition.parts){
+					JSONPartDefinition correctedPartDef = getPackForSubPart(parentPartDef, subPartDef);
+					if(correctedPartDef.pos.equals(offset)){
+						return correctedPartDef;
 					}
 					
 					//Check additional part definitions.
-					if(subPartPack.additionalParts != null){
-						for(VehiclePart additionalPack : subPartPack.additionalParts){
-							correctedPack = getPackForSubPart(parentPack, additionalPack);
-							if(correctedPack.pos.equals(offset)){
-								return correctedPack;
+					if(subPartDef.additionalParts != null){
+						for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
+							correctedPartDef = getPackForSubPart(parentPartDef, additionalPartDef);
+							if(correctedPartDef.pos.equals(offset)){
+								return correctedPartDef;
 							}
 						}
 					}
@@ -397,54 +383,55 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 	 * If they did, then the lookup relation between them and their spot in the vehicle would
 	 * get broken for maps on each reference.
 	 */
-	public VehiclePart getPackForSubPart(VehiclePart parentPack, VehiclePart subPack){
+	public JSONPartDefinition getPackForSubPart(JSONPartDefinition parentPack, JSONPartDefinition subPack){
 		if(!SUBPACK_MAPPINGS.containsKey(parentPack)){
-			SUBPACK_MAPPINGS.put(parentPack, new HashMap<VehiclePart, VehiclePart>());
+			SUBPACK_MAPPINGS.put(parentPack, new HashMap<JSONPartDefinition, JSONPartDefinition>());
 		}
 		
-		VehiclePart correctedPack = SUBPACK_MAPPINGS.get(parentPack).get(subPack);
-		if(correctedPack == null){
+		JSONPartDefinition correctedPartDef = SUBPACK_MAPPINGS.get(parentPack).get(subPack);
+		if(correctedPartDef == null){
 			//Use GSON to make a deep copy of the current pack definition.
 			//Set the sub-part flag to ensure we know this is a subPart for rendering operations.
-			correctedPack = JSONParser.duplicateJSON(subPack);
-			correctedPack.isSubPart = true;
+			correctedPartDef = JSONParser.duplicateJSON(subPack);
+			correctedPartDef.isSubPart = true;
 			
 			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
 			//First add the parent pack's position to the sub-pack.
 			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
-			correctedPack.pos.add(parentPack.pos);
+			correctedPartDef.pos.add(parentPack.pos);
 			
 			//If the parent pack is mirrored, we need to invert our X-position to match.
 			if(parentPack.pos.x < 0 ^ parentPack.inverseMirroring){
-				correctedPack.pos.x -= 2*subPack.pos.x;
+				correctedPartDef.pos.x -= 2*subPack.pos.x;
 			}
 			
 			//Use the parent's turnsWithSteer variable, as that's based on the vehicle, not the part.
-			correctedPack.turnsWithSteer = parentPack.turnsWithSteer;
+			correctedPartDef.turnsWithSteer = parentPack.turnsWithSteer;
 			
 			//Save the corrected pack into the mappings for later use.
-	        SUBPACK_MAPPINGS.get(parentPack).put(subPack, correctedPack);
+	        SUBPACK_MAPPINGS.get(parentPack).put(subPack, correctedPartDef);
 		}
-		return correctedPack;
+		return correctedPartDef;
 	}
 	
 	/**
 	 * Helper method to allow for recursion when adding default parts.
 	 * This method adds all default parts for the passed-in list of parts.
-	 * The part list should consist of a "parts" JSON definition.
-	 * This method should only be called when the vehicle or part with the
+	 * The part list should consist of a "parts" JSON definition, and can either
+	 * be on the main entity, or a part on this entity.
+	 * This method should only be called when the entity or part with the
 	 * passed-in definition is first placed, not when it's being loaded from saved data.
 	 */
-	public static void addDefaultParts(List<VehiclePart> partsToAdd, EntityVehicleA_Base vehicle, APart parentPart, boolean sendPacket){
-		for(VehiclePart packDef : partsToAdd){
-			if(packDef.defaultPart != null){
+	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, APart parentPart, boolean sendPacket){
+		for(JSONPartDefinition partDef : partsToAdd){
+			if(partDef.defaultPart != null){
 				try{
-					String partPackID = packDef.defaultPart.substring(0, packDef.defaultPart.indexOf(':'));
-					String partSystemName = packDef.defaultPart.substring(packDef.defaultPart.indexOf(':') + 1);
+					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
+					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						APart newPart = partItem.createPart((EntityVehicleF_Physics) vehicle, packDef, new WrapperNBT(), parentPart);
-						vehicle.addPart(newPart);
+						APart newPart = partItem.createPart(this, partDef, new WrapperNBT(), parentPart);
+						addPart(newPart);
 						
 						//Set default text for the new part, if we have any.
 						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
@@ -455,52 +442,43 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 						
 						//Send a packet if required.
 						if(sendPacket){
-							InterfacePacket.sendToAllClients(new PacketVehiclePartChange((EntityVehicleF_Physics) vehicle, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
+							InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
-						if(packDef.additionalParts != null){
-							addDefaultParts(packDef.additionalParts, vehicle, newPart, sendPacket);
+						if(partDef.additionalParts != null){
+							addDefaultParts(partDef.additionalParts, newPart, sendPacket);
 						}
 						
 						//Check all sub-parts, if we have any.
 						//We need to make sure to convert them to the right type as they're offset.
-						if(newPart.definition.subParts != null){
-							List<VehiclePart> subPartsToAdd = new ArrayList<VehiclePart>();
-							for(VehiclePart subPartPack : newPart.definition.subParts){
-								subPartsToAdd.add(vehicle.getPackForSubPart(packDef, subPartPack));
+						if(newPart.definition.parts != null){
+							List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
+							for(JSONPartDefinition subPartPack : newPart.definition.parts){
+								subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
 							}
-							addDefaultParts(subPartsToAdd, vehicle, newPart, sendPacket);
+							addDefaultParts(subPartsToAdd, newPart, sendPacket);
 						}
 					}catch(NullPointerException e){
-						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + " but that part doesn't exist in the pack item registry.");
+						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");
 					}
 				}catch(IndexOutOfBoundsException e){
-					throw new IllegalArgumentException("Could not parse defaultPart definition: " + packDef.defaultPart + ".  Format should be \"packId:partName\"");
+					throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
 				}
 			}
 		}
 	}
 	
 	@Override
-    public AnimationsVehicle getAnimationSystem(){
-		return animator;
-	}
-	
-	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		data.setString("packID", definition.packID);
-		data.setString("systemName", definition.systemName);
-		data.setString("subName", currentSubName);
-		
 		int totalParts = 0;
 		for(APart part : parts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
 				WrapperNBT partData = part.getData();
-				//We need to set some extra data here for the part to allow this vehicle to know where it went.
+				//We need to set some extra data here for the part to allow this entity to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setString("packID", part.definition.packID);
 				partData.setString("systemName", part.definition.systemName);
@@ -512,4 +490,6 @@ abstract class EntityVehicleA_Base extends AEntityBase{
 		}
 		data.setInteger("totalParts", totalParts);
 	}
+	
+	//FIXME need to have the remove method call all part removes so they get their removal states set.
 }

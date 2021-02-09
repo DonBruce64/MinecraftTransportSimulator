@@ -20,10 +20,10 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -43,7 +43,7 @@ import net.minecraft.item.ItemStack;
  */
 public class GUIPartBench extends AGUIBase{
 	/*Last item this GUI was on when closed.  Keyed by block instance.*/
-	private static final Map<TileEntityDecor, AItemPack<? extends AJSONItem<?>>> lastOpenedItem = new HashMap<TileEntityDecor, AItemPack<? extends AJSONItem<?>>>();
+	private static final Map<TileEntityDecor, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<TileEntityDecor, AItemPack<? extends AJSONItem>>();
 	
 	//Init variables.
 	private final TileEntityDecor decor;
@@ -79,13 +79,13 @@ public class GUIPartBench extends AGUIBase{
 	private String currentPack;
 	private String nextPack;
 	
-	private AItemPack<? extends AJSONItem<?>> prevItem;
-	private AItemPack<? extends AJSONItem<?>> currentItem;
-	private AItemPack<? extends AJSONItem<?>> nextItem;
+	private AItemPack<? extends AJSONItem> prevItem;
+	private AItemPack<? extends AJSONItem> currentItem;
+	private AItemPack<? extends AJSONItem> nextItem;
 	
 	//Only used for vehicles.
-	private AItemPack<? extends AJSONItem<?>> prevSubItem;
-	private AItemPack<? extends AJSONItem<?>> nextSubItem;
+	private AItemPack<? extends AJSONItem> prevSubItem;
+	private AItemPack<? extends AJSONItem> nextSubItem;
 	boolean displayVehicleInfo = false;
 	
 
@@ -436,12 +436,12 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		if(hasMaterials){
-			if(decor.definition.general.items != null){
-				return decor.definition.general.items.contains(item.definition.packID + ":" + item.definition.systemName);
-			}else if(decor.definition.general.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
-				if(item.definition instanceof JSONPart && decor.definition.general.partTypes != null){
-					for(String partType : decor.definition.general.partTypes){
-						if(((JSONPart) item.definition).general.type.contains(partType)){
+			if(decor.definition.decor.items != null){
+				return decor.definition.decor.items.contains(item.definition.packID + ":" + item.definition.systemName);
+			}else if(decor.definition.decor.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
+				if(item.definition instanceof JSONPart && decor.definition.decor.partTypes != null){
+					for(String partType : decor.definition.decor.partTypes){
+						if(((JSONPart) item.definition).generic.type.contains(partType)){
 							return true;
 						}
 					}
@@ -465,7 +465,7 @@ public class GUIPartBench extends AGUIBase{
 		float maxWheelSize = 0;
 		
 		//Get how many passengers and cargo this vehicle can hold.
-		for(VehiclePart part : vehicleDefinition.parts){
+		for(JSONPartDefinition part : vehicleDefinition.parts){
 			if(part.isController){
 				++controllers;
 			}else{
@@ -502,7 +502,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.general.emptyMass) + "\n";
+		totalInformation += InterfaceCore.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.motorized.emptyMass) + "\n";
 		totalInformation += InterfaceCore.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
 		totalInformation += InterfaceCore.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
 		totalInformation += InterfaceCore.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";

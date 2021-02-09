@@ -22,7 +22,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -62,7 +61,7 @@ public class GUIInstruments extends AGUIBase{
 	public GUIInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		this.vehicle = vehicle;
 		this.hudGUI = new GUIHUD(vehicle);
-		this.panelGUI = vehicle.definition.general.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);
+		this.panelGUI = vehicle.definition.motorized.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);
 		
 		//Add all packs that have instruments in them.
 		//This depends on if the player has the instruments, or if they are in creative.
@@ -272,7 +271,7 @@ public class GUIInstruments extends AGUIBase{
 	}
 	
 	@Override
-	public AEntityBase getGUILightSource(){
+	public EntityVehicleF_Physics getGUILightSource(){
 		return hudSelected ? hudGUI.getGUILightSource() : panelGUI.getGUILightSource();
 	}
 	

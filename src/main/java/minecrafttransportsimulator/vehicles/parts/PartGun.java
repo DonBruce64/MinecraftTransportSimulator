@@ -5,20 +5,19 @@ import minecrafttransportsimulator.baseclasses.IGunProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	
 	public final Gun internalGun;
 		
-	public PartGun(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
+	public PartGun(EntityVehicleF_Physics vehicle, JSONPartDefinition packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
 		super(vehicle, packVehicleDef, item, data, parentPart);
 		//Set min/max yaw/pitch angles based on our definition and the vehicle definition.
 		//If the vehicle's min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
@@ -27,30 +26,30 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		final double maxYawAngle;
 		final double minPitchAngle;
 		final double maxPitchAngle;
-		if(vehicleDefinition.minYaw == -180 && vehicleDefinition.maxYaw == 180){
+		if(partDefinition.minYaw == -180 && partDefinition.maxYaw == 180){
 			minYawAngle = -180;
 			maxYawAngle = 180;
 		}else{
 			if(definition.gun.minYaw != 0){
-				minYawAngle = vehicleDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, vehicleDefinition.minYaw) : definition.gun.minYaw;
+				minYawAngle = partDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, partDefinition.minYaw) : definition.gun.minYaw;
 			}else{
-				minYawAngle =  vehicleDefinition.minYaw;
+				minYawAngle =  partDefinition.minYaw;
 			}
 			if(definition.gun.maxYaw != 0){
-				maxYawAngle = vehicleDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, vehicleDefinition.maxYaw) : definition.gun.maxYaw;
+				maxYawAngle = partDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, partDefinition.maxYaw) : definition.gun.maxYaw;
 			}else{
-				maxYawAngle =  vehicleDefinition.maxYaw;
+				maxYawAngle =  partDefinition.maxYaw;
 			}
 		}
 		if(definition.gun.minPitch != 0){
-			minPitchAngle = vehicleDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, vehicleDefinition.minPitch) : -definition.gun.minPitch;
+			minPitchAngle = partDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, partDefinition.minPitch) : -definition.gun.minPitch;
 		}else{
-			minPitchAngle = -vehicleDefinition.minPitch;
+			minPitchAngle = -partDefinition.minPitch;
 		}	
 		if(definition.gun.maxPitch != 0){
-			maxPitchAngle = vehicleDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, vehicleDefinition.maxPitch) : -definition.gun.maxPitch;
+			maxPitchAngle = partDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, partDefinition.maxPitch) : -definition.gun.maxPitch;
 		}else{
-			maxPitchAngle = -vehicleDefinition.maxPitch;
+			maxPitchAngle = -partDefinition.maxPitch;
 		}
 		
 		//Create a new Gun object.
@@ -143,7 +142,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		//Check all controllers in case there's multiple controller seats.
 		for(APart vehiclePart : vehicle.parts){
 			if(vehiclePart instanceof PartSeat){
-				if(vehiclePart.vehicleDefinition.isController){
+				if(vehiclePart.partDefinition.isController){
 					WrapperEntity controller = vehicle.locationRiderMap.get(vehiclePart.placementOffset);
 					if(controller != null){
 						return controller;
@@ -163,7 +162,7 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 		//If this gun type can only have one selected at a time, check that this has the selected index.
 		if(controller != null){
 			PartSeat controllerSeat = (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(controller));
-			return !vehicleDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
+			return !partDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || vehicle.guns.get(getItem()).get(controllerSeat.gunIndex).equals(this));
 		}else{
 			return false;
 		}
@@ -205,18 +204,6 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	@Override
 	public int getTotalGuns(){
 		return vehicle.guns.get(getItem()).size();
-	}
-	
-	@Override
-	public void updateProviderSound(SoundInstance sound){
-		super.updateProviderSound(sound);
-		internalGun.updateProviderSound(sound);
-	}
-	
-	@Override
-	public void startSounds(){
-		super.startSounds();
-		internalGun.startSounds();
 	}
 	
 	@Override

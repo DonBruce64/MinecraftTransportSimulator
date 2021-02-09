@@ -27,7 +27,7 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	
 	@Override
 	public Class<? extends ABlockBase> getBlockClass(){
-		return DecorComponentType.getBlockClass(definition.general.type);
+		return DecorComponentType.getBlockClass(definition.decor.type);
 	}
 	
 	public static enum DecorComponentType{

@@ -2,15 +2,14 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -39,6 +38,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	public byte currentGear;
 	public int upshiftCountdown;
 	public int downshiftCountdown;
+	public int internalFuel;
 	public double hours;
 	public double rpm;
 	public double temp = 20;
@@ -57,7 +57,6 @@ public class PartEngine extends APart implements IParticleProvider{
 	private int starterLevel;
 	private int autoStarterWindDown;
 	private int shiftCooldown;
-	private int internalFuel;
 	private long lastTimeParticleSpawned;
 	private float currentGearRatio;
 	private double lowestWheelVelocity;
@@ -85,8 +84,8 @@ public class PartEngine extends APart implements IParticleProvider{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartEngine(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
@@ -107,7 +106,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		
 		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
 		//Well, except blimps, but that's a special case.
-		if(vehicle.definition.general.isAircraft){
+		if(vehicle.definition.motorized.isAircraft){
 			currentGear = 1;
 		}
 	}
@@ -515,7 +514,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	
 	@Override
 	public boolean isInLiquid(){
-		return vehicle.world.isBlockLiquid(new Point3i(worldPos.copy().add(0, vehicleDefinition.intakeOffset, 0)));
+		return vehicle.world.isBlockLiquid(new Point3i(worldPos.copy().add(0, partDefinition.intakeOffset, 0)));
 	}
 	
 	@Override
@@ -781,10 +780,6 @@ public class PartEngine extends APart implements IParticleProvider{
 			if(doShift || vehicle.world.isClient()){
 				currentGear = nextGear;
 				downshiftCountdown = definition.engine.clutchTime;
-				//If we are a big truck, turn on the backup beeper.
-				if(currentGear == -1 && vehicle.definition.motorized.isBigTruck && vehicle.world.isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
-				}
 			}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
 				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
 			}
@@ -908,110 +903,65 @@ public class PartEngine extends APart implements IParticleProvider{
 	@Override
 	public void updateProviderSound(SoundInstance sound){
 		super.updateProviderSound(sound);
-		//Adjust cranking sound pitch to match RPM and stop looping if we are done cranking.
-		//Adjust running sound to have pitch based on engine RPM.
-		if(sound.soundName.endsWith("_cranking")){
-			if(!state.esOn && !state.hsOn){
-				sound.stop();
-			}else{
-				if(definition.engine.isCrankingNotPitched){
-					sound.pitch = (float) Math.min(1.0F, (vehicle.electricPower + 3.0F)/10);
+		//If we are using a custom soundset, do that logic. Otherwise, do default sound logic.
+		if(definition.engine.customSoundset != null){
+			for(EngineSound soundDefinition : definition.engine.customSoundset){
+				//For "Advanced" = false:
+				//Interpolate in the form of Y=A*X + B.
+				//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
+				//For "Advanced" = true:
+				//Y = A*(H^2) + K
+				//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
+				double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
+				float customPitch;
+				float customVolume;
+				if(soundDefinition.pitchAdvanced){
+					customPitch = (float) Math.max((-0.000001 / (soundDefinition.pitchLength/1000)) * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/20000) + 1, 0);
 				}else{
-					sound.pitch = (float) (rpm/startRPM);
+					customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
+				}			
+				if(soundDefinition.volumeAdvanced){
+					customVolume = (float) Math.max((-0.000001 / (soundDefinition.volumeLength/1000)) * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/20000) + 1, 0);
+				}else{
+					customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
 				}
-			}
-		}else if(sound.soundName.endsWith("backup_beeper")){
-			//Turn off backup beeper if we are no longer in reverse or aren't running.
-			if(currentGear >= 0){
-				sound.stop();
-			}else{
-				sound.volume = state.running ? 1 : 0;
+				if(sound.soundName.equals(soundDefinition.soundName)){
+					if(!state.running && internalFuel == 0){
+						sound.stop();
+					}else{
+						sound.pitch = customPitch;
+						sound.volume = customVolume;
+					}
+				}
 			}
 		}else{
-			//If we are using a custom soundset, do that logic. Otherwise, do default sound logic.
-			if(definition.engine.customSoundset != null){
-				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					//For "Advanced" = false:
-					//Interpolate in the form of Y=A*X + B.
-					//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
-					//For "Advanced" = true:
-					//Y = A*(H^2) + K
-					//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
-					double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
-					float customPitch;
-					float customVolume;
-					if(soundDefinition.pitchAdvanced){
-						customPitch = (float) Math.max((-0.000001 / (soundDefinition.pitchLength/1000)) * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/20000) + 1, 0);
+			//Update running and supercharger sounds.
+			if(sound.soundName.endsWith("_running")){
+				if(!state.running && internalFuel == 0){
+					sound.stop();
+				}else{
+					//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+					//For steam engines, pitch is just 1 as it's meant to be the sound of a firebox.
+					if(definition.engine.isSteamPowered){
+						sound.pitch = 1.0F;
 					}else{
-						customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
-					}			
-					if(soundDefinition.volumeAdvanced){
-						customVolume = (float) Math.max((-0.000001 / (soundDefinition.volumeLength/1000)) * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/20000) + 1, 0);
-					}else{
-						customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
-					}
-					if(sound.soundName.equals(soundDefinition.soundName)){
-						if(!state.running && internalFuel == 0){
-							sound.stop();
-						}else{
-							sound.pitch = customPitch;
-							sound.volume = customVolume;
-						}
+						sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 					}
 				}
-			}else{
-				//Update running and supercharger sounds.
-				if(sound.soundName.endsWith("_running")){
-					if(!state.running && internalFuel == 0){
-						sound.stop();
+			}else if(sound.soundName.endsWith("_supercharger")){
+				if(!state.running && internalFuel == 0){
+					sound.stop();
+				}else{
+					sound.volume = (float) rpm/definition.engine.maxRPM;
+					if(definition.engine.isSteamPowered){
+						sound.pitch = 1.0F;
 					}else{
-						//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-						//For steam engines, pitch is just 1 as it's meant to be the sound of a firebox.
-						if(definition.engine.isSteamPowered){
-							sound.pitch = 1.0F;
-						}else{
-							sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
-						}
+						sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
 					}
-				}else if(sound.soundName.endsWith("_supercharger")){
-					if(!state.running && internalFuel == 0){
-						sound.stop();
-					}else{
-						sound.volume = (float) rpm/definition.engine.maxRPM;
-						if(definition.engine.isSteamPowered){
-							sound.pitch = 1.0F;
-						}else{
-							sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
-						}
-					}
-				}else if(sound.soundName.endsWith("_piston")){
-					sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/500D)); 
 				}
 			}
 		}
 	}
-	
-	@Override
-	public void startSounds(){
-		if(state.running){
-			if(definition.engine.customSoundset != null){
-				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					InterfaceSound.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
-				}
-			}else{
-				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-			}
-		}
-		if(state.esOn || state.hsOn){
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
-		}
-		if(currentGear < 0 && vehicle.definition.motorized.isBigTruck){
-			InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":backup_beeper", true));
-		}
-	}
-
-	
 	
 	//--------------------START OF ENGINE PARTICLE METHODS--------------------
 	
@@ -1019,7 +969,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	public void spawnParticles(){
 		//Render exhaust smoke if we have any exhausts and are running.
 		//If we are starting and have flames set, render those instead.
-		if(vehicleDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
+		if(partDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
 			//Render a smoke for every cycle the exhaust makes.
 			//Depending on the number of positions we have, render an exhaust for every one.
 			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
@@ -1033,19 +983,19 @@ public class PartEngine extends APart implements IParticleProvider{
 			if(engineCycleTimeMills != 0){
 				long camTime = currentTime%engineCycleTimeMills;
 				
-				boolean singleExhaust = vehicleDefinition.particleObjects.size() == 1;
+				boolean singleExhaust = partDefinition.particleObjects.size() == 1;
 				
 				//Iterate through all the exhaust positions and fire them if it is time to do so.
 				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
 				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(JSONParticleObject particle : vehicleDefinition.particleObjects){
+				for(JSONParticleObject particle : partDefinition.particleObjects){
 					if(singleExhaust){
 						if(lastTimeParticleSpawned + camTime > currentTime){
 							continue;
 						}
 					}else{
-						long camOffset = engineCycleTimeMills/vehicleDefinition.particleObjects.size();
-						long camMin = vehicleDefinition.particleObjects.indexOf(particle)*camOffset;
+						long camOffset = engineCycleTimeMills/partDefinition.particleObjects.size();
+						long camMin = partDefinition.particleObjects.indexOf(particle)*camOffset;
 						long camMax = camMin + camOffset;
 						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
 							continue;
@@ -1079,8 +1029,8 @@ public class PartEngine extends APart implements IParticleProvider{
 		//Will be from the engine or the exhaust if we have any.
 		if(backfired){
 			backfired = false;
-			if(vehicleDefinition.particleObjects != null){
-				for(JSONParticleObject particle : vehicleDefinition.particleObjects){
+			if(partDefinition.particleObjects != null){
+				for(JSONParticleObject particle : partDefinition.particleObjects){
 					Point3d exhaustOffset = particle.pos.copy().rotateFine(vehicle.angles).add(vehicle.position);
 					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(vehicle.angles);
 					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;

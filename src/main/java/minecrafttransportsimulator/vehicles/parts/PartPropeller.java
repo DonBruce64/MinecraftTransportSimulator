@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -23,8 +23,8 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartPropeller(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.damageAmount = data.getDouble("damageAmount");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
@@ -41,7 +41,7 @@ public class PartPropeller extends APart{
 	public void attack(Damage damage){
 		if(damage.attacker != null){
 			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
-				if(!vehicle.equals(damage.attacker.getEntityRiding())){
+				if(!entityOn.equals(damage.attacker.getEntityRiding())){
 					connectedEngine.handStartEngine();
 					InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(connectedEngine, Signal.HS_ON));
 				}
@@ -85,14 +85,14 @@ public class PartPropeller extends APart{
 		angularPosition += angularVelocity;
 		
 		//Damage propeller or entities if required.
-		if(!vehicle.world.isClient()){
+		if(!world.isClient()){
 			if(connectedEngine.rpm >= 100){
 				//Expand the bounding box bounds, and send off the attack.
 				boundingBox.widthRadius += 0.2;
 				boundingBox.heightRadius += 0.2;
 				boundingBox.depthRadius += 0.2;
 				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, vehicle.getController());
-				vehicle.world.attackEntities(propellerDamage, vehicle.wrapper, null);
+				world.attackEntities(propellerDamage, vehicle.wrapper, null);
 				boundingBox.widthRadius -= 0.2;
 				boundingBox.heightRadius -= 0.2;
 				boundingBox.depthRadius -= 0.2;
@@ -110,11 +110,11 @@ public class PartPropeller extends APart{
 			}
 			
 			//If we are too damaged, remove ourselves.
-			if(damageAmount > definition.propeller.startingHealth && !vehicle.world.isClient()){
+			if(damageAmount > definition.propeller.startingHealth && !world.isClient()){
 				if(ConfigSystem.configObject.damage.explosions.value){
-					vehicle.world.spawnExplosion(vehicle, worldPos, 1F, true);
+					world.spawnExplosion(this, worldPos, 1F, true);
 				}else{
-					vehicle.world.spawnExplosion(vehicle, worldPos, 0F, false);
+					world.spawnExplosion(this, worldPos, 0F, false);
 				}
 				isValid = false;
 			}
@@ -156,8 +156,8 @@ public class PartPropeller extends APart{
 		if(connectedEngine != null && connectedEngine.state.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(vehicle.angles));
-			double currentLinearVelocity = 20D*vehicle.motion.dotProduct(propellerThrustAxis);
+			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(entityOn.angles));
+			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
 			//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances

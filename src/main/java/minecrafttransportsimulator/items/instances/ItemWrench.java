@@ -52,7 +52,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					//If not, spawn item in the world and remove part.
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
-					if(!part.vehicleDefinition.isPermanent && part.childParts.isEmpty()){
+					if(!part.partDefinition.isPermanent && part.childParts.isEmpty()){
 						vehicle.removePart(part, null);
 						ItemPart droppedItem = part.getItem();
 						if(droppedItem != null){

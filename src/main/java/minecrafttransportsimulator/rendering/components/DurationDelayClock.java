@@ -1,11 +1,12 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
- * This is used both in model animations, and part movements.
+ * This is used anything that queries animation states.
  *
  * @author don_bruce
  */
@@ -26,10 +27,11 @@ public class DurationDelayClock{
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
-	public double getFactoredState(IAnimationProvider provider, double value){
+	public double getFactoredState(AEntityC_Definable<?> entity, double value){
 		boolean commandForwards = value == 1;
-		long currentTime = System.currentTimeMillis();
-		long cycleTime = definition.duration*50 + definition.forwardsDelay*50 + definition.reverseDelay*50;
+		//Get the current time, in ticks.
+		long currentTime = System.currentTimeMillis()/50;
+		long cycleTime = definition.duration + definition.forwardsDelay + definition.reverseDelay;
 		
 		//If we don't have an existing command, just set ourselves to the end of our command path.
 		if(timeCommandedForwards == 0 && timeCommandedReverse == 0){
@@ -51,7 +53,7 @@ public class DurationDelayClock{
 					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
 					timeCommandedReverse += timeForwards - cycleTime;
 				}
-				if(timeForwards >= definition.duration*50 + definition.forwardsDelay*50){
+				if(timeForwards >= definition.duration + definition.forwardsDelay){
 					//Made it to the end of travel, so need to play sound when we start travel back up.
 					playedReverseStartSound = false;
 				}
@@ -78,37 +80,37 @@ public class DurationDelayClock{
 		double movementFactor = 0;
 		if(commandForwards){
 			long timedelayed = currentTime - timeCommandedForwards;
-			if(timedelayed >= definition.forwardsDelay*50){
-				long timeMoved = currentTime - (timeCommandedForwards + definition.forwardsDelay*50);
-				if(timeMoved < definition.duration*50){
-					movementFactor = timeMoved/(double)(definition.duration*50);
+			if(timedelayed >= definition.forwardsDelay){
+				long timeMoved = currentTime - (timeCommandedForwards + definition.forwardsDelay);
+				if(timeMoved < definition.duration){
+					movementFactor = timeMoved/(double)(definition.duration);
 				}else{
 					movementFactor = 1;
-					if(!playedForwardsEndSound && provider.getProviderWorld().isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsEndSound));
+					if(!playedForwardsEndSound && entity.world.isClient()){
+						InterfaceSound.playQuickSound(new SoundInstance(entity, definition.forwardsEndSound));
 						playedForwardsEndSound = true;
 					}
 				}
-				if(!playedForwardsStartSound && provider.getProviderWorld().isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsStartSound));
+				if(!playedForwardsStartSound && entity.world.isClient()){
+					InterfaceSound.playQuickSound(new SoundInstance(entity, definition.forwardsStartSound));
 					playedForwardsStartSound = true;
 				}
 			}
 		}else{
 			long timedelayed = currentTime - timeCommandedReverse;
-			if(timedelayed >= definition.reverseDelay*50){
-				long timeMoved = currentTime - (timeCommandedReverse + definition.reverseDelay*50);
-				if(timeMoved < definition.duration*50){
-					movementFactor = timeMoved/(double)(definition.duration*50);
+			if(timedelayed >= definition.reverseDelay){
+				long timeMoved = currentTime - (timeCommandedReverse + definition.reverseDelay);
+				if(timeMoved < definition.duration){
+					movementFactor = timeMoved/(double)(definition.duration);
 				}else{
 					movementFactor = 1;
-					if(!playedReverseEndSound && provider.getProviderWorld().isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseEndSound));
+					if(!playedReverseEndSound && entity.world.isClient()){
+						InterfaceSound.playQuickSound(new SoundInstance(entity, definition.reverseEndSound));
 						playedReverseEndSound = true;
 					}
 				}
-				if(!playedReverseStartSound && provider.getProviderWorld().isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseStartSound));
+				if(!playedReverseStartSound && entity.world.isClient()){
+					InterfaceSound.playQuickSound(new SoundInstance(entity, definition.reverseStartSound));
 					playedReverseStartSound = true;
 				}
 			}

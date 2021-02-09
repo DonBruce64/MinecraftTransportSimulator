@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.items.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Interface for items that create entities when used.
  *
  * @author don_bruce
  */
-public interface IItemEntityProvider<EntityType extends AEntityBase>{
+public interface IItemEntityProvider<EntityType extends AEntityB_Existing<?>>{
 	
 	/**
 	 *  Gets a new instance of the entity this item creates.

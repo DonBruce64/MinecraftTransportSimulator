@@ -1,13 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -21,9 +20,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleBullet;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
-import minecrafttransportsimulator.sound.ISoundProviderComplex;
-import minecrafttransportsimulator.sound.InterfaceSound;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -40,12 +36,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  *
  * @author don_bruce
  */
-public class Gun implements IParticleProvider, ISoundProviderComplex{
-	public static final Map<Integer, Gun> createdServerGuns = new HashMap<Integer, Gun>();
-	public static final Map<Integer, Gun> createdClientGuns = new HashMap<Integer, Gun>();
-	/**Internal counter for tank IDs.  Increments each time a gun is created, and only valid on the server.**/
-	private static int idCounter = 1;
-	
+public class Gun extends AEntityB_Existing implements IParticleProvider{
 	//Variables based on the specific gun's properties.
 	public final IGunProvider provider;
 	public final int gunID;
@@ -250,9 +241,6 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 		
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
-			if(windupTimeCurrent == 0 && provider.getProviderWorld().isClient()){
-				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
-			}
 			++windupTimeCurrent;
 		}else if(!firing && windupTimeCurrent > 0){
 			--windupTimeCurrent;
@@ -320,9 +308,7 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 					loadedBullet = part;
 					bulletsReloading = part.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
-					if(provider.getProviderWorld().isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.packID + ":" + definition.systemName + "_reloading"));
-					}else{
+					if(!provider.getProviderWorld().isClient()){
 						InterfacePacket.sendToAllClients(new PacketGunChange(this, loadedBullet));
 					}
 					return true;
@@ -362,24 +348,13 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 	}
 	
 	@Override
-	public void updateProviderSound(SoundInstance sound){
-		//Adjust winding sound pitch to match winding value and stop looping if we aren't winding.
-		if(sound.soundName.endsWith("_winding")){
-			if(windupTimeCurrent == 0){
-				sound.stop();
-			}else{
-				float windupPercent = windupTimeCurrent/(float)definition.gun.windupTime;
-				sound.pitch = 0.25F + 0.75F*windupPercent;
-				sound.volume = 0.25F + 0.75F*windupPercent;
-			}
-		}
+	public boolean isProviderValid(){
+		return provider.isProviderValid();
 	}
 	
 	@Override
-	public void startSounds(){
-		if(windupTimeCurrent > 0){
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_winding", true));
-		}
+	public List<JSONSound> getSoundDefinitions(){
+		return definition.rendering != null ? definition.rendering.sounds : null;
 	}
 		
 	@Override
@@ -439,13 +414,12 @@ public class Gun implements IParticleProvider, ISoundProviderComplex{
 				InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
 			}
 			
-			//Do sound and effects.
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_firing"));
+			//Do effects.
 			if(definition.gun.particleObjects != null){
 				spawnEffectParticles();
 			}
 			
-			//Set last firing time to curernt time.
+			//Set last firing time to current time.
 			lastTimeFired = timeToFire;
 			
 			//Remove a bullet from the count and add shots fired.

@@ -23,7 +23,7 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 		if(player.getHeldItem() instanceof ItemPaintGun){
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
-		}else if(decor.definition.general.itemTypes != null || decor.definition.general.items != null){
+		}else if(decor.definition.decor.itemTypes != null || decor.definition.decor.items != null){
 			if(world.isClient()){
 				InterfaceGUI.openGUI(new GUIPartBench(decor, player));
 			}

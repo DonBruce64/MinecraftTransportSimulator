@@ -128,7 +128,7 @@ public class InterfaceEventsOverlay{
 						}
 						
 						//If the seat is a controller, render the HUD if it's set.
-						if(seat.vehicleDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+						if(seat.partDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
 							//Create a new GUI for the HUD if we don't have one or if we changed from first-person to third-person.
 							if(currentGUI == null || (inFirstPersonLastRender ^ InterfaceClient.inFirstPerson())){
 								currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);

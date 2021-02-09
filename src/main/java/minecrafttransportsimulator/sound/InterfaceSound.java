@@ -4,16 +4,15 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -38,8 +37,8 @@ public class InterfaceSound{
 	 * memory to prevent the need to load them every time they are played.**/
 	private static final Map<String, Integer> dataSourceBuffers = new HashMap<String, Integer>();
 	
-	/**List of playing {@link SoundInstance} objects.**/
-	private static final List<SoundInstance> playingSounds = new ArrayList<SoundInstance>();
+	/**Map of entities and their playing sounds.**/
+	private static final Map<AEntityB_Existing, List<SoundInstance>> activeEntitySounds = new HashMap<AEntityB_Existing, List<SoundInstance>>();
 	
 	/**List of playing {@link RadioStation} objects.**/
 	private static final List<RadioStation> playingStations = new ArrayList<RadioStation>();
@@ -56,7 +55,7 @@ public class InterfaceSound{
 	 *  as well as queue up sounds that aren't playing yet but need to.
 	 */
 	public static void update(){
-		if(!AL.isCreated()){
+		if(!InterfaceClient.isSoundSystemReady()){
 			//Don't go any further if OpenAL isn't ready.
 			return;
 		}
@@ -64,15 +63,19 @@ public class InterfaceSound{
 		//Handle pause state logic.
 		if(InterfaceClient.isGamePaused()){
 			if(!isSystemPaused){
-				for(SoundInstance sound : playingSounds){
-					AL10.alSourcePause(sound.sourceIndex);
+				for(List<SoundInstance> entitySounds : activeEntitySounds.values()){
+					for(SoundInstance sound : entitySounds){
+						AL10.alSourcePause(sound.sourceIndex);
+					}
 				}
 				isSystemPaused = true;
 			}
 			return;
 		}else if(isSystemPaused){
-			for(SoundInstance sound : playingSounds){
-				AL10.alSourcePlay(sound.sourceIndex);
+			for(List<SoundInstance> entitySounds : activeEntitySounds.values()){
+				for(SoundInstance sound : entitySounds){
+					AL10.alSourcePlay(sound.sourceIndex);
+				}
 			}
 			isSystemPaused = false;
 		}
@@ -83,8 +86,10 @@ public class InterfaceSound{
     		while(iterator.hasNext()){
     			iterator.remove();
     		}
-    		for(SoundInstance playingSound : playingSounds){
-    			playingSound.stop();
+    		for(List<SoundInstance> entitySounds : activeEntitySounds.values()){
+	    		for(SoundInstance playingSound : entitySounds){
+	    			playingSound.stop();
+	    		}
     		}
 		}
 		
@@ -92,7 +97,10 @@ public class InterfaceSound{
 		if(!queuedSounds.isEmpty()){
 			for(SoundInstance sound : queuedSounds){
 				AL10.alSourcePlay(sound.sourceIndex);
-				playingSounds.add(sound);
+				if(!activeEntitySounds.containsKey(sound.entity)){
+					activeEntitySounds.put(sound.entity, new ArrayList<SoundInstance>());
+				}
+				activeEntitySounds.get(sound.entity).add(sound);
 			}
 			queuedSounds.clear();
 		}
@@ -102,72 +110,76 @@ public class InterfaceSound{
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
-		Iterator<SoundInstance> soundIterator = playingSounds.iterator();
-		while(soundIterator.hasNext()){
-			SoundInstance sound = soundIterator.next();
-			AL10.alGetError();
-			int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
+		for(AEntityB_Existing entity : activeEntitySounds.keySet()){
+			//First have the entity update the sound states.
+			entity.updateSounds(activeEntitySounds.get(entity));
+			
+			//Iterate over all sounds to handle their new updated state.
+			Iterator<SoundInstance> soundIterator = activeEntitySounds.get(entity).iterator();
+			while(soundIterator.hasNext()){
+				SoundInstance sound = soundIterator.next();
+				AL10.alGetError();
+				int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
 
-			//If we are an invalid name, it means the sound system was reset.
-			//Blow out all buffers and restart all sounds.
-			if(AL10.alGetError() == AL10.AL_INVALID_NAME){
-				soundSystemReset = true;
-				break;
+				//If we are an invalid name, it means the sound system was reset.
+				//Blow out all buffers and restart all sounds.
+				if(AL10.alGetError() == AL10.AL_INVALID_NAME){
+					soundSystemReset = true;
+					break;
+				}
+				
+				if(state == AL10.AL_PLAYING){
+					if(sound.stopSound){
+						AL10.alSourceStop(sound.sourceIndex);
+					}else{
+						//Update position.
+						AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
+						
+						//If the player is inside an enclosed vehicle, half the sound volume.
+						if(sound.shouldBeDampened()){
+							AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume/2F);
+						}else{
+							AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
+						}
+						
+						//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
+						//Otherwise, set pitch as normal.
+						if(sound.looping && !sound.entity.equals(player.getEntityRiding())){
+							Point3d playerVelocity = player.getVelocity();
+							playerVelocity.y = 0;
+							double initalDelta = player.getPosition().subtract(entity.position).length();
+							double finalDelta = player.getPosition().add(playerVelocity).subtract(entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();
+							float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
+							AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
+						}else{
+							AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
+						}
+
+						//Update rolloff distance, which is based on pitch.
+						AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
+					}
+				}else{
+					//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
+					if(sound.radio == null){
+						AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
+						sound.stop();
+					}else if(sound.stopSound){
+						int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
+						if(boundBuffers > 0){
+							IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
+							AL10.alSourceUnqueueBuffers(sound.sourceIndex, buffers);
+						}
+					}
+					if(sound.stopSound){
+						IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
+						AL10.alDeleteSources(sourceBuffer);
+						soundIterator.remove();
+					}
+				}
 			}
 			
-			if(state == AL10.AL_PLAYING){
-				if(sound.provider instanceof ISoundProviderComplex){
-					((ISoundProviderComplex) sound.provider).updateProviderSound(sound);
-				}
-				if(sound.stopSound){
-					AL10.alSourceStop(sound.sourceIndex);
-				}else{
-					//Update position.
-					//FloatBuffer providerPosbuffer = sound.provider.getProviderPositionBuffer();
-					Point3d providerPosition = sound.provider.getProviderPosition();
-					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) providerPosition.x, (float) providerPosition.y, (float) providerPosition.z);
-					
-					//If the player is inside an enclosed vehicle, half the sound volume.
-					if(sound.shouldBeDampened()){
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume/2F);
-					}else{
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
-					}
-					
-					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
-					//Otherwise, set pitch as normal.
-					if(sound.looping && !sound.provider.equals(player.getEntityRiding())){
-						Point3d providerVelocity = ((ISoundProviderComplex) sound.provider).getProviderVelocity();
-						Point3d playerVelocity = player.getVelocity();
-						playerVelocity.y = 0;
-						double initalDelta = player.getPosition().subtract(providerPosition).length();
-						double finalDelta = player.getPosition().add(playerVelocity).subtract(providerPosition).add(-providerVelocity.x, 0D, -providerVelocity.z).length();
-						float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
-					}else{
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
-					}
-
-					//Update rolloff distance, which is based on pitch.
-					AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
-				}
-			}else{
-				//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
-				if(sound.radio == null){
-					AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
-					sound.stop();
-				}else if(sound.stopSound){
-					int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
-					if(boundBuffers > 0){
-						IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
-						AL10.alSourceUnqueueBuffers(sound.sourceIndex, buffers);
-					}
-				}
-				if(sound.stopSound){
-					IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
-					AL10.alDeleteSources(sourceBuffer);
-					soundIterator.remove();
-				}
+			if(soundSystemReset){
+				 break;
 			}
 		}
 		
@@ -179,17 +191,10 @@ public class InterfaceSound{
 		//If the sound system was reset, blow out all saved data points.
 		if(soundSystemReset){
 			dataSourceBuffers.clear();
-			Set<ISoundProviderComplex> providers = new HashSet<ISoundProviderComplex>();
-			for(SoundInstance sound : playingSounds){
-				if(sound.provider instanceof ISoundProviderComplex){
-					providers.add((ISoundProviderComplex) sound.provider);
-				}
-			}
-			playingSounds.clear();
+			for(List<SoundInstance> entitySounds : activeEntitySounds.values()){
+				entitySounds.clear();
+    		}
 			sourceGetFailures = 0;
-			for(ISoundProviderComplex provider : providers){
-				provider.startSounds();
-			}
 		}
 	}
 	
@@ -198,7 +203,7 @@ public class InterfaceSound{
 	 *  Useful for quick sounds like gunshots or button presses.
 	 */
 	public static void playQuickSound(SoundInstance sound){
-		if(AL.isCreated() && sourceGetFailures < 10){
+		if(InterfaceClient.isSoundSystemReady() && sourceGetFailures < 10){
 			//First get the IntBuffer pointer to where this sound data is stored.
 			Integer dataBufferPointer = loadOGGJarSound(sound.soundName);
 			if(dataBufferPointer != null){
@@ -215,10 +220,9 @@ public class InterfaceSound{
 				sound.sourceIndex = sourceBuffer.get(0);
 				
 				//Set properties and bind data buffer to source.
-				Point3d position = sound.provider.getProviderPosition();
 				AL10.alGetError();
 				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
-				AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) position.x, (float) position.y, (float) position.z);
+				AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
 	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 	    	    
 				//Done setting up buffer.  Queue sound to start playing.
@@ -226,6 +230,18 @@ public class InterfaceSound{
 			}
 		}
 	}
+	
+	/**
+   	 *  Called to start all sounds when this entity is loaded.
+   	 *  Sounds may be started after this; this method is just for
+   	 *  initial sounds that may have already been playing when this
+   	 *  entity was un-loaded and need to re-start.  Note that unless 
+   	 *  a entity is added to this list, it will NOT be queued for sound updates!
+   	 *  
+   	 */
+    public static void startSounds(AEntityB_Existing entity){
+    	activeEntitySounds.put(entity, new ArrayList<SoundInstance>());
+    }
     
 	/**
 	 *  Adds a station to be queued for updates.  This should only be done once upon station construction.
@@ -241,7 +257,7 @@ public class InterfaceSound{
 	 *  stack to avoid a CME.
 	 */
 	public static void addRadioSound(SoundInstance sound, List<Integer> buffers){
-		if(AL.isCreated() && sourceGetFailures < 10){
+		if(InterfaceClient.isSoundSystemReady() && sourceGetFailures < 10){
     		//Set the sound's source buffer index.
 			IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
 			AL10.alGetError();
@@ -258,7 +274,10 @@ public class InterfaceSound{
 				bindBuffer(sound, bufferIndex);
 			}
 			AL10.alSourcePlay(sound.sourceIndex);
-			playingSounds.add(sound);
+			if(!activeEntitySounds.containsKey(sound.entity)){
+				activeEntitySounds.put(sound.entity, new ArrayList<SoundInstance>());
+			}
+			activeEntitySounds.get(sound.entity).add(sound);
     	}
 	}
 
@@ -418,18 +437,20 @@ public class InterfaceSound{
     	if(event.getWorld().isRemote){
     		Iterator<SoundInstance> iterator = queuedSounds.iterator();
     		while(iterator.hasNext()){
-    			if(event.getWorld().equals(iterator.next().provider.getProviderWorld().world)){
+    			if(event.getWorld().equals(iterator.next().entity.world.world)){
     				iterator.remove();
     			}
     		}
-    		for(SoundInstance playingSound : playingSounds){
-    			if(event.getWorld().equals(playingSound.provider.getProviderWorld().world)){
-    				if(playingSound.radio != null){
-    					playingSound.radio.stop();
-    				}else{
-    					playingSound.stop();
-    				}
-    			}
+    		for(List<SoundInstance> entitySounds : activeEntitySounds.values()){
+	    		for(SoundInstance playingSound : entitySounds){
+	    			if(event.getWorld().equals(playingSound.entity.world.world)){
+	    				if(playingSound.radio != null){
+	    					playingSound.radio.stop();
+	    				}else{
+	    					playingSound.stop();
+	    				}
+	    			}
+	    		}
     		}
     		
     		//Mark world as un-paused and update sounds to stop the ones that were just removed.

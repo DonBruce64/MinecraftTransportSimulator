@@ -23,7 +23,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  *
  * @author don_bruce
  */
-public abstract class ATileEntityBase<JSONDefinition extends AJSONItem<?>>{
+public abstract class ATileEntityBase<JSONDefinition extends AJSONItem>{
 	/**Current world for this TileEntity.**/
 	public final WrapperWorld world;
 	/**Current position of this TileEntity.**/

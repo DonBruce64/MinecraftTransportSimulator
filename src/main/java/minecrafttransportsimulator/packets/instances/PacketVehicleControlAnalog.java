@@ -72,6 +72,13 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 		return true;
 	}
 	
+	/**
+	 *  Helper method for handling clamped values.
+	 */
+	private static int clampAngle(int min, int max, int value){
+		return value < min ? min : (value > max ? max : value);
+	}
+	
 	public enum Controls{
 		THROTTLE,
 		BRAKE,

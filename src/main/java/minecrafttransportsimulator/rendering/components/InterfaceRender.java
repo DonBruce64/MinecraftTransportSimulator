@@ -16,6 +16,8 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
@@ -26,7 +28,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -215,10 +216,10 @@ public class InterfaceRender{
 	
 	/**
 	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in entitie's location.  This will also enable lighting should
+	 *  passed-in entity's location.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToEntity(AEntityBase entity){
+	public static void setLightingToEntity(AEntityC_Definable<?> entity){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
@@ -296,7 +297,7 @@ public class InterfaceRender{
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
-	public static void renderEntityRiders(AEntityBase entity, float partialTicks){
+	public static void renderEntityRiders(AEntityD_Interactable<?> entity, float partialTicks){
 		for(WrapperEntity rider : entity.locationRiderMap.values()){
 			Entity riderEntity = rider.entity;
 			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
@@ -339,15 +340,15 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Renders all the text markings on the passed-in provider.
+	 *  Renders all the text markings on the passed-in entity.
 	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
 	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
 	 */
-	public static boolean renderTextMarkings(ITextProvider provider, String objectRendering){
+	public static boolean renderTextMarkings(AEntityC_Definable<?> entity, String objectRendering){
 		if(getRenderPass() != 1){
 			boolean systemLightingEnabled = true;
 			boolean internalLightingEnabled = true;
-			for(Entry<JSONText, String> textLine : provider.getText().entrySet()){
+			for(Entry<JSONText, String> textLine : entity.text.entrySet()){
 				JSONText textDefinition = textLine.getKey();
 				String text = textLine.getValue();
 				
@@ -361,7 +362,7 @@ public class InterfaceRender{
 					}
 					
 					//If we have light-up text, disable lightmap.
-					if(textDefinition.lightsUp && provider.renderTextLit()){
+					if(textDefinition.lightsUp && entity.renderTextLit()){
 						if(internalLightingEnabled){
 							internalLightingEnabled = false;
 							setInternalLightingState(internalLightingEnabled);
@@ -385,7 +386,7 @@ public class InterfaceRender{
 					//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
 					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 					//Finally, render the text.
-					String inheritedColor = provider.getSecondaryTextColor();
+					String inheritedColor = entity.getSecondaryTextColor();
 					String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
 					InterfaceGUI.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 					GL11.glPopMatrix();

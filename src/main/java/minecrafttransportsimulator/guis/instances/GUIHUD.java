@@ -5,7 +5,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
@@ -49,7 +48,7 @@ public class GUIHUD extends AGUIBase{
 	}
 	
 	@Override
-	public AEntityBase getGUILightSource(){
+	public EntityVehicleF_Physics getGUILightSource(){
 		return vehicle;
 	}
 	
@@ -70,6 +69,6 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	public String getTexture(){
-		return vehicle.definition.rendering.hudTexture != null ? vehicle.definition.rendering.hudTexture : "mts:textures/guis/hud.png";
+		return vehicle.definition.motorized.hudTexture != null ? vehicle.definition.motorized.hudTexture : "mts:textures/guis/hud.png";
 	}
 }

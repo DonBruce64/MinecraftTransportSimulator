@@ -3,22 +3,21 @@ package minecrafttransportsimulator.vehicles.parts;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
 	protected final Point3i[] lastBlocksModified;
 	protected final Point3i[] affectedBlocks;
 	
-	public PartEffector(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		lastBlocksModified = new Point3i[definition.effector.blocksWide];
 		affectedBlocks = new Point3i[definition.effector.blocksWide];
 	}
@@ -41,12 +40,12 @@ public class PartEffector extends APart{
 				switch(definition.effector.type){
 					case FERTILIZER: {
 						//Search all inventories for fertilizer and try to use it.
-						for(APart part : vehicle.parts){
+						for(APart part : entityOn.parts){
 							if(part instanceof PartInteractable){
 								WrapperInventory inventory = ((PartInteractable) part).inventory;
 								if(inventory != null && part.definition.interactable.feedsVehicles){
 									for(int j=0; j<inventory.getSize(); ++j){
-										if(vehicle.world.fertilizeBlock(affectedBlocks[i], inventory.getStackInSlot(j))){
+										if(world.fertilizeBlock(affectedBlocks[i], inventory.getStackInSlot(j))){
 											inventory.decrementSlot(j);
 											break;
 										}
@@ -58,9 +57,9 @@ public class PartEffector extends APart{
 					}
 					case HARVESTER: {
 						//Harvest drops, and add to inventories.
-						List<ItemStack> drops = vehicle.world.harvestBlock(affectedBlocks[i]);
+						List<ItemStack> drops = world.harvestBlock(affectedBlocks[i]);
 						if(drops != null){
-							for(APart part : vehicle.parts){
+							for(APart part : entityOn.parts){
 								if(part instanceof PartInteractable){
 									WrapperInventory inventory = ((PartInteractable) part).inventory;
 									if(inventory != null){
@@ -79,7 +78,7 @@ public class PartEffector extends APart{
 							//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
 							for(ItemStack stack : drops){
 								if(stack.getCount() > 0){
-									vehicle.world.spawnItemStack(stack, worldPos);
+									world.spawnItemStack(stack, worldPos);
 								}
 							}
 						}
@@ -87,12 +86,12 @@ public class PartEffector extends APart{
 					}
 					case PLANTER: {
 						//Search all inventories for seeds and try to plant them.
-						for(APart part : vehicle.parts){
+						for(APart part : entityOn.parts){
 							if(part instanceof PartInteractable){
 								WrapperInventory inventory = ((PartInteractable) part).inventory;
 								if(inventory != null && part.definition.interactable.feedsVehicles){
 									for(int j=0; j<inventory.getSize(); ++j){
-										if(vehicle.world.plantBlock(affectedBlocks[i], inventory.getStackInSlot(j))){
+										if(world.plantBlock(affectedBlocks[i], inventory.getStackInSlot(j))){
 											inventory.decrementSlot(j);
 											break;
 										}
@@ -103,7 +102,7 @@ public class PartEffector extends APart{
 						break;
 					}
 					case PLOW:{
-						vehicle.world.plowBlock(affectedBlocks[i]);
+						world.plowBlock(affectedBlocks[i]);
 						break;
 					}
 				}

@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -62,31 +63,28 @@ public class WrapperNBT{
 		tag.setString(name, value);
 	}
 	
-	public List<String> getStrings(String name, int qty){
+	public List<String> getStrings(String name){
+		return getStrings(name, getInteger(name + "count"));
+	}
+	
+	public List<String> getStrings(String name, int count){
 		List<String> values = new ArrayList<String>();
-		for(int i=0; i<qty; ++i){
+		for(int i=0; i<count; ++i){
 			values.add(getString(name + i));
         }
 		return values;
 	}
 	
-	public void setStrings(String name, List<String> values){
+	public void setStrings(String name, Collection<String> values){
 		setInteger(name + "count", values.size());
-		for(int i=0; i<values.size(); ++i){
-			setString(name + i, values.get(i));
+		int index = 0;
+		for(String value : values){
+			setString(name + index++, value);
 		}
 	}
 	
-	public Point3i getPoint3i(String name){
-		return new Point3i(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
-	}
 	
-	public void setPoint3i(String name, Point3i value){
-		setInteger(name + "x", value.x);
-		setInteger(name + "y", value.y);
-		setInteger(name + "z", value.z);
-	}
-	
+	//Point3d
 	public Point3d getPoint3d(String name){
 		return new Point3d(getDouble(name + "x"), getDouble(name + "y"), getDouble(name + "z"));
 	}
@@ -97,11 +95,11 @@ public class WrapperNBT{
 		setDouble(name + "z", value.z);
 	}
 	
-	public List<Point3i> getPoints(String name){
-		List<Point3i> values = new ArrayList<Point3i>();
+	public List<Point3d> getPoint3ds(String name){
+		List<Point3d> values = new ArrayList<Point3d>();
 		int count = getInteger(name + "count");
 		for(int i=0; i<count; ++i){
-			Point3i point = new Point3i(getInteger(name + i + "x"), getInteger(name + i + "y"), getInteger(name + i + "z"));
+			Point3d point = getPoint3d(name + i);
 			if(!point.isZero()){
 				values.add(point);
 			}
@@ -109,12 +107,43 @@ public class WrapperNBT{
 		return values;
 	}
 	
-	public void setPoints(String name, List<Point3i> values){
+	public void setPoint3ds(String name, Collection<Point3d> values){
 		setInteger(name + "count", values.size());
-		for(int i=0; i<values.size(); ++i){
-			setInteger(name + i + "x", values.get(i).x);
-			setInteger(name + i + "y", values.get(i).y);
-			setInteger(name + i + "z", values.get(i).z);
+		int index = 0;
+		for(Point3d value : values){
+			setPoint3d(name + index, value);
+		}
+	}
+	
+	
+	//Point3i
+	public Point3i getPoint3i(String name){
+		return new Point3i(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
+	}
+	
+	public void setPoint3i(String name, Point3i value){
+		setInteger(name + "x", value.x);
+		setInteger(name + "y", value.y);
+		setInteger(name + "z", value.z);
+	}
+	
+	public List<Point3i> getPoint3is(String name){
+		List<Point3i> values = new ArrayList<Point3i>();
+		int count = getInteger(name + "count");
+		for(int i=0; i<count; ++i){
+			Point3i point = getPoint3i(name + i);
+			if(!point.isZero()){
+				values.add(point);
+			}
+        }
+		return values;
+	}
+	
+	public void setPoint3is(String name, Collection<Point3i> values){
+		setInteger(name + "count", values.size());
+		int index = 0;
+		for(Point3i value : values){
+			setPoint3i(name + index, value);
 		}
 	}
 	

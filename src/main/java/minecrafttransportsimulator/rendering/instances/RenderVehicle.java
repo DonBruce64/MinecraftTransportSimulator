@@ -21,10 +21,10 @@ import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection.VehicleConnectionConnector;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ATransform;
@@ -55,15 +55,15 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 public final class RenderVehicle{	
 	//VEHICLE MAPS.  Maps are keyed by system name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, List<RenderableModelObject>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject>>();
-	private static final Map<String, Map<Integer, RenderableTransform>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform>>();
+	private static final Map<String, List<RenderableModelObject<EntityVehicleF_Physics>>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject<EntityVehicleF_Physics>>>();
+	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
 	@Deprecated
 	private static final Map<String, List<Float[]>> treadDeltas = new HashMap<String, List<Float[]>>();
 	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
 	
 	//PART MAPS.  Maps are keyed by the part model name.
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, List<RenderableModelObject>> partObjectLists = new HashMap<String, List<RenderableModelObject>>();
+	private static final Map<String, List<RenderableModelObject<EntityVehicleF_Physics>>> partObjectLists = new HashMap<String, List<RenderableModelObject<EntityVehicleF_Physics>>>();
 	
 	//CONNECTOR MAPS.  Maps are keyed by model name.
 	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
@@ -76,7 +76,7 @@ public final class RenderVehicle{
 	public static void clearVehicleCaches(JSONVehicle definition){
 		if(vehicleDisplayLists.containsKey(definition.systemName)){
 			GL11.glDeleteLists(vehicleDisplayLists.remove(definition.systemName), 1);
-			for(RenderableModelObject modelObject : vehicleObjectLists.get(definition.systemName)){
+			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(definition.systemName)){
 				modelObject.resetDisplayList();
 			}
 			vehicleObjectLists.remove(definition.systemName);
@@ -92,7 +92,7 @@ public final class RenderVehicle{
 			GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
 		}
 		if(partObjectLists.containsKey(modelName)){
-			for(RenderableModelObject modelObject : partObjectLists.get(modelName)){
+			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : partObjectLists.get(modelName)){
 				modelObject.resetDisplayList();
 			}
 			partObjectLists.remove(definition.systemName);
@@ -100,10 +100,10 @@ public final class RenderVehicle{
 	}
 	
 	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
-		for(RenderableModelObject modelObject : vehicleObjectLists.get(vehicle.definition.systemName)){
-			for(ATransform transform : modelObject.transforms){
+		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(vehicle.definition.systemName)){
+			for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
-					if(((TransformLight) transform).type.equals(light)){
+					if(((TransformLight<EntityVehicleF_Physics>) transform).type.equals(light)){
 						return true;
 					}
 				}
@@ -112,10 +112,10 @@ public final class RenderVehicle{
 		for(APart part : vehicle.parts){
 			String partModelLocation = part.definition.getModelLocation();
 			if(partObjectLists.containsKey(partModelLocation)){
-				for(RenderableModelObject modelObject : partObjectLists.get(partModelLocation)){
-					for(ATransform transform : modelObject.transforms){
+				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : partObjectLists.get(partModelLocation)){
+					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
-							if(((TransformLight) transform).type.equals(light)){
+							if(((TransformLight<EntityVehicleF_Physics>) transform).type.equals(light)){
 								return true;
 							}
 						}
@@ -164,8 +164,8 @@ public final class RenderVehicle{
 			if(!part.isFake()){
 				//Check to see if the part has a visibility animation and it's set to not be visible.
 				boolean shouldRender = true;
-				if(part.vehicleDefinition.animations != null){
-					for(JSONAnimationDefinition animation : part.vehicleDefinition.animations){
+				if(part.partDefinition.animations != null){
+					for(JSONAnimationDefinition animation : part.partDefinition.animations){
 						if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
 							double value = part.getAnimationSystem().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
 							if(value < animation.clampMin || value > animation.clampMax){
@@ -242,11 +242,11 @@ public final class RenderVehicle{
 			vehicleDisplayLists.put(vehicle.definition.systemName, OBJParser.generateDisplayList(parsedModel));
 			
 			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
-			Map<Integer, RenderableTransform> instrumentTransforms = new HashMap<Integer, RenderableTransform>();
+			Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
 			for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
 				if(packInstrument.animations != null){
-					instrumentTransforms.put(i, new RenderableTransform(packInstrument.animations));
+					instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
 				}
 			}
 			vehicleInstrumentTransforms.put(vehicle.definition.systemName, instrumentTransforms);
@@ -265,8 +265,8 @@ public final class RenderVehicle{
 		}
 		
 		//The display list only renders static objects.  We need to render dynamic ones manually.
-		List<RenderableModelObject> modelObjects = vehicleObjectLists.get(vehicle.definition.systemName);
-		for(RenderableModelObject modelObject : modelObjects){
+		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = vehicleObjectLists.get(vehicle.definition.systemName);
+		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, partialTicks, modelObjects);
 			}
@@ -291,7 +291,7 @@ public final class RenderVehicle{
 		
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
-		if(!part.definition.general.useVehicleTexture){
+		if(!part.definition.generic.useVehicleTexture){
 			InterfaceRender.setTexture(part.definition.getTextureLocation(part.currentSubName));
 		}else{
 			InterfaceRender.setTexture(part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
@@ -304,7 +304,7 @@ public final class RenderVehicle{
 		
 		//Mirror the model if we need to do so.
 		//If we are a sub-part, don't mirror as we'll already be mirrored.
-		boolean mirrored = ((part.placementOffset.x < 0 && !part.vehicleDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.vehicleDefinition.inverseMirroring)) && !part.disableMirroring;
+		boolean mirrored = ((part.placementOffset.x < 0 && !part.partDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.partDefinition.inverseMirroring)) && !part.disableMirroring;
 		if(mirrored){
 			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			GL11.glCullFace(GL11.GL_FRONT);
@@ -313,7 +313,7 @@ public final class RenderVehicle{
 		//If we are a tread, do the tread-specific render rather than the display list.
 		//Don't do this for pass 1 though as treads don't have transparency.
 		if(part.definition.ground != null && part.definition.ground.isTread && InterfaceRender.getRenderPass() != 1){
-			if(part.vehicleDefinition.treadZPoints != null){
+			if(part.partDefinition.treadZPoints != null){
 				doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 			}else{
 				doAutomaticTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));
@@ -375,12 +375,12 @@ public final class RenderVehicle{
 		if(deltas == null){
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
-			float lastY = treadPart.vehicleDefinition.treadYPoints[0];
-			float lastZ = treadPart.vehicleDefinition.treadZPoints[0];
-			for(byte i=1; i<treadPart.vehicleDefinition.treadYPoints.length; ++i){
-				totalDistance += Math.hypot((treadPart.vehicleDefinition.treadYPoints[i] - lastY), (treadPart.vehicleDefinition.treadYPoints[i] - lastZ));
-				lastY = treadPart.vehicleDefinition.treadYPoints[i];
-				lastZ = treadPart.vehicleDefinition.treadZPoints[i];
+			float lastY = treadPart.partDefinition.treadYPoints[0];
+			float lastZ = treadPart.partDefinition.treadZPoints[0];
+			for(byte i=1; i<treadPart.partDefinition.treadYPoints.length; ++i){
+				totalDistance += Math.hypot((treadPart.partDefinition.treadYPoints[i] - lastY), (treadPart.partDefinition.treadYPoints[i] - lastZ));
+				lastY = treadPart.partDefinition.treadYPoints[i];
+				lastZ = treadPart.partDefinition.treadZPoints[i];
 			}
 			
 			//Now that we have the total distance, generate a set of points for the path.
@@ -388,17 +388,17 @@ public final class RenderVehicle{
 			deltas = new ArrayList<Float[]>();
 			final float spacing = treadPart.definition.ground.spacing;
 			byte pointIndex = 0;
-			float currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
-			float currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
-			float nextY = treadPart.vehicleDefinition.treadYPoints[pointIndex + 1];
-			float nextZ = treadPart.vehicleDefinition.treadZPoints[pointIndex + 1];
+			float currentY = treadPart.partDefinition.treadYPoints[pointIndex];
+			float currentZ = treadPart.partDefinition.treadZPoints[pointIndex];
+			float nextY = treadPart.partDefinition.treadYPoints[pointIndex + 1];
+			float nextZ = treadPart.partDefinition.treadZPoints[pointIndex + 1];
 			float deltaYBeforeSegment = 0;
 			float deltaZBeforeSegment = 0;
 			float deltaBeforeSegment = 0;
 			float segmentDeltaY = (nextY - currentY);
 			float segmentDeltaZ = (nextZ - currentZ);
 			float segmentDeltaTotal = (float) Math.hypot(segmentDeltaY, segmentDeltaZ);
-			float angle = treadPart.vehicleDefinition.treadAngles[pointIndex];
+			float angle = treadPart.partDefinition.treadAngles[pointIndex];
 			float currentAngle = 0;
 			
 			//Keep moving along the sets of points, making another set of evenly-spaced points.
@@ -410,27 +410,27 @@ public final class RenderVehicle{
 					++pointIndex;
 					//If we run out of points go back to the start of the point set.
 					//If we are out again, exit the loop.
-					if(pointIndex + 1 == treadPart.vehicleDefinition.treadYPoints.length){
-						currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
-						currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
-						nextY = treadPart.vehicleDefinition.treadYPoints[0];
-						nextZ = treadPart.vehicleDefinition.treadZPoints[0];
+					if(pointIndex + 1 == treadPart.partDefinition.treadYPoints.length){
+						currentY = treadPart.partDefinition.treadYPoints[pointIndex];
+						currentZ = treadPart.partDefinition.treadZPoints[pointIndex];
+						nextY = treadPart.partDefinition.treadYPoints[0];
+						nextZ = treadPart.partDefinition.treadZPoints[0];
 						//Ensure we rotate the angle by the correct amount for the joint.
 						//It's possible that we will add a negative angle here due to going from something like 270 to 0.
 						//This will cause a -270 rotation rather than the +30 we want.
-						float angleToAdd = treadPart.vehicleDefinition.treadAngles[0] - treadPart.vehicleDefinition.treadAngles[pointIndex];
+						float angleToAdd = treadPart.partDefinition.treadAngles[0] - treadPart.partDefinition.treadAngles[pointIndex];
 						while(angleToAdd < 0){
 							angleToAdd += 360; 
 						}
 						angle += angleToAdd;
-					}else if(pointIndex + 1 > treadPart.vehicleDefinition.treadYPoints.length){
+					}else if(pointIndex + 1 > treadPart.partDefinition.treadYPoints.length){
 						break;
 					}else{
-						currentY = treadPart.vehicleDefinition.treadYPoints[pointIndex];
-						currentZ = treadPart.vehicleDefinition.treadZPoints[pointIndex];
-						nextY = treadPart.vehicleDefinition.treadYPoints[pointIndex + 1];
-						nextZ = treadPart.vehicleDefinition.treadZPoints[pointIndex + 1];
-						angle += treadPart.vehicleDefinition.treadAngles[pointIndex] - treadPart.vehicleDefinition.treadAngles[pointIndex - 1];
+						currentY = treadPart.partDefinition.treadYPoints[pointIndex];
+						currentZ = treadPart.partDefinition.treadZPoints[pointIndex];
+						nextY = treadPart.partDefinition.treadYPoints[pointIndex + 1];
+						nextZ = treadPart.partDefinition.treadZPoints[pointIndex + 1];
+						angle += treadPart.partDefinition.treadAngles[pointIndex] - treadPart.partDefinition.treadAngles[pointIndex - 1];
 					}
 					
 					//Update deltas.
@@ -486,7 +486,7 @@ public final class RenderVehicle{
 		}
 		GL11.glPushMatrix();
 		//First translate to the initial point.
-		GL11.glTranslated(0, treadPart.placementOffset.y + treadPart.vehicleDefinition.treadYPoints[0], treadPart.placementOffset.z + treadPart.vehicleDefinition.treadZPoints[0]);
+		GL11.glTranslated(0, treadPart.placementOffset.y + treadPart.partDefinition.treadYPoints[0], treadPart.placementOffset.z + treadPart.partDefinition.treadZPoints[0]);
 		//Next use the deltas to get the amount needed to translate and rotate each link.
 		for(Float[] point : deltas){
 			if(point[2] != 0){
@@ -515,11 +515,11 @@ public final class RenderVehicle{
 		if(points == null){
 			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.			
 			//Search through rotatable parts on the vehicle and grab the rollers.
-			Map<Integer, TransformTreadRoller> parsedRollers = new HashMap<Integer, TransformTreadRoller>();
-			for(RenderableModelObject modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.systemName)){
-				for(ATransform transform : modelObject.transforms){
+			Map<Integer, TransformTreadRoller<EntityVehicleF_Physics>> parsedRollers = new HashMap<Integer, TransformTreadRoller<EntityVehicleF_Physics>>();
+			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.systemName)){
+				for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 					if(transform instanceof TransformTreadRoller){
-						TransformTreadRoller treadTransform = (TransformTreadRoller) transform;
+						TransformTreadRoller<EntityVehicleF_Physics> treadTransform = (TransformTreadRoller<EntityVehicleF_Physics>) transform;
 						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
 					}
 				}
@@ -528,7 +528,7 @@ public final class RenderVehicle{
 			//Now that we have all the rollers, we can start calculating points.
 			//First calculate the endpoints on the rollers by calling the calculation method.
 			//We also transfer the rollers to an ordered array for convenience later.
-			TransformTreadRoller[] rollers = new TransformTreadRoller[parsedRollers.size()];
+			List<TransformTreadRoller<EntityVehicleF_Physics>> rollers = new ArrayList<TransformTreadRoller<EntityVehicleF_Physics>>();
 			for(int i=0; i<parsedRollers.size(); ++ i){
 				if(!parsedRollers.containsKey(i)){
 					throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
@@ -538,7 +538,7 @@ public final class RenderVehicle{
 				}else{
 					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(0));
 				}
-				rollers[i] = parsedRollers.get(i);
+				rollers.add(parsedRollers.get(i));
 			}
 			
 			//We need to ensure the endpoints are all angle-aligned.
@@ -548,10 +548,10 @@ public final class RenderVehicle{
 			//angle of roller 1 to be around 180, or downward-facing.
 			//From there, we add angles to align things.
 			//At the end, we should have an end angle of 540, or 180 + 360.
-			rollers[0].endAngle = 180;
-			for(int i=1; i<rollers.length; ++i){
-				TransformTreadRoller roller = rollers[i];
-				roller.startAngle = rollers[i - 1].endAngle;
+			rollers.get(0).endAngle = 180;
+			for(int i=1; i<rollers.size(); ++i){
+				TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
+				roller.startAngle = rollers.get(i - 1).endAngle;
 				//End angle should be 0-360 greater than start angle, or within
 				//30 degrees less, as is the case for concave rollers. 
 				while(roller.endAngle < roller.startAngle - 30){
@@ -563,14 +563,14 @@ public final class RenderVehicle{
 			}
 			//Set the end angle of the last roller, or start angle of the first roller, manually.
 			//Need to get it between the value of 360 + 0-180 as that's where we will connect.
-			while(rollers[0].startAngle < 0){
-				rollers[0].startAngle += 360;
+			while(rollers.get(0).startAngle < 0){
+				rollers.get(0).startAngle += 360;
 			}
-			if(rollers[0].startAngle > 180){
-				rollers[0].startAngle -= 360;
+			if(rollers.get(0).startAngle > 180){
+				rollers.get(0).startAngle -= 360;
 			}
-			rollers[0].startAngle += 360;
-			rollers[rollers.length - 1].endAngle = rollers[0].startAngle;
+			rollers.get(0).startAngle += 360;
+			rollers.get(rollers.size() - 1).endAngle = rollers.get(0).startAngle;
 			
 			
 			//Now that the endpoints are set, we can calculate the path.
@@ -578,18 +578,18 @@ public final class RenderVehicle{
 			//First calculate the total path length, and determine the optimum spacing.
 			//This is the closest value to the definition's tread spacing.
 			double totalPathLength = 0;
-			for(int i=0; i<rollers.length; ++i){
+			for(int i=0; i<rollers.size(); ++i){
 				//Get roller and add roller path contribution.
-				TransformTreadRoller roller = rollers[i];
+				TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
 				totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
 				
 				//Get next roller and add distance path contribution.
 				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
 				//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
-				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				TransformTreadRoller<EntityVehicleF_Physics> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
-				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-					totalPathLength += 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+				if(treadPart.partDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					totalPathLength += 2D*treadPart.partDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.partDefinition.treadDroopConstant);
 				}else{
 					totalPathLength += straightPathLength;
 				}
@@ -600,8 +600,8 @@ public final class RenderVehicle{
 			double yPoint = 0;
 			double zPoint = 0; 
 			points = new ArrayList<Double[]>();
-			for(int i=0; i<rollers.length; ++i){
-				TransformTreadRoller roller = rollers[i];
+			for(int i=0; i<rollers.size(); ++i){
+				TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
 				//Follow the curve of the roller from the start and end point.
 				//Do this until we don't have enough roller path left to make a point.
 				//If we have any remaining path from a prior operation, we
@@ -664,15 +664,15 @@ public final class RenderVehicle{
 				//For points that start and end at an angle of around 0 (top of rollers) we add droop.
 				//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
 				//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
-				TransformTreadRoller nextRoller = i == rollers.length - 1 ? rollers[0] : rollers[i + 1];
+				TransformTreadRoller<EntityVehicleF_Physics> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 				double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 				double extraPathLength = rollerPathLength + leftoverPathLength;
 				double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
 				double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
-				if(treadPart.vehicleDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-					double hyperbolicPathLength = 2D*treadPart.vehicleDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.vehicleDefinition.treadDroopConstant);
+				if(treadPart.partDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+					double hyperbolicPathLength = 2D*treadPart.partDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/treadPart.partDefinition.treadDroopConstant);
 					double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
-					double hyperbolicPathMaxY = treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant);
+					double hyperbolicPathMaxY = treadPart.partDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/treadPart.partDefinition.treadDroopConstant);
 					double hyperbolicFunctionCurrent = 0;
 					while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
 						//Go to and add the next point on the hyperbolic path.
@@ -682,9 +682,9 @@ public final class RenderVehicle{
 						}else{
 							hyperbolicFunctionCurrent += hyperbolicFunctionStep;
 						}
-						yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + treadPart.vehicleDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant) - hyperbolicPathMaxY;
+						yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + treadPart.partDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.partDefinition.treadDroopConstant) - hyperbolicPathMaxY;
 						zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
-						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.vehicleDefinition.treadDroopConstant))});
+						points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/treadPart.partDefinition.treadDroopConstant))});
 					}
 					leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
 				}else{
@@ -876,7 +876,7 @@ public final class RenderVehicle{
 				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 				
 				//Do transforms if required.
-				RenderableTransform transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i);
+				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i);
 				boolean doRender = true;
 				if(transform != null){
 					doRender = transform.doPreRenderTransforms(vehicle, 0);
@@ -917,11 +917,11 @@ public final class RenderVehicle{
 			
 			if(heldItem instanceof ItemPart){
 				ItemPart heldPart = (ItemPart) heldItem;
-				for(Entry<BoundingBox, VehiclePart> partSlotEntry : vehicle.activePartSlotBoxes.entrySet()){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.activePartSlotBoxes.entrySet()){
 					boolean isHoldingPart = false;
 					boolean isPartValid = false;
 					
-					if(partSlotEntry.getValue().types.contains(heldPart.definition.general.type)){
+					if(partSlotEntry.getValue().types.contains(heldPart.definition.generic.type)){
 						isHoldingPart = true;
 						if(heldPart.isPartValidForPackDef(partSlotEntry.getValue())){
 							isPartValid = true;
@@ -946,7 +946,7 @@ public final class RenderVehicle{
 				Point3d playerEyes = player.getPosition().add(0, player.getEyeHeight(), 0);
 				Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getHeadYaw(), 0)));
 				BoundingBox highlightedBox = null;
-				for(Entry<BoundingBox, VehiclePart> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
 					InterfaceRender.setColorState(0, 0, 1, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					GL11.glPushMatrix();
@@ -962,7 +962,7 @@ public final class RenderVehicle{
 				
 				if(highlightedBox != null){
 					//Get the definition for this box.
-					VehiclePart packVehicleDef = vehicle.partSlotBoxes.get(highlightedBox);
+					JSONPartDefinition packVehicleDef = vehicle.partSlotBoxes.get(highlightedBox);
 					
 					//Set blending back to false and re-enable 2D texture before rendering item and text.
 					InterfaceRender.setBlendState(false, false);

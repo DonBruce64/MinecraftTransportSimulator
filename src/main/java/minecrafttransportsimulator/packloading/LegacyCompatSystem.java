@@ -2,8 +2,12 @@ package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -14,17 +18,18 @@ import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -36,7 +41,7 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObjec
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
 	
-	public static void performLegacyCompats(AJSONItem<?> definition){
+	public static void performLegacyCompats(AJSONItem definition){
 		if(definition instanceof JSONVehicle){
 			performVehicleLegacyCompats((JSONVehicle) definition);
 		}else if(definition instanceof JSONPart){
@@ -56,6 +61,17 @@ public final class LegacyCompatSystem{
 	
 	private static void performVehicleLegacyCompats(JSONVehicle definition){
 		//Move vehicle parameters to the motorized section.
+		if(definition.general.emptyMass > 0){
+			definition.motorized.isAircraft = definition.general.isAircraft;
+			definition.general.isAircraft = false;
+	    	definition.motorized.isBlimp = definition.general.isBlimp;
+	    	definition.general.isBlimp = false;
+	    	definition.motorized.hasOpenTop = definition.general.openTop;
+	    	definition.general.openTop = false;
+	    	definition.motorized.emptyMass = definition.general.emptyMass;
+	    	definition.general.emptyMass = 0;
+		}
+		
 		if(definition.car != null){
 			definition.motorized.isBigTruck = definition.car.isBigTruck;
 			definition.motorized.isFrontWheelDrive = definition.car.isFrontWheelDrive;
@@ -128,7 +144,25 @@ public final class LegacyCompatSystem{
 			definition.motorized.hookupPos = null;
 		}
 		
-		for(VehiclePart partDef : definition.parts){
+		//Check for old HUD stuff.
+		if(definition.rendering.hudTexture != null){
+			definition.motorized.hudTexture = definition.rendering.hudTexture;
+			definition.rendering.hudTexture = null;
+		}
+		if(definition.rendering.panelTexture != null){
+			definition.motorized.panelTexture = definition.rendering.panelTexture;
+			definition.rendering.panelTexture = null;
+		}
+		if(definition.rendering.panelTextColor != null){
+			definition.motorized.panelTextColor = definition.rendering.panelTextColor;
+			definition.rendering.panelTextColor = null;
+		}
+		if(definition.rendering.panelLitTextColor != null){
+			definition.motorized.panelLitTextColor = definition.rendering.panelLitTextColor;
+			definition.rendering.panelLitTextColor = null;
+		}
+		
+		for(JSONPartDefinition partDef : definition.parts){
 			try{
 				performVehiclePartDefLegacyCompats(partDef);
 			}catch(Exception e){
@@ -136,16 +170,88 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
-		if(definition.rendering != null){
-			try{
-				performAnimationLegacyCompats(definition.rendering);
-			}catch(Exception e){
-				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+		//Do compats for sounds.
+		if(definition.rendering.sounds == null){
+			definition.rendering.sounds = new ArrayList<JSONSound>();
+			if(definition.motorized.hornSound != null){
+				JSONSound hornSound = new JSONSound();
+				hornSound.name = definition.motorized.hornSound;
+				hornSound.looping = true;
+				hornSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
+				hornDef.animationType = AnimationComponentType.VISIBILITY;
+				hornDef.variable = "horn";
+				hornDef.clampMin = 1.0F;
+				hornDef.clampMax = 1.0F;
+				hornSound.volumeAnimations.add(hornDef);
+				definition.rendering.sounds.add(hornSound);
+				definition.motorized.hornSound = null;
 			}
+			if(definition.motorized.sirenSound != null){
+				JSONSound sirenSound = new JSONSound();
+				sirenSound.name = definition.motorized.sirenSound;
+				sirenSound.looping = true;
+				sirenSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
+				sirenDef.animationType = AnimationComponentType.VISIBILITY;
+				sirenDef.variable = "siren";
+				sirenDef.clampMin = 1.0F;
+				sirenDef.clampMax = 1.0F;
+				sirenSound.volumeAnimations.add(sirenDef);
+				definition.rendering.sounds.add(sirenSound);
+				definition.motorized.sirenSound = null;
+			}
+			if(definition.motorized.isBigTruck){
+				JSONSound airbrakeSound = new JSONSound();
+				airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
+				airbrakeSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
+				airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
+				airbrakeDef.variable = "p_brake";
+				airbrakeDef.clampMin = 1.0F;
+				airbrakeDef.clampMax = 1.0F;
+				airbrakeSound.volumeAnimations.add(airbrakeDef);
+				definition.rendering.sounds.add(airbrakeSound);
+				
+				JSONSound backupBeeperSound = new JSONSound();
+				backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
+				backupBeeperSound.looping = true;
+				backupBeeperSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
+				backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
+				backupBeeperDef.variable = "engine_gear_1";
+				backupBeeperDef.clampMin = -10.0F;
+				backupBeeperDef.clampMax = -1.0F;
+				backupBeeperSound.volumeAnimations.add(backupBeeperDef);
+				definition.rendering.sounds.add(backupBeeperSound);
+				
+				definition.motorized.isBigTruck = false;
+			}
+		}
+		
+		try{
+			performAnimationLegacyCompats(definition.rendering);
+		}catch(Exception e){
+			throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 		}
     }
 	
 	private static void performPartLegacyCompats(JSONPart definition){
+		//Move general things to generic section.
+		if(definition.general.type != null){
+			if(definition.generic == null){
+				definition.generic = definition.new JSONPartGeneric();
+			}
+			definition.generic.type = definition.general.type;
+			definition.general.type = null;
+			definition.generic.customType = definition.general.customType;
+			definition.general.customType = null;
+			definition.generic.disableMirroring = definition.general.disableMirroring;
+			definition.general.disableMirroring = false;
+			definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
+			definition.general.useVehicleTexture = false;
+		}
+		
 		//If we are a part without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
 			definition.definitions = new ArrayList<JSONSubDefinition>();
@@ -154,6 +260,12 @@ public final class LegacyCompatSystem{
 			subDefinition.name = definition.general.name;
 			subDefinition.subName = "";
 			definition.definitions.add(subDefinition);
+		}
+		
+		//Move subParts to parts if we have them there.
+		if(definition.subParts != null){
+			definition.parts = definition.subParts;
+			definition.subParts = null;
 		}
 		
 		if(definition.engine != null){
@@ -306,12 +418,12 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
-		if(definition.subParts != null){
-    		for(VehiclePart subPartDef : definition.subParts){
+		if(definition.parts != null){
+    		for(JSONPartDefinition subPartDef : definition.parts){
     			try{
     				performVehiclePartDefLegacyCompats(subPartDef);
     			}catch(Exception e){
-    				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.subParts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+    				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.parts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
     			}
     		}
 		}
@@ -321,6 +433,77 @@ public final class LegacyCompatSystem{
 				performAnimationLegacyCompats(definition.rendering);
 			}catch(Exception e){
 				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
+		}
+		
+		//Do compats for engine and gun sounds.
+		if(definition.rendering == null || definition.rendering.sounds == null){
+			if(definition.general.type.startsWith("engine")){
+				if(definition.rendering == null){
+					definition.rendering = new JSONRendering();
+				}
+				if(definition.rendering.sounds == null){
+					definition.rendering.sounds = new ArrayList<JSONSound>();
+				}
+				
+				JSONSound crankingSound = new JSONSound();
+				crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
+				crankingSound.looping = true;
+				crankingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition crankingVolumeDef = new JSONAnimationDefinition();
+				crankingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				crankingVolumeDef.variable = "engine_starter";
+				crankingVolumeDef.clampMin = 1.0F;
+				crankingVolumeDef.clampMax = 1.0F;
+				crankingSound.volumeAnimations.add(crankingVolumeDef);
+				
+				crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
+				crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
+				crankingPitchDef.variable = "electric_power";
+				crankingPitchDef.axis = new Point3d(0, 0, 1D/10D);
+				crankingPitchDef.offset = 0.3F;
+				crankingPitchDef.clampMax = 1.0F;
+				crankingSound.pitchAnimations.add(crankingPitchDef);
+				if(!definition.engine.isCrankingNotPitched){
+					crankingPitchDef = new JSONAnimationDefinition();
+					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
+					crankingPitchDef.variable = "engine_rpm";
+					crankingPitchDef.axis = new Point3d(0, 0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D));
+					crankingSound.pitchAnimations.add(crankingPitchDef);
+				}
+				definition.rendering.sounds.add(crankingSound);
+				
+			}else if(definition.general.type.startsWith("gun")){
+				if(definition.rendering == null){
+					definition.rendering = new JSONRendering();
+				}
+				if(definition.rendering.sounds == null){
+					definition.rendering.sounds = new ArrayList<JSONSound>();
+				}
+				
+				JSONSound firingSound = new JSONSound();
+				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
+				firingSound.looping = definition.gun.fireDelay <= 1;
+				firingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
+				firingDef.animationType = AnimationComponentType.VISIBILITY;
+				firingDef.variable = "gun_firing";
+				firingDef.clampMin = 1.0F;
+				firingDef.clampMax = 1.0F;
+				firingSound.volumeAnimations.add(firingDef);
+				definition.rendering.sounds.add(firingSound);
+				
+				JSONSound reloadingSound = new JSONSound();
+				reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
+				reloadingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
+				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
+				reloadingDef.variable = "gun_reloading";
+				reloadingDef.clampMin = 1.0F;
+				reloadingDef.clampMax = 1.0F;
+				reloadingSound.volumeAnimations.add(reloadingDef);
+				definition.rendering.sounds.add(reloadingSound);
 			}
 		}
 	}
@@ -459,7 +642,7 @@ public final class LegacyCompatSystem{
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
 			int lineNumber = 0;
-			for(minecrafttransportsimulator.jsondefs.JSONDecor.TextLine line : definition.general.textLines){
+			for(TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.lightsUp = true;
 				object.color = line.color;
@@ -486,6 +669,27 @@ public final class LegacyCompatSystem{
 			definition.general.textObjects = null;
 		}
 		
+		//Move decor general properties to new location.
+		if(definition.general.width > 0){
+			if(definition.general.type != null){
+				definition.decor.type = DecorComponentType.valueOf(definition.general.type);
+				definition.general.type = null;
+			}
+			definition.decor = definition.new JSONDecorGeneric();
+			definition.decor.width = definition.general.width;
+			definition.general.width = 0;
+			definition.decor.width = definition.general.height;
+			definition.general.height = 0;
+			definition.decor.depth = definition.general.depth;
+			definition.general.depth = 0;
+			definition.decor.itemTypes = definition.general.itemTypes;
+			definition.general.itemTypes = null;
+			definition.decor.partTypes = definition.general.partTypes;
+			definition.general.partTypes = null;
+	    	definition.decor.items = definition.general.items;
+	    	definition.general.items = null;
+		}
+		
 		//Set default text to blank for decor text objects.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(JSONText text : definition.rendering.textObjects){
@@ -497,6 +701,15 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performItemLegacyCompats(JSONItem definition){
+		//Move item type if required.
+		if(definition.item == null){
+			definition.item = definition.new JSONItemGeneric();
+			if(definition.general.type != null){
+				definition.item.type = ItemComponentType.valueOf(definition.general.type);
+				definition.general.type = null;
+			}
+		}
+		
 		//Add blank fieldNames for booklets, as they shouldn't exist.
 		if(definition.booklet != null){
 			for(JSONText text : definition.booklet.titleText){
@@ -511,13 +724,21 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performSkinLegacyCompats(JSONSkin definition){
+		//Move skin properties to new location, if we have them.
+		if(definition.general.packID != null){
+			definition.skin = definition.new Skin();
+			definition.skin.packID = definition.general.packID;
+			definition.general.packID = null;
+			definition.skin.systemName = definition.general.systemName;
+			definition.general.systemName = null;
+		}
 		//Make the materials empty, as the parser doesn't like them null.
 		definition.general.materials = new ArrayList<String>();
 	}
 	
-	private static void performVehiclePartDefLegacyCompats(VehiclePart partDef){
+	private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef){
 		if(partDef.additionalPart != null){
-			partDef.additionalParts = new ArrayList<VehiclePart>();
+			partDef.additionalParts = new ArrayList<JSONPartDefinition>();
 			partDef.additionalParts.add(partDef.additionalPart);
 			partDef.additionalPart = null;
 		}
@@ -627,7 +848,7 @@ public final class LegacyCompatSystem{
 			
 			//If we have additional parts, check those too.
 			if(partDef.additionalParts != null){
-				for(VehiclePart additionalPartDef : partDef.additionalParts){
+				for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
 					performVehiclePartDefLegacyCompats(additionalPartDef);
 				}
 			}

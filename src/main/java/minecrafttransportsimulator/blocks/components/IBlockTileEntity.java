@@ -11,7 +11,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  *
  * @author don_bruce
  */
-public interface IBlockTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem<?>>>{
+public interface IBlockTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem>>{
 	
 	/**
 	 *  Gets a new Tile Entity for this block.

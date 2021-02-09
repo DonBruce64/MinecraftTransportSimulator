@@ -1,44 +1,44 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketMultipartPart;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
-/**Packet used to add/remove parts from a vehicle.  This packet only appears on clients after the
- * server has added or removed a part from the vehicle.
+/**Packet used to add/remove parts from an entity.  This packet only appears on clients after the
+ * server has added or removed a part from the entity.
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartChange extends APacketVehiclePart{
+public class PacketMultipartPartChange extends APacketMultipartPart{
 	private final ItemPart partItem;
 	private final WrapperNBT partData;
 	private boolean clickedPart;
 	private Point3d partClickedOffset;
 	
-	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset){
-		super(vehicle, offset);
+	public PacketMultipartPartChange(AEntityE_Multipart<?> entity, Point3d offset){
+		super(entity, offset);
 		this.partItem = null;
 		this.partData = null;
 		this.partClickedOffset = null;
 	}
 	
-	public PacketVehiclePartChange(EntityVehicleF_Physics vehicle, Point3d offset, ItemPart partItem, WrapperNBT partData, APart partClicked){
-		super(vehicle, offset);
+	public PacketMultipartPartChange(AEntityE_Multipart<?> entity, Point3d offset, ItemPart partItem, WrapperNBT partData, APart partClicked){
+		super(entity, offset);
 		this.partItem = partItem;
 		this.partData = partData;
 		this.clickedPart = partClicked != null;
 		this.partClickedOffset = clickedPart ? partClicked.placementOffset : null;
 	}
 	
-	public PacketVehiclePartChange(ByteBuf buf){
+	public PacketMultipartPartChange(ByteBuf buf){
 		super(buf);
 		if(buf.readBoolean()){
 			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
@@ -75,12 +75,12 @@ public class PacketVehiclePartChange extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityE_Multipart<?> entity, Point3d offset){
 		if(partItem == null){
-			vehicle.removePart(vehicle.getPartAtLocation(offset), null);
+			entity.removePart(entity.getPartAtLocation(offset), null);
 		}else{
-			VehiclePart packVehicleDef = vehicle.getPackDefForLocation(offset);
-			vehicle.addPart(partItem.createPart(vehicle, packVehicleDef, partData, vehicle.getPartAtLocation(partClickedOffset)));
+			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(offset);
+			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(partClickedOffset)));
 		}
 		return true;
 	}

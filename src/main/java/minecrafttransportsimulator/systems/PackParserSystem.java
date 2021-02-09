@@ -229,7 +229,7 @@ public final class PackParserSystem{
 									InterfaceCore.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
-								Class<? extends AJSONItem<?>> jsonClass = null;
+								Class<? extends AJSONItem> jsonClass = null;
 								if(classification != null){
 									switch(classification){
 										case VEHICLE : jsonClass = JSONVehicle.class; break;
@@ -247,7 +247,7 @@ public final class PackParserSystem{
 								}
 								
 								//Create the JSON instance.
-								AJSONItem<?> definition;
+								AJSONItem definition;
 								try{
 									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
 								}catch(Exception e){
@@ -267,18 +267,18 @@ public final class PackParserSystem{
 									//We don't create skin items right away as the pack they go to might not yet be loaded.
 									if(definition instanceof JSONSkin){
 										JSONSkin skinDef = (JSONSkin) definition;
-										if(!skinMap.containsKey(skinDef.general.packID)){
-											skinMap.put(skinDef.general.packID, new HashMap<String, JSONSkin>());
+										if(!skinMap.containsKey(skinDef.skin.packID)){
+											skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
 										}
 										definition.packID = packDef.packID;
-										skinMap.get(skinDef.general.packID).put(skinDef.general.systemName, skinDef);
+										skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
 									}else{
 										//Set code-based definition values prior to parsing all definitions out.
 					    		    	definition.packID = packDef.packID;
 					    		    	definition.systemName = fileName.substring(0, fileName.length() - ".json".length());
 					    		    	definition.prefixFolders = assetPath;
 					    		    	definition.classification = classification;
-										parseAllDefinitions((AJSONMultiModelProvider<?>) definition, ((AJSONMultiModelProvider<?>) definition).definitions, definition.packID);
+										parseAllDefinitions((AJSONMultiModelProvider) definition, ((AJSONMultiModelProvider) definition).definitions, definition.packID);
 									}
 								}else{
 									AItemPack<?> item;
@@ -333,7 +333,7 @@ public final class PackParserSystem{
     				for(AItemPack<?> packItem : packItemMap.get(packID).values()){
     					if(packItem.definition.systemName.equals(systemName)){
     						//Parse and create all of the new definitions.
-    						AJSONMultiModelProvider<?> oldDefinition = (AJSONMultiModelProvider<?>) packItem.definition;
+    						AJSONMultiModelProvider oldDefinition = (AJSONMultiModelProvider) packItem.definition;
     						List<JSONSubDefinition> newDefinitions = skinMap.get(packID).get(systemName).definitions;
     						parseAllDefinitions(oldDefinition, newDefinitions, skinMap.get(packID).get(systemName).packID);
     						
@@ -352,7 +352,7 @@ public final class PackParserSystem{
      * Helper method to parse multi-definition pack items.
      * Generated items are added to the passed-in list.
      */
-    private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
+    private static void parseAllDefinitions(AJSONMultiModelProvider mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
 			AItemPack<?> item;
@@ -535,12 +535,12 @@ public final class PackParserSystem{
     
     
     //--------------------START OF HELPER METHODS--------------------
-    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName){
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem> PackItem getItem(String packID, String systemName){
     	return getItem(packID, systemName, "");
     }
     
     @SuppressWarnings("unchecked")
-	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String subName){
+	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem> PackItem getItem(String packID, String systemName, String subName){
     	if(packItemMap.containsKey(packID)){
     		return (PackItem) packItemMap.get(packID).get(systemName + subName);
     	}
