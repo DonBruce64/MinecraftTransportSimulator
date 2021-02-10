@@ -15,6 +15,7 @@ import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -78,8 +79,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	//Internal radio variables.
 	private final Radio radio;
 	
-	public EntityVehicleE_Powered(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleE_Powered(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		
 		//Load simple variables.
 		this.hornOn = data.getBoolean("hornOn");

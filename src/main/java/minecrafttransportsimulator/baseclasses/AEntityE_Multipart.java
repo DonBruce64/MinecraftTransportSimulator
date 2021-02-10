@@ -49,8 +49,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private static final Map<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>> SUBPACK_MAPPINGS = new HashMap<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>>();
 	
-	public AEntityE_Multipart(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public AEntityE_Multipart(WrapperWorld world, WrapperEntity wrapper, JSONDefinition definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
@@ -482,7 +482,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setString("packID", part.definition.packID);
 				partData.setString("systemName", part.definition.systemName);
-				partData.setString("subName", part.currentSubName);
+				partData.setString("subName", part.subName);
 				partData.setPoint3d("offset", part.placementOffset);
 				data.setData("part_" + totalParts, partData);
 				++totalParts;

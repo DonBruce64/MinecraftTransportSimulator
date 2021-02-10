@@ -17,7 +17,7 @@ public class TransformActivator<AnimationEntity extends AEntityC_Definable<?>> e
 	
 	@Override
 	public boolean shouldActivate(AnimationEntity entity, float partialTicks){
-		double value = definition.offset + entity.getAnimationValue(definition, 0, getClock(entity), partialTicks);
+		double value = definition.offset + entity.getAnimator().getAnimatedVariableValue(entity, definition, 0, getClock(entity), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 

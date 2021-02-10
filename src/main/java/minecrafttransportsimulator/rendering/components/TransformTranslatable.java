@@ -23,7 +23,7 @@ public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>
 
 	@Override
 	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
-		double translation = entity.getAnimationValue(definition, offset, getClock(entity), partialTicks);
+		double translation = entity.getAnimator().getAnimatedVariableValue(entity, definition, offset, getClock(entity), partialTicks);
 		//Do the actual translation, if we aren't 0.
 		if(translation != 0){
 			GL11.glTranslated(translation*translationAxis.x, translation*translationAxis.y, translation*translationAxis.z);

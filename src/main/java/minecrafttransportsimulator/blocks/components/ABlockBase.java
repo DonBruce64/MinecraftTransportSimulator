@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -32,7 +31,7 @@ public abstract class ABlockBase{
 	 *  after NBT is loaded into the TE from saved state, or after its definition is
 	 *  set from the item definition if no NBT data was present on the item.
 	 */
-	public void onPlaced(WrapperWorld world, Point3i location, WrapperPlayer player){}
+	public void onPlaced(WrapperWorld world, Point3d position, WrapperPlayer player){}
 	
 	/**
 	 *  Called when this block is clicked.  Return true if this block does
@@ -40,7 +39,7 @@ public abstract class ABlockBase{
 	 *  or may not be taken.  Note that this is called both on the server and
 	 *  on the client, so watch your actions and packets!
 	 */
-	public abstract boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player);
+	public abstract boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player);
 	
 	/**
 	 *  Called when this block is removed from the world.  This occurs when the block is broken
@@ -48,7 +47,7 @@ public abstract class ABlockBase{
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
-	public void onBroken(WrapperWorld world, Point3i location){}
+	public void onBroken(WrapperWorld world, Point3d position){}
 
 	/**
 	 *  Gets the current rotation of the block at the passed-in point.
@@ -56,8 +55,8 @@ public abstract class ABlockBase{
 	 *  set by MC-standard methods when the player places the block, and is
 	 *  not modifiable by any block-based code.
 	 */
-	public float getRotation(WrapperWorld world, Point3i location){
-		return world.getBlockRotation(location);
+	public float getRotation(WrapperWorld world, Point3d position){
+		return world.getBlockRotation(position);
 	}
 	
 	/**
@@ -65,7 +64,7 @@ public abstract class ABlockBase{
 	 *  to handle collisions with this block.  May be based on state or TE data.
 	 *  Note that all collisions are relative to the block's location.
 	 */
-	public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+	public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
 		collidingBoxes.add(SINGLE_BLOCK_BOUNDS);
 	}
 	
@@ -113,7 +112,7 @@ public abstract class ABlockBase{
 			this.xzPlanar = xzPlanar;
 		}
 		
-		public Point3i getOffsetPoint(Point3i point){
+		public Point3d getOffsetPoint(Point3d point){
 			return point.copy().add(xOffset, yOffset, zOffset);
 		}
 		

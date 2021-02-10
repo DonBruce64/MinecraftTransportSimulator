@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -34,8 +35,8 @@ public class GUITextEditor extends AGUIBase{
 	private final List<GUIComponentTextBox> textInputBoxes = new ArrayList<GUIComponentTextBox>();
 	private final List<String> textInputFieldNames = new ArrayList<String>();
 	
-	//Provider clicked.
-	private final ITextProvider provider;
+	//Entity clicked.
+	private final AEntityC_Definable<?> entity;
 	
 	//Pole, axis clicked on pole, and label for sign.
 	private final TileEntityPole pole;
@@ -43,13 +44,13 @@ public class GUITextEditor extends AGUIBase{
 	private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
 	
 	public GUITextEditor(TileEntityPole pole, Axis axis){
-		this.provider = null;
+		this.entity = null;
 		this.pole = pole;
 		this.axis = axis;
 	}
 	
-	public GUITextEditor(ITextProvider provider){
-		this.provider = provider;
+	public GUITextEditor(AEntityC_Definable<?> entity){
+		this.entity = entity;
 		this.pole = null;
 		this.axis = null;
 	}
@@ -94,12 +95,12 @@ public class GUITextEditor extends AGUIBase{
 		}else{
 			textObjects = new ArrayList<JSONText>();
 			textLines = new ArrayList<String>();
-			textObjects.addAll(provider.getText().keySet());
-			textLines.addAll(provider.getText().values());
+			textObjects.addAll(entity.getText().keySet());
+			textLines.addAll(entity.getText().values());
 			
 			//Add part text objects if we are a vehicle.
-			if(provider instanceof EntityVehicleF_Physics){
-				for(APart part : ((EntityVehicleF_Physics) provider).parts){
+			if(entity instanceof EntityVehicleF_Physics){
+				for(APart part : ((EntityVehicleF_Physics) entity).parts){
 					textObjects.addAll(part.getText().keySet());
 					textLines.addAll(part.getText().values());
 				}
@@ -138,10 +139,10 @@ public class GUITextEditor extends AGUIBase{
 				//Now send the appropriate packet.
 				if(pole != null){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, packetTextLines, false));
-				}else if(provider instanceof EntityVehicleF_Physics){
-					InterfacePacket.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) provider, packetTextLines));
+				}else if(entity instanceof EntityVehicleF_Physics){
+					InterfacePacket.sendToServer(new PacketVehicleTextChange((EntityVehicleF_Physics) entity, packetTextLines));
 				}else{
-					InterfacePacket.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) provider, packetTextLines));
+					InterfacePacket.sendToServer(new PacketTileEntityDecorTextChange((TileEntityDecor) entity, packetTextLines));
 				}
 				InterfaceGUI.closeGUI();
 			}

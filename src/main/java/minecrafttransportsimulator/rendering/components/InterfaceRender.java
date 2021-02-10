@@ -16,6 +16,7 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -219,7 +220,7 @@ public class InterfaceRender{
 	 *  passed-in entity's location.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToEntity(AEntityC_Definable<?> entity){
+	public static void setLightingToEntity(AEntityB_Existing entity){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
@@ -230,15 +231,15 @@ public class InterfaceRender{
 	
 	/**
 	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in block's location.  This will also enable lighting should
+	 *  passed-in block's position.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToBlock(Point3i location){
+	public static void setLightingToBlock(Point3d position){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
         }
-		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(location.x, location.y, location.z), 0);
+		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	

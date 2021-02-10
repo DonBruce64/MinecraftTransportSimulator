@@ -6,7 +6,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents a light object of a model.  Inputs are the name of the name model
@@ -107,13 +106,8 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 2/3 power.
-		//Special case for the generic light, which doesn't require power, and is always on.
-		if(type.equals(LightType.GENERICLIGHT)){
-			setLightupTextureState(true, 1);
-		}else{
-			double electricPower = entity.getLightPower();
-			setLightupTextureState(entity.variablesOn.contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
-		}
+		double electricPower = entity.getLightPower();
+		setLightupTextureState(entity.variablesOn.contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
 		return 0;
 	}
 	
@@ -122,9 +116,9 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		//We cheat here and render our light bits at this point.
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.
-		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
-		boolean lightActuallyOn = (type.equals(LightType.GENERICLIGHT) || entity.variablesOn.contains(type.lowercaseName)) && isFlashingLightOn();
-		float sunLight = entity.world.getLightBrightness(new Point3i(entity.position), false);
+		//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
+		boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
+		float sunLight = entity.world.getLightBrightness(entity.position, false);
 		float electricPower = entity.getLightPower();
 		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
 		float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);

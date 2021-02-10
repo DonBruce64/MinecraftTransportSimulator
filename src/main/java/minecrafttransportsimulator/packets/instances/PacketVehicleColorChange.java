@@ -46,12 +46,12 @@ public class PacketVehicleColorChange extends APacketVehicle{
 			if(!player.isCreative()){
 				inventory.removeMaterials(newVehicleItem, false, true);
 			}
-			vehicle.currentSubName = newVehicleItem.subName;
+			vehicle.subName = newVehicleItem.subName;
 			
 			//If we have a secondTone, change parts to match if possible.
 			String secondTone = null;
 			for(JSONSubDefinition subDefinition : vehicle.definition.definitions){
-				if(subDefinition.subName.equals(vehicle.currentSubName)){
+				if(subDefinition.subName.equals(vehicle.subName)){
 					secondTone = subDefinition.secondTone;
 				}
 			}
@@ -59,7 +59,7 @@ public class PacketVehicleColorChange extends APacketVehicle{
 				for(APart part : vehicle.parts){
 					for(JSONSubDefinition subDefinition : part.definition.definitions){
 						if(subDefinition.subName.equals(secondTone)){
-							part.currentSubName = secondTone;
+							part.subName = secondTone;
 							break;
 						}
 					}

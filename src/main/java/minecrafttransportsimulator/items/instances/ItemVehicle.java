@@ -2,7 +2,6 @@ package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -30,11 +29,11 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
 		if(!world.isClient()){
 			ItemStack heldStack = player.getHeldStack();
 			//We want to spawn above this block.
-			++point.y;
+			++position.y;
 			
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
 			WrapperNBT data = new WrapperNBT(heldStack);
@@ -43,7 +42,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			data.setString("systemName", definition.systemName);
 			data.setString("subName", subName);
 			
-			//Make sure we don't restore any wold-based entity properties.
+			//Make sure we don't restore any world-based entity properties.
 			data.setInteger("lookupID", 0);
 			data.setPoint3d("position", new Point3d());
 			data.setPoint3d("motion", new Point3d());
@@ -62,7 +61,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
 			//Makes placement easier and is less likely for players to get stuck.
-			newVehicle.position.set(point.x, point.y, point.z);
+			newVehicle.position.set(position.x, position.y, position.z);
 			newVehicle.prevPosition.setTo(newVehicle.position);
 			newVehicle.angles.y = player.getYaw() + 90;
 			newVehicle.prevAngles.setTo(newVehicle.angles);
@@ -184,7 +183,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 
 	@Override
 	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		return new EntityVehicleF_Physics(world, wrapper, data);
+		return new EntityVehicleF_Physics(world, wrapper, this.definition, data);
 	}
 
 	@Override

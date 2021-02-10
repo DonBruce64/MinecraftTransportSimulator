@@ -94,6 +94,13 @@ public abstract class AEntityA_Base{
 		return null;
 	}
 	
+	/**
+	 * Call to get all entities from the world.
+	 */
+	public static List<AEntityA_Base> getEntities(WrapperWorld world){
+		return createdEntities.get(world);
+	}
+	
 	 /**
 	 * Called to update this entity.  This  may not be called if the entity extending this class
 	 * is not slated for updates in some sort of system.

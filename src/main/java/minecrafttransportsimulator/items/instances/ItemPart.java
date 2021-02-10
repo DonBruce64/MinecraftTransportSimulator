@@ -80,6 +80,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	
 	public APart createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		switch(partType){
+		//FIXME need to either pack-in the definition here, or pass it into the constructor.
 			case GENERIC : return new PartGeneric(entity, packVehicleDef, this, partData, parentPart);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.

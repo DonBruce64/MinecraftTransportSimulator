@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -25,7 +24,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadDisplayListMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
 	
 	@Override
-	public void render(TileEntityRoad road, float partialTicks){
+	public void renderModel(TileEntityRoad road, float partialTicks){
 		//Render road components.
 		//First set helper variables.
 		Point3d position = new Point3d();
@@ -62,7 +61,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 						
 						//If we are a dynamic curve, cache the dynamic vertex paths.
 						//If we are static, just render the model as-is.
-						if(road.definition.general.isDynamic && road.dynamicCurve != null){
+						if(road.definition.road.isDynamic && road.dynamicCurve != null){
 							//Core components need to be transformed to wedges.
 							List<Float[]> transformedVertices = new ArrayList<Float[]>();
 							Point3d priorPosition = new Point3d();
@@ -91,8 +90,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								//If we detect this in the last 3 segments, skip right to the end.
 								//This prevents a missing end segment due to collision.
 								rotationDelta.setTo(rotation).subtract(priorRotation);
-								Point3d testPoint1 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
-								Point3d testPoint2 = new Point3d(road.definition.general.borderOffset, 0, 0).rotateFine(rotation).add(position);
+								Point3d testPoint1 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
+								Point3d testPoint2 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
 								if(currentIndex != road.dynamicCurve.pathLength && (position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0){
 									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 3 > road.dynamicCurve.pathLength){
 										currentIndex = road.dynamicCurve.pathLength - 1;
@@ -125,14 +124,14 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
 								}
 							}
-						}else if(!road.definition.general.isDynamic){
+						}else if(!road.definition.road.isDynamic){
 							for(Float[][] vertexSet : parsedModel.values()){
 								for(Float[] vertex : vertexSet){
 									GL11.glTexCoord2f(vertex[3], vertex[4]);
 									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 									//Need to offset by 0.5 to match the offset of the TE as we're block-aligned.
 									position.set(vertex[0] - 0.5, vertex[1], vertex[2] - 0.5);
-									position.rotateY(road.rotation);
+									position.rotateFine(road.rotation);
 									GL11.glVertex3d(position.x, position.y, position.z);
 								}
 							}
@@ -169,8 +168,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		//If we are inactive render the blocking blocks and the main block.
 		if(!road.isActive()){
 			InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 0.5F);
-			for(Point3i location : road.collidingBlockOffsets){
-				BoundingBox blockingBox = new BoundingBox(new Point3d(location).add(0, 0.5, 0), 0.55, 0.55, 0.55);
+			for(Point3d location : road.collidingBlockOffsets){
+				BoundingBox blockingBox = new BoundingBox(location.copy().add(0, 0.5, 0), 0.55, 0.55, 0.55);
 				GL11.glPushMatrix();
 				GL11.glTranslated(location.x, location.y, location.z);
 				RenderBoundingBox.renderSolid(blockingBox);
@@ -208,7 +207,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				InterfaceRender.setColorState(0, 1, 1, 1);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToRotationAt(rotation, f);
-					position.set(road.definition.general.borderOffset, 0, 0).rotateFine(rotation);
+					position.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation);
 					road.dynamicCurve.offsetPointByPositionAt(position, f);
 					
 					GL11.glVertex3d(position.x, position.y, position.z);

@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 
@@ -21,7 +21,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	public boolean unloading;
     private FluidTank tank;
 
-    public TileEntityFluidLoader(WrapperWorld world, Point3i position, WrapperNBT data){
+    public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
     	this.tank = new FluidTank(world, data, 1000);
     	this.unloadMode = data.getBoolean("unloadMode");
@@ -37,9 +37,9 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 					updateNearestPart();
 				}
 			}else{
-				//Don't fuel vehicles or parts that don't exist.
+				//Don't fuel parts that don't exist.
 				//Also check distance to make sure the part hasn't moved away.
-				if(!connectedPart.vehicle.isValid || !connectedPart.isValid || connectedPart.worldPos.distanceTo(position) > 10){
+				if(!connectedPart.isValid || connectedPart.worldPos.distanceTo(position) > 10){
 					updateNearestPart();
 				}
 			}
@@ -74,10 +74,11 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		PartInteractable nearestPart = null;
 		double nearestDistance = 999;
 		if((tank.getFluidLevel() > 0 && !unloadMode) || (tank.getFluidLevel() < tank.getMaxLevel() && unloadMode)){
-			for(AEntityBase entity : AEntityBase.createdServerEntities){
-				if(entity instanceof EntityVehicleF_Physics){
-					if(entity.position.distanceTo(position) < 100){
-						for(APart part : ((EntityVehicleF_Physics) entity).parts){
+			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
+				if(entity instanceof AEntityE_Multipart){
+					AEntityE_Multipart<?> multipart = (AEntityE_Multipart<?>) entity;
+					if(multipart.position.distanceTo(position) < 100){
+						for(APart part : multipart.parts){
 							if(part.worldPos.distanceTo(position) < 10){
 								if(part instanceof PartInteractable){
 									FluidTank partTank = ((PartInteractable) part).tank;

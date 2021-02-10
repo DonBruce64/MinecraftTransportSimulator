@@ -28,7 +28,7 @@ public class BoundingBox{
 	public final Point3d localCenter;
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
-	public final List<Point3i> collidingBlockPositions = new ArrayList<Point3i>();
+	public final List<Point3d> collidingBlockPositions = new ArrayList<Point3d>();
 	private final Point3d tempGlobalCenter;
 	
 	public double widthRadius;

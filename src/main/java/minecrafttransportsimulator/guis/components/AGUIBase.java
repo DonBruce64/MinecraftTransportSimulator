@@ -74,7 +74,7 @@ public abstract class AGUIBase{
 	 *  Returns the source of where to calculate the light for this GUI.  This is required
 	 *  if {@link #getGUILightMode()} is any value other than {@link GUILightingMode#NONE}.
 	 */
-	public AEntityB_Existing<?> getGUILightSource(){
+	public AEntityB_Existing getGUILightSource(){
 		return null;
 	}
 	

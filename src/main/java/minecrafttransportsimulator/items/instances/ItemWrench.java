@@ -13,7 +13,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -70,7 +69,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 						if(vehicle.towedByVehicle != null){
 							vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
 						}
-						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
+						ItemVehicle vehicleItem = vehicle.getItem();
 						WrapperNBT vehicleData = new WrapperNBT();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);

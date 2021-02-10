@@ -4,6 +4,8 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -17,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
@@ -66,7 +67,7 @@ public class InterfaceEventsOverlay{
     	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
     		//First set up variables to see what we are hitting.
     		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-    		AEntityBase mousedOverEntity = null;
+    		AEntityB_Existing mousedOverEntity = null;
     		Point3d mousedOverPoint = null;
 			if(lastHit != null && lastHit.entityHit instanceof BuilderEntity){
 				mousedOverEntity = ((BuilderEntity) lastHit.entityHit).entity;
@@ -75,7 +76,7 @@ public class InterfaceEventsOverlay{
 			
 			//Set up variables.
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
-	    	AEntityBase ridingEntity = player.getEntityRiding();
+	    	AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
 	    	int screenWidth = event.getResolution().getScaledWidth();
 	    	int screenHeight = event.getResolution().getScaledHeight();
 	    	

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.items.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -24,9 +25,9 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
-		if(definition.general.type.equals(PoleComponentType.CORE)){
-			return ((IItemBlock) this).placeBlock(world, player, point, axis);
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
+		if(definition.pole.type.equals(PoleComponentType.CORE)){
+			return ((IItemBlock) this).placeBlock(world, player, position, axis);
 		}else{
 			return false;
 		}
@@ -51,12 +52,12 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		 *  Helper method to create a component for the passed-in pole.  Does not add the component
 		 *  to the pole, only creates it.
 		 */
-		public static ATileEntityPole_Component createComponent(TileEntityPole pole, ItemPoleComponent item){
-			switch(item.definition.general.type){
-				case CORE : return new TileEntityPole_Core(pole, item);	
-				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, item);
-				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, item);
-				case SIGN : return new TileEntityPole_Sign(pole, item);
+		public static ATileEntityPole_Component createComponent(TileEntityPole pole, ItemPoleComponent item, WrapperNBT data){
+			switch(item.definition.pole.type){
+				case CORE : return new TileEntityPole_Core(pole, item, data);	
+				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, item, data);
+				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, item, data);
+				case SIGN : return new TileEntityPole_Sign(pole, item, data);
 			}
 			//We'll never get here.
 			return null;

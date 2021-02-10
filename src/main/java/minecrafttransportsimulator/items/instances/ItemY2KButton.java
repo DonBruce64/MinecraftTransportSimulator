@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.instances;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -15,7 +16,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
 import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
@@ -31,7 +31,7 @@ public class ItemY2KButton extends AItemBase{
 	@Override
 	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		if(!world.isClient() && player.isOP()){
-			for(AEntityBase entity : AEntityBase.createdServerEntities){
+			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
 				if(entity instanceof EntityVehicleF_Physics){
 					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
 					vehicle.throttle = 0;

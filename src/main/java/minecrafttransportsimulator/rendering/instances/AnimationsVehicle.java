@@ -120,7 +120,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 						//If it's not, or it doesn't exist, return 0.
 						APart foundPart = vehicle.getPartAtLocation(foundDef.pos);
 						if(foundPart != null && partClass.isInstance(foundPart)){
-							return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+							return foundPart.getAnimator().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 						}else{
 							return 0;
 						}
@@ -179,12 +179,12 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
-			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.location.x - vehicle.position.x, vehicle.selectedBeacon.location.z - vehicle.position.z))) : 0;
+			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.position.x - vehicle.position.x, vehicle.selectedBeacon.position.z - vehicle.position.z))) : 0;
 			case("beacon_bearing_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.bearing : 0;
 			case("beacon_bearing_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.getBearingDelta(vehicle) : 0;
 			case("beacon_glideslope_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope : 0;
-			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
-			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
+			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
+			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
 			
 			//Missile incoming variables.
 			//Variable is in the form of missile_X_variablename.

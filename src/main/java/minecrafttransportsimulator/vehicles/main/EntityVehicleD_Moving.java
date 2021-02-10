@@ -7,15 +7,14 @@ import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -90,8 +89,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleD_Moving(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
@@ -202,26 +201,22 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(contactPoint != null){
 			contactPoint.rotateCoarse(angles).add(position);
 			Point3d testPoint = new Point3d();
-			Point3i checkLocation = new Point3i(contactPoint);
-			ABlockBase block =  world.getBlock(checkLocation);
+			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
-				ATileEntityMultiblock<?> multiblock = ((BlockCollision) block).getMasterBlock(world, checkLocation);
-				if(multiblock instanceof TileEntityRoad){
-					TileEntityRoad road = (TileEntityRoad) multiblock;
-					//Check to see which lane we are on, if any.
-					for(RoadLane lane : road.lanes){
-						//Check path-points on the curve.  If our angles and position are close, set this as the curve.
-						for(BezierCurve curve : lane.curves){
-							for(float f=0; f<curve.pathLength; ++f){
-								curve.setPointToPositionAt(testPoint, f);
-								testPoint.add(road.position.x, road.position.y, road.position.z);
-								if(testPoint.distanceTo(contactPoint) < 1){
-									curve.setPointToRotationAt(testPoint, f);
-									boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
-									boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
-									if(sameDirection || oppositeDirection){
-										return new RoadFollowingState(lane, curve, sameDirection, f);
-									}
+				TileEntityRoad road = ((BlockCollision) block).getMasterRoad(world, contactPoint);
+				//Check to see which lane we are on, if any.
+				for(RoadLane lane : road.lanes){
+					//Check path-points on the curve.  If our angles and position are close, set this as the curve.
+					for(BezierCurve curve : lane.curves){
+						for(float f=0; f<curve.pathLength; ++f){
+							curve.setPointToPositionAt(testPoint, f);
+							testPoint.add(road.position.x, road.position.y, road.position.z);
+							if(testPoint.distanceTo(contactPoint) < 1){
+								curve.setPointToRotationAt(testPoint, f);
+								boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
+								boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
+								if(sameDirection || oppositeDirection){
+									return new RoadFollowingState(lane, curve, sameDirection, f);
 								}
 							}
 						}
@@ -344,9 +339,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Get any contributions from the colliding collision bits.
 		for(BoundingBox box : blockCollisionBoxes){
 			if(!box.collidingBlockPositions.isEmpty()){
-				Point3i groundPosition = new Point3i(box.globalCenter);
-				if(!world.isAir(groundPosition)){
-					float frictionLoss = 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
+				if(!world.isAir(box.globalCenter)){
+					float frictionLoss = 0.6F - world.getBlockSlipperiness(box.globalCenter) + world.getRainStrength(box.globalCenter)*0.1F;
 					brakingFactor += Math.max(2.0 - frictionLoss, 0);
 				}
 			}

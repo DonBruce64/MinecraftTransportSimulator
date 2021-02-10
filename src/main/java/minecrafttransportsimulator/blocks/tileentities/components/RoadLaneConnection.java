@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Helper class for containing connection data.
@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  * @author don_bruce
  */
 public class RoadLaneConnection{
-	public final Point3i tileLocation;
+	public final Point3d tileLocation;
 	public final int laneNumber;
 	public final int curveNumber;
 	public final float curveNetAngle;
@@ -29,7 +29,7 @@ public class RoadLaneConnection{
 		this.connectedToStart = connectedToStart;
 	}
 	
-	public RoadLaneConnection(Point3i tileLocation, int laneNumber, int curveNumber, float curveNetAngle, boolean connectedToStart){
+	public RoadLaneConnection(Point3d tileLocation, int laneNumber, int curveNumber, float curveNetAngle, boolean connectedToStart){
 		this.tileLocation = tileLocation;
 		this.laneNumber = laneNumber;
 		this.curveNumber = curveNumber;
@@ -38,7 +38,7 @@ public class RoadLaneConnection{
 	}
 	
 	public RoadLaneConnection(WrapperNBT data){
-		this.tileLocation = data.getPoint3i("tileLocation");
+		this.tileLocation = data.getPoint3dCompact("tileLocation");
 		this.laneNumber = data.getInteger("laneNumber");
 		this.curveNumber = data.getInteger("curveNumber");
 		this.curveNetAngle = (float) data.getDouble("curveNetAngle");
@@ -46,7 +46,7 @@ public class RoadLaneConnection{
 	}
 	
 	public void save(WrapperNBT data){
-		data.setPoint3i("tileLocation",tileLocation);
+		data.setPoint3dCompact("tileLocation",tileLocation);
 		data.setInteger("laneNumber", laneNumber);
 		data.setInteger("curveNumber", curveNumber);
 		data.setDouble("curveNetAngle", curveNetAngle);

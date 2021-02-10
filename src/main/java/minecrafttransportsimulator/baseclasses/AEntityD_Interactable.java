@@ -53,8 +53,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 	 **/
 	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
-	public AEntityD_Interactable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public AEntityD_Interactable(WrapperWorld world, WrapperEntity wrapper, JSONDefinition definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
 		//so just make the locations for the moment so they are ready when riders are created.
 		savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));

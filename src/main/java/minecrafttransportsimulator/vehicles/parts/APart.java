@@ -9,17 +9,13 @@ import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.AnimationsPart;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityE_Multipart#addPart(APart)} to add parts 
@@ -33,6 +29,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public abstract class APart extends AEntityC_Definable<JSONPart>{
 	private static final Point3d ZERO_POINT = new Point3d();
 	private static final AnimationsPart animator = new AnimationsPart();
+	private static RenderPart renderer;
 	
 	//JSON properties.
 	public final JSONPartDefinition partDefinition;
@@ -56,8 +53,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
 		
-	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn.world, null, data);
+	public APart(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn.world, null, definition, data);
 		this.entityOn = entityOn;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
@@ -237,7 +234,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	 * Returns true if this part is in liquid.
 	 */
 	public boolean isInLiquid(){
-		return world.isBlockLiquid(new Point3i(worldPos));
+		return world.isBlockLiquid(worldPos);
 	}
 	
 	/**
@@ -261,15 +258,6 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	}
 	
 	/**
-	 * Gets the item for this part.  If the part should not return an item 
-	 * (either due to damage or other reasons) make this method return null.
-	 */
-	public ItemPart getItem(){
-		ItemPart item = PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName);
-		return item;
-	}
-	
-	/**
 	 * Return the part data in NBT form.
 	 * This is called when removing the part from an entity to return an item.
 	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
@@ -277,6 +265,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	 * This does not include the part offsets, as those are re-calculated every time the part is attached
 	 * and are saved separately from the item NBT data in the entity.
 	 */
+	//FIXME this needs to go into the proper method.
 	public WrapperNBT getData(){
 		WrapperNBT data = new WrapperNBT();
 		int lineNumber = 0;
@@ -317,13 +306,17 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	}
 	
 	@Override
-	public <AnimationEntity extends AEntityC_Definable<JSONPart>> ARenderEntity<AnimationEntity> getRenderer(){
-		// TODO Auto-generated method stub
-		return null;
+	@SuppressWarnings("unchecked")
+	public AnimationsPart getAnimator(){
+		return animator;
 	}
 	
 	@Override
-	public double getAnimationValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
-		return animator.getAnimatedVariableValue(this, animation, offset, clock, partialTicks);
+	@SuppressWarnings("unchecked")
+	public RenderPart getRenderer(){
+		if(renderer == null){
+			renderer = new RenderPart();
+		}
+		return renderer;
 	}
 }

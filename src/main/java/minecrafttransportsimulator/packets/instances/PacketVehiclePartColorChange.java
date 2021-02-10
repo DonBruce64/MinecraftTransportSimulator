@@ -46,7 +46,7 @@ public class PacketVehiclePartColorChange extends APacketMultipartPart{
 			if(!player.isCreative()){
 				inventory.removeMaterials(newPartItem, false, true);
 			}
-			part.currentSubName = newPartItem.subName;
+			part.subName = newPartItem.subName;
 			return true;
 		}
 		return false;

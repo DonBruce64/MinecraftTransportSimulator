@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -76,7 +76,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		//Create our client-side TE here if required.
 		if(tileEntity == null){
 			//Get the block that makes this TE and restore it from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
 		}
 	}
 	
@@ -98,7 +98,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		super.readFromNBT(tag);
 		if(tileEntity == null && tag.hasKey("teid")){
 			//Restore the TE from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
+			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
 		}
     }
     
@@ -119,7 +119,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     *
     * @author don_bruce
     */
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem<?>>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
 	    
 		public Tickable(){
 			super();

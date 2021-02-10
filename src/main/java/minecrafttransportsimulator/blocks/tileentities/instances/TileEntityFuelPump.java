@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -21,7 +20,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	public EntityVehicleF_Physics connectedVehicle;
     private FluidTank tank;
 
-    public TileEntityFuelPump(WrapperWorld world, Point3i position, WrapperNBT data){
+    public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
     	this.tank = new FluidTank(world, data, 15000);
     }
@@ -56,7 +55,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(connectedVehicle.position.distanceTo(position) > 16){
 				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 25, 25, 25))){
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
 					if(entity instanceof WrapperPlayer){
 						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
 					}
@@ -77,7 +76,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
-					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 						if(entity instanceof WrapperPlayer){
 							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.complete"));
 						}
@@ -88,7 +87,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(new Point3d(position), 16, 16, 16))){
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 					if(entity instanceof WrapperPlayer){
 						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.empty"));
 					}

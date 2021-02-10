@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
@@ -11,12 +12,6 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
-/**This class contains methods for part animations.
- * These are used to animate parts on vehicles.  The
- * vehicle itself is animated by {@link AnimationsVehicle}
- *
- * @author don_bruce
- */
 public final class AnimationsPart extends AAnimationsBase<APart>{
 	
 	@Override
@@ -44,7 +39,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 						if(part.parentPart != null){
 							return getRawVariableValue(part.parentPart, variable, partialTicks);
 						}else{
-							return part.vehicle.getAnimationSystem().getRawVariableValue(part.vehicle, variable, partialTicks);
+							return part.entityOn.getAnimator().getRawVariableValue(part.entityOn, variable, partialTicks);
 						}
 					}
 					
@@ -69,7 +64,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 							//If it's not, or it doesn't exist, return 0.
 							APart foundPart = part.entityOn.getPartAtLocation(part.entityOn.getPackForSubPart(part.partDefinition, foundDef).pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
-								return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+								return foundPart.getAnimator().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 							}else{
 								return 0;
 							}
@@ -135,7 +130,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 			PartGroundDevice groundDevice = (PartGroundDevice) part;
 			switch(variable){
 				case("ground_rotation"): return groundDevice.getRenderingRotation(partialTicks, true).x;
-				case("ground_onground"): return part.vehicle.groundDeviceCollective.groundedGroundDevices.contains(groundDevice) ? 1 : 0;
+				case("ground_onground"): return part.entityOn instanceof EntityVehicleF_Physics ? ((EntityVehicleF_Physics) part.entityOn).groundDeviceCollective.groundedGroundDevices.contains(groundDevice) ? 1 : 0 : 0;
 				case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
 				case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
 			}
@@ -189,8 +184,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 		}
 
 		//If we are down here, we must have not found a part variable.
-		//This means we might be requesting a vehicle variable on this part.
-		//Try to get the vehicle variable, and return whatever we get.
-		return part.vehicle.getAnimationSystem().getRawVariableValue(part.vehicle, variable, partialTicks);
+		//This means we might be requesting a parent entity variable on this part.
+		//Try to get the parent variable, and return whatever we get.
+		return part.entityOn.getAnimator().getRawVariableValue(part.entityOn, variable, partialTicks);
 	}
 }

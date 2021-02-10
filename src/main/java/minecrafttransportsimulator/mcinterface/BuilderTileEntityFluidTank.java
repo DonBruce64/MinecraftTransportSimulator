@@ -24,7 +24,7 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem<?>> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements ITickable, IFluidTank, IFluidHandler{
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements ITickable, IFluidTank, IFluidHandler{
 	
 	public BuilderTileEntityFluidTank(){
 		super();

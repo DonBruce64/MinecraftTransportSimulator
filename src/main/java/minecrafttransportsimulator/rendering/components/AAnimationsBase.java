@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**This class contains methods for animations.  These are used to animate anything 
@@ -61,17 +60,17 @@ public abstract class AAnimationsBase<AnimationEntity extends AEntityC_Definable
 			case("tick_sin"): return Math.sin(Math.toRadians(entity.world.getTick()));
 			case("tick_cos"): return Math.cos(Math.toRadians(entity.world.getTick()));
 			case("time"): return entity.world.getTime();
-			case("rain_strength"): return (int) entity.world.getRainStrength(new Point3i(entity.position));
+			case("rain_strength"): return (int) entity.world.getRainStrength(entity.position);
 			case("rain_sin"): {
-				int rainStrength = (int) entity.world.getRainStrength(new Point3i(entity.position)); 
+				int rainStrength = (int) entity.world.getRainStrength(entity.position); 
 				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5: 0;
 			}
 			case("rain_cos"): {
-				int rainStrength = (int) entity.world.getRainStrength(new Point3i(entity.position)); 
+				int rainStrength = (int) entity.world.getRainStrength(entity.position); 
 				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5 : 0;
 			}	
-			case("light_sunlight"): return entity.world.getLightBrightness(new Point3i(entity.position), false);
-			case("light_total"): return entity.world.getLightBrightness(new Point3i(entity.position), true);
+			case("light_sunlight"): return entity.world.getLightBrightness(entity.position, false);
+			case("light_total"): return entity.world.getLightBrightness(entity.position, true);
 		}
 		
 		//Check if this is a cycle variable.

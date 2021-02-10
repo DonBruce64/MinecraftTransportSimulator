@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.blocks.instances;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -14,7 +15,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -27,10 +27,10 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
 		//Only check right-clicks on the server.
 		if(!world.isClient()){
-			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(point);
+			TileEntityFuelPump pump = (TileEntityFuelPump) world.getTileEntity(position);
 			FluidTank tank = pump.getTank();
 			
 			//If we are holding an item, interact with the pump.
@@ -61,12 +61,13 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
     			//Get the closest vehicle within a 16-block radius.
     			EntityVehicleF_Physics nearestVehicle = null;
     			double lowestDistance = 16D;
-    			for(AEntityBase entity : AEntityBase.createdServerEntities){
+    			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
     				if(entity instanceof EntityVehicleF_Physics){
-    					double entityDistance = entity.position.distanceTo(point);
-    					if(entityDistance < lowestDistance){
-    						lowestDistance = entityDistance;
-    						nearestVehicle = (EntityVehicleF_Physics) entity;
+    					EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
+    					double vehicleDistance = testVehicle.position.distanceTo(position);
+    					if(vehicleDistance < lowestDistance){
+    						lowestDistance = vehicleDistance;
+    						nearestVehicle = testVehicle;
     					}
     				}
     			}
@@ -115,7 +116,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 	}
 	
     @Override
-	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityFuelPump(world, position, data);
 	}
 

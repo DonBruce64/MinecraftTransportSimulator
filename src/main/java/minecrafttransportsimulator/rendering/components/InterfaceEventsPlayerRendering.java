@@ -5,11 +5,12 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -67,7 +68,7 @@ public class InterfaceEventsPlayerRendering{
     	
     	//If we are riding an entity, adjust seating.
     	if(player.getRidingEntity() instanceof BuilderEntity){
-        	AEntityBase ridingEntity = ((BuilderEntity) player.getRidingEntity()).entity;
+        	AEntityD_Interactable<?> ridingEntity = (AEntityD_Interactable<?>) ((BuilderEntity) player.getRidingEntity()).entity;
         	float playerWidthScale = 1.0F;
         	float playerHeightScale = 1.0F;
         	GL11.glPushMatrix();
@@ -164,7 +165,7 @@ public class InterfaceEventsPlayerRendering{
     public static void on(RenderPlayerEvent.Post event){
     	EntityPlayer player = event.getEntityPlayer();
     	ModelPlayer playerModel = event.getRenderer().getMainModel();
-    	AEntityBase ridingEntity = null;
+    	AEntityB_Existing ridingEntity = null;
     	Point3d rightArmAngles = null;
 		Point3d leftArmAngles = null;
 		

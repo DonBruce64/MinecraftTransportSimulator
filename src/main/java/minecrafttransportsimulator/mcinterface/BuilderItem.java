@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -140,7 +140,7 @@ public class BuilderItem extends Item{
 	@Override
 	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
 		WrapperWorld wrapper = WrapperWorld.getWrapperFor(world);
-		return item.onBlockClicked(wrapper, wrapper.getWrapperFor(player), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+		return item.onBlockClicked(wrapper, wrapper.getWrapperFor(player), new Point3d(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
 	}
 	
 	/**

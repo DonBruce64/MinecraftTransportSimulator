@@ -35,8 +35,8 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 	}
 	
 	@Override

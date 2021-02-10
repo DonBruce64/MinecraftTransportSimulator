@@ -43,7 +43,7 @@ public class PacketTileEntityDecorColorChange extends APacketTileEntity<TileEnti
 			if(!player.isCreative()){
 				inventory.removeMaterials(newDecorItem, false, true);
 			}
-			decor.currentSubName = newDecorItem.subName;
+			decor.subName = newDecorItem.subName;
 			return true;
 		}
 		return false;

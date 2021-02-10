@@ -10,7 +10,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  *
  * @author don_bruce
  */
-public interface IItemEntityProvider<EntityType extends AEntityB_Existing<?>>{
+public interface IItemEntityProvider<EntityType extends AEntityB_Existing>{
 	
 	/**
 	 *  Gets a new instance of the entity this item creates.

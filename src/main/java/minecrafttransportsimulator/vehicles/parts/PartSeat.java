@@ -2,6 +2,7 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -16,8 +17,8 @@ public final class PartSeat extends APart{
 	public ItemPart activeGun;
 	public int gunIndex;
 	
-	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, definition, packVehicleDef, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
 	}
 	

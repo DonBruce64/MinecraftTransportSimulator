@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -12,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
@@ -109,9 +108,10 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	
 	//Animator for vehicles
 	private static final AnimationsVehicle animator = new AnimationsVehicle();
+	private static RenderVehicle renderer;;
 
-	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");
@@ -597,16 +597,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}
 	}
 	
-	@Override
-	public void render(float partialTicks){
-		RenderVehicle.render(this, partialTicks);
-	}
-	
-    @Override
-	public double getAnimationValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
-		return animator.getAnimatedVariableValue(this, animation, offset, clock, partialTicks);
-	}
-	
 	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(angleOfAttack == 0){
 			return 0;
@@ -621,6 +611,26 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}else{
 			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
 		}
+	}
+	
+	@Override
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.vehicleBeams.value;
+    }
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public AnimationsVehicle getAnimator(){
+		return animator;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public RenderVehicle getRenderer(){
+		if(renderer == null){
+			renderer = new RenderVehicle();
+		}
+		return renderer;
 	}
     
 	@Override

@@ -72,7 +72,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  its surroundings lit up.  Rather, this simply means there is a light on this entity somewhere.
 	 */
 	public boolean isLitUp(){
-		//FIXME make this true for vehicles and decors.
+		//FIXME do we use this anywhere?.
     	return false;
 	}
 	
@@ -83,7 +83,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
    	 *  rendering differently at different power levels.
    	 */
     public float getLightPower(){
-    	//FIXME make this true for vehicles and decors.
     	return 1.0F;
     }
     
@@ -92,7 +91,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
    	 *  so the method is abstract here.
    	 */
     public boolean shouldRenderBeams(){
-    	//FIXME make this true for vehicles and decors.
     	return false;
     }
     
@@ -107,6 +105,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
+		//FIXME make a way to not save these to save storage space on dynamically-placed entities.
 		data.setPoint3d("position", position);
 		data.setPoint3d("motion", motion);
 		data.setPoint3d("angles", angles);

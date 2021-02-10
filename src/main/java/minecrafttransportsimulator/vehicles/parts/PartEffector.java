@@ -5,21 +5,21 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
-	protected final Point3i[] lastBlocksModified;
-	protected final Point3i[] affectedBlocks;
+	private final Point3d[] lastBlocksModified;
+	private final Point3d[] affectedBlocks;
 	
-	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
-		lastBlocksModified = new Point3i[definition.effector.blocksWide];
-		affectedBlocks = new Point3i[definition.effector.blocksWide];
+	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, definition, packVehicleDef, data, parentPart);
+		lastBlocksModified = new Point3d[definition.effector.blocksWide];
+		affectedBlocks = new Point3d[definition.effector.blocksWide];
 	}
 	
 	@Override
@@ -28,8 +28,7 @@ public class PartEffector extends APart{
 		int startingIndex = -definition.effector.blocksWide/2;
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
-			Point3d partAffectorPosition = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(worldPos);
-			affectedBlocks[i] = new Point3i(partAffectorPosition);
+			affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(worldPos);
 			if(definition.effector.type.equals(EffectorComponentType.PLANTER) || definition.effector.type.equals(EffectorComponentType.PLOW)){
 				affectedBlocks[i].add(0, -1, 0);
 			}

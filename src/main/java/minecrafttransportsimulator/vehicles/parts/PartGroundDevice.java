@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -44,8 +45,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, definition, packVehicleDef, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us

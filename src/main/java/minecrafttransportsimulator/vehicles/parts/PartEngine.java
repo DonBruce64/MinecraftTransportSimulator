@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -84,8 +85,8 @@ public class PartEngine extends APart implements IParticleProvider{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartEngine(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, definition, packVehicleDef, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
@@ -514,7 +515,7 @@ public class PartEngine extends APart implements IParticleProvider{
 	
 	@Override
 	public boolean isInLiquid(){
-		return vehicle.world.isBlockLiquid(new Point3i(worldPos.copy().add(0, partDefinition.intakeOffset, 0)));
+		return world.isBlockLiquid(worldPos.copy().add(0, partDefinition.intakeOffset, 0));
 	}
 	
 	@Override

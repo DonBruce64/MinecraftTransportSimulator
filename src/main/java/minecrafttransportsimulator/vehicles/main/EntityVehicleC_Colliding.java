@@ -10,12 +10,12 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -23,7 +23,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.item.ItemStack;
@@ -66,8 +65,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<APart, Map<BoundingBox, JSONDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, JSONDoor>>();
 	
 	
-	public EntityVehicleC_Colliding(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleC_Colliding(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
+		super(world, wrapper, definition, data);
 		
 		//Create the initial part slots.
 		recalculatePartSlots();
@@ -456,7 +455,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
-			for(Point3i blockPosition : box.collidingBlockPositions){
+			for(Point3d blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
@@ -514,7 +513,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true, false)){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(getItem(), true, true, false)){
 			for(ItemStack stack : material.possibleItems){
 				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnItemStack(new ItemStack(stack.getItem(), material.qty, material.meta), location);

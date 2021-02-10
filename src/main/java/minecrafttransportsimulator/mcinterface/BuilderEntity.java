@@ -348,6 +348,7 @@ public class BuilderEntity extends Entity{
 			//This prevents loading duplicate client entities that don't update. 
 			//For the clients, we use the packet to create the entity after an update() call.
 			if(!world.isRemote){
+				//FIXME put this in the first update loop in case some mod does shady stuff.
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), null, new WrapperNBT(tag));
 			}

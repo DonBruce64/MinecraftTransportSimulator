@@ -27,8 +27,8 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection.VehicleConnectionConnector;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.ATransform;
-import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
@@ -52,7 +52,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
  *
  * @author don_bruce
  */
-public final class RenderVehicle{	
+public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{	
 	//VEHICLE MAPS.  Maps are keyed by system name.
 	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
 	private static final Map<String, List<RenderableModelObject<EntityVehicleF_Physics>>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject<EntityVehicleF_Physics>>>();
@@ -63,7 +63,7 @@ public final class RenderVehicle{
 	
 	//PART MAPS.  Maps are keyed by the part model name.
 	private static final Map<String, Integer> partDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, List<RenderableModelObject<EntityVehicleF_Physics>>> partObjectLists = new HashMap<String, List<RenderableModelObject<EntityVehicleF_Physics>>>();
+	private static final Map<String, List<RenderableModelObject<APart>>> partObjectLists = new HashMap<String, List<RenderableModelObject<APart>>>();
 	
 	//CONNECTOR MAPS.  Maps are keyed by model name.
 	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
@@ -92,7 +92,7 @@ public final class RenderVehicle{
 			GL11.glDeleteLists(partDisplayLists.remove(modelName), 1);
 		}
 		if(partObjectLists.containsKey(modelName)){
-			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : partObjectLists.get(modelName)){
+			for(RenderableModelObject<APart> modelObject : partObjectLists.get(modelName)){
 				modelObject.resetDisplayList();
 			}
 			partObjectLists.remove(definition.systemName);
@@ -112,10 +112,10 @@ public final class RenderVehicle{
 		for(APart part : vehicle.parts){
 			String partModelLocation = part.definition.getModelLocation();
 			if(partObjectLists.containsKey(partModelLocation)){
-				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : partObjectLists.get(partModelLocation)){
-					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
+				for(RenderableModelObject<APart> modelObject : partObjectLists.get(partModelLocation)){
+					for(ATransform<APart> transform : modelObject.transforms){
 						if(transform instanceof TransformLight){
-							if(((TransformLight<EntityVehicleF_Physics>) transform).type.equals(light)){
+							if(((TransformLight<APart>) transform).type.equals(light)){
 								return true;
 							}
 						}
@@ -126,35 +126,8 @@ public final class RenderVehicle{
 		return false;
 	}
 	
-	/**
-	 *  Renders the vehicle in its entirety.  Rendering happens normally in pass 0 (solid) and 1 (transparent), but may happen in the
-	 *  special pass -1 (end) if the vehicle wasn't rendered in either pass 0 or 1 due to chunk render culling.  Some rendering routines
-	 *  only run on specific passes, so see the comments on the called methods for information on what is rendered when.
-	 */
-	public static void render(EntityVehicleF_Physics vehicle, float partialTicks){
-		//Get the render offset.
-		//This is the interpolated movement, plus the prior position.
-		Point3d vehiclePosition = vehicle.prevPosition.getInterpolatedPoint(vehicle.position, partialTicks);
-		
-		//Subtract the vehcle's position by the render entity position to get the delta for translating.
-		vehiclePosition.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
-		
-		//Get the vehicle rotation.
-		Point3d renderRotation = vehicle.prevAngles.getInterpolatedPoint(vehicle.angles, partialTicks);
-       
-        //Set up lighting.
-        InterfaceRender.setLightingToEntity(vehicle);
-        
-        //Use smooth shading for main model rendering.
-		GL11.glShadeModel(GL11.GL_SMOOTH);
-        
-        //Push the matrix on the stack and translate and rotate to the vehicle's position.
-        GL11.glPushMatrix();
-        GL11.glTranslated(vehiclePosition.x, vehiclePosition.y, vehiclePosition.z);
-        GL11.glRotated(renderRotation.y, 0, 1, 0);
-        GL11.glRotated(renderRotation.x, 1, 0, 0);
-        GL11.glRotated(renderRotation.z, 0, 0, 1);
-		
+	@Override
+	public void renderModel(EntityVehicleF_Physics vehicle, float partialTicks){
         //Render the main model.
 		renderMainModel(vehicle, partialTicks);
 		
@@ -167,7 +140,7 @@ public final class RenderVehicle{
 				if(part.partDefinition.animations != null){
 					for(JSONAnimationDefinition animation : part.partDefinition.animations){
 						if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-							double value = part.getAnimationSystem().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
+							double value = part.getAnimator().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
 							if(value < animation.clampMin || value > animation.clampMax){
 								shouldRender = false;
 								break;
@@ -208,19 +181,6 @@ public final class RenderVehicle{
 		if(InterfaceRender.shouldRenderBoundingBoxes()){
 			renderBoundingBoxes(vehicle);
 		}
-		
-		//Pop vehicle translation matrix and reset all states.
-		GL11.glPopMatrix();
-		InterfaceRender.resetStates();
-		
-		//Spawn particles, but only once per render cycle.
-		if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
-			for(APart part : vehicle.parts){
-				if(part instanceof IParticleProvider){
-					((IParticleProvider) part).spawnParticles();
-				}
-			}
-		}
 	}
 	
 	/**
@@ -254,7 +214,7 @@ public final class RenderVehicle{
 		
 		//Bind the texture and render.
 		//Don't render on the transparent pass.
-		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.currentSubName));
+		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.subName));
 		if(InterfaceRender.getRenderPass() != 1){
 			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.systemName));
 		}
@@ -292,9 +252,9 @@ public final class RenderVehicle{
 		//If we aren't using the vehicle texture, bind the texture for this part.
 		//Otherwise, bind the vehicle texture as it may have been un-bound prior to this from another part.
 		if(!part.definition.generic.useVehicleTexture){
-			InterfaceRender.setTexture(part.definition.getTextureLocation(part.currentSubName));
+			InterfaceRender.setTexture(part.definition.getTextureLocation(part.subName));
 		}else{
-			InterfaceRender.setTexture(part.vehicle.definition.getTextureLocation(part.vehicle.currentSubName));
+			InterfaceRender.setTexture(part.entityOn.definition.getTextureLocation(part.entityOn.subName));
 		}
 		
 		//Rotate the part prior to rendering the displayList.
@@ -330,8 +290,8 @@ public final class RenderVehicle{
 			}
 			
 			//The display list only renders static object.  We need to render dynamic ones manually.
-			List<RenderableModelObject> modelObjects = partObjectLists.get(partModelLocation);
-			for(RenderableModelObject modelObject : modelObjects){
+			List<RenderableModelObject<APart>> modelObjects = partObjectLists.get(partModelLocation);
+			for(RenderableModelObject<APart> modelObject : modelObjects){
 				if(modelObject.applyAfter == null){
 					modelObject.render(part, partialTicks, modelObjects);
 				}
@@ -371,7 +331,7 @@ public final class RenderVehicle{
 	 */
 	@Deprecated
 	private static void doManualTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
-		List<Float[]> deltas = treadDeltas.get(treadPart.vehicle.definition.systemName);
+		List<Float[]> deltas = treadDeltas.get(treadPart.entityOn.definition.systemName);
 		if(deltas == null){
 			//First calculate the total distance the treads need to be rendered.
 			float totalDistance = 0;
@@ -476,7 +436,7 @@ public final class RenderVehicle{
 				}
 			}
 			//Add the finalized delta list to the map.
-			treadDeltas.put(treadPart.vehicle.definition.systemName, deltas);
+			treadDeltas.put(treadPart.entityOn.definition.systemName, deltas);
 		}
 		
 		
@@ -511,12 +471,12 @@ public final class RenderVehicle{
 	 *  This is required to prevent the need to manually input a ton of points and reduce pack creator's work.
 	 */
 	private static void doAutomaticTreadRender(PartGroundDevice treadPart, float partialTicks, int displayListIndex){
-		List<Double[]> points = treadPoints.get(treadPart.vehicle.definition.systemName);
+		List<Double[]> points = treadPoints.get(treadPart.entityOn.definition.systemName);
 		if(points == null){
 			//If we don't have the deltas, calculate them based on the points of the rollers on the vehicle.			
 			//Search through rotatable parts on the vehicle and grab the rollers.
 			Map<Integer, TransformTreadRoller<EntityVehicleF_Physics>> parsedRollers = new HashMap<Integer, TransformTreadRoller<EntityVehicleF_Physics>>();
-			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(treadPart.vehicle.definition.systemName)){
+			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(treadPart.entityOn.definition.systemName)){
 				for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 					if(transform instanceof TransformTreadRoller){
 						TransformTreadRoller<EntityVehicleF_Physics> treadTransform = (TransformTreadRoller<EntityVehicleF_Physics>) transform;
@@ -531,7 +491,7 @@ public final class RenderVehicle{
 			List<TransformTreadRoller<EntityVehicleF_Physics>> rollers = new ArrayList<TransformTreadRoller<EntityVehicleF_Physics>>();
 			for(int i=0; i<parsedRollers.size(); ++ i){
 				if(!parsedRollers.containsKey(i)){
-					throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + treadPart.vehicle.definition.packID + ":" + treadPart.vehicle.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
+					throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + treadPart.entityOn.definition.packID + ":" + treadPart.entityOn.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
 				}
 				if(i < parsedRollers.size() - 1){
 					parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
@@ -705,7 +665,7 @@ public final class RenderVehicle{
 					leftoverPathLength = straightPathLength;
 				}
 			}
-			treadPoints.put(treadPart.vehicle.definition.systemName, points);
+			treadPoints.put(treadPart.entityOn.definition.systemName, points);
 		}
 				
 		//Render the treads along their points.

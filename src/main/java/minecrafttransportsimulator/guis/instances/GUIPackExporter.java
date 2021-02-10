@@ -300,7 +300,7 @@ public class GUIPackExporter extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "Model:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getModelLocation());
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.currentSubName));
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.x));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";

@@ -232,7 +232,7 @@ public class JSONParser{
 		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
 		//Do legacy compats if we need before validating the JSON.
 		if(retObj instanceof AJSONItem){
-			LegacyCompatSystem.performLegacyCompats((AJSONItem<?>) retObj);
+			LegacyCompatSystem.performLegacyCompats((AJSONItem) retObj);
 		}
 		//Check for proper fields.
 		validateFields(retObj, "/", 1);

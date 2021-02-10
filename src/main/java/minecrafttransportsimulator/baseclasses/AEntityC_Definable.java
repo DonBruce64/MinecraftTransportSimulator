@@ -5,16 +5,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -31,7 +33,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public final JSONDefinition definition;
 
 	/**The current subName for this entity.  Used to select which definition represents this entity.*/
-	public String currentSubName;
+	public String subName;
 	
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
@@ -39,12 +41,15 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
-	public AEntityC_Definable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
+	public final RenderTickData renderData;
+	
+	public AEntityC_Definable(WrapperWorld world, WrapperEntity wrapper, JSONDefinition definition, WrapperNBT data){
 		super(world, wrapper, data);
-		//Set definition and current subName.
-		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName")); 
-		this.definition = item.definition;
-		this.currentSubName = item.subName;
+		//FIXME this goes in item constructors.
+		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
+		//Set definition and current subName. 
+		this.definition = definition;
+		this.subName = data.getString("subName");
 		
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
@@ -55,6 +60,19 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		//Load variables.
 		variablesOn.addAll(data.getStrings("variablesOn"));
+		
+		//Make sure the generic light is in the variable set.
+		variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
+		
+		//Create render data if we are on the client.
+		this.renderData = world.isClient() ? new RenderTickData(world) : null;
+	}
+	
+	/**
+	 *  Returns the current item for this entity.
+	 */
+	public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
+		return PackParserSystem.getItem(definition.packID, definition.systemName, subName);
 	}
 	
     /**
@@ -65,7 +83,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 */
     public boolean renderTextLit(){
     	//FIXME make this false for vehicles.
-    	return false;
+    	return true;
     }
     
     /**
@@ -75,25 +93,27 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 */
     public String getSecondaryTextColor(){
     	for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(currentSubName)){
+			if(subDefinition.subName.equals(subName)){
 				return subDefinition.secondColor;
 			}
 		}
-		throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + currentSubName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+		throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
     }
     
     /**
 	 *  Gets the renderer for this entity.  No actual rendering should be done in this method, 
 	 *  as doing so could result in classes being imported during object instantiation on the server 
 	 *  for graphics libraries that do not exist.  Instead, generate a class that does this and call it.
+	 *  This method is assured to be only called on clients, so you can just do the construction of the
+	 *  renderer in this method and pass it back as the return.
 	 */
-	public abstract <AnimationEntity extends AEntityC_Definable<JSONDefinition>> ARenderEntity<AnimationEntity> getRenderer();
+	public abstract <RendererInstance extends ARenderEntity<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> RendererInstance getRenderer();
 	
-	/**
-	 *  Gets the value of the passed-animation for this entity.  Unlike the renderer, animation calls
-	 *  are used both on the client and the server, so all methods inside here need to be server-safe.
+	 /**
+	 *  Returns the animator for this entity. Unlike the renderer, animator is used on both
+	 *  the client and the server, so all methods inside here need to be server-safe.
 	 */
-	public abstract double getAnimationValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks);
+	public abstract <AnimatorInstance extends AAnimationsBase<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> AnimatorInstance getAnimator();
     
     @Override
     public void updateSounds(List<SoundInstance> sounds){
@@ -115,7 +135,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		super.save(data);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
-		data.setString("subName", currentSubName);
+		data.setString("subName", subName);
 		int lineNumber = 0;
 		for(String textLine : text.values()){
 			data.setString("textLine" + lineNumber++, textLine);

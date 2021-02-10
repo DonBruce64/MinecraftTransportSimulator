@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -116,22 +115,22 @@ public class WrapperNBT{
 	}
 	
 	
-	//Point3i
-	public Point3i getPoint3i(String name){
-		return new Point3i(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
+	//Point3dcompact.  Casts-down doubles to ints for compact storage.
+	public Point3d getPoint3dCompact(String name){
+		return new Point3d(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
 	}
 	
-	public void setPoint3i(String name, Point3i value){
-		setInteger(name + "x", value.x);
-		setInteger(name + "y", value.y);
-		setInteger(name + "z", value.z);
+	public void setPoint3dCompact(String name, Point3d value){
+		setInteger(name + "x", (int) value.x);
+		setInteger(name + "y", (int) value.y);
+		setInteger(name + "z", (int) value.z);
 	}
 	
-	public List<Point3i> getPoint3is(String name){
-		List<Point3i> values = new ArrayList<Point3i>();
+	public List<Point3d> getPoint3dsCompact(String name){
+		List<Point3d> values = new ArrayList<Point3d>();
 		int count = getInteger(name + "count");
 		for(int i=0; i<count; ++i){
-			Point3i point = getPoint3i(name + i);
+			Point3d point = getPoint3dCompact(name + i);
 			if(!point.isZero()){
 				values.add(point);
 			}
@@ -139,11 +138,11 @@ public class WrapperNBT{
 		return values;
 	}
 	
-	public void setPoint3is(String name, Collection<Point3i> values){
+	public void setPoint3dsCompact(String name, Collection<Point3d> values){
 		setInteger(name + "count", values.size());
 		int index = 0;
-		for(Point3i value : values){
-			setPoint3i(name + index, value);
+		for(Point3d value : values){
+			setPoint3dCompact(name + index, value);
 		}
 	}
 	

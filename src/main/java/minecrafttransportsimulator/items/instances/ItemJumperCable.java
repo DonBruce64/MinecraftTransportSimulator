@@ -35,7 +35,7 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 							lastEngineClicked = engine;
 							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.firstlink"));
 						}else if(!lastEngineClicked.equals(engine)){
-							if(lastEngineClicked.vehicle.equals(engine.vehicle)){
+							if(lastEngineClicked.entityOn.equals(engine.entityOn)){
 								lastEngineClicked = null;
 								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.samevehicle"));
 							}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){

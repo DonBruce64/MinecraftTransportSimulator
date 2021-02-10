@@ -6,6 +6,7 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
@@ -595,7 +596,7 @@ public final class LegacyCompatSystem{
 		//If we are a sign using the old textlines, update them.
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
-			for(minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine line : definition.general.textLines){
+			for(TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.color = line.color;
 				object.scale = line.scale;
@@ -624,6 +625,15 @@ public final class LegacyCompatSystem{
 					text.defaultText = "";
 				}
 			}
+		}
+		
+		//Move pole general properties to new location.
+		if(definition.general.type != null){
+			definition.pole = definition.new JSONPoleGeneric();
+			definition.pole.type = PoleComponentType.valueOf(definition.general.type);
+			definition.general.type = null;
+			definition.pole.radius = definition.general.radius;
+			definition.general.radius = 0;
 		}
 	}
 	
@@ -669,6 +679,15 @@ public final class LegacyCompatSystem{
 			definition.general.textObjects = null;
 		}
 		
+		//Set default text to blank for decor text objects.
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(JSONText text : definition.rendering.textObjects){
+				if(text.defaultText == null){
+					text.defaultText = "";
+				}
+			}
+		}
+		
 		//Move decor general properties to new location.
 		if(definition.general.width > 0){
 			if(definition.general.type != null){
@@ -688,15 +707,6 @@ public final class LegacyCompatSystem{
 			definition.general.partTypes = null;
 	    	definition.decor.items = definition.general.items;
 	    	definition.general.items = null;
-		}
-		
-		//Set default text to blank for decor text objects.
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(JSONText text : definition.rendering.textObjects){
-				if(text.defaultText == null){
-					text.defaultText = "";
-				}
-			}
 		}
 	}
 	

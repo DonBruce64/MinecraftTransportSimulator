@@ -52,6 +52,7 @@ public abstract class AJSONItem{
     	//Vehicle was deprecated for vehicle type.
     	//Part was for part type, and went to generic.
     	//Decor was for decor type, and went to decor
+    	//Pole was for pole type, and went to pole.
     	//Item was for item type, and went in item.
     	@Deprecated
     	public String type;
@@ -91,10 +92,10 @@ public abstract class AJSONItem{
     	public List<String> partTypes;
     	@Deprecated
     	public List<String> items;
+    	
+    	//Moved from Pole during common JSON overhauling.
     	@Deprecated
-    	public TextLine[] textLines;
-    	@Deprecated
-    	public List<JSONText> textObjects;
+    	public float radius;
     	
     	//Moved from Skin during common JSON overhauling.
     	@SuppressWarnings("hiding")
@@ -104,8 +105,14 @@ public abstract class AJSONItem{
 		@Deprecated
     	public String systemName;
     	
+    	//These came from both Decor and Pole.
+    	@Deprecated
+    	public TextLine[] textLines;
+    	@Deprecated
+    	public List<JSONText> textObjects;
         @Deprecated
         public class TextLine{
+        	public int characters;
         	public float xPos;
         	public float yPos;
         	public float zPos;

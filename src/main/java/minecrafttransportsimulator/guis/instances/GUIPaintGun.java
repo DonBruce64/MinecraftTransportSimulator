@@ -75,7 +75,7 @@ public class GUIPaintGun extends AGUIBase{
 		this.pole = null;
 		this.axis = null;
 		this.player = player;
-		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
+		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.subName);
 	}
 	
 	public GUIPaintGun(APart part, WrapperPlayer player){
@@ -85,7 +85,7 @@ public class GUIPaintGun extends AGUIBase{
 		this.pole = null;
 		this.axis = null;
 		this.player = player;
-		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(part.definition.packID, part.definition.systemName, part.currentSubName);
+		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(part.definition.packID, part.definition.systemName, part.subName);
 	}
 	
 	public GUIPaintGun(TileEntityDecor decor, WrapperPlayer player){
@@ -95,7 +95,7 @@ public class GUIPaintGun extends AGUIBase{
 		this.pole = null;
 		this.axis = null;
 		this.player = player;
-		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(decor.definition.packID, decor.definition.systemName, decor.currentSubName);
+		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(decor.definition.packID, decor.definition.systemName, decor.subName);
 	}
 	
 	public GUIPaintGun(TileEntityPole pole, Axis axis, WrapperPlayer player){

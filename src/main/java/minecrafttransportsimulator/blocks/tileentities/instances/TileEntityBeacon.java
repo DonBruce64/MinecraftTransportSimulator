@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -25,7 +24,7 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	public String beaconName;
 	
-	public TileEntityBeacon(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityBeacon(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
 		//Manually add textLines, as these won't be in the JSON.
 		this.nameTextObject = new JSONText();

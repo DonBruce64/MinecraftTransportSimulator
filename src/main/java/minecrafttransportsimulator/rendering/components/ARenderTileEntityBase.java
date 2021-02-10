@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 
 /**Base Tile Entity rendering class (TESR).  
@@ -21,5 +23,18 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	 */
 	public boolean translateToSlabs(){
 		return true;
+	}
+	
+	@Override
+	public void adjustPositionRotation(RenderedTileEntity entity, Point3d entityPosition, Point3d entityRotation){
+		if(translateToSlabs() && entity.world.isBlockBottomSlab(entity.position.copy().add(0, -1, 0))){
+			entityPosition.y -= 0.5D;			
+		}
+		if(rotateToBlock()){
+			ABlockBase block = entity.world.getBlock(entity.position);
+			if(block != null){
+				entityRotation.y -= block.getRotation(entity.world, entity.position);
+			}
+		}
 	}
 }
