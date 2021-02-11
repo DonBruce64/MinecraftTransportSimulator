@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -9,6 +11,7 @@ import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -35,8 +38,8 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
-		super(world, wrapper, definition, data);
+	public EntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 	}
 	
 	@Override

@@ -53,8 +53,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
 		
-	public APart(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn.world, null, definition, data);
+	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn.world, data);
 		this.entityOn = entityOn;
 		this.placementOffset = packVehicleDef.pos;
 		this.totalOffset = placementOffset.copy();
@@ -286,8 +286,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	
 	//--------------------START OF SOUND AND ANIMATION CODE--------------------
 	@Override
-	public boolean isLitUp(){
-		return entityOn.isLitUp();
+	public float getLightProvided(){
+		return entityOn.getLightProvided();
 	}
 	
 	@Override

@@ -15,7 +15,6 @@ import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -24,8 +23,8 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.Radio;
@@ -77,10 +76,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
 	
 	//Internal radio variables.
-	private final Radio radio;
+	public final Radio radio;
 	
-	public EntityVehicleE_Powered(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
-		super(world, wrapper, definition, data);
+	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		//Load simple variables.
 		this.hornOn = data.getBoolean("hornOn");
@@ -208,13 +207,19 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	}
 	
 	@Override
+	public void remove(){
+		super.remove();
+		radio.stop();
+	}
+	
+	@Override
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).partDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
-							InterfacePacket.sendToServer(new PacketVehiclePartEngine(engine, Signal.AS_ON));
+							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 						}
 					}
 					InterfacePacket.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
@@ -246,7 +251,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 					}
 					if(!otherController){
 						for(PartEngine engine : engines.values()){
-							InterfacePacket.sendToServer(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
 						}
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
 						InterfacePacket.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
@@ -258,8 +263,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	}
 	
 	@Override
-	public boolean isLitUp(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.DAYTIMELIGHT.isInCollection(variablesOn);
+	public float getLightProvided(){
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.DAYTIMELIGHT.isInCollection(variablesOn) ? 1.0F : 0.0F;
 	}
 	
 	@Override

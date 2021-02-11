@@ -12,9 +12,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -73,19 +73,19 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 						}
 					}else{
 						if(selectorState == 0){
 							if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT)){
-								InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 							}else{
-								InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 							}
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
 						}
 					}
 				}
@@ -102,9 +102,9 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
 					}else{
-						InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
 					}
 				}
 				
@@ -119,7 +119,7 @@ public class GUIPanelGround extends AGUIPanel{
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.emergencylights"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
 				}
 				
 				@Override
@@ -142,20 +142,20 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(selectorState == 0 && !leftSide){
-						InterfacePacket.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
 					}else if(selectorState == 1 && !leftSide){
-						InterfacePacket.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
 					}else if(selectorState == 1 && leftSide){
-						InterfacePacket.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
 					}else if(selectorState == 2 && leftSide){
-						InterfacePacket.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 				
 				@Override
 				public void onReleased(){
 					if(selectorState == 2){
-						InterfacePacket.sendToServer(new PacketVehiclePartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 					}
 				}
 			};
@@ -272,7 +272,7 @@ public class GUIPanelGround extends AGUIPanel{
 			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (variableNumber%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariable, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketVehicleVariableToggle(vehicle, this.text));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, this.text));
 				}
 				
 				@Override

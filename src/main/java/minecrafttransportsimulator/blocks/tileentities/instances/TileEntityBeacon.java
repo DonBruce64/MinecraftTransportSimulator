@@ -63,8 +63,8 @@ public class TileEntityBeacon extends TileEntityDecor{
 		}
 	}
 	
-	
-	public void updateBeaconToText(List<String> textLines){
+	@Override
+	public void updateText(List<String> textLines){
 		BeaconManager.removeBeacon(world, beaconName);
 		try{
 			beaconName = textLines.get(0);

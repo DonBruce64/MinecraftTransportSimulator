@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -110,8 +108,8 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private static final AnimationsVehicle animator = new AnimationsVehicle();
 	private static RenderVehicle renderer;;
 
-	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
-		super(world, wrapper, definition, data);
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");

@@ -12,9 +12,9 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -40,14 +40,14 @@ public class ItemY2KButton extends AItemBase{
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					for(PartEngine engine : vehicle.engines.values()){
 						engine.setMagnetoStatus(false);
-						InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+						InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
 					}
 					Iterator<String> variableIterator = vehicle.variablesOn.iterator();
 					while(variableIterator.hasNext()){
 						String variableName = variableIterator.next();
 						for(LightType light : LightType.values()){
 							if(light.lowercaseName.equals(variableName)){
-								InterfacePacket.sendToAllClients(new PacketVehicleVariableToggle(vehicle, variableName));
+								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variableName));
 								variableIterator.remove();
 								break;
 							}

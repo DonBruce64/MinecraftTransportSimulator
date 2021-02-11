@@ -17,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implements IItemBlock{
 	
@@ -52,12 +53,13 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		 *  Helper method to create a component for the passed-in pole.  Does not add the component
 		 *  to the pole, only creates it.
 		 */
-		public static ATileEntityPole_Component createComponent(TileEntityPole pole, ItemPoleComponent item, WrapperNBT data){
+		public static ATileEntityPole_Component createComponent(TileEntityPole pole, WrapperNBT data){
+			ItemPoleComponent item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
 			switch(item.definition.pole.type){
-				case CORE : return new TileEntityPole_Core(pole, item, data);	
-				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, item, data);
-				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, item, data);
-				case SIGN : return new TileEntityPole_Sign(pole, item, data);
+				case CORE : return new TileEntityPole_Core(pole, data);	
+				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, data);
+				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, data);
+				case SIGN : return new TileEntityPole_Sign(pole, data);
 			}
 			//We'll never get here.
 			return null;

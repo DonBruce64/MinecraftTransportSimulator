@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -25,8 +24,8 @@ public final class PartInteractable extends APart{
 	public String jerrycanFluid;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		switch(definition.interactable.interactionType){
 			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", world, data, definition.interactable.inventoryUnits*9); break;
 			case BARREL: this.interactable = null; break;

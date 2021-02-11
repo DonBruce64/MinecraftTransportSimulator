@@ -15,7 +15,6 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -65,8 +64,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<APart, Map<BoundingBox, JSONDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, JSONDoor>>();
 	
 	
-	public EntityVehicleC_Colliding(WrapperWorld world, WrapperEntity wrapper, JSONVehicle definition, WrapperNBT data){
-		super(world, wrapper, definition, data);
+	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		//Create the initial part slots.
 		recalculatePartSlots();

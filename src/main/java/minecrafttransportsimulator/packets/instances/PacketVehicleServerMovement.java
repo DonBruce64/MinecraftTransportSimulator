@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet used to send server vehicle movement to clients.  This packet doesn't directly
@@ -18,7 +18,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PacketVehicleServerMovement extends APacketVehicle{
+public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics>{
 	private final Point3d motion;
 	private final Point3d rotation;
 	

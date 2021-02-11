@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
@@ -13,8 +12,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(masterPart.entityOn, definition, packVehicleDef, data, parentPart);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(masterPart.entityOn, packVehicleDef, data, parentPart);
 		this.masterPart = masterPart;
 	}
 	

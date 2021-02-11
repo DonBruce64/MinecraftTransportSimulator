@@ -8,7 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketMultipartPart;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -17,48 +17,53 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * 
  * @author don_bruce
  */
-public class PacketMultipartPartChange extends APacketMultipartPart{
+public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
+	private final Point3d partOffset;
 	private final ItemPart partItem;
 	private final WrapperNBT partData;
 	private boolean clickedPart;
-	private Point3d partClickedOffset;
+	private Point3d parentPartOffset;
 	
-	public PacketMultipartPartChange(AEntityE_Multipart<?> entity, Point3d offset){
-		super(entity, offset);
+	public PacketPartChange(AEntityE_Multipart<?> entity, Point3d partOffset){
+		super(entity);
+		this.partOffset = partOffset;
 		this.partItem = null;
 		this.partData = null;
-		this.partClickedOffset = null;
+		this.parentPartOffset = null;
 	}
 	
-	public PacketMultipartPartChange(AEntityE_Multipart<?> entity, Point3d offset, ItemPart partItem, WrapperNBT partData, APart partClicked){
-		super(entity, offset);
+	public PacketPartChange(AEntityE_Multipart<?> entity, Point3d partOffset, ItemPart partItem, WrapperNBT partData, APart partClicked){
+		super(entity);
+		this.partOffset = partOffset;
 		this.partItem = partItem;
 		this.partData = partData;
 		this.clickedPart = partClicked != null;
-		this.partClickedOffset = clickedPart ? partClicked.placementOffset : null;
+		this.parentPartOffset = clickedPart ? partClicked.placementOffset : null;
 	}
 	
-	public PacketMultipartPartChange(ByteBuf buf){
+	public PacketPartChange(ByteBuf buf){
 		super(buf);
+		this.partOffset = readPoint3dFromBuffer(buf);
 		if(buf.readBoolean()){
 			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 			this.partData = readDataFromBuffer(buf);
 			this.clickedPart = buf.readBoolean();
 			if(clickedPart){
-				this.partClickedOffset = readPoint3dFromBuffer(buf);
+				this.parentPartOffset = readPoint3dFromBuffer(buf);
 			}else{
-				this.partClickedOffset = null;
+				this.parentPartOffset = null;
 			}
 		}else{
 			this.partItem = null;
 			this.partData = null;
-			this.partClickedOffset = null;
+			this.parentPartOffset = null;
 		}
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
+		writePoint3dToBuffer(partOffset, buf);
 		if(partItem != null){
 			buf.writeBoolean(true);
 			writeStringToBuffer(partItem.definition.packID, buf);
@@ -67,7 +72,7 @@ public class PacketMultipartPartChange extends APacketMultipartPart{
 			writeDataToBuffer(partData, buf);
 			buf.writeBoolean(clickedPart);
 			if(clickedPart){
-				writePoint3dToBuffer(partClickedOffset, buf);
+				writePoint3dToBuffer(parentPartOffset, buf);
 			}
 		}else{
 			buf.writeBoolean(false);
@@ -75,12 +80,12 @@ public class PacketMultipartPartChange extends APacketMultipartPart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityE_Multipart<?> entity, Point3d offset){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityE_Multipart<?> entity){
 		if(partItem == null){
-			entity.removePart(entity.getPartAtLocation(offset), null);
+			entity.removePart(entity.getPartAtLocation(partOffset), null);
 		}else{
-			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(offset);
-			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(partClickedOffset)));
+			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(partOffset);
+			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)));
 		}
 		return true;
 	}

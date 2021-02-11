@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -32,11 +33,22 @@ public abstract class APacketEntity<EntityType extends AEntityA_Base> extends AP
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		EntityType entity = AEntityA_Base.getEntity(world, lookupID);
-		if(entity != null && handle(world, player, entity)){
-			if(!world.isClient()){
-				InterfacePacket.sendToAllClients(this);
+		if(entity != null && handle(world, player, entity) && !world.isClient()){
+			InterfacePacket.sendToAllClients(this);
+			if(entity instanceof ATileEntityBase){
+				//Need to set TEs as updated, as they don't normally do this.
+				world.markTileEntityChanged(((ATileEntityBase<?>) entity).position);
 			}
 		}
+	}
+	
+	/**
+	 *  Helper method for handling clamped values.  Mainly comes from
+	 *  control packets where we could go outside our desired bounds if we
+	 *  don't check clamping.
+	 */
+	protected static int clampAngle(int min, int max, int value){
+		return value < min ? min : (value > max ? max : value);
 	}
 	
 	/**

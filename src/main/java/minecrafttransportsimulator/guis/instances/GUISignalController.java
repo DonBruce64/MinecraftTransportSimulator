@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
@@ -55,7 +55,7 @@ public class GUISignalController extends AGUIBase{
 	//Internal controller locations point list.
 	//We set this to prevent the player from seeing changes on their clients.
 	//If we did set the actual locations here, there'd be de-syncs if the player didn't hit confirm.
-	private final Set<Point3i> componentLocations = new HashSet<Point3i>();
+	private final Set<Point3d> componentLocations = new HashSet<Point3d>();
 	
 	private final TileEntitySignalController controller;
 	
@@ -63,7 +63,7 @@ public class GUISignalController extends AGUIBase{
 		this.controller = controller;
 		
 		//Set initial signal counts.
-		for(Point3i location : controller.componentLocations){
+		for(Point3d location : controller.componentLocations){
 			ATileEntityBase<?> tile = controller.world.getTileEntity(location);
 			if(tile instanceof TileEntityPole){
 				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
@@ -90,21 +90,22 @@ public class GUISignalController extends AGUIBase{
 				streetLights = 0;
 				componentLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
-				for(int i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
-					for(int j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
-						for(int k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
-							Point3i location = new Point3i(i, j, k);
-							ATileEntityBase<?> tile = controller.world.getTileEntity(location);
+				Point3d checkPosition = new Point3d();
+				for(double i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
+					for(double j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
+						for(double k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
+							checkPosition.set(i, j, k);
+							ATileEntityBase<?> tile = controller.world.getTileEntity(checkPosition);
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
 										trafficSignalItem.stack = component.getItem().getNewStack();
 										++trafficSignals;
-										componentLocations.add(location);
+										componentLocations.add(checkPosition);
 									}else if(component instanceof TileEntityPole_StreetLight){
 										streetLightItem.stack = component.getItem().getNewStack();
 										++streetLights;
-										componentLocations.add(location);
+										componentLocations.add(checkPosition);
 									}
 								}
 							}

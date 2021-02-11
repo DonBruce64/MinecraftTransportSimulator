@@ -14,11 +14,11 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable>{
+public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable<?>>{
 	private final int riderID;
 	private final Point3d position;
 	
-	public PacketEntityRiderChange(AEntityD_Interactable entity, WrapperEntity rider, Point3d position){
+	public PacketEntityRiderChange(AEntityD_Interactable<?> entity, WrapperEntity rider, Point3d position){
 		super(entity);
 		this.riderID = rider.getID();
 		this.position = position;
@@ -41,7 +41,7 @@ public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityD_Interactable entity){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityD_Interactable<?> entity){
 		if(position != null){
 			entity.addRider(world.getEntity(riderID), position);
 		}else{

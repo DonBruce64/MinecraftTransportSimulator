@@ -225,7 +225,7 @@ public class VehicleGroundDeviceBox{
 			}
 			
 			isLiquidCollidedWithGround = false;
-			for(Point3i blockPosition : liquidBox.collidingBlockPositions){
+			for(Point3d blockPosition : liquidBox.collidingBlockPositions){
 				if(!vehicle.world.isBlockLiquid(blockPosition)){
 					isLiquidCollidedWithGround = true;
 					break;

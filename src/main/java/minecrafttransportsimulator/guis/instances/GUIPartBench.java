@@ -414,7 +414,7 @@ public class GUIPartBench extends AGUIBase{
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.
-			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).general.type.equals(PoleComponentType.SIGN));
+			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).pole.type.equals(PoleComponentType.SIGN));
 		}else{
 			itemRender.stack = currentItem.getNewStack();
 			modelRender.modelLocation = null;

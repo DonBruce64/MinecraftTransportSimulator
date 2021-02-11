@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -89,18 +88,20 @@ public abstract class APacketBase{
 	
 	/**
 	 *  Helper method to write a Point3i to the buffer.
+	 *  Does so in a compact way by casting-down the doubles to ints.
+	 *  Useful if you don't need the floating-point and want to save on bandwidth.
 	 */
-	protected static void writePoint3iToBuffer(Point3i point, ByteBuf buf){
-		buf.writeInt(point.x);
-		buf.writeInt(point.y);
-		buf.writeInt(point.z);
+	protected static void writePoint3dCompactToBuffer(Point3d point, ByteBuf buf){
+		buf.writeInt((int) point.x);
+		buf.writeInt((int) point.y);
+		buf.writeInt((int) point.z);
 	}
 	
 	/**
-	 *  Helper method to read a Point3i from the buffer.
+	 *  Helper method to read a compact Point3d from the buffer.
 	 */
-	protected static Point3i readPoint3iFromBuffer(ByteBuf buf){
-		return new Point3i(buf.readInt(), buf.readInt(), buf.readInt());
+	protected static Point3d readPoint3dCompactFromBuffer(ByteBuf buf){
+		return new Point3d(buf.readInt(), buf.readInt(), buf.readInt());
 	}
 	
 	/**

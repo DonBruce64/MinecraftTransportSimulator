@@ -6,7 +6,6 @@ import minecrafttransportsimulator.baseclasses.IGunProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -18,8 +17,8 @@ public class PartGun extends APart implements IParticleProvider, IGunProvider{
 	
 	public final Gun internalGun;
 		
-	public PartGun(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartGun(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		//Set min/max yaw/pitch angles based on our definition and the vehicle definition.
 		//If the vehicle's min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
 		//Yaw/Pitch set to 0 is ignored as it's assumed to be un-defined.

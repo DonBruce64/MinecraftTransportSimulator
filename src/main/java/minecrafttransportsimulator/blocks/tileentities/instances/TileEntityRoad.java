@@ -6,11 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -26,8 +24,8 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityMultiblockCollisionUpdate;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
+import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -60,6 +58,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public final List<Point3d> collidingBlockOffsets;
 	
 	public static final int MAX_COLLISION_DISTANCE = 32;
+	private static final AnimationsDecor animator = new AnimationsDecor();
+	private static RenderRoad renderer;
 	
 	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
@@ -219,7 +219,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
 				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x; x += 0.5){
 					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z; z += 0.5){
-						Point3i testPoint = new Point3i(new Point3d(x, 0, z).rotateY(rotation));
+						Point3d testPoint = new Point3d(x, 0, z).rotateFine(rotation);
 						
 						if(!testPoint.isZero() && !collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
 							//Offset the point to the global cordinate space, get the block, and offset back.
@@ -250,32 +250,34 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public boolean spawnCollisionBlocks(WrapperPlayer player){
 		Map<Point3d, Integer> collisionHeightMap = generateCollisionPoints();
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
-			for(Point3i offset : collisionBlockOffsets){
-				Point3i testPoint = offset.copy().add(position);
-				world.setBlock(BlockCollision.blockInstances.get(collisionHeightMap.get(offset)), testPoint, null, Axis.UP);
+			for(Point3d offset : collisionBlockOffsets){
+				world.setBlock(BlockCollision.blockInstances.get(collisionHeightMap.get(offset)), offset.copy().add(position), null, Axis.UP);
 			}
 			collidingBlockOffsets.clear();
 			setActive(true);
-			InterfacePacket.sendToAllClients(new PacketTileEntityMultiblockCollisionUpdate(this));
+			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return true;
 		}else{
 			collisionBlockOffsets.clear();
 			player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
-			InterfacePacket.sendToAllClients(new PacketTileEntityMultiblockCollisionUpdate(this));
+			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return false;
 		}
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public RenderRoad getRenderer(){
-		return new RenderRoad();
+	public AnimationsDecor getAnimator(){
+		return animator;
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public <AnimatorInstance extends AAnimationsBase<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> AnimatorInstance getAnimator(){
-		return null;
+	public RenderRoad getRenderer(){
+		if(renderer == null){
+			renderer = new RenderRoad();
+		}
+		return renderer;
 	}
 	
 	@Override

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet used for controlling vehicles.  Responsible for handing inputs for control points that
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PacketVehicleControlAnalog extends APacketVehicle{
+public class PacketVehicleControlAnalog extends APacketEntity<EntityVehicleF_Physics>{
 	private final Controls controlType;
 	private final short value;
 	private final byte cooldown;
@@ -70,13 +70,6 @@ public class PacketVehicleControlAnalog extends APacketVehicle{
 			}
 		}
 		return true;
-	}
-	
-	/**
-	 *  Helper method for handling clamped values.
-	 */
-	private static int clampAngle(int min, int max, int value){
-		return value < min ? min : (value > max ? max : value);
 	}
 	
 	public enum Controls{

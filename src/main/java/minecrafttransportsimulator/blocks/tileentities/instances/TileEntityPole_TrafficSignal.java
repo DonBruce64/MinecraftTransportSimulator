@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Traffic signal component for poles.  This doesn't tick, as the state of the light
@@ -11,14 +10,14 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  */
 public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	
-	public TileEntityPole_TrafficSignal(TileEntityPole core, ItemPoleComponent item, WrapperNBT data){
-		super(core, item, data);
+	public TileEntityPole_TrafficSignal(TileEntityPole core,  WrapperNBT data){
+		super(core, data);
 		//FIXME move this to when we add this component to a pole.
 		//variablesOn.add(LightType.UNLINKEDLIGHT.lowercaseName);
 	}
 
 	@Override
-	public float lightLevel(){
+	public float getLightProvided(){
 		//We always have the generic light on, so account for that.
 		return variablesOn.size() > 1 ? 12F/15F : 0.0F;
 	}

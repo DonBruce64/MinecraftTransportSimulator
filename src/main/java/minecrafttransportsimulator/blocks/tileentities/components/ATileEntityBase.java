@@ -23,13 +23,10 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Definable<JSONDefinition>{
-	/**Current light level of the block for this TileEntity.  Defaults to 0, or no light.**/
-	public float lightLevel;
 	
 	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, null, data);
+		super(world, data);
 		this.position.setTo(position);
-		this.lightLevel = (float) data.getDouble("lightLevel");
 		
 		//TODO remove when packs have converted, as we previously used these fields on TEs.
 		if(subName.isEmpty()){
@@ -49,11 +46,5 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		List<AItemPack<JSONDefinition>> drops = new ArrayList<AItemPack<JSONDefinition>>();
 		drops.add(getItem());
 		return drops;
-	}
-	
-	@Override
-	public void save(WrapperNBT data){
-		super.save(data);
-		data.setDouble("lightLevel", lightLevel);
 	}
 }

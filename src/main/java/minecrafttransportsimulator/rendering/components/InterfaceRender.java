@@ -16,11 +16,9 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -217,24 +215,10 @@ public class InterfaceRender{
 	
 	/**
 	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in entity's location.  This will also enable lighting should
+	 *  passed-in position.  This will also enable lighting should
 	 *  the current render pass be -1.
 	 */
-	public static void setLightingToEntity(AEntityB_Existing entity){
-		if(getRenderPass() == -1){
-	        RenderHelper.enableStandardItemLighting();
-	        setLightingState(true);
-        }
-		int lightVar = entity.wrapper.entity.getBrightnessForRender();
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-	}
-	
-	/**
-	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in block's position.  This will also enable lighting should
-	 *  the current render pass be -1.
-	 */
-	public static void setLightingToBlock(Point3d position){
+	public static void setLightingToPosition(Point3d position){
 		if(getRenderPass() == -1){
 	        RenderHelper.enableStandardItemLighting();
 	        setLightingState(true);
@@ -327,9 +311,9 @@ public class InterfaceRender{
 	 *  This also allows for playing the block breaking sound.
 	 *  It does not actually break the block.  Such breakage must be done on the server.
 	 */
-	public static void spawnBlockBreakParticles(Point3i point, boolean playSound){
+	public static void spawnBlockBreakParticles(Point3d position, boolean playSound){
 		if(Minecraft.getMinecraft().effectRenderer != null){
-			BlockPos pos = new BlockPos(point.x, point.y, point.z);
+			BlockPos pos = new BlockPos(position.x, position.y, position.z);
 			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
 				Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
 				if(playSound){

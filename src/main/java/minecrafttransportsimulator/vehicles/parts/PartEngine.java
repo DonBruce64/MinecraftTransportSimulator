@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -16,8 +15,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.ParticleDrip;
@@ -85,8 +84,8 @@ public class PartEngine extends APart implements IParticleProvider{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartEngine(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
@@ -122,14 +121,14 @@ public class PartEngine extends APart implements IParticleProvider{
 					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
 					if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 				}
-				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 			}else{
 				hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
 				if(!definition.engine.isSteamPowered){
 					if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 					if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
 				}
-				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 			}
 		}
 	}
@@ -183,7 +182,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		}
 		
 		//Add cooling for ambient temp.
-		ambientTemp = (25*vehicle.world.getTemperature(new Point3i(vehicle.position)) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
+		ambientTemp = (25*world.getTemperature(worldPos) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
 		coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*(rpm/2000F)) + vehicle.velocity/1000F;
 		temp -= (temp - ambientTemp)*coolingFactor;
 		
@@ -622,7 +621,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		
 		//Send off packet and start sounds.
 		if(!vehicle.world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.START));
+			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
 		}else{
 			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
 			if(definition.engine.customSoundset != null){
@@ -679,7 +678,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		
 		//Send off packet and play stopping sound.
 		if(!vehicle.world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, signal));
+			InterfacePacket.sendToAllClients(new PacketPartEngine(this, signal));
 		}else{
 			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
@@ -690,7 +689,7 @@ public class PartEngine extends APart implements IParticleProvider{
 		//This also causes particles to spawn and sounds to play.
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
 		if(!vehicle.world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BACKFIRE));
+			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 		}else{
 			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
@@ -758,7 +757,7 @@ public class PartEngine extends APart implements IParticleProvider{
 				currentGear = nextGear;
 				upshiftCountdown = definition.engine.clutchTime;
 			}else if(!vehicle.world.isClient() && !autoShift && currentGear <= 0){
-				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;
@@ -782,7 +781,7 @@ public class PartEngine extends APart implements IParticleProvider{
 				currentGear = nextGear;
 				downshiftCountdown = definition.engine.clutchTime;
 			}else if(!vehicle.world.isClient() && !autoShift && currentGear >= 0){
-				InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(this, Signal.BAD_SHIFT));
+				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;

@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -16,8 +15,8 @@ public class PartEffector extends APart{
 	private final Point3d[] lastBlocksModified;
 	private final Point3d[] affectedBlocks;
 	
-	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		lastBlocksModified = new Point3d[definition.effector.blocksWide];
 		affectedBlocks = new Point3d[definition.effector.blocksWide];
 	}

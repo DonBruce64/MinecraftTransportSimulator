@@ -78,20 +78,22 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 		return false;
 	}
 	
+	/**
+	 * Creates a new part from the saved data.  This is used 
+	 */
 	public APart createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		switch(partType){
-		//FIXME need to either pack-in the definition here, or pass it into the constructor.
-			case GENERIC : return new PartGeneric(entity, packVehicleDef, this, partData, parentPart);
+			case GENERIC : return new PartGeneric(entity, packVehicleDef, partData, parentPart);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on vehicles.
 			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
 			case BULLET : return null;
-			case EFFECTOR : return new PartEffector(entity, packVehicleDef, this, partData, parentPart);
-			case ENGINE : return new PartEngine(entity, packVehicleDef, this, partData, parentPart);
-			case GROUND : return new PartGroundDevice(entity, packVehicleDef, this, partData, parentPart);
-			case GUN : return new PartGun(entity, packVehicleDef, this, partData, parentPart);
-			case INTERACTABLE : return new PartInteractable(entity, packVehicleDef, this, partData, parentPart);
-			case PROPELLER : return new PartPropeller(entity, packVehicleDef, this, partData, parentPart);
-			case SEAT : return new PartSeat(entity, packVehicleDef, this, partData, parentPart);
+			case EFFECTOR : return new PartEffector(entity, packVehicleDef, partData, parentPart);
+			case ENGINE : return new PartEngine(entity, packVehicleDef, partData, parentPart);
+			case GROUND : return new PartGroundDevice(entity, packVehicleDef, partData, parentPart);
+			case GUN : return new PartGun(entity, packVehicleDef, partData, parentPart);
+			case INTERACTABLE : return new PartInteractable(entity, packVehicleDef, partData, parentPart);
+			case PROPELLER : return new PartPropeller(entity, packVehicleDef, partData, parentPart);
+			case SEAT : return new PartSeat(entity, packVehicleDef, partData, parentPart);
 		}
 		//We'll never get here, but it makes the complier happy.
 		return null;

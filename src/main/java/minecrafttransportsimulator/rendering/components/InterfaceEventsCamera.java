@@ -2,14 +2,15 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -58,7 +59,7 @@ public class InterfaceEventsCamera{
     	if(event.getEntity() instanceof EntityPlayer){
 	    	//Get variables.
     		WrapperPlayer player = WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor((EntityPlayer) event.getEntity());
-			AEntityBase ridingEntity = player.getEntityRiding();
+			AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
 			EntityVehicleF_Physics vehicle = ridingEntity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) ridingEntity : null;
 			PartSeat sittingSeat = vehicle != null ? (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(player)) : null;
 			EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getUUID());
@@ -84,7 +85,7 @@ public class InterfaceEventsCamera{
 					runningCustomCameras = true;
 			    	int camerasChecked = 0;
 			    	JSONCameraObject camera = null;
-			    	IAnimationProvider provider = null;
+			    	AEntityC_Definable<?> cameraProvider = null;
 			    	
 					if(vehicle != null){
 						if(vehicle.definition.rendering.cameraObjects != null){
@@ -92,7 +93,7 @@ public class InterfaceEventsCamera{
 								if(isCameraActive(testCamera, vehicle, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
-										provider = vehicle;
+										cameraProvider = vehicle;
 										break;
 									}
 								}
@@ -104,7 +105,7 @@ public class InterfaceEventsCamera{
 									if(isCameraActive(testCamera, part, partialTicks)){
 										if(camerasChecked++ == customCameraIndex){
 											camera = testCamera;
-											provider = part;
+											cameraProvider = part;
 											break;
 										}
 									}
@@ -120,7 +121,7 @@ public class InterfaceEventsCamera{
 								if(isCameraActive(testCamera, playerGunEntity, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
-										provider = playerGunEntity;
+										cameraProvider = playerGunEntity;
 										break;
 									}
 								}
@@ -148,7 +149,7 @@ public class InterfaceEventsCamera{
 						if(camera.animations != null){
 							boolean inhibitAnimations = false;
 	        				for(JSONAnimationDefinition animation : camera.animations){
-	        					double variableValue= provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
+	        					double variableValue= cameraProvider.getAnimator().getAnimatedVariableValue(cameraProvider, animation, 0, null, partialTicks);
 	        					switch(animation.animationType){
 		        					case TRANSLATION :{
 	            						if(!inhibitAnimations && variableValue != 0){
@@ -194,19 +195,21 @@ public class InterfaceEventsCamera{
 	    				if(camera.rot != null){
 	    					cameraRotation.add(camera.rot);
 	    				}
-	    				if(provider instanceof APart){
-	    					APart part = (APart) provider;
+	    				//FIXME may not need this if we use parts as providers?
+	    				/*
+	    				if(cameraProvider instanceof APart){
+	    					APart part = (APart) cameraProvider;
 		    				if(part != null){
 		    					Point3d factoredRotation = part.totalRotation.copy().subtract(part.prevTotalRotation).multiply(partialTicks).add(part.prevTotalRotation);
 		    					cameraPosition.rotateFine(factoredRotation).add(part.totalOffset);
 		    					cameraRotation.add(factoredRotation);
 							}
-	    				}
+	    				}*/
 	    				
 	    				//Camera position is set.
 	    				//If we are on a vehicle, do vehicle alignment.  Otherwise, just align to the entity.
-	    				AEntityBase providerEntity = vehicle != null ? vehicle : playerGunEntity;
-	    				Point3d providerSmoothedRotation = providerEntity.prevAngles.copy().add(providerEntity.angles.copy().subtract(providerEntity.prevAngles).multiply(partialTicks));
+	    				//AEntityBase providerEntity = vehicle != null ? vehicle : playerGunEntity;
+	    				Point3d providerSmoothedRotation = cameraProvider.prevAngles.getInterpolatedPoint(cameraProvider.angles, partialTicks);
 						cameraPosition.rotateFine(providerSmoothedRotation);
 						cameraRotation.add(providerSmoothedRotation);
 	    				if(vehicle != null){
@@ -315,11 +318,11 @@ public class InterfaceEventsCamera{
     	}
     }
     
-    private static boolean isCameraActive(JSONCameraObject camera, IAnimationProvider provider, float partialTicks){
+    private static boolean isCameraActive(JSONCameraObject camera, AEntityC_Definable<?> entity, float partialTicks){
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-					double value = provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
+					double value = entity.getAnimator().getAnimatedVariableValue(entity, animation, 0, null, partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;
 					}

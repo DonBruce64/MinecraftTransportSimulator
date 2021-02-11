@@ -11,39 +11,36 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
+import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketGunChange;
+import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorColorChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityDecorTextChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityMultiblockCollisionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleColorChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.instances.PacketMultipartPartChange;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartColorChange;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
+import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTextChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -80,40 +77,55 @@ public class InterfacePacket{
 		byte packetIndex = 0;
 		registerPacket(packetIndex++, PacketBeaconListingChange.class);
 		registerPacket(packetIndex++, PacketBulletHit.class);
+		
+		//Entity packets.
 		registerPacket(packetIndex++, PacketEntityCSHandshake.class);
+		registerPacket(packetIndex++, PacketEntityColorChange.class);
 		registerPacket(packetIndex++, PacketEntityRiderChange.class);
+		registerPacket(packetIndex++, PacketEntityTextChange.class);
+		registerPacket(packetIndex++, PacketEntityVariableToggle.class);
+		
+		//Fluid tank packets.
 		registerPacket(packetIndex++, PacketFluidTankChange.class);
+		
+		//FIXME guns need to be parts in their entireteyl
 		registerPacket(packetIndex++, PacketGunChange.class);
+		
+		//Part packets.
+		registerPacket(packetIndex++, PacketPartChange.class);
+		registerPacket(packetIndex++, PacketPartEngine.class);
+		registerPacket(packetIndex++, PacketPartGroundDevice.class);
+		registerPacket(packetIndex++, PacketPartInteractable.class);
+		registerPacket(packetIndex++, PacketPartSeat.class);
+		
+		//Player packets.
 		registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		registerPacket(packetIndex++, PacketPlayerCraftItem.class);
 		registerPacket(packetIndex++, PacketPlayerGunChange.class);
 		registerPacket(packetIndex++, PacketPlayerGunFiring.class);
+		
+		//Radio packets.
 		registerPacket(packetIndex++, PacketRadioStateChange.class);
-		registerPacket(packetIndex++, PacketTileEntityDecorColorChange.class);
-		registerPacket(packetIndex++, PacketTileEntityDecorTextChange.class);
+		
+		//Tile entity packets.
 		registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
 		registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
-		registerPacket(packetIndex++, PacketTileEntityMultiblockCollisionUpdate.class);
+		registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
 		registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
 		registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
 		registerPacket(packetIndex++, PacketTileEntityRoadConnectionUpdate.class);
 		registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
+		
+		//Vehicle packets.
 		registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-		registerPacket(packetIndex++, PacketVehicleColorChange.class);
 		registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		registerPacket(packetIndex++, PacketVehicleControlDigital.class);
 		registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
-		registerPacket(packetIndex++, PacketMultipartPartChange.class);
-		registerPacket(packetIndex++, PacketVehiclePartColorChange.class);
-		registerPacket(packetIndex++, PacketVehiclePartEngine.class);
-		registerPacket(packetIndex++, PacketVehiclePartGroundDevice.class);
-		registerPacket(packetIndex++, PacketVehiclePartInteractable.class);
-		registerPacket(packetIndex++, PacketVehiclePartSeat.class);
 		registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-		registerPacket(packetIndex++, PacketVehicleTextChange.class);
 		registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
-		registerPacket(packetIndex++, PacketVehicleVariableToggle.class);
+		
+		//World packets.
 		registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
 	}
 	

@@ -213,7 +213,7 @@ public class WrapperPlayer extends WrapperEntity{
             	if(!EntityPlayerGun.playerServerGuns.containsKey(event.player.getUniqueID().toString())){
             		WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(event.player.world);
             		WrapperPlayer playerWrapper = worldWrapper.getWrapperFor(event.player);
-            		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, worldWrapper.generateEntity(), playerWrapper, new WrapperNBT());
+            		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
             		worldWrapper.spawnEntity(entity);
             	}
         	}else{

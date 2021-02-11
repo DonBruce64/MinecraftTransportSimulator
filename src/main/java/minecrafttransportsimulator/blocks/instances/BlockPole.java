@@ -67,12 +67,8 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 				}else if(isPlayerClickingEditableSign){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(isPlayerHoldingComponent && !isPlayerHoldingCore){
-					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
-					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						textLines = new WrapperNBT(heldStack).getStrings("textLines", component.definition.rendering.textObjects.size());
-					}
-					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, new WrapperNBT(heldStack), false));	
 				}else{
 					return false;
 				}

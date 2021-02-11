@@ -2,14 +2,13 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 public final class PartSeat extends APart{
@@ -17,8 +16,8 @@ public final class PartSeat extends APart{
 	public ItemPart activeGun;
 	public int gunIndex;
 	
-	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
 	}
 	
@@ -54,7 +53,7 @@ public final class PartSeat extends APart{
 						//If we do have an active gun, validate that it's still correct.
 						if(activeGun == null){
 							setNextActiveGun();
-							InterfacePacket.sendToAllClients(new PacketVehiclePartSeat(this));
+							InterfacePacket.sendToAllClients(new PacketPartSeat(this));
 						}else{
 							for(ItemPart gunType : vehicle.guns.keySet()){
 								for(PartGun gun : vehicle.guns.get(gunType)){
@@ -69,7 +68,7 @@ public final class PartSeat extends APart{
 							//Invalid active gun detected.  Select a new one.
 							activeGun = null;
 							setNextActiveGun();
-							InterfacePacket.sendToAllClients(new PacketVehiclePartSeat(this));
+							InterfacePacket.sendToAllClients(new PacketPartSeat(this));
 						}
 					}
 				}

@@ -10,7 +10,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -122,9 +121,9 @@ public class ParticleBullet extends AParticle{
 		}
 		
 		//Didn't hit an entity.  Check for blocks.
-		Point3i hitPos = world.getBlockHit(position, motion);
+		Point3d hitPos = world.getBlockHit(position, motion);
 		if(hitPos != null){
-			doBulletHit(new Point3d(hitPos), velocity);
+			doBulletHit(hitPos, velocity);
 			return;
 		}
 		
@@ -141,9 +140,9 @@ public class ParticleBullet extends AParticle{
 		
 		//Check proximity fuze against any blocks that might be out front
 		if(bullet.definition.bullet.proximityFuze != 0) {
-			Point3i projectedImpactPoint = gun.getProviderWorld().getBlockHit(this.position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
+			Point3d projectedImpactPoint = gun.getProviderWorld().getBlockHit(position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
 			if(projectedImpactPoint != null) {
-				this.doBulletHit(this.position, velocity);
+				doBulletHit(position, velocity);
 				return;
 			}
 		}

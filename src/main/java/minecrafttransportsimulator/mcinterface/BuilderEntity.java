@@ -132,7 +132,7 @@ public class BuilderEntity extends Entity{
     		
     		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
     		if(world.isRemote){
-    			if(entity.isLitUp()){
+    			if(entity.getLightProvided() > 0){
 					BlockPos newPos = getPosition();
 					//Check to see if we need to place a light.
 					if(!newPos.equals(fakeLightPosition)){

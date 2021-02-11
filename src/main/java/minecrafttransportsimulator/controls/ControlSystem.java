@@ -14,8 +14,8 @@ import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartSeat;
-import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsCamera;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -148,7 +148,7 @@ public final class ControlSystem{
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
 					if(InterfaceClient.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
-						InterfacePacket.sendToServer(new PacketVehiclePartSeat((PartSeat) part));
+						InterfacePacket.sendToServer(new PacketPartSeat((PartSeat) part));
 					}
 				}
 			}
@@ -158,7 +158,7 @@ public final class ControlSystem{
 	private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
 			if(InterfaceGUI.isGUIActive(null)){
-				InterfaceGUI.openGUI(new GUIRadio(vehicle));
+				InterfaceGUI.openGUI(new GUIRadio(vehicle.radio));
 			}else if(InterfaceGUI.isGUIActive(GUIRadio.class)){
 				InterfaceGUI.closeGUI();
 			}
@@ -422,14 +422,14 @@ public final class ControlSystem{
 		
 		//Check for lights.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RUNNINGLIGHT.lowercaseName));
-			InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.HEADLIGHT.lowercaseName));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.RUNNINGLIGHT.lowercaseName));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.HEADLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 		}
 
 		//Change turn signal status depending on turning status.
@@ -440,20 +440,20 @@ public final class ControlSystem{
 			if(!powered.turningLeft && powered.rudderAngle < -200){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(!powered.turningRight && powered.rudderAngle > 200){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
-				InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.LEFTTURNLIGHT.lowercaseName));
 			}
 			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
-				InterfacePacket.sendToServer(new PacketVehicleVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, LightType.RIGHTTURNLIGHT.lowercaseName));
 			}
 			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
 				--powered.turningCooldown;

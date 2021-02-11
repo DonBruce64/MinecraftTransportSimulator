@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Core component for poles.  Allows us to change the core model.
@@ -10,12 +9,12 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  */
 public class TileEntityPole_Core extends ATileEntityPole_Component{
 		
-	public TileEntityPole_Core(TileEntityPole core, ItemPoleComponent item, WrapperNBT data){
-		super(core, item, data);
+	public TileEntityPole_Core(TileEntityPole core, WrapperNBT data){
+		super(core, data);
 	}
 
 	@Override
-	public float lightLevel(){
+	public float getLightProvided(){
 		return 0;
 	}
 }

@@ -15,9 +15,8 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.instances.AnimationsPole;
+import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -28,17 +27,21 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	private static final AnimationsPole animator = new AnimationsPole();
+	private static final AnimationsDecor animator = new AnimationsDecor();
 	private static RenderPole renderer;
+	
+	private float maxTotalLightLevel;
 	
 	public TileEntityPole(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
+		//FIXME add legacy loader here to prevent corrupition of old worlds.
+		
 		//Load components back in.
 		for(Axis axis : Axis.values()){
 			if(!axis.equals(Axis.NONE)){
 				WrapperNBT componentData = data.getData(axis.name());
 				if(componentData != null){
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(componentData.getString("packID"), componentData.getString("systemName"), componentData.getString("subName")), componentData);
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
 					components.put(axis, newComponent);
 				}
 			}
@@ -47,7 +50,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//Add our core component to the NONE axis.
 		//This is done for ease of rendering and lookup routines.
 		if(!components.containsKey(Axis.NONE)){
-			components.put(Axis.NONE, PoleComponentType.createComponent(this, PackParserSystem.getItem(definition.packID, definition.systemName, subName), data));
+			components.put(Axis.NONE, PoleComponentType.createComponent(this, data));
 		}
 	}
 	
@@ -57,12 +60,16 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public void updateLightState(){
 		float calculatedLevel = 0;
 		for(ATileEntityPole_Component component : components.values()){
-			calculatedLevel = Math.max(calculatedLevel, component.lightLevel());
+			calculatedLevel = Math.max(calculatedLevel, component.getLightProvided());
 		}
-		if(lightLevel != calculatedLevel){
-			lightLevel = calculatedLevel;
+		if(maxTotalLightLevel != calculatedLevel){
 			world.updateLightBrightness(position);
 		}
+	}
+	
+	@Override
+	public float getLightProvided(){
+		return maxTotalLightLevel;
 	}
 	
 	@Override
@@ -78,7 +85,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public AnimationsPole getAnimator(){
+	public AnimationsDecor getAnimator(){
 		return animator;
 	}
 	

@@ -4,13 +4,11 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartGroundDevice;
+import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.rendering.components.IParticleProvider;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
@@ -45,8 +43,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPart definition, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, definition, packVehicleDef, data, parentPart);
+	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+		super(entityOn, packVehicleDef, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
@@ -92,8 +90,8 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			if(definition.ground.isWheel){
 				if(Math.abs(prevAngularVelocity)/(vehicle.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicle.velocity > 0.3){
 					//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-					Point3i blockPositionBelow = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
-					if(!vehicle.world.isAir(blockPositionBelow) && vehicle.world.getBlockHardness(blockPositionBelow) >= 1.25){
+					Point3d blockPositionBelow = worldPos.copy().add(0, -1, 0);
+					if(!world.isAir(blockPositionBelow) && world.getBlockHardness(blockPositionBelow) >= 1.25){
 						contactThisTick = true;
 					}
 				}
@@ -196,7 +194,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			InterfacePacket.sendToAllClients(new PacketVehiclePartGroundDevice(this, setFlat));
+			InterfacePacket.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
 		}
 		
 		//Set flat state and new bounding box.
@@ -210,7 +208,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 	}
 	
 	public float getFrictionLoss(){
-		Point3i groundPosition = new Point3i((int) worldPos.x, (int) worldPos.y - 1, (int) worldPos.z);
+		Point3d groundPosition = worldPos.copy().add(0, -1, 0);
 		if(!world.isAir(groundPosition)){
 			return 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
 		}else{
@@ -261,7 +259,7 @@ public class PartGroundDevice extends APart implements IParticleProvider{
 			for(byte i=0; i<4; ++i){
 				InterfaceRender.spawnParticle(new ParticleSmoke(world, worldPos, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 			}
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(worldPos).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(worldPos.copy().add(0, -1, 0), false);
 		}
 	}
 }

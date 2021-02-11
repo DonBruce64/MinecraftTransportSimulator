@@ -13,11 +13,11 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.item.ItemStack;
@@ -30,7 +30,7 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class PacketVehicleInteract extends APacketVehicle{
+public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>{
 	private final Point3d hitPosition;
 	private boolean rightClick;
 		

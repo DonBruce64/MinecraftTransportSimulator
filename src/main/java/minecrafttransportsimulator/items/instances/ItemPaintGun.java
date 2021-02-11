@@ -52,13 +52,13 @@ public class ItemPaintGun extends AItemBase implements IItemVehicleInteractable{
 		if(world.isClient()){
 			ATileEntityBase<?> tile = world.getTileEntity(position);
 			if(tile instanceof TileEntityDecor){
-				InterfaceGUI.openGUI(new GUIPaintGun((TileEntityDecor) tile, player));
+				InterfaceGUI.openGUI(new GUIPaintGun(tile, player));
 				return true;
 			}else if(tile instanceof TileEntityPole){
 				//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
 				axis = Axis.getFromRotation(player.getYaw()).getOpposite();
 				if(((TileEntityPole) tile).components.containsKey(axis)){
-					InterfaceGUI.openGUI(new GUIPaintGun((TileEntityPole) tile, axis, player));
+					InterfaceGUI.openGUI(new GUIPaintGun(((TileEntityPole) tile).components.get(axis), player));
 				}
 				return true;
 			}

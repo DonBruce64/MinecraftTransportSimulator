@@ -86,7 +86,7 @@ public class BuilderParticle extends Particle{
         	);
             
             //Set brightness and render.
-    	    InterfaceRender.setLightingToBlock(particle.position);
+    	    InterfaceRender.setLightingToPosition(particle.position);
     	    if(particle.isBright()){
     	    	InterfaceRender.setLightingState(false);
     	    	particle.render(partialTicks);

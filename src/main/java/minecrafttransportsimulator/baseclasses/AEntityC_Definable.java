@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -10,7 +11,6 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
@@ -43,12 +43,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	public final RenderTickData renderData;
 	
-	public AEntityC_Definable(WrapperWorld world, WrapperEntity wrapper, JSONDefinition definition, WrapperNBT data){
-		super(world, wrapper, data);
-		//FIXME this goes in item constructors.
-		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
-		//Set definition and current subName. 
-		this.definition = definition;
+	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
+		super(world, data);
+		//Set definition and current subName.
+		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"));
+		this.definition = item.definition;
 		this.subName = data.getString("subName");
 		
 		//Load text.
@@ -82,7 +81,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 *  author doesn't want it to be.
    	 */
     public boolean renderTextLit(){
-    	//FIXME make this false for vehicles.
     	return true;
     }
     
@@ -98,6 +96,18 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+    }
+    
+    /**
+	 *  Called to update the text on this entity.  Normally just sets the text to the passed-in values,
+	 *  but may do supplemental logic if desired.
+	 */
+    public void updateText(List<String> textLines){
+    	int linesChecked = 0;
+		for(Entry<JSONText, String> textEntry : text.entrySet()){
+			textEntry.setValue(textLines.get(linesChecked));
+			++linesChecked;
+		}
     }
     
     /**

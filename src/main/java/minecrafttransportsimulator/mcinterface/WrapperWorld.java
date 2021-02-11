@@ -302,12 +302,10 @@ public class WrapperWorld{
     }
 	
 	/**
-	 *  Spawns the entity into the world.  Only valid for entities that
-	 *  have had their wrapper set from {@link #generateEntity()}
+	 *  Spawns the entity into the world.
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
-		BuilderEntity builder = (BuilderEntity) entity.wrapper.entity;
-		builder.entity = entity;
+		BuilderEntity builder = new BuilderEntity(entity.world.world);
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		world.spawnEntity(builder);
     }

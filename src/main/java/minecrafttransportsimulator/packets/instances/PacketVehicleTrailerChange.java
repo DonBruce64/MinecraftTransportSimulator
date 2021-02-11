@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.vehicles.parts.APart;
  * 
  * @author don_bruce
  */
-public class PacketVehicleTrailerChange extends APacketVehicle{
+public class PacketVehicleTrailerChange extends APacketEntity<EntityVehicleF_Physics>{
 	private final int linkedID;
 	private final int activeHitchConnectionSavedIndex;
 	private final int activeHookupConnectionSavedIndex;
@@ -97,33 +97,29 @@ public class PacketVehicleTrailerChange extends APacketVehicle{
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		if(linkedID != -1){
-			for(AEntityBase entity : AEntityBase.createdClientEntities){
-				if(entity.lookupID == linkedID){
-					EntityVehicleF_Physics trailer = (EntityVehicleF_Physics) entity;
-					
-					APart hitchPart;
-					VehicleConnection hitchConnection;
-					if(activeHitchPartSavedOffset != null){
-						hitchPart = vehicle.getPartAtLocation(activeHitchPartSavedOffset);
-						hitchConnection = hitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
-					}else{
-						hitchPart = null;
-						hitchConnection = vehicle.definition.connections.get(activeHitchConnectionSavedIndex);
-					}
-					
-					APart hookupPart;
-					VehicleConnection hookupConnection;
-					if(activeHookupPartSavedOffset != null){
-						hookupPart = trailer.getPartAtLocation(activeHookupPartSavedOffset);
-						hookupConnection = hookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
-					}else{
-						hookupPart = null;
-						hookupConnection = trailer.definition.connections.get(activeHookupConnectionSavedIndex);
-					}
-					
-					vehicle.changeTrailer(trailer, hitchConnection, hookupConnection, hitchPart, hookupPart);
-					break;
+			EntityVehicleF_Physics trailer = AEntityA_Base.getEntity(world, linkedID);
+			if(trailer != null){
+				APart hitchPart;
+				VehicleConnection hitchConnection;
+				if(activeHitchPartSavedOffset != null){
+					hitchPart = vehicle.getPartAtLocation(activeHitchPartSavedOffset);
+					hitchConnection = hitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
+				}else{
+					hitchPart = null;
+					hitchConnection = vehicle.definition.connections.get(activeHitchConnectionSavedIndex);
 				}
+				
+				APart hookupPart;
+				VehicleConnection hookupConnection;
+				if(activeHookupPartSavedOffset != null){
+					hookupPart = trailer.getPartAtLocation(activeHookupPartSavedOffset);
+					hookupConnection = hookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
+				}else{
+					hookupPart = null;
+					hookupConnection = trailer.definition.connections.get(activeHookupConnectionSavedIndex);
+				}
+				
+				vehicle.changeTrailer(trailer, hitchConnection, hookupConnection, hitchPart, hookupPart);
 			}
 		}else{
 			if(vehicle.towedVehicle != null){

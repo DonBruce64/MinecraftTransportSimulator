@@ -10,7 +10,6 @@ import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -54,9 +53,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
-			//Prior to creating this class we need to create a new entity wrapper to hold it.
-			//Get one, and then create the class with it.
-			EntityVehicleF_Physics newVehicle = createEntity(world, world.generateEntity(), player, data);
+			EntityVehicleF_Physics newVehicle = createEntity(world, player, data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -182,8 +179,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		return new EntityVehicleF_Physics(world, wrapper, this.definition, data);
+	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
+		return new EntityVehicleF_Physics(world, data);
 	}
 
 	@Override

@@ -48,8 +48,8 @@ public class EntityPlayerGun extends AEntityB_Existing implements IGunProvider{
 	
 	private static final AnimationsGun animator = new AnimationsGun();
 	
-	public EntityPlayerGun(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityPlayerGun(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
+		super(world, data);
 		if(playerSpawning != null){
 			//Newly-spawned entity.
 			this.player = playerSpawning;

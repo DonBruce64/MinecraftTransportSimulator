@@ -36,7 +36,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
 	       
 	        //Set up lighting.
-	        InterfaceRender.setLightingToEntity(entity);
+	        InterfaceRender.setLightingToPosition(entity.position);
 	        
 	        //Use smooth shading for main model rendering.
 			GL11.glShadeModel(GL11.GL_SMOOTH);

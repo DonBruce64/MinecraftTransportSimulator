@@ -2,7 +2,6 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.sound.InterfaceSound;
@@ -17,10 +16,6 @@ import minecrafttransportsimulator.sound.SoundInstance;
  */
 public abstract class AEntityB_Existing extends AEntityA_Base{
 	
-	/**Wrapper reference for interfacing with entity-wrapper systems.  MAY be null if the entity isn't wrapped by
-	 * the game because it's not an actual entity as the game defines it.  As such, this should only be used by
-	 * game-interface (mcinterface) code, NOT by the actual code.**/
-	public final WrapperEntity wrapper;
 	public final Point3d position;
 	public final Point3d prevPosition;
 	public final Point3d motion;
@@ -30,9 +25,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d rotation;
 	public final Point3d prevRotation;
 	
-	public AEntityB_Existing(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
+	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		this.wrapper = wrapper;
 		this.position = data.getPoint3d("position");
 		this.prevPosition = position.copy();
 		this.motion = data.getPoint3d("motion");
@@ -67,13 +61,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**
-	 *  This method returns true if this entity is lit up.  Used to send lighting status to various
-	 *  systems for rendering.  Note that this does NOT imply that this entity is bright enough to make
-	 *  its surroundings lit up.  Rather, this simply means there is a light on this entity somewhere.
+	 *  This method returns how much light this entity is providing.  Used to send lighting status to various
+	 *  systems for rendering in the world to provide actual light rather than rendered light.
+	 *  This is different than {@link #getLightPower()}, which is for internally-rendered lights.
 	 */
-	public boolean isLitUp(){
-		//FIXME do we use this anywhere?.
-    	return false;
+	public float getLightProvided(){
+    	return 0.0F;
 	}
 	
 	/**

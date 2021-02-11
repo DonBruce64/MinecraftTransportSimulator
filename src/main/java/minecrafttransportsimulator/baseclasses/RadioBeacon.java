@@ -11,13 +11,13 @@ public class RadioBeacon{
 	public final String name;
 	public final double glideSlope;
 	public final double bearing;
-	public final Point3i position;
+	public final Point3d position;
 	
 	public RadioBeacon(WrapperNBT data){
 		this.name = data.getString("name");
 		this.glideSlope = data.getDouble("glideSlope");
 		this.bearing = data.getDouble("bearing");
-		this.position = data.getPoint3i("location");
+		this.position = data.getPoint3dCompact("location");
 	}
 	
 	public RadioBeacon(String name, double glideSlope, double bearing, Point3d position){
@@ -41,6 +41,6 @@ public class RadioBeacon{
 		data.setString("name", name);
 		data.setDouble("glideSlope", glideSlope);
 		data.setDouble("bearing", bearing);
-		data.setPoint3i("location", position);
+		data.setPoint3dCompact("location", position);
 	}
 }

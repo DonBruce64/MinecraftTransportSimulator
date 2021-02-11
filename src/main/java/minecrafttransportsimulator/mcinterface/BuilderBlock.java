@@ -291,7 +291,7 @@ public class BuilderBlock extends Block{
   		if(mcBlock instanceof IBlockTileEntity){
   			BuilderTileEntity<?> builder = (BuilderTileEntity<?>) world.getTileEntity(pos);
   			if(builder != null && builder.tileEntity != null){
-  				return (int) (builder.tileEntity.lightLevel*15F);
+  				return (int) (builder.tileEntity.getLightProvided()*15F);
   			}
   		}
         return super.getLightValue(state, world, pos);

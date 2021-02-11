@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -117,7 +116,7 @@ public class PacketBulletHit extends APacketBase{
 						//If we are a water bullet, and we hit fire, put it out. 
 						//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
 						//In this case, we need to simply spawn a few block particles to alert the player of a hit.
-						Point3i hitPosition = new Point3i(box.globalCenter);
+						Point3d hitPosition = box.globalCenter.copy();
 						if(bulletDefinition.bullet.types.contains("water")){
 							hitPosition.add(0, 1, 0);
 							if(world.isFire(hitPosition)){
@@ -146,7 +145,7 @@ public class PacketBulletHit extends APacketBase{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound and spawn some particles.
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(globalCenter), true);
+			InterfaceRender.spawnBlockBreakParticles(globalCenter, true);
 		}
 	}
 }

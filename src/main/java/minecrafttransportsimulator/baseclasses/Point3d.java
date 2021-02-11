@@ -25,10 +25,6 @@ public class Point3d{
 		this.z = z;
 	}
 	
-	public Point3d(Point3i point){
-		this(point.x, point.y, point.z);
-	}
-	
 	@Override
 	public boolean equals(Object object){
 		if(object instanceof Point3d){
@@ -90,32 +86,10 @@ public class Point3d{
 	}
 	
 	/**
-	 * Adds the passed-in point's values to this point.
-	 * Returns the called object for nested operations.
-	 */
-	public Point3d add(Point3i point){
-		this.x += point.x;
-		this.y += point.y;
-		this.z += point.z;
-		return this;
-	}
-	
-	/**
 	 * Subtracts the passed-in point's values to this point.
 	 * Returns the called object for nested operations.
 	 */
 	public Point3d subtract(Point3d point){
-		this.x -= point.x;
-		this.y -= point.y;
-		this.z -= point.z;
-		return this;
-	}
-	
-	/**
-	 * Subtracts the passed-in point's values to this point.
-	 * Returns the called object for nested operations.
-	 */
-	public Point3d subtract(Point3i point){
 		this.x -= point.x;
 		this.y -= point.y;
 		this.z -= point.z;
@@ -148,16 +122,6 @@ public class Point3d{
 	 * Returns the distance between this point and the passed-in point.
 	 */
 	public double distanceTo(Point3d point){
-		double deltaX = point.x - this.x;
-		double deltaY = point.y - this.y;
-		double deltaZ = point.z - this.z;
-		return Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
-	}
-	
-	/**
-	 * Like {@link #distanceTo(Point3d)}, but for use with Point3i classes.
-	 */
-	public double distanceTo(Point3i point){
 		double deltaX = point.x - this.x;
 		double deltaY = point.y - this.y;
 		double deltaZ = point.z - this.z;

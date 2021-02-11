@@ -1,11 +1,10 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -21,9 +20,9 @@ public final class ParticleMissile extends ParticleBullet{
 	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
-	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController, Point3i target) {
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController, Point3d targetPosition) {
 		super(position, motion, direction, bullet, gun, gunController);
-		this.targetPosition = new Point3d(target);
+		this.targetPosition = targetPosition;
 		this.entityTarget = null;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
 		this.desiredAngleOfAttack = bullet.definition.bullet.angleOfAttack;
@@ -51,7 +50,7 @@ public final class ParticleMissile extends ParticleBullet{
 			//If the target is a vehicle, and we're not currently locked onto an engine,
 			//Try to find a valid, warm engine to track.
 			//If we were tracking an engine, but it is no longer valid or is cold, find a new one.
-			AEntityBase entityTargetBase = entityTarget.getBaseEntity();
+			AEntityA_Base entityTargetBase = entityTarget.getBaseEntity();
 			if(entityTargetBase instanceof EntityVehicleF_Physics) {
 				if (engineTarget == null || !engineTarget.isValid || engineTarget.temp < 30f) {
 					EntityVehicleF_Physics vehicleTarget = (EntityVehicleF_Physics) entityTargetBase;

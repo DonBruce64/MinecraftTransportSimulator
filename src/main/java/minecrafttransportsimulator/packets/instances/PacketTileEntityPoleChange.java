@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -12,12 +8,10 @@ import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketTileEntity;
-import minecrafttransportsimulator.rendering.components.ITextProvider;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -33,17 +27,17 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole>{
+public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 	private final Axis axis;
 	private final ItemPoleComponent componentItem;
-	private final List<String> textLines;
+	private final WrapperNBT data;
 	private final boolean removal;
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent componentItem, List<String> textLines, boolean removal){
+	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent componentItem, WrapperNBT data, boolean removal){
 		super(pole);
 		this.axis = axis;
 		this.componentItem = componentItem;
-		this.textLines = textLines;
+		this.data = data;
 		this.removal = removal;
 	}
 	
@@ -56,13 +50,9 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 			this.componentItem = null;
 		}
 		if(buf.readBoolean()){
-			byte textLineCount = buf.readByte();
-			this.textLines = new ArrayList<String>();
-			for(byte i=0; i<textLineCount; ++i){
-				textLines.add(readStringFromBuffer(buf));
-			}
+			this.data = readDataFromBuffer(buf);
 		}else{
-			this.textLines = null;
+			this.data = null;
 		}
 		this.removal = buf.readBoolean();
 	}
@@ -79,12 +69,9 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 		}else{
 			buf.writeBoolean(false);
 		}
-		if(textLines != null){
+		if(data != null){
 			buf.writeBoolean(true);
-			buf.writeByte(textLines.size());
-			for(String textLine : textLines){
-				writeStringToBuffer(textLine, buf);
-			}
+			writeDataToBuffer(data, buf);
 		}else{
 			buf.writeBoolean(false);
 		}
@@ -93,68 +80,41 @@ public class PacketTileEntityPoleChange extends APacketTileEntity<TileEntityPole
 	
 	@Override
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
+		ATileEntityPole_Component component = pole.components.get(axis);
+		
 		//Check if we can do editing.
 		if(world.isClient() || !ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
 			if(removal){
 				//Player clicked with a wrench, try to remove the component on the axis.
 				if(pole.components.containsKey(axis)){
-					ATileEntityPole_Component component = pole.components.get(axis);
-					WrapperNBT data = null;
-					if(component instanceof ITextProvider && component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						data = new WrapperNBT();
-						int lineNumber = 0;
-						for(String textLine : ((ITextProvider) component).getText().values()){
-							data.setString("textLine" + lineNumber++, textLine);
-						}
-					}
-					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.getItem(), data)){
+					WrapperNBT removedComponentData = new WrapperNBT();
+					component.save(removedComponentData);
+					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
 						pole.components.remove(axis);
 						pole.updateLightState();
 						return true;
 					}
 				}
-			}else if(componentItem == null && textLines == null){
-				if(pole.components.get(axis) instanceof ITextProvider && pole.components.get(axis).definition.rendering != null && pole.components.get(axis).definition.rendering.textObjects != null){
+			}else if(componentItem == null){
+				//Player didn't click with anything.  See if we can exit text.
+				if(!pole.components.get(axis).text.isEmpty()){
 					if(world.isClient()){
-						InterfaceGUI.openGUI(new GUITextEditor(pole, axis));
+						InterfaceGUI.openGUI(new GUITextEditor(component));
 					}else{
 						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
 						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 					}
 				}
 				return false;
-			}if(componentItem == null && textLines != null){
-				//This is a packet attempting to change component text.  Do so now.
-				if(pole.components.containsKey(axis)){
-					ATileEntityPole_Component component = pole.components.get(axis);
-					if(component instanceof ITextProvider){
-						int linesChecked = 0;
-						for(Entry<JSONText, String> textEntry : ((ITextProvider) component).getText().entrySet()){
-							textEntry.setValue(textLines.get(linesChecked));
-							++linesChecked;
-						}
-					}
-					return true;
-				}
 			}else if(componentItem != null && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, componentItem);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, data);
 				pole.components.put(axis, newComponent);
-				if(textLines != null && newComponent instanceof ITextProvider){
-					int linesChecked = 0;
-					for(Entry<JSONText, String> textEntry : ((ITextProvider) newComponent).getText().entrySet()){
-						textEntry.setValue(textLines.get(linesChecked));
-						++linesChecked;
-					}
-				}
 				pole.updateLightState();
 				if(!player.isCreative()){
 					player.getInventory().removeStack(player.getHeldStack(), 1);
 				}
 				return true;
-			}else if(componentItem != null && pole.components.containsKey(axis)){
-				//Player clicked an existing sign to change the definition.  Do so now.
-				pole.components.get(axis).currentSubName = componentItem.subName;
 			}
 		}
 		return false;

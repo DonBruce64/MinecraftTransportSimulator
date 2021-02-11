@@ -86,7 +86,7 @@ public class BuilderGUI extends GuiScreen{
 		
 		//If we are light-sensitive, enable lighting.
 		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
-			InterfaceRender.setLightingToEntity(gui.getGUILightSource());
+			InterfaceRender.setLightingToPosition(gui.getGUILightSource().position);
 			InterfaceRender.setSystemLightingState(false);
 		}
 		

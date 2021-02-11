@@ -6,17 +6,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketMultipartPartChange;
+import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -49,8 +49,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private static final Map<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>> SUBPACK_MAPPINGS = new HashMap<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>>();
 	
-	public AEntityE_Multipart(WrapperWorld world, WrapperEntity wrapper, JSONDefinition definition, WrapperNBT data){
-		super(world, wrapper, definition, data);
+	public AEntityE_Multipart(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
@@ -92,6 +92,24 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Now call the super to update prev variables.
 		super.update();
+	}
+	
+
+	
+	@Override
+	public void updateText(List<String> textLines){
+		//Multiparts also update their part's text.
+		int linesChecked = 0;
+		for(Entry<JSONText, String> textEntry : text.entrySet()){
+			textEntry.setValue(textLines.get(linesChecked));
+			++linesChecked;
+		}
+		for(APart part : parts){
+			for(Entry<JSONText, String> textEntry : part.text.entrySet()){
+				textEntry.setValue(textLines.get(linesChecked));
+				++linesChecked;
+			}
+		}
 	}
     
     /**
@@ -162,6 +180,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
+				//FIXME need to pack in definition with NBT here.
 				partToAdd = partItem.createPart(this, newPartDef, partData != null ? partData : new WrapperNBT(), parentPart); 
 			}
 		}
@@ -190,7 +209,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	    		}
 				
 				//Send packet to client with part data.
-				InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, offset, partItem, partData, partToAdd.parentPart));
+				InterfacePacket.sendToAllClients(new PacketPartChange(this, offset, partItem, partData, partToAdd.parentPart));
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
@@ -242,7 +261,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, part.placementOffset));
+				InterfacePacket.sendToAllClients(new PacketPartChange(this, part.placementOffset));
 			}
 		}
 		
@@ -429,6 +448,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
+						//FIXME call item adding methods here.
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
 						APart newPart = partItem.createPart(this, partDef, new WrapperNBT(), parentPart);
 						addPart(newPart);
@@ -442,7 +462,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						
 						//Send a packet if required.
 						if(sendPacket){
-							InterfacePacket.sendToAllClients(new PacketMultipartPartChange(this, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
+							InterfacePacket.sendToAllClients(new PacketPartChange(this, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.

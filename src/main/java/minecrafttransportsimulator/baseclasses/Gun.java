@@ -390,14 +390,14 @@ public class Gun extends AEntityB_Existing implements IParticleProvider{
 				//First find the block the controller is looking at, if possible
 				double maxDistance = 2000D;
 				Point3d lineOfSight = lastController.getLineOfSight(maxDistance);
-				Point3i blockTarget = provider.getProviderWorld().getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+				Point3d blockTarget = provider.world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 				
 				//Try to find the closest entity between the controller and the block
 				//If no block was found, set target position to maxDistance in the direction of the line of sight
 				if(blockTarget != null){
 					maxDistance = lastController.getPosition().distanceTo(blockTarget);
 				}else{
-					blockTarget = new Point3i(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight));
+					blockTarget = lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight);
 				}
 				WrapperEntity entityTarget = provider.getProviderWorld().getEntityLookingAt(lastController, (float) maxDistance);
 				

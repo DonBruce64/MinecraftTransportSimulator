@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketTileEntity;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to road lanes to change their connections.  This is sent from servers to all clients
  * when a connection state changes.  The data sent consists of the lane/curve that we need
@@ -17,12 +17,12 @@ import minecrafttransportsimulator.packets.components.APacketTileEntity;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<TileEntityRoad>{
+public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEntityRoad>{
 	private final int laneNumber;
 	private final int curveNumber;
 	private final boolean connectedToStart;
 	
-	private final Point3i otherPosition;
+	private final Point3d otherPosition;
 	private final int otherLaneNumber;
 	private final int otherCurveNumber;
 	private final float otherCurveNetAngle;
@@ -58,7 +58,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 		this.curveNumber = buf.readInt();
 		this.connectedToStart = buf.readBoolean();
 		if(buf.readBoolean()){
-			this.otherPosition = readPoint3iFromBuffer(buf);
+			this.otherPosition = readPoint3dFromBuffer(buf);
 			this.otherLaneNumber = buf.readInt();
 			this.otherCurveNumber = buf.readInt();
 			this.otherCurveNetAngle = buf.readFloat();
@@ -80,7 +80,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketTileEntity<Tile
 		buf.writeBoolean(connectedToStart);
 		if(otherPosition != null){
 			buf.writeBoolean(true);
-			writePoint3iToBuffer(otherPosition, buf);
+			writePoint3dToBuffer(otherPosition, buf);
 			buf.writeInt(otherLaneNumber);
 			buf.writeInt(otherCurveNumber);
 			buf.writeFloat(otherCurveNetAngle);

@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet sent to vehicles to update their selected beacons.  This is sent from clients when they
@@ -13,7 +13,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PacketVehicleBeaconChange extends APacketVehicle{
+public class PacketVehicleBeaconChange extends APacketEntity<EntityVehicleF_Physics>{
 	private final String beaconName;
 	
 	public PacketVehicleBeaconChange(EntityVehicleF_Physics vehicle, String beaconName){
