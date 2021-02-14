@@ -132,15 +132,9 @@ public class InterfaceSound{
 					if(sound.stopSound){
 						AL10.alSourceStop(sound.sourceIndex);
 					}else{
-						//Update position.
+						//Update position and volume.
 						AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
-						
-						//If the player is inside an enclosed vehicle, half the sound volume.
-						if(sound.shouldBeDampened()){
-							AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume/2F);
-						}else{
-							AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
-						}
+						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
 						
 						//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
 						//Otherwise, set pitch as normal.

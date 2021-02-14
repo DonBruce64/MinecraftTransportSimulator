@@ -39,7 +39,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 			}else{
 				//Don't fuel parts that don't exist.
 				//Also check distance to make sure the part hasn't moved away.
-				if(!connectedPart.isValid || connectedPart.worldPos.distanceTo(position) > 10){
+				if(!connectedPart.isValid || connectedPart.position.distanceTo(position) > 10){
 					updateNearestPart();
 				}
 			}
@@ -79,19 +79,19 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 					AEntityE_Multipart<?> multipart = (AEntityE_Multipart<?>) entity;
 					if(multipart.position.distanceTo(position) < 100){
 						for(APart part : multipart.parts){
-							if(part.worldPos.distanceTo(position) < 10){
+							if(part.position.distanceTo(position) < 10){
 								if(part instanceof PartInteractable){
 									FluidTank partTank = ((PartInteractable) part).tank;
 									if(partTank != null){
 										if(unloadMode){
 											if(partTank.drain(tank.getFluid(), 1, false) > 0){
-												if(part.worldPos.distanceTo(position) < nearestDistance){
+												if(part.position.distanceTo(position) < nearestDistance){
 													nearestPart = (PartInteractable) part;
 												}
 											}
 										}else{
 											if(partTank.fill(tank.getFluid(), 1, false) > 0){
-												if(part.worldPos.distanceTo(position) < nearestDistance){
+												if(part.position.distanceTo(position) < nearestDistance){
 													nearestPart = (PartInteractable) part;
 												}
 											}

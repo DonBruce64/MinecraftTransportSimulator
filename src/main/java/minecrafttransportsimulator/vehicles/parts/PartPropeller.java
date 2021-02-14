@@ -23,8 +23,8 @@ public class PartPropeller extends APart{
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
-	public PartPropeller(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartPropeller(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placementDefinition, data, parentPart);
 		this.damageAmount = data.getDouble("damageAmount");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
@@ -60,10 +60,10 @@ public class PartPropeller extends APart{
 			return;
 		}
 		//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
-		if(definition.propeller.isDynamicPitch){
-			if(vehicle.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
+		if(definition.propeller.isDynamicPitch && vehicleOn != null){
+			if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(!vehicle.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
+			}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
 			}else if(connectedEngine.rpm < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM)*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
@@ -91,8 +91,8 @@ public class PartPropeller extends APart{
 				boundingBox.widthRadius += 0.2;
 				boundingBox.heightRadius += 0.2;
 				boundingBox.depthRadius += 0.2;
-				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, vehicle.getController());
-				world.attackEntities(propellerDamage, vehicle.wrapper, null);
+				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, vehicleOn != null ? vehicleOn.getController() : null);
+				world.attackEntities(propellerDamage, this, null);
 				boundingBox.widthRadius -= 0.2;
 				boundingBox.heightRadius -= 0.2;
 				boundingBox.depthRadius -= 0.2;
@@ -112,20 +112,13 @@ public class PartPropeller extends APart{
 			//If we are too damaged, remove ourselves.
 			if(damageAmount > definition.propeller.startingHealth && !world.isClient()){
 				if(ConfigSystem.configObject.damage.explosions.value){
-					world.spawnExplosion(this, worldPos, 1F, true);
+					world.spawnExplosion(this, position, 1F, true);
 				}else{
-					world.spawnExplosion(this, worldPos, 0F, false);
+					world.spawnExplosion(this, position, 0F, false);
 				}
 				isValid = false;
 			}
 		}
-	}
-	
-	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();		
-		data.setDouble("damageAmount", damageAmount);
-		return data;
 	}
 	
 	@Override
@@ -140,10 +133,10 @@ public class PartPropeller extends APart{
 
 	@Override
 	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
-		if(definition.propeller.isRotor){
-			Point3d rotations = new Point3d(vehicle.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
-			if(vehicle.isVTOL){
-				rotations.add(vehicle.elevatorTrim*20D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicle.aileronTrim*20D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, 0);
+		if(definition.propeller.isRotor && vehicleOn != null){
+			Point3d rotations = new Point3d(vehicleOn.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicleOn.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
+			if(vehicleOn.isVTOL){
+				rotations.add(vehicleOn.elevatorTrim*20D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicleOn.aileronTrim*20D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, 0);
 			}
 			return rotations;
 		}else{
@@ -172,7 +165,7 @@ public class PartPropeller extends APart{
 				//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
 				thrust *= Math.PI*Math.pow(0.0254*definition.propeller.diameter/2D, 2);
 				//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
-				thrust *= vehicle.airDensity/25D*1.5D;
+				thrust *= airDensity/25D*1.5D;
 
 				//Get the angle of attack of the propeller.
 				//Note pitch velocity is in linear in meters per second, 
@@ -202,5 +195,11 @@ public class PartPropeller extends APart{
 			}
 		}
 		return propellerForce;
+	}
+	
+	@Override
+	public void save(WrapperNBT data){
+		super.save(data);
+		data.setDouble("damageAmount", damageAmount);
 	}
 }

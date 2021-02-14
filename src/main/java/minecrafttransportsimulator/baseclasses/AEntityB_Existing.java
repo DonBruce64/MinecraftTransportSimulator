@@ -24,6 +24,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
+	public double airDensity;
 	
 	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -49,6 +50,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		prevMotion.setTo(motion);
 		prevAngles.setTo(angles);
 		prevRotation.setTo(rotation);
+		airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 	}
 	
 	/**
@@ -58,6 +60,16 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public boolean needsChunkloading(){
 		return false;
+	}
+	
+	/**
+	 *  Returning false here will prevent this entity's positional data from being saved during saving
+	 *  operations.  Normally you want this, but if your entity dynamically calculates its position based
+	 *  on other data, such as an entity on another entity, then you may not care for this data and can
+	 *  return false.  This will save on disk space and networking if you have a lot of entities.
+	 */
+	public boolean shouldSavePosition(){
+		return true;
 	}
 	
 	/**
@@ -94,14 +106,23 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  are passed-in to allow the entity to know if we need to start them or not.
 	 */
     public void updateSounds(List<SoundInstance> sounds){}
+    
+    /**
+   	 *  Spawns particles for this entity.  This is called after every render frame, so
+   	 *  watch your methods to prevent spam.  Note that this method is not called if the
+   	 *  game is paused, as particles are assumed to only be spawned during normal entity
+   	 *  updates.
+   	 */
+    public void spawnParticles(){}
 	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		//FIXME make a way to not save these to save storage space on dynamically-placed entities.
-		data.setPoint3d("position", position);
-		data.setPoint3d("motion", motion);
-		data.setPoint3d("angles", angles);
-		data.setPoint3d("rotation", rotation);
+		if(shouldSavePosition()){
+			data.setPoint3d("position", position);
+			data.setPoint3d("motion", motion);
+			data.setPoint3d("angles", angles);
+			data.setPoint3d("rotation", rotation);
+		}
 	}
 }

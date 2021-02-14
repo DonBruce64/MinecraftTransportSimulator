@@ -2,8 +2,8 @@ package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
@@ -11,13 +11,13 @@ import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -59,8 +59,8 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			}
 			
 			//Add all seat-specific effects to the rider
-			if(seat.partDefinition.seatEffects != null) {
-				for(JSONPotionEffect effect: seat.partDefinition.seatEffects){
+			if(seat.placementDefinition.seatEffects != null) {
+				for(JSONPotionEffect effect: seat.placementDefinition.seatEffects){
 					rider.addPotionEffect(effect);
 				}
 			}
@@ -99,8 +99,8 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
-    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.partDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.partDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.placementDefinition.isController);
+    			InterfaceInput.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -189,6 +189,21 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		}
 	}
 	
+	@Override
+    public void updateSounds(List<SoundInstance> sounds){
+    	super.updateSounds(sounds);
+    	//If we are in an closed-top vehicle, dampen the sound.
+    	//Unless it's a radio, in which case don't do so.
+    	AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+		if(entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson()){
+			for(SoundInstance sound : sounds){
+				if(sound.radio == null || !entityRiding.equals(this)){
+					sound.volume *= 0.5F;
+				}
+			}
+		}
+    }
+	
 	/**
 	 *  Helper method used to get the controlling player for this vehicle.
 	 */
@@ -196,7 +211,7 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		for(Point3d location : locationRiderMap.keySet()){
 			PartSeat seat = (PartSeat) getPartAtLocation(location);
 			WrapperEntity rider = locationRiderMap.get(location);
-			if(seat != null && seat.partDefinition.isController && rider instanceof WrapperPlayer){
+			if(seat != null && seat.placementDefinition.isController && rider instanceof WrapperPlayer){
 				return (WrapperPlayer) rider;
 			}
 		}

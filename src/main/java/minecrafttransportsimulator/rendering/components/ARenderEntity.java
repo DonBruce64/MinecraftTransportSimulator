@@ -56,6 +56,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			GL11.glShadeModel(GL11.GL_FLAT);
 			GL11.glPopMatrix();
 			InterfaceRender.resetStates();
+			
+			//Spawn particles, if we aren't paused and this is the main render pass.
+			if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
+				entity.spawnParticles();
+			}
 		}
 	}
 	

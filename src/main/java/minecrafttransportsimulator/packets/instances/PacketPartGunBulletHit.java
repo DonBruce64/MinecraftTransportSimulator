@@ -3,18 +3,18 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Packet used for sending bullet hit information to and from the server.  The first instance of this packet
  * is sent from clients to the server when they detect that a bullet that was spawned by the client player
@@ -23,8 +23,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketBulletHit extends APacketBase{
-	private final int gunID;
+public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 	private final Point3d localCenter;
 	private final Point3d globalCenter;
 	private final double bulletVelocity;
@@ -33,9 +32,8 @@ public class PacketBulletHit extends APacketBase{
 	private final int hitEntityID;
 	private final int controllerEntityID;
 
-	public PacketBulletHit(BoundingBox box, double velocity, ItemPart bullet, Gun gun, int bulletNumber, WrapperEntity hitEntity, WrapperEntity controllerEntity){
-		super(null);
-		this.gunID = gun.gunID;
+	public PacketPartGunBulletHit(PartGun gun, BoundingBox box, double velocity, ItemPart bullet,  int bulletNumber, WrapperEntity hitEntity, WrapperEntity controllerEntity){
+		super(gun);
 		this.localCenter = box.localCenter;
 		this.globalCenter = box.globalCenter;
 		this.bulletVelocity = velocity;
@@ -45,9 +43,8 @@ public class PacketBulletHit extends APacketBase{
 		this.controllerEntityID = controllerEntity != null ? controllerEntity.getID() : -1;
 	}
 	
-	public PacketBulletHit(ByteBuf buf){
+	public PacketPartGunBulletHit(ByteBuf buf){
 		super(buf);
-		this.gunID = buf.readInt();
 		this.localCenter = readPoint3dFromBuffer(buf);
 		this.globalCenter = readPoint3dFromBuffer(buf);
 		this.bulletVelocity = buf.readDouble();
@@ -60,7 +57,6 @@ public class PacketBulletHit extends APacketBase{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(gunID);
 		writePoint3dToBuffer(localCenter, buf);
 		writePoint3dToBuffer(globalCenter, buf);
 		buf.writeDouble(bulletVelocity);
@@ -73,14 +69,13 @@ public class PacketBulletHit extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, PartGun gun){
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
 			JSONPart bulletDefinition = bullet.definition;
 			float blastSize = bulletDefinition.bullet.blastStrength == 0f ? bulletDefinition.bullet.diameter/10f : bulletDefinition.bullet.blastStrength;
 			BoundingBox box = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false, false, false, 0);
-			Gun gun = Gun.createdServerGuns.get(gunID);
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
@@ -88,7 +83,7 @@ public class PacketBulletHit extends APacketBase{
 				//If we are an explosive bullet, blow up at our current position.
 				//Otherwise do attack logic.
 				if(bulletDefinition.bullet.types.contains("explosive")){
-					world.spawnExplosion(gun.provider.getController(), box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
+					world.spawnExplosion(gun.getController(), box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
@@ -147,5 +142,6 @@ public class PacketBulletHit extends APacketBase{
 			//If this is the case, play the block break sound and spawn some particles.
 			InterfaceRender.spawnBlockBreakParticles(globalCenter, true);
 		}
+		return false;
 	}
 }

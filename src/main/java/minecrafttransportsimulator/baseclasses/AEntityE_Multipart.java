@@ -37,11 +37,18 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	public final List<APart> parts = new ArrayList<APart>();
 	
-	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
-	 * due to the potential of various sub-class variables not being ready at construction time.  To compensate, we add the parts we
-	 * wish to add to this list.  Post-construction these will be added to this entity, preventing NPEs.
+	/**This map is similar to {@link #parts}, except it's keyed by the part item.  It serves as a way
+	 * to obtain all parts of a specific type on this entity in cases where such information is needed.
+	 * Note that the CME/iterator rules do not apply to this map as it's not used for iterative operations.
 	 */
-	private final List<APart> partsFromNBT = new ArrayList<APart>();
+	public final HashMap<ItemPart, List<APart>> partsByItem = new LinkedHashMap<ItemPart, List<APart>>();
+	
+	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
+	 * due to the potential of various sub-class variables not being ready at construction time.  To compensate, 
+	 * we add the parts we wish to add to this list.  Post-construction these will be added to this entity, preventing NPEs.
+	 * If you want to add parts to the entity in part constructors, they MUST be in this list.
+	 */
+	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
@@ -80,7 +87,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Send update call down to all parts.
 		//They need to get processed first to handle hitbox logic, or removal based on damage.
-		//We call this before we call the super as they need to know the new statuses.
+		//We call this before we call the super as they need to know the status deltas.
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -94,7 +101,15 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		super.update();
 	}
 	
-
+	@Override
+	public void remove(){
+		super.remove();
+		//Call all the part removal methods to ensure they save their states properly.
+		//We do this via for-next loop to prevent a CME if the part modifies the part list.
+		for(int i=0; i<parts.size(); ){
+			parts.get(0).remove();
+		}
+	}
 	
 	@Override
 	public void updateText(List<String> textLines){
@@ -153,7 +168,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				for(APart part : partsToCheck){
 					if(part.definition.parts != null){
 						for(JSONPartDefinition subPartDef : part.definition.parts){
-							JSONPartDefinition correctedDef = getPackForSubPart(part.partDefinition, subPartDef);
+							JSONPartDefinition correctedDef = getPackForSubPart(part.placementDefinition, subPartDef);
 							if(offset.equals(correctedDef.pos)){
 								parentPart = part;
 								break;
@@ -162,7 +177,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							//Check sub-part additional parts.
 							if(subPartDef.additionalParts != null){
 								for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
-									JSONPartDefinition correctedAdditionalDef = getPackForSubPart(part.partDefinition, additionalPartDef);
+									JSONPartDefinition correctedAdditionalDef = getPackForSubPart(part.placementDefinition, additionalPartDef);
 									if(offset.equals(correctedAdditionalDef.pos)){
 										parentPart = getPartAtLocation(correctedDef.pos);
 										break;
@@ -180,8 +195,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
-				//FIXME need to pack in definition with NBT here.
-				partToAdd = partItem.createPart(this, newPartDef, partData != null ? partData : new WrapperNBT(), parentPart); 
+				partToAdd = partItem.createPart(this, newPartDef, partData != null ? partData : partItem.generateDefaultData(), parentPart); 
 			}
 		}
     	
@@ -198,14 +212,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	    		addPart(partToAdd);
 				
 				//If we are a new part, we need to add text.
-	    		boolean newPart = partData.getString("packID").isEmpty();
+	    		boolean newPart = partData.getString("uniqueUUID").isEmpty();
 	    		if(newPart){
-					if(partToAdd.definition.rendering != null && partToAdd.definition.rendering.textObjects != null){
-						for(JSONText textObject : partToAdd.definition.rendering.textObjects){
-							partToAdd.text.put(textObject, textObject.defaultText);
-						}
-					}
-					partData = partToAdd.getData();
+					partData = partItem.generateDefaultData();
 	    		}
 				
 				//Send packet to client with part data.
@@ -216,7 +225,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				if(newPart && partToAdd.definition.parts != null){
 					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						subPartsToAdd.add(this.getPackForSubPart(partToAdd.partDefinition, subPartPack));
+						subPartsToAdd.add(this.getPackForSubPart(partToAdd.placementDefinition, subPartPack));
 					}
 					addDefaultParts(subPartsToAdd, partToAdd, true);
 				}
@@ -233,6 +242,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
    	 */
 	public void addPart(APart part){
 		parts.add(part);
+		ItemPart partItem = part.getItem();
+		if(!partsByItem.containsKey(partItem)){
+			partsByItem.put(partItem, new ArrayList<APart>());
+		}
+		partsByItem.get(partItem).add(part);
 		
 		//Add a ride-able location.
 		if(part instanceof PartSeat){
@@ -253,6 +267,12 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			}else{
 				parts.remove(part);
 			}
+			//Remove from mappings.
+			ItemPart partItem = part.getItem();
+			if(partsByItem.containsKey(partItem)){
+				partsByItem.get(partItem).remove(part);
+			}
+			
 			//Remove any riders riding this part from the riding map.
 			if(locationRiderMap.containsKey(part.placementOffset)){
 				removeRider(locationRiderMap.get(part.placementOffset), null);
@@ -441,16 +461,15 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * This method should only be called when the entity or part with the
 	 * passed-in definition is first placed, not when it's being loaded from saved data.
 	 */
-	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, APart parentPart, boolean sendPacket){
+	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, APart parentPart, boolean addedAfterSpawning){
 		for(JSONPartDefinition partDef : partsToAdd){
 			if(partDef.defaultPart != null){
 				try{
 					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
-						//FIXME call item adding methods here.
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						APart newPart = partItem.createPart(this, partDef, new WrapperNBT(), parentPart);
+						APart newPart = partItem.createPart(this, partDef, partItem.generateDefaultData(), parentPart);
 						addPart(newPart);
 						
 						//Set default text for the new part, if we have any.
@@ -461,14 +480,14 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						}
 						
 						//Send a packet if required.
-						if(sendPacket){
-							InterfacePacket.sendToAllClients(new PacketPartChange(this, newPart.placementOffset, newPart.getItem(), newPart.getData(), parentPart));
+						if(addedAfterSpawning){
+							InterfacePacket.sendToAllClients(new PacketPartChange(this, newPart.placementOffset, newPart.getItem(), partItem.generateDefaultData(), parentPart));
 						}
 						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
 						if(partDef.additionalParts != null){
-							addDefaultParts(partDef.additionalParts, newPart, sendPacket);
+							addDefaultParts(partDef.additionalParts, newPart, addedAfterSpawning);
 						}
 						
 						//Check all sub-parts, if we have any.
@@ -478,7 +497,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							for(JSONPartDefinition subPartPack : newPart.definition.parts){
 								subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
 							}
-							addDefaultParts(subPartsToAdd, newPart, sendPacket);
+							addDefaultParts(subPartsToAdd, newPart, addedAfterSpawning);
 						}
 					}catch(NullPointerException e){
 						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");
@@ -497,12 +516,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		for(APart part : parts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
-				WrapperNBT partData = part.getData();
+				WrapperNBT partData = new WrapperNBT();
+				part.save(partData);
 				//We need to set some extra data here for the part to allow this entity to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
-				partData.setString("packID", part.definition.packID);
-				partData.setString("systemName", part.definition.systemName);
-				partData.setString("subName", part.subName);
 				partData.setPoint3d("offset", part.placementOffset);
 				data.setData("part_" + totalParts, partData);
 				++totalParts;
@@ -510,6 +527,4 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 		data.setInteger("totalParts", totalParts);
 	}
-	
-	//FIXME need to have the remove method call all part removes so they get their removal states set.
 }

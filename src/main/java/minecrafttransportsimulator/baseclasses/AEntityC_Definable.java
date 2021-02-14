@@ -9,6 +9,7 @@ import java.util.Set;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -130,14 +131,14 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     	super.updateSounds(sounds);
     	//FIXME update sounds
     	//Start any looping sounds.
-    	/*List<JSONSound> soundDefs = getSoundDefinitions();
+    	List<JSONSound> soundDefs = definition.rendering != null ? definition.rendering.sounds : null;
     	if(soundDefs != null){
 			for(JSONSound soundDef : soundDefs){
 				if(soundDef.looping){
 					InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
 				}
 			}
-    	}*/
+    	}
     }
 	
 	@Override

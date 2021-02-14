@@ -12,8 +12,6 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component{
 	
 	public TileEntityPole_StreetLight(TileEntityPole core, WrapperNBT data){
 		super(core, data);
-		//FIXME move this to when we add this component to a pole.
-		//variablesOn.add(LightType.STREETLIGHT.lowercaseName);
 	}
 
 	@Override

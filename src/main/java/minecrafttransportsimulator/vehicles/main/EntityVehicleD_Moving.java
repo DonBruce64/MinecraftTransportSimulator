@@ -42,8 +42,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public static final byte MAX_BRAKE = 100;
 	public byte brake;
 	public boolean parkingBrakeOn;
-	public boolean locked;
-	public String ownerUUID = "";
 	
 	//Internal states.
 	public boolean goingInReverse;
@@ -89,7 +87,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	
 	public EntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		this.locked = data.getBoolean("locked");
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
 		
@@ -100,7 +97,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.activeHitchPartSavedOffset = data.getPoint3d("activeHitchPartSavedOffset");
 		this.activeHookupPartSavedOffset = data.getPoint3d("activeHookupPartSavedOffset");
 		
-		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
@@ -383,7 +379,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Don't use fake ground devices here as it'll mess up math for vehicles.
 			boolean treadsOnly = true;
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-				if(groundDevice.partDefinition.turnsWithSteer && !groundDevice.isFake()){
+				if(groundDevice.placementDefinition.turnsWithSteer && !groundDevice.isFake()){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 					if(treadsOnly && !groundDevice.definition.ground.isTread){
 						treadsOnly = false;
@@ -1038,7 +1034,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("locked", locked);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
 		if(towedVehicle != null){
@@ -1059,7 +1054,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				data.setInteger("activeHookupConnectionSavedIndex", definition.connections.indexOf(activeHookupConnection));
 			}
 		}
-		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
 	}

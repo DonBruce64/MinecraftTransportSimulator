@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.AEntityA_Base;
-import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public final class ParticleMissile extends ParticleBullet{
 	
@@ -20,7 +20,7 @@ public final class ParticleMissile extends ParticleBullet{
 	private final float proximityFuzeDistance;
 
 	//Constructor for when an entity could not be found, so a block position will be the target
-	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController, Point3d targetPosition) {
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, WrapperEntity gunController, Point3d targetPosition) {
 		super(position, motion, direction, bullet, gun, gunController);
 		this.targetPosition = targetPosition;
 		this.entityTarget = null;
@@ -30,7 +30,7 @@ public final class ParticleMissile extends ParticleBullet{
 	}
 	
 	//Passes in an entity to be used as the target
-	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController, WrapperEntity target) {
+	public ParticleMissile(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, WrapperEntity gunController, WrapperEntity target) {
 		super(position, motion, direction, bullet, gun, gunController);
 		this.entityTarget = target;
 		this.anglePerTickSpeed = bullet.definition.bullet.turnFactor * 1000/bullet.definition.bullet.diameter;
@@ -63,7 +63,7 @@ public final class ParticleMissile extends ParticleBullet{
 							if(currentEngine.temp < 30f) {
 								continue;
 							}
-							float distanceToEngine = (float)position.distanceTo(currentEngine.worldPos);
+							float distanceToEngine = (float)position.distanceTo(currentEngine.position);
 							if (nearestEngine == null || distanceToEngine < smallestDistance) {
 								nearestEngine = currentEngine;
 								smallestDistance = distanceToEngine;
@@ -74,7 +74,7 @@ public final class ParticleMissile extends ParticleBullet{
 					//Otherwise, forget about this vehicle.
 					if (nearestEngine != null) {
 						engineTarget = nearestEngine;
-						targetPosition = engineTarget.worldPos;
+						targetPosition = engineTarget.position;
 						vehicleTarget.acquireMissile(this);
 					}
 					else {

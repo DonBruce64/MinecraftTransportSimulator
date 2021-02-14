@@ -57,7 +57,7 @@ public class InterfaceEventsPlayerRendering{
 	    	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
 	    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
 	    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-	    	if(gunEntity != null && gunEntity.gun != null){
+	    	if(gunEntity != null && gunEntity.activeGun != null){
 	    		if(player.isSneaking()){
 	    			disableBothArms(playerModel, player, true);
 	    		}else{
@@ -94,7 +94,7 @@ public class InterfaceEventsPlayerRendering{
 		            		
 		            		//Check if arms need to be set for adjustment.
 		            		if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
-			            		if(seat.partDefinition.isController){
+			            		if(seat.placementDefinition.isController){
 			            			disableBothArms(playerModel, player, false);
 			            			renderCurrentRiderControlling = true;
 			            		}
@@ -182,13 +182,13 @@ public class InterfaceEventsPlayerRendering{
     		
     		//If we are holding a gun, get arm angles.
     		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-	    	if(gunEntity != null && gunEntity.gun != null){	    		
+	    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 	    		//Get arm rotations.
 	    		Point3d heldVector;
 				if(player.isSneaking()){
-					heldVector = gunEntity.gun.definition.gun.handHeldAimedOffset;
+					heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
 				}else{
-					heldVector = gunEntity.gun.definition.gun.handHeldNormalOffset;
+					heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
 				}
 				double heldVectorLength = heldVector.length();
 				double armPitchOffset = Math.toRadians(-90 + player.rotationPitch) - Math.asin(heldVector.y/heldVectorLength);
@@ -265,7 +265,7 @@ public class InterfaceEventsPlayerRendering{
     @SubscribeEvent
     public static void on(RenderHandEvent event){
     	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
-    	if(entity != null && entity.gun != null){
+    	if(entity != null && entity.activeGun != null){
     		event.setCanceled(true);
     	}
     }
@@ -273,7 +273,7 @@ public class InterfaceEventsPlayerRendering{
     @SubscribeEvent
     public static void on(RenderSpecificHandEvent event){
     	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
-    	if(entity != null && entity.gun != null){
+    	if(entity != null && entity.activeGun != null){
     		event.setCanceled(true);
     	}
     }

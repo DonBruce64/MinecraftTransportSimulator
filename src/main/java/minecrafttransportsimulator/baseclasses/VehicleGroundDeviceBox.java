@@ -76,7 +76,7 @@ public class VehicleGroundDeviceBox{
 		liquidDevices.clear();
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.partDefinition.isSpare){
+				if(!part.placementDefinition.isSpare){
 					//X-offsets of 0 are both left and right as they are center points.
 					//This ensures we don't roll to try and align a center point.
 					if(isFront && part.placementOffset.z > 0){

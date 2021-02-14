@@ -45,7 +45,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 						PartInteractable interactable = (PartInteractable) part;
 						if(interactable.tank != null && !interactable.equals(firstPartClicked)){
 							if(interactable.linkedPart == null && interactable.linkedVehicle == null){
-								if(part.worldPos.distanceTo(firstPartClicked.worldPos) < 15){
+								if(part.position.distanceTo(firstPartClicked.position) < 15){
 									if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 										firstPartClicked.linkedPart = interactable;
 										InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked));
@@ -65,7 +65,7 @@ public class ItemFuelHose extends AItemBase implements IItemVehicleInteractable{
 							}
 						}
 					}else if(part == null){
-						if(vehicle.position.distanceTo(firstPartClicked.worldPos) < 15){
+						if(vehicle.position.distanceTo(firstPartClicked.position) < 15){
 							if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 								firstPartClicked.linkedVehicle = vehicle;
 								InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked));

@@ -1,9 +1,6 @@
 package minecrafttransportsimulator.sound;
 
 import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
  * in the {@link InterfaceSound}.  This class holds data such as the current
@@ -52,17 +49,5 @@ public class SoundInstance{
 	 */
 	public void stop(){
 		this.stopSound = true;
-	}
-	
-	/**
-	 *  Returns true if the sound should be dampened.
-	 *  Used if we are in an enclosed vehicle and in first-person mode.
-	 *  If the sound is streaming, and the vehicle is the provider, it is
-	 *  assumed the sound is the vehicle radio, so it should NOT be dampened.
-	 */
-	public boolean shouldBeDampened(){
-		//FIXME move this into main entity sound update volume code.
-		AEntityBase entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
-		return entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.openTop && InterfaceClient.inFirstPerson() && (radio == null || !entityRiding.equals(entity));
 	}
 }

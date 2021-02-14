@@ -67,13 +67,13 @@ public class InterfaceEventsCamera{
 			
 	    	if(InterfaceClient.inFirstPerson()){
 	    		//If we are sneaking and holding a gun, enable custom cameras.
-	    		if(playerGunEntity != null && playerGunEntity.gun != null && sittingSeat == null){
+	    		if(playerGunEntity != null && playerGunEntity.activeGun != null && sittingSeat == null){
 	    			enableCustomCameras = player.isSneaking() && !InterfaceRender.shadersDetected;
 	    			customCameraIndex = 0;
 	    		}
 	    		
 	    		//If our seat is set to automatically use custom cameras try to get one.
-        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.partDefinition.forceCameras){
+        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.placementDefinition.forceCameras){
     				enableCustomCameras = true;
 	    			customCameraIndex = 0;
         		}
@@ -115,9 +115,9 @@ public class InterfaceEventsCamera{
 								break;
 							}
 						}
-					}else if(playerGunEntity != null && playerGunEntity.gun != null){
-						if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
-							for(JSONCameraObject testCamera : playerGunEntity.gun.definition.rendering.cameraObjects){
+					}else if(playerGunEntity != null && playerGunEntity.activeGun != null){
+						if(playerGunEntity.activeGun.definition.rendering != null && playerGunEntity.activeGun.definition.rendering.cameraObjects != null){
+							for(JSONCameraObject testCamera : playerGunEntity.activeGun.definition.rendering.cameraObjects){
 								if(isCameraActive(testCamera, playerGunEntity, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
@@ -303,8 +303,8 @@ public class InterfaceEventsCamera{
 			        	if(sittingSeat != null){
 			        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
 			        	}
-		        	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
-		        		if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
+		        	}else if(playerGunEntity != null && playerGunEntity.activeGun != null && player.isSneaking()){
+		        		if(playerGunEntity.activeGun.definition.rendering != null && playerGunEntity.activeGun.definition.rendering.cameraObjects != null){
 		        			InterfaceClient.toggleFirstPerson();
 		        		}
 		        	}

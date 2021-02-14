@@ -16,6 +16,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.AnimationsPart;
+import minecrafttransportsimulator.rendering.instances.RenderPart;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityE_Multipart#addPart(APart)} to add parts 
@@ -32,13 +34,16 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	private static RenderPart renderer;
 	
 	//JSON properties.
-	public final JSONPartDefinition partDefinition;
+	public final JSONPartDefinition placementDefinition;
 	public final Point3d placementOffset;
 	public final Point3d placementRotation;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
+	/**The entity this part has been placed on.*/
 	public final AEntityE_Multipart<?> entityOn;
+	/**The vehicle this part has been placed on, or null if it wasn't placed on a vehicle.*/
+	protected final EntityVehicleF_Physics vehicleOn;
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for an entity.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
@@ -50,19 +55,18 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	public final Point3d prevTotalOffset;
 	public final Point3d totalRotation;
 	public final Point3d prevTotalRotation;
-	public final Point3d worldPos;
 	public final BoundingBox boundingBox;
 		
-	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
+	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, data);
 		this.entityOn = entityOn;
-		this.placementOffset = packVehicleDef.pos;
+		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
+		this.placementOffset = placementDefinition.pos;
 		this.totalOffset = placementOffset.copy();
 		this.prevTotalOffset = totalOffset.copy();
-		this.partDefinition = packVehicleDef;
-		this.worldPos = placementOffset.copy().rotateFine(entityOn.angles).add(entityOn.position);
-		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
-		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d();
+		this.placementDefinition = placementDefinition;
+		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
+		this.placementRotation = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
 		this.totalRotation = placementRotation.copy();
 		this.prevTotalRotation = totalRotation.copy();
 		
@@ -71,7 +75,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		if(!isFake() && parentPart != null){
 			this.parentPart = parentPart;
 			parentPart.childParts.add(this);
-			if(packVehicleDef.isSubPart){
+			if(placementDefinition.isSubPart){
 				this.disableMirroring = parentPart.disableMirroring || definition.generic.disableMirroring;
 			}else{
 				this.disableMirroring = definition.generic.disableMirroring;
@@ -82,11 +86,14 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		}
 		
 		//Create movement animation clocks.
-		if(partDefinition.animations != null){
-			for(JSONAnimationDefinition animation : partDefinition.animations){
+		if(placementDefinition.animations != null){
+			for(JSONAnimationDefinition animation : placementDefinition.animations){
 				clocks.add(new DurationDelayClock(animation));
 			}
 		}
+		
+		//Set initial position.
+		this.position.setTo(placementOffset).rotateFine(entityOn.angles).add(entityOn.position);
 	}
 	
 	/**
@@ -150,7 +157,12 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		}
 		
 		//Set worldpos to our net offset pos on the entity.
-		worldPos.setTo(totalOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		position.setTo(totalOffset).rotateFine(entityOn.angles).add(entityOn.position);
+	}
+	
+	@Override
+	public boolean shouldSavePosition(){
+		return false;
 	}
 	
 	/**
@@ -234,7 +246,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	 * Returns true if this part is in liquid.
 	 */
 	public boolean isInLiquid(){
-		return world.isBlockLiquid(worldPos);
+		return world.isBlockLiquid(position);
 	}
 	
 	/**
@@ -255,24 +267,6 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		if(parentPart != null){
 			parentPart.childParts.remove(this);
 		}
-	}
-	
-	/**
-	 * Return the part data in NBT form.
-	 * This is called when removing the part from an entity to return an item.
-	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
-	 * part back into an part again is packed into the NBT tag that is returned.
-	 * This does not include the part offsets, as those are re-calculated every time the part is attached
-	 * and are saved separately from the item NBT data in the entity.
-	 */
-	//FIXME this needs to go into the proper method.
-	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
-		int lineNumber = 0;
-		for(String textLine : text.values()){
-			data.setString("textLine" + lineNumber++, textLine);
-		}
-		return data;
 	}
 	
 	public float getWidth(){

@@ -325,7 +325,7 @@ public class WrapperWorld{
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
+	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, AEntityB_Existing damageSource, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
@@ -468,7 +468,7 @@ public class WrapperWorld{
 				for(Point3d ridableLocation : entityToLoad.ridableLocations){
 					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
 						if(entityToLoad instanceof EntityVehicleF_Physics){
-							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).partDefinition.isController){
+							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).placementDefinition.isController){
 								continue;
 							}
 						}

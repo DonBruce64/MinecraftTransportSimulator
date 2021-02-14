@@ -21,6 +21,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.rendering.instances.RenderPart;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -185,7 +186,7 @@ public class GUIPackExporter extends AGUIBase{
 												definition.doors = loadedDefinition.doors;
 												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
-												RenderVehicle.clearPartCaches(definition);
+												RenderPart.clearPartCaches(definition);
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;

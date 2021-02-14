@@ -3,7 +3,6 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -21,10 +19,10 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.Radio;
@@ -33,7 +31,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
@@ -70,7 +67,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
-	public final HashMap<ItemPart, List<PartGun>> guns = new LinkedHashMap<ItemPart, List<PartGun>>();
 	
 	//Map containing incoming missiles, sorted by distance.
 	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
@@ -216,7 +212,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).partDefinition.isController){
+				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController){
 					for(PartEngine engine : engines.values()){
 						if(!engine.state.running){
 							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
@@ -237,12 +233,12 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider)){
 				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
 				boolean otherController = false;
-				if(riddenPart.partDefinition.isController){
+				if(riddenPart.placementDefinition.isController){
 					//Check if another player is in a controller seat.  If so, don't stop the engines.
 					for(APart part : parts){
 						if(!part.equals(riddenPart)){
 							if(locationRiderMap.containsKey(part.placementOffset)){
-								if(part.partDefinition.isController){
+								if(part.placementDefinition.isController){
 									otherController = true;
 									break;
 								}
@@ -318,16 +314,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 					}
 				}
 			}
-		}else if(!part.partDefinition.isSpare){
+		}else if(!part.placementDefinition.isSpare){
 			if(part instanceof PartGroundDevice){
 				if(part.definition.ground.isWheel || part.definition.ground.isTread){
 					wheels.add((PartGroundDevice) part);
 				}
-			}else if(part instanceof PartGun){
-				if(!guns.containsKey(part.getItem())){
-					guns.put(part.getItem(), new ArrayList<PartGun>());
-				}
-				guns.get(part.getItem()).add((PartGun) part);
 			}
 		}
 	}
@@ -349,12 +340,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		}
 		if(wheels.contains(part)){
 			wheels.remove(part);
-		}else if(part instanceof PartGun){
-			for(List<PartGun> gunList : guns.values()){
-				if(gunList.contains(part)){
-					gunList.remove(part);
-				}
-			}
 		}
 	}
 	

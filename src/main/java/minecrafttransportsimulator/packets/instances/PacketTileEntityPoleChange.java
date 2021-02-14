@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -109,6 +110,8 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 			}else if(componentItem != null && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, data);
+				newComponent.variablesOn.add(LightType.UNLINKEDLIGHT.lowercaseName);
+				newComponent.variablesOn.add(LightType.STREETLIGHT.lowercaseName);
 				pole.components.put(axis, newComponent);
 				pole.updateLightState();
 				if(!player.isCreative()){

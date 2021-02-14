@@ -12,8 +12,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(masterPart.entityOn, packVehicleDef, data, parentPart);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(masterPart.entityOn, placementDefinition, data, parentPart);
 		this.masterPart = masterPart;
 	}
 	
@@ -26,11 +26,6 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	public void remove(){
 		//Do nothing here as we should not be removing ourselves from the vehicle.
 		//That is our master part's job.
-	}
-	
-	@Override
-	public WrapperNBT getData(){
-		return new WrapperNBT();
 	}
 	
 	@Override

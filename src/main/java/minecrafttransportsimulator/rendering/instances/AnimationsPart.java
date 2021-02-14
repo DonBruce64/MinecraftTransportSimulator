@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
+import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -62,7 +63,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 						if(foundDef != null){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = part.entityOn.getPartAtLocation(part.entityOn.getPackForSubPart(part.partDefinition, foundDef).pos);
+							APart foundPart = part.entityOn.getPartAtLocation(part.entityOn.getPackForSubPart(part.placementDefinition, foundDef).pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return foundPart.getAnimator().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 							}else{
@@ -108,9 +109,30 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_hours"): return engine.hours;
 			}
 		}else if(part instanceof PartGun){
-			value = AnimationsGun.getGunVariable(((PartGun) part).internalGun, variable, partialTicks);
-			if(!Double.isNaN(value)){
-				return value;
+			PartGun gun = (PartGun) part;
+			//Check for an instance of a gun_muzzle_# variable, since these requires additional parsing
+			if (variable.startsWith("gun_muzzle_")){
+				//Get the rest of the variable after gun_muzzle_
+				String muzzleVariable = variable.substring("gun_muzzle_".length());
+				//Parse one or more digits, then take off one because we are zero-indexed
+				int muzzleNumber = Integer.parseInt(muzzleVariable.substring(0, muzzleVariable.indexOf('_'))) - 1;
+				switch(muzzleVariable.substring(muzzleVariable.indexOf('_') + 1)) {
+					case("firing"): return (muzzleNumber == gun.currentMuzzle ? 1 : 0) * gun.cooldownTimeRemaining/(double)gun.definition.gun.fireDelay;
+				}
+			}
+			switch(variable){
+				case("gun_inhand"): return gun.entityOn instanceof EntityPlayerGun ? 1 : 0;	
+				case("gun_active"): return gun.active ? 1 : 0;
+				case("gun_firing"): return gun.firing ? 1 : 0;
+				case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
+				case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
+				case("gun_cooldown"): return gun.cooldownTimeRemaining > 0 ? 1 : 0;
+				case("gun_windup_time"): return gun.windupTimeCurrent;
+				case("gun_windup_rotation"): return gun.windupRotation;
+				case("gun_windup_complete"): return gun.windupTimeCurrent == gun.definition.gun.windupTime ? 1 : 0;
+				case("gun_reload"): return gun.reloadTimeRemaining > 0 ? 1 : 0;
+				case("gun_ammo_count"): return gun.bulletsLeft;
+				case("gun_ammo_percent"): return gun.bulletsLeft/gun.definition.gun.capacity;
 			}
 		}else if(part instanceof PartInteractable){
 			PartInteractable interactable = (PartInteractable) part;

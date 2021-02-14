@@ -40,7 +40,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	
 	//Internal states.
 	private float hardnessHitThisTick = 0;
-	public double airDensity;
 	public double currentMass;
 	public double velocity;
 	public double axialVelocity;
@@ -115,10 +114,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		axialVelocity = Math.abs(motion.dotProduct(headingVector));
 		
 		//Update mass.
-		if(definition != null){
-			currentMass = getCurrentMass();
-			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-		}
+		currentMass = getCurrentMass();
 		
 		//Auto-close any open doors that should be closed.
 		//Only do this once a second to prevent lag.
@@ -177,7 +173,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			for(APart part : parts){
 				if(part.definition.parts != null){
 					for(JSONPartDefinition subPartDef : part.definition.parts){
-						if(packVehicleDef.equals(getPackForSubPart(part.partDefinition, subPartDef))){
+						if(packVehicleDef.equals(getPackForSubPart(part.placementDefinition, subPartDef))){
 							//Need to find the delta between our 0-degree position and our current position.
 							Point3d delta = subPartDef.pos.copy().rotateFine(part.totalRotation).subtract(subPartDef.pos);
 							box.updateToEntity(this, delta);
@@ -256,7 +252,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				
 				//If the part is linked to doors, and none are open, don't add it.
 				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
-				if(areDoorsBlocking(part.partDefinition, clientPlayer)){
+				if(areDoorsBlocking(part.placementDefinition, clientPlayer)){
 					continue;
 				}
 			}
@@ -279,8 +275,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-			if(seat.partDefinition.linkedDoors != null){
-				for(String linkedDoor : seat.partDefinition.linkedDoors){
+			if(seat.placementDefinition.linkedDoors != null){
+				for(String linkedDoor : seat.placementDefinition.linkedDoors){
 					if(variablesOn.contains(linkedDoor)){
 						for(JSONDoor doorDef : definition.doors){
 							if(doorDef.name.equals(linkedDoor)){
@@ -314,8 +310,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-		if(seat != null && seat.partDefinition.linkedDoors != null){
-			for(String linkedDoor : seat.partDefinition.linkedDoors){
+		if(seat != null && seat.placementDefinition.linkedDoors != null){
+			for(String linkedDoor : seat.placementDefinition.linkedDoors){
 				if(!variablesOn.contains(linkedDoor)){
 					for(JSONDoor doorDef : definition.doors){
 						if(doorDef.name.equals(linkedDoor)){
@@ -507,7 +503,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Remove all parts from the vehicle and place them as items.
 		for(APart part : parts){
 			if(part.getItem() != null){
-				world.spawnItem(part.getItem(), part.getData(), part.worldPos);
+				WrapperNBT partData = new WrapperNBT();
+				part.save(partData);
+				world.spawnItem(part.getItem(), partData, part.position);
 			}
 		}
 		

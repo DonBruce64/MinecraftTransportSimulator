@@ -9,19 +9,21 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
-import minecrafttransportsimulator.packets.instances.PacketBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketGunChange;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
+import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.packets.instances.PacketPartGunBulletHit;
+import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
-import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
@@ -35,10 +37,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
@@ -76,7 +74,6 @@ public class InterfacePacket{
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
 		registerPacket(packetIndex++, PacketBeaconListingChange.class);
-		registerPacket(packetIndex++, PacketBulletHit.class);
 		
 		//Entity packets.
 		registerPacket(packetIndex++, PacketEntityCSHandshake.class);
@@ -88,11 +85,10 @@ public class InterfacePacket{
 		//Fluid tank packets.
 		registerPacket(packetIndex++, PacketFluidTankChange.class);
 		
-		//FIXME guns need to be parts in their entireteyl
-		registerPacket(packetIndex++, PacketGunChange.class);
-		
 		//Part packets.
 		registerPacket(packetIndex++, PacketPartChange.class);
+		registerPacket(packetIndex++, PacketPartGunBulletHit.class);
+		registerPacket(packetIndex++, PacketPartGun.class);
 		registerPacket(packetIndex++, PacketPartEngine.class);
 		registerPacket(packetIndex++, PacketPartGroundDevice.class);
 		registerPacket(packetIndex++, PacketPartInteractable.class);
@@ -101,8 +97,6 @@ public class InterfacePacket{
 		//Player packets.
 		registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		registerPacket(packetIndex++, PacketPlayerCraftItem.class);
-		registerPacket(packetIndex++, PacketPlayerGunChange.class);
-		registerPacket(packetIndex++, PacketPlayerGunFiring.class);
 		
 		//Radio packets.
 		registerPacket(packetIndex++, PacketRadioStateChange.class);

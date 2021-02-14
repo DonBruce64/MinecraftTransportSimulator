@@ -116,7 +116,7 @@ public abstract class AEntityA_Base{
 	 */
 	public void remove(){
 		isValid = false;
-		createdEntities.get(world).set(lookupID, null);
+		createdEntities.get(world).remove(lookupID);
 	}
 	
 	/**

@@ -53,11 +53,23 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 	 **/
 	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
+	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
+	 * their owners, or OP players (server admins).
+	 **/
+	public boolean locked;
+	
+	/**The ID of the owner of this entity. If this string is empty, it can be assumed that there is no owner.
+	 * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
+	 **/
+	public String ownerUUID;
+	
 	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
 		//so just make the locations for the moment so they are ready when riders are created.
-		savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
+		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
+		this.locked = data.getBoolean("locked");
+		this.ownerUUID = data.getString("ownerUUID");
 	}
 	
 	/**
@@ -159,5 +171,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 	public void save(WrapperNBT data){
 		super.save(data);
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
+		data.setBoolean("locked", locked);
+		data.setString("ownerUUID", ownerUUID);
 	}
 }

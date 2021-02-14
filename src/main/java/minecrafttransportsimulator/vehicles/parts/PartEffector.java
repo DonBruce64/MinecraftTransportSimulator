@@ -15,8 +15,8 @@ public class PartEffector extends APart{
 	private final Point3d[] lastBlocksModified;
 	private final Point3d[] affectedBlocks;
 	
-	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placementDefinition, data, parentPart);
 		lastBlocksModified = new Point3d[definition.effector.blocksWide];
 		affectedBlocks = new Point3d[definition.effector.blocksWide];
 	}
@@ -27,7 +27,7 @@ public class PartEffector extends APart{
 		int startingIndex = -definition.effector.blocksWide/2;
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
-			affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(worldPos);
+			affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(position);
 			if(definition.effector.type.equals(EffectorComponentType.PLANTER) || definition.effector.type.equals(EffectorComponentType.PLOW)){
 				affectedBlocks[i].add(0, -1, 0);
 			}
@@ -76,7 +76,7 @@ public class PartEffector extends APart{
 							//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
 							for(ItemStack stack : drops){
 								if(stack.getCount() > 0){
-									world.spawnItemStack(stack, worldPos);
+									world.spawnItemStack(stack, position);
 								}
 							}
 						}

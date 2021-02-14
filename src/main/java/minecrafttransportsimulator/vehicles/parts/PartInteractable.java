@@ -24,8 +24,8 @@ public final class PartInteractable extends APart{
 	public String jerrycanFluid;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placementDefinition, data, parentPart);
 		switch(definition.interactable.interactionType){
 			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", world, data, definition.interactable.inventoryUnits*9); break;
 			case BARREL: this.interactable = null; break;
@@ -42,12 +42,14 @@ public final class PartInteractable extends APart{
 	
 	@Override
 	public boolean interact(WrapperPlayer player){
-		if(!vehicle.locked){
+		if(!entityOn.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 				entityOn.removePart(this, null);
-				world.spawnItem(getItem(), getData(), worldPos);
+				WrapperNBT data = new WrapperNBT();
+				save(data);
+				world.spawnItem(getItem(), data, position);
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
@@ -63,8 +65,10 @@ public final class PartInteractable extends APart{
 	public void attack(Damage damage){
 		double explosivePower = getExplosiveContribution();
 		if(explosivePower > 0){
-			world.spawnExplosion(this, worldPos, explosivePower, true);
-			entityOn.destroyAt(worldPos);
+			world.spawnExplosion(this, position, explosivePower, true);
+			if(vehicleOn != null){
+				vehicleOn.destroyAt(position);
+			}
 		}
 	}
 	
@@ -81,13 +85,13 @@ public final class PartInteractable extends APart{
 			FluidTank linkedTank =  null;
 			String linkedMessage = null;
 			if(linkedVehicle != null){
-				if(linkedVehicle.position.distanceTo(worldPos) > 16){
+				if(linkedVehicle.position.distanceTo(position) > 16){
 					linkedMessage = "interact.fuelhose.linkdropped";
 				}else{
 					linkedTank = linkedVehicle.fuelTank;
 				}
 			}else if(linkedPart != null){
-				if(linkedPart.worldPos.distanceTo(worldPos) > 16){
+				if(linkedPart.position.distanceTo(position) > 16){
 					linkedMessage = "interact.fuelhose.linkdropped";
 				}else{
 					linkedTank = linkedPart.tank;
@@ -118,26 +122,13 @@ public final class PartInteractable extends APart{
 			if(linkedMessage != null){
 				linkedVehicle = null;
 				linkedPart = null;
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 					if(entity instanceof WrapperPlayer){
 						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage(linkedMessage));
 					}
 				}
 			}
 		}
-	}
-	
-	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
-		if(interactable != null){
-			interactable.save(data);
-		}else if(tank != null){
-			tank.save(data);
-		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
-			data.setString("jerrycanFluid", jerrycanFluid);
-		}
-		return data;
 	}
 	
 	public int getInventoryCount(){
@@ -195,6 +186,18 @@ public final class PartInteractable extends APart{
 			return tank.getExplosiveness();
 		}else{
 			return 0;
+		}
+	}
+	
+	@Override
+	public void save(WrapperNBT data){
+		super.save(data);
+		if(interactable != null){
+			interactable.save(data);
+		}else if(tank != null){
+			tank.save(data);
+		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+			data.setString("jerrycanFluid", jerrycanFluid);
 		}
 	}
 }

@@ -6,7 +6,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public final class PartGeneric extends APart{
 	
-	public PartGeneric(AEntityE_Multipart<?> entityOn, JSONPartDefinition packVehicleDef, WrapperNBT data, APart parentPart){
-		super(entityOn, packVehicleDef, data, parentPart);
+	public PartGeneric(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placementDefinition, data, parentPart);
 	}
 }

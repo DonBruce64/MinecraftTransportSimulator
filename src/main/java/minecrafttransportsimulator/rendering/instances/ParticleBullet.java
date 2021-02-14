@@ -14,7 +14,7 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketBulletHit;
+import minecrafttransportsimulator.packets.instances.PacketPartGunBulletHit;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
@@ -37,7 +37,7 @@ import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 public class ParticleBullet extends AParticle{
 	private final ItemPart bullet;
-	private final Gun gun;
+	private final PartGun gun;
 	private final int bulletNumber;
 	private final double initialVelocity;
 	private final Point3d initialDirection;
@@ -51,8 +51,8 @@ public class ParticleBullet extends AParticle{
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
 	
-    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, Gun gun, WrapperEntity gunController){
-    	super(gun.getProviderWorld(), position, motion);
+    public ParticleBullet(Point3d position, Point3d motion, Point3d direction, ItemPart bullet, PartGun gun, WrapperEntity gunController){
+    	super(gun.world, position, motion);
     	this.bullet = bullet;
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
@@ -103,13 +103,13 @@ public class ParticleBullet extends AParticle{
 						}else if(!(baseEntity instanceof EntityVehicleF_Physics) || ((EntityVehicleF_Physics) baseEntity).getPartAtLocation(hitBox.localCenter) == null){
 							continue;
 						}
-						InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+						InterfacePacket.sendToServer(new PacketPartGunBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
 						isValid = false;
 						break;
 					}
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
-					InterfacePacket.sendToServer(new PacketBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
+					InterfacePacket.sendToServer(new PacketPartGunBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
 					isValid = false;
 				}
 			}
@@ -187,7 +187,7 @@ public class ParticleBullet extends AParticle{
 	
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
 		isValid = false;
-		InterfacePacket.sendToServer(new PacketBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
+		InterfacePacket.sendToServer(new PacketPartGunBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
 		age = maxAge;
 	}
 	

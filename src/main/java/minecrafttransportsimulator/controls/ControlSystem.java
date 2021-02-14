@@ -10,12 +10,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketGunChange;
-import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsCamera;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -61,8 +60,9 @@ public final class ControlSystem{
 
 	
 	public static void controlPlayerGun(EntityPlayerGun entity){
-		if(entity.gun != null){
-			InterfacePacket.sendToServer(new PacketPlayerGunFiring(entity, InterfaceInput.isRightMouseButtonDown()));
+		//Don't send state changes unless we're holding a gun.
+		if(!entity.parts.isEmpty()){
+			InterfacePacket.sendToServer(new PacketPartGun((PartGun) entity.parts.get(0), InterfaceInput.isRightMouseButtonDown()));
 		}
 	}
 	
@@ -143,7 +143,7 @@ public final class ControlSystem{
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
 				if(InterfaceClient.getClientPlayer().equals(gun.getController())){
-					InterfacePacket.sendToServer(new PacketGunChange(gun.internalGun, gunTrigger.isPressed()));
+					InterfacePacket.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed()));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
