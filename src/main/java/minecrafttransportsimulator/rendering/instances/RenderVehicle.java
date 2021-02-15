@@ -130,11 +130,6 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			}
 		}
 		
-		//Render all the parts.
-		for(APart part : vehicle.parts){
-			part.getRenderer().render(part, partialTicks);
-		}
-		
 		//Render all connectors.
 		renderConnectors(vehicle);
 		
@@ -166,10 +161,10 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				GL11.glPushMatrix();
 				if(vehicle.activeHookupPart != null){
 					GL11.glTranslated(vehicle.activeHookupPart.totalOffset.x, vehicle.activeHookupPart.totalOffset.y, vehicle.activeHookupPart.totalOffset.z);
-					if(!vehicle.activeHookupPart.totalRotation.isZero()){
-						GL11.glRotated(vehicle.activeHookupPart.totalRotation.y, 0, 1, 0);
-						GL11.glRotated(vehicle.activeHookupPart.totalRotation.x, 1, 0, 0);
-						GL11.glRotated(vehicle.activeHookupPart.totalRotation.z, 0, 0, 1);
+					if(!vehicle.activeHookupPart.localAngles.isZero()){
+						GL11.glRotated(vehicle.activeHookupPart.localAngles.y, 0, 1, 0);
+						GL11.glRotated(vehicle.activeHookupPart.localAngles.x, 1, 0, 0);
+						GL11.glRotated(vehicle.activeHookupPart.localAngles.z, 0, 0, 1);
 					}
 					renderConnector(connector, vehicle.activeHookupPart.definition.packID);
 				}else{
@@ -183,10 +178,10 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				GL11.glPushMatrix();
 				if(vehicle.activeHitchPart != null){
 					GL11.glTranslated(vehicle.activeHitchPart.totalOffset.x, vehicle.activeHitchPart.totalOffset.y, vehicle.activeHitchPart.totalOffset.z);
-					if(!vehicle.activeHitchPart.totalRotation.isZero()){
-						GL11.glRotated(vehicle.activeHitchPart.totalRotation.y, 0, 1, 0);
-						GL11.glRotated(vehicle.activeHitchPart.totalRotation.x, 1, 0, 0);
-						GL11.glRotated(vehicle.activeHitchPart.totalRotation.z, 0, 0, 1);
+					if(!vehicle.activeHitchPart.localAngles.isZero()){
+						GL11.glRotated(vehicle.activeHitchPart.localAngles.y, 0, 1, 0);
+						GL11.glRotated(vehicle.activeHitchPart.localAngles.x, 1, 0, 0);
+						GL11.glRotated(vehicle.activeHitchPart.localAngles.z, 0, 0, 1);
 					}
 					renderConnector(connector, vehicle.activeHitchPart.definition.packID);
 				}else{

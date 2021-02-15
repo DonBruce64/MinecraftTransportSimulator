@@ -3,8 +3,10 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Base Entity rendering class.  
  *
@@ -60,6 +62,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Spawn particles, if we aren't paused and this is the main render pass.
 			if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 				entity.spawnParticles();
+			}
+			
+			//Render parts, if we are they type of entity to have them.
+			if(entity instanceof AEntityE_Multipart){
+				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+					part.getRenderer().render(part, partialTicks);
+				}
 			}
 		}
 	}

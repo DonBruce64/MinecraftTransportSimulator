@@ -9,6 +9,7 @@ import java.util.Map;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -307,6 +308,7 @@ public class WrapperWorld{
 	public void spawnEntity(AEntityB_Existing entity){
 		BuilderEntity builder = new BuilderEntity(entity.world.world);
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
+		builder.entity = entity;
 		world.spawnEntity(builder);
     }
 	
@@ -325,7 +327,7 @@ public class WrapperWorld{
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, AEntityB_Existing damageSource, Point3d motion){
+	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
@@ -378,26 +380,25 @@ public class WrapperWorld{
 		
 		//Found collided entities.  Do checks to remove excess entities and attack them if required.
 		if(!collidedEntities.isEmpty()){
-			if(damageSource != null){
+			if(damage.damgeSource != null){
 				//Iterate over all entities.  If the entity is the passed-in source, or riding the source, remove it.
 				Iterator<Entity> iterator = collidedEntities.iterator();
 				while(iterator.hasNext()){
-					Entity entity = iterator.next();
-					if(entity instanceof BuilderEntity){
-						AEntityB_Existing testSource = ((BuilderEntity) entity).entity;
-						if(damageSource.equals(testSource.wrapper)){
-							//Don't attack ourselves if we are a builder damage.
+					Entity mcEntityAttacked = iterator.next();
+					if(mcEntityAttacked instanceof BuilderEntity){
+						AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityAttacked).entity;
+						if(damage.damgeSource.equals(entityAttacked)){
+							//Don't attack ourselves.
 							iterator.remove();
+						}else if(entityAttacked instanceof AEntityE_Multipart){
+							if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
+								//Don't attack the entity we are a part on.
+								iterator.remove();
+							}
 						}
-					}else if(entity.getRidingEntity() instanceof BuilderEntity){
-						AEntityB_Existing testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
-						if(damageSource.equals(testSource.wrapper)){
-							//Don't attack the entity we are riding a builder.
-							iterator.remove();
-						}
-					}else{
-						if(damageSource.entity.equals(entity)){
-							//Don't attack ourselves if we hit ourselves.
+					}else if(mcEntityAttacked.getRidingEntity() instanceof BuilderEntity){
+						if(damage.damgeSource.equals(((BuilderEntity) mcEntityAttacked.getRidingEntity()).entity)){
+							//Don't attack riders of the source of the damage.
 							iterator.remove();
 						}
 					}
@@ -463,7 +464,7 @@ public class WrapperWorld{
 	 *  Only non-hostile mobs will be loaded.
 	 */
 	public void loadEntities(BoundingBox box, AEntityD_Interactable<?> entityToLoad){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(entityToLoad.wrapper.entity, box.convert())){
+		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
 			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : entityToLoad.ridableLocations){
 					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
@@ -968,18 +969,9 @@ public class WrapperWorld{
 	
 	/**
 	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from an internal entity.
 	 */
-	public void spawnExplosion(AEntityB_Existing source, Point3d location, double strength, boolean flames){
-		world.newExplosion(source.wrapper.entity, location.x, location.y, location.z, (float) strength, flames, true);
-	}
-	
-	/**
-	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from a wrapper entity.
-	 */
-	public void spawnExplosion(WrapperEntity entity, Point3d location, double strength, boolean flames){
-		world.newExplosion(entity.entity, location.x, location.y, location.z, (float) strength, flames, true);
+	public void spawnExplosion(Point3d location, double strength, boolean flames){
+		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**

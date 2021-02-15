@@ -39,9 +39,9 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public void attack(Damage damage){
-		if(damage.attacker != null){
-			if(damage.attacker instanceof WrapperPlayer && ((WrapperPlayer) damage.attacker).getHeldItem() == null){
-				if(!entityOn.equals(damage.attacker.getEntityRiding())){
+		if(damage.entityResponsible != null){
+			if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldItem() == null){
+				if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
 					connectedEngine.handStartEngine();
 					InterfacePacket.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
 				}
@@ -91,8 +91,8 @@ public class PartPropeller extends APart{
 				boundingBox.widthRadius += 0.2;
 				boundingBox.heightRadius += 0.2;
 				boundingBox.depthRadius += 0.2;
-				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, vehicleOn != null ? vehicleOn.getController() : null);
-				world.attackEntities(propellerDamage, this, null);
+				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, this, vehicleOn != null ? vehicleOn.getController() : null);
+				world.attackEntities(propellerDamage, null);
 				boundingBox.widthRadius -= 0.2;
 				boundingBox.heightRadius -= 0.2;
 				boundingBox.depthRadius -= 0.2;
@@ -112,9 +112,9 @@ public class PartPropeller extends APart{
 			//If we are too damaged, remove ourselves.
 			if(damageAmount > definition.propeller.startingHealth && !world.isClient()){
 				if(ConfigSystem.configObject.damage.explosions.value){
-					world.spawnExplosion(this, position, 1F, true);
+					world.spawnExplosion(position, 1F, true);
 				}else{
-					world.spawnExplosion(this, position, 0F, false);
+					world.spawnExplosion(position, 0F, false);
 				}
 				isValid = false;
 			}
@@ -149,7 +149,7 @@ public class PartPropeller extends APart{
 		if(connectedEngine != null && connectedEngine.state.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(entityOn.angles));
+			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(localAngles.copy().add(entityOn.angles));
 			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
@@ -191,7 +191,7 @@ public class PartPropeller extends APart{
 					propellerActionRotation.z = 0;
 					propellerThrustVector.rotateCoarse(propellerActionRotation); 
 				}
-				propellerForce.add(propellerThrustVector.rotateCoarse(totalRotation));
+				propellerForce.add(propellerThrustVector.rotateCoarse(localAngles));
 			}
 		}
 		return propellerForce;

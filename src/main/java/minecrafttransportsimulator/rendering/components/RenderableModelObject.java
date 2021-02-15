@@ -38,7 +38,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//Roller found.  Create a transform for it.
 			this.applyAfter = null;
 			if(objectName.toLowerCase().contains("roller")){
-				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, null, vertices));
+				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices));
 			}	
 		}
 		if(objectName.contains("&")){

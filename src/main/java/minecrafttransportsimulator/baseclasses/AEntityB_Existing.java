@@ -105,7 +105,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  when this method is called.  All existing sounds this entity is playing
 	 *  are passed-in to allow the entity to know if we need to start them or not.
 	 */
-    public void updateSounds(List<SoundInstance> sounds){}
+    public void updateSounds(List<SoundInstance> sounds){
+    	if(!isValid){
+    		for(SoundInstance sound : sounds){
+    			sound.stop();
+    		}
+    	}
+    }
     
     /**
    	 *  Spawns particles for this entity.  This is called after every render frame, so

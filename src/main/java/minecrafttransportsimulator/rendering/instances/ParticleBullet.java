@@ -6,9 +6,9 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Gun;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
@@ -19,7 +19,6 @@ import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
@@ -75,25 +74,15 @@ public class ParticleBullet extends AParticle{
 		}
 		//Get current velocity and possible damage.
 		double velocity = motion.length();
-		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, null);
+		Damage damage = new Damage("bullet", velocity*bullet.definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, gun, null);
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
-		Map<WrapperEntity, List<BoundingBox>> attackedEntities;
-		if(gun.provider instanceof AEntityBase){
-			attackedEntities = world.attackEntities(damage, ((AEntityBase) gun.provider).wrapper, motion);
-		}else if(gun.provider instanceof PartGun){
-			attackedEntities = world.attackEntities(damage, ((PartGun) gun.provider).vehicle.wrapper, motion);
-		}else if(gun.provider instanceof WrapperEntity){
-			attackedEntities = world.attackEntities(damage, (WrapperEntity) gun.provider, motion);
-		}else{
-			attackedEntities = world.attackEntities(damage, null, motion);
-		}
-		
+		Map<WrapperEntity, List<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
 			for(WrapperEntity entity : attackedEntities.keySet()){
 				if(attackedEntities.get(entity) != null){
-					AEntityBase baseEntity = entity.getBaseEntity();
+					AEntityA_Base baseEntity = entity.getBaseEntity();
 					for(BoundingBox hitBox : attackedEntities.get(entity)){
 						if(hitBox.armorThickness != 0){
 							if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
@@ -103,13 +92,13 @@ public class ParticleBullet extends AParticle{
 						}else if(!(baseEntity instanceof EntityVehicleF_Physics) || ((EntityVehicleF_Physics) baseEntity).getPartAtLocation(hitBox.localCenter) == null){
 							continue;
 						}
-						InterfacePacket.sendToServer(new PacketPartGunBulletHit(hitBox, velocity, bullet, gun, bulletNumber, entity, gunController));
+						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, hitBox, velocity, bullet, bulletNumber, entity, gunController));
 						isValid = false;
 						break;
 					}
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(box, velocity, bullet, gun, bulletNumber, entity, gunController));
+					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, box, velocity, bullet, bulletNumber, entity, gunController));
 					isValid = false;
 				}
 			}
@@ -140,7 +129,7 @@ public class ParticleBullet extends AParticle{
 		
 		//Check proximity fuze against any blocks that might be out front
 		if(bullet.definition.bullet.proximityFuze != 0) {
-			Point3d projectedImpactPoint = gun.getProviderWorld().getBlockHit(position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
+			Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(bullet.definition.bullet.proximityFuze));
 			if(projectedImpactPoint != null) {
 				doBulletHit(position, velocity);
 				return;
@@ -187,7 +176,7 @@ public class ParticleBullet extends AParticle{
 	
 	protected void doBulletHit(BoundingBox hitBox, double velocity) {
 		isValid = false;
-		InterfacePacket.sendToServer(new PacketPartGunBulletHit(hitBox, velocity, bullet, gun, bulletNumber, null, gunController));
+		InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, hitBox, velocity, bullet, bulletNumber, null, gunController));
 		age = maxAge;
 	}
 	
@@ -212,14 +201,14 @@ public class ParticleBullet extends AParticle{
 				case SMOKE: {
 					if(particleObject.transparency == 0f && particleObject.toTransparency == 0F) particleObject.transparency = 1f;
 					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(gun.getProviderWorld(), particlePosition, particleVelocity.copy(), particleObject);
+						currentParticle = new ParticleSuspendedSmoke(world, particlePosition, particleVelocity.copy(), particleObject);
 						InterfaceRender.spawnParticle(currentParticle);
 					}
 					break;
 				}
 				case FLAME: {
 					for(int i=0; i<particleObject.quantity; i++) {
-						currentParticle = new ParticleFlame(gun.getProviderWorld(), particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
+						currentParticle = new ParticleFlame(world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), particleObject.scale);
 						currentParticle.deltaScale = (particleObject.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
 						InterfaceRender.spawnParticle(currentParticle);
 					}

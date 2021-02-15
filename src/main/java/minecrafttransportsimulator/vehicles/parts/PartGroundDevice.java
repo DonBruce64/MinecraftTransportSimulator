@@ -121,8 +121,8 @@ public class PartGroundDevice extends APart{
 					}else{
 						wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
 					}
-					Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, vehicleOn.getController());
-					vehicleOn.world.attackEntities(wheelDamage, this, null);
+					Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, this, vehicleOn.getController());
+					vehicleOn.world.attackEntities(wheelDamage, null);
 					boundingBox.widthRadius -= 0.25;
 					boundingBox.depthRadius -= 0.25;
 				}
@@ -142,7 +142,6 @@ public class PartGroundDevice extends APart{
 		super.remove();
 		if(fakePart != null){
 			fakePart.isValid = false;
-			entityOn.removePart(fakePart, null);
 		}
 	}
 	

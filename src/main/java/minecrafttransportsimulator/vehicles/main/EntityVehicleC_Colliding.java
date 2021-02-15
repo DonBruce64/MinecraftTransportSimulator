@@ -157,9 +157,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			if(partDoorBoxes.containsKey(part)){
 				for(Entry<BoundingBox, JSONDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
 					if(variablesOn.contains(doorEntry.getValue().name)){
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.localAngles).add(part.totalOffset).rotateFine(angles).add(position);
 					}else{
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.localAngles).add(part.totalOffset).rotateFine(angles).add(position);
 					}
 				}
 			}
@@ -175,7 +175,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					for(JSONPartDefinition subPartDef : part.definition.parts){
 						if(packVehicleDef.equals(getPackForSubPart(part.placementDefinition, subPartDef))){
 							//Need to find the delta between our 0-degree position and our current position.
-							Point3d delta = subPartDef.pos.copy().rotateFine(part.totalRotation).subtract(subPartDef.pos);
+							Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
 							box.updateToEntity(this, delta);
 							foundPart = true;
 							break;
@@ -521,8 +521,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Damage all riders, including the controller.
 		WrapperPlayer controller = getController();
-		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, null);
-		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, controller);
+		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, null);
+		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, controller);
 		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);

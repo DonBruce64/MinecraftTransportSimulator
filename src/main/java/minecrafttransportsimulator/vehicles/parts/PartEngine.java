@@ -6,7 +6,6 @@ import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -20,8 +19,6 @@ import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.ParticleDrip;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.sound.InterfaceSound;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
@@ -32,6 +29,7 @@ public class PartEngine extends APart{
 	public boolean oilLeak;
 	public boolean fuelLeak;
 	public boolean brokenStarter;
+	public boolean backfired;
 	public byte reverseGears;
 	public byte currentGear;
 	public int upshiftCountdown;
@@ -49,7 +47,7 @@ public class PartEngine extends APart{
 	public PartEngine linkedEngine;
 	
 	//Internal variables.
-	private boolean backfired;
+	private boolean spawnBackfireParticles;
 	private boolean isPropellerInLiquid;
 	private boolean autoStarterEngaged;
 	private int starterLevel;
@@ -134,6 +132,9 @@ public class PartEngine extends APart{
 	@Override
 	public void update(){
 		super.update();
+		//Reset backfire state.
+		backfired = false;
+		
 		//Set fuel flow to 0 for the start of this cycle.
 		fuelFlow = 0;
 		
@@ -420,7 +421,7 @@ public class PartEngine extends APart{
 				if(part instanceof PartPropeller){
 					PartPropeller propeller = (PartPropeller) part;
 					havePropeller = true;
-					Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.totalRotation.copy().add(vehicleOn.angles));
+					Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.localAngles.copy().add(vehicleOn.angles));
 					propellerAxialVelocity = vehicleOn.motion.dotProduct(propellerThrustAxis);
 					propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
 					
@@ -469,7 +470,7 @@ public class PartEngine extends APart{
 			
 			///Update variables used for jet thrust.
 			if(definition.engine.jetPowerFactor > 0){
-				Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(totalRotation.copy().add(vehicleOn.angles));
+				Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(localAngles.copy().add(vehicleOn.angles));
 				engineAxialVelocity = vehicleOn.motion.dotProduct(engineThrustAxis);
 				
 				//Check for entities forward and aft of the engine and damage them.
@@ -478,13 +479,13 @@ public class PartEngine extends APart{
 					boundingBox.heightRadius += 0.25;
 					boundingBox.depthRadius += 0.25;
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
-					Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, vehicleOn.getController());
-					world.attackEntities(jetIntake, this, null);
+					Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, vehicleOn.getController());
+					world.attackEntities(jetIntake, null);
 					
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
-					Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, jetIntake.attacker).setFire();
-					world.attackEntities(jetExhaust, this, null);
+					Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, jetIntake.entityResponsible).setFire();
+					world.attackEntities(jetExhaust, null);
 					
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
 					boundingBox.widthRadius -= 0.25;
@@ -554,9 +555,6 @@ public class PartEngine extends APart{
 			}else if(state.equals(EngineStates.RUNNING)){
 				state = EngineStates.ENGINE_OFF;
 				internalFuel = 100;
-				if(world.isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
-				}
 			}
 		}
 	}
@@ -568,14 +566,8 @@ public class PartEngine extends APart{
 					state = EngineStates.MAGNETO_OFF_ES_ON;
 				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
 					state = EngineStates.MAGNETO_ON_ES_ON;
-					if(world.isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
-					}
 				}else if(state.equals(EngineStates.RUNNING)){
 					state =  EngineStates.RUNNING_ES_ON;
-					if(world.isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
-					}
 				}
 			}else{
 				starterLevel = 0;
@@ -605,19 +597,9 @@ public class PartEngine extends APart{
 			pressure = 60;
 		}
 		
-		//Send off packet and start sounds.
+		//Send off packet.
 		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
-		}else{
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_starting"));
-			if(definition.engine.customSoundset != null){
-				for(EngineSound soundDefinition : definition.engine.customSoundset){
-					InterfaceSound.playQuickSound(new SoundInstance(this, soundDefinition.soundName, true));
-				}
-			}else if(internalFuel == 0){
-				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_running", true));
-				InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_supercharger", true));
-			}
 		}
 	}
 	
@@ -632,11 +614,8 @@ public class PartEngine extends APart{
 			return;
 		}
 		
-		//Add a small amount to the starter level from the player's hand, and play cranking sound.
+		//Add a small amount to the starter level from the player's hand.
 		starterLevel += 4;
-		if(world.isClient()){
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_cranking", true));
-		}
 	}
 	
 	public void autoStartEngine(){
@@ -662,11 +641,9 @@ public class PartEngine extends APart{
 			}
 		}
 		
-		//Send off packet and play stopping sound.
+		//Send off packet.
 		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketPartEngine(this, signal));
-		}else{
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_stopping"));
 		}
 	}
 	
@@ -677,16 +654,16 @@ public class PartEngine extends APart{
 		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 		}else{
-			InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_sputter"));
 			backfired = true;
+			spawnBackfireParticles = true;
 		}
 	}
 	
 	protected void explodeEngine(){
 		if(ConfigSystem.configObject.damage.explosions.value){
-			world.spawnExplosion(entityOn, position, 1F, true);
+			world.spawnExplosion(position, 1F, true);
 		}else{
-			world.spawnExplosion(entityOn, position, 0F, false);
+			world.spawnExplosion(position, 0F, false);
 		}
 		isValid = false;
 	}
@@ -875,79 +852,13 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.add(new Point3d(0D, 0D, thrust).rotateCoarse(totalRotation));
+			engineForce.add(new Point3d(0D, 0D, thrust).rotateCoarse(localAngles));
 		}
 		
 		//Finally, return the force we calculated.
 		return engineForce;
 	}
-
 	
-	
-	//--------------------START OF ENGINE SOUND METHODS--------------------
-	
-	@Override
-	public void updateProviderSound(SoundInstance sound){
-		super.updateProviderSound(sound);
-		//If we are using a custom soundset, do that logic. Otherwise, do default sound logic.
-		if(definition.engine.customSoundset != null){
-			for(EngineSound soundDefinition : definition.engine.customSoundset){
-				//For "Advanced" = false:
-				//Interpolate in the form of Y=A*X + B.
-				//In this case, B is the idle offset, A is the slope, X is the RPM, and Y is the output.
-				//For "Advanced" = true:
-				//Y = A*(H^2) + K
-				//Y is output, H is the peak of the sound's "Arch shape", K is the unit of pitch/volume when it is at H (it's peak), and A is how much of a bend the the sound/volume has 
-				double rpmPercentOfMax = Math.max(0, (rpm - startRPM)/definition.engine.maxRPM);
-				float customPitch;
-				float customVolume;
-				if(soundDefinition.pitchAdvanced){
-					customPitch = (float) Math.max((-0.000001 / (soundDefinition.pitchLength/1000)) * Math.pow(rpm - soundDefinition.pitchCenter, 2) + (soundDefinition.pitchLength/20000) + 1, 0);
-				}else{
-					customPitch = (float) Math.max((soundDefinition.pitchMax - soundDefinition.pitchIdle)*rpmPercentOfMax + soundDefinition.pitchIdle, 0);	
-				}			
-				if(soundDefinition.volumeAdvanced){
-					customVolume = (float) Math.max((-0.000001 / (soundDefinition.volumeLength/1000)) * Math.pow(rpm - soundDefinition.volumeCenter, 2) + (soundDefinition.volumeLength/20000) + 1, 0);
-				}else{
-					customVolume = (float) Math.max((soundDefinition.volumeMax - soundDefinition.volumeIdle)*rpmPercentOfMax + soundDefinition.volumeIdle, 0);	
-				}
-				if(sound.soundName.equals(soundDefinition.soundName)){
-					if(!state.running && internalFuel == 0){
-						sound.stop();
-					}else{
-						sound.pitch = customPitch;
-						sound.volume = customVolume;
-					}
-				}
-			}
-		}else{
-			//Update running and supercharger sounds.
-			if(sound.soundName.endsWith("_running")){
-				if(!state.running && internalFuel == 0){
-					sound.stop();
-				}else{
-					//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-					//For steam engines, pitch is just 1 as it's meant to be the sound of a firebox.
-					if(definition.engine.isSteamPowered){
-						sound.pitch = 1.0F;
-					}else{
-						sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
-					}
-				}
-			}else if(sound.soundName.endsWith("_supercharger")){
-				if(!state.running && internalFuel == 0){
-					sound.stop();
-				}else{
-					sound.volume = (float) rpm/definition.engine.maxRPM;
-					if(definition.engine.isSteamPowered){
-						sound.pitch = 1.0F;
-					}else{
-						sound.pitch = (float) (0.35*(1 + Math.max(0, (rpm - startRPM))/(definition.engine.maxRPM < 15000 ? 500 : 5000)));
-					}
-				}
-			}
-		}
-	}
 	
 	//--------------------START OF ENGINE PARTICLE METHODS--------------------
 	
@@ -998,10 +909,6 @@ public class PartEngine extends APart{
 					
 					if(state.running){
 						InterfaceRender.spawnParticle(new ParticleSmoke(world, exhaustOffset, velocityOffset, particleColor.getRed()/255F, particleColor.getGreen()/255F, particleColor.getBlue()/255F, particle.transparency, particle.scale));
-						//Also play steam chuff sound if we are a steam engine.
-						if(definition.engine.isSteamPowered){
-							InterfaceSound.playQuickSound(new SoundInstance(this, definition.packID + ":" + definition.systemName + "_piston"));
-						}
 					}
 					if(definition.engine.flamesOnStartup && state.esOn){
 						InterfaceRender.spawnParticle(new ParticleFlame(world, exhaustOffset, velocityOffset, 1.0F));
@@ -1013,8 +920,8 @@ public class PartEngine extends APart{
 		
 		//If we backfired, render a few puffs.
 		//Will be from the engine or the exhaust if we have any.
-		if(backfired){
-			backfired = false;
+		if(spawnBackfireParticles){
+			spawnBackfireParticles = false;
 			if(placementDefinition.particleObjects != null){
 				for(JSONParticleObject particle : placementDefinition.particleObjects){
 					Point3d exhaustOffset = particle.pos.copy().rotateFine(entityOn.angles).add(entityOn.position);

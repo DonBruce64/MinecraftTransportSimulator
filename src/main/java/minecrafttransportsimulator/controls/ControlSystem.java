@@ -61,8 +61,8 @@ public final class ControlSystem{
 	
 	public static void controlPlayerGun(EntityPlayerGun entity){
 		//Don't send state changes unless we're holding a gun.
-		if(!entity.parts.isEmpty()){
-			InterfacePacket.sendToServer(new PacketPartGun((PartGun) entity.parts.get(0), InterfaceInput.isRightMouseButtonDown()));
+		if(entity.activeGun != null){
+			InterfacePacket.sendToServer(new PacketPartGun(entity.activeGun, InterfaceInput.isRightMouseButtonDown()));
 		}
 	}
 	

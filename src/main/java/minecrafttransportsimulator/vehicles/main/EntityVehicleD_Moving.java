@@ -818,7 +818,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHitchOffset(){
 		if(activeHitchConnection != null){
 			if(activeHitchPart != null){
-				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.totalRotation).add(activeHitchPart.totalOffset); 
+				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.localAngles).add(activeHitchPart.totalOffset); 
 			}else{
 				return activeHitchConnection.pos;
 			}
@@ -834,7 +834,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHookupOffset(){
 		if(activeHookupConnection != null){
 			if(activeHookupPart != null){
-				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.totalRotation).add(activeHookupPart.totalOffset); 
+				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.localAngles).add(activeHookupPart.totalOffset); 
 			}else{
 				return activeHookupConnection.pos;
 			}
@@ -923,12 +923,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					if(!firstConnection.hookup && secondConnection.hookup){
 						Point3d hitchPos = firstConnection.pos.copy();
 						if(optionalFirstPart != null){
-							hitchPos.rotateCoarse(optionalFirstPart.totalRotation).add(optionalFirstPart.totalOffset);
+							hitchPos.rotateCoarse(optionalFirstPart.localAngles).add(optionalFirstPart.totalOffset);
 						}
 						hitchPos.rotateCoarse(firstVehicle.angles).add(firstVehicle.position);
 						Point3d hookupPos = secondConnection.pos.copy();
 						if(optionalSecondPart != null){
-							hookupPos.rotateCoarse(optionalSecondPart.totalRotation).add(optionalSecondPart.totalOffset);
+							hookupPos.rotateCoarse(optionalSecondPart.localAngles).add(optionalSecondPart.totalOffset);
 						}
 						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
 						
@@ -984,8 +984,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				trailer.angles.setTo(angles);
 				trailer.prevAngles.setTo(prevAngles);
 				if(activeHitchPart != null){
-					trailer.angles.add(activeHitchPart.totalRotation);
-					trailer.prevAngles.add(activeHitchPart.totalRotation);
+					trailer.angles.add(activeHitchPart.localAngles);
+					trailer.prevAngles.add(activeHitchPart.localAngles);
 				}
 				EntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
 				while(trailerTrailer != null){

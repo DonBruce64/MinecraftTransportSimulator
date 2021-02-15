@@ -223,7 +223,7 @@ public class BuilderEntity extends Entity{
 				BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
 				for(BoundingBox box : interactable.interactionBoxes){
 					if(box.intersects(explosiveBounds)){
-						interactable.attack(new Damage(source.damageType, amount, box, playerSource).setExplosive());
+						interactable.attack(new Damage(source.damageType, amount, box, null, playerSource).setExplosive());
 					}
 				}
 				lastExplosionPosition = null;
@@ -233,7 +233,7 @@ public class BuilderEntity extends Entity{
 				Point3d attackerPosition = new Point3d(attacker.posX, attacker.posY, attacker.posZ);
 				for(BoundingBox box : interactable.interactionBoxes){
 					if(box.isPointInside(attackerPosition)){
-						damage = new Damage(source.damageType, amount, box, playerSource);
+						damage = new Damage(source.damageType, amount, box, null, playerSource);
 						break;
 					}
 				}
@@ -244,7 +244,7 @@ public class BuilderEntity extends Entity{
 					//We do raytracing here to catch this movement.
 					RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().add(attacker.motionX, attacker.motionY, attacker.motionZ));
 					if(hitRaytrace != null){
-						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, playerSource);
+						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, null, playerSource);
 					}
 				}
 				
@@ -389,12 +389,7 @@ public class BuilderEntity extends Entity{
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
-    	List<AEntityA_Base> activeEntities = AEntityA_Base.getEntities(WrapperWorld.getWrapperFor(event.getWorld()));
-    	
-    	for(int i=0; i<activeEntities.size(); ){
-    		AEntityA_Base activeEntity = activeEntities.get(0);
-    		activeEntity.remove();
-    	}
+    	AEntityA_Base.removaAllEntities(WrapperWorld.getWrapperFor(event.getWorld()));
     }
 	
 	/**

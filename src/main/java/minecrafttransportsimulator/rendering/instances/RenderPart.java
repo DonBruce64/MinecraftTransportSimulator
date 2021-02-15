@@ -80,11 +80,9 @@ public final class RenderPart extends ARenderEntity<APart>{
 			//Not a fake part, do rendering.
 			GL11.glPushMatrix();
 			if(part.definition.ground != null && part.definition.ground.isTread){
-				//Treads don't get translated by y, or z.
-				GL11.glTranslated(part.placementOffset.x, 0, 0);
-			}else{
-				Point3d offset = part.prevTotalOffset.getInterpolatedPoint(part.totalOffset, partialTicks);
-				GL11.glTranslated(offset.x, offset.y, offset.z);
+				//Tread rendering is done via the vehicle, which will assume the part is centered at 0, 0, 0.
+				//We need to undo the offset of the tread part for this routine.
+				GL11.glTranslated(0, -part.placementOffset.y, -part.placementOffset.z);
 			}
 			
 			String partModelLocation = part.definition.getModelLocation();
@@ -104,13 +102,6 @@ public final class RenderPart extends ARenderEntity<APart>{
 			
 			//Rotate the part prior to rendering the displayList.
 			//We will already have been translated to our position prior to this call.
-			Point3d positionRotation = part.prevTotalRotation.getInterpolatedPoint(part.totalRotation, partialTicks);
-			if(!positionRotation.isZero()){
-				GL11.glRotated(positionRotation.y, 0, 1, 0);
-				GL11.glRotated(positionRotation.x, 1, 0, 0);
-				GL11.glRotated(positionRotation.z, 0, 0, 1);
-			}
-
 			Point3d renderingRotation = part.getRenderingRotation(partialTicks, false);
 			if(!renderingRotation.isZero()){
 				GL11.glRotated(renderingRotation.y, 0, 1, 0);

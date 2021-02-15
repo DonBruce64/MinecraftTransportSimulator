@@ -3,14 +3,12 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public abstract class AJSONPartProvider extends AJSONMultiModelProvider{
-    @JSONRequired
-    @JSONDescription("The parts section is simply a list of part spots for this object, and what parts can go into those spots.  These are also used in parts themselves to allow for sub-parts.  Note that all parts with an X pos that is negative will be mirrored along the Z-axis.  This is to allow for asymmetrical parts such as wheels with hubcaps and seats with armrests.  Note that parts may behave differently depending on what they are placed on.  An engine might work well in a car, but it won't do anything on a hoist!")
+    
+	@JSONDescription("The parts section is simply a list of part spots for this object, and what parts can go into those spots.  These are also used in parts themselves to allow for sub-parts.  Note that all parts with an X pos that is negative will be mirrored along the Z-axis.  This is to allow for asymmetrical parts such as wheels with hubcaps and seats with armrests.  Note that parts may behave differently depending on what they are placed on.  An engine might work well in a car, but it won't do anything on a hoist!")
     public List<JSONPartDefinition> parts;
     
-    @JSONRequired
     @JSONDescription("The collision section is simply a list of boxes that MTS uses to determine the collision points of object.  For most cases you can get away with less than a dozen of these, but for larger models with complex shapes you may need more of them.")
     public List<JSONCollisionBox> collision;
     

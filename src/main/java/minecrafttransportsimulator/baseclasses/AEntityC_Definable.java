@@ -9,6 +9,8 @@ import java.util.Set;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -16,8 +18,10 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
+import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -42,14 +46,23 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
+	/**Render data to help us render on the proper tick and time.**/
 	public final RenderTickData renderData;
+	
+	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundVolumeClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
+	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundPitchClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
 	
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition and current subName.
-		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"));
-		this.definition = item.definition;
-		this.subName = data.getString("subName");
+		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
+		if(item != null){
+			this.definition = item.definition;
+			this.subName = item.subName;
+		}else{
+			this.definition = generateDefaultDefinition();
+			this.subName = "";
+		}
 		
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
@@ -59,13 +72,32 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Load variables.
-		variablesOn.addAll(data.getStrings("variablesOn"));
+		this.variablesOn.addAll(data.getStrings("variablesOn"));
 		
 		//Make sure the generic light is in the variable set.
-		variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
+		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
 		
 		//Create render data if we are on the client.
 		this.renderData = world.isClient() ? new RenderTickData(world) : null;
+		
+		//Create all sound clocks.
+		if(definition.rendering != null && definition.rendering.sounds != null){
+			for(JSONSound soundDef : definition.rendering.sounds){
+				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> volumeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();				
+				for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
+					volumeClocks.put(animation, new DurationDelayClock(animation));
+				}
+				soundVolumeClocks.put(soundDef, volumeClocks);
+				
+				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> pitchClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				if(soundDef.pitchAnimations != null){
+					for(JSONAnimationDefinition animation : soundDef.pitchAnimations){
+						pitchClocks.put(animation, new DurationDelayClock(animation));
+					}
+				}
+				soundPitchClocks.put(soundDef, pitchClocks);
+			}
+		}
 	}
 	
 	/**
@@ -73,6 +105,14 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
 		return PackParserSystem.getItem(definition.packID, definition.systemName, subName);
+	}
+	
+	/**
+	 *  Generates the default definition for this entity. Used if the item can't be found.
+	 *  This allows for internally-definable entities.
+	 */
+	public JSONDefinition generateDefaultDefinition(){
+		throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined.  This is NOT allowed.  The entity must be missing its item, but this should be impossible as it shouldn't even have loaded?");
 	}
 	
     /**
@@ -129,16 +169,82 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     public void updateSounds(List<SoundInstance> sounds){
     	super.updateSounds(sounds);
-    	//FIXME update sounds
-    	//Start any looping sounds.
-    	List<JSONSound> soundDefs = definition.rendering != null ? definition.rendering.sounds : null;
-    	if(soundDefs != null){
-			for(JSONSound soundDef : soundDefs){
-				if(soundDef.looping){
-					InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
+    	//Update passed-in sounds to the definitions that created them.    	
+    	//If the sound is playing, but shouldn't be, stop it.
+    	//If the sound isn't playing, but should be, start it.
+		for(SoundInstance sound : sounds){
+			for(JSONSound soundDef : soundVolumeClocks.keySet()){
+				if(sound.soundName.equals(soundDef.name)){
+					//Adjust volume.
+					if(!soundDef.volumeAnimations.isEmpty()){
+						sound.volume = 0;
+						for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
+							if(animation.animationType.equals(AnimationComponentType.TRANSLATION)){
+								sound.volume += getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
+							}else if(animation.animationType.equals(AnimationComponentType.ROTATION)){
+								sound.volume += Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+							}
+						}
+						if(sound.volume < 0){
+							sound.volume = 0;
+						}
+					}
+					
+					//Adjust pitch.
+					if(!soundDef.pitchAnimations.isEmpty()){
+						sound.pitch = 0;
+						for(JSONAnimationDefinition animation : soundDef.pitchAnimations){
+							if(animation.animationType.equals(AnimationComponentType.TRANSLATION)){
+								sound.pitch += getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
+							}else if(animation.animationType.equals(AnimationComponentType.ROTATION)){
+								sound.pitch += Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+							}
+						}
+						if(sound.pitch < 0){
+							sound.pitch = 0;
+						}
+					}
+					break;
 				}
 			}
-    	}
+		}
+		
+		//Next start or stop sounds.
+		for(JSONSound soundDef : soundVolumeClocks.keySet()){
+			//Check if we should be playing this sound.
+			boolean shouldSoundPlay = true;
+			for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
+				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
+					double value = getAnimator().getAnimatedVariableValue(this, animation, 0, null, 0);
+					if(value < animation.clampMin || value > animation.clampMax){
+						shouldSoundPlay = false;
+						break;
+					}
+				}
+			}
+			
+			if(shouldSoundPlay){
+				//Sound should play.  If it's not playing, start it.
+				boolean isSoundPlaying = false;
+				for(SoundInstance sound : sounds){
+					if(sound.soundName.equals(soundDef.name)){
+						isSoundPlaying = true;
+						break;
+					}
+				}
+				if(!isSoundPlaying){
+					InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
+				}
+			}else{
+				//If sound is playing, stop it.
+				for(SoundInstance sound : sounds){
+					if(sound.soundName.equals(soundDef.name)){
+						sound.stop();
+						break;
+					}
+				}
+			}
+		}
     }
 	
 	@Override

@@ -199,10 +199,10 @@ public class PartGun extends APart{
 				//For pitch, we need to find the relative angle of the player to the entity's 0-pitch plane.
 				//When the player rotates their head, they don't do so relative to the pitch of the entity the gun is on, 
 				//so a yaw change can result in a pitch change.
-				double partYawContribution = definition.gun.yawIsInternal ? totalRotation.y : totalRotation.y - prevOrientation.y;
-				double partPitchContribution = definition.gun.pitchIsInternal ? totalRotation.x : totalRotation.x - prevOrientation.x;
+				double partYawContribution = definition.gun.yawIsInternal ? localAngles.y : localAngles.y - prevOrientation.y;
+				double partPitchContribution = definition.gun.pitchIsInternal ? localAngles.x : localAngles.x - prevOrientation.x;
 				double entityPitchContribution = (entityOn.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
-				double entityRollContribution = (entityOn.angles.z + totalRotation.z)*Math.sin(Math.toRadians(partYawContribution));
+				double entityRollContribution = (entityOn.angles.z + localAngles.z)*Math.sin(Math.toRadians(partYawContribution));
 				targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
 				targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
 			}else{
@@ -416,10 +416,10 @@ public class PartGun extends APart{
 		super.updatePositionAndRotation();
 		//Need to use prev orientation here, as otherwise we get into a feedback loop.
 		if(!definition.gun.yawIsInternal){
-			totalRotation.add(0, prevOrientation.y, 0);
+			localAngles.add(0, prevOrientation.y, 0);
 		}
 		if(!definition.gun.pitchIsInternal){
-			totalRotation.add(prevOrientation.x, 0, 0);
+			localAngles.add(prevOrientation.x, 0, 0);
 		}
 	}
 
@@ -473,7 +473,7 @@ public class PartGun extends APart{
 			
 			//Set the bullet's direction the the provider's orientation.
 			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(spreadAngle);
-			bulletDirection.rotateFine(totalRotation).rotateFine(entityOn.angles);
+			bulletDirection.rotateFine(localAngles).rotateFine(entityOn.angles);
 			
 			//If we have a gun with a muzzle velocity, set the bullet's velocity to that.  Otherwise set it to the vehicle's velocity.
 			Point3d bulletVelocity;
@@ -486,7 +486,7 @@ public class PartGun extends APart{
 			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
 			//Then move the bullet to the appropriate firing position.
 			Point3d bulletPosition = getFiringOrigin();
-			bulletPosition.rotateFine(totalRotation).rotateFine(entityOn.angles);
+			bulletPosition.rotateFine(localAngles).rotateFine(entityOn.angles);
 			bulletPosition.add(position);
 
 			//Add the bullet as a particle.
@@ -557,13 +557,13 @@ public class PartGun extends APart{
 			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
 			//Add a little variation to this.
 			Point3d particleVelocity = gunParticle.velocityVector.copy().multiply(1/20D/10D).rotateFine(internalOrientation);
-			particleVelocity.rotateFine(totalRotation).rotateFine(entityOn.angles);
+			particleVelocity.rotateFine(localAngles).rotateFine(entityOn.angles);
 			
 			//Get the particle's initial position.
 			Point3d particlePosition = position.copy();
 			if(gunParticle.pos != null) {
 				particlePosition.add(gunParticle.pos.copy().rotateFine(internalOrientation));
-				particlePosition.rotateFine(totalRotation).rotateFine(entityOn.angles);
+				particlePosition.rotateFine(localAngles).rotateFine(entityOn.angles);
 			}
 
 			//Spawn the appropriate type and amount of particles.

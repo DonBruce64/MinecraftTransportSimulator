@@ -427,7 +427,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
 					rotation.setTo(towedByVehicle.angles).subtract(angles);
 					if(towedByVehicle.activeHitchPart != null){
-						rotation.add(towedByVehicle.activeHitchPart.totalRotation);
+						rotation.add(towedByVehicle.activeHitchPart.localAngles);
 					}
 				}else{
 					//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.

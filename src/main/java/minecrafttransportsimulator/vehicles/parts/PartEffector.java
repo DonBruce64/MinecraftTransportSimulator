@@ -27,7 +27,7 @@ public class PartEffector extends APart{
 		int startingIndex = -definition.effector.blocksWide/2;
 		for(int i=0; i<definition.effector.blocksWide; ++i){
 			int xOffset = startingIndex + i;
-			affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(totalRotation).add(position);
+			affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(localAngles).add(position);
 			if(definition.effector.type.equals(EffectorComponentType.PLANTER) || definition.effector.type.equals(EffectorComponentType.PLOW)){
 				affectedBlocks[i].add(0, -1, 0);
 			}

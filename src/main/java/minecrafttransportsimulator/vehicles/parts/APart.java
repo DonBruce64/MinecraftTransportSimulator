@@ -36,7 +36,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
 	public final Point3d placementOffset;
-	public final Point3d placementRotation;
+	public final Point3d placementAngles;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
@@ -52,9 +52,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	public final Point3d totalOffset;
-	public final Point3d prevTotalOffset;
-	public final Point3d totalRotation;
-	public final Point3d prevTotalRotation;
+	public final Point3d localAngles;
 	public final BoundingBox boundingBox;
 		
 	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
@@ -63,12 +61,10 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementOffset = placementDefinition.pos;
 		this.totalOffset = placementOffset.copy();
-		this.prevTotalOffset = totalOffset.copy();
 		this.placementDefinition = placementDefinition;
 		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
-		this.placementRotation = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
-		this.totalRotation = placementRotation.copy();
-		this.prevTotalRotation = totalRotation.copy();
+		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
+		this.localAngles = placementAngles.copy();
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
@@ -92,8 +88,9 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 			}
 		}
 		
-		//Set initial position.
+		//Set initial position and rotation.
 		this.position.setTo(placementOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		this.angles.setTo(placementAngles);
 	}
 	
 	/**
@@ -130,11 +127,13 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	 */
 	@Override
 	public void update(){
-		prevTotalOffset.setTo(totalOffset);
-		prevTotalRotation.setTo(totalRotation);
+		super.update();
 		updatePositionAndRotation();
 		//If we have a parent part, we need to change our offsets to be relative to it.
-		if(parentPart != null){
+		if(parentPart != null && placementDefinition.isSubPart){
+			totalOffset.setTo(placementOffset);
+			localAngles.setTo(placementAngles);
+			
 			//Get parent offset and rotation.  The parent will have been updated already as it has
 			//to be placed on the vehicle before us, and as such will be before us in the parts list.
 			//Our initial offset needs to be relative to the position of the part on the parent, so 
@@ -143,21 +142,22 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 			
 			//Rotate our current relative offset by the rotation of the parent to get the correct
 			//offset between us and our parent's position in our parent's coordinate system.
-			totalOffset.rotateFine(parentPart.totalRotation);
+			totalOffset.rotateFine(parentPart.localAngles);
 			
-			//Add our parent's rotation to our own so we have a cumulative rotation.
+			//Add our parent's angles to our own so we have a cumulative rotation.
 			//This has the potential for funny rotations if we're both rotated, as we should
 			//apply this rotation about our parent's rotated axis, not our own, but for most situations,
 			//it's close enough.
-			totalRotation.add(parentPart.totalRotation);
+			localAngles.add(parentPart.localAngles);
 			
 			//Now that we have the proper relative offset, add our parent's offset to get our next offset.
 			//This is our final offset point.
 			totalOffset.add(parentPart.totalOffset);
 		}
 		
-		//Set worldpos to our net offset pos on the entity.
+		//Set position and rotation to our net offset pos on the entity.
 		position.setTo(totalOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		angles.setTo(localAngles).add(entityOn.angles);
 	}
 	
 	@Override
@@ -173,7 +173,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	protected void updatePositionAndRotation(){
 		boolean inhibitAnimations = false;
 		totalOffset.set(0D, 0D, 0D);
-		totalRotation.set(0D, 0D, 0D);
+		localAngles.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
 			for(DurationDelayClock clock : clocks){
 				JSONAnimationDefinition animation = clock.definition;
@@ -184,7 +184,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
 							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
-							totalOffset.add(appliedTranslation.rotateFine(totalRotation));
+							totalOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
 					}
@@ -198,11 +198,11 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 							if(!animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-								totalOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(totalRotation));
+								totalOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(localAngles));
 							}
 							
 							//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-							totalRotation.add(appliedRotation);
+							localAngles.add(appliedRotation);
 						}
 						break;
 					}
@@ -230,7 +230,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		
 		//Add on the placement offset and rotation  now that we have our dynamic values.
 		totalOffset.add(placementOffset);
-		totalRotation.add(placementRotation);
+		localAngles.add(placementAngles);
 	}
 	
 	/**

@@ -25,7 +25,7 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	public double endZ;
 	public double endAngle;
 	
-	public TransformTreadRoller(String objectName, JSONAnimationDefinition definition, Float[][] vertices){
+	public TransformTreadRoller(String objectName, Float[][] vertices){
 		super(generateDefaultDefinition());
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		

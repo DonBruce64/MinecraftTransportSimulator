@@ -271,7 +271,7 @@ public final class LegacyCompatSystem{
 		
 		if(definition.engine != null){
 			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
-			if(definition.general.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
+			if(definition.generic.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
 				definition.engine.jetPowerFactor = 1.0F;
 				definition.engine.bypassRatio = definition.engine.gearRatios[0];
 				definition.engine.gearRatios[0] = 1.0F;
@@ -305,9 +305,9 @@ public final class LegacyCompatSystem{
 			}
 		}else{
 			//Check for old ground devices, crates, barrels, effectors, and customs.
-			switch(definition.general.type){
+			switch(definition.generic.type){
 				case("wheel"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.isWheel = true;
 					definition.ground.width = definition.wheel.diameter/2F;
@@ -317,7 +317,7 @@ public final class LegacyCompatSystem{
 					definition.wheel = null;
 					break;
 				}case("skid"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.width = definition.skid.width;
 					definition.ground.height = definition.skid.width;
@@ -325,7 +325,7 @@ public final class LegacyCompatSystem{
 					definition.skid = null;
 					break;
 				}case("pontoon"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.canFloat = true;
 					definition.ground.width = definition.pontoon.width;
@@ -335,7 +335,7 @@ public final class LegacyCompatSystem{
 					definition.pontoon = null;
 					break;
 				}case("tread"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.isTread = true;
 					definition.ground.width = definition.tread.width;
@@ -347,60 +347,59 @@ public final class LegacyCompatSystem{
 					definition.tread = null;
 					break;
 				}case("crate"):{
-					definition.general.type = "interactable_crate";
+					definition.generic.type = "interactable_crate";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.CRATE;
 					definition.interactable.inventoryUnits = 1;
 					definition.interactable.feedsVehicles = true;
 					break;
 				}case("barrel"):{
-					definition.general.type = "interactable_barrel";
+					definition.generic.type = "interactable_barrel";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.BARREL;
 					definition.interactable.inventoryUnits = 1;
 					break;
 				}case("crafting_table"):{
-					definition.general.type = "interactable_crafting_table";
+					definition.generic.type = "interactable_crafting_table";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
 					break;
 				}case("furnace"):{
-					definition.general.type = "interactable_furnace";
+					definition.generic.type = "interactable_furnace";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.FURNACE;
 					break;
 				}case("brewing_stand"):{
-					definition.general.type = "interactable_brewing_stand";
+					definition.generic.type = "interactable_brewing_stand";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
 					break;
 				}case("fertilizer"):{
-					definition.general.type = "effector_fertilizer";
+					definition.generic.type = "effector_fertilizer";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.FERTILIZER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("harvester"):{
-					definition.general.type = "effector_harvester";
+					definition.generic.type = "effector_harvester";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.HARVESTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("planter"):{
-					definition.general.type = "effector_planter";
+					definition.generic.type = "effector_planter";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLANTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("plow"):{
-					definition.general.type = "effector_plow";
+					definition.generic.type = "effector_plow";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLOW;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("custom"):{
-					definition.general.type = "generic";
-					definition.generic = definition.new JSONPartGeneric();
+					definition.generic.type = "generic";
 					definition.generic.height = definition.custom.height;
 					definition.generic.width = definition.custom.width;
 					definition.custom = null;
@@ -409,12 +408,12 @@ public final class LegacyCompatSystem{
 			}
 			
 			//If the part is a ground_ type, and canGoFlat, auto-set flat height.
-			if(definition.general.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
+			if(definition.generic.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
 				definition.ground.flatHeight = definition.ground.height/2F;
 			}
 			
 			//If the part is a seat, and doesn't have a seat sub-section, add one.
-			if(definition.general.type.startsWith("seat") && definition.seat == null){
+			if(definition.generic.type.startsWith("seat") && definition.seat == null){
 				definition.seat = definition.new JSONPartSeat();
 			}
 		}
@@ -439,7 +438,7 @@ public final class LegacyCompatSystem{
 		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
-			if(definition.general.type.startsWith("engine")){
+			if(definition.generic.type.startsWith("engine")){
 				if(definition.rendering == null){
 					definition.rendering = new JSONRendering();
 				}
@@ -447,6 +446,43 @@ public final class LegacyCompatSystem{
 					definition.rendering.sounds = new ArrayList<JSONSound>();
 				}
 				
+				//Starting sound plays when engine goes from stopped to running.
+				JSONSound startingSound = new JSONSound();
+				startingSound.name = definition.packID + ":" + definition.systemName + "_starting";
+				startingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition startingVolumeDef = new JSONAnimationDefinition();
+				startingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				startingVolumeDef.variable = "engine_running";
+				startingVolumeDef.clampMin = 1.0F;
+				startingVolumeDef.clampMax = 1.0F;
+				startingSound.volumeAnimations.add(startingVolumeDef);
+				definition.rendering.sounds.add(startingSound);
+				
+				//Stopping sound plays when engine goes from running to stopped.
+				JSONSound stoppingSound = new JSONSound();
+				stoppingSound.name = definition.packID + ":" + definition.systemName + "_stopping";
+				stoppingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition stoppingVolumeDef = new JSONAnimationDefinition();
+				stoppingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				stoppingVolumeDef.variable = "engine_running";
+				stoppingVolumeDef.clampMin = 0.0F;
+				stoppingVolumeDef.clampMax = 0.0F;
+				stoppingSound.volumeAnimations.add(stoppingVolumeDef);
+				definition.rendering.sounds.add(stoppingSound);
+				
+				//Sputtering sound plays when engine backfires.
+				JSONSound sputteringSound = new JSONSound();
+				sputteringSound.name = definition.packID + ":" + definition.systemName + "_sputter";
+				sputteringSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition sputteringVolumeDef = new JSONAnimationDefinition();
+				sputteringVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				sputteringVolumeDef.variable = "engine_backfired";
+				sputteringVolumeDef.clampMin = 1.0F;
+				sputteringVolumeDef.clampMax = 1.0F;
+				sputteringSound.volumeAnimations.add(sputteringVolumeDef);
+				definition.rendering.sounds.add(sputteringSound);
+				
+				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
 				crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
 				crankingSound.looping = true;
@@ -475,7 +511,30 @@ public final class LegacyCompatSystem{
 				}
 				definition.rendering.sounds.add(crankingSound);
 				
-			}else if(definition.general.type.startsWith("gun")){
+				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
+				JSONSound runningSound = new JSONSound();
+				runningSound.name = definition.packID + ":" + definition.systemName + "_running";
+				runningSound.looping = true;
+				runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
+				runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				runningVolumeDef.variable = "engine_running";
+				runningVolumeDef.clampMin = 1.0F;
+				runningVolumeDef.clampMax = 1.0F;
+				runningSound.volumeAnimations.add(runningVolumeDef);
+				
+				runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
+				runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
+				runningPitchDef.variable = "engine_rpm";
+				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+				runningPitchDef.axis = new Point3d(0, 0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000));
+				runningPitchDef.offset = 0.35F;
+				runningSound.pitchAnimations.add(runningPitchDef);
+				definition.rendering.sounds.add(runningSound);
+				
+				
+			}else if(definition.generic.type.startsWith("gun")){
 				if(definition.rendering == null){
 					definition.rendering = new JSONRendering();
 				}
@@ -630,7 +689,7 @@ public final class LegacyCompatSystem{
 		//Move pole general properties to new location.
 		if(definition.general.type != null){
 			definition.pole = definition.new JSONPoleGeneric();
-			definition.pole.type = PoleComponentType.valueOf(definition.general.type);
+			definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase());
 			definition.general.type = null;
 			definition.pole.radius = definition.general.radius;
 			definition.general.radius = 0;
@@ -638,6 +697,32 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performDecorLegacyCompats(JSONDecor definition){
+		//Move decor general properties to new location.
+		if(definition.decor == null){
+			definition.decor = definition.new JSONDecorGeneric();
+			if(definition.general.type != null){
+				definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase());
+				definition.general.type = null;
+			}
+			definition.decor.width = definition.general.width;
+			definition.general.width = 0;
+			definition.decor.width = definition.general.height;
+			definition.general.height = 0;
+			definition.decor.depth = definition.general.depth;
+			definition.general.depth = 0;
+			definition.decor.itemTypes = definition.general.itemTypes;
+			definition.general.itemTypes = null;
+			definition.decor.partTypes = definition.general.partTypes;
+			definition.general.partTypes = null;
+	    	definition.decor.items = definition.general.items;
+	    	definition.general.items = null;
+		}
+		
+		//If we are a decor without a type, set us to generic.
+		if(definition.decor.type == null){
+			definition.decor.type = DecorComponentType.GENERIC;
+		}
+		
 		//If we are a decor without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
 			definition.definitions = new ArrayList<JSONSubDefinition>();
@@ -687,27 +772,6 @@ public final class LegacyCompatSystem{
 				}
 			}
 		}
-		
-		//Move decor general properties to new location.
-		if(definition.general.width > 0){
-			if(definition.general.type != null){
-				definition.decor.type = DecorComponentType.valueOf(definition.general.type);
-				definition.general.type = null;
-			}
-			definition.decor = definition.new JSONDecorGeneric();
-			definition.decor.width = definition.general.width;
-			definition.general.width = 0;
-			definition.decor.width = definition.general.height;
-			definition.general.height = 0;
-			definition.decor.depth = definition.general.depth;
-			definition.general.depth = 0;
-			definition.decor.itemTypes = definition.general.itemTypes;
-			definition.general.itemTypes = null;
-			definition.decor.partTypes = definition.general.partTypes;
-			definition.general.partTypes = null;
-	    	definition.decor.items = definition.general.items;
-	    	definition.general.items = null;
-		}
 	}
 	
 	private static void performItemLegacyCompats(JSONItem definition){
@@ -715,7 +779,7 @@ public final class LegacyCompatSystem{
 		if(definition.item == null){
 			definition.item = definition.new JSONItemGeneric();
 			if(definition.general.type != null){
-				definition.item.type = ItemComponentType.valueOf(definition.general.type);
+				definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase());
 				definition.general.type = null;
 			}
 		}

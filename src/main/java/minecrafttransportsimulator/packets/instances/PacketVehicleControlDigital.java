@@ -54,7 +54,7 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 					boolean matchingConnection = false;
 					boolean trailerInRange = false;
 					for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
+						if(entity instanceof EntityVehicleF_Physics && !entity.equals(vehicle)){
 							switch(vehicle.tryToConnect((EntityVehicleF_Physics) entity)){
 								case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect")); return false;
 								case TRAILER_TOO_FAR : matchingConnection = true; break;

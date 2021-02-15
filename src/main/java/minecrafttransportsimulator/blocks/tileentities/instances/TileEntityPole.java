@@ -11,12 +11,14 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -34,8 +36,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	
 	public TileEntityPole(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
-		//FIXME add legacy loader here to prevent corrupition of old worlds.
-		
 		//Load components back in.
 		for(Axis axis : Axis.values()){
 			if(!axis.equals(Axis.NONE)){
@@ -44,6 +44,29 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
 					components.put(axis, newComponent);
 				}
+			}
+		}
+		
+		//TODO remove legacy loader a few versions down the line.
+		for(Axis axis : Axis.values()){
+			String componentPackID = data.getString("packID" + axis.ordinal());
+			if(!componentPackID.isEmpty()){
+				String componentSystemName = data.getString("systemName" + axis.ordinal());
+				String componentSubName = data.getString("subName" + axis.ordinal());
+				ItemPoleComponent poleItem = PackParserSystem.getItem(componentPackID, componentSystemName, componentSubName);
+				
+				WrapperNBT fakeData = new WrapperNBT();
+				fakeData.setString("packID", componentPackID);
+				fakeData.setString("systemName", componentSystemName);
+				fakeData.setString("subName", componentSubName);
+				if(poleItem.definition.rendering != null && poleItem.definition.rendering.textObjects != null){
+					for(int i=0; i<poleItem.definition.rendering.textObjects.size(); ++i){
+						fakeData.setString("textLine" + i, data.getString("textLine" + axis.ordinal() + i));
+					}
+				}
+				
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, fakeData);
+				components.put(axis, newComponent);
 			}
 		}
 		

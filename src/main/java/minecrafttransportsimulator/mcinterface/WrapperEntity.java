@@ -16,8 +16,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.World;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
  * and motion variables for entities, as well as setting their riding statuses.
@@ -83,7 +86,14 @@ public class WrapperEntity{
 	 */
 	public void setRiding(AEntityD_Interactable<?> entityToRide){
 		if(entityToRide != null){
-			entity.startRiding(entityToRide.wrapper.entity, true);
+			//Get the builder for this entity and set the player to riding it.
+			AxisAlignedBB searchBounds = new AxisAlignedBB(new BlockPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z)).grow(World.MAX_ENTITY_RADIUS);
+			for(BuilderEntity builder : getWorld().world.getEntitiesWithinAABB(BuilderEntity.class, searchBounds)){
+				if(entityToRide.equals(builder.entity)){
+					entity.startRiding(builder, true);
+					return;
+				}
+			}
 		}else{
 			entity.dismountRidingEntity();
 		}
@@ -274,17 +284,17 @@ public class WrapperEntity{
 			public ITextComponent getDeathMessage(EntityLivingBase player){
 				EntityLivingBase recentEntity = player.getAttackingEntity();
 				if(recentEntity != null){//Player engaged with another player...
-					if(damage.attacker != null){//and then was killed by another player.
+					if(damage.entityResponsible != null){//and then was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 
-								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName(), recentEntity.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName(), recentEntity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.player", 
 								new Object[] {player.getDisplayName(), recentEntity.getDisplayName()});
 					}
 				}else{//Player was minding their own business...
-					if(damage.attacker != null){//and was killed by another player.
+					if(damage.entityResponsible != null){//and was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.null", 
-								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.null", 
 								new Object[] {player.getDisplayName()});

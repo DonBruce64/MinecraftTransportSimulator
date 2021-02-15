@@ -112,7 +112,7 @@ public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>
 			if(rightClick){
 				part.interact(player);
 			}else{
-				part.attack(new Damage("player", 1.0F, part.boundingBox, player));
+				part.attack(new Damage("player", 1.0F, part.boundingBox, null, player));
 			}
 		}else{
 			//Check if we clicked a door.

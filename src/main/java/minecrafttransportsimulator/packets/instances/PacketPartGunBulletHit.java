@@ -83,7 +83,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 				//If we are an explosive bullet, blow up at our current position.
 				//Otherwise do attack logic.
 				if(bulletDefinition.bullet.types.contains("explosive")){
-					world.spawnExplosion(gun.getController(), box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
+					world.spawnExplosion(box.globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
@@ -92,7 +92,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 							//Create damage object and attack the entity.
 							WrapperEntity attacker = world.getEntity(controllerEntityID);
 							double damageAmount = bulletVelocity*bulletDefinition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
-							Damage damage = new Damage("bullet", damageAmount, box, attacker).ignoreCooldown();
+							Damage damage = new Damage("bullet", damageAmount, box, gun, attacker).ignoreCooldown();
 							if(bulletDefinition.bullet.types.contains("water")){
 								damage.isWater = true;
 							}

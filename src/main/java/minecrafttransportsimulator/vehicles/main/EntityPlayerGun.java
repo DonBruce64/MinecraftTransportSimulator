@@ -43,15 +43,6 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	
 	public EntityPlayerGun(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
 		super(world, data);
-		//Add fake JSON for our gun part definition.
-		JSONPartDefinition fakeDef = new JSONPartDefinition();
-		fakeDef.pos = new Point3d();
-		fakeDef.rot = new Point3d();
-		fakeDef.types = new ArrayList<String>();
-		fakeDef.maxValue = Float.MAX_VALUE;
-		definition.parts = new ArrayList<JSONPartDefinition>();
-		definition.parts.add(fakeDef);
-		
 		//Get the player spawning us.
 		if(playerSpawning != null){
 			//Newly-spawned entity.
@@ -87,6 +78,19 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		}else{
 			playerServerGuns.put(player.getUUID(), this);
 		}
+	}
+	
+	@Override
+	public JSONPlayerGun generateDefaultDefinition(){
+		JSONPlayerGun defaultDefinition = new JSONPlayerGun();
+		JSONPartDefinition fakeDef = new JSONPartDefinition();
+		fakeDef.pos = new Point3d();
+		fakeDef.rot = new Point3d();
+		fakeDef.types = new ArrayList<String>();
+		fakeDef.maxValue = Float.MAX_VALUE;
+		defaultDefinition.parts = new ArrayList<JSONPartDefinition>();
+		defaultDefinition.parts.add(fakeDef);
+		return defaultDefinition;
 	}
 	
 	@Override

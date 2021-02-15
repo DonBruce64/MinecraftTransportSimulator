@@ -281,7 +281,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 					explosivePower += ((PartInteractable) part).getExplosiveContribution();
 				}
 			}
-			world.spawnExplosion(this, location, explosivePower + fuelTank.getExplosiveness() + 1D, true);
+			world.spawnExplosion(location, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
 		
 		//If we are being towed, unhook us from our tower.

@@ -70,7 +70,7 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			if(seat.definition.seat.heightScale != 0){
 				seatYPos *= seat.definition.seat.heightScale;
 			}
-			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
+			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.localAngles).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset);
 			rider.setVelocity(motion);
 			
@@ -123,7 +123,7 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 				//Need to invert the lookup as location may be null from the builder.
 				//Rider won't be, as it's required, so we can use it to get the actual location.
 				PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-				rider.setYaw(angles.y + seat.totalRotation.y);
+				rider.setYaw(angles.y + seat.localAngles.y);
 			}
 		}
 		

@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  */
 public abstract class AEntityA_Base{
 	/**List of created entities.  Keyed to world instances and then their {@link #lookupID}**/
-	private static Map<WrapperWorld, List<AEntityA_Base>> createdEntities = new HashMap<WrapperWorld, List<AEntityA_Base>>();
+	private static final Map<WrapperWorld, HashMap<Integer, AEntityA_Base>> createdEntities = new HashMap<WrapperWorld, HashMap<Integer, AEntityA_Base>>();
+	/**Internal ID counter.**/
+	private static int lookupIDCounter = 0;
 	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
 	public final int lookupID;
 	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.  Ideal if you need a static reference to the entity.**/
@@ -43,23 +46,15 @@ public abstract class AEntityA_Base{
 		this.world = world;
 		
 		//Get the list of entities we belong to.
-		List<AEntityA_Base> worldEntities = createdEntities.get(world);
+		HashMap<Integer, AEntityA_Base> worldEntities = createdEntities.get(world);
 		if(worldEntities == null){
-			worldEntities = new ArrayList<AEntityA_Base>();
-			//Add a null entry for the first entity as we don't want to use ID 0.
-			worldEntities.add(null);
+			worldEntities = new HashMap<Integer, AEntityA_Base>();
 			createdEntities.put(world, worldEntities);
 		}
 		
 		//Get our lookupID, or make a new one.
-		int savedLookupID = data.getInteger("lookupID");
-		if(savedLookupID == 0){
-			this.lookupID = worldEntities.size();
-		}else{
-			this.lookupID = savedLookupID;
-			
-		}
-		createdEntities.get(world).add(this);
+		this.lookupID = world.isClient() ? data.getInteger("lookupID") : lookupIDCounter++;
+		worldEntities.put(lookupID, this);
 	}
 	
 	/**
@@ -68,11 +63,12 @@ public abstract class AEntityA_Base{
 	 */
 	@SuppressWarnings("unchecked")
 	public static <EntityType extends AEntityA_Base> EntityType getEntity(WrapperWorld world, int lookupID){
-		List<AEntityA_Base> entities = createdEntities.get(world);
-		if(entities != null && entities.size() > lookupID){
+		HashMap<Integer, AEntityA_Base> entities = createdEntities.get(world);
+		if(entities != null){
 			return (EntityType) entities.get(lookupID);
+		}else{
+			return null;
 		}
-		return null;
 	}
 	
 	/**
@@ -83,9 +79,9 @@ public abstract class AEntityA_Base{
 	 */
 	@SuppressWarnings("unchecked")
 	public static <EntityType extends AEntityA_Base> EntityType getEntity(WrapperWorld world, String uniqueUUID){
-		List<AEntityA_Base> entities = createdEntities.get(world);
+		HashMap<Integer, AEntityA_Base> entities = createdEntities.get(world);
 		if(entities != null){
-			for(AEntityA_Base entity : entities){
+			for(AEntityA_Base entity : entities.values()){
 				if(entity.uniqueUUID.equals(uniqueUUID)){
 					return (EntityType) entity;
 				}
@@ -97,8 +93,24 @@ public abstract class AEntityA_Base{
 	/**
 	 * Call to get all entities from the world.
 	 */
-	public static List<AEntityA_Base> getEntities(WrapperWorld world){
-		return createdEntities.get(world);
+	public static Collection<AEntityA_Base> getEntities(WrapperWorld world){
+		return createdEntities.get(world).values();
+	}
+	
+	/**
+	 * Call this if you need to remove all entities from the world.  Used mainly when
+	 * a world is un-loaded because no players are in it anymore.
+	 */
+	public static void removaAllEntities(WrapperWorld world){
+		HashMap<Integer, AEntityA_Base> entityMap = createdEntities.get(world);
+		if(entityMap != null){
+			//Need to copy the IDs so we don't CME the map keys.
+			List<Integer> entityLookupIDs = new ArrayList<Integer>();
+			entityLookupIDs.addAll(entityMap.keySet());
+			for(Integer lookupID : entityLookupIDs){
+				entityMap.get(lookupID).remove();
+			}
+		}
 	}
 	
 	 /**

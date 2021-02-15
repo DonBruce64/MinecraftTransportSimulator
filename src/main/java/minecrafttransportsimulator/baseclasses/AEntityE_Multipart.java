@@ -105,9 +105,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	public void remove(){
 		super.remove();
 		//Call all the part removal methods to ensure they save their states properly.
-		//We do this via for-next loop to prevent a CME if the part modifies the part list.
-		for(int i=0; i<parts.size(); ){
-			parts.get(0).remove();
+		for(APart part : parts){
+			part.remove();
 		}
 	}
 	
