@@ -72,7 +72,7 @@ public class InterfaceEventsCamera{
 	    			customCameraIndex = 0;
 	    		}
 	    		
-	    		//If our seat is set to automatically use custom cameras try to get one.
+	    		//If our seat is set to automatically use custom cameras, enable them.
         		if(!enableCustomCameras && sittingSeat != null && sittingSeat.placementDefinition.forceCameras){
     				enableCustomCameras = true;
 	    			customCameraIndex = 0;
@@ -131,12 +131,6 @@ public class InterfaceEventsCamera{
 					
 					//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
 					if(camera != null){
-						//Need to orient our custom camera.  Custom cameras do viewpoint rendering.
-						//This means everything happens in the opposite order of model creation.
-						//As this is the case, all rotations are applied as ZXY, not YXZ.
-						//This also means all signs are inverted for all operations.
-						//Finally, it means that rotation operations do NOT affect the matrix origin.
-						
 						//Set current overlay for future calls.
 						customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
 	        			
@@ -189,37 +183,22 @@ public class InterfaceEventsCamera{
 	        				}
 	        			}
 						
-	    				//Now that the transformed camera is ready, add the camera offset position and rotation.
-	    				//This may be for a part, in which case we need to offset by the part's position/rotation as well.
-						cameraPosition.add(camera.pos);
+	    				//Now that the transformed camera is ready, add the camera initial offset position and rotation.
+						Point3d entityAnglesDelta = cameraProvider.angles.copy().subtract(cameraProvider.prevAngles).multiply(partialTicks).add(cameraProvider.prevAngles);
+						cameraRotation.add(entityAnglesDelta);
+						cameraPosition.add(camera.pos.copy().rotateFine(entityAnglesDelta));
 	    				if(camera.rot != null){
 	    					cameraRotation.add(camera.rot);
 	    				}
-	    				//FIXME may not need this if we use parts as providers?
-	    				/*
-	    				if(cameraProvider instanceof APart){
-	    					APart part = (APart) cameraProvider;
-		    				if(part != null){
-		    					Point3d factoredRotation = part.totalRotation.copy().subtract(part.prevTotalRotation).multiply(partialTicks).add(part.prevTotalRotation);
-		    					cameraPosition.rotateFine(factoredRotation).add(part.totalOffset);
-		    					cameraRotation.add(factoredRotation);
-							}
-	    				}*/
 	    				
-	    				//Camera position is set.
-	    				//If we are on a vehicle, do vehicle alignment.  Otherwise, just align to the entity.
-	    				//AEntityBase providerEntity = vehicle != null ? vehicle : playerGunEntity;
-	    				Point3d providerSmoothedRotation = cameraProvider.prevAngles.getInterpolatedPoint(cameraProvider.angles, partialTicks);
-						cameraPosition.rotateFine(providerSmoothedRotation);
-						cameraRotation.add(providerSmoothedRotation);
-	    				if(vehicle != null){
-							//Camera is positioned and rotated to match the entity.  Do OpenGL transforms to set it.
-							//Get the distance from the vehicle's center point to the rendered player to get a 0,0,0 starting point.
-		        			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-							Point3d vehiclePositionDelta = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
-							vehiclePositionDelta.subtract(player.getRenderedPosition(partialTicks).add(0, player.getEyeHeight(), 0));
-							cameraPosition.add(vehiclePositionDelta);
-	    				}
+	    				//Camera is positioned and rotated to match the entity.  Do OpenGL transforms to set it.
+						//Get the distance from the entity's center point to the rendered player to get a 0,0,0 starting point.
+	        			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
+						Point3d entityPositionDelta = cameraProvider.position.copy().subtract(cameraProvider.prevPosition).multiply(partialTicks).add(cameraProvider.prevPosition);
+						entityPositionDelta.subtract(player.getRenderedPosition(partialTicks).add(0, player.getEyeHeight(), 0));
+						cameraPosition.add(entityPositionDelta);
+						
+						
 						
 						//Rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
 	            		GL11.glRotated(180, 0, 1, 0);
@@ -282,7 +261,7 @@ public class InterfaceEventsCamera{
 	        		customCameraIndex = 0;
 	    		}
 	    		if(sittingSeat != null){
-	    			GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, -zoomLevel);
+	    			GL11.glTranslated(-sittingSeat.localOffset.x, 0F, -zoomLevel);
 	    		}
 	        }else{
 	        	//Assuming inverted third-person mode.
@@ -301,7 +280,7 @@ public class InterfaceEventsCamera{
 							}
 						}
 			        	if(sittingSeat != null){
-			        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
+			        		GL11.glTranslated(-sittingSeat.localOffset.x, 0F, zoomLevel);
 			        	}
 		        	}else if(playerGunEntity != null && playerGunEntity.activeGun != null && player.isSneaking()){
 		        		if(playerGunEntity.activeGun.definition.rendering != null && playerGunEntity.activeGun.definition.rendering.cameraObjects != null){

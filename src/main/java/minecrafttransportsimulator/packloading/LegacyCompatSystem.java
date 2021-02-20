@@ -42,11 +42,11 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
 	
-	public static void performLegacyCompats(AJSONItem definition){
+	public static void performLegacyCompats(AJSONItem definition, String packID, String systemName){
 		if(definition instanceof JSONVehicle){
 			performVehicleLegacyCompats((JSONVehicle) definition);
 		}else if(definition instanceof JSONPart){
-			performPartLegacyCompats((JSONPart) definition);
+			performPartLegacyCompats((JSONPart) definition, packID, systemName);
 		}else if(definition instanceof JSONInstrument){
 			performInstrumentLegacyCompats((JSONInstrument) definition);
 		}else if(definition instanceof JSONPoleComponent){
@@ -237,7 +237,7 @@ public final class LegacyCompatSystem{
 		}
     }
 	
-	private static void performPartLegacyCompats(JSONPart definition){
+	private static void performPartLegacyCompats(JSONPart definition, String packID, String systemName){
 		//Move general things to generic section.
 		if(definition.general.type != null){
 			if(definition.generic == null){
@@ -438,7 +438,7 @@ public final class LegacyCompatSystem{
 		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
-			if(definition.generic.type.startsWith("engine")){
+			if(definition.engine != null){
 				if(definition.rendering == null){
 					definition.rendering = new JSONRendering();
 				}
@@ -448,7 +448,7 @@ public final class LegacyCompatSystem{
 				
 				//Starting sound plays when engine goes from stopped to running.
 				JSONSound startingSound = new JSONSound();
-				startingSound.name = definition.packID + ":" + definition.systemName + "_starting";
+				startingSound.name = packID + ":" + systemName + "_starting";
 				startingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition startingVolumeDef = new JSONAnimationDefinition();
 				startingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
@@ -460,7 +460,7 @@ public final class LegacyCompatSystem{
 				
 				//Stopping sound plays when engine goes from running to stopped.
 				JSONSound stoppingSound = new JSONSound();
-				stoppingSound.name = definition.packID + ":" + definition.systemName + "_stopping";
+				stoppingSound.name = packID + ":" + systemName + "_stopping";
 				stoppingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition stoppingVolumeDef = new JSONAnimationDefinition();
 				stoppingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
@@ -472,7 +472,7 @@ public final class LegacyCompatSystem{
 				
 				//Sputtering sound plays when engine backfires.
 				JSONSound sputteringSound = new JSONSound();
-				sputteringSound.name = definition.packID + ":" + definition.systemName + "_sputter";
+				sputteringSound.name = packID + ":" + systemName + "_sputter";
 				sputteringSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition sputteringVolumeDef = new JSONAnimationDefinition();
 				sputteringVolumeDef.animationType = AnimationComponentType.VISIBILITY;
@@ -484,7 +484,7 @@ public final class LegacyCompatSystem{
 				
 				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
-				crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
+				crankingSound.name = packID + ":" + systemName + "_cranking";
 				crankingSound.looping = true;
 				crankingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingVolumeDef = new JSONAnimationDefinition();
@@ -513,7 +513,7 @@ public final class LegacyCompatSystem{
 				
 				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
 				JSONSound runningSound = new JSONSound();
-				runningSound.name = definition.packID + ":" + definition.systemName + "_running";
+				runningSound.name = packID + ":" + systemName + "_running";
 				runningSound.looping = true;
 				runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
@@ -534,7 +534,7 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(runningSound);
 				
 				
-			}else if(definition.generic.type.startsWith("gun")){
+			}else if(definition.gun != null){
 				if(definition.rendering == null){
 					definition.rendering = new JSONRendering();
 				}

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
@@ -17,8 +18,8 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.AnimationsPlayerGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
-import net.minecraft.item.ItemStack;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
@@ -34,7 +35,6 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	
 	public final WrapperPlayer player;
 	private int hotbarSelected = -1;
-	private ItemStack gunStack;
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
 	
@@ -83,10 +83,25 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	@Override
 	public JSONPlayerGun generateDefaultDefinition(){
 		JSONPlayerGun defaultDefinition = new JSONPlayerGun();
+		defaultDefinition.packID = "dummy";
+		defaultDefinition.systemName = "dummy";
+		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
 		fakeDef.pos = new Point3d();
 		fakeDef.rot = new Point3d();
 		fakeDef.types = new ArrayList<String>();
+		//Look though all gun types and add them.
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			if(packItem instanceof ItemPart){
+				ItemPart partItem = (ItemPart) packItem;
+				if(partItem.isHandHeldGun()){
+					if(!fakeDef.types.contains(partItem.definition.generic.type)){
+						fakeDef.types.add(partItem.definition.generic.type);
+					}
+				}
+			}
+		}
+		
 		fakeDef.maxValue = Float.MAX_VALUE;
 		defaultDefinition.parts = new ArrayList<JSONPartDefinition>();
 		defaultDefinition.parts.add(fakeDef);
@@ -97,7 +112,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	public void update(){
 		super.update();
 		//Make sure player is still valid and haven't left the server.
-		if(player.isValid()){
+		if(player != null && player.isValid()){
 			//Set our position to the player's position.  We may update this later if we have a gun.
 			position.setTo(player.getPosition());
 			motion.setTo(player.getVelocity());
@@ -105,24 +120,21 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			//Get the current gun.
 			activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
 			
-			//Check to make sure if we had a gun, that it didn't change.
-			if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
-				saveGun(true);
-			}
-			
-			//If we don't have a gun yet, try to get the current one if the player is holding one.
-			if(activeGun == null){
-				AItemBase heldItem = player.getHeldItem();
-				if(heldItem instanceof ItemPart){
-					ItemPart heldPart = (ItemPart) heldItem;
-					if(heldPart.isHandHeldGun() && !world.isClient()){
-						gunStack = player.getHeldStack();
-						//Need to add the type here to allow us to add the part.
-						if(!definition.parts.get(0).types.contains(heldPart.definition.generic.type)){
-							definition.parts.get(0).types.add(heldPart.definition.generic.type);
+			if(!world.isClient()){
+				//Check to make sure if we had a gun, that it didn't change.
+				if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
+					saveGun(true);
+				}
+				
+				//If we don't have a gun yet, try to get the current one if the player is holding one.
+				if(activeGun == null){
+					AItemBase heldItem = player.getHeldItem();
+					if(heldItem instanceof ItemPart){
+						ItemPart heldPart = (ItemPart) heldItem;
+						if(heldPart.isHandHeldGun()){
+							addPartFromItem(heldPart, new WrapperNBT(player.getHeldStack()), new Point3d(), false);
+							hotbarSelected = player.getHotbarIndex();
 						}
-						addPartFromItem(heldPart, new WrapperNBT(gunStack), new Point3d(), false);
-						hotbarSelected = player.getHotbarIndex();
 					}
 				}
 			}
@@ -172,6 +184,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		}else{
 			remove();
 		}
+		
+		//Update the gun now, if we have one.
+		updateParts();
 	}
 	
 	@Override
@@ -194,10 +209,10 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	private void saveGun(boolean remove){
 		WrapperNBT data = new WrapperNBT();
 		activeGun.save(data);
-		gunStack.setTagCompound(data.tag);
+		player.getHeldStack().setTagCompound(data.tag);
 		didGunFireLastTick = false;
 		if(remove){
-			activeGun.remove();
+			removePart(activeGun, null);
 			activeGun = null;
 		}
 	}

@@ -108,7 +108,9 @@ public abstract class AEntityA_Base{
 			List<Integer> entityLookupIDs = new ArrayList<Integer>();
 			entityLookupIDs.addAll(entityMap.keySet());
 			for(Integer lookupID : entityLookupIDs){
-				entityMap.get(lookupID).remove();
+				if(entityMap.containsKey(lookupID)){
+					entityMap.get(lookupID).remove();
+				}
 			}
 		}
 	}

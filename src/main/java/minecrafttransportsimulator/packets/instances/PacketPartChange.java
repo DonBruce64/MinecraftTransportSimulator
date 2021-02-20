@@ -21,7 +21,6 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 	private final Point3d partOffset;
 	private final ItemPart partItem;
 	private final WrapperNBT partData;
-	private boolean clickedPart;
 	private Point3d parentPartOffset;
 	
 	public PacketPartChange(AEntityE_Multipart<?> entity, Point3d partOffset){
@@ -32,13 +31,13 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 		this.parentPartOffset = null;
 	}
 	
-	public PacketPartChange(AEntityE_Multipart<?> entity, Point3d partOffset, ItemPart partItem, WrapperNBT partData, APart partClicked){
+	public PacketPartChange(AEntityE_Multipart<?> entity, APart partAdded){
 		super(entity);
-		this.partOffset = partOffset;
-		this.partItem = partItem;
-		this.partData = partData;
-		this.clickedPart = partClicked != null;
-		this.parentPartOffset = clickedPart ? partClicked.placementOffset : null;
+		this.partOffset = partAdded.placementOffset;
+		this.partItem = partAdded.getItem();
+		this.partData = new WrapperNBT();
+		partAdded.save(partData);
+		this.parentPartOffset = partAdded.parentPart != null ? partAdded.parentPart.placementOffset : null;
 	}
 	
 	public PacketPartChange(ByteBuf buf){
@@ -47,8 +46,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 		if(buf.readBoolean()){
 			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 			this.partData = readDataFromBuffer(buf);
-			this.clickedPart = buf.readBoolean();
-			if(clickedPart){
+			if(buf.readBoolean()){
 				this.parentPartOffset = readPoint3dFromBuffer(buf);
 			}else{
 				this.parentPartOffset = null;
@@ -70,9 +68,11 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 			writeStringToBuffer(partItem.definition.systemName, buf);
 			writeStringToBuffer(partItem.subName, buf);
 			writeDataToBuffer(partData, buf);
-			buf.writeBoolean(clickedPart);
-			if(clickedPart){
+			if(parentPartOffset != null){
+				buf.writeBoolean(true);
 				writePoint3dToBuffer(parentPartOffset, buf);
+			}else{
+				buf.writeBoolean(false);
 			}
 		}else{
 			buf.writeBoolean(false);
@@ -85,7 +85,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 			entity.removePart(entity.getPartAtLocation(partOffset), null);
 		}else{
 			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(partOffset);
-			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)));
+			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)), false);
 		}
 		return true;
 	}

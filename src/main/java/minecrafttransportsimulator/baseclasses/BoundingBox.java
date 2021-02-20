@@ -113,7 +113,7 @@ public class BoundingBox{
 		//First rotate the box based on the part's rotation.
 		globalCenter.setTo(localCenter).rotateFine(part.localAngles);
 		//Now translate the box to it's actual position relative to the entity.
-		globalCenter.add(part.totalOffset);
+		globalCenter.add(part.localOffset);
 		//Now rotate the collision box by the entity's rotation.
 		globalCenter.rotateFine(part.entityOn.angles);
 		//Add the worldOffset based on the entity's current position.

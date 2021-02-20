@@ -36,7 +36,7 @@ public final class PartInteractable extends APart{
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
-		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data, definition.interactable.inventoryUnits*10000) : null;
+		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data.getDataOrNew("tank"), definition.interactable.inventoryUnits*10000) : null;
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	
@@ -195,7 +195,9 @@ public final class PartInteractable extends APart{
 		if(interactable != null){
 			interactable.save(data);
 		}else if(tank != null){
-			tank.save(data);
+			WrapperNBT tankData = new WrapperNBT();
+			tank.save(tankData);
+			data.setData("tank", tankData);
 		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			data.setString("jerrycanFluid", jerrycanFluid);
 		}

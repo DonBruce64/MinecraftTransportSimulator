@@ -77,17 +77,24 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	@Override
 	public void update(){
+		super.update();
+		
 		//If we have any NBT parts, add them now.
 		if(!partsFromNBT.isEmpty()){
 			for(APart part : partsFromNBT){
-				addPart(part);
+				addPart(part, false);
 			}
 			partsFromNBT.clear();
 		}
-		
-		//Send update call down to all parts.
-		//They need to get processed first to handle hitbox logic, or removal based on damage.
-		//We call this before we call the super as they need to know the status deltas.
+	}
+	
+	/**
+	 * Called to update the parts on this entity.  This should be called after all movement on the
+	 * entity has been performed, as parts need to do their actions based on the updated movement
+	 * of the entity.  Calling this before the entity finishes moving will lead to the parts "lagging"
+	 * behind the entity.
+	 */
+	public void updateParts(){
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -96,9 +103,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				removePart(part, iterator);
 			}
 		}
-		
-		//Now call the super to update prev variables.
-		super.update();
 	}
 	
 	@Override
@@ -135,7 +139,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns true if the part was able to be added, false if something prevented it.
 	 */
-    public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean doingConstruction){
+    public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -194,7 +198,15 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
-				partToAdd = partItem.createPart(this, newPartDef, partData != null ? partData : partItem.generateDefaultData(), parentPart); 
+				//If we need NBT, create it here.  Make sure to save creative stats for engines.
+				if(partData == null){
+					partData = partItem.generateDefaultData();
+				}else if(partData != null && partData.getString("packID").isEmpty()){
+					WrapperNBT newData = partItem.generateDefaultData();
+					newData.setBoolean("isCreative", partData.getBoolean("isCreative"));
+					partData = newData;
+				}
+				partToAdd = partItem.createPart(this, newPartDef, partData, parentPart); 
 			}
 		}
     	
@@ -202,31 +214,23 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//If we're in construction, it goes in the NBT maps and we need to add a rider position if it's a seat.
 		//Otherwise, we use the regular add method.
     	if(partToAdd != null){
-    		if(doingConstruction){
+    		if(addedDuringConstruction){
     			partsFromNBT.add(partToAdd);
 				if(partToAdd instanceof PartSeat){
 					ridableLocations.add(partToAdd.placementOffset);
 				}
     		}else{
-	    		addPart(partToAdd);
-				
-				//If we are a new part, we need to add text.
-	    		boolean newPart = partData.getString("uniqueUUID").isEmpty();
-	    		if(newPart){
-					partData = partItem.generateDefaultData();
-	    		}
-				
-				//Send packet to client with part data.
-				InterfacePacket.sendToAllClients(new PacketPartChange(this, offset, partItem, partData, partToAdd.parentPart));
+	    		addPart(partToAdd, true);
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
+	    		boolean newPart = partData.getString("uniqueUUID").isEmpty();
 				if(newPart && partToAdd.definition.parts != null){
 					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						subPartsToAdd.add(this.getPackForSubPart(partToAdd.placementDefinition, subPartPack));
+						subPartsToAdd.add(getPackForSubPart(partToAdd.placementDefinition, subPartPack));
 					}
-					addDefaultParts(subPartsToAdd, partToAdd, true);
+					addDefaultParts(subPartsToAdd, addedDuringConstruction);
 				}
     		}
 			return true;
@@ -239,17 +243,26 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
    	 * Adds the passed-in part to the entity.  Also is responsible for modifying
    	 * and lists or maps that may have changed from adding the part.
    	 */
-	public void addPart(APart part){
+	public void addPart(APart part, boolean sendPacket){
 		parts.add(part);
 		ItemPart partItem = part.getItem();
-		if(!partsByItem.containsKey(partItem)){
-			partsByItem.put(partItem, new ArrayList<APart>());
+		//Check for null, as the part may not have an item it will return, as is
+		//the case for fake parts or flat wheels.
+		if(partItem != null){
+			if(!partsByItem.containsKey(partItem)){
+				partsByItem.put(partItem, new ArrayList<APart>());
+			}
+			partsByItem.get(partItem).add(part);
 		}
-		partsByItem.get(partItem).add(part);
 		
 		//Add a ride-able location.
 		if(part instanceof PartSeat){
 			ridableLocations.add(part.placementOffset);
+		}
+		
+		//If we are on the server, and need to notify clients, do so.
+		if(sendPacket && !world.isClient()){
+			InterfacePacket.sendToAllClients(new PacketPartChange(this, part));
 		}
 	}
 	
@@ -456,11 +469,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Helper method to allow for recursion when adding default parts.
 	 * This method adds all default parts for the passed-in list of parts.
 	 * The part list should consist of a "parts" JSON definition, and can either
-	 * be on the main entity, or a part on this entity.
+	 * be on the main entity, or a part on this entity (subParts).
 	 * This method should only be called when the entity or part with the
 	 * passed-in definition is first placed, not when it's being loaded from saved data.
 	 */
-	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, APart parentPart, boolean addedAfterSpawning){
+	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, boolean addedDuringConstruction){
 		for(JSONPartDefinition partDef : partsToAdd){
 			if(partDef.defaultPart != null){
 				try{
@@ -468,35 +481,23 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						APart newPart = partItem.createPart(this, partDef, partItem.generateDefaultData(), parentPart);
-						addPart(newPart);
-						
-						//Set default text for the new part, if we have any.
-						if(newPart.definition.rendering != null && newPart.definition.rendering.textObjects != null){
-							for(JSONText textObject : newPart.definition.rendering.textObjects){
-								newPart.text.put(textObject, textObject.defaultText);
+						if(addPartFromItem(partItem, partItem.generateDefaultData(), partDef.pos, addedDuringConstruction)){
+							
+							//Check if we have an additional parts.
+							//If so, we need to check that for default parts.
+							if(partDef.additionalParts != null){
+								addDefaultParts(partDef.additionalParts, addedDuringConstruction);
 							}
-						}
-						
-						//Send a packet if required.
-						if(addedAfterSpawning){
-							InterfacePacket.sendToAllClients(new PacketPartChange(this, newPart.placementOffset, newPart.getItem(), partItem.generateDefaultData(), parentPart));
-						}
-						
-						//Check if we have an additional parts.
-						//If so, we need to check that for default parts.
-						if(partDef.additionalParts != null){
-							addDefaultParts(partDef.additionalParts, newPart, addedAfterSpawning);
-						}
-						
-						//Check all sub-parts, if we have any.
-						//We need to make sure to convert them to the right type as they're offset.
-						if(newPart.definition.parts != null){
-							List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
-							for(JSONPartDefinition subPartPack : newPart.definition.parts){
-								subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
+							
+							//Check all sub-parts, if we have any.
+							//We need to make sure to convert them to the right type as they're offset.
+							if(partItem.definition.parts != null){
+								List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
+								for(JSONPartDefinition subPartPack : partItem.definition.parts){
+									subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
+								}
+								addDefaultParts(subPartsToAdd, addedDuringConstruction);
 							}
-							addDefaultParts(subPartsToAdd, newPart, addedAfterSpawning);
 						}
 					}catch(NullPointerException e){
 						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");

@@ -70,7 +70,7 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			if(seat.definition.seat.heightScale != 0){
 				seatYPos *= seat.definition.seat.heightScale;
 			}
-			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.localAngles).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
+			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.localAngles).add(seat.localOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset);
 			rider.setVelocity(motion);
 			
@@ -162,13 +162,13 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		APart partRiding = getPartAtLocation(riderLocation);
 		if(packPart.dismountPos != null){
 			if(partRiding != null){
-				dismountPosition = packPart.dismountPos.copy().add(partRiding.totalOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
+				dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
 			}else{
 				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
 			}
 		}else{
 			if(partRiding != null){
-				Point3d partDelta = partRiding.totalOffset.copy().subtract(partRiding.placementOffset);
+				Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
 				if(riderLocation.x < 0){
 					partDelta.x = -partDelta.x;
 					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);

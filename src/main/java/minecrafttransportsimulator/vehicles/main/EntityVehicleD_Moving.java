@@ -148,7 +148,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This is required to move the GDBs if the GDs move.
 		for(APart part : parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.placementOffset.equals(part.totalOffset)){
+				if(!part.localOffset.equals(part.prevLocalOffset)){
 					groundDeviceCollective.updateBounds();
 					break;
 				}
@@ -164,11 +164,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				dampenControlSurfaces();
 			}
 		}
+		
+		//Update parts after all movement is done.
+		updateParts();
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean sendPacket){
+		super.addPart(part, sendPacket);
 		groundDeviceCollective.updateMembers();
 		groundDeviceCollective.updateBounds();
 	}
@@ -198,19 +201,21 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
 				TileEntityRoad road = ((BlockCollision) block).getMasterRoad(world, contactPoint);
-				//Check to see which lane we are on, if any.
-				for(RoadLane lane : road.lanes){
-					//Check path-points on the curve.  If our angles and position are close, set this as the curve.
-					for(BezierCurve curve : lane.curves){
-						for(float f=0; f<curve.pathLength; ++f){
-							curve.setPointToPositionAt(testPoint, f);
-							testPoint.add(road.position.x, road.position.y, road.position.z);
-							if(testPoint.distanceTo(contactPoint) < 1){
-								curve.setPointToRotationAt(testPoint, f);
-								boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
-								boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
-								if(sameDirection || oppositeDirection){
-									return new RoadFollowingState(lane, curve, sameDirection, f);
+				if(road != null){
+					//Check to see which lane we are on, if any.
+					for(RoadLane lane : road.lanes){
+						//Check path-points on the curve.  If our angles and position are close, set this as the curve.
+						for(BezierCurve curve : lane.curves){
+							for(float f=0; f<curve.pathLength; ++f){
+								curve.setPointToPositionAt(testPoint, f);
+								testPoint.add(road.position.x, road.position.y, road.position.z);
+								if(testPoint.distanceTo(contactPoint) < 1){
+									curve.setPointToRotationAt(testPoint, f);
+									boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
+									boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
+									if(sameDirection || oppositeDirection){
+										return new RoadFollowingState(lane, curve, sameDirection, f);
+									}
 								}
 							}
 						}
@@ -422,7 +427,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 									}
 								}
 							}else if(part instanceof PartEngine){
-								if(((PartEngine) part).currentGear == 0){
+								if(((PartEngine) part).currentGear == 0 && ((PartEngine) part).state.running){
 									foundNeutralEngine = true;
 								}
 							}
@@ -818,7 +823,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHitchOffset(){
 		if(activeHitchConnection != null){
 			if(activeHitchPart != null){
-				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.localAngles).add(activeHitchPart.totalOffset); 
+				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.localAngles).add(activeHitchPart.localOffset); 
 			}else{
 				return activeHitchConnection.pos;
 			}
@@ -834,7 +839,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHookupOffset(){
 		if(activeHookupConnection != null){
 			if(activeHookupPart != null){
-				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.localAngles).add(activeHookupPart.totalOffset); 
+				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.localAngles).add(activeHookupPart.localOffset); 
 			}else{
 				return activeHookupConnection.pos;
 			}
@@ -923,12 +928,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					if(!firstConnection.hookup && secondConnection.hookup){
 						Point3d hitchPos = firstConnection.pos.copy();
 						if(optionalFirstPart != null){
-							hitchPos.rotateCoarse(optionalFirstPart.localAngles).add(optionalFirstPart.totalOffset);
+							hitchPos.rotateCoarse(optionalFirstPart.localAngles).add(optionalFirstPart.localOffset);
 						}
 						hitchPos.rotateCoarse(firstVehicle.angles).add(firstVehicle.position);
 						Point3d hookupPos = secondConnection.pos.copy();
 						if(optionalSecondPart != null){
-							hookupPos.rotateCoarse(optionalSecondPart.localAngles).add(optionalSecondPart.totalOffset);
+							hookupPos.rotateCoarse(optionalSecondPart.localAngles).add(optionalSecondPart.localOffset);
 						}
 						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
 						

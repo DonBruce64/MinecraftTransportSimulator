@@ -126,7 +126,7 @@ public class GUIPackEditor extends JFrame{
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
 			        	FileReader reader = new FileReader(file);
-			            currentJSON = JSONParser.parseStream(reader, currentJSONClass);
+			            currentJSON = JSONParser.parseStream(reader, currentJSONClass, null, null);
 			            reader.close();
 			            lastDirectoryAccessed = file.getParentFile();
 			            if(currentJSON != null){

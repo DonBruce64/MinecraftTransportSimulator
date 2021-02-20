@@ -59,7 +59,7 @@ public class PartGroundDevice extends APart{
 			placementDefinition.pos = actualPlacement;
 			//This hack prevents us from adding this part to the main list during vehicle construction.
 			if(vehicleOn.partSlotBoxes != null){
-				vehicleOn.addPart(fakePart);
+				vehicleOn.addPart(fakePart, true);
 			}else{
 				vehicleOn.partsFromNBT.add(fakePart);
 			}

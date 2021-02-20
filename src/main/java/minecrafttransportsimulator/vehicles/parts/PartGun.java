@@ -72,7 +72,15 @@ public class PartGun extends APart{
 		
 	public PartGun(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
-		this.playerHolding = entityOn instanceof EntityPlayerGun ? ((EntityPlayerGun) entityOn).player : null;
+		if(entityOn instanceof EntityPlayerGun){
+			this.playerHolding = ((EntityPlayerGun) entityOn).player;
+			if(playerHolding == null){
+				this.isValid = false;
+			}
+		}else{
+			this.playerHolding = null;
+		}
+		
 		//Set min/max yaw/pitch angles based on our definition and the entity definition.
 		//If the entity definition min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
 		//Yaw/Pitch set to 0 is ignored as it's assumed to be un-defined.
@@ -138,6 +146,8 @@ public class PartGun extends APart{
 	
 	@Override
 	public void update(){
+		super.update();
+		
 		//Get the current controller and item reference for this gun.
 		WrapperEntity controller = getController();
 		ItemPart gunItem = getItem();
@@ -150,7 +160,7 @@ public class PartGun extends APart{
 				active = true;
 			}else{
 				PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-				active = !placementDefinition.isSpare && controller != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
+				active = !placementDefinition.isSpare && controller != null && controllerSeat != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
 			}
 		}else{
 			active = false;

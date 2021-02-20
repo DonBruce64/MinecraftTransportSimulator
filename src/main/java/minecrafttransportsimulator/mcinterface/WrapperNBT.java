@@ -150,6 +150,10 @@ public class WrapperNBT{
 		return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : null;
 	}
 	
+	public WrapperNBT getDataOrNew(String name){
+		return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : new WrapperNBT();
+	}
+	
 	public void setData(String name, WrapperNBT value){
 		tag.setTag(name, value.tag);
 	}

@@ -160,7 +160,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			for(VehicleConnectionConnector connector : vehicle.activeHookupConnection.connectors){
 				GL11.glPushMatrix();
 				if(vehicle.activeHookupPart != null){
-					GL11.glTranslated(vehicle.activeHookupPart.totalOffset.x, vehicle.activeHookupPart.totalOffset.y, vehicle.activeHookupPart.totalOffset.z);
+					GL11.glTranslated(vehicle.activeHookupPart.localOffset.x, vehicle.activeHookupPart.localOffset.y, vehicle.activeHookupPart.localOffset.z);
 					if(!vehicle.activeHookupPart.localAngles.isZero()){
 						GL11.glRotated(vehicle.activeHookupPart.localAngles.y, 0, 1, 0);
 						GL11.glRotated(vehicle.activeHookupPart.localAngles.x, 1, 0, 0);
@@ -177,7 +177,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			for(VehicleConnectionConnector connector : vehicle.activeHitchConnection.connectors){
 				GL11.glPushMatrix();
 				if(vehicle.activeHitchPart != null){
-					GL11.glTranslated(vehicle.activeHitchPart.totalOffset.x, vehicle.activeHitchPart.totalOffset.y, vehicle.activeHitchPart.totalOffset.z);
+					GL11.glTranslated(vehicle.activeHitchPart.localOffset.x, vehicle.activeHitchPart.localOffset.y, vehicle.activeHitchPart.localOffset.z);
 					if(!vehicle.activeHitchPart.localAngles.isZero()){
 						GL11.glRotated(vehicle.activeHitchPart.localAngles.y, 0, 1, 0);
 						GL11.glRotated(vehicle.activeHitchPart.localAngles.x, 1, 0, 0);
@@ -301,7 +301,10 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					if(isHoldingPart){
 						BoundingBox partBox = partSlotEntry.getKey();
 						GL11.glPushMatrix();
-						GL11.glTranslated(partBox.localCenter.x, partBox.localCenter.y, partBox.localCenter.z);
+						GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
+						GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
+						GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+						GL11.glTranslated(partBox.globalCenter.x - vehicle.position.x, partBox.globalCenter.y - vehicle.position.y, partBox.globalCenter.z - vehicle.position.z);
 						if(isPartValid){
 							InterfaceRender.setColorState(0, 1, 0, 0.5F);
 							RenderBoundingBox.renderSolid(partBox);
@@ -316,11 +319,15 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				Point3d playerEyes = player.getPosition().add(0, player.getEyeHeight(), 0);
 				Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getHeadYaw(), 0)));
 				BoundingBox highlightedBox = null;
+				GL11.glPushMatrix();
+				GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
+				GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
+				GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
 					InterfaceRender.setColorState(0, 0, 1, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					GL11.glPushMatrix();
-					GL11.glTranslated(currentBox.localCenter.x, currentBox.localCenter.y, currentBox.localCenter.z);
+					GL11.glTranslated(currentBox.globalCenter.x - vehicle.position.x, currentBox.globalCenter.y - vehicle.position.y, currentBox.globalCenter.z - vehicle.position.z);
 					RenderBoundingBox.renderSolid(currentBox);
 					GL11.glPopMatrix();
 					if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
@@ -329,6 +336,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 						}
 					}
 				}
+				GL11.glPopMatrix();
 				
 				if(highlightedBox != null){
 					//Get the definition for this box.
@@ -406,8 +414,9 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 		//Set states for box render.
 		GL11.glPushMatrix();
 		//Need to undo rotation so boxes render as axis-aligned.
-		GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+		GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
 		GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
+		GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 		InterfaceRender.setLightingState(false);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glLineWidth(3.0F);
@@ -444,8 +453,8 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : vehicle.parts){
 			if(!part.isFake()){
-				GL11.glVertex3d(part.totalOffset.x, part.totalOffset.y - part.getHeight(), part.totalOffset.z);
-				GL11.glVertex3d(part.totalOffset.x, part.totalOffset.y + part.getHeight(), part.totalOffset.z);
+				GL11.glVertex3d(part.localOffset.x, part.localOffset.y - part.getHeight(), part.localOffset.z);
+				GL11.glVertex3d(part.localOffset.x, part.localOffset.y + part.getHeight(), part.localOffset.z);
 			}
 		}
 		GL11.glEnd();

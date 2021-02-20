@@ -85,7 +85,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
-		this.fuelTank = new FluidTank(world, data, definition.motorized.fuelCapacity);
+		this.fuelTank = new FluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
 		
 		//Load text.
 		if(definition.rendering.textObjects != null){
@@ -108,7 +108,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		}
 		
 		//Start create radio.
-		this.radio = new Radio(this, data);
+		this.radio = new Radio(this, data.getDataOrNew("radio"));
 	}
 	
 	@Override
@@ -297,8 +297,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean sendPacket){
+		super.addPart(part, sendPacket);
 		if(part instanceof PartEngine){
 			//Because parts is a list, the #1 engine will always come before the #2 engine.
 			//We can use this to determine where in the list this engine needs to go.
@@ -370,7 +370,9 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
-		fuelTank.save(data);
+		WrapperNBT fuelTankData = new WrapperNBT();
+		fuelTank.save(fuelTankData);
+		data.setData("fuelTank", fuelTankData);
 		
 		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
 		for(int i=0; i<instrumentsInSlots.length; ++i){
@@ -380,6 +382,8 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			}
 		}
 		
-		radio.save(data);
+		WrapperNBT radioData = new WrapperNBT();
+		radio.save(radioData);
+		data.setData("radio", radioData);
 	}
 }

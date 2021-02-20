@@ -157,9 +157,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			if(partDoorBoxes.containsKey(part)){
 				for(Entry<BoundingBox, JSONDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
 					if(variablesOn.contains(doorEntry.getValue().name)){
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.localAngles).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.localAngles).add(part.localOffset).rotateFine(angles).add(position);
 					}else{
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.localAngles).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.localAngles).add(part.localOffset).rotateFine(angles).add(position);
 					}
 				}
 			}
@@ -210,15 +210,9 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 							//special bounds of the generic part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
-							if(heldPart.definition.generic != null){
-								box.widthRadius = heldPart.definition.generic.width/2D;
-								box.heightRadius = heldPart.definition.generic.height/2D;
-								box.depthRadius = heldPart.definition.generic.width/2D;
-							}else{
-								box.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
-								box.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;
-								box.depthRadius = PART_SLOT_HITBOX_WIDTH/2D;
-							}
+							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
 							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 						}
 					}
@@ -351,13 +345,13 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean sendPacket){
+		super.addPart(part, sendPacket);
 		//Add part to collision map if it has collision.
 		if(!part.isFake() && part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
 			for(JSONCollisionBox boxDefinition : part.definition.collision){
-				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
+				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.localOffset).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
 				if(!newBox.isInterior){

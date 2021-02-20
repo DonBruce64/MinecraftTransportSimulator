@@ -110,66 +110,90 @@ public class InterfaceSound{
 		
 		//Update playing sounds.
 		boolean soundSystemReset = false;
-		for(AEntityB_Existing entity : activeEntitySounds.keySet()){
-			//First have the entity update the sound states.
-			entity.updateSounds(activeEntitySounds.get(entity));
+		Iterator<AEntityB_Existing> entityIterator = activeEntitySounds.keySet().iterator();
+		while(entityIterator.hasNext()){
+			AEntityB_Existing entity = entityIterator.next();
 			
-			//Iterate over all sounds to handle their new updated state.
-			Iterator<SoundInstance> soundIterator = activeEntitySounds.get(entity).iterator();
-			while(soundIterator.hasNext()){
-				SoundInstance sound = soundIterator.next();
-				AL10.alGetError();
-				int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
-
-				//If we are an invalid name, it means the sound system was reset.
-				//Blow out all buffers and restart all sounds.
-				if(AL10.alGetError() == AL10.AL_INVALID_NAME){
-					soundSystemReset = true;
-					break;
-				}
-				
-				if(state == AL10.AL_PLAYING){
-					if(sound.stopSound){
+			//Only update sounds if we have a player.
+			if(player != null){
+				//If the entity is invalid, stop all sounds and remove it.
+				if(!entity.isValid){
+					for(SoundInstance sound : activeEntitySounds.get(entity)){
 						AL10.alSourceStop(sound.sourceIndex);
-					}else{
-						//Update position and volume.
-						AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
-						
-						//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
-						//Otherwise, set pitch as normal.
-						if(sound.looping && !sound.entity.equals(player.getEntityRiding())){
-							Point3d playerVelocity = player.getVelocity();
-							playerVelocity.y = 0;
-							double initalDelta = player.getPosition().subtract(entity.position).length();
-							double finalDelta = player.getPosition().add(playerVelocity).subtract(entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();
-							float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
-							AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
-						}else{
-							AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
-						}
-
-						//Update rolloff distance, which is based on pitch.
-						AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
 					}
+					entityIterator.remove();
 				}else{
-					//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
-					if(sound.radio == null){
-						AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
-						sound.stop();
-					}else if(sound.stopSound){
-						int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
-						if(boundBuffers > 0){
-							IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
-							AL10.alSourceUnqueueBuffers(sound.sourceIndex, buffers);
+					//First have the entity update the sound states.
+					entity.updateSounds(activeEntitySounds.get(entity));
+					
+					//Iterate over all sounds to handle their new updated state.
+					Iterator<SoundInstance> soundIterator = activeEntitySounds.get(entity).iterator();
+					while(soundIterator.hasNext()){
+						SoundInstance sound = soundIterator.next();
+						AL10.alGetError();
+						int state = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_SOURCE_STATE);
+						//If we are an invalid name, it means the sound system was reset.
+						//Blow out all buffers and restart all sounds.
+						if(AL10.alGetError() == AL10.AL_INVALID_NAME){
+							soundSystemReset = true;
+							break;
 						}
-					}
-					if(sound.stopSound){
-						IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
-						AL10.alDeleteSources(sourceBuffer);
-						soundIterator.remove();
+						
+						//Stop sound if the entity isn't valid anymore.
+						if(!sound.entity.isValid){
+							sound.stop();
+						}
+						
+						if(state == AL10.AL_PLAYING){
+							if(sound.stopSound){
+								AL10.alSourceStop(sound.sourceIndex);
+							}else{
+								//Update position and volume.
+								AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
+								AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
+								
+								//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
+								//Otherwise, set pitch as normal.
+								if(sound.looping && !sound.entity.equals(player.getEntityRiding())){
+									Point3d playerVelocity = player.getVelocity();
+									playerVelocity.y = 0;
+									double initalDelta = player.getPosition().subtract(entity.position).length();
+									double finalDelta = player.getPosition().add(playerVelocity).subtract(entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();
+									float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
+									AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
+								}else{
+									AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
+								}
+	
+								//Update rolloff distance, which is based on pitch.
+								AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F/(0.25F + 3*sound.pitch));
+							}
+						}else{
+							//We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
+							if(sound.radio == null){
+								AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
+								sound.stop();
+							}else if(sound.stopSound){
+								int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
+								if(boundBuffers > 0){
+									IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
+									AL10.alSourceUnqueueBuffers(sound.sourceIndex, buffers);
+								}
+							}
+							if(sound.stopSound){
+								IntBuffer sourceBuffer = (IntBuffer) BufferUtils.createIntBuffer(1).put(sound.sourceIndex).flip();
+								AL10.alDeleteSources(sourceBuffer);
+								soundIterator.remove();
+							}
+						}
 					}
 				}
+			}else{
+				//Stop all sounds and remove them as we shouldn't have any.
+				for(SoundInstance sound : activeEntitySounds.get(entity)){
+					AL10.alSourceStop(sound.sourceIndex);
+				}
+				entityIterator.remove();
 			}
 			
 			if(soundSystemReset){

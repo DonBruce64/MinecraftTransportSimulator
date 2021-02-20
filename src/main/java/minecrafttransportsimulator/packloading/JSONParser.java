@@ -228,11 +228,11 @@ public class JSONParser{
 	/**
 	 *  Parses the passed in stream to the passed-in JSON type.
 	 */
-	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass){
+	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass, String packID, String systemName){
 		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
 		//Do legacy compats if we need before validating the JSON.
 		if(retObj instanceof AJSONItem){
-			LegacyCompatSystem.performLegacyCompats((AJSONItem) retObj);
+			LegacyCompatSystem.performLegacyCompats((AJSONItem) retObj, packID, systemName);
 		}
 		//Check for proper fields.
 		validateFields(retObj, "/", 1);

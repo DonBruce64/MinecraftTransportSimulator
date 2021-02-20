@@ -62,7 +62,7 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	
 	/**
 	 *  Returns the current animation clock for the passed-in entity.  Clocks are not shared between
-	 *  vehicle to allow each vehicle to have their own running clocks for each animation.
+	 *  entities to allow each vehicle to have their own running clocks for each animation.
 	 */
 	public DurationDelayClock getClock(AnimationEntity entity){
 		if(!clocks.containsKey(entity)){

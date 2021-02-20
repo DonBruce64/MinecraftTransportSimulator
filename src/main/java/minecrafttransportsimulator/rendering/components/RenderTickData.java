@@ -17,6 +17,7 @@ public class RenderTickData{
 	
 	public RenderTickData(WrapperWorld world){
 		this.world = world;
+		this.lastTickPass[0] = world.getTick(); 
 	}
 	
 	public boolean shouldRender(int renderPass, float partialTicks){

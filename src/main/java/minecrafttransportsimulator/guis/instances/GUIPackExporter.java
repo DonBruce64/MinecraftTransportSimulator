@@ -157,7 +157,7 @@ public class GUIPackExporter extends AGUIBase{
 										try{
 											if(packItem.definition instanceof JSONVehicle){
 												JSONVehicle definition = (JSONVehicle) packItem.definition;
-												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class);
+												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.definitions = loadedDefinition.definitions;
 												definition.motorized = loadedDefinition.motorized;
@@ -170,7 +170,7 @@ public class GUIPackExporter extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONPart){
 												JSONPart definition = (JSONPart) packItem.definition;
-												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class);
+												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.engine = loadedDefinition.engine;
 												definition.ground = loadedDefinition.ground;
@@ -190,13 +190,13 @@ public class GUIPackExporter extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;
-												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class);
+												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.components = loadedDefinition.components;
 												
 											}else if(packItem.definition instanceof JSONPoleComponent){
 												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
-												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class);
+												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												
 											}else{

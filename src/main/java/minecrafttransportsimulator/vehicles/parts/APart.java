@@ -20,7 +20,7 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
- * Use {@link AEntityE_Multipart#addPart(APart)} to add parts 
+ * Use {@link AEntityE_Multipart#addPart(APart, boolean)} to add parts 
  * and {@link AEntityE_Multipart#removePart(APart, Iterator)} to remove them.
  * You may extend {@link AEntityE_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
@@ -51,7 +51,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
-	public final Point3d totalOffset;
+	public final Point3d localOffset;
+	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
 	public final BoundingBox boundingBox;
 		
@@ -60,7 +61,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementOffset = placementDefinition.pos;
-		this.totalOffset = placementOffset.copy();
+		this.localOffset = placementOffset.copy();
+		this.prevLocalOffset = localOffset.copy();
 		this.placementDefinition = placementDefinition;
 		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
 		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
@@ -128,21 +130,19 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	@Override
 	public void update(){
 		super.update();
+		prevLocalOffset.setTo(localOffset);
 		updatePositionAndRotation();
 		//If we have a parent part, we need to change our offsets to be relative to it.
 		if(parentPart != null && placementDefinition.isSubPart){
-			totalOffset.setTo(placementOffset);
-			localAngles.setTo(placementAngles);
-			
 			//Get parent offset and rotation.  The parent will have been updated already as it has
 			//to be placed on the vehicle before us, and as such will be before us in the parts list.
 			//Our initial offset needs to be relative to the position of the part on the parent, so 
 			//we need to start with that delta.
-			totalOffset.subtract(parentPart.placementOffset);
+			localOffset.subtract(parentPart.placementOffset);
 			
 			//Rotate our current relative offset by the rotation of the parent to get the correct
 			//offset between us and our parent's position in our parent's coordinate system.
-			totalOffset.rotateFine(parentPart.localAngles);
+			localOffset.rotateFine(parentPart.localAngles);
 			
 			//Add our parent's angles to our own so we have a cumulative rotation.
 			//This has the potential for funny rotations if we're both rotated, as we should
@@ -152,11 +152,11 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 			
 			//Now that we have the proper relative offset, add our parent's offset to get our next offset.
 			//This is our final offset point.
-			totalOffset.add(parentPart.totalOffset);
+			localOffset.add(parentPart.localOffset);
 		}
 		
 		//Set position and rotation to our net offset pos on the entity.
-		position.setTo(totalOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
 		angles.setTo(localAngles).add(entityOn.angles);
 	}
 	
@@ -172,11 +172,11 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	 */
 	protected void updatePositionAndRotation(){
 		boolean inhibitAnimations = false;
-		totalOffset.set(0D, 0D, 0D);
+		localOffset.set(0D, 0D, 0D);
 		localAngles.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
 			for(DurationDelayClock clock : clocks){
-				JSONAnimationDefinition animation = clock.definition;
+				JSONAnimationDefinition animation = clock.animation;
 				switch(animation.animationType){
 					case TRANSLATION :{
 						if(!inhibitAnimations){
@@ -184,7 +184,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
 							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
-							totalOffset.add(appliedTranslation.rotateFine(localAngles));
+							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
 					}
@@ -198,7 +198,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 							if(!animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-								totalOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(localAngles));
+								localOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(localAngles));
 							}
 							
 							//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
@@ -229,7 +229,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		}
 		
 		//Add on the placement offset and rotation  now that we have our dynamic values.
-		totalOffset.add(placementOffset);
+		localOffset.add(placementOffset);
 		localAngles.add(placementAngles);
 	}
 	
@@ -270,11 +270,11 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	}
 	
 	public float getWidth(){
-		return definition.generic != null ? definition.generic.width : 0.75F;
+		return definition.generic.width != 0 ? definition.generic.width : 0.75F;
 	}
 	
 	public float getHeight(){
-		return definition.generic != null ? definition.generic.height : 0.75F;
+		return definition.generic.height != 0 ? definition.generic.height : 0.75F;
 	}
 
 	

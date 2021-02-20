@@ -47,6 +47,12 @@ public class JSONAnimationDefinition{
 	@JSONDescription("Like forwardsDelay, but for the end of the animation.  This delay is applied when the variable goes from 1 to 0.")
 	public int reverseDelay;
 	
+	@JSONDescription("If true, this animation will skip the forward movement time specified in the duration and will instantly move to the end of the animation.  Useful when you want uni-directional animations.  Note that this does not prevent the movement delay from forwardsDelay from applying.  This is only for the duration.")
+	public boolean skipForwardsMovement;
+	
+	@JSONDescription("Like skipForwardsMovement, but for the reverse movement.")
+	public boolean skipReverseMovement;
+	
 	@JSONDescription("This sound will play when the animation starts its movement forwards.  This only happens at the start of the duration, not the start of the delay.  Format is [packID:soundName]")
 	public String forwardsStartSound;
 	
