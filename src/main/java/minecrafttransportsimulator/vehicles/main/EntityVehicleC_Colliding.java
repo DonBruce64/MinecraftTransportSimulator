@@ -465,7 +465,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 			}
 			
-			if(hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
+			if(ConfigSystem.configObject.general.vehicleDestruction.value && hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
 					destroyAt(box.globalCenter);
 				}
