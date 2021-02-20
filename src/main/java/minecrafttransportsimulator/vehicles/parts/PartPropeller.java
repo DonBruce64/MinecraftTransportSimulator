@@ -65,9 +65,9 @@ public class PartPropeller extends APart{
 				--currentPitch;
 			}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 				++currentPitch;
-			}else if(connectedEngine.rpm < PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM)*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
+			}else if(connectedEngine.rpm < PartEngine.getSafeRPM(connectedEngine.definition.engine)*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
 				--currentPitch;
-			}else if(connectedEngine.rpm > PartEngine.getSafeRPMFromMax(connectedEngine.definition.engine.maxRPM)*0.85 && currentPitch < definition.propeller.pitch){
+			}else if(connectedEngine.rpm > PartEngine.getSafeRPM(connectedEngine.definition.engine)*0.85 && currentPitch < definition.propeller.pitch){
 				++currentPitch;
 			}
 		}

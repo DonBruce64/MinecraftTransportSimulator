@@ -119,7 +119,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 					tooltipLines.add(InterfaceGUI.getFormattingCode("dark_purple") + InterfaceCore.translate("info.item.engine.creative"));
 				}
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.maxrpm") + definition.engine.maxRPM);
-				tooltipLines.add(InterfaceCore.translate("info.item.engine.maxsaferpm") + PartEngine.getSafeRPMFromMax(definition.engine.maxRPM));
+				tooltipLines.add(InterfaceCore.translate("info.item.engine.maxsaferpm") + PartEngine.getSafeRPM(definition.engine));
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.fuelconsumption") + definition.engine.fuelConsumption);
 				if(definition.engine.jetPowerFactor > 0){
 					tooltipLines.add(InterfaceCore.translate("info.item.engine.jetpowerfactor") + (int) (100*definition.engine.jetPowerFactor) + "%");

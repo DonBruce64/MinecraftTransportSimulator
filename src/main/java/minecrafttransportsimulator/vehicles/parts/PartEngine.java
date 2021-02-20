@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -239,8 +240,8 @@ public class PartEngine extends APart{
 					hours += 0.001*getTotalWearFactor();
 					
 					//Add extra hours if we are running the engine too fast.
-					if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)){
-						hours += (rpm - getSafeRPMFromMax(definition.engine.maxRPM))/getSafeRPMFromMax(definition.engine.maxRPM)*getTotalWearFactor();
+					if(rpm > getSafeRPM(definition.engine)){
+						hours += (rpm - getSafeRPM(definition.engine))/getSafeRPM(definition.engine)*getTotalWearFactor();
 					}
 				}
 				
@@ -287,7 +288,7 @@ public class PartEngine extends APart{
 					
 					//If the engine has high hours, give a chance for a backfire.
 					if(hours > 100 && !world.isClient()){
-						if(Math.random() < hours/1000*(getSafeRPMFromMax(this.definition.engine.maxRPM)/(rpm+getSafeRPMFromMax(this.definition.engine.maxRPM)/2))){
+						if(Math.random() < hours/1000*(getSafeRPM(definition.engine)/(rpm+getSafeRPM(definition.engine)/2))){
 							backfireEngine();
 						}
 					}
@@ -321,12 +322,12 @@ public class PartEngine extends APart{
 									}
 								}
 							}else{
-								if(rpm > getSafeRPMFromMax(definition.engine.maxRPM)*0.5F*(1.0F + vehicleOn.throttle/100F)){
+								if(rpm > getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F)){
 									if(shiftUp(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
 										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
 									}
-								}else if(rpm < getSafeRPMFromMax(definition.engine.maxRPM)*0.25*(1.0F + vehicleOn.throttle/100F) && currentGear > 1){
+								}else if(rpm < getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F) && currentGear > 1){
 									if(shiftDown(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
 										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
@@ -460,7 +461,7 @@ public class PartEngine extends APart{
 				if(state.running){
 					engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
 					rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-					if(rpm > getSafeRPMFromMax(definition.engine.maxRPM) && definition.engine.jetPowerFactor == 0){
+					if(rpm > getSafeRPM(definition.engine) && definition.engine.jetPowerFactor == 0){
 						rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
 					}
 				}else if(!state.esOn && !state.hsOn){
@@ -754,8 +755,8 @@ public class PartEngine extends APart{
 	
 	//--------------------START OF ENGINE PROPERTY METHODS--------------------
 	
-	public static int getSafeRPMFromMax(int maxRPM){
-		return maxRPM < 15000 ? maxRPM - (maxRPM - 2500)/2 : (int) (maxRPM/1.1);
+	public static int getSafeRPM(JSONPartEngine engineDef){
+		return engineDef.maxSafeRPM != 0 ? engineDef.maxRPM : (engineDef.maxRPM < 15000 ? engineDef.maxRPM - (engineDef.maxRPM - 2500)/2 : (int) (engineDef.maxRPM/1.1));
 	}
 	
 	public float getTotalFuelConsumption(){
@@ -840,7 +841,7 @@ public class PartEngine extends APart{
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
-			double safeRPMFactor = rpm/getSafeRPMFromMax(definition.engine.maxRPM);
+			double safeRPMFactor = rpm/getSafeRPM(definition.engine);
 			double coreContribution = Math.max(10*airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
 			
 			//The fan portion is calculated similarly to how propellers are calculated.
