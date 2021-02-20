@@ -580,10 +580,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
 			//If we hit something, however, we need to inhibit the movement so we don't do that.
 			//This prevents vehicles from phasing through walls even though they are driving on the ground.
-			//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
+			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
 			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
 			if(isCollisionBoxCollided()){
-				correctCollidingMovement();
+				if(towedByVehicle != null){
+					Point3d initalMotion = motion.copy();
+					correctCollidingMovement();
+					towedByVehicle.motion.add(motion).subtract(initalMotion);
+				}else{
+					correctCollidingMovement();
+				}
+				
 			}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
@@ -666,13 +673,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		if(towedByVehicle == null){
-			tempBoxAngles.setTo(rotation).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
-				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-				if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-					return true;
-				}
+		tempBoxAngles.setTo(rotation).add(angles);
+		for(BoundingBox box : blockCollisionBoxes){
+			tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+			if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+				return true;
 			}
 		}
 		return false;

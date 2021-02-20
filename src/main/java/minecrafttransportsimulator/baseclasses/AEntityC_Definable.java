@@ -112,7 +112,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  This allows for internally-definable entities.
 	 */
 	public JSONDefinition generateDefaultDefinition(){
-		throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined.  This is NOT allowed.  The entity must be missing its item, but this should be impossible as it shouldn't even have loaded?");
+		throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined.  This is NOT allowed.  The entity must be missing its item.  Perhaps a pack was removed with this entity still in the world?");
 	}
 	
     /**

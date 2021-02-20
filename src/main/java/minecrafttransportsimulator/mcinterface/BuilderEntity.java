@@ -184,7 +184,12 @@ public class BuilderEntity extends Entity{
     		//Builder with no entity on the server.  Try to get it from NBT. If we can't, it's invalid.
     		if(lastLoadedNBT != null){
     			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+    			try{
+    				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+    			}catch(Exception e){
+    				InterfaceCore.logError(e.getMessage());
+    				setDead();
+    			}
     			lastLoadedNBT = null;
     		}else{
     			setDead();
