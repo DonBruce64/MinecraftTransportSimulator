@@ -96,6 +96,9 @@ public final class PackParserSystem{
     	
     	//Now that all the items and skins are parsed, create them.
     	createAllItems();
+    	
+    	//Have the config system dump the crafting, if so required.
+    	ConfigSystem.dumpCrafting();
     } 
 
 	/**

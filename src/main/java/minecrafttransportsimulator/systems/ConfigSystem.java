@@ -24,6 +24,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
  */
 public final class ConfigSystem{
 	private static File configFile;
+	private static File craftingFile;
 	public static JSONConfig configObject;
 	
 	/**Called to load this class from the passed-in config file.
@@ -34,6 +35,7 @@ public final class ConfigSystem{
 	public static void loadFromDisk(File configDirectory){
 		//Set the current config file location to the passed-in file.
 		configFile = new File(configDirectory, "mtsconfig.json");
+		craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
 				
 	    //If we have a config file already, parse it into Java.
 		//Otherwise, make a new one.
@@ -60,7 +62,6 @@ public final class ConfigSystem{
 		
 		
 		//Now parse the crafting override file.
-		File craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
 		if(craftingFile.exists() && !configObject.general.dumpCraftingConfig.value){
 			try{
 				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
@@ -76,7 +77,19 @@ public final class ConfigSystem{
 				InterfaceCore.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
 				InterfaceCore.logError(e.getMessage());
 			}
-		}else{
+		}
+		
+		//If we have the old config file, delete it.
+		File oldConfigFile = new File(configDirectory, "mts.cfg");
+		if(oldConfigFile.exists()){
+			oldConfigFile.delete();
+		}
+	}
+	
+	/**Called to dump the crafting file.  Only dumps if required by the config.
+	 */
+	public static void dumpCrafting(){
+		if(configObject.general.dumpCraftingConfig.value){
 			//Make the default override file and save it.
 			try{
 				FileWriter writer = new FileWriter(craftingFile);
@@ -86,12 +99,6 @@ public final class ConfigSystem{
 			}catch(Exception e){
 				InterfaceCore.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
 			}
-		}
-		
-		//If we have the old config file, delete it.
-		File oldConfigFile = new File(configDirectory, "mts.cfg");
-		if(oldConfigFile.exists()){
-			oldConfigFile.delete();
 		}
 	}
 	
