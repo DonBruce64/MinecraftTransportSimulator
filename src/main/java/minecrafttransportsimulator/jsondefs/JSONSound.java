@@ -18,4 +18,7 @@ public class JSONSound{
 	
 	@JSONDescription("If the sound should loop, set this to true.  Be aware that unless the volume is set to 0 or below, or the sound is blocked via visibility variables or inhibitors, then it will keep playing forever and take up a sound slot!")
 	public boolean looping;
+	
+	@JSONDescription("If the sound should repeat every tick, set this to true.  Mainly used for sounds on guns that need to be played every tick the gun fires, but may be used for other things.  Looping sounds is HIGHLY preferred to this if possible.")
+	public boolean repeating;
 }

@@ -543,23 +543,23 @@ public final class LegacyCompatSystem{
 				}
 				
 				JSONSound firingSound = new JSONSound();
-				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
-				firingSound.looping = definition.gun.fireDelay <= 1;
+				firingSound.name = packID + ":" + systemName + "_firing";
+				firingSound.repeating = true;
 				firingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
 				firingDef.animationType = AnimationComponentType.VISIBILITY;
-				firingDef.variable = "gun_firing";
+				firingDef.variable = "gun_fired";
 				firingDef.clampMin = 1.0F;
 				firingDef.clampMax = 1.0F;
 				firingSound.volumeAnimations.add(firingDef);
 				definition.rendering.sounds.add(firingSound);
 				
 				JSONSound reloadingSound = new JSONSound();
-				reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
+				reloadingSound.name = packID + ":" + systemName + "_reloading";
 				reloadingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
 				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
-				reloadingDef.variable = "gun_reloading";
+				reloadingDef.variable = "gun_reload";
 				reloadingDef.clampMin = 1.0F;
 				reloadingDef.clampMax = 1.0F;
 				reloadingSound.volumeAnimations.add(reloadingDef);

@@ -24,6 +24,7 @@ import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Base class for entities that are defined via JSON definitions.
  * This level adds various method for said definitions, which include rendering functions. 
@@ -225,7 +226,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					double value = getAnimator().getAnimatedVariableValue(this, animation, 0, null, 0);
 					DurationDelayClock clock = soundVolumeClocks.get(soundDef).get(animation);
 					clock.getFactoredState(this, value);
-					if(value < animation.clampMin || value > animation.clampMax || (!soundDef.looping && !clock.movedThisUpdate)){
+					if(value < animation.clampMin || value > animation.clampMax || (!soundDef.looping && !soundDef.repeating && !clock.movedThisUpdate)){
 						shouldSoundPlay = false;
 						break;
 					}
@@ -235,10 +236,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			if(shouldSoundPlay){
 				//Sound should play.  If it's not playing, start it.
 				boolean isSoundPlaying = false;
-				for(SoundInstance sound : sounds){
-					if(sound.soundName.equals(soundDef.name)){
-						isSoundPlaying = true;
-						break;
+				if(!soundDef.repeating){
+					for(SoundInstance sound : sounds){
+						if(sound.soundName.equals(soundDef.name)){
+							isSoundPlaying = true;
+							break;
+						}
 					}
 				}
 				if(!isSoundPlaying){
