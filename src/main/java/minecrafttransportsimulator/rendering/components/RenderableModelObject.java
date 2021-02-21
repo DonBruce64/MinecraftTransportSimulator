@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -17,7 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class RenderableModelObject extends RenderableTransform{
+public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>> extends RenderableTransform<AnimationEntity>{
 	private final String modelName;
 	public final String objectName;
 	private final Float[][] vertices;
@@ -25,7 +26,7 @@ public class RenderableModelObject extends RenderableTransform{
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, IAnimationProvider provider){
+	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, AnimationEntity entity){
 		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
 		this.modelName = modelName;
 		this.objectName = objectName;
@@ -37,17 +38,17 @@ public class RenderableModelObject extends RenderableTransform{
 			//Roller found.  Create a transform for it.
 			this.applyAfter = null;
 			if(objectName.toLowerCase().contains("roller")){
-				transforms.add(TransformTreadRoller.create(objectName, null, vertices));
+				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices));
 			}	
 		}
 		if(objectName.contains("&")){
-			transforms.add(new TransformLight(modelName, objectName, vertices));
+			transforms.add(new TransformLight<AnimationEntity>(modelName, objectName, vertices));
 		}
 		if(objectName.toLowerCase().contains("window")){
-			transforms.add(new TransformWindow(vertices));
+			transforms.add(new TransformWindow<AnimationEntity>(vertices));
 		}
-		if(objectName.toLowerCase().endsWith("url") && provider instanceof ITextProvider){
-			transforms.add(new TransformOnlineTexture(objectName));
+		if(objectName.toLowerCase().endsWith("url")){
+			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));
 		}
 	}
 	
@@ -55,9 +56,9 @@ public class RenderableModelObject extends RenderableTransform{
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(IAnimationProvider provider, float partialTicks, List<RenderableModelObject> allObjects){
+	public void render(AnimationEntity entity, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
-		if(doPreRenderTransforms(provider, partialTicks)){
+		if(doPreRenderTransforms(entity, partialTicks)){
 			//Render, caching the displayList if needed.
 			//Don't render on pass 1, as that's for transparency.
 			if(InterfaceRender.getRenderPass() != 1){
@@ -72,19 +73,17 @@ public class RenderableModelObject extends RenderableTransform{
 			}
 			
 			//Do post-render logic.
-			doPostRenderTransforms(provider, partialTicks);
+			doPostRenderTransforms(entity, partialTicks);
 			
 			//Render text on this object.
-			if(provider instanceof ITextProvider){
-				if(InterfaceRender.renderTextMarkings((ITextProvider) provider, objectName)){
-					InterfaceRender.recallTexture();
-				}
+			if(InterfaceRender.renderTextMarkings(entity, objectName)){
+				InterfaceRender.recallTexture();
 			}
 			
 			//Render any parts that depend on us before we pop our state.
-			for(RenderableModelObject modelObject : allObjects){
+			for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
 				if(objectName.equals(modelObject.applyAfter)){
-					modelObject.render(provider, partialTicks, allObjects);
+					modelObject.render(entity, partialTicks, allObjects);
 				}
 			}
 		}

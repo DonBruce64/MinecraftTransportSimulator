@@ -96,6 +96,9 @@ public final class PackParserSystem{
     	
     	//Now that all the items and skins are parsed, create them.
     	createAllItems();
+    	
+    	//Have the config system dump the crafting, if so required.
+    	ConfigSystem.dumpCrafting();
     } 
 
 	/**
@@ -114,7 +117,7 @@ public final class PackParserSystem{
 			while(entries.hasMoreElements()){
 				ZipEntry entry = entries.nextElement();
 				if(entry.getName().endsWith("packdefinition.json")){
-					JSONPack packDef = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class);
+					JSONPack packDef = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class, null, null);
 					packJarMap.put(packDef.packID, packJar);
 					packMap.put(packDef.packID, packDef);
 				}
@@ -229,7 +232,7 @@ public final class PackParserSystem{
 									InterfaceCore.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
-								Class<? extends AJSONItem<?>> jsonClass = null;
+								Class<? extends AJSONItem> jsonClass = null;
 								if(classification != null){
 									switch(classification){
 										case VEHICLE : jsonClass = JSONVehicle.class; break;
@@ -247,9 +250,9 @@ public final class PackParserSystem{
 								}
 								
 								//Create the JSON instance.
-								AJSONItem<?> definition;
+								AJSONItem definition;
 								try{
-									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass);
+									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()));
 								}catch(Exception e){
 									InterfaceCore.logError("Could not parse: " + packDef.packID + ":" + fileName);
 						    		InterfaceCore.logError(e.getMessage());
@@ -267,18 +270,18 @@ public final class PackParserSystem{
 									//We don't create skin items right away as the pack they go to might not yet be loaded.
 									if(definition instanceof JSONSkin){
 										JSONSkin skinDef = (JSONSkin) definition;
-										if(!skinMap.containsKey(skinDef.general.packID)){
-											skinMap.put(skinDef.general.packID, new HashMap<String, JSONSkin>());
+										if(!skinMap.containsKey(skinDef.skin.packID)){
+											skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
 										}
 										definition.packID = packDef.packID;
-										skinMap.get(skinDef.general.packID).put(skinDef.general.systemName, skinDef);
+										skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
 									}else{
 										//Set code-based definition values prior to parsing all definitions out.
 					    		    	definition.packID = packDef.packID;
 					    		    	definition.systemName = fileName.substring(0, fileName.length() - ".json".length());
 					    		    	definition.prefixFolders = assetPath;
 					    		    	definition.classification = classification;
-										parseAllDefinitions((AJSONMultiModelProvider<?>) definition, ((AJSONMultiModelProvider<?>) definition).definitions, definition.packID);
+										parseAllDefinitions((AJSONMultiModelProvider) definition, ((AJSONMultiModelProvider) definition).definitions, definition.packID);
 									}
 								}else{
 									AItemPack<?> item;
@@ -333,7 +336,7 @@ public final class PackParserSystem{
     				for(AItemPack<?> packItem : packItemMap.get(packID).values()){
     					if(packItem.definition.systemName.equals(systemName)){
     						//Parse and create all of the new definitions.
-    						AJSONMultiModelProvider<?> oldDefinition = (AJSONMultiModelProvider<?>) packItem.definition;
+    						AJSONMultiModelProvider oldDefinition = (AJSONMultiModelProvider) packItem.definition;
     						List<JSONSubDefinition> newDefinitions = skinMap.get(packID).get(systemName).definitions;
     						parseAllDefinitions(oldDefinition, newDefinitions, skinMap.get(packID).get(systemName).packID);
     						
@@ -352,7 +355,7 @@ public final class PackParserSystem{
      * Helper method to parse multi-definition pack items.
      * Generated items are added to the passed-in list.
      */
-    private static void parseAllDefinitions(AJSONMultiModelProvider<?> mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
+    private static void parseAllDefinitions(AJSONMultiModelProvider mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
 			AItemPack<?> item;
@@ -435,7 +438,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their vehicles to the mod.**/
     public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONVehicle definition = JSONParser.parseStream(jsonReader, JSONVehicle.class);
+    		JSONVehicle definition = JSONParser.parseStream(jsonReader, JSONVehicle.class, null, null);
     		for(JSONSubDefinition subDefinition : definition.definitions){
     			setupItem(new ItemVehicle(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
     		}
@@ -448,7 +451,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their parts to the mod.**/
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class);
+    		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class, null, null);
     		for(JSONSubDefinition subDefinition : definition.definitions){
 	    		setupItem(new ItemPart(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
     		}
@@ -461,7 +464,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their instrument set to the mod.**/
     public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONInstrument definition = JSONParser.parseStream(jsonReader, JSONInstrument.class);
+    		JSONInstrument definition = JSONParser.parseStream(jsonReader, JSONInstrument.class, null, null);
     		setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT);
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
@@ -472,7 +475,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their pole components to the mod.**/
     public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONPoleComponent definition = JSONParser.parseStream(jsonReader, JSONPoleComponent.class);
+    		JSONPoleComponent definition = JSONParser.parseStream(jsonReader, JSONPoleComponent.class, null, null);
     		for(JSONSubDefinition subDefinition : definition.definitions){
     			setupItem(new ItemPoleComponent(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
     		}
@@ -490,7 +493,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their decor blocks to the mod.**/
     public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		JSONDecor definition = JSONParser.parseStream(jsonReader, JSONDecor.class);
+    		JSONDecor definition = JSONParser.parseStream(jsonReader, JSONDecor.class, null, null);
     		for(JSONSubDefinition subDefinition : definition.definitions){
     			setupItem(new ItemDecor(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
     		}
@@ -503,7 +506,7 @@ public final class PackParserSystem{
     /**Packs should call this upon load to add their crafting items to the mod.**/
     public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
-    		setupItem(new ItemItem(JSONParser.parseStream(jsonReader, JSONItem.class)), packID, jsonFileName, "", "", ItemClassification.ITEM);
+    		setupItem(new ItemItem(JSONParser.parseStream(jsonReader, JSONItem.class, null, null)), packID, jsonFileName, "", "", ItemClassification.ITEM);
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
@@ -535,12 +538,12 @@ public final class PackParserSystem{
     
     
     //--------------------START OF HELPER METHODS--------------------
-    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName){
+    public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem> PackItem getItem(String packID, String systemName){
     	return getItem(packID, systemName, "");
     }
     
     @SuppressWarnings("unchecked")
-	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem<?>> PackItem getItem(String packID, String systemName, String subName){
+	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem> PackItem getItem(String packID, String systemName, String subName){
     	if(packItemMap.containsKey(packID)){
     		return (PackItem) packItemMap.get(packID).get(systemName + subName);
     	}

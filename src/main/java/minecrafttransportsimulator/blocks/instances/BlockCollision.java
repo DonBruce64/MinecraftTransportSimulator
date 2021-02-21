@@ -5,10 +5,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -27,13 +26,13 @@ public class BlockCollision extends ABlockBase{
 	}
     
     @Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
 		return false;
 	}
     
     @Override
-    public void onBroken(WrapperWorld world, Point3i location){
-    	ATileEntityMultiblock<?> masterBlock = getMasterBlock(world, location);
+    public void onBroken(WrapperWorld world, Point3d position){
+    	TileEntityRoad masterBlock = getMasterRoad(world, position);
     	if(masterBlock != null && masterBlock.isActive()){
     		//We belong to this TE.  Destroy the block.  This will end up
 			//destroying all collisions, including this one.  However, since
@@ -45,7 +44,7 @@ public class BlockCollision extends ABlockBase{
     }
     
     @Override
-    public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+    public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
 		collidingBoxes.add(blockBounds);
 	}
     
@@ -55,23 +54,23 @@ public class BlockCollision extends ABlockBase{
 	}
     
     /**
-	 *  Helper method to get the master block instance given the position of a block in the world.
+	 *  Helper method to get the master road instance given the position of a block in the world.
 	 *  This is made non-static simply to ensure people obtain a reference to an actual collision block
 	 *  prior to trying to call this method, as there aren't any bound-able checks we can do on the two
 	 *  input variables.
 	 */
-    public ATileEntityMultiblock<?> getMasterBlock(WrapperWorld world, Point3i location){
-    	Point3i blockOffset = new Point3i(0, 0, 0);
-    	Point3i testPoint = new Point3i(0, 0, 0);
-    	for(int i=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; i<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++i){
-    		for(int j=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; j<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++j){
-    			for(int k=-ATileEntityMultiblock.MAX_COLLISION_DISTANCE; k<2*ATileEntityMultiblock.MAX_COLLISION_DISTANCE; ++k){
+    public TileEntityRoad getMasterRoad(WrapperWorld world, Point3d position){
+    	Point3d blockOffset = new Point3d();
+    	Point3d testPoint = new Point3d();
+    	for(int i=-TileEntityRoad.MAX_COLLISION_DISTANCE; i<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++i){
+    		for(int j=-TileEntityRoad.MAX_COLLISION_DISTANCE; j<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++j){
+    			for(int k=-TileEntityRoad.MAX_COLLISION_DISTANCE; k<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++k){
     				blockOffset.set(i, j, k);
-    				testPoint.setTo(location).subtract(blockOffset);
+    				testPoint.setTo(position).subtract(blockOffset);
             		ATileEntityBase<?> testTile = world.getTileEntity(testPoint);
-            		if(testTile instanceof ATileEntityMultiblock){
-            			if(((ATileEntityMultiblock<?>) testTile).collisionBlockOffsets.contains(blockOffset)){
-            				return (ATileEntityMultiblock<?>) testTile;
+            		if(testTile instanceof TileEntityRoad){
+            			if(((TileEntityRoad) testTile).collisionBlockOffsets.contains(blockOffset)){
+            				return (TileEntityRoad) testTile;
             			}
             		}
             	}

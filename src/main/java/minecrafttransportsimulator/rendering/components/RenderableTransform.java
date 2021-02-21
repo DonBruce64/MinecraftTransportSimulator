@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -14,30 +15,30 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class RenderableTransform{
-	public final List<ATransform> transforms = new ArrayList<ATransform>();
+public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
+	public final List<ATransform<AnimationEntity>> transforms = new ArrayList<ATransform<AnimationEntity>>();
 	
 	public RenderableTransform(List<JSONAnimationDefinition> animations){
 		for(JSONAnimationDefinition animation : animations){
 			switch(animation.animationType){
 				case TRANSLATION :{
-					transforms.add(new TransformTranslatable(animation));
+					transforms.add(new TransformTranslatable<AnimationEntity>(animation));
 					break;
 				}
 				case ROTATION :{
-					transforms.add(new TransformRotatable(animation));
+					transforms.add(new TransformRotatable<AnimationEntity>(animation));
 					break;
 				}
 				case VISIBILITY :{
-					transforms.add(new TransformVisibile(animation));
+					transforms.add(new TransformVisibile<AnimationEntity>(animation));
 					break;
 				}
 				case INHIBITOR :{
-					transforms.add(new TransformInhibitor(animation));
+					transforms.add(new TransformInhibitor<AnimationEntity>(animation));
 					break;
 				}
 				case ACTIVATOR :{
-					transforms.add(new TransformActivator(animation));
+					transforms.add(new TransformActivator<AnimationEntity>(animation));
 					break;
 				}
 			}
@@ -48,25 +49,25 @@ public class RenderableTransform{
 	 *  Does all the transforms for this object.  If the object should render, return true. 
 	 *  If the object should not render due to a transform, return false.
 	 */
-	public boolean doPreRenderTransforms(IAnimationProvider provider, float partialTicks){
+	public boolean doPreRenderTransforms(AnimationEntity entity, float partialTicks){
 		double priorOffset = 0;
 		boolean inhibitAnimations = false;
-		for(ATransform transform : transforms){
+		for(ATransform<AnimationEntity> transform : transforms){
 			if(inhibitAnimations){
-				if(transform.shouldActivate(provider, partialTicks)){
+				if(transform.shouldActivate(entity, partialTicks)){
 					inhibitAnimations = false;
 				}
 			}else{
-				if(transform.shouldInhibit(provider, partialTicks)){
+				if(transform.shouldInhibit(entity, partialTicks)){
 					inhibitAnimations = true;
-				}else if(!transform.shouldRender(provider, partialTicks)){
+				}else if(!transform.shouldRender(entity, partialTicks)){
 					return false;
 				}else{
 					//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
 					if(transform.definition != null && transform.definition.addPriorOffset){
-						priorOffset = transform.applyTransform(provider, partialTicks, priorOffset);
+						priorOffset = transform.applyTransform(entity, partialTicks, priorOffset);
 					}else{
-						priorOffset = transform.applyTransform(provider, partialTicks, 0);
+						priorOffset = transform.applyTransform(entity, partialTicks, 0);
 					}
 				}
 			}
@@ -78,9 +79,9 @@ public class RenderableTransform{
 	 *  Does post-render transform logic.  This is transform-dependent, and should be done after rendering
 	 *  has been completed.
 	 */
-	public void doPostRenderTransforms(IAnimationProvider provider, float partialTicks){
-		for(ATransform transform : transforms){
-			transform.doPostRenderLogic(provider, partialTicks);
+	public void doPostRenderTransforms(AnimationEntity entity, float partialTicks){
+		for(ATransform<AnimationEntity> transform : transforms){
+			transform.doPostRenderLogic(entity, partialTicks);
 		}
 	}
 }

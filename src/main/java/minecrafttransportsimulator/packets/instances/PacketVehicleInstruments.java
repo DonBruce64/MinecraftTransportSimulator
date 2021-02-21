@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsOverlay;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -19,7 +19,7 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  * 
  * @author don_bruce
  */
-public class PacketVehicleInstruments extends APacketVehicle{
+public class PacketVehicleInstruments extends APacketEntity<EntityVehicleF_Physics>{
 	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;

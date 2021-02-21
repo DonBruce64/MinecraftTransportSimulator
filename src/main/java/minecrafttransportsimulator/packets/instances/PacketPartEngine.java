@@ -2,14 +2,15 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
 /**Packet used to send signals to engines.  This can be a state change or damage from an attack.
@@ -20,7 +21,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartEngine extends APacketVehiclePart{
+public class PacketPartEngine extends APacketEntity<PartEngine>{
 	private final Signal packetType;
 	private final double hours;
 	private final boolean oilLeak;
@@ -29,8 +30,8 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 	private final int linkedID;
 	private final Point3d linkedPos;
 	
-	public PacketVehiclePartEngine(PartEngine engine, Signal packetType){
-		super(engine.vehicle, engine.placementOffset);
+	public PacketPartEngine(PartEngine engine, Signal packetType){
+		super(engine);
 		this.packetType = packetType;
 		this.hours = 0;
 		this.oilLeak = false;
@@ -40,8 +41,8 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		this.linkedPos = null;
 	}
 	
-	public PacketVehiclePartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak, boolean brokenStarter){
-		super(engine.vehicle, engine.placementOffset);
+	public PacketPartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak, boolean brokenStarter){
+		super(engine);
 		this.packetType = Signal.DAMAGE;
 		this.hours = hours;
 		this.oilLeak = oilLeak;
@@ -51,18 +52,18 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 		this.linkedPos = null;
 	}
 	
-	public PacketVehiclePartEngine(PartEngine engine, PartEngine linkedEngine){
-		super(engine.vehicle, engine.placementOffset);
+	public PacketPartEngine(PartEngine engine, PartEngine linkedEngine){
+		super(engine);
 		this.packetType = Signal.LINK;
 		this.hours = 0;
 		this.oilLeak = false;
 		this.fuelLeak = false;
 		this.brokenStarter = false;
-		this.linkedID = linkedEngine.vehicle.lookupID;
+		this.linkedID = linkedEngine.entityOn.lookupID;
 		this.linkedPos = linkedEngine.placementOffset;
 	}
 	
-	public PacketVehiclePartEngine(ByteBuf buf){
+	public PacketPartEngine(ByteBuf buf){
 		super(buf);
 		this.packetType = Signal.values()[buf.readByte()];
 		if(packetType.equals(Signal.DAMAGE)){
@@ -101,8 +102,7 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
-		PartEngine engine = (PartEngine) vehicle.getPartAtLocation(offset);
+	public boolean handle(WrapperWorld world, WrapperPlayer player, PartEngine engine){
 		switch(packetType){
 			case MAGNETO_OFF: engine.setMagnetoStatus(false); break;
 			case MAGNETO_ON: engine.setMagnetoStatus(true); break;
@@ -131,14 +131,13 @@ public class PacketVehiclePartEngine extends APacketVehiclePart{
 				InterfaceSound.playQuickSound(new SoundInstance(engine, MasterLoader.resourceDomain + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
-				for(AEntityBase entity : AEntityBase.createdClientEntities){
-					if(entity.lookupID == linkedID){
-						for(PartEngine otherEngine : ((EntityVehicleF_Physics) entity).engines.values()){
-							if(otherEngine.placementOffset.equals(linkedPos)){
-								otherEngine.linkedEngine = engine;
-								engine.linkedEngine = otherEngine;
-								return false;
-							}
+				AEntityE_Multipart<?> otherEntity = (AEntityE_Multipart<?>) AEntityA_Base.getEntity(world, linkedID);
+				if(otherEntity != null){
+					for(APart part : otherEntity.parts){
+						if(part.placementOffset.equals(linkedPos)){
+							((PartEngine) part).linkedEngine = engine;
+							engine.linkedEngine = (PartEngine) part;
+							return false;
 						}
 					}
 				}

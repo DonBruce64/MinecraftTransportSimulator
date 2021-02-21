@@ -36,7 +36,7 @@ public class BuilderCreativeTab extends CreativeTabs{
 	
 	BuilderCreativeTab(String name, AItemBase iconItem){
 		super(name);
-		this.itemIcon = iconItem.getBuilder();
+		this.itemIcon = iconItem != null ? iconItem.getBuilder() : null;
 	}
 	
 	/**
@@ -54,12 +54,12 @@ public class BuilderCreativeTab extends CreativeTabs{
     }
 	
 	@Override
-	public ItemStack getIcon(){
+	public ItemStack createIcon(){
 		return itemIcon != null ? new ItemStack(itemIcon) : null;
 	}
 	
 	@Override
-	public ItemStack createIcon(){
+	public ItemStack getIcon(){
 		if(itemIcon != null){
 			return super.getIcon();
 		}else{

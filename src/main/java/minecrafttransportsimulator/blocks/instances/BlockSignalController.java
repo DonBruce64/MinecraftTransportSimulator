@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
@@ -16,15 +16,15 @@ public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalContr
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i point, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
 		if(world.isClient()){
-			InterfaceGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(point)));
+			InterfaceGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(position)));
 		}
 		return true;
 	}
 
 	@Override
-	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntitySignalController(world, position, data);
 	}
 

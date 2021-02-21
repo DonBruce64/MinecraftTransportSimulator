@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -34,9 +35,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public int allRedTime = 1;
 	
 	//Locations of blocks.
-	public final List<Point3i> componentLocations = new ArrayList<Point3i>();
+	public final List<Point3d> componentLocations = new ArrayList<Point3d>();
 	
-	public TileEntitySignalController(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
 		//Load state data.
 		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
@@ -51,7 +52,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	        allRedTime = data.getInteger("allRedTime");
 		}
         componentLocations.clear();
-        componentLocations.addAll(data.getPoints("componentLocations"));
+        componentLocations.addAll(data.getPoint3dsCompact("componentLocations"));
 	}
 	
 	@Override
@@ -81,11 +82,11 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 					//Check only once every two seconds to prevent lag.
 					if(currentTime%2 == 0){
 						//Get a bounding box for all lights in the controller system.
-						int minX = Integer.MAX_VALUE;
-						int maxX = Integer.MIN_VALUE;
-						int minZ = Integer.MAX_VALUE;
-						int maxZ = Integer.MIN_VALUE;
-						for(Point3i controllerSignalPos : componentLocations){
+						double minX = Double.MAX_VALUE;
+						double maxX = Double.MIN_VALUE;
+						double minZ = Double.MAX_VALUE;
+						double maxZ = Double.MIN_VALUE;
+						for(Point3d controllerSignalPos : componentLocations){
 							minX = Math.min(minX, controllerSignalPos.x);
 							maxX = Math.max(maxX, controllerSignalPos.x);
 							minZ = Math.min(minZ, controllerSignalPos.z);
@@ -103,10 +104,13 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 						
 						//Now we have min-max, check for any vehicles in the area.
 						//We need to check along the non-primary axis, but we don't care about Y.
-						for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
-							if(entity.position.x > minX && entity.position.x < maxX && entity.position.z > minZ && entity.position.z < maxZ){
-								updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
-								break;
+						for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
+							if(entity instanceof EntityVehicleF_Physics){
+								EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+								if(vehicle.position.x > minX && vehicle.position.x < maxX && vehicle.position.z > minZ && vehicle.position.z < maxZ){
+									updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+									break;
+								}
 							}
 						}
 					}
@@ -182,7 +186,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		if(cycleUpdate){
 			timeOperationStarted = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
 		}
-		Iterator<Point3i> iterator = componentLocations.iterator();
+		Iterator<Point3d> iterator = componentLocations.iterator();
 		while(iterator.hasNext()){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(iterator.next());
 			if(pole != null){
@@ -190,16 +194,14 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 					ATileEntityPole_Component component = pole.components.get(axis);
 					if(component instanceof TileEntityPole_TrafficSignal){
 						TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
-						signal.lightOn = (axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? currentOpState.mainLight : currentOpState.crossLight;
-						signal.activeVariables.clear();
-						signal.activeVariables.add(signal.lightOn.lowercaseName);
+						signal.variablesOn.clear();
+						signal.variablesOn.add((axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? currentOpState.mainLight.lowercaseName : currentOpState.crossLight.lowercaseName);
 					}else if(component instanceof TileEntityPole_StreetLight){
 						TileEntityPole_StreetLight light = (TileEntityPole_StreetLight) component;
-						if(light.active ^ lightsOn){
-							light.active = lightsOn;
-							light.activeVariables.clear();
-							if(light.active){
-								light.activeVariables.add(LightType.STREETLIGHT.lowercaseName);
+						if(light.variablesOn.contains(LightType.STREETLIGHT.lowercaseName) ^ lightsOn){
+							light.variablesOn.clear();
+							if(lightsOn){
+								light.variablesOn.add(LightType.STREETLIGHT.lowercaseName);
 							}
 							pole.updateLightState();
 						}
@@ -222,7 +224,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         data.setInteger("yellowMainTime", yellowMainTime);
         data.setInteger("yellowCrossTime", yellowCrossTime);
         data.setInteger("allRedTime", allRedTime);
-        data.setPoints("componentLocations", componentLocations);
+        data.setPoint3dsCompact("componentLocations", componentLocations);
     }
 	
 	public static enum OpMode{

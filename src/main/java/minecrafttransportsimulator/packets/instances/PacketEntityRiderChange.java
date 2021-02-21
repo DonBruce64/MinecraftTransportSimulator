@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**Packet used to add/remove riders from an entity.  This packet only appears on clients after the
  * server has added or removed a rider from the entity.  If a position is given, then this rider should
@@ -14,11 +14,11 @@ import minecrafttransportsimulator.vehicles.main.AEntityBase;
  * 
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntity{
+public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable<?>>{
 	private final int riderID;
 	private final Point3d position;
 	
-	public PacketEntityRiderChange(AEntityBase entity, WrapperEntity rider, Point3d position){
+	public PacketEntityRiderChange(AEntityD_Interactable<?> entity, WrapperEntity rider, Point3d position){
 		super(entity);
 		this.riderID = rider.getID();
 		this.position = position;
@@ -41,7 +41,7 @@ public class PacketEntityRiderChange extends APacketEntity{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityBase entity){
+	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityD_Interactable<?> entity){
 		if(position != null){
 			entity.addRider(world.getEntity(riderID), position);
 		}else{

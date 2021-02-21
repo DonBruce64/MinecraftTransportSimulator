@@ -61,7 +61,7 @@ public final class RenderInstrument{
 				if(component.textObject != null){
 					int variablePartNumber = AnimationsVehicle.getPartNumber(component.textObject.fieldName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
-					double textNumeric = vehicle.getAnimationSystem().getRawVariableValue(vehicle, addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
+					double textNumeric = vehicle.getAnimator().getRawVariableValue(vehicle, addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
 						InterfaceRender.setLightingState(false);
@@ -97,7 +97,7 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double value = vehicle.getAnimationSystem().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							double value = vehicle.getAnimator().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}

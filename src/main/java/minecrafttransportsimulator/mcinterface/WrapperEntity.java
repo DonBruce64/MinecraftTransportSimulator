@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -15,8 +16,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.World;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
  * and motion variables for entities, as well as setting their riding statuses.
@@ -71,8 +75,8 @@ public class WrapperEntity{
 	 *  the entity is not riding any MTS entity (rider may will be riding
 	 *  a vanilla entity).
 	 */
-	public AEntityBase getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntity ? ((BuilderEntity) entity.getRidingEntity()).entity : null;
+	public AEntityD_Interactable<?> getEntityRiding(){
+		return entity.getRidingEntity() instanceof BuilderEntity ? (AEntityD_Interactable<?>) ((BuilderEntity) entity.getRidingEntity()).entity : null;
 	}
 	
 	/**
@@ -80,9 +84,16 @@ public class WrapperEntity{
 	 *  If null is passed-in, then this rider will stop riding whatever entity it
 	 *  is riding, if it was riding any entity.
 	 */
-	public void setRiding(AEntityBase entityToRide){
+	public void setRiding(AEntityD_Interactable<?> entityToRide){
 		if(entityToRide != null){
-			entity.startRiding(entityToRide.wrapper.entity, true);
+			//Get the builder for this entity and set the player to riding it.
+			AxisAlignedBB searchBounds = new AxisAlignedBB(new BlockPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z)).grow(World.MAX_ENTITY_RADIUS);
+			for(BuilderEntity builder : getWorld().world.getEntitiesWithinAABB(BuilderEntity.class, searchBounds)){
+				if(entityToRide.equals(builder.entity)){
+					entity.startRiding(builder, true);
+					return;
+				}
+			}
 		}else{
 			entity.dismountRidingEntity();
 		}
@@ -92,7 +103,7 @@ public class WrapperEntity{
 	 *  If the wrapped entity is an AEntityBase, return that
 	 *  base entity. Otherwise return null.
 	 */
-	public AEntityBase getBaseEntity(){
+	public AEntityA_Base getBaseEntity(){
 		return entity instanceof BuilderEntity ? ((BuilderEntity) entity).entity : null;
 	}
 	
@@ -263,25 +274,27 @@ public class WrapperEntity{
 	public void attack(Damage damage){
 		//If this entity is one of ours, just forward the damage and exit.
 		if(entity instanceof BuilderEntity){
-			((BuilderEntity) entity).entity.attack(damage);
-			return;
+			if(((BuilderEntity) entity).entity instanceof AEntityD_Interactable){
+				((AEntityD_Interactable<?>) ((BuilderEntity) entity).entity).attack(damage);
+				return;
+			}
 		}
 		DamageSource newSource = new DamageSource(damage.name){
 			@Override
 			public ITextComponent getDeathMessage(EntityLivingBase player){
 				EntityLivingBase recentEntity = player.getAttackingEntity();
 				if(recentEntity != null){//Player engaged with another player...
-					if(damage.attacker != null){//and then was killed by another player.
+					if(damage.entityResponsible != null){//and then was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 
-								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName(), recentEntity.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName(), recentEntity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.player", 
 								new Object[] {player.getDisplayName(), recentEntity.getDisplayName()});
 					}
 				}else{//Player was minding their own business...
-					if(damage.attacker != null){//and was killed by another player.
+					if(damage.entityResponsible != null){//and was killed by another player.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".player.null", 
-								new Object[] {player.getDisplayName(), damage.attacker.entity.getDisplayName()});
+								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName()});
 					}else{//and then was killed by something.
 						return new TextComponentTranslation("death.attack." + this.damageType + ".null.null", 
 								new Object[] {player.getDisplayName()});

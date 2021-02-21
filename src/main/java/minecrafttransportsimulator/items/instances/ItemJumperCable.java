@@ -9,7 +9,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -35,14 +35,14 @@ public class ItemJumperCable extends AItemBase implements IItemVehicleInteractab
 							lastEngineClicked = engine;
 							player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.firstlink"));
 						}else if(!lastEngineClicked.equals(engine)){
-							if(lastEngineClicked.vehicle.equals(engine.vehicle)){
+							if(lastEngineClicked.entityOn.equals(engine.entityOn)){
 								lastEngineClicked = null;
 								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.samevehicle"));
-							}else if(engine.worldPos.distanceTo(lastEngineClicked.worldPos) < 15){
+							}else if(engine.position.distanceTo(lastEngineClicked.position) < 15){
 								engine.linkedEngine = lastEngineClicked;
 								lastEngineClicked.linkedEngine = engine;
-								InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(engine, lastEngineClicked));
-								InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(lastEngineClicked, engine));
+								InterfacePacket.sendToAllClients(new PacketPartEngine(engine, lastEngineClicked));
+								InterfacePacket.sendToAllClients(new PacketPartEngine(lastEngineClicked, engine));
 								lastEngineClicked = null;
 								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
 							}else{

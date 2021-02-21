@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 
 /**This class represents a section of a model that uses a texture from an online source.
@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
  *
  * @author don_bruce
  */
-public class TransformOnlineTexture extends ATransform{
+public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	private final String objectName;
 	
 	public TransformOnlineTexture(String objectName){
@@ -19,12 +19,11 @@ public class TransformOnlineTexture extends ATransform{
 	}
 	
 	@Override
-	public boolean shouldRender(IAnimationProvider provider, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, float partialTicks){
 		//Make sure the provider has a texture for us.
-		Map<JSONText, String> textLines = ((ITextProvider) provider).getText();
-		for(JSONText text : ((ITextProvider) provider).getText().keySet()){
+		for(JSONText text : entity.text.keySet()){
 			if(text.fieldName.equals(objectName)){
-				if(!textLines.get(text).isEmpty()){
+				if(!entity.text.get(text).isEmpty()){
 					return true;
 				}
 			}
@@ -33,10 +32,10 @@ public class TransformOnlineTexture extends ATransform{
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		if(InterfaceRender.getRenderPass() != 1){
-			//Get the texture from the text objects of the provider.
-			for(Entry<JSONText, String> textEntry : ((ITextProvider) provider).getText().entrySet()){
+			//Get the texture from the text objects of the entity.
+			for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
 				if(textEntry.getKey().fieldName.equals(objectName)){
 					if(!textEntry.getValue().isEmpty()){
 						String errorString = InterfaceRender.bindURLTexture(textEntry.getValue());
@@ -52,7 +51,7 @@ public class TransformOnlineTexture extends ATransform{
 	}
 	
 	@Override
-	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
+	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
 		if(InterfaceRender.getRenderPass() != 1){
 			//Un-bind the URL texture.
 			InterfaceRender.recallTexture();

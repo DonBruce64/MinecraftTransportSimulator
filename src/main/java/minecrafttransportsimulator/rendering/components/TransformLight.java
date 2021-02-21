@@ -4,17 +4,16 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 
 /**This class represents a light object of a model.  Inputs are the name of the name model
 * and the name of the light.
 *
 * @author don_bruce
 */
-public class TransformLight extends ATransform{
+public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	public final LightType type;
 	public final boolean isLightupTexture;
 	
@@ -104,34 +103,29 @@ public class TransformLight extends ATransform{
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 2/3 power.
-		//Special case for the generic light, which doesn't require power, and is always on.
-		if(type.equals(LightType.GENERICLIGHT)){
-			setLightupTextureState(true, 1);
-		}else{
-			double electricPower = provider.getLightPower();
-			setLightupTextureState(provider.getActiveVariables().contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
-		}
+		double electricPower = entity.getLightPower();
+		setLightupTextureState(entity.variablesOn.contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
 		return 0;
 	}
 	
 	@Override
-	public void doPostRenderLogic(IAnimationProvider provider, float partialTicks){
+	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
 		//We cheat here and render our light bits at this point.
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.
-		//We won't have to worry about the light-up textures, as those lighting changes will be overidden here.
-		boolean lightActuallyOn = (type.equals(LightType.GENERICLIGHT) || provider.getActiveVariables().contains(type.lowercaseName)) && isFlashingLightOn();
-		float sunLight = provider.getProviderWorld().getLightBrightness(new Point3i(provider.getProviderPosition()), false);
-		float electricPower = provider.getLightPower();
+		//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
+		boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
+		float sunLight = entity.world.getLightBrightness(entity.position, false);
+		float electricPower = entity.getLightPower();
 		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
 		float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
 		
 		//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, provider instanceof AEntityBase ? ConfigSystem.configObject.clientRendering.vehicleBeams.value : ConfigSystem.configObject.clientRendering.blockBeams.value);
+		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams());
 	}
 	
 	/**

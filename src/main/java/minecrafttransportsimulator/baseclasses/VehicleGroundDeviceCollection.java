@@ -67,16 +67,16 @@ public class VehicleGroundDeviceCollection{
 	 */
 	public void spawnSlippingParticles(){
 		if(frontLeftGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
 		}
 		if(frontRightGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
 		}
 		if(rearLeftGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
 		}
 		if(rearRightGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(new Point3i(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position)).add(0, -1, 0), false);
+			InterfaceRender.spawnBlockBreakParticles(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
 		}
 	}
 	

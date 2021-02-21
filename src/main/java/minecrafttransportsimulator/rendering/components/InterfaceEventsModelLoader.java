@@ -15,12 +15,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
-import minecrafttransportsimulator.mcinterface.BuilderTileEntityRender;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
@@ -29,6 +29,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
@@ -53,13 +54,12 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsModelLoader{
-	private static final Map<BuilderEntity, RenderTickData> renderData = new HashMap<BuilderEntity, RenderTickData>();
     
 	/**
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the global entity rendering class.
@@ -74,29 +74,23 @@ public class InterfaceEventsModelLoader{
 				
 				@Override
 				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
-					if(builder.entity != null){
-						//If we don't have render data yet, create one now.
-						if(!renderData.containsKey(builder)){
-							renderData.put(builder, new RenderTickData(builder.entity.world));
-						}
-						
-						//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-						int renderPass = InterfaceRender.getRenderPass();
-						if(renderPass == -1){
-							renderPass = 2;
-						}
-						
-						//If we need to render, do so now.
-						if(renderData.get(builder).shouldRender(renderPass, partialTicks)){
-							builder.entity.render(partialTicks);
-						}
+					if(builder.entity != null && builder.entity instanceof AEntityC_Definable){
+						AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
+						internalEntity.getRenderer().render(internalEntity, partialTicks);
 					}
 				}
 			};
 		}});
 		
 		//Register the TESR wrapper.
-		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new BuilderTileEntityRender());
+		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new TileEntitySpecialRenderer<BuilderTileEntity>(){
+			@Override
+			public void render(BuilderTileEntity builder, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
+				if(builder.tileEntity != null){
+					builder.tileEntity.getRenderer().render(builder.tileEntity, partialTicks);
+				}
+			}
+		});
 		
 		//Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
 		//FAR easier than trying to use the bloody bakery system.

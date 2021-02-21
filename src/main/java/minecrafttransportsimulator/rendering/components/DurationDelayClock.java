@@ -1,76 +1,96 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
- * This is used both in model animations, and part movements.
+ * This is used anything that queries animation states.
  *
  * @author don_bruce
  */
 public class DurationDelayClock{
-	public final JSONAnimationDefinition definition;
+	public final JSONAnimationDefinition animation;
+	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;
 	private Long timeCommandedReverse = 0L;
-	private boolean playedForwardsStartSound = false;
-	private boolean playedForwardsEndSound = false;
-	private boolean playedReverseStartSound = false;
-	private boolean playedReverseEndSound = false;
+	private boolean startedForwardsMovement = false;
+	private boolean endedForwardsMovement = false;
+	private boolean startedReverseMovement = false;
+	private boolean endedReverseMovement = false;
 	
-	public DurationDelayClock(JSONAnimationDefinition definition){
-		this.definition = definition;
+	public DurationDelayClock(JSONAnimationDefinition animation){
+		this.animation = animation;
+	}
+	
+	/**
+	 *  Returns true if this clock should be queried for {@link #getFactoredState(AEntityC_Definable, double)}.
+	 *  This can be false to bypass factored states that won't affect the variable value.  
+	 */
+	public boolean isUseful(){
+		return animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0 || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null; 
 	}
 	
 	/**
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
-	public double getFactoredState(IAnimationProvider provider, double value){
+	public double getFactoredState(AEntityC_Definable<?> entity, double value){
 		boolean commandForwards = value == 1;
 		long currentTime = System.currentTimeMillis();
-		long cycleTime = definition.duration*50 + definition.forwardsDelay*50 + definition.reverseDelay*50;
+		long forwardsCycleTime = animation.forwardsDelay*50 + animation.reverseDelay*50;
+		if(!animation.skipForwardsMovement){
+			forwardsCycleTime += animation.duration*50;
+		}
+		long reverseCycleTime = animation.forwardsDelay*50 + animation.reverseDelay*50;
+		if(!animation.skipReverseMovement){
+			reverseCycleTime += animation.duration*50;
+		}
+		movedThisUpdate = false;
 		
 		//If we don't have an existing command, just set ourselves to the end of our command path.
 		if(timeCommandedForwards == 0 && timeCommandedReverse == 0){
 			if(commandForwards){
-				timeCommandedForwards = currentTime - cycleTime;
+				timeCommandedForwards = currentTime - forwardsCycleTime;
 			}else{
-				timeCommandedReverse = currentTime - cycleTime;
+				timeCommandedReverse = currentTime - reverseCycleTime;
 			}
-			playedForwardsStartSound = true;
-			playedForwardsEndSound = true;
-			playedReverseStartSound = true;
-			playedReverseEndSound = true;
+			startedForwardsMovement = true;
+			endedForwardsMovement = true;
+			startedReverseMovement = true;
+			endedReverseMovement = true;
 		}else if(timeCommandedForwards != 0){
 			if(!commandForwards){
 				//Going forwards, need to reverse.
+				movedThisUpdate = true;
 				timeCommandedReverse = currentTime;
 				long timeForwards = currentTime - timeCommandedForwards;
-				if(timeForwards < cycleTime){
+				if(timeForwards < forwardsCycleTime){
 					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
-					timeCommandedReverse += timeForwards - cycleTime;
+					timeCommandedReverse += timeForwards - forwardsCycleTime;
 				}
-				if(timeForwards >= definition.duration*50 + definition.forwardsDelay*50){
-					//Made it to the end of travel, so need to play sound when we start travel back up.
-					playedReverseStartSound = false;
+				if(timeForwards >= forwardsCycleTime - animation.reverseDelay*50){
+					//Made it to the end of travel, so we aren't in the reversing process.
+					startedReverseMovement = false;
 				}
-				playedReverseEndSound = false;
+				endedReverseMovement = false;
 				timeCommandedForwards = 0L;
 			}
 		}else{
 			if(commandForwards){
 				//Going in reverse, need to go forwards.
+				movedThisUpdate = true;
 				timeCommandedForwards = currentTime;
 				long timeReverse = currentTime - timeCommandedReverse;
-				if(timeReverse < cycleTime){
+				if(timeReverse < reverseCycleTime){
 					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
-					timeCommandedForwards += timeReverse - cycleTime;
+					timeCommandedForwards += timeReverse - reverseCycleTime;
 				}else{
-					//Made it to the end of travel, so need to play sound when we start travel back up.
-					playedForwardsStartSound = false;
+					//Made it to the end of travel, so we aren't in the forwards process.
+					startedForwardsMovement = false;
 				}
-				playedForwardsEndSound = false;
+				endedForwardsMovement = false;
 				timeCommandedReverse = 0L;
 			}
 		}
@@ -78,38 +98,50 @@ public class DurationDelayClock{
 		double movementFactor = 0;
 		if(commandForwards){
 			long timedelayed = currentTime - timeCommandedForwards;
-			if(timedelayed >= definition.forwardsDelay*50){
-				long timeMoved = currentTime - (timeCommandedForwards + definition.forwardsDelay*50);
-				if(timeMoved < definition.duration*50){
-					movementFactor = timeMoved/(double)(definition.duration*50);
+			if(timedelayed >= animation.forwardsDelay*50){
+				long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay*50);
+				if(timeMoved < animation.duration*50 && !animation.skipForwardsMovement){
+					movedThisUpdate = true;
+					movementFactor = timeMoved/(double)(animation.duration*50);
 				}else{
 					movementFactor = 1;
-					if(!playedForwardsEndSound && provider.getProviderWorld().isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsEndSound));
-						playedForwardsEndSound = true;
+					if(!endedForwardsMovement){
+						endedForwardsMovement = true;
+						movedThisUpdate = true;
+						if(animation.forwardsEndSound != null && entity.world.isClient()){
+							InterfaceSound.playQuickSound(new SoundInstance(entity, animation.forwardsEndSound));
+						}
 					}
 				}
-				if(!playedForwardsStartSound && provider.getProviderWorld().isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.forwardsStartSound));
-					playedForwardsStartSound = true;
+				if(!startedForwardsMovement){
+					startedForwardsMovement = true;
+					if(animation.forwardsStartSound != null && entity.world.isClient()){
+						InterfaceSound.playQuickSound(new SoundInstance(entity, animation.forwardsStartSound));
+					}
 				}
 			}
 		}else{
 			long timedelayed = currentTime - timeCommandedReverse;
-			if(timedelayed >= definition.reverseDelay*50){
-				long timeMoved = currentTime - (timeCommandedReverse + definition.reverseDelay*50);
-				if(timeMoved < definition.duration*50){
-					movementFactor = timeMoved/(double)(definition.duration*50);
+			if(timedelayed >= animation.reverseDelay*50){
+				long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay*50);
+				if(timeMoved < animation.duration*50 && !animation.skipReverseMovement){
+					movedThisUpdate = true;
+					movementFactor = timeMoved/(double)(animation.duration*50);
 				}else{
 					movementFactor = 1;
-					if(!playedReverseEndSound && provider.getProviderWorld().isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseEndSound));
-						playedReverseEndSound = true;
+					if(!endedReverseMovement){
+						endedReverseMovement = true;
+						movedThisUpdate = true;
+						if(animation.reverseEndSound != null && entity.world.isClient()){
+							InterfaceSound.playQuickSound(new SoundInstance(entity, animation.reverseEndSound));
+						}
 					}
 				}
-				if(!playedReverseStartSound && provider.getProviderWorld().isClient()){
-					InterfaceSound.playQuickSound(new SoundInstance(provider, definition.reverseStartSound));
-					playedReverseStartSound = true;
+				if(!startedReverseMovement){
+					startedReverseMovement = true;
+					if(animation.reverseStartSound != null && entity.world.isClient()){
+						InterfaceSound.playQuickSound(new SoundInstance(entity, animation.reverseStartSound));
+					}
 				}
 			}
 			movementFactor = 1 - movementFactor;

@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
@@ -20,7 +20,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -128,7 +127,7 @@ public class BuilderBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		return mcBlock.onClicked(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperWorld.getWrapperFor(world).getWrapperFor(player));
+		return mcBlock.onClicked(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperWorld.getWrapperFor(world).getWrapperFor(player));
 	}
     
     @Override
@@ -141,14 +140,15 @@ public class BuilderBlock extends Block{
     	//Note that this method is only used for middle-clicking and nothing else.  Failure to return valid results
     	//here will result in air being grabbed, and no WAILA support.
     	if(mcBlock instanceof IBlockTileEntity<?>){
-    		TileEntity tile = world.getTileEntity(pos);
-    		if(tile instanceof BuilderTileEntity){
-    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
-    				AItemPack<?> item = ((BuilderTileEntity<?>) tile).tileEntity.item;
+    		TileEntity mcTile = world.getTileEntity(pos);
+    		if(mcTile instanceof BuilderTileEntity){
+    			ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
+    			if(tile != null){
+    				AItemPack<?> item = tile.getItem();
     				if(item != null){
     					ItemStack stack = item.getNewStack();
     	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-    	        		((BuilderTileEntity<?>) tile).tileEntity.save(data);
+    	        		((BuilderTileEntity<?>) mcTile).tileEntity.save(data);
     	        		stack.setTagCompound(data.tag);
     	            	return stack;
     				}
@@ -175,7 +175,7 @@ public class BuilderBlock extends Block{
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
     	//Forward the breaking call to the block to allow for breaking logic.
-    	mcBlock.onBroken(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()));
+    	mcBlock.onBroken(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()));
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
     	//spawned during the getDrops method.  Also notify the block that it's been broken in case
     	//it needs to do operations.
@@ -184,7 +184,7 @@ public class BuilderBlock extends Block{
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
-        			for(AItemPack<? extends AJSONItem<? extends AJSONItem<?>.General>> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
+        			for(AItemPack<?> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
         				drops.add(item.getNewStack());
         			}
         			dropsAtPositions.put(pos, drops);
@@ -200,7 +200,7 @@ public class BuilderBlock extends Block{
     	//Gets the collision boxes. We forward this call to the block to handle.
     	//We add-on 0.5D to offset the box to the correct location.
     	List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
-    	mcBlock.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3i(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
+    	mcBlock.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
     	for(BoundingBox box : collisionBoxes){
     		AxisAlignedBB mcBox = box.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			if(mcBox.intersects(entityBox)){
@@ -291,7 +291,7 @@ public class BuilderBlock extends Block{
   		if(mcBlock instanceof IBlockTileEntity){
   			BuilderTileEntity<?> builder = (BuilderTileEntity<?>) world.getTileEntity(pos);
   			if(builder != null && builder.tileEntity != null){
-  				return (int) (builder.tileEntity.lightLevel*15F);
+  				return (int) (builder.tileEntity.getLightProvided()*15F);
   			}
   		}
         return super.getLightValue(state, world, pos);

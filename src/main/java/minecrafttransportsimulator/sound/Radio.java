@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.sound;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
@@ -14,12 +12,7 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 *
 * @author don_bruce
 */
-public class Radio{
-	public static final Map<Integer, Radio> createdClientRadios = new HashMap<Integer, Radio>();
-	public static final Map<Integer, Radio> createdServerRadios = new HashMap<Integer, Radio>();
-	/**Internal counter for radio IDs.  Increments each time a radio is created**/
-	private static int idCounter = 1;
-	public final int radioID;
+public class Radio extends AEntityB_Existing{
 	
 	//Public variables for modifying state.
 	public int preset;
@@ -28,14 +21,12 @@ public class Radio{
 	public RadioStation currentStation;
 	
 	//Private runtime variables.
-	private final IRadioProvider provider;
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
-	public Radio(IRadioProvider provider, WrapperNBT data){
-		this.provider = provider;
-		this.radioID = provider.getProviderWorld().isClient() ? data.getInteger("radioID") : idCounter++;
-		if(provider.getProviderWorld().isClient()){
+	public Radio(AEntityB_Existing provider, WrapperNBT data){
+		super(provider.world, data);
+		if(world.isClient()){
 			if(data.getBoolean("savedRadio")){
 				changeSource(RadioSources.values()[data.getInteger("currentSource")], false);
 				pressPreset(data.getInteger("preset"), false);
@@ -44,10 +35,8 @@ public class Radio{
 				changeSource(RadioSources.LOCAL, false);
 				changeVolume(10, false);
 			}
-			createdClientRadios.put(radioID, this);
 		}else{
 			setProperties(RadioSources.values()[data.getInteger("currentSource")], data.getInteger("volume"), data.getInteger("preset"));
-			createdServerRadios.put(radioID, this);
 		}
 	}
 	
@@ -57,7 +46,7 @@ public class Radio{
 	 * it has connected and is ready to play sound.
 	 */
 	public void start(){
-		currentSound = new SoundInstance(provider, "Radio_" + radioID, false, this);
+		currentSound = new SoundInstance(this, "Radio_" + lookupID, false, this);
 		currentSound.volume = volume/10F;
 	}
 	
@@ -88,7 +77,7 @@ public class Radio{
 			case SERVER : displayText = "Ready to play from files on the server.\nPress a station number to start."; break;
 			case INTERNET : displayText = "Ready to play from internet streams.\nPress a station number to start.\nOr press SET to set a station URL."; break;
 		}
-		if(provider.getProviderWorld().isClient() && sendPacket){
+		if(world.isClient() && sendPacket){
 			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
@@ -108,7 +97,7 @@ public class Radio{
 		if(currentSound != null){
 			currentSound.volume = setVolume/10F;
 		}
-		if(provider.getProviderWorld().isClient() && sendPacket){
+		if(world.isClient() && sendPacket){
 			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, setVolume, preset));
 		}
 	}
@@ -144,7 +133,7 @@ public class Radio{
 				currentStation.addRadio(this);
 			}
 		}
-		if(provider.getProviderWorld().isClient() && sendPacket){
+		if(world.isClient() && sendPacket){
 			InterfacePacket.sendToServer(new PacketRadioStateChange(this, currentSource, volume, preset));
 		}
 	}
@@ -159,11 +148,9 @@ public class Radio{
 	}
 	
 	
-	/**
-	 * Saves the radio state to NBT for creation later.
-	 */
+	@Override
 	public void save(WrapperNBT data){
-		data.setInteger("radioID", radioID);
+		//Don't save positional data.  We don't care about that as that comes from our provider.
 		data.setInteger("currentSource", currentSource.ordinal());
 		data.setBoolean("savedRadio", true);
 		data.setInteger("preset", preset);

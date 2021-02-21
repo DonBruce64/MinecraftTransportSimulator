@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketTileEntity;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityRoadChange extends APacketTileEntity<TileEntityRoad>{
+public class PacketTileEntityRoadChange extends APacketEntity<TileEntityRoad>{
 	private final RoadComponent componentType;
 	private final ItemRoadComponent componentItem;
 	

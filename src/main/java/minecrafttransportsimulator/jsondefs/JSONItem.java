@@ -7,16 +7,20 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 @JSONDescription("While allowing users to craft vehicles is great, it can get a bit un-realistic to make a truck out of stacks of iron ingots and glass.  To help with this, MTS allows you to make custom items.  These items are loaded via JSON like all other vehicle bits, but rather than use an OBJ model they use the normal Minecraft item JSON format.  This allows you to take any JSON outputted from any modeling software (such as BlockBench) and plop it, along with a small file in the jsondefs section, into your pack for crafting use!  Items just have a general section per the default.  That's it.  If you want to add functioanlity to your items, you can do so by giving the appropriate type parameter.")
-public class JSONItem extends AJSONItem<JSONItem.ItemGeneral>{
-	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
-	@JSONDescription("Booklet-specific item section.")
-	public JSONBooklet booklet;
+public class JSONItem extends AJSONItem{
+	
+	@JSONDescription("Properties for all items..")
+	public JSONItemGeneric item;
 	
 	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="general")
 	@JSONDescription("Food-specific item section.")
 	public JSONFood food;
+	
+	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
+	@JSONDescription("Booklet-specific item section.")
+	public JSONBooklet booklet;
 
-    public class ItemGeneral extends AJSONItem<JSONItem.ItemGeneral>.General{
+    public class JSONItemGeneric{
     	@JSONDescription("The functionality to give this item.")
     	public ItemComponentType type;
     }

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 
 /**Base Tile Entity rendering class (TESR).  
@@ -7,13 +9,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
  *
  * @author don_bruce
  */
-public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>>{
-	
-	/**
-	 *  Called to render this tile entity.  The currently-bound texture is undefined, so you will need
-	 *  to bind whichever texture you see fit to do so.  This can be done via {@link InterfaceRender#bindTexture(String, String)}
-	 */
-	public abstract void render(RenderedTileEntity tileEntity, float partialTicks);
+public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>> extends ARenderEntity<RenderedTileEntity>{
 	
 	/**
 	 *  Returns true if this TE should be rotated to the rotation of the block.
@@ -27,5 +23,21 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	 */
 	public boolean translateToSlabs(){
 		return true;
+	}
+	
+	@Override
+	public void adjustPositionRotation(RenderedTileEntity entity, Point3d entityPosition, Point3d entityRotation){
+		//Offset X and Z to be centered in the block.
+		entityPosition.x += 0.5;
+		entityPosition.z += 0.5;
+		if(translateToSlabs() && entity.world.isBlockBottomSlab(entity.position.copy().add(0, -1, 0))){
+			entityPosition.y -= 0.5D;			
+		}
+		if(rotateToBlock()){
+			ABlockBase block = entity.world.getBlock(entity.position);
+			if(block != null){
+				entityRotation.y -= block.getRotation(entity.world, entity.position);
+			}
+		}
 	}
 }

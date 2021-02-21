@@ -3,21 +3,19 @@ package minecrafttransportsimulator.vehicles.main;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
-import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityMultiblock;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -44,8 +42,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public static final byte MAX_BRAKE = 100;
 	public byte brake;
 	public boolean parkingBrakeOn;
-	public boolean locked;
-	public String ownerUUID = "";
 	
 	//Internal states.
 	public boolean goingInReverse;
@@ -89,9 +85,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
-		this.locked = data.getBoolean("locked");
+	public EntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
 		
@@ -102,7 +97,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		this.activeHitchPartSavedOffset = data.getPoint3d("activeHitchPartSavedOffset");
 		this.activeHookupPartSavedOffset = data.getPoint3d("activeHookupPartSavedOffset");
 		
-		this.ownerUUID = data.getString("ownerUUID");
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
@@ -116,9 +110,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//We need to wait on this in case the vehicle didn't load at the same time.
 		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
 			try{
-				for(AEntityBase entity : (world.isClient() ? AEntityBase.createdClientEntities : AEntityBase.createdServerEntities)){
-					if(entity.uniqueUUID.equals(towedVehicleSavedID)){
-						towedVehicle = (EntityVehicleF_Physics) entity;
+				if(!towedVehicleSavedID.isEmpty()){
+					towedVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
+					if(towedVehicle != null){
 						if(!activeHitchPartSavedOffset.isZero()){
 							activeHitchPart = getPartAtLocation(activeHitchPartSavedOffset);
 							activeHitchConnection = activeHitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
@@ -126,16 +120,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 							activeHitchConnection = definition.connections.get(activeHitchConnectionSavedIndex);
 						}
 						towedVehicleSavedID = "";
-					}else if(entity.uniqueUUID.equals(towedByVehicleSavedID)){
-						towedByVehicle = (EntityVehicleF_Physics) entity;
-						if(!activeHookupPartSavedOffset.isZero()){
-							activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
-							activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
-						}else{
-							activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
-						}
-						towedByVehicleSavedID = "";
 					}
+				}
+				if(!towedByVehicleSavedID.isEmpty()){
+					towedByVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
+					if(!activeHookupPartSavedOffset.isZero()){
+						activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
+						activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
+					}else{
+						activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
+					}
+					towedByVehicleSavedID = "";
 				}
 			}catch(Exception e){
 				InterfaceCore.logError("Could not connect trailer to vehicle.  Did the JSON change?");
@@ -153,7 +148,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//This is required to move the GDBs if the GDs move.
 		for(APart part : parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.placementOffset.equals(part.totalOffset)){
+				if(!part.localOffset.equals(part.prevLocalOffset)){
 					groundDeviceCollective.updateBounds();
 					break;
 				}
@@ -169,11 +164,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				dampenControlSurfaces();
 			}
 		}
+		
+		//Update parts after all movement is done.
+		updateParts();
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean sendPacket){
+		super.addPart(part, sendPacket);
 		groundDeviceCollective.updateMembers();
 		groundDeviceCollective.updateBounds();
 	}
@@ -200,12 +198,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(contactPoint != null){
 			contactPoint.rotateCoarse(angles).add(position);
 			Point3d testPoint = new Point3d();
-			Point3i checkLocation = new Point3i(contactPoint);
-			ABlockBase block =  world.getBlock(checkLocation);
+			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
-				ATileEntityMultiblock<?> multiblock = ((BlockCollision) block).getMasterBlock(world, checkLocation);
-				if(multiblock instanceof TileEntityRoad){
-					TileEntityRoad road = (TileEntityRoad) multiblock;
+				TileEntityRoad road = ((BlockCollision) block).getMasterRoad(world, contactPoint);
+				if(road != null){
 					//Check to see which lane we are on, if any.
 					for(RoadLane lane : road.lanes){
 						//Check path-points on the curve.  If our angles and position are close, set this as the curve.
@@ -342,9 +338,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Get any contributions from the colliding collision bits.
 		for(BoundingBox box : blockCollisionBoxes){
 			if(!box.collidingBlockPositions.isEmpty()){
-				Point3i groundPosition = new Point3i(box.globalCenter);
-				if(!world.isAir(groundPosition)){
-					float frictionLoss = 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
+				if(!world.isAir(box.globalCenter)){
+					float frictionLoss = 0.6F - world.getBlockSlipperiness(box.globalCenter) + world.getRainStrength(box.globalCenter)*0.1F;
 					brakingFactor += Math.max(2.0 - frictionLoss, 0);
 				}
 			}
@@ -389,7 +384,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//Don't use fake ground devices here as it'll mess up math for vehicles.
 			boolean treadsOnly = true;
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-				if(groundDevice.vehicleDefinition.turnsWithSteer && !groundDevice.isFake()){
+				if(groundDevice.placementDefinition.turnsWithSteer && !groundDevice.isFake()){
 					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
 					if(treadsOnly && !groundDevice.definition.ground.isTread){
 						treadsOnly = false;
@@ -432,7 +427,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 									}
 								}
 							}else if(part instanceof PartEngine){
-								if(((PartEngine) part).currentGear == 0){
+								if(((PartEngine) part).currentGear == 0 && ((PartEngine) part).state.running){
 									foundNeutralEngine = true;
 								}
 							}
@@ -474,7 +469,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//If we aren't on a road, try to find one.
 		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
-		if(towedByVehicle != null || definition.general.isAircraft){
+		if(towedByVehicle != null || definition.motorized.isAircraft){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
@@ -585,10 +580,17 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
 			//If we hit something, however, we need to inhibit the movement so we don't do that.
 			//This prevents vehicles from phasing through walls even though they are driving on the ground.
-			//If we are being towed, don't check for collisions, as this can lead to the vehicle getting stuck.
+			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
 			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
 			if(isCollisionBoxCollided()){
-				correctCollidingMovement();
+				if(towedByVehicle != null){
+					Point3d initalMotion = motion.copy();
+					correctCollidingMovement();
+					towedByVehicle.motion.add(motion).subtract(initalMotion);
+				}else{
+					correctCollidingMovement();
+				}
+				
 			}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
@@ -671,13 +673,11 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		if(towedByVehicle == null){
-			tempBoxAngles.setTo(rotation).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
-				tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-				if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-					return true;
-				}
+		tempBoxAngles.setTo(rotation).add(angles);
+		for(BoundingBox box : blockCollisionBoxes){
+			tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+			if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+				return true;
 			}
 		}
 		return false;
@@ -828,7 +828,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHitchOffset(){
 		if(activeHitchConnection != null){
 			if(activeHitchPart != null){
-				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.totalRotation).add(activeHitchPart.totalOffset); 
+				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.localAngles).add(activeHitchPart.localOffset); 
 			}else{
 				return activeHitchConnection.pos;
 			}
@@ -844,7 +844,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	public Point3d getHookupOffset(){
 		if(activeHookupConnection != null){
 			if(activeHookupPart != null){
-				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.totalRotation).add(activeHookupPart.totalOffset); 
+				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.localAngles).add(activeHookupPart.localOffset); 
 			}else{
 				return activeHookupConnection.pos;
 			}
@@ -933,12 +933,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					if(!firstConnection.hookup && secondConnection.hookup){
 						Point3d hitchPos = firstConnection.pos.copy();
 						if(optionalFirstPart != null){
-							hitchPos.rotateCoarse(optionalFirstPart.totalRotation).add(optionalFirstPart.totalOffset);
+							hitchPos.rotateCoarse(optionalFirstPart.localAngles).add(optionalFirstPart.localOffset);
 						}
 						hitchPos.rotateCoarse(firstVehicle.angles).add(firstVehicle.position);
 						Point3d hookupPos = secondConnection.pos.copy();
 						if(optionalSecondPart != null){
-							hookupPos.rotateCoarse(optionalSecondPart.totalRotation).add(optionalSecondPart.totalOffset);
+							hookupPos.rotateCoarse(optionalSecondPart.localAngles).add(optionalSecondPart.localOffset);
 						}
 						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
 						
@@ -994,8 +994,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				trailer.angles.setTo(angles);
 				trailer.prevAngles.setTo(prevAngles);
 				if(activeHitchPart != null){
-					trailer.angles.add(activeHitchPart.totalRotation);
-					trailer.prevAngles.add(activeHitchPart.totalRotation);
+					trailer.angles.add(activeHitchPart.localAngles);
+					trailer.prevAngles.add(activeHitchPart.localAngles);
 				}
 				EntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
 				while(trailerTrailer != null){
@@ -1044,7 +1044,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("locked", locked);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
 		if(towedVehicle != null){
@@ -1065,7 +1064,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				data.setInteger("activeHookupConnectionSavedIndex", definition.connections.indexOf(activeHookupConnection));
 			}
 		}
-		data.setString("ownerUUID", ownerUUID);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
 	}

@@ -5,13 +5,13 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -21,12 +21,11 @@ import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 /**This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
  * well as helper functions and logic for controlling those surfaces.
+ * Note that angle variables here should be divided by 10 to get actual angle.
  * 
  * @author don_bruce
  */
 public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
-	//Note that angle variable should be divided by 10 to get actual angle.
-	
 	//Aileron.
 	public static final short MAX_AILERON_ANGLE = 250;
 	public static final short MAX_AILERON_TRIM = 100;
@@ -104,9 +103,13 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	private Point3d thrustTorque = new Point3d();//kg*m^2/ticks^2
 	private Point3d totalTorque = new Point3d();//kg*m^2/ticks^2
 	private Point3d rotorRotation = new Point3d();//degrees
+	
+	//Animator for vehicles
+	private static final AnimationsVehicle animator = new AnimationsVehicle();
+	private static RenderVehicle renderer;;
 
-	public EntityVehicleF_Physics(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");
@@ -224,7 +227,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByVehicle == null){
 			//Set moments.
-			momentRoll = definition.general.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
+			momentRoll = definition.motorized.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
 			momentPitch = 2D*currentMass;
 			momentYaw = 3D*currentMass;
 			
@@ -283,7 +286,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Get forces.  Some forces are specific to JSON sections.
 			//First get gravity.
 			gravitationalForce = definition.motorized.ballastVolume == 0 ? currentMass*(9.8/400) : 0;
-			if(!definition.general.isAircraft){
+			if(!definition.motorized.isAircraft){
 				gravitationalForce *= ConfigSystem.configObject.general.gravityFactor.value;
 			}
 			
@@ -298,7 +301,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
 			
 			//Set blimp-specific states before calculating forces.
-			if(definition.general.isBlimp){
+			if(definition.motorized.isBlimp){
 				//Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
 				//we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
 				//which key is pressed, they both activate the rudder for turning.
@@ -318,7 +321,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Get the drag coefficient and force.
-			if(definition.general.isAircraft){
+			if(definition.motorized.isAircraft){
 				//Aircraft are 0.03 by default, or whatever is specified.
 				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
 			}else{
@@ -374,7 +377,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			}
 			
 			//Do more blimp-specific things for the forces.
-			if(definition.general.isBlimp){
+			if(definition.motorized.isBlimp){
 				//Roll and pitch are applied only if we aren't level.
 				//This only happens if we fall out of the sky and land on the ground and tilt.
 				if(angles.z > 0){
@@ -424,7 +427,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
 					rotation.setTo(towedByVehicle.angles).subtract(angles);
 					if(towedByVehicle.activeHitchPart != null){
-						rotation.add(towedByVehicle.activeHitchPart.totalRotation);
+						rotation.add(towedByVehicle.activeHitchPart.localAngles);
 					}
 				}else{
 					//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
@@ -592,11 +595,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}
 	}
 	
-	@Override
-	public void render(float partialTicks){
-		RenderVehicle.render(this, partialTicks);
-	}
-	
 	protected static double getLiftCoeff(double angleOfAttack, double maxLiftCoeff){
 		if(angleOfAttack == 0){
 			return 0;
@@ -611,6 +609,26 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 		}else{
 			return maxLiftCoeff*Math.sin(Math.PI/6*angleOfAttack/15);
 		}
+	}
+	
+	@Override
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.vehicleBeams.value;
+    }
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public AnimationsVehicle getAnimator(){
+		return animator;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public RenderVehicle getRenderer(){
+		if(renderer == null){
+			renderer = new RenderVehicle();
+		}
+		return renderer;
 	}
     
 	@Override

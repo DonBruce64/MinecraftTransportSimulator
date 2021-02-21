@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.components;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -11,17 +11,17 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  *
  * @author don_bruce
  */
-public interface IBlockTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem<?>>>{
+public interface IBlockTileEntity<TileEntityType extends ATileEntityBase<? extends AJSONItem>>{
 	
 	/**
 	 *  Gets a new Tile Entity for this block.
 	 */
-	public TileEntityType createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data);
+	public TileEntityType createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data);
 	
 	/**
 	 *  Gets the class that this Tile Entity is made from.
 	 *  This is for registration, not construction.  For construction,
-	 *  use {@link #createTileEntity(WrapperWorld, Point3i, WrapperNBT)}
+	 *  use {@link #createTileEntity(WrapperWorld, Point3d, WrapperNBT)}
 	 */
 	public Class<TileEntityType> getTileEntityClass();
 }

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.rendering.instances.RenderPart;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -156,7 +157,7 @@ public class GUIPackExporter extends AGUIBase{
 										try{
 											if(packItem.definition instanceof JSONVehicle){
 												JSONVehicle definition = (JSONVehicle) packItem.definition;
-												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class);
+												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.definitions = loadedDefinition.definitions;
 												definition.motorized = loadedDefinition.motorized;
@@ -169,7 +170,7 @@ public class GUIPackExporter extends AGUIBase{
 												
 											}else if(packItem.definition instanceof JSONPart){
 												JSONPart definition = (JSONPart) packItem.definition;
-												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class);
+												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.engine = loadedDefinition.engine;
 												definition.ground = loadedDefinition.ground;
@@ -180,22 +181,22 @@ public class GUIPackExporter extends AGUIBase{
 												definition.interactable = loadedDefinition.interactable;
 												definition.effector = loadedDefinition.effector;
 												definition.generic = loadedDefinition.generic;
-												definition.subParts = loadedDefinition.subParts;
+												definition.parts = loadedDefinition.parts;
 												definition.collision = loadedDefinition.collision;
 												definition.doors = loadedDefinition.doors;
 												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
-												RenderVehicle.clearPartCaches(definition);
+												RenderPart.clearPartCaches(definition);
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;
-												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class);
+												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.components = loadedDefinition.components;
 												
 											}else if(packItem.definition instanceof JSONPoleComponent){
 												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
-												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class);
+												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												
 											}else{
@@ -300,7 +301,7 @@ public class GUIPackExporter extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "Model:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getModelLocation());
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.currentSubName));
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.x));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";

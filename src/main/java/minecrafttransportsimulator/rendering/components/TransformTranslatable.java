@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -9,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformTranslatable extends ATransform{
+public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	private final Point3d translationAxis;
 	
 	
@@ -21,8 +22,8 @@ public class TransformTranslatable extends ATransform{
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
-		double translation = provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, offset, getClock(provider), partialTicks);
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
+		double translation = entity.getAnimator().getAnimatedVariableValue(entity, definition, offset, getClock(entity), partialTicks);
 		//Do the actual translation, if we aren't 0.
 		if(translation != 0){
 			GL11.glTranslated(translation*translationAxis.x, translation*translationAxis.y, translation*translationAxis.z);

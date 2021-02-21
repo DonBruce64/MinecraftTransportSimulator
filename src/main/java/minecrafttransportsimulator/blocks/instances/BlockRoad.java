@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.instances;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
@@ -19,21 +19,21 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
     
     @Override
-    public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+    public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
     	//Get collision box from saved instance in the TE.
-    	TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
+    	TileEntityRoad road = (TileEntityRoad) world.getTileEntity(position);
     	if(road != null){
     		collidingBoxes.add(road.boundingBox);
     	}else{
-			super.addCollisionBoxes(world, location, collidingBoxes);
+			super.addCollisionBoxes(world, position, collidingBoxes);
 		}
 	}
 
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
 		if(!world.isClient()){
 			//Check if we aren't active.  If not, try to spawn collision again.
-			TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
+			TileEntityRoad road = (TileEntityRoad) world.getTileEntity(position);
 	    	if(road != null && !road.isActive()){
 	    		road.spawnCollisionBlocks(player);
 	    	}
@@ -42,8 +42,8 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-    public void onBroken(WrapperWorld world, Point3i location){
-		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(location);
+    public void onBroken(WrapperWorld world, Point3d position){
+		TileEntityRoad road = (TileEntityRoad) world.getTileEntity(position);
 		if(road != null && road.isActive()){
 			//Set the TE to inactive and remove all road connections.
 			road.setActive(false);
@@ -52,8 +52,8 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 			}
 			
 			//Now remove all collision blocks.
-			for(Point3i blockOffset : road.collisionBlockOffsets){
-				Point3i blockLocation = location.copy().add(blockOffset);
+			for(Point3d blockOffset : road.collisionBlockOffsets){
+				Point3d blockLocation = position.copy().add(blockOffset);
 				//Check to make sure we don't destroy non-road blocks.
 				//This is required in case our TE is corrupt or someone messes with it.
 				if(world.getBlock(blockLocation) instanceof BlockCollision){
@@ -64,7 +64,7 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
     
     @Override
-	public TileEntityRoad createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityRoad createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityRoad(world, position, data);
 	}
 

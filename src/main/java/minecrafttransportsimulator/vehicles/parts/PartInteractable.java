@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.vehicles.parts;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -24,30 +24,32 @@ public final class PartInteractable extends APart{
 	public String jerrycanFluid;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		super(vehicle, packVehicleDef, item, data, parentPart);
+	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placementDefinition, data, parentPart);
 		switch(definition.interactable.interactionType){
-			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", vehicle.world, data, definition.interactable.inventoryUnits*9); break;
+			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", world, data, definition.interactable.inventoryUnits*9); break;
 			case BARREL: this.interactable = null; break;
 			case CRAFTING_TABLE: this.interactable = null; break;
-			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", vehicle.world, data, 0); break;
-			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", vehicle.world, data, 0); break;
+			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", world, data, 0); break;
+			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", world, data, 0); break;
 			case JERRYCAN: this.interactable = null; break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
-		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(data, definition.interactable.inventoryUnits*10000, vehicle.world.isClient()) : null;
+		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data.getDataOrNew("tank"), definition.interactable.inventoryUnits*10000) : null;
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	
 	@Override
 	public boolean interact(WrapperPlayer player){
-		if(!vehicle.locked){
+		if(!entityOn.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
-				vehicle.removePart(this, null);
-				vehicle.world.spawnItem(getItem(), getData(), worldPos);
+				entityOn.removePart(this, null);
+				WrapperNBT data = new WrapperNBT();
+				save(data);
+				world.spawnItem(getItem(), data, position);
 			}else if(interactable != null){
 				player.openTileEntityGUI(interactable);
 			}else if(tank != null){
@@ -63,8 +65,10 @@ public final class PartInteractable extends APart{
 	public void attack(Damage damage){
 		double explosivePower = getExplosiveContribution();
 		if(explosivePower > 0){
-			vehicle.world.spawnExplosion(vehicle, worldPos, explosivePower, true);
-			vehicle.destroyAt(worldPos);
+			world.spawnExplosion(position, explosivePower, true);
+			if(vehicleOn != null){
+				vehicleOn.destroyAt(position);
+			}
 		}
 	}
 	
@@ -77,17 +81,17 @@ public final class PartInteractable extends APart{
 		
 		//Check to see if we are linked and need to send fluid to the linked tank.
 		//Only do checks on the server.  Clients get packets.
-		if(!vehicle.world.isClient()){
+		if(!world.isClient()){
 			FluidTank linkedTank =  null;
 			String linkedMessage = null;
 			if(linkedVehicle != null){
-				if(linkedVehicle.position.distanceTo(worldPos) > 16){
+				if(linkedVehicle.position.distanceTo(position) > 16){
 					linkedMessage = "interact.fuelhose.linkdropped";
 				}else{
 					linkedTank = linkedVehicle.fuelTank;
 				}
 			}else if(linkedPart != null){
-				if(linkedPart.worldPos.distanceTo(worldPos) > 16){
+				if(linkedPart.position.distanceTo(position) > 16){
 					linkedMessage = "interact.fuelhose.linkdropped";
 				}else{
 					linkedTank = linkedPart.tank;
@@ -118,26 +122,13 @@ public final class PartInteractable extends APart{
 			if(linkedMessage != null){
 				linkedVehicle = null;
 				linkedPart = null;
-				for(WrapperEntity entity : vehicle.world.getEntitiesWithin(new BoundingBox(worldPos, 16, 16, 16))){
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 					if(entity instanceof WrapperPlayer){
 						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage(linkedMessage));
 					}
 				}
 			}
 		}
-	}
-	
-	@Override
-	public WrapperNBT getData(){
-		WrapperNBT data = super.getData();
-		if(interactable != null){
-			interactable.save(data);
-		}else if(tank != null){
-			tank.save(data);
-		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
-			data.setString("jerrycanFluid", jerrycanFluid);
-		}
-		return data;
 	}
 	
 	public int getInventoryCount(){
@@ -195,6 +186,20 @@ public final class PartInteractable extends APart{
 			return tank.getExplosiveness();
 		}else{
 			return 0;
+		}
+	}
+	
+	@Override
+	public void save(WrapperNBT data){
+		super.save(data);
+		if(interactable != null){
+			interactable.save(data);
+		}else if(tank != null){
+			WrapperNBT tankData = new WrapperNBT();
+			tank.save(tankData);
+			data.setData("tank", tankData);
+		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+			data.setString("jerrycanFluid", jerrycanFluid);
 		}
 	}
 }

@@ -9,7 +9,7 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
  * a specific box.  This is mainly for attacks that hurt all entities within the area, but don't target a
  * specific box or part on the entity.
  * <br><br>
- * The passed-in entity here represents the entity that is responsible for the damage.  The player responsible
+ * The passed-in wrapper here represents the entity that is responsible for the damage.  The player responsible
  * may not be the actual entity that attacked.  For example, a player that fires a gun on a car will spawn bullet,
  * and the bullet may hit another player, but it's the player who shot the gun that is responsible, not the bullet.
  * Conversely, if a player starts a jet engine and walks away, and then another player gets sucked into the jet engine,
@@ -21,7 +21,8 @@ public class Damage{
 	public final String name;
 	public final double amount;
 	public final BoundingBox box;
-	public final WrapperEntity attacker;
+	public final AEntityB_Existing damgeSource;
+	public final WrapperEntity entityResponsible;
 	
 	public boolean isFire;
 	public boolean isWater;
@@ -29,11 +30,12 @@ public class Damage{
 	public boolean ignoreArmor;
 	public boolean ignoreCooldown;
 	
-	public Damage(String name, double amount, BoundingBox box, WrapperEntity attacker){
+	public Damage(String name, double amount, BoundingBox box, AEntityB_Existing damgeSource, WrapperEntity entityResponsible){
 		this.name = name;
 		this.amount = amount;
 		this.box = box;
-		this.attacker = attacker;
+		this.damgeSource = damgeSource;
+		this.entityResponsible = entityResponsible;
 	}
 	
 	/**

@@ -5,7 +5,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.util.math.AxisAlignedBB;
 
@@ -29,7 +28,7 @@ public class BoundingBox{
 	public final Point3d localCenter;
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
-	public final List<Point3i> collidingBlockPositions = new ArrayList<Point3i>();
+	public final List<Point3d> collidingBlockPositions = new ArrayList<Point3d>();
 	private final Point3d tempGlobalCenter;
 	
 	public double widthRadius;
@@ -91,7 +90,7 @@ public class BoundingBox{
 	 *  better interaction while standing on entities.  Optional extra offset is present should
 	 *  a supplemental translation need to be performed before aligning to the entity.
 	 */
-	public void updateToEntity(AEntityBase entity, Point3d optionalOffset){
+	public void updateToEntity(AEntityD_Interactable<?> entity, Point3d optionalOffset){
 		globalCenter.setTo(localCenter);
 		if(optionalOffset != null){
 			globalCenter.add(optionalOffset);
@@ -107,18 +106,18 @@ public class BoundingBox{
 	
 	/**
 	 *  Sets the global center of this box to the position of the passed-in part, rotated by the
-	 *  part and vehicle's rotation and offset by the local center.  This is like {@link #updateToEntity(AEntityBase)}
-	 *  but for parts on vehicles which have offsets.
+	 *  part and entity's rotation and offset by the local center.  This is like {@link #updateToEntity(AEntityD_Interactable)}
+	 *  but for parts on entities which have offsets.
 	 */
 	public void updateToPart(APart part){
 		//First rotate the box based on the part's rotation.
-		globalCenter.setTo(localCenter).rotateFine(part.totalRotation);
-		//Now translate the box to it's actual position relative to the vehicle.
-		globalCenter.add(part.totalOffset);
-		//Now rotate the collision box by the vehicle's rotation.
-		globalCenter.rotateFine(part.vehicle.angles);
-		//Add the worldOffset based on the vehicle's current position.
-		globalCenter.add(part.vehicle.position);
+		globalCenter.setTo(localCenter).rotateFine(part.localAngles);
+		//Now translate the box to it's actual position relative to the entity.
+		globalCenter.add(part.localOffset);
+		//Now rotate the collision box by the entity's rotation.
+		globalCenter.rotateFine(part.entityOn.angles);
+		//Add the worldOffset based on the entity's current position.
+		globalCenter.add(part.entityOn.position);
 		//Clamp the box's points if required.
 		if(isCollision){
 			//Need to round box to prevent floating-point errors.

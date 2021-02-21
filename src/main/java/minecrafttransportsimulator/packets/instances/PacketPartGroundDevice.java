@@ -1,11 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
 /**Packet used to send signals to ground devices.  Currently only used to make wheel-typed
@@ -13,15 +11,15 @@ import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartGroundDevice extends APacketVehiclePart{
+public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice>{
 	final boolean flat;
 	
-	public PacketVehiclePartGroundDevice(PartGroundDevice groundDevice, boolean flat){
-		super(groundDevice.vehicle, groundDevice.placementOffset);
+	public PacketPartGroundDevice(PartGroundDevice groundDevice, boolean flat){
+		super(groundDevice);
 		this.flat = flat;
 	}
 	
-	public PacketVehiclePartGroundDevice(ByteBuf buf){
+	public PacketPartGroundDevice(ByteBuf buf){
 		super(buf);
 		this.flat = buf.readBoolean();
 	}
@@ -33,8 +31,7 @@ public class PacketVehiclePartGroundDevice extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
-		PartGroundDevice groundDevice = (PartGroundDevice) vehicle.getPartAtLocation(offset);
+	public boolean handle(WrapperWorld world, WrapperPlayer player, PartGroundDevice groundDevice){
 		groundDevice.setFlatState(flat);
 		return true;
 	}

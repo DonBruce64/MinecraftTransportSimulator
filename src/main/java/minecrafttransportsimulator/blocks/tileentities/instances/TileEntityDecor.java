@@ -1,20 +1,14 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.LinkedHashMap;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.components.IAnimationProvider;
-import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
@@ -22,80 +16,43 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  *
  * @author don_bruce
  */
-public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements IAnimationProvider, ITextProvider{
+public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
-	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	private static final AnimationsDecor animator = new AnimationsDecor();
+	private static RenderDecor renderer;
 	
-	public TileEntityDecor(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
 		//Add a bounding box for each rotation.
-		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.general.width/2D, definition.general.height/2D, definition.general.depth/2D);
-		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.general.depth/2D, definition.general.height/2D, definition.general.width/2D);
+		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.decor.width/2D, definition.decor.height/2D, definition.decor.depth/2D);
+		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.decor.depth/2D, definition.decor.height/2D, definition.decor.width/2D);
 		this.boundingBoxes[2] = boundingBoxes[0];
 		this.boundingBoxes[3] = boundingBoxes[1];
-		
-		//Get text.
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
-			}
-		}
 	}
 	
 	@Override
-    public Point3d getProviderPosition(){
-		return doublePosition;
-	}
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
+    }
 	
 	@Override
-    public WrapperWorld getProviderWorld(){
-		return world;
-	}
-	
-	@Override
-    public AnimationsDecor getAnimationSystem(){
+	@SuppressWarnings("unchecked")
+	public AnimationsDecor getAnimator(){
 		return animator;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public RenderDecor getRenderer(){
+		if(renderer == null){
+			renderer = new RenderDecor();
+		}
+		return renderer;
 	}
 	
 	@Override
 	public float getLightPower(){
 		return (15 - world.getRedstonePower(position))/15F;
-	}
-	
-	@Override
-	public LinkedHashMap<JSONText, String> getText(){
-		return text;
-	}
-	
-	@Override
-	public String getSecondaryTextColor(){
-		for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(currentSubName)){
-				return subDefinition.secondColor;
-			}
-		}
-		throw new IllegalArgumentException("Tried to get the definition for a decor of subName:" + currentSubName + ".  But that isn't a valid subName for the decor:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
-	}
-	
-	@Override
-	public boolean renderTextLit(){
-		return true;
-	}
-	
-	@Override
-	public RenderDecor getRenderer(){
-		return new RenderDecor();
-	}
-	
-	@Override
-	public void save(WrapperNBT data){
-		super.save(data);
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				data.setString("textLine" + i, text.get(definition.rendering.textObjects.get(i)));
-			}
-		}
 	}
 }

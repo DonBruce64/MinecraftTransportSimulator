@@ -1,11 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehiclePart;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 
@@ -14,22 +15,22 @@ import minecrafttransportsimulator.vehicles.parts.PartInteractable;
  * 
  * @author don_bruce
  */
-public class PacketVehiclePartInteractable extends APacketVehiclePart{
+public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 	private final int linkedID;
 	private final Point3d linkedOffset;
 	
-	public PacketVehiclePartInteractable(PartInteractable interactable){
-		super(interactable.vehicle, interactable.placementOffset);
+	public PacketPartInteractable(PartInteractable interactable){
+		super(interactable);
 		if(interactable.linkedVehicle != null){
 			this.linkedID = interactable.linkedVehicle.lookupID;
 			this.linkedOffset = null;
 		}else{
-			this.linkedID = interactable.linkedPart.vehicle.lookupID;
+			this.linkedID = interactable.linkedPart.entityOn.lookupID;
 			this.linkedOffset = interactable.linkedPart.placementOffset;
 		}
 	}
 	
-	public PacketVehiclePartInteractable(ByteBuf buf){
+	public PacketPartInteractable(ByteBuf buf){
 		super(buf);
 		this.linkedID = buf.readInt();
 		this.linkedOffset = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
@@ -48,16 +49,13 @@ public class PacketVehiclePartInteractable extends APacketVehiclePart{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle, Point3d offset){
-		PartInteractable interactable = (PartInteractable) vehicle.getPartAtLocation(offset);
-		for(AEntityBase entity : AEntityBase.createdClientEntities){
-			if(entity.lookupID == linkedID){
-				if(linkedOffset == null){
-					interactable.linkedVehicle = (EntityVehicleF_Physics) entity;
-				}else{
-					interactable.linkedPart = (PartInteractable) ((EntityVehicleF_Physics) entity).getPartAtLocation(linkedOffset);
-				}
-				break;
+	public boolean handle(WrapperWorld world, WrapperPlayer player, PartInteractable interactable){
+		AEntityA_Base linkedEntity = AEntityA_Base.getEntity(world, linkedID);
+		if(linkedEntity != null){
+			if(linkedOffset == null){
+				interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
+			}else{
+				interactable.linkedPart = (PartInteractable) ((AEntityE_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
 			}
 		}
 		return true;

@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
@@ -228,14 +229,14 @@ public final class OBJParser{
 	 *  The passed-in definition may be null to prevent this check and the removal of components
 	 *  due to dynamic JSON definitions.
 	 */
-	public static List<RenderableModelObject> generateRenderables(IAnimationProvider provider, String modelLocation, Map<String, Float[][]> parsedModel, List<JSONAnimatedObject> animatedObjects){
+	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AnimationEntity entity, String modelLocation, Map<String, Float[][]> parsedModel, List<JSONAnimatedObject> animatedObjects){
 		//For anything that has a definition as an animation, add it to an animated list.
 		//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
-		List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
+		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
 		if(animatedObjects != null){
 			for(JSONAnimatedObject definition : animatedObjects){
 				if(parsedModel.containsKey(definition.objectName)){
-					modelObjects.add(new RenderableModelObject(modelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), provider));
+					modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), entity));
 					parsedModel.remove(definition.objectName);
 				}
 			}
@@ -245,7 +246,7 @@ public final class OBJParser{
 		Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
 		while(iterator.hasNext()){
 			Entry<String, Float[][]> entry = iterator.next();
-			RenderableModelObject modelObject = new RenderableModelObject(modelLocation, entry.getKey(), null, entry.getValue(), provider);
+			RenderableModelObject<AnimationEntity> modelObject = new RenderableModelObject<AnimationEntity>(modelLocation, entry.getKey(), null, entry.getValue(), entity);
 			if(!modelObject.transforms.isEmpty()){
 				modelObjects.add(modelObject);
 				iterator.remove();

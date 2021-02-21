@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**This class represents a visibility animation of a model.  This transform will disable the rendering of this
@@ -7,20 +8,20 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformVisibile extends ATransform{
+public class TransformVisibile<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	
 	public TransformVisibile(JSONAnimationDefinition definition){
 		super(definition);
 	}
 	
 	@Override
-	public boolean shouldRender(IAnimationProvider provider, float partialTicks){
-		double value = definition.offset + provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, 0, getClock(provider), partialTicks);
+	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+		double value = definition.offset + entity.getAnimator().getAnimatedVariableValue(entity, definition, 0, getClock(entity), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity provider, float partialTicks, double offset){
 		//Do nothing.
 		return 0;
 	}

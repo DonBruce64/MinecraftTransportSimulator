@@ -3,6 +3,7 @@ package minecrafttransportsimulator.items.instances;
 import java.util.Iterator;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -11,11 +12,10 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine;
-import minecrafttransportsimulator.packets.instances.PacketVehiclePartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehicleVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
@@ -31,7 +31,7 @@ public class ItemY2KButton extends AItemBase{
 	@Override
 	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		if(!world.isClient() && player.isOP()){
-			for(AEntityBase entity : AEntityBase.createdServerEntities){
+			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
 				if(entity instanceof EntityVehicleF_Physics){
 					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
 					vehicle.throttle = 0;
@@ -40,14 +40,14 @@ public class ItemY2KButton extends AItemBase{
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
 					for(PartEngine engine : vehicle.engines.values()){
 						engine.setMagnetoStatus(false);
-						InterfacePacket.sendToAllClients(new PacketVehiclePartEngine(engine, Signal.MAGNETO_OFF));
+						InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
 					}
 					Iterator<String> variableIterator = vehicle.variablesOn.iterator();
 					while(variableIterator.hasNext()){
 						String variableName = variableIterator.next();
 						for(LightType light : LightType.values()){
 							if(light.lowercaseName.equals(variableName)){
-								InterfacePacket.sendToAllClients(new PacketVehicleVariableToggle(vehicle, variableName));
+								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variableName));
 								variableIterator.remove();
 								break;
 							}

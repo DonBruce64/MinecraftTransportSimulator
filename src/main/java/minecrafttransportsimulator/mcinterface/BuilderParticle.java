@@ -2,7 +2,6 @@ package minecrafttransportsimulator.mcinterface;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import net.minecraft.client.particle.Particle;
@@ -87,7 +86,7 @@ public class BuilderParticle extends Particle{
         	);
             
             //Set brightness and render.
-    	    InterfaceRender.setLightingToBlock(new Point3i(particle.position));
+    	    InterfaceRender.setLightingToPosition(particle.position);
     	    if(particle.isBright()){
     	    	InterfaceRender.setLightingState(false);
     	    	particle.render(partialTicks);

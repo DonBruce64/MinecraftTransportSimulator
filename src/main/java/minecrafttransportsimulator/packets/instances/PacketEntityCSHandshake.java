@@ -53,7 +53,7 @@ public class PacketEntityCSHandshake extends APacketBase{
 		if(world.isClient()){
 			//Create the entity from loaded data.
 			BuilderEntity builder = (BuilderEntity) world.getEntity(builderID).entity; 
-			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, world.getWrapperFor(builder), player, data);
+			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, player, data);
 		}else{
 			//Send back a packet to the player who requested it.
 			player.sendPacket(new PacketEntityCSHandshake(builderID, world.getEntity(builderID).getData()));

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**This class represents a pseudo-animation that disables other animations.
@@ -8,20 +9,20 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author gyro_hero
  */
-public class TransformInhibitor extends ATransform{
+public class TransformInhibitor<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	
 	public TransformInhibitor(JSONAnimationDefinition definition){
 		super(definition);
 	}
 	
 	@Override
-	public boolean shouldInhibit(IAnimationProvider provider, float partialTicks){
-		double value = definition.offset + provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, 0, getClock(provider), partialTicks);
+	public boolean shouldInhibit(AnimationEntity entity, float partialTicks){
+		double value = definition.offset + entity.getAnimator().getAnimatedVariableValue(entity, definition, 0D, getClock(entity), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		//Do nothing.
 		return 0;
 	}

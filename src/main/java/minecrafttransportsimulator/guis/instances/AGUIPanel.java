@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
@@ -29,7 +28,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	public AGUIPanel(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
 		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
-		if(vehicle.definition.general.isBlimp){
+		if(vehicle.definition.motorized.isBlimp){
 			haveReverseThrustOption = true;
 		}else{
 			boolean foundReversingPart = false;
@@ -95,7 +94,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
-	public AEntityBase getGUILightSource(){
+	public EntityVehicleF_Physics getGUILightSource(){
 		return vehicle;
 	}
 	
@@ -116,6 +115,6 @@ public abstract class AGUIPanel extends AGUIBase{
 	
 	@Override
 	public String getTexture(){
-		return vehicle.definition.rendering.panelTexture != null ? vehicle.definition.rendering.panelTexture : "mts:textures/guis/panel.png";
+		return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
 	}
 }

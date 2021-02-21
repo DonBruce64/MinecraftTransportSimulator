@@ -2,119 +2,102 @@ package minecrafttransportsimulator.vehicles.parts;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
-import minecrafttransportsimulator.rendering.components.IAnimationProvider;
-import minecrafttransportsimulator.rendering.components.ITextProvider;
 import minecrafttransportsimulator.rendering.instances.AnimationsPart;
-import minecrafttransportsimulator.sound.ISoundProviderComplex;
-import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.rendering.instances.RenderPart;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
-/**This class is the base for all parts and should be extended for any vehicle-compatible parts.
- * Use {@link EntityVehicleF_Physics#addPart(APart)} to add parts 
- * and {@link EntityVehicleF_Physics#removePart(APart, Iterator)} to remove them.
- * You may extend {@link EntityVehicleE_Powered} to get more functionality with those systems.
+/**This class is the base for all parts and should be extended for any entity-compatible parts.
+ * Use {@link AEntityE_Multipart#addPart(APart, boolean)} to add parts 
+ * and {@link AEntityE_Multipart#removePart(APart, Iterator)} to remove them.
+ * You may extend {@link AEntityE_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
  * 
  * @author don_bruce
  */
-public abstract class APart implements ISoundProviderComplex, IAnimationProvider, ITextProvider{
+public abstract class APart extends AEntityC_Definable<JSONPart>{
 	private static final Point3d ZERO_POINT = new Point3d();
 	private static final AnimationsPart animator = new AnimationsPart();
+	private static RenderPart renderer;
 	
 	//JSON properties.
-	public final JSONPart definition;
-	public final VehiclePart vehicleDefinition;
+	public final JSONPartDefinition placementDefinition;
 	public final Point3d placementOffset;
-	public final Point3d placementRotation;
+	public final Point3d placementAngles;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
-	public final EntityVehicleF_Physics vehicle;
-	/**The parent of this part, if this part is a sub-part of a part or an additional part for a vehicle.*/
+	/**The entity this part has been placed on.*/
+	public final AEntityE_Multipart<?> entityOn;
+	/**The vehicle this part has been placed on, or null if it wasn't placed on a vehicle.*/
+	protected final EntityVehicleF_Physics vehicleOn;
+	/**The parent of this part, if this part is a sub-part of a part or an additional part for an entity.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
-	/**Map containing text objects and their current associated text.**/
-	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
-	public final Point3d totalOffset;
-	public final Point3d prevTotalOffset;
-	public final Point3d totalRotation;
-	public final Point3d prevTotalRotation;
-	public final Point3d worldPos;
+	public final Point3d localOffset;
+	public final Point3d prevLocalOffset;
+	public final Point3d localAngles;
 	public final BoundingBox boundingBox;
-	public String currentSubName;
-	public boolean isValid = true;
 		
-	public APart(EntityVehicleF_Physics vehicle, VehiclePart packVehicleDef, ItemPart item, WrapperNBT data, APart parentPart){
-		this.vehicle = vehicle;
-		this.placementOffset = packVehicleDef.pos;
-		this.totalOffset = placementOffset.copy();
-		this.prevTotalOffset = totalOffset.copy();
-		this.definition = item.definition;;
-		this.vehicleDefinition = packVehicleDef;
-		this.worldPos = placementOffset.copy().rotateFine(vehicle.angles).add(vehicle.position);
-		this.boundingBox = new BoundingBox(placementOffset, worldPos, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
-		this.placementRotation = packVehicleDef.rot != null ? packVehicleDef.rot : new Point3d();
-		this.totalRotation = placementRotation.copy();
-		this.prevTotalRotation = totalRotation.copy();
-		this.currentSubName = item.subName;
-		this.isValid = true;
-		
-		//Load text.
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
-			}
-		}
+	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn.world, data);
+		this.entityOn = entityOn;
+		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
+		this.placementOffset = placementDefinition.pos;
+		this.localOffset = placementOffset.copy();
+		this.prevLocalOffset = localOffset.copy();
+		this.placementDefinition = placementDefinition;
+		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
+		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
+		this.localAngles = placementAngles.copy();
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
 		if(!isFake() && parentPart != null){
 			this.parentPart = parentPart;
 			parentPart.childParts.add(this);
-			if(packVehicleDef.isSubPart){
-				this.disableMirroring = parentPart.disableMirroring || definition.general.disableMirroring;
+			if(placementDefinition.isSubPart){
+				this.disableMirroring = parentPart.disableMirroring || definition.generic.disableMirroring;
 			}else{
-				this.disableMirroring = definition.general.disableMirroring;
+				this.disableMirroring = definition.generic.disableMirroring;
 			}
 		}else{
-			this.disableMirroring = definition.general.disableMirroring;
+			this.disableMirroring = definition.generic.disableMirroring;
 			this.parentPart = null;
 		}
 		
 		//Create movement animation clocks.
-		if(vehicleDefinition.animations != null){
-			for(JSONAnimationDefinition animation : vehicleDefinition.animations){
+		if(placementDefinition.animations != null){
+			for(JSONAnimationDefinition animation : placementDefinition.animations){
 				clocks.add(new DurationDelayClock(animation));
 			}
 		}
+		
+		//Set initial position and rotation.
+		this.position.setTo(placementOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		this.angles.setTo(placementAngles);
 	}
 	
 	/**
 	 * This is called during part save/load calls.  Fakes parts are
-	 * added to vehicles, but they aren't saved with the NBT.  Rather, 
+	 * added to entities, but they aren't saved with the NBT.  Rather, 
 	 * they should be re-created in the constructor of the part that added
 	 * them in the first place.
 	 */
@@ -133,46 +116,55 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	}
 	
 	/**
-	 * Called when the vehicle sees this part being attacked.
+	 * Called when the entity this part is on sees this part being attacked.
 	 * Only called on the server.
 	 */
 	public void attack(Damage damage){}
 	
 	/**
-	 * This gets called every tick by the vehicle after it finishes its update loop.
+	 * This gets called every tick by the entity after it finishes its update loop.
 	 * Use this for reactions that this part can take based on its surroundings if need be.
-	 * Do NOT remove the part from the vehicle in this loop.  Instead, set it to invalid.
+	 * Do NOT remove the part from the entity in this loop.  Instead, set it to invalid.
 	 * Removing the part during this loop will earn you a CME.
 	 */
+	@Override
 	public void update(){
-		prevTotalOffset.setTo(totalOffset);
-		prevTotalRotation.setTo(totalRotation);
+		super.update();
+		prevMotion.setTo(entityOn.prevMotion);
+		motion.setTo(entityOn.motion);
+		prevLocalOffset.setTo(localOffset);
 		updatePositionAndRotation();
 		//If we have a parent part, we need to change our offsets to be relative to it.
-		if(parentPart != null){
+		if(parentPart != null && placementDefinition.isSubPart){
 			//Get parent offset and rotation.  The parent will have been updated already as it has
 			//to be placed on the vehicle before us, and as such will be before us in the parts list.
 			//Our initial offset needs to be relative to the position of the part on the parent, so 
 			//we need to start with that delta.
-			totalOffset.subtract(parentPart.placementOffset);
+			localOffset.subtract(parentPart.placementOffset);
 			
 			//Rotate our current relative offset by the rotation of the parent to get the correct
 			//offset between us and our parent's position in our parent's coordinate system.
-			totalOffset.rotateFine(parentPart.totalRotation);
+			localOffset.rotateFine(parentPart.localAngles);
 			
-			//Add our parent's rotation to our own so we have a cumulative rotation.
+			//Add our parent's angles to our own so we have a cumulative rotation.
 			//This has the potential for funny rotations if we're both rotated, as we should
 			//apply this rotation about our parent's rotated axis, not our own, but for most situations,
 			//it's close enough.
-			totalRotation.add(parentPart.totalRotation);
+			localAngles.add(parentPart.localAngles);
 			
 			//Now that we have the proper relative offset, add our parent's offset to get our next offset.
 			//This is our final offset point.
-			totalOffset.add(parentPart.totalOffset);
+			localOffset.add(parentPart.localOffset);
 		}
 		
-		//Set worldpos to our net offset pos on the vehicle..
-		worldPos.setTo(totalOffset).rotateFine(vehicle.angles).add(vehicle.position);
+		//Set position and rotation to our net offset pos on the entity.
+		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		angles.setTo(localAngles).add(entityOn.angles);
+	}
+	
+	@Override
+	public boolean shouldSavePosition(){
+		return false;
 	}
 	
 	/**
@@ -182,11 +174,11 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 */
 	protected void updatePositionAndRotation(){
 		boolean inhibitAnimations = false;
-		totalOffset.set(0D, 0D, 0D);
-		totalRotation.set(0D, 0D, 0D);
+		localOffset.set(0D, 0D, 0D);
+		localAngles.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
 			for(DurationDelayClock clock : clocks){
-				JSONAnimationDefinition animation = clock.definition;
+				JSONAnimationDefinition animation = clock.animation;
 				switch(animation.animationType){
 					case TRANSLATION :{
 						if(!inhibitAnimations){
@@ -194,7 +186,7 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
 							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
 							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
-							totalOffset.add(appliedTranslation.rotateFine(totalRotation));
+							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
 					}
@@ -208,11 +200,11 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 							if(!animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
-								totalOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(totalRotation));
+								localOffset.add(animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(animation.centerPoint).rotateFine(localAngles));
 							}
 							
 							//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-							totalRotation.add(appliedRotation);
+							localAngles.add(appliedRotation);
 						}
 						break;
 					}
@@ -239,8 +231,8 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 		}
 		
 		//Add on the placement offset and rotation  now that we have our dynamic values.
-		totalOffset.add(placementOffset);
-		totalRotation.add(placementRotation);
+		localOffset.add(placementOffset);
+		localAngles.add(placementAngles);
 	}
 	
 	/**
@@ -256,14 +248,14 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * Returns true if this part is in liquid.
 	 */
 	public boolean isInLiquid(){
-		return vehicle.world.isBlockLiquid(new Point3i(worldPos));
+		return world.isBlockLiquid(position);
 	}
 	
 	/**
-	 * Called when the vehicle removes this part.
+	 * Called when the part is removed from the entity.
 	 * Allows for parts to trigger logic that happens when they are removed.
 	 * Note that hitboxes are configured to not allow this part to be
-	 * wrenched if it has children, so it may be assumed that no child
+	 * removed if it has children, so it may be assumed that no child
 	 * parts are present when this action occurs.  Do note that it's possible
 	 * this part is a child to another part, so you will need to remove this
 	 * part as the child from its parent if is has one.  Also note that you may
@@ -271,101 +263,56 @@ public abstract class APart implements ISoundProviderComplex, IAnimationProvider
 	 * If you need to remove another part, set it to invalid instead.  This will
 	 * have it be removed at the end of the update loop.
 	 */
+	@Override
 	public void remove(){
-		isValid = false;
+		super.remove();
 		if(parentPart != null){
 			parentPart.childParts.remove(this);
 		}
 	}
 	
-	/**
-	 * Gets the item for this part.  If the part should not return an item 
-	 * (either due to damage or other reasons) make this method return null.
-	 */
-	public ItemPart getItem(){
-		ItemPart item = PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName);
-		return item;
-	}
-	
-	/**
-	 * Return the part data in NBT form.
-	 * This is called when removing the part from a vehicle to return an item.
-	 * This is also called when saving this part, so ensure EVERYTHING you need to make this
-	 * part back into an part again is packed into the NBT tag that is returned.
-	 * This does not include the part offsets, as those are re-calculated every time the part is attached
-	 * and are saved separately from the item NBT data in the vehicle.
-	 */
-	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
-		int lineNumber = 0;
-		for(String textLine : text.values()){
-			data.setString("textLine" + lineNumber++, textLine);
-		}
-		return data;
-	}
-	
 	public float getWidth(){
-		return definition.generic != null ? definition.generic.width : 0.75F;
+		return definition.generic.width != 0 ? definition.generic.width : 0.75F;
 	}
 	
 	public float getHeight(){
-		return definition.generic != null ? definition.generic.height : 0.75F;
+		return definition.generic.height != 0 ? definition.generic.height : 0.75F;
 	}
 
 	
 	//--------------------START OF SOUND AND ANIMATION CODE--------------------
 	@Override
-	public void updateProviderSound(SoundInstance sound){
-		if(!this.isValid || !vehicle.isValid){
-			sound.stop();
-		}
-	}
-	
-	@Override
-	public void startSounds(){}
-	
-	@Override
-    public Point3d getProviderPosition(){
-		return worldPos;
-	}
-    
-	@Override
-    public Point3d getProviderVelocity(){
-		return vehicle.getProviderVelocity();
-	}
-	
-	@Override
-    public WrapperWorld getProviderWorld(){
-		return vehicle.getProviderWorld();
-	}
-	
-	@Override
-    public AnimationsPart getAnimationSystem(){
-		return animator;
+	public float getLightProvided(){
+		return entityOn.getLightProvided();
 	}
 	
 	@Override
 	public float getLightPower(){
-		return vehicle.getLightPower();
+		return entityOn.getLightPower();
 	}
 	
 	@Override
-	public Set<String> getActiveVariables(){
-		return vehicle.getActiveVariables();
-	}
-	
-	@Override
-	public LinkedHashMap<JSONText, String> getText(){
-		return text;
-	}
-	
-	@Override
-	public String getSecondaryTextColor(){
-		return vehicle.getSecondaryTextColor();
+	public boolean shouldRenderBeams(){
+		return entityOn.shouldRenderBeams();
 	}
 	
 	@Override
 	public boolean renderTextLit(){
-		return vehicle.renderTextLit();
+		return entityOn.renderTextLit();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public AnimationsPart getAnimator(){
+		return animator;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public RenderPart getRenderer(){
+		if(renderer == null){
+			renderer = new RenderPart();
+		}
+		return renderer;
 	}
 }

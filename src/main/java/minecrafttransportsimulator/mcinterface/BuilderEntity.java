@@ -9,6 +9,9 @@ import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -18,9 +21,7 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
-import minecrafttransportsimulator.sound.IRadioProvider;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.entity.Entity;
@@ -50,7 +51,7 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  * class that we can control that doesn't have the wonky systems the MC entities have, such
  * as no roll axis, a single hitbox, and tons of immutable objects that get thrown away every update.
  * Constructor simply takes in a world instance per default MC standards, but doesn't create the actual
- * {@link AEntityBase} until later.  This is because we can't build our entity at the same time MC creates 
+ * {@link AEntityB_Existing} until later.  This is because we can't build our entity at the same time MC creates 
  * this instance as we might not yet have NBT data.  Instead, we simply hold on to the class and construct 
  * it whenever we get called to do so.
  *
@@ -62,9 +63,13 @@ public class BuilderEntity extends Entity{
 	public static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	public AEntityBase entity;
+	public AEntityB_Existing entity;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
 	private boolean requestDataFromServer;
+	/**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
+	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
+	 * to do their funky logic.  I'm looking at YOU The One Probe!**/
+	private NBTTagCompound lastLoadedNBT;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
 	/**Position where we have spawned a fake light.  Used for shader compatibility.**/
@@ -85,81 +90,86 @@ public class BuilderEntity extends Entity{
     public void onEntityUpdate(){
     	//If our entity isn't null, update it and our position.
     	if(entity != null){
-    		//First forward the update call.
-    		entity.update();
-    		
-    		//Update AABBs.
-    		//We need to update a wrapper class here as normal entities only allow a single collision box.
-    		//We also need to know if we need to increase the max world collision bounds to detect this entity.
-    		//Only do this after the first tick of the entity, as we might have some states that need updating
-    		//on that first tick that would cause bad maths.
-    		//We also do this only every second, as it prevents excess checks.
-    		interactionBoxes = new WrapperAABBCollective(this, entity.interactionBoxes);
-    		collisionBoxes = new WrapperAABBCollective(this, entity.collisionBoxes);
-    		if(entity.ticksExisted > 1 && entity.ticksExisted%20 == 0){
-	    		double furthestWidthRadius = 0;
-	    		double furthestHeightRadius = 0;
-	    		for(BoundingBox box : entity.interactionBoxes){
-	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - entity.position.x + box.widthRadius));
-	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - entity.position.y + box.heightRadius));
-	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - entity.position.z + box.depthRadius));
-	    		}
-	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
-	    		
-	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
-				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
-					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
-				}
-    		}
-    		
-			//Set the new position and rotation.
-    		setPosition(entity.position.x, entity.position.y, entity.position.z);
-    		rotationYaw = (float) -entity.angles.y;
-    		rotationPitch = (float) entity.angles.x;
-    		
-    		//Check that riders are still present prior to updating them.
-    		//This handles dismounting of riders from entities in a non-event-driven way.
-    		//We do this because other mods and Sponge like to screw up the events...
-    		if(!world.isRemote){
-	    		Iterator<WrapperEntity> riderIterator = entity.locationRiderMap.inverse().keySet().iterator();
-	    		while(riderIterator.hasNext()){
-	    			WrapperEntity rider = riderIterator.next();
-	    			if(!this.equals(rider.entity.getRidingEntity())){
-	    				entity.removeRider(rider, riderIterator);
-	    			}
-	    		}
-    		}
-    		
-    		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
-    		if(world.isRemote){
-    			if(entity.isLitUp()){
-					BlockPos newPos = getPosition();
-					//Check to see if we need to place a light.
-					if(!newPos.equals(fakeLightPosition)){
-						//If our prior position is not null, remove that block.
-						if(fakeLightPosition != null){
-							world.setBlockToAir(fakeLightPosition);
-							world.checkLight(fakeLightPosition);
-							fakeLightPosition = null;
-						}
-						//Set block in world and update pos.  Only do this if the block is air.
-						if(world.isAirBlock(newPos)){
-							world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
-							world.checkLight(newPos);
-							fakeLightPosition = newPos;
-						}
-					}
-    			}else if(fakeLightPosition != null){
-    				//Lights are off, turn off fake light.
-    				world.setBlockToAir(fakeLightPosition);
-    				world.checkLight(fakeLightPosition);
-    				fakeLightPosition = null;
-    			}
-    		}
-    		
     		//Check if we are still valid, or need to be set dead.
     		if(!entity.isValid){
     			setDead();
+    		}else{
+	    		//Forward the update call.
+	    		entity.update();
+	    		
+	    		//Set the new position and rotation.
+	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
+	    		rotationYaw = (float) -entity.angles.y;
+	    		rotationPitch = (float) entity.angles.x;
+	    		
+	    		if(entity instanceof AEntityD_Interactable){
+	    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+	    			
+	    			//Update AABBs.
+	        		//We need to update a wrapper class here as normal entities only allow a single collision box.
+	        		//We also need to know if we need to increase the max world collision bounds to detect this entity.
+	        		//Only do this after the first tick of the entity, as we might have some states that need updating
+	        		//on that first tick that would cause bad maths.
+	        		//We also do this only every second, as it prevents excess checks.
+	        		interactionBoxes = new WrapperAABBCollective(this, interactable.interactionBoxes);
+	        		collisionBoxes = new WrapperAABBCollective(this, interactable.collisionBoxes);
+	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
+	    	    		double furthestWidthRadius = 0;
+	    	    		double furthestHeightRadius = 0;
+	    	    		for(BoundingBox box : interactable.interactionBoxes){
+	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - interactable.position.x + box.widthRadius));
+	    	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - interactable.position.y + box.heightRadius));
+	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - interactable.position.z + box.depthRadius));
+	    	    		}
+	    	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
+	    	    		
+	    	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
+	    				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
+	    					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
+	    				}
+	        		}
+	        		
+	        		//Check that riders are still present prior to updating them.
+	        		//This handles dismounting of riders from entities in a non-event-driven way.
+	        		//We do this because other mods and Sponge like to screw up the events...
+	        		if(!world.isRemote){
+	    	    		Iterator<WrapperEntity> riderIterator = interactable.locationRiderMap.inverse().keySet().iterator();
+	    	    		while(riderIterator.hasNext()){
+	    	    			WrapperEntity rider = riderIterator.next();
+	    	    			if(!this.equals(rider.entity.getRidingEntity())){
+	    	    				interactable.removeRider(rider, riderIterator);
+	    	    			}
+	    	    		}
+	        		}
+	    		}
+	    		
+	    		
+	    		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
+	    		if(world.isRemote){
+	    			if(entity.getLightProvided() > 0){
+						BlockPos newPos = getPosition();
+						//Check to see if we need to place a light.
+						if(!newPos.equals(fakeLightPosition)){
+							//If our prior position is not null, remove that block.
+							if(fakeLightPosition != null){
+								world.setBlockToAir(fakeLightPosition);
+								world.checkLight(fakeLightPosition);
+								fakeLightPosition = null;
+							}
+							//Set block in world and update pos.  Only do this if the block is air.
+							if(world.isAirBlock(newPos)){
+								world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
+								world.checkLight(newPos);
+								fakeLightPosition = newPos;
+							}
+						}
+	    			}else if(fakeLightPosition != null){
+	    				//Lights are off, turn off fake light.
+	    				world.setBlockToAir(fakeLightPosition);
+	    				world.checkLight(fakeLightPosition);
+	    				fakeLightPosition = null;
+	    			}
+	    		}
     		}
     	}else if(world.isRemote){
     		//No entity.  Wait for NBT to be loaded to create it.
@@ -171,9 +181,19 @@ public class BuilderEntity extends Entity{
     			requestDataFromServer = false;
     		}
     	}else{
-    		//Builder with no entity on the server.  Likely due to a bad creation routine.
-    		//Remove the builder from the world.
-    		setDead();
+    		//Builder with no entity on the server.  Try to get it from NBT. If we can't, it's invalid.
+    		if(lastLoadedNBT != null){
+    			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+    			try{
+    				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+    			}catch(Exception e){
+    				InterfaceCore.logError(e.getMessage());
+    				setDead();
+    			}
+    			lastLoadedNBT = null;
+    		}else{
+    			setDead();
+    		}
     	}
     }
     
@@ -184,35 +204,31 @@ public class BuilderEntity extends Entity{
 		if(fakeLightPosition != null){
 			world.setBlockToAir(fakeLightPosition);
 		}
-		//Mark entity as invalid and remove from maps.
+		
+		//Stop chunkloading of this entity.
+		InterfaceChunkloader.removeEntityTicket(this);
+		
+		//Notify internal entity of it being invalid.
 		if(entity != null){
-			entity.isValid = false;
-			InterfaceChunkloader.removeEntityTicket(this);
-			if(world.isRemote){
-				AEntityBase.createdClientEntities.remove(entity);
-			}else{
-				AEntityBase.createdServerEntities.remove(entity);
-			}
-			if(entity instanceof IRadioProvider && world.isRemote){
-				((IRadioProvider) entity).getRadio().stop();
-			}
+			entity.remove();
 		}
 	}
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){
-		if(!world.isRemote && entity != null){
+		if(!world.isRemote && entity instanceof AEntityD_Interactable){
+			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
 			Entity attacker = source.getImmediateSource();
 			Entity trueSource = source.getTrueSource();
-			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperWorld.getWrapperFor(trueSource.world).getWrapperFor((EntityPlayer) trueSource) : null;
+			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? interactable.world.getWrapperFor((EntityPlayer) trueSource) : null;
 			if(lastExplosionPosition != null && source.isExplosion()){
 				//We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
 				//it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
 				//Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
 				BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
-				for(BoundingBox box : entity.interactionBoxes){
+				for(BoundingBox box : interactable.interactionBoxes){
 					if(box.intersects(explosiveBounds)){
-						entity.attack(new Damage(source.damageType, amount, box, playerSource).setExplosive());
+						interactable.attack(new Damage(source.damageType, amount, box, null, playerSource).setExplosive());
 					}
 				}
 				lastExplosionPosition = null;
@@ -220,9 +236,9 @@ public class BuilderEntity extends Entity{
 				Damage damage = null;
 				//Check the damage at the current position of the attacker.
 				Point3d attackerPosition = new Point3d(attacker.posX, attacker.posY, attacker.posZ);
-				for(BoundingBox box : entity.interactionBoxes){
+				for(BoundingBox box : interactable.interactionBoxes){
 					if(box.isPointInside(attackerPosition)){
-						damage = new Damage(source.damageType, amount, box, playerSource);
+						damage = new Damage(source.damageType, amount, box, null, playerSource);
 						break;
 					}
 				}
@@ -233,13 +249,13 @@ public class BuilderEntity extends Entity{
 					//We do raytracing here to catch this movement.
 					RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().add(attacker.motionX, attacker.motionY, attacker.motionZ));
 					if(hitRaytrace != null){
-						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, playerSource);
+						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, null, playerSource);
 					}
 				}
 				
 				//If we have damage on a point, attack it now.
 				if(damage != null){
-					entity.attack(damage);
+					interactable.attack(damage);
 				} 
 			}
 		}
@@ -249,17 +265,18 @@ public class BuilderEntity extends Entity{
     @Override
     public void updatePassenger(Entity passenger){
     	//Forward passenger updates to the entity, if it exists.
-    	if(entity != null){
-    		Iterator<WrapperEntity> iterator = entity.locationRiderMap.inverse().keySet().iterator();
+    	if(entity instanceof AEntityD_Interactable){
+    		AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+    		Iterator<WrapperEntity> iterator = interactable.locationRiderMap.inverse().keySet().iterator();
     		while(iterator.hasNext()){
     			WrapperEntity rider = iterator.next();
     			if(rider.entity.equals(passenger)){
-    				entity.updateRider(rider, iterator);
+    				interactable.updateRider(rider, iterator);
     				return;
     			}
     		}
     		//Couldn't find rider in entity list.  Add them as a passenger.
-    		entity.addRider(passenger instanceof EntityPlayer ? WrapperWorld.getWrapperFor(world).getWrapperFor((EntityPlayer)passenger) : WrapperWorld.getWrapperFor(world).getWrapperFor(passenger), null);
+    		interactable.addRider(interactable.world.getWrapperFor(passenger), null);
     	}
     }
     
@@ -309,7 +326,9 @@ public class BuilderEntity extends Entity{
 					//If we found a part, return it as an item.
 					if(part != null){
 						ItemStack stack = part.getItem().getNewStack();
-						stack.setTagCompound(part.getData().tag);
+						WrapperNBT partData = new WrapperNBT();
+						part.save(partData);
+						stack.setTagCompound(partData.tag);
 						return stack;
 					}
 				}
@@ -348,13 +367,10 @@ public class BuilderEntity extends Entity{
 	public void readFromNBT(NBTTagCompound tag){
     	super.readFromNBT(tag);
 		if(entity == null && tag.hasKey("entityid")){
-			//If we are on a server, restore the entity from saved state.
-			//If we are on a client, set the data tag.
-			//This prevents loading duplicate client entities that don't update. 
-			//For the clients, we use the packet to create the entity after an update() call.
+			//If we are on a server, save the NBT for loading in the next update call.
+			//If we are on a client, we'll get this via packet.
 			if(!world.isRemote){
-				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, worldWrapper.getWrapperFor(this), null, new WrapperNBT(tag));
+				lastLoadedNBT = tag;
 			}
 		}
 	}
@@ -378,13 +394,7 @@ public class BuilderEntity extends Entity{
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
-		Iterator<AEntityBase> entityIterator = event.getWorld().isRemote ? AEntityBase.createdClientEntities.iterator() : AEntityBase.createdServerEntities.iterator();
-		while(entityIterator.hasNext()){
-			AEntityBase entity = entityIterator.next();
-			if(event.getWorld().equals(entity.world.world)){
-				entityIterator.remove();
-			}
-		}
+    	AEntityA_Base.removaAllEntities(WrapperWorld.getWrapperFor(event.getWorld()));
     }
 	
 	/**
@@ -419,7 +429,7 @@ public class BuilderEntity extends Entity{
 	    		if(boxClicked != null){
 		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
 	    		}else{
-	    			InterfaceCore.logError("A vehicle was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+	    			InterfaceCore.logError("A entity was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
 	    		event.setCanceled(true);
 				event.setCancellationResult(EnumActionResult.SUCCESS);
@@ -444,7 +454,7 @@ public class BuilderEntity extends Entity{
     			if(boxClicked != null){
     				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
         		}else{
-        			InterfaceCore.logError("A vehicle was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
+        			InterfaceCore.logError("A entity was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}
     			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
     		}

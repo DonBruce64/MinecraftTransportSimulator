@@ -2,8 +2,13 @@ package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -14,17 +19,18 @@ import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObject;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -36,11 +42,11 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart.ExhaustObjec
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
 	
-	public static void performLegacyCompats(AJSONItem<?> definition){
+	public static void performLegacyCompats(AJSONItem definition, String packID, String systemName){
 		if(definition instanceof JSONVehicle){
 			performVehicleLegacyCompats((JSONVehicle) definition);
 		}else if(definition instanceof JSONPart){
-			performPartLegacyCompats((JSONPart) definition);
+			performPartLegacyCompats((JSONPart) definition, packID, systemName);
 		}else if(definition instanceof JSONInstrument){
 			performInstrumentLegacyCompats((JSONInstrument) definition);
 		}else if(definition instanceof JSONPoleComponent){
@@ -56,6 +62,17 @@ public final class LegacyCompatSystem{
 	
 	private static void performVehicleLegacyCompats(JSONVehicle definition){
 		//Move vehicle parameters to the motorized section.
+		if(definition.general.emptyMass > 0){
+			definition.motorized.isAircraft = definition.general.isAircraft;
+			definition.general.isAircraft = false;
+	    	definition.motorized.isBlimp = definition.general.isBlimp;
+	    	definition.general.isBlimp = false;
+	    	definition.motorized.hasOpenTop = definition.general.openTop;
+	    	definition.general.openTop = false;
+	    	definition.motorized.emptyMass = definition.general.emptyMass;
+	    	definition.general.emptyMass = 0;
+		}
+		
 		if(definition.car != null){
 			definition.motorized.isBigTruck = definition.car.isBigTruck;
 			definition.motorized.isFrontWheelDrive = definition.car.isFrontWheelDrive;
@@ -128,7 +145,25 @@ public final class LegacyCompatSystem{
 			definition.motorized.hookupPos = null;
 		}
 		
-		for(VehiclePart partDef : definition.parts){
+		//Check for old HUD stuff.
+		if(definition.rendering.hudTexture != null){
+			definition.motorized.hudTexture = definition.rendering.hudTexture;
+			definition.rendering.hudTexture = null;
+		}
+		if(definition.rendering.panelTexture != null){
+			definition.motorized.panelTexture = definition.rendering.panelTexture;
+			definition.rendering.panelTexture = null;
+		}
+		if(definition.rendering.panelTextColor != null){
+			definition.motorized.panelTextColor = definition.rendering.panelTextColor;
+			definition.rendering.panelTextColor = null;
+		}
+		if(definition.rendering.panelLitTextColor != null){
+			definition.motorized.panelLitTextColor = definition.rendering.panelLitTextColor;
+			definition.rendering.panelLitTextColor = null;
+		}
+		
+		for(JSONPartDefinition partDef : definition.parts){
 			try{
 				performVehiclePartDefLegacyCompats(partDef);
 			}catch(Exception e){
@@ -136,16 +171,88 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
-		if(definition.rendering != null){
-			try{
-				performAnimationLegacyCompats(definition.rendering);
-			}catch(Exception e){
-				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+		//Do compats for sounds.
+		if(definition.rendering.sounds == null){
+			definition.rendering.sounds = new ArrayList<JSONSound>();
+			if(definition.motorized.hornSound != null){
+				JSONSound hornSound = new JSONSound();
+				hornSound.name = definition.motorized.hornSound;
+				hornSound.looping = true;
+				hornSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
+				hornDef.animationType = AnimationComponentType.VISIBILITY;
+				hornDef.variable = "horn";
+				hornDef.clampMin = 1.0F;
+				hornDef.clampMax = 1.0F;
+				hornSound.volumeAnimations.add(hornDef);
+				definition.rendering.sounds.add(hornSound);
+				definition.motorized.hornSound = null;
 			}
+			if(definition.motorized.sirenSound != null){
+				JSONSound sirenSound = new JSONSound();
+				sirenSound.name = definition.motorized.sirenSound;
+				sirenSound.looping = true;
+				sirenSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
+				sirenDef.animationType = AnimationComponentType.VISIBILITY;
+				sirenDef.variable = "siren";
+				sirenDef.clampMin = 1.0F;
+				sirenDef.clampMax = 1.0F;
+				sirenSound.volumeAnimations.add(sirenDef);
+				definition.rendering.sounds.add(sirenSound);
+				definition.motorized.sirenSound = null;
+			}
+			if(definition.motorized.isBigTruck){
+				JSONSound airbrakeSound = new JSONSound();
+				airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
+				airbrakeSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
+				airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
+				airbrakeDef.variable = "p_brake";
+				airbrakeDef.clampMin = 1.0F;
+				airbrakeDef.clampMax = 1.0F;
+				airbrakeSound.volumeAnimations.add(airbrakeDef);
+				definition.rendering.sounds.add(airbrakeSound);
+				
+				JSONSound backupBeeperSound = new JSONSound();
+				backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
+				backupBeeperSound.looping = true;
+				backupBeeperSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
+				backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
+				backupBeeperDef.variable = "engine_gear_1";
+				backupBeeperDef.clampMin = -10.0F;
+				backupBeeperDef.clampMax = -1.0F;
+				backupBeeperSound.volumeAnimations.add(backupBeeperDef);
+				definition.rendering.sounds.add(backupBeeperSound);
+				
+				definition.motorized.isBigTruck = false;
+			}
+		}
+		
+		try{
+			performAnimationLegacyCompats(definition.rendering);
+		}catch(Exception e){
+			throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 		}
     }
 	
-	private static void performPartLegacyCompats(JSONPart definition){
+	private static void performPartLegacyCompats(JSONPart definition, String packID, String systemName){
+		//Move general things to generic section.
+		if(definition.general.type != null){
+			if(definition.generic == null){
+				definition.generic = definition.new JSONPartGeneric();
+			}
+			definition.generic.type = definition.general.type;
+			definition.general.type = null;
+			definition.generic.customType = definition.general.customType;
+			definition.general.customType = null;
+			definition.generic.disableMirroring = definition.general.disableMirroring;
+			definition.general.disableMirroring = false;
+			definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
+			definition.general.useVehicleTexture = false;
+		}
+		
 		//If we are a part without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
 			definition.definitions = new ArrayList<JSONSubDefinition>();
@@ -156,9 +263,15 @@ public final class LegacyCompatSystem{
 			definition.definitions.add(subDefinition);
 		}
 		
+		//Move subParts to parts if we have them there.
+		if(definition.subParts != null){
+			definition.parts = definition.subParts;
+			definition.subParts = null;
+		}
+		
 		if(definition.engine != null){
 			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
-			if(definition.general.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
+			if(definition.generic.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
 				definition.engine.jetPowerFactor = 1.0F;
 				definition.engine.bypassRatio = definition.engine.gearRatios[0];
 				definition.engine.gearRatios[0] = 1.0F;
@@ -192,9 +305,9 @@ public final class LegacyCompatSystem{
 			}
 		}else{
 			//Check for old ground devices, crates, barrels, effectors, and customs.
-			switch(definition.general.type){
+			switch(definition.generic.type){
 				case("wheel"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.isWheel = true;
 					definition.ground.width = definition.wheel.diameter/2F;
@@ -204,7 +317,7 @@ public final class LegacyCompatSystem{
 					definition.wheel = null;
 					break;
 				}case("skid"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.width = definition.skid.width;
 					definition.ground.height = definition.skid.width;
@@ -212,7 +325,7 @@ public final class LegacyCompatSystem{
 					definition.skid = null;
 					break;
 				}case("pontoon"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.canFloat = true;
 					definition.ground.width = definition.pontoon.width;
@@ -222,7 +335,7 @@ public final class LegacyCompatSystem{
 					definition.pontoon = null;
 					break;
 				}case("tread"):{
-					definition.general.type = "ground_" + definition.general.type;
+					definition.generic.type = "ground_" + definition.generic.type;
 					definition.ground = definition.new JSONPartGroundDevice();
 					definition.ground.isTread = true;
 					definition.ground.width = definition.tread.width;
@@ -234,60 +347,59 @@ public final class LegacyCompatSystem{
 					definition.tread = null;
 					break;
 				}case("crate"):{
-					definition.general.type = "interactable_crate";
+					definition.generic.type = "interactable_crate";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.CRATE;
 					definition.interactable.inventoryUnits = 1;
 					definition.interactable.feedsVehicles = true;
 					break;
 				}case("barrel"):{
-					definition.general.type = "interactable_barrel";
+					definition.generic.type = "interactable_barrel";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.BARREL;
 					definition.interactable.inventoryUnits = 1;
 					break;
 				}case("crafting_table"):{
-					definition.general.type = "interactable_crafting_table";
+					definition.generic.type = "interactable_crafting_table";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
 					break;
 				}case("furnace"):{
-					definition.general.type = "interactable_furnace";
+					definition.generic.type = "interactable_furnace";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.FURNACE;
 					break;
 				}case("brewing_stand"):{
-					definition.general.type = "interactable_brewing_stand";
+					definition.generic.type = "interactable_brewing_stand";
 					definition.interactable = definition.new JSONPartInteractable();
 					definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
 					break;
 				}case("fertilizer"):{
-					definition.general.type = "effector_fertilizer";
+					definition.generic.type = "effector_fertilizer";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.FERTILIZER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("harvester"):{
-					definition.general.type = "effector_harvester";
+					definition.generic.type = "effector_harvester";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.HARVESTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("planter"):{
-					definition.general.type = "effector_planter";
+					definition.generic.type = "effector_planter";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLANTER;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("plow"):{
-					definition.general.type = "effector_plow";
+					definition.generic.type = "effector_plow";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLOW;
 					definition.effector.blocksWide = 1;
 					break;
 				}case("custom"):{
-					definition.general.type = "generic";
-					definition.generic = definition.new JSONPartGeneric();
+					definition.generic.type = "generic";
 					definition.generic.height = definition.custom.height;
 					definition.generic.width = definition.custom.width;
 					definition.custom = null;
@@ -296,22 +408,22 @@ public final class LegacyCompatSystem{
 			}
 			
 			//If the part is a ground_ type, and canGoFlat, auto-set flat height.
-			if(definition.general.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
+			if(definition.generic.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
 				definition.ground.flatHeight = definition.ground.height/2F;
 			}
 			
 			//If the part is a seat, and doesn't have a seat sub-section, add one.
-			if(definition.general.type.startsWith("seat") && definition.seat == null){
+			if(definition.generic.type.startsWith("seat") && definition.seat == null){
 				definition.seat = definition.new JSONPartSeat();
 			}
 		}
 		
-		if(definition.subParts != null){
-    		for(VehiclePart subPartDef : definition.subParts){
+		if(definition.parts != null){
+    		for(JSONPartDefinition subPartDef : definition.parts){
     			try{
     				performVehiclePartDefLegacyCompats(subPartDef);
     			}catch(Exception e){
-    				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.subParts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+    				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.parts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
     			}
     		}
 		}
@@ -321,6 +433,137 @@ public final class LegacyCompatSystem{
 				performAnimationLegacyCompats(definition.rendering);
 			}catch(Exception e){
 				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
+		}
+		
+		//Do compats for engine and gun sounds.
+		if(definition.rendering == null || definition.rendering.sounds == null){
+			if(definition.engine != null){
+				if(definition.rendering == null){
+					definition.rendering = new JSONRendering();
+				}
+				if(definition.rendering.sounds == null){
+					definition.rendering.sounds = new ArrayList<JSONSound>();
+				}
+				
+				//Starting sound plays when engine goes from stopped to running.
+				JSONSound startingSound = new JSONSound();
+				startingSound.name = packID + ":" + systemName + "_starting";
+				startingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition startingVolumeDef = new JSONAnimationDefinition();
+				startingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				startingVolumeDef.variable = "engine_running";
+				startingVolumeDef.clampMin = 1.0F;
+				startingVolumeDef.clampMax = 1.0F;
+				startingSound.volumeAnimations.add(startingVolumeDef);
+				definition.rendering.sounds.add(startingSound);
+				
+				//Stopping sound plays when engine goes from running to stopped.
+				JSONSound stoppingSound = new JSONSound();
+				stoppingSound.name = packID + ":" + systemName + "_stopping";
+				stoppingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition stoppingVolumeDef = new JSONAnimationDefinition();
+				stoppingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				stoppingVolumeDef.variable = "engine_running";
+				stoppingVolumeDef.clampMin = 0.0F;
+				stoppingVolumeDef.clampMax = 0.0F;
+				stoppingSound.volumeAnimations.add(stoppingVolumeDef);
+				definition.rendering.sounds.add(stoppingSound);
+				
+				//Sputtering sound plays when engine backfires.
+				JSONSound sputteringSound = new JSONSound();
+				sputteringSound.name = packID + ":" + systemName + "_sputter";
+				sputteringSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition sputteringVolumeDef = new JSONAnimationDefinition();
+				sputteringVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				sputteringVolumeDef.variable = "engine_backfired";
+				sputteringVolumeDef.clampMin = 1.0F;
+				sputteringVolumeDef.clampMax = 1.0F;
+				sputteringSound.volumeAnimations.add(sputteringVolumeDef);
+				definition.rendering.sounds.add(sputteringSound);
+				
+				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
+				JSONSound crankingSound = new JSONSound();
+				crankingSound.name = packID + ":" + systemName + "_cranking";
+				crankingSound.looping = true;
+				crankingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition crankingVolumeDef = new JSONAnimationDefinition();
+				crankingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				crankingVolumeDef.variable = "engine_starter";
+				crankingVolumeDef.clampMin = 1.0F;
+				crankingVolumeDef.clampMax = 1.0F;
+				crankingSound.volumeAnimations.add(crankingVolumeDef);
+				
+				crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
+				crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
+				crankingPitchDef.variable = "electric_power";
+				crankingPitchDef.axis = new Point3d(0, 0, 1D/10D);
+				crankingPitchDef.offset = 0.3F;
+				crankingPitchDef.clampMax = 1.0F;
+				crankingSound.pitchAnimations.add(crankingPitchDef);
+				if(!definition.engine.isCrankingNotPitched){
+					crankingPitchDef = new JSONAnimationDefinition();
+					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
+					crankingPitchDef.variable = "engine_rpm";
+					crankingPitchDef.axis = new Point3d(0, 0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D));
+					crankingSound.pitchAnimations.add(crankingPitchDef);
+				}
+				definition.rendering.sounds.add(crankingSound);
+				
+				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
+				JSONSound runningSound = new JSONSound();
+				runningSound.name = packID + ":" + systemName + "_running";
+				runningSound.looping = true;
+				runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
+				runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+				runningVolumeDef.variable = "engine_running";
+				runningVolumeDef.clampMin = 1.0F;
+				runningVolumeDef.clampMax = 1.0F;
+				runningSound.volumeAnimations.add(runningVolumeDef);
+				
+				runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
+				runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
+				runningPitchDef.variable = "engine_rpm";
+				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+				runningPitchDef.axis = new Point3d(0, 0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000));
+				runningPitchDef.offset = 0.35F;
+				runningSound.pitchAnimations.add(runningPitchDef);
+				definition.rendering.sounds.add(runningSound);
+				
+				
+			}else if(definition.gun != null){
+				if(definition.rendering == null){
+					definition.rendering = new JSONRendering();
+				}
+				if(definition.rendering.sounds == null){
+					definition.rendering.sounds = new ArrayList<JSONSound>();
+				}
+				
+				JSONSound firingSound = new JSONSound();
+				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
+				firingSound.looping = definition.gun.fireDelay <= 1;
+				firingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
+				firingDef.animationType = AnimationComponentType.VISIBILITY;
+				firingDef.variable = "gun_firing";
+				firingDef.clampMin = 1.0F;
+				firingDef.clampMax = 1.0F;
+				firingSound.volumeAnimations.add(firingDef);
+				definition.rendering.sounds.add(firingSound);
+				
+				JSONSound reloadingSound = new JSONSound();
+				reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
+				reloadingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
+				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
+				reloadingDef.variable = "gun_reloading";
+				reloadingDef.clampMin = 1.0F;
+				reloadingDef.clampMax = 1.0F;
+				reloadingSound.volumeAnimations.add(reloadingDef);
+				definition.rendering.sounds.add(reloadingSound);
 			}
 		}
 	}
@@ -412,7 +655,7 @@ public final class LegacyCompatSystem{
 		//If we are a sign using the old textlines, update them.
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
-			for(minecrafttransportsimulator.jsondefs.JSONPoleComponent.TextLine line : definition.general.textLines){
+			for(TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.color = line.color;
 				object.scale = line.scale;
@@ -442,9 +685,44 @@ public final class LegacyCompatSystem{
 				}
 			}
 		}
+		
+		//Move pole general properties to new location.
+		if(definition.general.type != null){
+			definition.pole = definition.new JSONPoleGeneric();
+			definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase());
+			definition.general.type = null;
+			definition.pole.radius = definition.general.radius;
+			definition.general.radius = 0;
+		}
 	}
 	
 	private static void performDecorLegacyCompats(JSONDecor definition){
+		//Move decor general properties to new location.
+		if(definition.decor == null){
+			definition.decor = definition.new JSONDecorGeneric();
+			if(definition.general.type != null){
+				definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase());
+				definition.general.type = null;
+			}
+			definition.decor.width = definition.general.width;
+			definition.general.width = 0;
+			definition.decor.width = definition.general.height;
+			definition.general.height = 0;
+			definition.decor.depth = definition.general.depth;
+			definition.general.depth = 0;
+			definition.decor.itemTypes = definition.general.itemTypes;
+			definition.general.itemTypes = null;
+			definition.decor.partTypes = definition.general.partTypes;
+			definition.general.partTypes = null;
+	    	definition.decor.items = definition.general.items;
+	    	definition.general.items = null;
+		}
+		
+		//If we are a decor without a type, set us to generic.
+		if(definition.decor.type == null){
+			definition.decor.type = DecorComponentType.GENERIC;
+		}
+		
 		//If we are a decor without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
 			definition.definitions = new ArrayList<JSONSubDefinition>();
@@ -459,7 +737,7 @@ public final class LegacyCompatSystem{
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
 			int lineNumber = 0;
-			for(minecrafttransportsimulator.jsondefs.JSONDecor.TextLine line : definition.general.textLines){
+			for(TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.lightsUp = true;
 				object.color = line.color;
@@ -497,6 +775,15 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performItemLegacyCompats(JSONItem definition){
+		//Move item type if required.
+		if(definition.item == null){
+			definition.item = definition.new JSONItemGeneric();
+			if(definition.general.type != null){
+				definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase());
+				definition.general.type = null;
+			}
+		}
+		
 		//Add blank fieldNames for booklets, as they shouldn't exist.
 		if(definition.booklet != null){
 			for(JSONText text : definition.booklet.titleText){
@@ -511,13 +798,21 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performSkinLegacyCompats(JSONSkin definition){
+		//Move skin properties to new location, if we have them.
+		if(definition.general.packID != null){
+			definition.skin = definition.new Skin();
+			definition.skin.packID = definition.general.packID;
+			definition.general.packID = null;
+			definition.skin.systemName = definition.general.systemName;
+			definition.general.systemName = null;
+		}
 		//Make the materials empty, as the parser doesn't like them null.
 		definition.general.materials = new ArrayList<String>();
 	}
 	
-	private static void performVehiclePartDefLegacyCompats(VehiclePart partDef){
+	private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef){
 		if(partDef.additionalPart != null){
-			partDef.additionalParts = new ArrayList<VehiclePart>();
+			partDef.additionalParts = new ArrayList<JSONPartDefinition>();
 			partDef.additionalParts.add(partDef.additionalPart);
 			partDef.additionalPart = null;
 		}
@@ -627,7 +922,7 @@ public final class LegacyCompatSystem{
 			
 			//If we have additional parts, check those too.
 			if(partDef.additionalParts != null){
-				for(VehiclePart additionalPartDef : partDef.additionalParts){
+				for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
 					performVehiclePartDefLegacyCompats(additionalPartDef);
 				}
 			}

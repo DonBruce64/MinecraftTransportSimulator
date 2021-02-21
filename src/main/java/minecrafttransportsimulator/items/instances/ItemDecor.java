@@ -27,12 +27,12 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	
 	@Override
 	public Class<? extends ABlockBase> getBlockClass(){
-		return DecorComponentType.getBlockClass(definition.general.type);
+		return DecorComponentType.getBlockClass(definition.decor.type);
 	}
 	
 	public static enum DecorComponentType{
 		@JSONDescription("Will make the decor have no functionality.")
-		NONE,
+		GENERIC,
 		@JSONDescription("Will make the decor have beacon functionality.")
 		BEACON,
 		@JSONDescription("Will make the decor have signal controller functionality.")
@@ -55,11 +55,11 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 					case FUEL_PUMP : return BlockFuelPump.class;
 					case FLUID_LOADER : return BlockFluidLoader.class;
 					case RADIO : return BlockRadio.class;
-					case NONE : return BlockDecor.class;
+					case GENERIC : return BlockDecor.class;
 				}
 			}
-			//Normal decor is assumed to be default per legacy systems.
-			return BlockDecor.class;
+			//We won't ever get here, but this makes the compiler happy.
+			return null;
 		}
 	}
 }

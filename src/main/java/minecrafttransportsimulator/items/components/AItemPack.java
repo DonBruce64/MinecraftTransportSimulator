@@ -13,7 +13,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public abstract class AItemPack<JSONDefinition extends AJSONItem<?>> extends AItemBase{
+public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemBase{
 	public static final String PACKID_SEPARATOR = ".";
 	public final JSONDefinition definition;
 	private final String sourcePackID;

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -9,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformRotatable extends ATransform{
+public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	protected final Point3d rotationAxis;
 	
 	public TransformRotatable(JSONAnimationDefinition definition){
@@ -20,9 +21,9 @@ public class TransformRotatable extends ATransform{
 	}
 
 	@Override
-	public double applyTransform(IAnimationProvider provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
 		//Get rotation.
-		double rotation = provider.getAnimationSystem().getAnimatedVariableValue(provider, definition, offset, getClock(provider), partialTicks);
+		double rotation = entity.getAnimator().getAnimatedVariableValue(entity, definition, offset, getClock(entity), partialTicks);
 		
 		//Do rotation.
 		if(rotation != 0){

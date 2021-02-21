@@ -1,53 +1,49 @@
 package minecrafttransportsimulator.vehicles.main;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Gun;
-import minecrafttransportsimulator.baseclasses.IGunProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketGunChange;
-import minecrafttransportsimulator.packets.instances.PacketPlayerGunChange;
-import minecrafttransportsimulator.packets.instances.PacketPlayerGunFiring;
-import minecrafttransportsimulator.rendering.instances.AnimationsGun;
+import minecrafttransportsimulator.rendering.instances.AnimationsPlayerGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
-import minecrafttransportsimulator.sound.SoundInstance;
-import net.minecraft.item.ItemStack;
+import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Entity class responsible for storing and syncing information about the current gun
- * any player is holding.  This entity will render the held gun, if it exists, as well as
- * spawn any bullets the gun is told to fire.  The current item the player is holding is
- * stored, and whenever the player either changes this item, or stops firing, the data
- * is saved back to that item to ensure that the gun's state is maintained.
+ * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
+ * The current item the player is holding is stored, and whenever the player either changes 
+ * this item, or stops firing, the data is saved back to that item to ensure that the gun's 
+ * state is maintained.
  *  
  * @author don_bruce
  */
-public class EntityPlayerGun extends AEntityBase implements IGunProvider{
-	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
+public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
+	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	
 	public final WrapperPlayer player;
-	private int ticksOnGun;
 	private int hotbarSelected = -1;
-	private ItemStack gunStack;
-	private ItemPart gunItem;
-	public Gun gun;
-	public boolean fireCommand;
-	public String currentSubName;
+	private boolean didGunFireLastTick;
+	public PartGun activeGun;
 	
-	private static final AnimationsGun animator = new AnimationsGun();
+	private static final AnimationsPlayerGun animator = new AnimationsPlayerGun();
+	private static RenderPlayerGun renderer;
 	
-	public EntityPlayerGun(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityPlayerGun(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
+		super(world, data);
+		//Get the player spawning us.
 		if(playerSpawning != null){
 			//Newly-spawned entity.
 			this.player = playerSpawning;
@@ -70,15 +66,13 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 				this.player = foundPlayer;
 			}else{
 				this.player = null;
-				isValid = false;
-				if(!world.isClient()){
-					playerServerGuns.remove(playerUUID);
-				}
+				remove();
 				return;
 			}
 		}
 		
 		hotbarSelected = player.getHotbarIndex();
+		
 		if(world.isClient()){
 			playerClientGuns.put(player.getUUID(), this);
 		}else{
@@ -87,214 +81,155 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 	}
 	
 	@Override
+	public JSONPlayerGun generateDefaultDefinition(){
+		JSONPlayerGun defaultDefinition = new JSONPlayerGun();
+		defaultDefinition.packID = "dummy";
+		defaultDefinition.systemName = "dummy";
+		
+		JSONPartDefinition fakeDef = new JSONPartDefinition();
+		fakeDef.pos = new Point3d();
+		fakeDef.rot = new Point3d();
+		fakeDef.types = new ArrayList<String>();
+		//Look though all gun types and add them.
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			if(packItem instanceof ItemPart){
+				ItemPart partItem = (ItemPart) packItem;
+				if(partItem.isHandHeldGun()){
+					if(!fakeDef.types.contains(partItem.definition.generic.type)){
+						fakeDef.types.add(partItem.definition.generic.type);
+					}
+				}
+			}
+		}
+		
+		fakeDef.maxValue = Float.MAX_VALUE;
+		defaultDefinition.parts = new ArrayList<JSONPartDefinition>();
+		defaultDefinition.parts.add(fakeDef);
+		return defaultDefinition;
+	}
+	
+	@Override
 	public void update(){
 		super.update();
-		//Need to make sure we have the player.
-		//We might be invalid here and haven't had the system report this.
-		if(player != null){
-			//Make sure player is still valid and haven't left the server.
-			if(player.isValid()){
-				//Set our position to the player's position.  We may update this later if we have a gun.
-				position.setTo(player.getPosition());
-				motion.setTo(player.getVelocity());
-				
+		//Make sure player is still valid and haven't left the server.
+		if(player != null && player.isValid()){
+			//Set our position to the player's position.  We may update this later if we have a gun.
+			position.setTo(player.getPosition());
+			motion.setTo(player.getVelocity());
+			
+			//Get the current gun.
+			activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+			
+			if(!world.isClient()){
 				//Check to make sure if we had a gun, that it didn't change.
-				if(gun != null && (!gunItem.equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
+				if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
 					saveGun(true);
-					fireCommand = false;
-					InterfacePacket.sendToAllClients(new PacketPlayerGunFiring(this, false));
 				}
 				
 				//If we don't have a gun yet, try to get the current one if the player is holding one.
-				if(gun == null){
+				if(activeGun == null){
 					AItemBase heldItem = player.getHeldItem();
 					if(heldItem instanceof ItemPart){
 						ItemPart heldPart = (ItemPart) heldItem;
-						if(heldPart.isHandHeldGun() && !world.isClient()){
-							if(++ticksOnGun == 5){
-								createNewGun(-1);
-								InterfacePacket.sendToAllClients(new PacketPlayerGunChange(this, gun.gunID));
-								ticksOnGun = 0;
-							}
+						if(heldPart.isHandHeldGun()){
+							addPartFromItem(heldPart, new WrapperNBT(player.getHeldStack()), new Point3d(), false);
+							hotbarSelected = player.getHotbarIndex();
 						}
 					}
 				}
+			}
+			
+			//If we have a gun, do updates to it.
+			//Only change firing command on servers to prevent de-syncs.
+			//Packets will get sent to clients to change them.
+			if(activeGun != null){
+				//Set our position relative to the the player's hand.
+				//Center point is at the player's arm, with offset being where the offset is.
+				Point3d heldVector;
+				if(player.isSneaking()){
+					heldVector = activeGun.definition.gun.handHeldAimedOffset;
+				}else{
+					heldVector = activeGun.definition.gun.handHeldNormalOffset;
+				}
+				angles.set(player.getPitch(), player.getHeadYaw(), 0);
 				
-				//If we have a gun, do updates to it.
-				//Only change firing command on servers to prevent de-syncs.
-				//Packets will get sent to clients to change them.
-				if(gun != null){
-					//Set our position relative to the the player's hand.
-					//Center point is at the player's arm, with offset being where the offset is.
-					Point3d heldVector;
-					if(player.isSneaking()){
-						heldVector = gunItem.definition.gun.handHeldAimedOffset;
-					}else{
-						heldVector = gunItem.definition.gun.handHeldNormalOffset;
-					}
-					angles.set(player.getPitch(), player.getHeadYaw(), 0);
-					
-					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
-					//Sneaking lowers arm by 0.2 blocks.
-					//First rotate point based on pitch.  This is for only the arm movement.
-					Point3d armRotation = new Point3d(angles.x, 0, 0);
-					position.setTo(heldVector).rotateFine(armRotation);
-					
-					//Now rotate based on player yaw.  We need to take the arm offset into account here.
-					armRotation.set(0, angles.y, 0);
-					position.add(-0.3125, 0, 0).rotateFine(armRotation);
-					
-					//Now add the player's position and model center point offsets.
-					position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
-					
-					//If the player is riding something, add to our position the vehicle's motion.
-					//This is because the player gets moved with the vehicle.
-					if(player.getEntityRiding() != null){
-						position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
-					}
-					
-					if(fireCommand && !gun.firing && !world.isClient()){
-						gun.firing = true;
-						InterfacePacket.sendToAllClients(new PacketGunChange(gun, true));
-					}else if(!fireCommand && gun.firing && !world.isClient()){
-						gun.firing = false;
-						InterfacePacket.sendToAllClients(new PacketGunChange(gun, false));
+				//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
+				//Sneaking lowers arm by 0.2 blocks.
+				//First rotate point based on pitch.  This is for only the arm movement.
+				Point3d armRotation = new Point3d(angles.x, 0, 0);
+				position.setTo(heldVector).rotateFine(armRotation);
+				
+				//Now rotate based on player yaw.  We need to take the arm offset into account here.
+				armRotation.set(0, angles.y, 0);
+				position.add(-0.3125, 0, 0).rotateFine(armRotation);
+				
+				//Now add the player's position and model center point offsets.
+				position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
+				
+				//If the player is riding something, add to our position the vehicle's motion.
+				//This is because the player gets moved with the vehicle.
+				if(player.getEntityRiding() != null){
+					position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
+				}
+				
+				//Save gun data if we stopped firing.
+				if(!world.isClient()){
+					if(activeGun.firing){
+						didGunFireLastTick = true;
+					}else if(!activeGun.firing && didGunFireLastTick){
 						saveGun(false);
 					}
-					gun.update();
 				}
-			}else{
-				isValid = false;
 			}
+		}else{
+			remove();
 		}
-	}
-	
-	public void createNewGun(int optionalGunID){
-		gunStack = player.getHeldStack();
-		gunItem = (ItemPart) player.getHeldItem();
-		currentSubName = gunItem.subName;
 		
-		WrapperNBT data = new WrapperNBT(gunStack);
-		if(optionalGunID != -1){
-			data.setInteger("gunID", optionalGunID);
-		}
-		gun = new Gun(this, gunItem.definition, 0, 0, 0, 0, data);
-		gun.firing = fireCommand;
-		hotbarSelected = player.getHotbarIndex();
+		//Update the gun now, if we have one.
+		updateParts();
 	}
 	
-	private void saveGun(boolean delete){
-		WrapperNBT data = new WrapperNBT();
-		gun.save(data);
-		gunStack.setTagCompound(data.tag);
-		if(delete){
-			gun = null;
-		}
-	}
-	
-	
-	//----------START OF GUN INTERFACE CODE----------
 	@Override
-	public void reloadGunBullets(){
-		if(gunItem.definition.gun.autoReload || gun.bulletsLeft == 0){
-			//Check the player's inventory for bullets.
-			WrapperInventory inventory = player.getInventory();
-			for(int i=0; i<inventory.getSize(); ++i){
-				AItemBase item = inventory.getItemInSlot(i);
-				if(item instanceof ItemPart){
-					if(gun.tryToReload((ItemPart) item)){
-						//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-						inventory.decrementSlot(i);
-						return;
-					}
-				}
+	public boolean shouldSavePosition(){
+		return false;
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		if(player != null){
+			if(world.isClient()){
+				playerClientGuns.remove(player.getUUID());
+			}else{
+				playerServerGuns.remove(player.getUUID());
 			}
 		}
 	}
-
-	@Override
-	public WrapperEntity getController(){
-		return player;
-	}
-
-	@Override
-	public boolean isGunActive(WrapperEntity controller){
-		return true;
-	}
-
-	@Override
-	public double getDesiredYaw(WrapperEntity controller){
-		return 0;
-	}
-
-	@Override
-	public double getDesiredPitch(WrapperEntity controller){
-		return 0;
-	}
-
-	@Override
-	public int getGunNumber(){
-		return 1;
-	}
-
-	@Override
-	public int getTotalGuns(){
-		return 1;
-	}
 	
-	@Override
-	public void spawnParticles(){
-		if(gun != null){
-			gun.spawnParticles();
-		}
-	}
-	
-	
-	//----------START OF SOUND INTERFACE CODE----------
-	
-	@Override
-	public void startSounds(){
-		if(gun != null){
-			gun.startSounds();
+	private void saveGun(boolean remove){
+		WrapperNBT data = new WrapperNBT();
+		activeGun.save(data);
+		player.getHeldStack().setTagCompound(data.tag);
+		didGunFireLastTick = false;
+		if(remove){
+			removePart(activeGun, null);
+			activeGun = null;
 		}
 	}
 
 	@Override
-	public void updateProviderSound(SoundInstance sound){
-		if(gun != null){
-			gun.startSounds();
-		}
-	}
-	
-	//----------START OF RENDERING INTERFACE CODE----------
-	@Override
-    public AnimationsGun getAnimationSystem(){
+	@SuppressWarnings("unchecked")
+	public AnimationsPlayerGun getAnimator(){
 		return animator;
 	}
 	
 	@Override
-	public void orientToProvider(Point3d point){
-		point.rotateFine(angles);
-	}
-	
-	@Override
-	public Point3d getProviderVelocity(){
-		return motion;
-	}
-
-	@Override
-	public float getLightPower(){
-		return 1;
-	}
-
-	@Override
-	public boolean isLitUp(){
-		return false;
-	}
-
-	@Override
-	public void render(float partialTicks){
-		RenderPlayerGun.render(this, partialTicks);
+	@SuppressWarnings("unchecked")
+	public RenderPlayerGun getRenderer(){
+		if(renderer == null){
+			renderer = new RenderPlayerGun();
+		}
+		return renderer;
 	}
 	
 	@Override
@@ -302,9 +237,6 @@ public class EntityPlayerGun extends AEntityBase implements IGunProvider{
 		super.save(data);
 		if(player != null){
 			data.setString("playerUUID", player.getUUID());
-		}
-		if(gun != null){
-			gun.save(data);
 		}
 	}
 }

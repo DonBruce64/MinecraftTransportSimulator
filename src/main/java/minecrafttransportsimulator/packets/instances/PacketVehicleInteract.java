@@ -13,11 +13,11 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.item.ItemStack;
@@ -30,7 +30,7 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class PacketVehicleInteract extends APacketVehicle{
+public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>{
 	private final Point3d hitPosition;
 	private boolean rightClick;
 		
@@ -112,16 +112,16 @@ public class PacketVehicleInteract extends APacketVehicle{
 			if(rightClick){
 				part.interact(player);
 			}else{
-				part.attack(new Damage("player", 1.0F, part.boundingBox, player));
+				part.attack(new Damage("player", 1.0F, part.boundingBox, null, player));
 			}
 		}else{
 			//Check if we clicked a door.
-			Map<BoundingBox, VehicleDoor> allDoors = new HashMap<BoundingBox, VehicleDoor>();
+			Map<BoundingBox, JSONDoor> allDoors = new HashMap<BoundingBox, JSONDoor>();
 			allDoors.putAll(vehicle.vehicleDoorBoxes);
-			for(Map<BoundingBox, VehicleDoor> doorMap : vehicle.partDoorBoxes.values()){
+			for(Map<BoundingBox, JSONDoor> doorMap : vehicle.partDoorBoxes.values()){
 				allDoors.putAll(doorMap);
 			}
-			for(Entry<BoundingBox, VehicleDoor> doorEntry : allDoors.entrySet()){
+			for(Entry<BoundingBox, JSONDoor> doorEntry : allDoors.entrySet()){
 				if(doorEntry.getKey().localCenter.equals(hitPosition)){
 					if(!doorEntry.getValue().ignoresClicks){
 						//Can't open locked vehicles.

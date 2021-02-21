@@ -3,10 +3,14 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 
-public class JSONRoadComponent extends AJSONMultblock<JSONRoadComponent.RoadGeneral>{
+public class JSONRoadComponent extends AJSONMultiModelProvider{
 
-    public class RoadGeneral extends AJSONMultblock<JSONRoadComponent.RoadGeneral>.General{
+	@JSONDescription("Road-specific properties.")
+	public JSONRoadGeneric road;
+	
+    public class JSONRoadGeneric{
     	//Common variables.
     	public String type;
     	public boolean isDynamic;
@@ -18,6 +22,7 @@ public class JSONRoadComponent extends AJSONMultblock<JSONRoadComponent.RoadGene
     	
     	//Static variables.
     	public List<JSONLaneSector> sectors;
+    	public List<JSONRoadCollisionArea> collisionAreas;
     }
     
     public class JSONLaneSector{
@@ -35,5 +40,11 @@ public class JSONRoadComponent extends AJSONMultblock<JSONRoadComponent.RoadGene
     public class JSONLaneSectorEndPoint{
     	public Point3d pos;
     	public float angle;
+    }
+    
+    public class JSONRoadCollisionArea{
+    	public Point3d firstCorner;
+    	public Point3d secondCorner;
+    	public int collisionHeight;
     }
 }

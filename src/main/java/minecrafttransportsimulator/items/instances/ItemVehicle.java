@@ -2,16 +2,14 @@ package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -30,11 +28,11 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
 		if(!world.isClient()){
 			ItemStack heldStack = player.getHeldStack();
 			//We want to spawn above this block.
-			++point.y;
+			++position.y;
 			
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
 			WrapperNBT data = new WrapperNBT(heldStack);
@@ -43,7 +41,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			data.setString("systemName", definition.systemName);
 			data.setString("subName", subName);
 			
-			//Make sure we don't restore any wold-based entity properties.
+			//Make sure we don't restore any world-based entity properties.
 			data.setInteger("lookupID", 0);
 			data.setPoint3d("position", new Point3d());
 			data.setPoint3d("motion", new Point3d());
@@ -55,14 +53,12 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
-			//Prior to creating this class we need to create a new entity wrapper to hold it.
-			//Get one, and then create the class with it.
-			EntityVehicleF_Physics newVehicle = createEntity(world, world.generateEntity(), player, data);
+			EntityVehicleF_Physics newVehicle = createEntity(world, player, data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
 			//Makes placement easier and is less likely for players to get stuck.
-			newVehicle.position.set(point.x, point.y, point.z);
+			newVehicle.position.set(position.x, position.y, position.z);
 			newVehicle.prevPosition.setTo(newVehicle.position);
 			newVehicle.angles.y = player.getYaw() + 90;
 			newVehicle.prevAngles.setTo(newVehicle.angles);
@@ -73,7 +69,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				newVehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recursion.
-				EntityVehicleF_Physics.addDefaultParts(newVehicle.definition.parts, newVehicle, null, false);
+				newVehicle.addDefaultParts(newVehicle.definition.parts, true);
 
 				//Set default vehicle text.
 				if(newVehicle.definition.rendering.textObjects != null){
@@ -125,7 +121,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				
 				//Open all doors.  This lets players know we can close them and put things in slots.
 				if(definition.doors != null){
-					for(VehicleDoor door : definition.doors){
+					for(JSONDoor door : definition.doors){
 						if(!door.closedByDefault){
 							newVehicle.variablesOn.add(door.name);
 						}
@@ -133,7 +129,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				}
 				for(APart part : newVehicle.parts){
 					if(part.definition.doors != null){
-						for(VehicleDoor door : part.definition.doors){
+						for(JSONDoor door : part.definition.doors){
 							if(!door.closedByDefault){
 								newVehicle.variablesOn.add(door.name);
 							}
@@ -145,7 +141,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
 			//First boost Y based on collision boxes.
 			double furthestDownPoint = 0;
-			for(VehicleCollisionBox collisionBox : newVehicle.definition.collision){
+			for(JSONCollisionBox collisionBox : newVehicle.definition.collision){
 				furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
 			}
 			
@@ -183,14 +179,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperEntity wrapper, WrapperPlayer playerSpawning, WrapperNBT data){
-		EntityVehicleF_Physics vehicle = new EntityVehicleF_Physics(world, wrapper, data);
-		//Need to wait for vehicle to load-in before we try to add saved parts.
-		for(APart part : vehicle.partsFromNBT){
-			vehicle.addPart(part);
-		}
-		vehicle.partsFromNBT.clear();
-		return vehicle;
+	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
+		return new EntityVehicleF_Physics(world, data);
 	}
 
 	@Override

@@ -2,14 +2,15 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
@@ -58,7 +59,7 @@ public class InterfaceEventsCamera{
     	if(event.getEntity() instanceof EntityPlayer){
 	    	//Get variables.
     		WrapperPlayer player = WrapperWorld.getWrapperFor(event.getEntity().world).getWrapperFor((EntityPlayer) event.getEntity());
-			AEntityBase ridingEntity = player.getEntityRiding();
+			AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
 			EntityVehicleF_Physics vehicle = ridingEntity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) ridingEntity : null;
 			PartSeat sittingSeat = vehicle != null ? (PartSeat) vehicle.getPartAtLocation(vehicle.locationRiderMap.inverse().get(player)) : null;
 			EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getUUID());
@@ -66,13 +67,13 @@ public class InterfaceEventsCamera{
 			
 	    	if(InterfaceClient.inFirstPerson()){
 	    		//If we are sneaking and holding a gun, enable custom cameras.
-	    		if(playerGunEntity != null && playerGunEntity.gun != null && sittingSeat == null){
+	    		if(playerGunEntity != null && playerGunEntity.activeGun != null && sittingSeat == null){
 	    			enableCustomCameras = player.isSneaking() && !InterfaceRender.shadersDetected;
 	    			customCameraIndex = 0;
 	    		}
 	    		
-	    		//If our seat is set to automatically use custom cameras try to get one.
-        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.vehicleDefinition.forceCameras){
+	    		//If our seat is set to automatically use custom cameras, enable them.
+        		if(!enableCustomCameras && sittingSeat != null && sittingSeat.placementDefinition.forceCameras){
     				enableCustomCameras = true;
 	    			customCameraIndex = 0;
         		}
@@ -84,7 +85,7 @@ public class InterfaceEventsCamera{
 					runningCustomCameras = true;
 			    	int camerasChecked = 0;
 			    	JSONCameraObject camera = null;
-			    	IAnimationProvider provider = null;
+			    	AEntityC_Definable<?> cameraProvider = null;
 			    	
 					if(vehicle != null){
 						if(vehicle.definition.rendering.cameraObjects != null){
@@ -92,7 +93,7 @@ public class InterfaceEventsCamera{
 								if(isCameraActive(testCamera, vehicle, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
-										provider = vehicle;
+										cameraProvider = vehicle;
 										break;
 									}
 								}
@@ -104,7 +105,7 @@ public class InterfaceEventsCamera{
 									if(isCameraActive(testCamera, part, partialTicks)){
 										if(camerasChecked++ == customCameraIndex){
 											camera = testCamera;
-											provider = part;
+											cameraProvider = part;
 											break;
 										}
 									}
@@ -114,13 +115,13 @@ public class InterfaceEventsCamera{
 								break;
 							}
 						}
-					}else if(playerGunEntity != null && playerGunEntity.gun != null){
-						if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
-							for(JSONCameraObject testCamera : playerGunEntity.gun.definition.rendering.cameraObjects){
+					}else if(playerGunEntity != null && playerGunEntity.activeGun != null){
+						if(playerGunEntity.activeGun.definition.rendering != null && playerGunEntity.activeGun.definition.rendering.cameraObjects != null){
+							for(JSONCameraObject testCamera : playerGunEntity.activeGun.definition.rendering.cameraObjects){
 								if(isCameraActive(testCamera, playerGunEntity, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
-										provider = playerGunEntity;
+										cameraProvider = playerGunEntity;
 										break;
 									}
 								}
@@ -130,12 +131,6 @@ public class InterfaceEventsCamera{
 					
 					//If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
 					if(camera != null){
-						//Need to orient our custom camera.  Custom cameras do viewpoint rendering.
-						//This means everything happens in the opposite order of model creation.
-						//As this is the case, all rotations are applied as ZXY, not YXZ.
-						//This also means all signs are inverted for all operations.
-						//Finally, it means that rotation operations do NOT affect the matrix origin.
-						
 						//Set current overlay for future calls.
 						customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
 	        			
@@ -148,7 +143,7 @@ public class InterfaceEventsCamera{
 						if(camera.animations != null){
 							boolean inhibitAnimations = false;
 	        				for(JSONAnimationDefinition animation : camera.animations){
-	        					double variableValue= provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
+	        					double variableValue= cameraProvider.getAnimator().getAnimatedVariableValue(cameraProvider, animation, 0, null, partialTicks);
 	        					switch(animation.animationType){
 		        					case TRANSLATION :{
 	            						if(!inhibitAnimations && variableValue != 0){
@@ -188,35 +183,22 @@ public class InterfaceEventsCamera{
 	        				}
 	        			}
 						
-	    				//Now that the transformed camera is ready, add the camera offset position and rotation.
-	    				//This may be for a part, in which case we need to offset by the part's position/rotation as well.
-						cameraPosition.add(camera.pos);
+	    				//Now that the transformed camera is ready, add the camera initial offset position and rotation.
+						Point3d entityAnglesDelta = cameraProvider.angles.copy().subtract(cameraProvider.prevAngles).multiply(partialTicks).add(cameraProvider.prevAngles);
+						cameraRotation.add(entityAnglesDelta);
+						cameraPosition.add(camera.pos.copy().rotateFine(entityAnglesDelta));
 	    				if(camera.rot != null){
 	    					cameraRotation.add(camera.rot);
 	    				}
-	    				if(provider instanceof APart){
-	    					APart part = (APart) provider;
-		    				if(part != null){
-		    					Point3d factoredRotation = part.totalRotation.copy().subtract(part.prevTotalRotation).multiply(partialTicks).add(part.prevTotalRotation);
-		    					cameraPosition.rotateFine(factoredRotation).add(part.totalOffset);
-		    					cameraRotation.add(factoredRotation);
-							}
-	    				}
 	    				
-	    				//Camera position is set.
-	    				//If we are on a vehicle, do vehicle alignment.  Otherwise, just align to the entity.
-	    				AEntityBase providerEntity = vehicle != null ? vehicle : playerGunEntity;
-	    				Point3d providerSmoothedRotation = providerEntity.prevAngles.copy().add(providerEntity.angles.copy().subtract(providerEntity.prevAngles).multiply(partialTicks));
-						cameraPosition.rotateFine(providerSmoothedRotation);
-						cameraRotation.add(providerSmoothedRotation);
-	    				if(vehicle != null){
-							//Camera is positioned and rotated to match the entity.  Do OpenGL transforms to set it.
-							//Get the distance from the vehicle's center point to the rendered player to get a 0,0,0 starting point.
-		        			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-							Point3d vehiclePositionDelta = vehicle.position.copy().subtract(vehicle.prevPosition).multiply(partialTicks).add(vehicle.prevPosition);
-							vehiclePositionDelta.subtract(player.getRenderedPosition(partialTicks).add(0, player.getEyeHeight(), 0));
-							cameraPosition.add(vehiclePositionDelta);
-	    				}
+	    				//Camera is positioned and rotated to match the entity.  Do OpenGL transforms to set it.
+						//Get the distance from the entity's center point to the rendered player to get a 0,0,0 starting point.
+	        			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
+						Point3d entityPositionDelta = cameraProvider.position.copy().subtract(cameraProvider.prevPosition).multiply(partialTicks).add(cameraProvider.prevPosition);
+						entityPositionDelta.subtract(player.getRenderedPosition(partialTicks).add(0, player.getEyeHeight(), 0));
+						cameraPosition.add(entityPositionDelta);
+						
+						
 						
 						//Rotate by 180 to get the forwards-facing orientation; MC does everything backwards.
 	            		GL11.glRotated(180, 0, 1, 0);
@@ -279,7 +261,7 @@ public class InterfaceEventsCamera{
 	        		customCameraIndex = 0;
 	    		}
 	    		if(sittingSeat != null){
-	    			GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, -zoomLevel);
+	    			GL11.glTranslated(-sittingSeat.localOffset.x, 0F, -zoomLevel);
 	    		}
 	        }else{
 	        	//Assuming inverted third-person mode.
@@ -298,10 +280,10 @@ public class InterfaceEventsCamera{
 							}
 						}
 			        	if(sittingSeat != null){
-			        		GL11.glTranslated(-sittingSeat.totalOffset.x, 0F, zoomLevel);
+			        		GL11.glTranslated(-sittingSeat.localOffset.x, 0F, zoomLevel);
 			        	}
-		        	}else if(playerGunEntity != null && playerGunEntity.gun != null && player.isSneaking()){
-		        		if(playerGunEntity.gun.definition.rendering != null && playerGunEntity.gun.definition.rendering.cameraObjects != null){
+		        	}else if(playerGunEntity != null && playerGunEntity.activeGun != null && player.isSneaking()){
+		        		if(playerGunEntity.activeGun.definition.rendering != null && playerGunEntity.activeGun.definition.rendering.cameraObjects != null){
 		        			InterfaceClient.toggleFirstPerson();
 		        		}
 		        	}
@@ -315,11 +297,11 @@ public class InterfaceEventsCamera{
     	}
     }
     
-    private static boolean isCameraActive(JSONCameraObject camera, IAnimationProvider provider, float partialTicks){
+    private static boolean isCameraActive(JSONCameraObject camera, AEntityC_Definable<?> entity, float partialTicks){
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-					double value = provider.getAnimationSystem().getAnimatedVariableValue(provider, animation, 0, null, partialTicks);
+					double value = entity.getAnimator().getAnimatedVariableValue(entity, animation, 0, null, partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;
 					}

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -10,7 +11,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
  *
  * @author don_bruce
  */
-public class TransformTreadRoller extends TransformRotatable{
+public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends TransformRotatable<AnimationEntity>{
 	public final int rollerNumber;
 	public final double yPos;
 	public final double zPos;
@@ -24,27 +25,10 @@ public class TransformTreadRoller extends TransformRotatable{
 	public double endZ;
 	public double endAngle;
 	
-	private TransformTreadRoller(String objectName, JSONAnimationDefinition definition, double yPos, double zPos, double radius, double circumference){
-		super(definition);
+	public TransformTreadRoller(String objectName, Float[][] vertices){
+		super(generateDefaultDefinition());
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
-		this.zPos = zPos;
-		this.yPos = yPos;
-		this.radius = radius;
-		this.circumference = circumference;
 		
-		//360 degrees is 1 block, so if we have a roller of circumference of 1,
-		//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
-		//Knowing this, we can calculate the linear velocity for this roller, as a roller with
-		//half the circumference needs double the factor, and vice-versa.  Basically, we get
-		//the ratio of the two circumferences of the "standard" roller and our roller.
-		definition.axis.x = (1.0D/Math.PI)/(radius*2D);
-		this.rotationAxis.x = 1.0;
-	}
-	
-	/**
-	 * Helper function to create a tread roller.
-	 */
-	public static TransformTreadRoller create(String objectName, JSONAnimationDefinition definition, Float[][] vertices){
 		//Get the points that define this roller.
 		double minY = 999;
 		double maxY = -999;
@@ -56,22 +40,29 @@ public class TransformTreadRoller extends TransformRotatable{
 			minZ = Math.min(minZ, point[2]);
 			maxZ = Math.max(maxZ, point[2]);
 		}
-		double yPos = minY + (maxY - minY)/2D;
-		double zPos = minZ + (maxZ - minZ)/2D;
-		double radius = (maxZ - minZ)/2D;
-		double circumference = 2*Math.PI*radius;
+		this.yPos = minY + (maxY - minY)/2D;
+		this.zPos = minZ + (maxZ - minZ)/2D;
+		this.radius = (maxZ - minZ)/2D;
+		this.circumference = 2*Math.PI*radius;
 		
-		if(definition == null){
-			//We don't have a definition for this, auto-create one and return the roller with it.
-			definition = new JSONAnimationDefinition();
-			definition.animationType = AnimationComponentType.ROTATION;
-			definition.variable = "ground_rotation_1";
-			definition.centerPoint = new Point3d(0D, yPos, zPos);
-			definition.axis = new Point3d();
-		}
-		
-		//Return the created roller.
-		return new TransformTreadRoller(objectName, definition, yPos, zPos, radius, circumference);
+		//Set the center point and axis.
+		//360 degrees is 1 block, so if we have a roller of circumference of 1,
+		//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
+		//Knowing this, we can calculate the linear velocity for this roller, as a roller with
+		//half the circumference needs double the factor, and vice-versa.  Basically, we get
+		//the ratio of the two circumferences of the "standard" roller and our roller.
+		definition.centerPoint.set(0D, yPos, zPos);
+		definition.axis.x = (1.0D/Math.PI)/(radius*2D);
+		this.rotationAxis.set(1.0, 0, 0);
+	}
+	
+	private static JSONAnimationDefinition generateDefaultDefinition(){
+		JSONAnimationDefinition definition = new JSONAnimationDefinition();
+		definition.animationType = AnimationComponentType.ROTATION;
+		definition.variable = "ground_rotation_1";
+		definition.centerPoint = new Point3d();
+		definition.axis = new Point3d();
+		return definition;
 	}
 	
 	/**
@@ -81,7 +72,7 @@ public class TransformTreadRoller extends TransformRotatable{
 	 * Additionally, we know we'll start on the bottom of a roller, so between
 	 * those two things we can tell which tangent we should follow.
 	 */
-	public void calculateEndpoints(TransformTreadRoller nextRoller){
+	public void calculateEndpoints(TransformTreadRoller<AnimationEntity> nextRoller){
 		//What calculations we do depend on if the rollers are the same size.
 		//If so, we can do simple calcs.  If not, we get to do trig.
 		if(radius == nextRoller.radius){

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
@@ -81,8 +81,8 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			
 			if(partClass != null){
 				//Iterate through the definitions to find the index of the pack def for the part we want.
-				VehiclePart foundDef = null;
-				for(VehiclePart vehicleDef : vehicle.definition.parts){
+				JSONPartDefinition foundDef = null;
+				for(JSONPartDefinition vehicleDef : vehicle.definition.parts){
 					//If this part is the one we want, get it or add to our index.
 					for(String defPartType : vehicleDef.types){
 						if(partType.equals("part") || defPartType.startsWith(partType)){
@@ -97,7 +97,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 					
 					//Also check additional parts if we have them..
 					if(foundDef == null && vehicleDef.additionalParts != null){
-						for(VehiclePart additionalDef : vehicleDef.additionalParts){
+						for(JSONPartDefinition additionalDef : vehicleDef.additionalParts){
 							for(String defPartType : additionalDef.types){
 								if(partType.equals("part") || defPartType.startsWith(partType)){
 									if(partNumber == 0){
@@ -120,7 +120,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 						//If it's not, or it doesn't exist, return 0.
 						APart foundPart = vehicle.getPartAtLocation(foundDef.pos);
 						if(foundPart != null && partClass.isInstance(foundPart)){
-							return foundPart.getAnimationSystem().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+							return foundPart.getAnimator().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 						}else{
 							return 0;
 						}
@@ -151,7 +151,6 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
 			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
-			case("siren"): return vehicle.sirenOn ? 1 : 0;
 			case("locked"): return vehicle.locked ? 1 : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
@@ -180,12 +179,12 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
 			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
-			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.location.x - vehicle.position.x, vehicle.selectedBeacon.location.z - vehicle.position.z))) : 0;
+			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.position.x - vehicle.position.x, vehicle.selectedBeacon.position.z - vehicle.position.z))) : 0;
 			case("beacon_bearing_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.bearing : 0;
 			case("beacon_bearing_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.getBearingDelta(vehicle) : 0;
 			case("beacon_glideslope_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope : 0;
-			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
-			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.location.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.location))) : 0;
+			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
+			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
 			
 			//Missile incoming variables.
 			//Variable is in the form of missile_X_variablename.

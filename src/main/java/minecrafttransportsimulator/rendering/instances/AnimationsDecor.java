@@ -35,11 +35,11 @@ public final class AnimationsDecor extends AAnimationsBase<TileEntityDecor>{
 				case("fuelpump_dispensed"): return pump.getTank().getAmountDispensed();
 			}
 		}else if(decor instanceof TileEntityRadio){
-			TileEntityRadio radio = (TileEntityRadio) decor;
+			TileEntityRadio radioDecor = (TileEntityRadio) decor;
 			switch(variable){
-				case("radio_active"): return radio.getRadio().isPlaying() ? 1 : 0;	
-				case("radio_volume"): return radio.getRadio().volume;
-				case("radio_preset"): return radio.getRadio().preset;
+				case("radio_active"): return radioDecor.radio.isPlaying() ? 1 : 0;	
+				case("radio_volume"): return radioDecor.radio.volume;
+				case("radio_preset"): return radioDecor.radio.preset;
 			}
 		}
 		

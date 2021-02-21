@@ -13,7 +13,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.General>{
+public abstract class AJSONItem{
 	/**A String containing any prefix folders for this item.  Used by the packloading system to tell
 	 * where resources are relative to the item's JSON definition file path.  This contains all folders
 	 * "between" the item's classification directory and the item's actual file.*/
@@ -31,8 +31,8 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
 	/**Generic variable used to represent the general properties of this pack item.  Extend this and
 	 * reference it in the generic for all sub-classes.*/
 	@JSONRequired
-	@JSONDescription("Common and core content to all JSONs, plus any additional core parameters that are JSON-sepecific and not in their own sub-section.")
-	public GeneralConfig general;
+	@JSONDescription("Common and core content to all JSONs.")
+	public General general;
 
     public class General{
     	@JSONDescription("The name of this content.  Will be displayed in item form.  Note that if the content is a type that has a set of definitions, then this name is ignored and the appropriate definition name is used instead.")
@@ -47,5 +47,77 @@ public abstract class AJSONItem<GeneralConfig extends AJSONItem<GeneralConfig>.G
     	@JSONRequired
     	@JSONDescription("A list of materials that are required to create this component.  The format for this list is [GiveString:Metadata:Qty], where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials in this list, and no extraMaterials if it uses definitions, it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter.")
     	public List<String> materials;
+    	
+    	//Moved from multiple locations.
+    	//Vehicle was deprecated for vehicle type.
+    	//Part was for part type, and went to generic.
+    	//Decor was for decor type, and went to decor
+    	//Pole was for pole type, and went to pole.
+    	//Item was for item type, and went in item.
+    	@Deprecated
+    	public String type;
+    	
+    	//Moved from MultiModelProvider during common JSON overhauling.
+    	@Deprecated
+    	public String modelName;
+    	
+    	//Moved from Vehicle during common JSON overhauling.
+    	@Deprecated
+    	public boolean isAircraft;
+    	@Deprecated
+    	public boolean isBlimp;
+    	@Deprecated
+    	public boolean openTop;
+    	@Deprecated
+    	public int emptyMass;
+    	
+    	//Moved from Part during common JSON overhauling.
+    	@Deprecated
+    	public String customType;
+    	@Deprecated
+    	public boolean disableMirroring;
+    	@Deprecated
+    	public boolean useVehicleTexture;
+    	
+    	//Moved from Decor during common JSON overhauling.
+    	@Deprecated
+    	public float width;
+		@Deprecated
+    	public float height;
+		@Deprecated
+    	public float depth;
+		@Deprecated
+    	public List<String> itemTypes;
+    	@Deprecated
+    	public List<String> partTypes;
+    	@Deprecated
+    	public List<String> items;
+    	
+    	//Moved from Pole during common JSON overhauling.
+    	@Deprecated
+    	public float radius;
+    	
+    	//Moved from Skin during common JSON overhauling.
+    	@SuppressWarnings("hiding")
+		@Deprecated
+    	public String packID;
+    	@SuppressWarnings("hiding")
+		@Deprecated
+    	public String systemName;
+    	
+    	//These came from both Decor and Pole.
+    	@Deprecated
+    	public TextLine[] textLines;
+    	@Deprecated
+    	public List<JSONText> textObjects;
+        @Deprecated
+        public class TextLine{
+        	public int characters;
+        	public float xPos;
+        	public float yPos;
+        	public float zPos;
+        	public float scale;
+        	public String color;
+        }
     }
 }

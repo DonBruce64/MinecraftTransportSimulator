@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
@@ -18,10 +20,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -292,7 +293,7 @@ public class WrapperWorld{
 	
 	/**
 	 *  Generates a new wrapper to be used for entity tracking.
-	 *  This should be fed into the constructor of {@link AEntityBase}
+	 *  This should be fed into the constructor of {@link AEntityB_Existing}
 	 *  at construction time to allow it to interface with the world.
 	 */
 	public WrapperEntity generateEntity(){
@@ -302,13 +303,12 @@ public class WrapperWorld{
     }
 	
 	/**
-	 *  Spawns the entity into the world.  Only valid for entities that
-	 *  have had their wrapper set from {@link #generateEntity()}
+	 *  Spawns the entity into the world.
 	 */
-	public void spawnEntity(AEntityBase entity){
-		BuilderEntity builder = (BuilderEntity) entity.wrapper.entity;
-		builder.entity = entity;
+	public void spawnEntity(AEntityB_Existing entity){
+		BuilderEntity builder = new BuilderEntity(entity.world.world);
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
+		builder.entity = entity;
 		world.spawnEntity(builder);
     }
 	
@@ -327,30 +327,61 @@ public class WrapperWorld{
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, WrapperEntity damageSource, Point3d motion){
+	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
-		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
+		
+		//Get collided entities.
 		if(motion != null){
 			mcBox = mcBox.expand(motion.x, motion.y, motion.z);
 			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
-			//Create variables.
-			Point3d startPoint = damage.box.globalCenter;
-			Point3d endPoint = damage.box.globalCenter.copy().add(motion);
-			Vec3d start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
-			Vec3d end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
-			
-			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
-			Iterator<Entity> iterator = collidedEntities.iterator();
-			while(iterator.hasNext()){
-				Entity entity = iterator.next();
-				//If we hit a builder, get all the collision for it and check it all.
-				if(entity instanceof BuilderEntity){
-					AEntityBase baseEntity = ((BuilderEntity) entity).entity;
+		}else{
+			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+		}
+		
+		//Get variables.  If we aren't moving, we won't need these.
+		Point3d startPoint = null;
+		Point3d endPoint = null;
+		Vec3d start = null;
+		Vec3d end = null;
+		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = null;
+		if(motion != null){
+			startPoint = damage.box.globalCenter;
+			endPoint = damage.box.globalCenter.copy().add(motion);
+			start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
+			end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
+			rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();
+		}
+		
+		//Validate the collided entities to make sure we didn't hit something we shouldn't have.
+		//Also get rayTrace hits for advanced checking.
+		Iterator<Entity> iterator = collidedEntities.iterator();
+		while(iterator.hasNext()){
+			Entity mcEntityCollided = iterator.next();
+			if(mcEntityCollided instanceof BuilderEntity){
+				AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityCollided).entity;
+				if(damage.damgeSource != null){
+					if(damage.damgeSource.equals(entityAttacked)){
+						//Don't attack ourselves.
+						iterator.remove();
+						continue;
+					}else if(entityAttacked instanceof AEntityE_Multipart){
+						if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
+							//Don't attack the entity we are a part on.
+							iterator.remove();
+							continue;
+						}
+					}
+				}
+				
+				//Get hitboxes hit if we are a moving source of damage.
+				if(motion != null){
 					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
-					for(BoundingBox box : baseEntity.interactionBoxes){
-						if(box.getIntersectionPoint(startPoint, endPoint) != null){
-							hitBoxes.add(box);
+					if(entityAttacked instanceof AEntityD_Interactable){
+						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
+							if(box.getIntersectionPoint(startPoint, endPoint) != null){
+								hitBoxes.add(box);
+							}
 						}
 					}
 					
@@ -359,63 +390,40 @@ public class WrapperWorld{
 					if(hitBoxes.isEmpty()){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(entity), hitBoxes);
+						rayTraceHits.put(getWrapperFor(mcEntityCollided), hitBoxes);
 					}
-				}else{
-					//Didn't hit a builder. Do normal raytracing.
-					//If we didn't hit anything, remove the entity from the list. 
-					if(entity.getEntityBoundingBox().calculateIntercept(start, end) == null){
+				}
+			}else{
+				if(damage.damgeSource != null){
+					if(mcEntityCollided.getRidingEntity() instanceof BuilderEntity){
+						if(damage.damgeSource.equals(((BuilderEntity) mcEntityCollided.getRidingEntity()).entity)){
+							//Don't attack riders of the source of the damage.
+							iterator.remove();
+							continue;
+						}
+					}
+				}
+				
+				//Didn't hit a builder. Do normal raytracing.
+				//If we didn't hit anything, remove the entity from the list. 
+				if(motion != null){
+					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(entity), null);
+						rayTraceHits.put(getWrapperFor(mcEntityCollided), null);
 					}
-				}
-			}
-		}else{
-			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
-			rayTraceHits = null;
-		}
-		
-		//Found collided entities.  Do checks to remove excess entities and attack them if required.
-		if(!collidedEntities.isEmpty()){
-			if(damageSource != null){
-				//Iterate over all entities.  If the entity is the passed-in source, or riding the source, remove it.
-				Iterator<Entity> iterator = collidedEntities.iterator();
-				while(iterator.hasNext()){
-					Entity entity = iterator.next();
-					if(entity instanceof BuilderEntity){
-						AEntityBase testSource = ((BuilderEntity) entity).entity;
-						if(damageSource.equals(testSource.wrapper)){
-							//Don't attack ourselves if we are a builder damage.
-							iterator.remove();
-						}
-					}else if(entity.getRidingEntity() instanceof BuilderEntity){
-						AEntityBase testSource = ((BuilderEntity) entity.getRidingEntity()).entity;
-						if(damageSource.equals(testSource.wrapper)){
-							//Don't attack the entity we are riding a builder.
-							iterator.remove();
-						}
-					}else{
-						if(damageSource.entity.equals(entity)){
-							//Don't attack ourselves if we hit ourselves.
-							iterator.remove();
-						}
-					}
-				}
-			}
-			
-			//If we are on the server, attack the entities.
-			if(!isClient()){
-				for(Entity entity : collidedEntities){
-					getWrapperFor(entity).attack(damage);
 				}
 			}
 		}
 		
+		//If we are on the server, attack the entities.
 		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
 		if(isClient()){
 			return rayTraceHits;
 		}else{
+			for(Entity entity : collidedEntities){
+				getWrapperFor(entity).attack(damage);
+			}
 			return null;
 		}
 	}
@@ -462,17 +470,17 @@ public class WrapperWorld{
 	 *  Loads all entities that are in the passed-in range into the passed-in entity.
 	 *  Only non-hostile mobs will be loaded.
 	 */
-	public void loadEntities(BoundingBox box, AEntityBase vehicle){
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(vehicle.wrapper.entity, box.convert())){
+	public void loadEntities(BoundingBox box, AEntityD_Interactable<?> entityToLoad){
+		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
 			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
-				for(Point3d ridableLocation : vehicle.ridableLocations){
-					if(!vehicle.locationRiderMap.containsKey(ridableLocation)){
-						if(vehicle instanceof EntityVehicleF_Physics){
-							if(((EntityVehicleF_Physics) vehicle).getPartAtLocation(ridableLocation).vehicleDefinition.isController){
+				for(Point3d ridableLocation : entityToLoad.ridableLocations){
+					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
+						if(entityToLoad instanceof EntityVehicleF_Physics){
+							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).placementDefinition.isController){
 								continue;
 							}
 						}
-						vehicle.addRider(new WrapperEntity(entity), ridableLocation);
+						entityToLoad.addRider(new WrapperEntity(entity), ridableLocation);
 						break;
 					}
 				}
@@ -481,63 +489,63 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the block at the passed-in location, or null if it doesn't exist in the world.
+	 *  Returns the block at the passed-in position, or null if it doesn't exist in the world.
 	 *  Only valid for blocks of type {@link ABlockBase} others will return null.
 	 */
-	public ABlockBase getBlock(Point3i point){
-		Block block = world.getBlockState(new BlockPos(point.x, point.y, point.z)).getBlock();
+	public ABlockBase getBlock(Point3d position){
+		Block block = world.getBlockState(new BlockPos(position.x, position.y, position.z)).getBlock();
 		return block instanceof BuilderBlock ? ((BuilderBlock) block).mcBlock : null;
 	}
 	
 	/**
 	 *  Returns the hardness of the block at the passed-in point.
 	 */
-	public float getBlockHardness(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public float getBlockHardness(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		return world.getBlockState(pos).getBlockHardness(world, pos);
 	}
 	
 	/**
-	 *  Returns the slipperiness of the block at the passed-in point.
+	 *  Returns the slipperiness of the block at the passed-in position.
 	 *  0.6 is default slipperiness for blocks.
 	 */
-	public float getBlockSlipperiness(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public float getBlockSlipperiness(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
 		return state.getBlock().getSlipperiness(state, world, pos, null);
 	}
 	
 	/**
-	 *  Returns the point where the first block along the path can be hit, or null if there are
+	 *  Returns the position where the first block along the path can be hit, or null if there are
 	 *  no blocks along the path.
 	 */
-	public Point3i getBlockHit(Point3d position, Point3d delta){
+	public Point3d getBlockHit(Point3d position, Point3d delta){
 		Vec3d start = new Vec3d(position.x, position.y, position.z);
 		RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
 		if(trace != null){
 			BlockPos pos = trace.getBlockPos();
 			if(pos != null){
-				 return new Point3i(pos.getX(), pos.getY(), pos.getZ());
+				 return new Point3d(pos.getX(), pos.getY(), pos.getZ());
 			}
 		}
 		return null;
 	}
 	
 	/**
-	 *  Returns the rotation (in degrees) of the block at the passed-in location.
+	 *  Returns the rotation (in degrees) of the block at the passed-in position.
 	 *  Only valid for blocks of type {@link ABlockBase}.
 	 */
-    public float getBlockRotation(Point3i point){
-    	return world.getBlockState(new BlockPos(point.x, point.y, point.z)).getValue(BuilderBlock.FACING).getHorizontalAngle();
+    public float getBlockRotation(Point3d position){
+    	return world.getBlockState(new BlockPos(position.x, position.y, position.z)).getValue(BuilderBlock.FACING).getHorizontalAngle();
     }
 	
     /**
-	 *  Returns true if the block at the passed-in location is solid at the passed-in axis.
+	 *  Returns true if the block at the passed-in position is solid at the passed-in axis.
 	 *  Solid means that said block can be collided with, is a cube, and is generally able to have
 	 *  things placed or connected to it.
 	 */
-	public boolean isBlockSolid(Point3i point, Axis axis){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public boolean isBlockSolid(Point3d position, Axis axis){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
 		Block offsetMCBlock = state.getBlock();
 		EnumFacing facing = EnumFacing.valueOf(axis.name());
@@ -547,28 +555,28 @@ public class WrapperWorld{
 	/**
 	 *  Returns true if the block is liquid.
 	 */
-	public boolean isBlockLiquid(Point3i point){
-        return world.getBlockState(new BlockPos(point.x, point.y, point.z)).getMaterial().isLiquid();
+	public boolean isBlockLiquid(Point3d position){
+        return world.getBlockState(new BlockPos(position.x, position.y, position.z)).getMaterial().isLiquid();
 	}
 	
 	/**
-	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  Returns true if the block at the passed-in position is a slab, but only the
 	 *  bottom portion of the slab.  May be used to adjust renders to do half-block
 	 *  rendering to avoid floating blocks.
 	 */
-	public boolean isBlockBottomSlab(Point3i point){
-		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+	public boolean isBlockBottomSlab(Point3d position){
+		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y, position.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
 	}
 	
 	/**
-	 *  Returns true if the block at the passed-in location is a slab, but only the
+	 *  Returns true if the block at the passed-in position is a slab, but only the
 	 *  top portion of the slab.  May be used to adjust renders to do half-block
 	 *  rendering to avoid floating blocks.
 	 */
-	public boolean isBlockTopSlab(Point3i point){
-		IBlockState state = world.getBlockState(new BlockPos(point.x, point.y, point.z));
+	public boolean isBlockTopSlab(Point3d position){
+		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y, position.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
 	}
@@ -596,12 +604,12 @@ public class WrapperWorld{
 	    					int oldCollidingBlockCount = collidingAABBs.size();
 	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
 	    					if(collidingAABBs.size() > oldCollidingBlockCount){
-	    						box.collidingBlockPositions.add(new Point3i(i, j, k));
+	    						box.collidingBlockPositions.add(new Point3d(i, j, k));
 	    					}
 	    				}
 						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
 							collidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
-							box.collidingBlockPositions.add(new Point3i(i, j, k));
+							box.collidingBlockPositions.add(new Point3d(i, j, k));
 						}
     				}
     			}
@@ -651,8 +659,8 @@ public class WrapperWorld{
 	/**
 	 *  Returns the current redstone power at the passed-in position.
 	 */
-	public int getRedstonePower(Point3i point){
-		return world.getStrongPower(new BlockPos(point.x, point.y, point.z));
+	public int getRedstonePower(Point3d position){
+		return world.getStrongPower(new BlockPos(position.x, position.y, position.z));
 	}
 
 	/**
@@ -662,16 +670,16 @@ public class WrapperWorld{
 	 *  for blocks to query rain strength and not get 0 due to no rain
 	 *  being possible "in" that block.
 	 */
-	public float getRainStrength(Point3i point){
-		return world.isRainingAt(new BlockPos(point.x, point.y + 1, point.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
+	public float getRainStrength(Point3d position){
+		return world.isRainingAt(new BlockPos(position.x, position.y + 1, position.z)) ? world.getRainStrength(1.0F) + world.getThunderStrength(1.0F) : 0.0F;
 	}
 	
 	/**
 	 *  Returns the current temperature at the passed-in position.
 	 *  Dependent on biome, and likely modified by mods that add new boimes.
 	 */
-	public float getTemperature(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public float getTemperature(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		return world.getBiome(pos).getTemperature(pos);
 	}
 
@@ -682,10 +690,10 @@ public class WrapperWorld{
 	 *  for the player reference.
 	 */
 	@SuppressWarnings("unchecked")
-	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONItem<?>> boolean setBlock(ABlockBase block, Point3i location, WrapperPlayer playerWrapper, Axis axis){
+	public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONMultiModelProvider> boolean setBlock(ABlockBase block, Point3d position, WrapperPlayer playerWrapper, Axis axis){
     	if(!world.isRemote){
     		BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
-    		BlockPos pos = new BlockPos(location.x, location.y, location.z);
+    		BlockPos pos = new BlockPos(position.x, position.y, position.z);
     		if(playerWrapper != null){
     			WrapperPlayer player = playerWrapper;
     	    	ItemStack stack = playerWrapper.getHeldStack();
@@ -693,7 +701,7 @@ public class WrapperWorld{
     	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
     	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
     	            pos = pos.offset(facing);
-    	            location.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
+    	            position.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
     	    	}
     	    	
 	            if(item != null && player.player.canPlayerEdit(pos, facing, stack) && world.mayPlace(wrapper, pos, false, facing, null)){
@@ -716,11 +724,11 @@ public class WrapperWorld{
 		            			}
 		            		}
 		            		data.setDouble("rotation", Math.round(player.getHeadYaw()/15)*15%360);
-		            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), data);
+		            		builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, position, data);
 		            		
 		            	}
 		            	//Send place event to block class, and also send initial update check.
-		            	block.onPlaced(this, location, player);
+		            	block.onPlaced(this, position, player);
 		                stack.shrink(1);
 		                return true;
 		            }
@@ -730,7 +738,7 @@ public class WrapperWorld{
     			if(world.setBlockState(pos, newState, 11)){
     				if(block instanceof IBlockTileEntity){
     					BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-    					builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, new Point3i(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT());
+    					builderTile.tileEntity = ((IBlockTileEntity<TileEntityType>) block).createTileEntity(this, position, new WrapperNBT());
     				}
     				return true;
     			}
@@ -742,48 +750,48 @@ public class WrapperWorld{
 	 /**
 	 *  Gets the wrapper TE at the specified position.
 	 */
-	public WrapperTileEntity getWrapperTileEntity(Point3i position){
+	public WrapperTileEntity getWrapperTileEntity(Point3d position){
 		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
 		return tile != null ? new WrapperTileEntity(tile) : null;
 	}
 	
 	/**
-	 *  Returns the tile entity at the passed-in location, or null if it doesn't exist in the world.
+	 *  Returns the tile entity at the passed-in position, or null if it doesn't exist in the world.
 	 *  Only valid for TEs of type {@link ATileEntityBase} others will return null.
 	 */
 	@SuppressWarnings("unchecked")
-	public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3i point){
-		TileEntity tile = world.getTileEntity(new BlockPos(point.x, point.y, point.z));
+	public <TileEntityType extends ATileEntityBase<?>> TileEntityType getTileEntity(Point3d position){
+		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
 		return tile instanceof BuilderTileEntity ? ((BuilderTileEntity<TileEntityType>) tile).tileEntity : null;
 	}
 	
 	/**
-	 *  Flags the tile entity at the passed-in point for saving.  This means the TE's
+	 *  Flags the tile entity at the passed-in position for saving.  This means the TE's
 	 *  NBT data will be saved to disk when the chunk unloads so it will maintain its state.
 	 */
-	public void markTileEntityChanged(Point3i point){
-		world.getTileEntity(new BlockPos(point.x, point.y, point.z)).markDirty();
+	public void markTileEntityChanged(Point3d position){
+		world.getTileEntity(new BlockPos(position.x, position.y, position.z)).markDirty();
 	}
 	
 	/**
-	 *  Gets the brightness at this point, as a value between 0.0-1.0. Calculated from the
+	 *  Gets the brightness at this position, as a value between 0.0-1.0. Calculated from the
 	 *  sun brightness, and possibly the block brightness if calculateBlock is true.
 	 */
-	public float getLightBrightness(Point3i point, boolean calculateBlock){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public float getLightBrightness(Point3d position, boolean calculateBlock){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		float sunLight = world.getSunBrightness(0)*(world.getLightFor(EnumSkyBlock.SKY, pos) - world.getSkylightSubtracted())/15F;
 		float blockLight = calculateBlock ? world.getLightFromNeighborsFor(EnumSkyBlock.BLOCK, pos)/15F : 0.0F;
 		return Math.max(sunLight, blockLight);
 	}
 	
 	/**
-	 *  Updates the brightness of the block at this point.  Only works if the block
+	 *  Updates the brightness of the block at this position.  Only works if the block
 	 *  is a dynamic-brightness block that implements {@link IBlockTileEntity}. 
 	 */
-	public void updateLightBrightness(Point3i point){
-		ATileEntityBase<?> tile = getTileEntity(point);
+	public void updateLightBrightness(Point3d position){
+		ATileEntityBase<?> tile = getTileEntity(position);
 		if(tile != null){
-			BlockPos pos = new BlockPos(point.x, point.y, point.z);
+			BlockPos pos = new BlockPos(position.x, position.y, position.z);
 			//This needs to get fired manually as even if we update the blockstate the light value won't change
 			//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
 			world.checkLight(pos);
@@ -795,27 +803,27 @@ public class WrapperWorld{
 	 *  This does no sanity checks, so make sure you're
 	 *  actually allowed to do such a thing before calling.
 	 */
-	public void destroyBlock(Point3i point){
-		world.destroyBlock(new BlockPos(point.x, point.y, point.z), true);
+	public void destroyBlock(Point3d position){
+		world.destroyBlock(new BlockPos(position.x, position.y, position.z), true);
 	}
 	
 	/**
-	 *  Returns true if the block at this point is air.
+	 *  Returns true if the block at this position is air.
 	 */
-	public boolean isAir(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public boolean isAir(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos); 
 		Block block = state.getBlock();
 		return block.isAir(state, world, pos);
 	}
 	
 	/**
-	 *  Returns true if the block at this point is fire.
+	 *  Returns true if the block at this position is fire.
 	 *  Note: this will return true on vanilla fire, as well as
 	 *  any other blocks made of fire from other mods.
 	 */
-	public boolean isFire(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public boolean isFire(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos); 
 		return state.getMaterial().equals(Material.FIRE);
 	}
@@ -825,19 +833,19 @@ public class WrapperWorld{
 	 *  This does no sanity checks, so make sure you're
 	 *  actually allowed to do such a thing before calling.
 	 */
-	public void setToFire(Point3i point){
-		world.setBlockState(new BlockPos(point.x, point.y, point.z), Blocks.FIRE.getDefaultState());
+	public void setToFire(Point3d position){
+		world.setBlockState(new BlockPos(position.x, position.y, position.z), Blocks.FIRE.getDefaultState());
 	}
 	
 	/**
-	 *  Tries to fertilize the block with the passed-in stack.
+	 *  Tries to fertilize the block at the passed-in position with the passed-in stack.
 	 *  Returns true if the block was fertilized.
 	 */
-	public boolean fertilizeBlock(Point3i point, ItemStack stack){
+	public boolean fertilizeBlock(Point3d position, ItemStack stack){
 		//Check if the item can fertilize things and we are on the server.
 		if(stack.getItem().equals(Items.DYE) && !world.isRemote){
 			//Check if we are in crops.
-			BlockPos cropPos = new BlockPos(point.x, point.y, point.z);
+			BlockPos cropPos = new BlockPos(position.x, position.y, position.z);
 			IBlockState cropState = world.getBlockState(cropPos);
 			Block cropBlock = cropState.getBlock();
 			if(cropBlock instanceof IGrowable){
@@ -852,14 +860,14 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Tries to harvest the block at the passed-in location.  If the harvest was
+	 *  Tries to harvest the block at the passed-in position.  If the harvest was
 	 *  successful, and the block harvested was crops, the result returned is a list
 	 *  of the drops from the crops.  If the crops couldn't be harvested, null is returned.
 	 *  If the block was harvested, but not crops, then the resulting drops
 	 *  are dropped on the ground and an empty list is returned.
 	 */
-	public List<ItemStack> harvestBlock(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public List<ItemStack> harvestBlock(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
 		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
 			Block harvestedBlock = state.getBlock();
@@ -878,7 +886,7 @@ public class WrapperWorld{
 				}else{
 					for(ItemStack stack : drops){
 						if(stack.getCount() > 0){
-							world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
+							world.spawnEntity(new EntityItem(world, position.x, position.y, position.z, stack));
 						}
 					}
 				}
@@ -889,17 +897,17 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Tries to plant the item as a block.  Only works if the land conditions are correct
+	 *  Tries to plant the item as a block at the passed-in position.  Only works if the land conditions are correct
 	 *  and the item is actually seeds that can be planted.
 	 */
-	public boolean plantBlock(Point3i point, ItemStack stack){
+	public boolean plantBlock(Point3d position, ItemStack stack){
 		//Check for valid seeds.
 		Item item = stack.getItem();
 		if(item instanceof IPlantable){
 			IPlantable plantable = (IPlantable) item;
 			
 			//Check if we have farmland below and air above.
-			BlockPos farmlandPos = new BlockPos(point.x, point.y, point.z);
+			BlockPos farmlandPos = new BlockPos(position.x, position.y, position.z);
 			IBlockState farmlandState = world.getBlockState(farmlandPos);
 			Block farmlandBlock = farmlandState.getBlock();
 			if(farmlandBlock.equals(Blocks.FARMLAND)){
@@ -919,10 +927,10 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Tries to plow the block.  Essentially, this turns grass and dirt into farmland.
+	 *  Tries to plow the block at the passed-in position.  Essentially, this turns grass and dirt into farmland.
 	 */
-	public boolean plowBlock(Point3i point){
-		BlockPos pos = new BlockPos(point.x, point.y, point.z);
+	public boolean plowBlock(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState oldState = world.getBlockState(pos);
 		IBlockState newState = null;
 		Block block = oldState.getBlock();
@@ -968,18 +976,9 @@ public class WrapperWorld{
 	
 	/**
 	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from an internal entity.
 	 */
-	public void spawnExplosion(AEntityBase source, Point3d location, double strength, boolean flames){
-		world.newExplosion(source.wrapper.entity, location.x, location.y, location.z, (float) strength, flames, true);
-	}
-	
-	/**
-	 *  Spawns an explosion of the specified strength at the passed-in point.
-	 *  Explosion in this case is from a wrapper entity.
-	 */
-	public void spawnExplosion(WrapperEntity entity, Point3d location, double strength, boolean flames){
-		world.newExplosion(entity.entity, location.x, location.y, location.z, (float) strength, flames, true);
+	public void spawnExplosion(Point3d location, double strength, boolean flames){
+		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, true);
 	}
 	
 	/**

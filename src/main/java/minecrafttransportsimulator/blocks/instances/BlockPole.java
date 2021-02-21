@@ -6,7 +6,6 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -46,14 +45,14 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public boolean onClicked(WrapperWorld world, Point3i location, Axis axis, WrapperPlayer player){
+	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
 		//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
 		axis = Axis.getFromRotation(player.getYaw()).getOpposite();
 		
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
-		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
+		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
 		if(pole != null){
 			ItemStack heldStack = player.getHeldStack();
 			AItemBase heldItem = player.getHeldItem();
@@ -61,19 +60,15 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 			boolean isPlayerHoldingWrench = heldItem instanceof ItemWrench;
 			boolean isPlayerClickingEditableSign = clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null;
 			boolean isPlayerHoldingComponent = heldItem instanceof ItemPoleComponent;
-			boolean isPlayerHoldingCore = isPlayerHoldingComponent && ((ItemPoleComponent) heldItem).definition.general.type.equals(PoleComponentType.CORE);
+			boolean isPlayerHoldingCore = isPlayerHoldingComponent && ((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE);
 			if(world.isClient()){
 				if(isPlayerHoldingWrench){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, true));
 				}else if(isPlayerClickingEditableSign){
 					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, null, null, false));
 				}else if(isPlayerHoldingComponent && !isPlayerHoldingCore){
-					List<String> textLines = null;
 					ItemPoleComponent component = (ItemPoleComponent) heldItem;
-					if(component.definition.rendering != null && component.definition.rendering.textObjects != null){
-						textLines = new WrapperNBT(heldStack).getStrings("textLines", component.definition.rendering.textObjects.size());
-					}
-					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, textLines, false));	
+					InterfacePacket.sendToServer(new PacketTileEntityPoleChange(pole, axis, component, new WrapperNBT(heldStack), false));	
 				}else{
 					return false;
 				}
@@ -84,13 +79,13 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	}
 	
 	@Override
-	public void addCollisionBoxes(WrapperWorld world, Point3i location, List<BoundingBox> collidingBoxes){
+	public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
 		//For every connection or component we have, return a collision box.
-		TileEntityPole pole = (TileEntityPole) world.getTileEntity(location);
+		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
 		if(pole != null){
 			for(Axis axis : Axis.values()){
 				if(axis.blockBased){
-					if(world.getBlock(axis.getOffsetPoint(location)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(location), axis.getOpposite()) || pole.components.containsKey(axis)){
+					if(world.getBlock(axis.getOffsetPoint(position)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(position), axis.getOpposite()) || pole.components.containsKey(axis)){
 						collidingBoxes.add(axisBounds.get(axis));
 					}
 				}else if(axis.equals(Axis.NONE)){
@@ -98,12 +93,12 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 				}
 			}
 		}else{
-			super.addCollisionBoxes(world, location, collidingBoxes);
+			super.addCollisionBoxes(world, position, collidingBoxes);
 		}
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(WrapperWorld world, Point3i position, WrapperNBT data){
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityPole(world, position, data);
 	}
 

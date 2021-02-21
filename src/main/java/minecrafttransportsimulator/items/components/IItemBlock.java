@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -60,7 +60,7 @@ public interface IItemBlock{
 	 *  Tries to let this player place the block for this IItemBlock into the world.
 	 *  Returns true if the block was placed.
 	 */
-	public default boolean placeBlock(WrapperWorld world, WrapperPlayer player, Point3i point, Axis axis){
-		return world.setBlock(getBlock(), point, player, axis);
+	public default boolean placeBlock(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
+		return world.setBlock(getBlock(), position, player, axis);
 	}
 }

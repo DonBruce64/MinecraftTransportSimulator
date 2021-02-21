@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpState;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketTileEntity;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 
-public class PacketTileEntitySignalControllerChange extends APacketTileEntity<TileEntitySignalController>{
+public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEntitySignalController>{
 	private final OpMode currentOpMode;
 	private final boolean mainDirectionXAxis;
 	private final short greenMainTime;
@@ -20,7 +20,7 @@ public class PacketTileEntitySignalControllerChange extends APacketTileEntity<Ti
 	private final short yellowMainTime;
 	private final short yellowCrossTime;
 	private final short allRedTime;
-    private final List<Point3i> componentLocations;
+    private final List<Point3d> componentLocations;
 	
 	public PacketTileEntitySignalControllerChange(TileEntitySignalController controller){
 		super(controller);
@@ -45,9 +45,9 @@ public class PacketTileEntitySignalControllerChange extends APacketTileEntity<Ti
 		this.allRedTime = buf.readShort();
 		
 		byte components = buf.readByte();
-		this.componentLocations = new ArrayList<Point3i>();
+		this.componentLocations = new ArrayList<Point3d>();
 		for(byte i=0; i<components; ++i){
-			componentLocations.add(new Point3i(buf.readInt(), buf.readInt(), buf.readInt()));
+			componentLocations.add(readPoint3dCompactFromBuffer(buf));
 		}
 	}
 	
@@ -63,10 +63,8 @@ public class PacketTileEntitySignalControllerChange extends APacketTileEntity<Ti
 		buf.writeShort(allRedTime);
 		
 		buf.writeByte(componentLocations.size());
-		for(Point3i componentLocation : componentLocations){
-			buf.writeInt(componentLocation.x);
-			buf.writeInt(componentLocation.y);
-			buf.writeInt(componentLocation.z);
+		for(Point3d componentLocation : componentLocations){
+			writePoint3dCompactToBuffer(componentLocation, buf);
 		}
 	}
 	

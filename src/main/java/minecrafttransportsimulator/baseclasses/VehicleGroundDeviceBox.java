@@ -76,7 +76,7 @@ public class VehicleGroundDeviceBox{
 		liquidDevices.clear();
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.vehicleDefinition.isSpare){
+				if(!part.placementDefinition.isSpare){
 					//X-offsets of 0 are both left and right as they are center points.
 					//This ensures we don't roll to try and align a center point.
 					if(isFront && part.placementOffset.z > 0){
@@ -121,10 +121,10 @@ public class VehicleGroundDeviceBox{
 		solidBox.widthRadius = 0;
 		solidBox.heightRadius = 0;
 		for(APart groundDevice : groundDevices){
-			solidBox.localCenter.x += groundDevice.totalOffset.x;
-			solidBox.localCenter.z += groundDevice.totalOffset.z;
-			if(groundDevice.totalOffset.y - groundDevice.getHeight()/2D < solidBox.localCenter.y - solidBox.heightRadius){
-				solidBox.localCenter.y = groundDevice.totalOffset.y;
+			solidBox.localCenter.x += groundDevice.localOffset.x;
+			solidBox.localCenter.z += groundDevice.localOffset.z;
+			if(groundDevice.localOffset.y - groundDevice.getHeight()/2D < solidBox.localCenter.y - solidBox.heightRadius){
+				solidBox.localCenter.y = groundDevice.localOffset.y;
 				solidBox.heightRadius = groundDevice.getHeight()/2D;
 				solidBox.widthRadius = groundDevice.getWidth()/2D;
 			}
@@ -138,10 +138,10 @@ public class VehicleGroundDeviceBox{
 		liquidBox.widthRadius = 0;
 		liquidBox.heightRadius = 0;
 		for(APart groundDevice : liquidDevices){
-			liquidBox.localCenter.x += groundDevice.totalOffset.x;
-			liquidBox.localCenter.z += groundDevice.totalOffset.z;
-			if(groundDevice.totalOffset.y - groundDevice.getHeight()/2D < liquidBox.localCenter.y - liquidBox.heightRadius){
-				liquidBox.localCenter.y = groundDevice.totalOffset.y;
+			liquidBox.localCenter.x += groundDevice.localOffset.x;
+			liquidBox.localCenter.z += groundDevice.localOffset.z;
+			if(groundDevice.localOffset.y - groundDevice.getHeight()/2D < liquidBox.localCenter.y - liquidBox.heightRadius){
+				liquidBox.localCenter.y = groundDevice.localOffset.y;
 				liquidBox.heightRadius = groundDevice.getHeight()/2D;
 				liquidBox.widthRadius = groundDevice.getWidth()/2D;
 			}
@@ -225,7 +225,7 @@ public class VehicleGroundDeviceBox{
 			}
 			
 			isLiquidCollidedWithGround = false;
-			for(Point3i blockPosition : liquidBox.collidingBlockPositions){
+			for(Point3d blockPosition : liquidBox.collidingBlockPositions){
 				if(!vehicle.world.isBlockLiquid(blockPosition)){
 					isLiquidCollidedWithGround = true;
 					break;

@@ -1,13 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketVehicle;
-import minecrafttransportsimulator.sound.InterfaceSound;
-import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
+import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
@@ -15,7 +12,7 @@ import minecrafttransportsimulator.vehicles.parts.PartEngine;
  * 
  * @author don_bruce
  */
-public class PacketVehicleControlDigital extends APacketVehicle{
+public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Physics>{
 	private final Controls controlType;
 	private final boolean controlState;
 	
@@ -42,25 +39,11 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case P_BRAKE : {
-				//If we are a big truck on a client that just set the brake, play the brake sound.
-				if(world.isClient() && !vehicle.parkingBrakeOn && controlState && vehicle.definition.motorized.isBigTruck){
-					InterfaceSound.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":air_brake_activating"));
-				}
 				vehicle.parkingBrakeOn = controlState;
 				break;
 			}
 			case HORN : {
-				if(world.isClient() && !vehicle.hornOn && controlState){
-					InterfaceSound.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.hornSound, true));
-				}
 				vehicle.hornOn = controlState;
-				break;
-			}
-			case SIREN : {
-				if(world.isClient() && !vehicle.sirenOn && controlState){
-					InterfaceSound.playQuickSound(new SoundInstance(vehicle, vehicle.definition.motorized.sirenSound, true));
-				}
-				vehicle.sirenOn = controlState;
 				break;
 			}
 			case TRAILER : {
@@ -70,8 +53,8 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				}else{
 					boolean matchingConnection = false;
 					boolean trailerInRange = false;
-					for(AEntityBase entity : AEntityBase.createdServerEntities){
-						if(!entity.equals(vehicle) && entity instanceof EntityVehicleF_Physics){
+					for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
+						if(entity instanceof EntityVehicleF_Physics && !entity.equals(vehicle)){
 							switch(vehicle.tryToConnect((EntityVehicleF_Physics) entity)){
 								case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect")); return false;
 								case TRAILER_TOO_FAR : matchingConnection = true; break;
@@ -109,7 +92,7 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 				return didShift;
 			}
 			case REVERSE : {
-				if(vehicle.definition.general.isBlimp){
+				if(vehicle.definition.motorized.isBlimp){
 					for(PartEngine engine : vehicle.engines.values()){
 						if(controlState){
 							engine.shiftDown(false);
@@ -154,7 +137,6 @@ public class PacketVehicleControlDigital extends APacketVehicle{
 	public enum Controls{
 		P_BRAKE,
 		HORN,
-		SIREN,
 		SHIFT_UP,
 		SHIFT_DN,
 		TRAILER,

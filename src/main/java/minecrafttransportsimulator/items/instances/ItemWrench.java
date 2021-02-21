@@ -13,7 +13,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.APart;
 
@@ -52,11 +51,13 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 					//If not, spawn item in the world and remove part.
 					//Make sure to remove the part before spawning the item.  Some parts
 					//care about this order and won't spawn items unless they've been removed.
-					if(!part.vehicleDefinition.isPermanent && part.childParts.isEmpty()){
+					if(!part.placementDefinition.isPermanent && part.childParts.isEmpty()){
 						vehicle.removePart(part, null);
 						ItemPart droppedItem = part.getItem();
 						if(droppedItem != null){
-							vehicle.world.spawnItem(droppedItem, part.getData(), part.worldPos);
+							WrapperNBT partData = new WrapperNBT();
+							part.save(partData);
+							vehicle.world.spawnItem(droppedItem, partData, part.position);
 						}
 					}
 				}else if(player.isSneaking()){
@@ -70,7 +71,7 @@ public class ItemWrench extends AItemBase implements IItemVehicleInteractable{
 						if(vehicle.towedByVehicle != null){
 							vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
 						}
-						ItemVehicle vehicleItem = PackParserSystem.getItem(vehicle.definition.packID, vehicle.definition.systemName, vehicle.currentSubName);
+						ItemVehicle vehicleItem = vehicle.getItem();
 						WrapperNBT vehicleData = new WrapperNBT();
 						vehicle.save(vehicleData);
 						vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);

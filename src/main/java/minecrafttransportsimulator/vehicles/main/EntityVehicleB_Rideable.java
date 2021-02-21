@@ -1,18 +1,23 @@
 package minecrafttransportsimulator.vehicles.main;
 
 import java.util.Iterator;
+import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
@@ -27,11 +32,14 @@ import minecrafttransportsimulator.vehicles.parts.PartSeat;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
+abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
 	
-	public EntityVehicleB_Rideable(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
+	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
+	
+	public EntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 	}
 	
 	@Override
@@ -51,8 +59,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			}
 			
 			//Add all seat-specific effects to the rider
-			if(seat.vehicleDefinition.seatEffects != null) {
-				for(JSONPotionEffect effect: seat.vehicleDefinition.seatEffects){
+			if(seat.placementDefinition.seatEffects != null) {
+				for(JSONPotionEffect effect: seat.placementDefinition.seatEffects){
 					rider.addPotionEffect(effect);
 				}
 			}
@@ -62,7 +70,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 			if(seat.definition.seat.heightScale != 0){
 				seatYPos *= seat.definition.seat.heightScale;
 			}
-			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.totalRotation).add(seat.totalOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
+			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.localAngles).add(seat.localOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset);
 			rider.setVelocity(motion);
 			
@@ -91,8 +99,8 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
-    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.vehicleDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.vehicleDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.placementDefinition.isController);
+    			InterfaceInput.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -115,7 +123,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 				//Need to invert the lookup as location may be null from the builder.
 				//Rider won't be, as it's required, so we can use it to get the actual location.
 				PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-				rider.setYaw(angles.y + seat.totalRotation.y);
+				rider.setYaw(angles.y + seat.localAngles.y);
 			}
 		}
 		
@@ -138,7 +146,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 		
 		//Get rid of any potion effects that were caused by the seat
-		VehiclePart packPart = getPackDefForLocation(riderLocation);
+		JSONPartDefinition packPart = getPackDefForLocation(riderLocation);
 		if(packPart.seatEffects != null) {
 			for(JSONPotionEffect effect: packPart.seatEffects){
 				rider.removePotionEffect(effect);
@@ -154,13 +162,13 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		APart partRiding = getPartAtLocation(riderLocation);
 		if(packPart.dismountPos != null){
 			if(partRiding != null){
-				dismountPosition = packPart.dismountPos.copy().add(partRiding.totalOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
+				dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
 			}else{
 				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
 			}
 		}else{
 			if(partRiding != null){
-				Point3d partDelta = partRiding.totalOffset.copy().subtract(partRiding.placementOffset);
+				Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
 				if(riderLocation.x < 0){
 					partDelta.x = -partDelta.x;
 					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);
@@ -181,6 +189,21 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		}
 	}
 	
+	@Override
+    public void updateSounds(List<SoundInstance> sounds){
+    	super.updateSounds(sounds);
+    	//If we are in an closed-top vehicle, dampen the sound.
+    	//Unless it's a radio, in which case don't do so.
+    	AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+		if(entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson()){
+			for(SoundInstance sound : sounds){
+				if(sound.radio == null || !entityRiding.equals(this)){
+					sound.volume *= 0.5F;
+				}
+			}
+		}
+    }
+	
 	/**
 	 *  Helper method used to get the controlling player for this vehicle.
 	 */
@@ -188,7 +211,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 		for(Point3d location : locationRiderMap.keySet()){
 			PartSeat seat = (PartSeat) getPartAtLocation(location);
 			WrapperEntity rider = locationRiderMap.get(location);
-			if(seat != null && seat.vehicleDefinition.isController && rider instanceof WrapperPlayer){
+			if(seat != null && seat.placementDefinition.isController && rider instanceof WrapperPlayer){
 				return (WrapperPlayer) rider;
 			}
 		}
@@ -200,7 +223,7 @@ abstract class EntityVehicleB_Rideable extends EntityVehicleA_Base{
 	 * Includes core mass, player weight (including inventory), and cargo.
 	 */
 	protected float getCurrentMass(){
-		int currentMass = definition.general.emptyMass;
+		int currentMass = definition.motorized.emptyMass;
 		for(APart part : parts){
 			if(part instanceof PartInteractable){
 				currentMass += ((PartInteractable) part).getInventoryWeight();

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.baseclasses.Point3i;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.components.ITextProvider;
+import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -29,46 +29,51 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	public TileEntityPole(WrapperWorld world, Point3i position, WrapperNBT data){
+	private static final AnimationsDecor animator = new AnimationsDecor();
+	private static RenderPole renderer;
+	
+	private float maxTotalLightLevel;
+	
+	public TileEntityPole(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
 		//Load components back in.
 		for(Axis axis : Axis.values()){
-			String packID = data.getString("packID" + axis.ordinal());
-			if(!packID.isEmpty()){
-				//TODO remove this a few major versions down the road when we don't need to convert things.
-				String systemName = data.getString("systemName" + axis.ordinal());
-				String subName = data.getString("subName" + axis.ordinal());
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(packID, systemName, subName));
-				components.put(axis, newComponent);
-				
-				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
-					ITextProvider provider = (ITextProvider) newComponent;
-					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
-						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLine" + axis.ordinal() + i));
-					}
-				}
-			}
-			
-			packID = data.getString("packID" + axis.name());
-			if(!packID.isEmpty()){
-				String systemName = data.getString("systemName" + axis.name());
-				String subName = data.getString("subName" + axis.name());
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, PackParserSystem.getItem(packID, systemName, subName));
-				components.put(axis, newComponent);
-				
-				if(newComponent instanceof ITextProvider && newComponent.definition.rendering != null && newComponent.definition.rendering.textObjects != null){
-					ITextProvider provider = (ITextProvider) newComponent;
-					for(int i=0; i<newComponent.definition.rendering.textObjects.size(); ++i){
-						provider.getText().put(newComponent.definition.rendering.textObjects.get(i), data.getString("textLine" + axis.name() + i));
-					}
+			if(!axis.equals(Axis.NONE)){
+				WrapperNBT componentData = data.getData(axis.name());
+				if(componentData != null){
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
+					components.put(axis, newComponent);
 				}
 			}
 		}
 		
-		//If we don't have our core component on the NONE axis, add it now based on our definition.
+		//TODO remove legacy loader a few versions down the line.
+		for(Axis axis : Axis.values()){
+			String componentPackID = data.getString("packID" + axis.ordinal());
+			if(!componentPackID.isEmpty()){
+				String componentSystemName = data.getString("systemName" + axis.ordinal());
+				String componentSubName = data.getString("subName" + axis.ordinal());
+				ItemPoleComponent poleItem = PackParserSystem.getItem(componentPackID, componentSystemName, componentSubName);
+				
+				WrapperNBT fakeData = new WrapperNBT();
+				fakeData.setString("packID", componentPackID);
+				fakeData.setString("systemName", componentSystemName);
+				fakeData.setString("subName", componentSubName);
+				if(poleItem.definition.rendering != null && poleItem.definition.rendering.textObjects != null){
+					for(int i=0; i<poleItem.definition.rendering.textObjects.size(); ++i){
+						fakeData.setString("textLine" + i, data.getString("textLine" + axis.ordinal() + i));
+					}
+				}
+				
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, fakeData);
+				components.put(axis, newComponent);
+			}
+		}
+		
+		//Add our core component to the NONE axis.
 		//This is done for ease of rendering and lookup routines.
 		if(!components.containsKey(Axis.NONE)){
-			components.put(Axis.NONE, PoleComponentType.createComponent(this, ((ItemPoleComponent) this.item)));
+			components.put(Axis.NONE, PoleComponentType.createComponent(this, data));
 		}
 	}
 	
@@ -78,12 +83,16 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public void updateLightState(){
 		float calculatedLevel = 0;
 		for(ATileEntityPole_Component component : components.values()){
-			calculatedLevel = Math.max(calculatedLevel, component.lightLevel());
+			calculatedLevel = Math.max(calculatedLevel, component.getLightProvided());
 		}
-		if(lightLevel != calculatedLevel){
-			lightLevel = calculatedLevel;
+		if(maxTotalLightLevel != calculatedLevel){
 			world.updateLightBrightness(position);
 		}
+	}
+	
+	@Override
+	public float getLightProvided(){
+		return maxTotalLightLevel;
 	}
 	
 	@Override
@@ -98,8 +107,18 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
+	public AnimationsDecor getAnimator(){
+		return animator;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
 	public RenderPole getRenderer(){
-		return new RenderPole();
+		if(renderer == null){
+			renderer = new RenderPole();
+		}
+		return renderer;
 	}
 	
 	@Override
@@ -108,16 +127,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
 			Axis axis = connectedObjectEntry.getKey();
-			ATileEntityPole_Component component = connectedObjectEntry.getValue();
-			data.setString("packID" + axis.name(), component.definition.packID);
-			data.setString("systemName" + axis.name(), component.definition.systemName);
-			data.setString("subName" + axis.name(), component.currentSubName);
-			if(component instanceof ITextProvider){
-				int lineNumber = 0;
-				for(String textLine : ((ITextProvider) component).getText().values()){
-					data.setString("textLine" + axis.name() + lineNumber++, textLine);
-				}
+			if(!axis.equals(Axis.NONE)){
+				ATileEntityPole_Component component = connectedObjectEntry.getValue();
+				WrapperNBT componentData = new WrapperNBT();
+				component.save(componentData);
+				data.setData(axis.name(), componentData);
 			}
 		}
-    }
+	}
 }

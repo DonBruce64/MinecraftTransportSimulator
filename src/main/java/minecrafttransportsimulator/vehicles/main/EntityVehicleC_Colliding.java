@@ -6,17 +6,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.Point3i;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleDoor;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehiclePart;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -24,7 +22,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import minecrafttransportsimulator.vehicles.parts.APart;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.item.ItemStack;
@@ -43,7 +40,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	
 	//Internal states.
 	private float hardnessHitThisTick = 0;
-	public double airDensity;
 	public double currentMass;
 	public double velocity;
 	public double axialVelocity;
@@ -61,21 +57,21 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public final Map<APart, List<BoundingBox>> partCollisionBoxes = new HashMap<APart, List<BoundingBox>>();
 	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
 	public final List<BoundingBox> partInteractionBoxes = new ArrayList<BoundingBox>();
-	public final Map<BoundingBox, VehiclePart> partSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
-	public final Map<BoundingBox, VehiclePart> activePartSlotBoxes = new HashMap<BoundingBox, VehiclePart>();
-	public final Map<BoundingBox, VehicleDoor> vehicleDoorBoxes = new HashMap<BoundingBox, VehicleDoor>();
-	public final Map<APart, Map<BoundingBox, VehicleDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, VehicleDoor>>();
+	public final Map<BoundingBox, JSONPartDefinition> partSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+	public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+	public final Map<BoundingBox, JSONDoor> vehicleDoorBoxes = new HashMap<BoundingBox, JSONDoor>();
+	public final Map<APart, Map<BoundingBox, JSONDoor>> partDoorBoxes = new HashMap<APart, Map<BoundingBox, JSONDoor>>();
 	
 	
-	public EntityVehicleC_Colliding(WrapperWorld world, WrapperEntity wrapper, WrapperNBT data){
-		super(world, wrapper, data);
+	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
+		super(world, data);
 		
 		//Create the initial part slots.
 		recalculatePartSlots();
 		
 		//Create initial collision boxes.  Needed to test spawn logic.
 		for(int i=0; i<definition.collision.size(); ++i){
-			VehicleCollisionBox boxDefinition = definition.collision.get(i);
+			JSONCollisionBox boxDefinition = definition.collision.get(i);
 			BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy(), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
 			vehicleCollisionBoxes.add(newBox);
 			collisionBoxes.add(newBox);
@@ -86,15 +82,15 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Create door boxes, and set states based on saved data.
 		if(definition.doors != null){
-			for(VehicleDoor door : definition.doors){
+			for(JSONDoor door : definition.doors){
 				BoundingBox box = new BoundingBox(door.closedPos, door.closedPos.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
 				vehicleDoorBoxes.put(box, door);
 				collisionBoxes.add(box);
 			}
 			for(APart part : parts){
 				if(part.definition.doors != null){
-					Map<BoundingBox, VehicleDoor> partDoors = new HashMap<BoundingBox, VehicleDoor>();
-					for(VehicleDoor door : part.definition.doors){
+					Map<BoundingBox, JSONDoor> partDoors = new HashMap<BoundingBox, JSONDoor>();
+					for(JSONDoor door : part.definition.doors){
 						Point3d doorOffsetCenter = door.closedPos.copy().add(part.placementOffset);
 						BoundingBox box = new BoundingBox(doorOffsetCenter, doorOffsetCenter.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
 						partDoors.put(box, door);
@@ -118,10 +114,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		axialVelocity = Math.abs(motion.dotProduct(headingVector));
 		
 		//Update mass.
-		if(definition != null){
-			currentMass = getCurrentMass();
-			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-		}
+		currentMass = getCurrentMass();
 		
 		//Auto-close any open doors that should be closed.
 		//Only do this once a second to prevent lag.
@@ -129,7 +122,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			Iterator<String> variableIterator = variablesOn.iterator();
 			while(variableIterator.hasNext()){
 				String openDoorName = variableIterator.next();
-				for(VehicleDoor doorDef : definition.doors){
+				for(JSONDoor doorDef : definition.doors){
 					if(doorDef.name.equals(openDoorName)){
 						if(doorDef.closeOnMovement){
 							variableIterator.remove();
@@ -153,7 +146,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		
 		//Update door collision boxes.
-		for(Entry<BoundingBox, VehicleDoor> doorEntry : vehicleDoorBoxes.entrySet()){
+		for(Entry<BoundingBox, JSONDoor> doorEntry : vehicleDoorBoxes.entrySet()){
 			if(variablesOn.contains(doorEntry.getValue().name)){
 				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
 			}else{
@@ -162,11 +155,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		}
 		for(APart part : parts){
 			if(partDoorBoxes.containsKey(part)){
-				for(Entry<BoundingBox, VehicleDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
+				for(Entry<BoundingBox, JSONDoor> doorEntry : partDoorBoxes.get(part).entrySet()){
 					if(variablesOn.contains(doorEntry.getValue().name)){
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(part.localAngles).add(part.localOffset).rotateFine(angles).add(position);
 					}else{
-						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.totalRotation).add(part.totalOffset).rotateFine(angles).add(position);
+						doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(part.localAngles).add(part.localOffset).rotateFine(angles).add(position);
 					}
 				}
 			}
@@ -175,14 +168,14 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//Update part slot box positions.
 		//If this part box is part of a part, make sure we take that part's orientation into account.
 		for(BoundingBox box : partSlotBoxes.keySet()){
-			VehiclePart packVehicleDef = partSlotBoxes.get(box);
+			JSONPartDefinition packVehicleDef = partSlotBoxes.get(box);
 			boolean foundPart = false;
 			for(APart part : parts){
-				if(part.definition.subParts != null){
-					for(VehiclePart subPartDef : part.definition.subParts){
-						if(packVehicleDef.equals(getPackForSubPart(part.vehicleDefinition, subPartDef))){
+				if(part.definition.parts != null){
+					for(JSONPartDefinition subPartDef : part.definition.parts){
+						if(packVehicleDef.equals(getPackForSubPart(part.placementDefinition, subPartDef))){
 							//Need to find the delta between our 0-degree position and our current position.
-							Point3d delta = subPartDef.pos.copy().rotateFine(part.totalRotation).subtract(subPartDef.pos);
+							Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
 							box.updateToEntity(this, delta);
 							foundPart = true;
 							break;
@@ -208,24 +201,18 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			if(heldItem instanceof ItemPart){
-				for(Entry<BoundingBox, VehiclePart> partSlotBoxEntry : partSlotBoxes.entrySet()){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : partSlotBoxes.entrySet()){
 					ItemPart heldPart = (ItemPart) heldItem;
 					//Does the part held match this packPart?
-					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.general.type)){
+					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.generic.type)){
 						//Are there any doors blocking us from clicking this part?
 						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 							//special bounds of the generic part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
-							if(heldPart.definition.generic != null){
-								box.widthRadius = heldPart.definition.generic.width/2D;
-								box.heightRadius = heldPart.definition.generic.height/2D;
-								box.depthRadius = heldPart.definition.generic.width/2D;
-							}else{
-								box.widthRadius = PART_SLOT_HITBOX_WIDTH/2D;
-								box.heightRadius = PART_SLOT_HITBOX_HEIGHT/2D;
-								box.depthRadius = PART_SLOT_HITBOX_WIDTH/2D;
-							}
+							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
 							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 						}
 					}
@@ -259,7 +246,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				
 				//If the part is linked to doors, and none are open, don't add it.
 				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
-				if(areDoorsBlocking(part.vehicleDefinition, clientPlayer)){
+				if(areDoorsBlocking(part.placementDefinition, clientPlayer)){
 					continue;
 				}
 			}
@@ -282,10 +269,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-			if(seat.vehicleDefinition.linkedDoors != null){
-				for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
+			if(seat.placementDefinition.linkedDoors != null){
+				for(String linkedDoor : seat.placementDefinition.linkedDoors){
 					if(variablesOn.contains(linkedDoor)){
-						for(VehicleDoor doorDef : definition.doors){
+						for(JSONDoor doorDef : definition.doors){
 							if(doorDef.name.equals(linkedDoor)){
 								if(doorDef.activateOnSeated){
 									variablesOn.remove(linkedDoor);
@@ -295,7 +282,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 						}
 						for(APart part : parts){
 							if(part.definition.doors != null){
-								for(VehicleDoor doorDef : part.definition.doors){
+								for(JSONDoor doorDef : part.definition.doors){
 									if(doorDef.name.equals(linkedDoor)){
 										if(doorDef.activateOnSeated){
 											variablesOn.remove(linkedDoor);
@@ -317,10 +304,10 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-		if(seat != null && seat.vehicleDefinition.linkedDoors != null){
-			for(String linkedDoor : seat.vehicleDefinition.linkedDoors){
+		if(seat != null && seat.placementDefinition.linkedDoors != null){
+			for(String linkedDoor : seat.placementDefinition.linkedDoors){
 				if(!variablesOn.contains(linkedDoor)){
-					for(VehicleDoor doorDef : definition.doors){
+					for(JSONDoor doorDef : definition.doors){
 						if(doorDef.name.equals(linkedDoor)){
 							if(doorDef.activateOnSeated){
 								variablesOn.add(linkedDoor);
@@ -330,7 +317,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 					}
 					for(APart part : parts){
 						if(part.definition.doors != null){
-							for(VehicleDoor doorDef : part.definition.doors){
+							for(JSONDoor doorDef : part.definition.doors){
 								if(doorDef.name.equals(linkedDoor)){
 									if(doorDef.activateOnSeated){
 										variablesOn.add(linkedDoor);
@@ -351,20 +338,23 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//This is called if we attack the vehicle with something, rather than click it with an item.
 		//This attack can come from a player with a hand-held item, or a projectile such as an arrow.
 		//If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
-		APart part = getPartAtLocation(damage.box.localCenter);
-		if(part != null){
-			part.attack(damage);
+		//Need to make sure we are valid, howevr, as our death explosions can get us into infinte loops.
+		if(isValid){
+			APart part = getPartAtLocation(damage.box.localCenter);
+			if(part != null){
+				part.attack(damage);
+			}
 		}
 	}
 	
 	@Override
-	public void addPart(APart part){
-		super.addPart(part);
+	public void addPart(APart part, boolean sendPacket){
+		super.addPart(part, sendPacket);
 		//Add part to collision map if it has collision.
 		if(!part.isFake() && part.definition.collision != null && part.definition.collision.size() > 0){
 			partCollisionBoxes.put(part, new ArrayList<BoundingBox>());
-			for(VehicleCollisionBox boxDefinition : part.definition.collision){
-				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.totalOffset).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
+			for(JSONCollisionBox boxDefinition : part.definition.collision){
+				BoundingBox newBox = new BoundingBox(boxDefinition.pos, boxDefinition.pos.copy().add(part.localOffset).add(position), boxDefinition.width/2D, boxDefinition.height/2D, boxDefinition.width/2D, boxDefinition.collidesWithLiquids, boxDefinition.isInterior, true, boxDefinition.armorThickness);
 				partCollisionBoxes.get(part).add(newBox);
 				collisionBoxes.add(newBox);
 				if(!newBox.isInterior){
@@ -375,8 +365,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Add door boxes to maps, if the part has them.
 		if(part.definition.doors != null){
-			Map<BoundingBox, VehicleDoor> partDoors = new HashMap<BoundingBox, VehicleDoor>();
-			for(VehicleDoor door : part.definition.doors){
+			Map<BoundingBox, JSONDoor> partDoors = new HashMap<BoundingBox, JSONDoor>();
+			for(JSONDoor door : part.definition.doors){
 				Point3d doorOffsetCenter = door.closedPos.copy().add(part.placementOffset);
 				BoundingBox box = new BoundingBox(doorOffsetCenter, doorOffsetCenter.copy(), door.width/2D, door.height/2D, door.width/2D, false, true, false, 0);
 				partDoors.put(box, door);
@@ -413,11 +403,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		recalculatePartSlots();
 	}
 	
-	@Override
-	public Set<String> getActiveVariables(){
-		return variablesOn;
-	}
-	
 	/**
 	 * Call to re-create the list of all valid part slot boxes.
 	 * This should be called after part addition or part removal.
@@ -425,7 +410,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	 */
 	private void recalculatePartSlots(){
 		partSlotBoxes.clear();
-		for(Entry<Point3d, VehiclePart> packPartEntry : getAllPossiblePackParts().entrySet()){
+		for(Entry<Point3d, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
 				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateCoarse(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false, false, false, 0);
 				partSlotBoxes.put(newSlotBox, packPartEntry.getValue());
@@ -437,7 +422,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	 * Returns true if any linked doors are blocking the player from
 	 * accessing the passed-in part slot.
 	 */
-	public boolean areDoorsBlocking(VehiclePart partDef, WrapperPlayer player){
+	public boolean areDoorsBlocking(JSONPartDefinition partDef, WrapperPlayer player){
 		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
 			for(String door : partDef.linkedDoors){
 				if(variablesOn.contains(door)){
@@ -462,7 +447,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
-			for(Point3i blockPosition : box.collidingBlockPositions){
+			for(Point3d blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
@@ -483,7 +468,7 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				}
 			}
 			
-			if(hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
+			if(ConfigSystem.configObject.general.vehicleDestruction.value && hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
 					destroyAt(box.globalCenter);
 				}
@@ -509,16 +494,20 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 	 * code and player damage code.
 	 */
 	public void destroyAt(Point3d location){
-		this.isValid = false;
+		//Do normal removal operations.
+		remove();
+		
 		//Remove all parts from the vehicle and place them as items.
 		for(APart part : parts){
 			if(part.getItem() != null){
-				world.spawnItem(part.getItem(), part.getData(), part.worldPos);
+				WrapperNBT partData = new WrapperNBT();
+				part.save(partData);
+				world.spawnItem(part.getItem(), partData, part.position);
 			}
 		}
 		
 		//Also drop some crafting ingredients as items.
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(PackParserSystem.getItem(definition.packID, definition.systemName, currentSubName), true, true, false)){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(getItem(), true, true, false)){
 			for(ItemStack stack : material.possibleItems){
 				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
 					world.spawnItemStack(new ItemStack(stack.getItem(), material.qty, material.meta), location);
@@ -529,8 +518,8 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		
 		//Damage all riders, including the controller.
 		WrapperPlayer controller = getController();
-		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, null);
-		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, controller);
+		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, null);
+		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, controller);
 		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);

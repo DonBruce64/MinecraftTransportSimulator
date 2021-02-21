@@ -5,11 +5,12 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.AEntityBase;
 import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartSeat;
@@ -56,7 +57,7 @@ public class InterfaceEventsPlayerRendering{
 	    	//We can't use the setHeldItem hand as it plays the equip sound, so we use slots instead.
 	    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
 	    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-	    	if(gunEntity != null && gunEntity.gun != null){
+	    	if(gunEntity != null && gunEntity.activeGun != null){
 	    		if(player.isSneaking()){
 	    			disableBothArms(playerModel, player, true);
 	    		}else{
@@ -67,7 +68,7 @@ public class InterfaceEventsPlayerRendering{
     	
     	//If we are riding an entity, adjust seating.
     	if(player.getRidingEntity() instanceof BuilderEntity){
-        	AEntityBase ridingEntity = ((BuilderEntity) player.getRidingEntity()).entity;
+        	AEntityD_Interactable<?> ridingEntity = (AEntityD_Interactable<?>) ((BuilderEntity) player.getRidingEntity()).entity;
         	float playerWidthScale = 1.0F;
         	float playerHeightScale = 1.0F;
         	GL11.glPushMatrix();
@@ -80,7 +81,7 @@ public class InterfaceEventsPlayerRendering{
 	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 						if(player.equals(rider.entity)){
 							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-							ridingAngles = seat.prevTotalRotation.getInterpolatedPoint(seat.totalRotation, event.getPartialRenderTick());
+							ridingAngles = seat.prevAngles.getInterpolatedPoint(seat.angles, event.getPartialRenderTick()).subtract(seat.entityOn.angles);
 		            		
 		            		//Set sitting mode to the seat we are sitting in.
 		            		//If we aren't standing, we'll need to adjust the legs.
@@ -93,7 +94,7 @@ public class InterfaceEventsPlayerRendering{
 		            		
 		            		//Check if arms need to be set for adjustment.
 		            		if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
-			            		if(seat.vehicleDefinition.isController){
+			            		if(seat.placementDefinition.isController){
 			            			disableBothArms(playerModel, player, false);
 			            			renderCurrentRiderControlling = true;
 			            		}
@@ -164,7 +165,7 @@ public class InterfaceEventsPlayerRendering{
     public static void on(RenderPlayerEvent.Post event){
     	EntityPlayer player = event.getEntityPlayer();
     	ModelPlayer playerModel = event.getRenderer().getMainModel();
-    	AEntityBase ridingEntity = null;
+    	AEntityB_Existing ridingEntity = null;
     	Point3d rightArmAngles = null;
 		Point3d leftArmAngles = null;
 		
@@ -181,13 +182,13 @@ public class InterfaceEventsPlayerRendering{
     		
     		//If we are holding a gun, get arm angles.
     		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
-	    	if(gunEntity != null && gunEntity.gun != null){	    		
+	    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 	    		//Get arm rotations.
 	    		Point3d heldVector;
 				if(player.isSneaking()){
-					heldVector = gunEntity.gun.definition.gun.handHeldAimedOffset;
+					heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
 				}else{
-					heldVector = gunEntity.gun.definition.gun.handHeldNormalOffset;
+					heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
 				}
 				double heldVectorLength = heldVector.length();
 				double armPitchOffset = Math.toRadians(-90 + player.rotationPitch) - Math.asin(heldVector.y/heldVectorLength);
@@ -264,7 +265,7 @@ public class InterfaceEventsPlayerRendering{
     @SubscribeEvent
     public static void on(RenderHandEvent event){
     	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
-    	if(entity != null && entity.gun != null){
+    	if(entity != null && entity.activeGun != null){
     		event.setCanceled(true);
     	}
     }
@@ -272,7 +273,7 @@ public class InterfaceEventsPlayerRendering{
     @SubscribeEvent
     public static void on(RenderSpecificHandEvent event){
     	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID().toString());
-    	if(entity != null && entity.gun != null){
+    	if(entity != null && entity.activeGun != null){
     		event.setCanceled(true);
     	}
     }

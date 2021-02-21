@@ -20,6 +20,9 @@ public class JSONCraftingOverrides{
 	public String comment2 = "Everything that is crafted on one of the benches can be modified here to include any item, including modded ones.";
 	public String comment3 = "The format is one of [modID]:[ItemName]:[Metadata]:[Qty], with the name being the same as the in-game /give command.";
 	public String comment4 = "A sample override config is given here for reference.  Modify as you see fit.";
+	public String comment5 = "If you need the full listing of items, set dumpCraftingConfig to true in the general config section.";
+	public String comment6 = "This will overwrite this file with all craft-able items in all packs.";
+	public String comment7 = "Note that their crafting recipes may vary depending on what packs are installed.";
 	public Map<String, Map<String, List<String>>> overrides = populateDefaultOverrides();
 	
 	private static Map<String, Map<String, List<String>>> populateDefaultOverrides(){
