@@ -343,13 +343,28 @@ public class WrapperWorld{
 			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
 			Iterator<Entity> iterator = collidedEntities.iterator();
 			while(iterator.hasNext()){
-				Entity entity = iterator.next();
+				Entity mcEntityCollided = iterator.next();
 				//If we hit a builder, get all the collision for it and check it all.
-				if(entity instanceof BuilderEntity){
+				if(mcEntityCollided instanceof BuilderEntity){
+					AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityCollided).entity;
+					if(damage.damgeSource != null){
+						if(damage.damgeSource.equals(entityAttacked)){
+							//Don't attack ourselves.
+							iterator.remove();
+							continue;
+						}else if(entityAttacked instanceof AEntityE_Multipart){
+							if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
+								//Don't attack the entity we are a part on.
+								iterator.remove();
+								continue;
+							}
+						}
+					}
+					
+					//Get hitboxes hit.
 					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
-					AEntityB_Existing baseEntity = ((BuilderEntity) entity).entity;
-					if(baseEntity instanceof AEntityD_Interactable){
-						for(BoundingBox box : ((AEntityD_Interactable<?>) baseEntity).interactionBoxes){
+					if(entityAttacked instanceof AEntityD_Interactable){
+						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
 							if(box.getIntersectionPoint(startPoint, endPoint) != null){
 								hitBoxes.add(box);
 							}
@@ -361,15 +376,25 @@ public class WrapperWorld{
 					if(hitBoxes.isEmpty()){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(entity), hitBoxes);
+						rayTraceHits.put(getWrapperFor(mcEntityCollided), hitBoxes);
 					}
 				}else{
+					if(damage.damgeSource != null){
+						if(mcEntityCollided.getRidingEntity() instanceof BuilderEntity){
+							if(damage.damgeSource.equals(((BuilderEntity) mcEntityCollided.getRidingEntity()).entity)){
+								//Don't attack riders of the source of the damage.
+								iterator.remove();
+								continue;
+							}
+						}
+					}
+					
 					//Didn't hit a builder. Do normal raytracing.
 					//If we didn't hit anything, remove the entity from the list. 
-					if(entity.getEntityBoundingBox().calculateIntercept(start, end) == null){
+					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(entity), null);
+						rayTraceHits.put(getWrapperFor(mcEntityCollided), null);
 					}
 				}
 			}
@@ -378,45 +403,14 @@ public class WrapperWorld{
 			rayTraceHits = null;
 		}
 		
-		//Found collided entities.  Do checks to remove excess entities and attack them if required.
-		if(!collidedEntities.isEmpty()){
-			if(damage.damgeSource != null){
-				//Iterate over all entities.  If the entity is the passed-in source, or riding the source, remove it.
-				Iterator<Entity> iterator = collidedEntities.iterator();
-				while(iterator.hasNext()){
-					Entity mcEntityAttacked = iterator.next();
-					if(mcEntityAttacked instanceof BuilderEntity){
-						AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityAttacked).entity;
-						if(damage.damgeSource.equals(entityAttacked)){
-							//Don't attack ourselves.
-							iterator.remove();
-						}else if(entityAttacked instanceof AEntityE_Multipart){
-							if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
-								//Don't attack the entity we are a part on.
-								iterator.remove();
-							}
-						}
-					}else if(mcEntityAttacked.getRidingEntity() instanceof BuilderEntity){
-						if(damage.damgeSource.equals(((BuilderEntity) mcEntityAttacked.getRidingEntity()).entity)){
-							//Don't attack riders of the source of the damage.
-							iterator.remove();
-						}
-					}
-				}
-			}
-			
-			//If we are on the server, attack the entities.
-			if(!isClient()){
-				for(Entity entity : collidedEntities){
-					getWrapperFor(entity).attack(damage);
-				}
-			}
-		}
-		
+		//If we are on the server, attack the entities.
 		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
 		if(isClient()){
 			return rayTraceHits;
 		}else{
+			for(Entity entity : collidedEntities){
+				getWrapperFor(entity).attack(damage);
+			}
 			return null;
 		}
 	}

@@ -133,7 +133,7 @@ public final class PartSeat extends APart{
 							}
 							//If the gun type is the same as the active gun, check if it's set to fireSolo.
 							//If we, we didn't group it and need to go to the next active gun with that type.
-							if(part.definition.equals(activeGun)){
+							if(partItem.equals(activeGun)){
 								if(part.definition.gun.fireSolo){
 									if(entityOn.partsByItem.get(partItem).size() <= ++gunIndex){
 										gunIndex = 0;
