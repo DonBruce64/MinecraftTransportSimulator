@@ -79,7 +79,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 			
 			//Not a fake part, do rendering.
 			GL11.glPushMatrix();
-			if(part.definition.ground != null && part.definition.ground.isTread){
+			if(part.definition.ground != null && (part.definition.ground.isTread && !part.placementDefinition.isSpare)){
 				//Tread rendering is done via the vehicle, which will assume the part is centered at 0, 0, 0.
 				//We need to undo the offset of the tread part for this routine.
 				GL11.glTranslated(0, -part.placementOffset.y, -part.placementOffset.z);
@@ -117,9 +117,9 @@ public final class RenderPart extends ARenderEntity<APart>{
 				GL11.glCullFace(GL11.GL_FRONT);
 			}
 			
-			//If we are a tread, do the tread-specific render rather than the display list.
+			//If we are a tread (that's not spare), do the tread-specific render rather than the display list.
 			//Don't do this for pass 1 though as treads don't have transparency.
-			if(part.definition.ground != null && part.definition.ground.isTread && InterfaceRender.getRenderPass() != 1){
+			if(part.definition.ground != null && part.definition.ground.isTread && !part.placementDefinition.isSpare && InterfaceRender.getRenderPass() != 1){
 				if(part.placementDefinition.treadZPoints != null){
 					doManualTreadRender((PartGroundDevice) part, partialTicks, partDisplayLists.get(partModelLocation));	
 				}else{

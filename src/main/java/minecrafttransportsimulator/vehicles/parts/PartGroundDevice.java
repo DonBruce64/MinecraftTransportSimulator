@@ -51,7 +51,7 @@ public class PartGroundDevice extends APart{
 		//we will be marked as such.  Check that to prevent loops.  Also set some parameters manually
 		//as fake parts have a few special properties.
 		//Don't add the fake part until the first update loop.  This prevents save/load errors.
-		if(!isFake() && getLongPartOffset() != 0){
+		if(!isFake() && getLongPartOffset() != 0 && !placementDefinition.isSpare){
 			//Need to swap placement for fake part so it uses the offset.
 			Point3d actualPlacement = placementDefinition.pos;
 			placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
