@@ -101,7 +101,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				//If we have a default fuel, add it now as we SHOULD have an engine to tell
 				//us what fuel type we will need to add.
 				if(newVehicle.definition.motorized.defaultFuelQty > 0){
-					for(APart part : newVehicle.parts){
+					for(APart part : newVehicle.partsFromNBT){
 						if(part instanceof PartEngine){
 							//Get the most potent fuel for the vehicle from the fuel configs.
 							String mostPotentFluid = "";
