@@ -338,9 +338,12 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		//This is called if we attack the vehicle with something, rather than click it with an item.
 		//This attack can come from a player with a hand-held item, or a projectile such as an arrow.
 		//If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
-		APart part = getPartAtLocation(damage.box.localCenter);
-		if(part != null){
-			part.attack(damage);
+		//Need to make sure we are valid, howevr, as our death explosions can get us into infinte loops.
+		if(isValid){
+			APart part = getPartAtLocation(damage.box.localCenter);
+			if(part != null){
+				part.attack(damage);
+			}
 		}
 	}
 	

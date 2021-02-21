@@ -90,86 +90,86 @@ public class BuilderEntity extends Entity{
     public void onEntityUpdate(){
     	//If our entity isn't null, update it and our position.
     	if(entity != null){
-    		//First forward the update call.
-    		entity.update();
-    		
-    		//Set the new position and rotation.
-    		setPosition(entity.position.x, entity.position.y, entity.position.z);
-    		rotationYaw = (float) -entity.angles.y;
-    		rotationPitch = (float) entity.angles.x;
-    		
-    		if(entity instanceof AEntityD_Interactable){
-    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
-    			
-    			//Update AABBs.
-        		//We need to update a wrapper class here as normal entities only allow a single collision box.
-        		//We also need to know if we need to increase the max world collision bounds to detect this entity.
-        		//Only do this after the first tick of the entity, as we might have some states that need updating
-        		//on that first tick that would cause bad maths.
-        		//We also do this only every second, as it prevents excess checks.
-        		interactionBoxes = new WrapperAABBCollective(this, interactable.interactionBoxes);
-        		collisionBoxes = new WrapperAABBCollective(this, interactable.collisionBoxes);
-        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
-    	    		double furthestWidthRadius = 0;
-    	    		double furthestHeightRadius = 0;
-    	    		for(BoundingBox box : interactable.interactionBoxes){
-    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - interactable.position.x + box.widthRadius));
-    	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - interactable.position.y + box.heightRadius));
-    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - interactable.position.z + box.depthRadius));
-    	    		}
-    	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
-    	    		
-    	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
-    				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
-    					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
-    				}
-        		}
-        		
-        		//Check that riders are still present prior to updating them.
-        		//This handles dismounting of riders from entities in a non-event-driven way.
-        		//We do this because other mods and Sponge like to screw up the events...
-        		if(!world.isRemote){
-    	    		Iterator<WrapperEntity> riderIterator = interactable.locationRiderMap.inverse().keySet().iterator();
-    	    		while(riderIterator.hasNext()){
-    	    			WrapperEntity rider = riderIterator.next();
-    	    			if(!this.equals(rider.entity.getRidingEntity())){
-    	    				interactable.removeRider(rider, riderIterator);
-    	    			}
-    	    		}
-        		}
-    		}
-    		
-    		
-    		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
-    		if(world.isRemote){
-    			if(entity.getLightProvided() > 0){
-					BlockPos newPos = getPosition();
-					//Check to see if we need to place a light.
-					if(!newPos.equals(fakeLightPosition)){
-						//If our prior position is not null, remove that block.
-						if(fakeLightPosition != null){
-							world.setBlockToAir(fakeLightPosition);
-							world.checkLight(fakeLightPosition);
-							fakeLightPosition = null;
-						}
-						//Set block in world and update pos.  Only do this if the block is air.
-						if(world.isAirBlock(newPos)){
-							world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
-							world.checkLight(newPos);
-							fakeLightPosition = newPos;
-						}
-					}
-    			}else if(fakeLightPosition != null){
-    				//Lights are off, turn off fake light.
-    				world.setBlockToAir(fakeLightPosition);
-    				world.checkLight(fakeLightPosition);
-    				fakeLightPosition = null;
-    			}
-    		}
-    		
     		//Check if we are still valid, or need to be set dead.
     		if(!entity.isValid){
     			setDead();
+    		}else{
+	    		//Forward the update call.
+	    		entity.update();
+	    		
+	    		//Set the new position and rotation.
+	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
+	    		rotationYaw = (float) -entity.angles.y;
+	    		rotationPitch = (float) entity.angles.x;
+	    		
+	    		if(entity instanceof AEntityD_Interactable){
+	    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+	    			
+	    			//Update AABBs.
+	        		//We need to update a wrapper class here as normal entities only allow a single collision box.
+	        		//We also need to know if we need to increase the max world collision bounds to detect this entity.
+	        		//Only do this after the first tick of the entity, as we might have some states that need updating
+	        		//on that first tick that would cause bad maths.
+	        		//We also do this only every second, as it prevents excess checks.
+	        		interactionBoxes = new WrapperAABBCollective(this, interactable.interactionBoxes);
+	        		collisionBoxes = new WrapperAABBCollective(this, interactable.collisionBoxes);
+	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
+	    	    		double furthestWidthRadius = 0;
+	    	    		double furthestHeightRadius = 0;
+	    	    		for(BoundingBox box : interactable.interactionBoxes){
+	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - interactable.position.x + box.widthRadius));
+	    	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - interactable.position.y + box.heightRadius));
+	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - interactable.position.z + box.depthRadius));
+	    	    		}
+	    	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
+	    	    		
+	    	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
+	    				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
+	    					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
+	    				}
+	        		}
+	        		
+	        		//Check that riders are still present prior to updating them.
+	        		//This handles dismounting of riders from entities in a non-event-driven way.
+	        		//We do this because other mods and Sponge like to screw up the events...
+	        		if(!world.isRemote){
+	    	    		Iterator<WrapperEntity> riderIterator = interactable.locationRiderMap.inverse().keySet().iterator();
+	    	    		while(riderIterator.hasNext()){
+	    	    			WrapperEntity rider = riderIterator.next();
+	    	    			if(!this.equals(rider.entity.getRidingEntity())){
+	    	    				interactable.removeRider(rider, riderIterator);
+	    	    			}
+	    	    		}
+	        		}
+	    		}
+	    		
+	    		
+	    		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
+	    		if(world.isRemote){
+	    			if(entity.getLightProvided() > 0){
+						BlockPos newPos = getPosition();
+						//Check to see if we need to place a light.
+						if(!newPos.equals(fakeLightPosition)){
+							//If our prior position is not null, remove that block.
+							if(fakeLightPosition != null){
+								world.setBlockToAir(fakeLightPosition);
+								world.checkLight(fakeLightPosition);
+								fakeLightPosition = null;
+							}
+							//Set block in world and update pos.  Only do this if the block is air.
+							if(world.isAirBlock(newPos)){
+								world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
+								world.checkLight(newPos);
+								fakeLightPosition = newPos;
+							}
+						}
+	    			}else if(fakeLightPosition != null){
+	    				//Lights are off, turn off fake light.
+	    				world.setBlockToAir(fakeLightPosition);
+	    				world.checkLight(fakeLightPosition);
+	    				fakeLightPosition = null;
+	    			}
+	    		}
     		}
     	}else if(world.isRemote){
     		//No entity.  Wait for NBT to be loaded to create it.

@@ -1,12 +1,14 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -19,7 +21,6 @@ import minecrafttransportsimulator.rendering.components.AParticle;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**This part class is special, in that it does not extend APart.
@@ -45,7 +46,6 @@ public class ParticleBullet extends AParticle{
 	
 	private final Map<ItemPart, Integer> bulletDisplayLists = new HashMap<ItemPart, Integer>();
 	
-	private double armorPenetrated;
 	private int burnTimeLeft;
 	private int accelerationLeft;
 	private int timeUntilAirBurst;
@@ -80,22 +80,42 @@ public class ParticleBullet extends AParticle{
 		//If we collide with an armored vehicle, try to penetrate it.
 		Map<WrapperEntity, List<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
+			double armorPenetrated = 0;
 			for(WrapperEntity entity : attackedEntities.keySet()){
-				if(attackedEntities.get(entity) != null){
+				List<BoundingBox> hitBoxes = attackedEntities.get(entity);
+				if(hitBoxes != null){
 					AEntityA_Base baseEntity = entity.getBaseEntity();
-					for(BoundingBox hitBox : attackedEntities.get(entity)){
-						if(hitBox.armorThickness != 0){
+					BoundingBox armorBoxHit = null;
+					
+					//Check all boxes for armor and see if we penetrated them.
+					Iterator<BoundingBox> hitBoxIterator = hitBoxes.iterator();
+					while(hitBoxIterator.hasNext()){
+						BoundingBox hitBox = hitBoxIterator.next();
+						if(hitBox.armorThickness > 0){
 							if(hitBox.armorThickness < bullet.definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
 								armorPenetrated += hitBox.armorThickness;
-								continue;
+								hitBoxIterator.remove();
+							}else{
+								armorBoxHit = hitBox;
 							}
-						}else if(!(baseEntity instanceof EntityVehicleF_Physics) || ((EntityVehicleF_Physics) baseEntity).getPartAtLocation(hitBox.localCenter) == null){
-							continue;
 						}
-						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, hitBox, velocity, bullet, bulletNumber, entity, gunController));
+					}	
+					
+					//If we hit an armor box, set that to what we attacked.
+					//If we didn't, see if we hit a part instead.
+					if(armorBoxHit != null){
+						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, armorBoxHit, velocity, bullet, bulletNumber, entity, gunController));
 						isValid = false;
-						break;
+					}else{
+						for(BoundingBox hitBox : hitBoxes){
+							if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartAtLocation(hitBox.localCenter) != null){
+								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, hitBox, velocity, bullet, bulletNumber, entity, gunController));
+								isValid = false;
+								break;
+							}
+						}
 					}
+					
 				}else{
 					box.globalCenter.setTo(entity.getPosition());
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, box, velocity, bullet, bulletNumber, entity, gunController));
