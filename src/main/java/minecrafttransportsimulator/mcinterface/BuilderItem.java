@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -209,10 +210,11 @@ public class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				//TODO remove this when all packs use the new system.
 				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
-					 BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID).packName, item)); 
+					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID);
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
 				}else{
+					//TODO remove this when all packs use the new system.
 					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
 				}
 			}

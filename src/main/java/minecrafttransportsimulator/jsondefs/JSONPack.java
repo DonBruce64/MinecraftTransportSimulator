@@ -11,6 +11,7 @@ public class JSONPack{
 	public String packID;
 	@JSONRequired
 	public String packName;
+	public String packItem;
 	public int fileStructure;
 	public boolean externalSkinsInOwnTab;
 	public boolean internalSkinsInOwnTab;
