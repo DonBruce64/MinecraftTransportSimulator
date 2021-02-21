@@ -330,38 +330,52 @@ public class WrapperWorld{
 	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
-		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();;
+		
+		//Get collided entities.
 		if(motion != null){
 			mcBox = mcBox.expand(motion.x, motion.y, motion.z);
 			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
-			//Create variables.
-			Point3d startPoint = damage.box.globalCenter;
-			Point3d endPoint = damage.box.globalCenter.copy().add(motion);
-			Vec3d start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
-			Vec3d end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
-			
-			//Iterate over all entities.  If the entity doesn't intersect the damage path, remove it.
-			Iterator<Entity> iterator = collidedEntities.iterator();
-			while(iterator.hasNext()){
-				Entity mcEntityCollided = iterator.next();
-				//If we hit a builder, get all the collision for it and check it all.
-				if(mcEntityCollided instanceof BuilderEntity){
-					AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityCollided).entity;
-					if(damage.damgeSource != null){
-						if(damage.damgeSource.equals(entityAttacked)){
-							//Don't attack ourselves.
+		}else{
+			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+		}
+		
+		//Get variables.  If we aren't moving, we won't need these.
+		Point3d startPoint = null;
+		Point3d endPoint = null;
+		Vec3d start = null;
+		Vec3d end = null;
+		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = null;
+		if(motion != null){
+			startPoint = damage.box.globalCenter;
+			endPoint = damage.box.globalCenter.copy().add(motion);
+			start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
+			end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
+			rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();
+		}
+		
+		//Validate the collided entities to make sure we didn't hit something we shouldn't have.
+		//Also get rayTrace hits for advanced checking.
+		Iterator<Entity> iterator = collidedEntities.iterator();
+		while(iterator.hasNext()){
+			Entity mcEntityCollided = iterator.next();
+			if(mcEntityCollided instanceof BuilderEntity){
+				AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityCollided).entity;
+				if(damage.damgeSource != null){
+					if(damage.damgeSource.equals(entityAttacked)){
+						//Don't attack ourselves.
+						iterator.remove();
+						continue;
+					}else if(entityAttacked instanceof AEntityE_Multipart){
+						if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
+							//Don't attack the entity we are a part on.
 							iterator.remove();
 							continue;
-						}else if(entityAttacked instanceof AEntityE_Multipart){
-							if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
-								//Don't attack the entity we are a part on.
-								iterator.remove();
-								continue;
-							}
 						}
 					}
-					
-					//Get hitboxes hit.
+				}
+				
+				//Get hitboxes hit if we are a moving source of damage.
+				if(motion != null){
 					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
 					if(entityAttacked instanceof AEntityD_Interactable){
 						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
@@ -378,19 +392,21 @@ public class WrapperWorld{
 					}else{
 						rayTraceHits.put(getWrapperFor(mcEntityCollided), hitBoxes);
 					}
-				}else{
-					if(damage.damgeSource != null){
-						if(mcEntityCollided.getRidingEntity() instanceof BuilderEntity){
-							if(damage.damgeSource.equals(((BuilderEntity) mcEntityCollided.getRidingEntity()).entity)){
-								//Don't attack riders of the source of the damage.
-								iterator.remove();
-								continue;
-							}
+				}
+			}else{
+				if(damage.damgeSource != null){
+					if(mcEntityCollided.getRidingEntity() instanceof BuilderEntity){
+						if(damage.damgeSource.equals(((BuilderEntity) mcEntityCollided.getRidingEntity()).entity)){
+							//Don't attack riders of the source of the damage.
+							iterator.remove();
+							continue;
 						}
 					}
-					
-					//Didn't hit a builder. Do normal raytracing.
-					//If we didn't hit anything, remove the entity from the list. 
+				}
+				
+				//Didn't hit a builder. Do normal raytracing.
+				//If we didn't hit anything, remove the entity from the list. 
+				if(motion != null){
 					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
 						iterator.remove();
 					}else{
@@ -398,9 +414,6 @@ public class WrapperWorld{
 					}
 				}
 			}
-		}else{
-			collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
-			rayTraceHits = null;
 		}
 		
 		//If we are on the server, attack the entities.
