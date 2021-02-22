@@ -320,8 +320,11 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The diameter of this gun.  This defines what ammo diameter may be used with it, and is what corresponds to the min-max parameters in the vehicle JSON.  It is also used to calculate rotation speed.  Units are in mm.")
     	public float diameter;
 		
-		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns, but greater accuracy at long ranges.  Units are in meters.")
+		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns (unless their travel speed is specified), but greater accuracy at long ranges.  Units are in meters.")
     	public float length;
+		
+		@JSONDescription("How fast, in degrees/tick, the gun can rotate.  This is normally auto-calculated from the gun's length, but it may be specified here if desired.")
+    	public float travelSpeed;
 		
 		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
     	public boolean fireSolo;

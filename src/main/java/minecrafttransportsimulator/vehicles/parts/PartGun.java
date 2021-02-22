@@ -119,7 +119,7 @@ public class PartGun extends APart{
 		if(loadedBullet == null){
 			bulletsLeft = 0;
 		}
-		this.anglePerTickSpeed = (50/definition.gun.diameter + 1/definition.gun.length);
+		this.anglePerTickSpeed = definition.gun.travelSpeed != 0 ? definition.gun.travelSpeed : (50/definition.gun.diameter + 1/definition.gun.length);
 	}
 	
 	@Override
