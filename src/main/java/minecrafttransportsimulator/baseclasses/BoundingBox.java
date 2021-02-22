@@ -57,6 +57,11 @@ public class BoundingBox{
 		this.armorThickness = armorThickness;
 	}
 	
+	@Override
+	public String toString(){
+		return "LocalCenter:" + localCenter.toString() + " GlobalCenter:" + globalCenter.toString() + " Width:" + widthRadius + " Height:" + heightRadius + " Depth:" + depthRadius; 
+	}
+	
 	/**
 	 *  Populates the collidingBlocks list with all currently-colliding blocks.
 	 *  Also populates the collisionDepth list with the collision depths of all collisions, not just blocks.

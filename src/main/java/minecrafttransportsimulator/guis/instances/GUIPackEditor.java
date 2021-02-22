@@ -45,6 +45,7 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
@@ -168,6 +169,7 @@ public class GUIPackEditor extends JFrame{
         //Create map to store entries.  Putting these in directly messes up the box formatting.
         Map<String, Class<?>> jsonClasses = new LinkedHashMap<String, Class<?>>();
         jsonClasses.put("JSON Type - Select first!.", null);
+        jsonClasses.put(JSONPack.class.getSimpleName(), JSONPack.class);
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
         jsonClasses.put(JSONPart.class.getSimpleName(), JSONPart.class);
         jsonClasses.put(JSONInstrument.class.getSimpleName(), JSONInstrument.class);
@@ -502,11 +504,15 @@ public class GUIPackEditor extends JFrame{
 	private static String formatTooltipText(String annotationText){
 		String tooltipText = "<html>";
 		for(String annotationSegment : annotationText.split("\n")){
-			int breakIndex = annotationSegment.indexOf(" ", 100);
+			int breakIndex = annotationSegment.indexOf(" ", 150);
 			while(breakIndex != -1){
 				tooltipText += annotationSegment.substring(0, breakIndex) + "<br>";
 				annotationSegment = annotationSegment.substring(breakIndex);
-				breakIndex = annotationSegment.indexOf(" ", 100);
+				breakIndex = annotationSegment.indexOf(" ", 150);
+				int listStartIndex = annotationSegment.indexOf("<ul>");
+				if(listStartIndex > 0 && listStartIndex < breakIndex){
+					breakIndex = annotationSegment.indexOf("</ul>");
+				}
 			}
 			tooltipText += annotationSegment  + "<br><br>";
 		}
