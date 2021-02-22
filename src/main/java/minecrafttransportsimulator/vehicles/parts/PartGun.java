@@ -312,15 +312,6 @@ public class PartGun extends APart{
 		}
 		windupRotation += windupTimeCurrent;
 		
-		//If we are reloading, decrement the reloading timer.
-		//If we are done reloading, add the new bullets.
-		if(reloadTimeRemaining > 0){
-			--reloadTimeRemaining;
-		}else if(bulletsReloading != 0){
-			bulletsLeft += bulletsReloading;
-			bulletsReloading = 0;
-		}
-		
 		//If this gun is being told to fire, and we have bullets and are wound up, fire.
 		//Don't spawn bullets on the server, as they will cause lots of lag and network traffic.
 		//Instead, spawn them on the clients, and then send back hit data to the server.
@@ -394,6 +385,16 @@ public class PartGun extends APart{
 					}
 				}
 			}
+		}
+		
+		//If we are reloading, decrement the reloading timer.
+		//If we are done reloading, add the new bullets.
+		//This comes after the reloading block as we need a 0/1 state-change for the various animations.
+		if(reloadTimeRemaining > 0){
+			--reloadTimeRemaining;
+		}else if(bulletsReloading != 0){
+			bulletsLeft += bulletsReloading;
+			bulletsReloading = 0;
 		}
 	}
 	

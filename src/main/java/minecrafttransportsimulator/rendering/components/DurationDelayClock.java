@@ -39,13 +39,13 @@ public class DurationDelayClock{
 	public double getFactoredState(AEntityC_Definable<?> entity, double value){
 		boolean commandForwards = value == 1;
 		long currentTime = System.currentTimeMillis();
-		long forwardsCycleTime = animation.forwardsDelay*50 + animation.reverseDelay*50;
+		long forwardsCycleTime = animation.forwardsDelay*50;
 		if(!animation.skipForwardsMovement){
-			forwardsCycleTime += animation.duration*50;
+			forwardsCycleTime += animation.duration*50 + animation.reverseDelay*50;
 		}
-		long reverseCycleTime = animation.forwardsDelay*50 + animation.reverseDelay*50;
+		long reverseCycleTime = animation.reverseDelay*50;
 		if(!animation.skipReverseMovement){
-			reverseCycleTime += animation.duration*50;
+			reverseCycleTime += animation.duration*50 + animation.forwardsDelay*50;
 		}
 		movedThisUpdate = false;
 		
@@ -63,7 +63,6 @@ public class DurationDelayClock{
 		}else if(timeCommandedForwards != 0){
 			if(!commandForwards){
 				//Going forwards, need to reverse.
-				movedThisUpdate = true;
 				timeCommandedReverse = currentTime;
 				long timeForwards = currentTime - timeCommandedForwards;
 				if(timeForwards < forwardsCycleTime){
@@ -80,7 +79,6 @@ public class DurationDelayClock{
 		}else{
 			if(commandForwards){
 				//Going in reverse, need to go forwards.
-				movedThisUpdate = true;
 				timeCommandedForwards = currentTime;
 				long timeReverse = currentTime - timeCommandedReverse;
 				if(timeReverse < reverseCycleTime){

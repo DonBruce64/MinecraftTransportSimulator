@@ -225,7 +225,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					//to clamp the value used in the testing.
 					double value = getAnimator().getAnimatedVariableValue(this, animation, 0, null, 0);
 					DurationDelayClock clock = soundVolumeClocks.get(soundDef).get(animation);
-					clock.getFactoredState(this, value);
+					value = clock.getFactoredState(this, value);
 					if(value < animation.clampMin || value > animation.clampMax || (!soundDef.looping && !soundDef.repeating && !clock.movedThisUpdate)){
 						shouldSoundPlay = false;
 						break;
