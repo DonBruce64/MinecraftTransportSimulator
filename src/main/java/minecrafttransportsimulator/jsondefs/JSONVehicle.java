@@ -33,6 +33,7 @@ public class JSONVehicle extends AJSONPartProvider{
     	public int gearSequenceDuration;
         public float downForce;
     	public float axleRatio;
+    	public float brakingFactor;
     	public float maxTiltAngle;
     	public float dragCoefficient;
     	public float tailDistance;

@@ -230,6 +230,11 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
+		//Check if we didn't specify a braking force.
+		if(definition.motorized.brakingFactor == 0){
+			definition.motorized.brakingFactor = 1.0F;
+		}
+		
 		try{
 			performAnimationLegacyCompats(definition.rendering);
 		}catch(Exception e){

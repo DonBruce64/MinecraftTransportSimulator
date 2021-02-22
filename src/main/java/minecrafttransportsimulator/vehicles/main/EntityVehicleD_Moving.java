@@ -233,7 +233,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	private void performGroundOperations(){
 		//Get braking force and apply it to the motions.
-		float brakingFactor = getBrakingForce();
+		float brakingFactor = getBrakingForce()*definition.motorized.brakingFactor;
 		if(brakingFactor > 0){
 			double brakingForce = 20F*brakingFactor/currentMass;
 			if(brakingForce > velocity){
