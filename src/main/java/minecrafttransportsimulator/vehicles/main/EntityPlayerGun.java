@@ -48,7 +48,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			//Newly-spawned entity.
 			this.player = playerSpawning;
 			position.setTo(player.getPosition());
-			rotation.set(player.getPitch(), player.getHeadYaw(), 0);
+			prevPosition.setTo(position);
+			angles.set(player.getPitch(), player.getHeadYaw(), 0);
+			prevAngles.setTo(angles);
 		}else{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.

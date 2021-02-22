@@ -40,7 +40,6 @@ import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
  */
 public class PartGun extends APart{
 	//Variables based on the specific gun's properties.
-	private final WrapperPlayer playerHolding;
 	private final double minYawAngle;
 	private final double maxYawAngle;
 	private final double minPitchAngle;
@@ -72,14 +71,6 @@ public class PartGun extends APart{
 		
 	public PartGun(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
-		if(entityOn instanceof EntityPlayerGun){
-			this.playerHolding = ((EntityPlayerGun) entityOn).player;
-			if(playerHolding == null){
-				this.isValid = false;
-			}
-		}else{
-			this.playerHolding = null;
-		}
 		
 		//Set min/max yaw/pitch angles based on our definition and the entity definition.
 		//If the entity definition min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
@@ -151,6 +142,16 @@ public class PartGun extends APart{
 		//Get the current controller and item reference for this gun.
 		WrapperEntity controller = getController();
 		ItemPart gunItem = getItem();
+		WrapperPlayer playerHolding;
+		if(entityOn instanceof EntityPlayerGun){
+			playerHolding = ((EntityPlayerGun) entityOn).player;
+			if(playerHolding == null){
+				this.isValid = false;
+				return;
+			}
+		}else{
+			playerHolding = null;
+		}
 		
 		//We flag ourselves as inactive if there are no controllers and the seat isn't set to us if we're not hand-held.
 		//We aren't making sentry turrets here.... yet.
