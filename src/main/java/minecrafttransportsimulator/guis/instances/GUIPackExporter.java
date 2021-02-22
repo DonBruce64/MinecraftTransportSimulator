@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -210,6 +212,14 @@ public class GUIPackExporter extends AGUIBase{
 								}
 							}
 						}
+						
+						//Send reset commands to entities.
+						for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicleClicked.world)){
+							if(entity instanceof AEntityC_Definable){
+								((AEntityC_Definable<?>) entity).onDefinitionReset();
+							}
+						}
+						
 						debug.setText(debug.getText() + "\nImporting finished.");
 					}else{
 						debug.setText("ERROR: No last modified timestamp file found at location: " + lastModifiedFile.getAbsolutePath() + "\nPlease re-export your pack data.");

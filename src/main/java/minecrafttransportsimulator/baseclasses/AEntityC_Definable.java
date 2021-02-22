@@ -81,6 +81,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		this.renderData = world.isClient() ? new RenderTickData(world) : null;
 		
 		//Create all sound clocks.
+		populateSoundMaps();
+	}
+	
+	/**
+	 *  Helper method for populating sound maps.
+	 */
+	public void populateSoundMaps(){
 		if(definition.rendering != null && definition.rendering.sounds != null){
 			for(JSONSound soundDef : definition.rendering.sounds){
 				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> volumeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();				
@@ -152,6 +159,16 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
     
     /**
+	 *  Called to reset the definition for this entity.  At this point, the definition will
+	 *  already updated, so this is more for updating cached variables.
+	 */
+    public void onDefinitionReset(){
+    	soundVolumeClocks.clear();
+    	soundPitchClocks.clear();
+    	populateSoundMaps();
+    }
+    
+    /**
 	 *  Gets the renderer for this entity.  No actual rendering should be done in this method, 
 	 *  as doing so could result in classes being imported during object instantiation on the server 
 	 *  for graphics libraries that do not exist.  Instead, generate a class that does this and call it.
@@ -177,15 +194,47 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				if(sound.soundName.equals(soundDef.name)){
 					//Adjust volume.
 					if(!soundDef.volumeAnimations.isEmpty()){
+						boolean inhibitAnimations = false;
 						boolean definedVolume = false;
 						sound.volume = 0;
 						for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
-							if(animation.animationType.equals(AnimationComponentType.TRANSLATION)){
-								definedVolume = true;
-								sound.volume += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
-							}else if(animation.animationType.equals(AnimationComponentType.ROTATION)){
-								definedVolume = true;
-								sound.volume += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+							switch(animation.animationType){
+								case TRANSLATION :{
+									if(!inhibitAnimations){
+										definedVolume = true;
+										sound.volume += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
+									}
+									break;
+								}
+								case ROTATION :{
+									if(!inhibitAnimations){
+										definedVolume = true;
+										sound.volume += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+									}
+									break;
+								}
+								case VISIBILITY :{
+									//Do nothing.
+									break;
+								}
+								case INHIBITOR :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
+										if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+											inhibitAnimations = true;
+										}
+									}
+									break;
+								}
+								case ACTIVATOR :{
+									if(inhibitAnimations){
+										double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
+										if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+											inhibitAnimations = false;
+										}
+									}
+									break;
+								}
 							}
 						}
 						if(!definedVolume){
@@ -197,12 +246,44 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					
 					//Adjust pitch.
 					if(soundDef.pitchAnimations != null && !soundDef.pitchAnimations.isEmpty()){
+						boolean inhibitAnimations = false;
 						sound.pitch = 0;
 						for(JSONAnimationDefinition animation : soundDef.pitchAnimations){
-							if(animation.animationType.equals(AnimationComponentType.TRANSLATION)){
-								sound.pitch += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
-							}else if(animation.animationType.equals(AnimationComponentType.ROTATION)){
-								sound.pitch += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+							switch(animation.animationType){
+								case TRANSLATION :{
+									if(!inhibitAnimations){
+										sound.pitch += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
+									}
+									break;
+								}
+								case ROTATION :{
+									if(!inhibitAnimations){
+										sound.pitch += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+									}
+									break;
+								}
+								case VISIBILITY :{
+									//Do nothing.
+									break;
+								}
+								case INHIBITOR :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
+										if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+											inhibitAnimations = true;
+										}
+									}
+									break;
+								}
+								case ACTIVATOR :{
+									if(inhibitAnimations){
+										double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
+										if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+											inhibitAnimations = false;
+										}
+									}
+									break;
+								}
 							}
 						}
 						if(sound.pitch < 0){
@@ -224,7 +305,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					//to clamp the value used in the testing.
 					double value = getAnimator().getAnimatedVariableValue(this, animation, 0, null, 0);
 					DurationDelayClock clock = soundVolumeClocks.get(soundDef).get(animation);
-					value = clock.getFactoredState(this, value);
+					if(animation.forwardsDelay != 0 || animation.duration != 0 || animation.reverseDelay != 0){
+						value = clock.getFactoredState(this, value);
+					}else{
+						//Need to use the state-change bit here.
+						clock.getFactoredState(this, value);
+					}
 					if(value < animation.clampMin || value > animation.clampMax || (!soundDef.looping && !soundDef.repeating && !clock.movedThisUpdate)){
 						shouldSoundPlay = false;
 						break;
