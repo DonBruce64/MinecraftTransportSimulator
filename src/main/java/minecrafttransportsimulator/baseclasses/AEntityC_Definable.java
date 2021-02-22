@@ -24,7 +24,6 @@ import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Base class for entities that are defined via JSON definitions.
  * This level adds various method for said definitions, which include rendering functions. 

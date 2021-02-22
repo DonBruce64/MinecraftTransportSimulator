@@ -121,7 +121,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
 							float hardnessHit = world.getBlockHardness(hitPosition);
-							if(!world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
+							if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
 							}else if(bulletDefinition.bullet.types.contains("incendiary")){
 								//Couldn't break block, but we might be able to set it on fire.

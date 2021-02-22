@@ -23,6 +23,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -978,7 +979,7 @@ public class WrapperWorld{
 	 *  Spawns an explosion of the specified strength at the passed-in point.
 	 */
 	public void spawnExplosion(Point3d location, double strength, boolean flames){
-		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, true);
+		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
 	}
 	
 	/**
