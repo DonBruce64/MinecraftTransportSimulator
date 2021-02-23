@@ -46,6 +46,11 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 
 			//If we have a connected part, try to load or unload from it depending on our state.
 			if(connectedPart != null){
+				//Check load/unload state.
+				if(world.getTick()%20 == 0){
+					unloadMode = world.getRedstonePower(position) > 0;
+				}
+				
 				if(unloadMode){
 					String fluidToUnload = connectedPart.tank.getFluid();
 					double amountToUnload = connectedPart.tank.drain(fluidToUnload, 100, false);

@@ -47,9 +47,6 @@ interact.fuelpump.complete=Vehicle is full, disconnecting.
 interact.fuelpump.empty=Fuel pump is empty, disconnecting.
 interact.fuelpump.disconnect=Disconnecting and stopping pumping.
 
-interact.loader.load=Loader is now in LOAD mode.
-interact.loader.unload=Loader is now in UNLOAD mode.
-
 interact.jerrycan.empty=This jerrycan is empty and cannot fuel this vehicle.
 interact.jerrycan.wrongtype=This jerrycan does not contain the same liquid as what is in the vehicle.
 interact.jerrycan.toofull=This vehicle is already full of fuel.  You cannot add any more.

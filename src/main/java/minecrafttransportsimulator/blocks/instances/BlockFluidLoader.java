@@ -6,7 +6,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluid
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	
@@ -16,13 +15,7 @@ public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		//Only check right-clicks on the server.
-		if(!world.isClient()){
-			TileEntityFluidLoader loader = (TileEntityFluidLoader) world.getTileEntity(position);
-			loader.unloadMode = !loader.unloadMode;
-			player.sendPacket(new PacketPlayerChatMessage(loader.unloadMode ? "interact.loader.unload" : "interact.loader.load"));
-		}
-		return true;
+		return false;
 	}
 	
     @Override
