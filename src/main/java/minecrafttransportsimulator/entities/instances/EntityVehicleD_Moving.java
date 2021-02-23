@@ -14,7 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -48,8 +48,8 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	//Towing data.
 	public EntityVehicleF_Physics towedVehicle;
 	public EntityVehicleF_Physics towedByVehicle;
-	public VehicleConnection activeHitchConnection;
-	public VehicleConnection activeHookupConnection;
+	public JSONConnection activeHitchConnection;
+	public JSONConnection activeHookupConnection;
 	public APart activeHitchPart;
 	public APart activeHookupPart;
 	private String towedVehicleSavedID;
@@ -799,7 +799,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 */
 	public boolean hasHitch(){
 		if(definition.connections != null){
-			for(VehicleConnection connection : definition.connections){
+			for(JSONConnection connection : definition.connections){
 				if(!connection.hookup){
 					return true;
 				}
@@ -807,7 +807,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 		for(APart part : parts){
 			if(part.definition.connections != null){
-				for(VehicleConnection connection : part.definition.connections){
+				for(JSONConnection connection : part.definition.connections){
 					if(!connection.hookup){
 						return true;
 					}
@@ -918,14 +918,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	/**
 	 * Helper block for checking if two connection sets can connect.
 	 */
-	private static TrailerConnectionResult tryToConnectConnections(List<VehicleConnection> firstConnections, List<VehicleConnection> secondConnections, EntityVehicleD_Moving firstVehicle, EntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
+	private static TrailerConnectionResult tryToConnectConnections(List<JSONConnection> firstConnections, List<JSONConnection> secondConnections, EntityVehicleD_Moving firstVehicle, EntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
 		//Check to make sure wer're being fed actual connections.
 		if(firstConnections != null && secondConnections != null){
 			//Create status variables.
 			boolean matchingConnection = false;
 			boolean trailerInRange = false;
-			for(VehicleConnection firstConnection : firstConnections){
-				for(VehicleConnection secondConnection : secondConnections){
+			for(JSONConnection firstConnection : firstConnections){
+				for(JSONConnection secondConnection : secondConnections){
 					if(!firstConnection.hookup && secondConnection.hookup){
 						Point3d hitchPos = firstConnection.pos.copy();
 						if(optionalFirstPart != null){
@@ -972,7 +972,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Hitch and hookup index should be part of our and the trailer's respective
 	 * definitions.
 	 */
-	public void changeTrailer(EntityVehicleD_Moving trailer, VehicleConnection hitchConnection, VehicleConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
+	public void changeTrailer(EntityVehicleD_Moving trailer, JSONConnection hitchConnection, JSONConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
 		if(trailer == null){
 			towedVehicle.towedByVehicle = null;
 			towedVehicle.activeHookupConnection = null;

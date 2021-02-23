@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
@@ -17,7 +17,7 @@ public class GUIComponentInstrument{
 	public final int x;
 	public final int y;
 	public final int instrumentPackIndex;
-	public final PackInstrument packInstrument;
+	public final JSONInstrumentDefinition packInstrument;
 	public final ItemInstrument instrument;
 	public final EntityVehicleF_Physics vehicle;
 	

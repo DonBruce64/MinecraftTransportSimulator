@@ -5,7 +5,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -22,7 +22,7 @@ public class PacketVehicleTrailerChange extends APacketEntity<EntityVehicleF_Phy
 	private final Point3d activeHitchPartSavedOffset;
 	private final Point3d activeHookupPartSavedOffset;
 	
-	public PacketVehicleTrailerChange(EntityVehicleF_Physics vehicle, VehicleConnection hitchConnection, VehicleConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
+	public PacketVehicleTrailerChange(EntityVehicleF_Physics vehicle, JSONConnection hitchConnection, JSONConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
 		super(vehicle);
 		EntityVehicleF_Physics trailer = vehicle.towedVehicle;
 		if(trailer != null){
@@ -100,7 +100,7 @@ public class PacketVehicleTrailerChange extends APacketEntity<EntityVehicleF_Phy
 			EntityVehicleF_Physics trailer = AEntityA_Base.getEntity(world, linkedID);
 			if(trailer != null){
 				APart hitchPart;
-				VehicleConnection hitchConnection;
+				JSONConnection hitchConnection;
 				if(activeHitchPartSavedOffset != null){
 					hitchPart = vehicle.getPartAtLocation(activeHitchPartSavedOffset);
 					hitchConnection = hitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
@@ -110,7 +110,7 @@ public class PacketVehicleTrailerChange extends APacketEntity<EntityVehicleF_Phy
 				}
 				
 				APart hookupPart;
-				VehicleConnection hookupConnection;
+				JSONConnection hookupConnection;
 				if(activeHookupPartSavedOffset != null){
 					hookupPart = trailer.getPartAtLocation(activeHookupPartSavedOffset);
 					hookupConnection = hookupPart.definition.connections.get(activeHookupConnectionSavedIndex);

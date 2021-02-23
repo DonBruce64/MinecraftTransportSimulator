@@ -20,10 +20,10 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
+import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection.VehicleConnectionConnector;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
@@ -102,7 +102,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
 			Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
 			for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
+				JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
 				if(packInstrument.animations != null){
 					instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
 				}
@@ -157,7 +157,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 	private static void renderConnectors(EntityVehicleF_Physics vehicle){
 		lastBoundConnectorTexture = "";
 		if(vehicle.activeHookupConnection != null && vehicle.activeHookupConnection.connectors != null){
-			for(VehicleConnectionConnector connector : vehicle.activeHookupConnection.connectors){
+			for(JSONConnectionConnector connector : vehicle.activeHookupConnection.connectors){
 				GL11.glPushMatrix();
 				if(vehicle.activeHookupPart != null){
 					GL11.glTranslated(vehicle.activeHookupPart.localOffset.x, vehicle.activeHookupPart.localOffset.y, vehicle.activeHookupPart.localOffset.z);
@@ -174,7 +174,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			}
 		}
 		if(vehicle.activeHitchConnection != null && vehicle.activeHitchConnection.connectors != null){
-			for(VehicleConnectionConnector connector : vehicle.activeHitchConnection.connectors){
+			for(JSONConnectionConnector connector : vehicle.activeHitchConnection.connectors){
 				GL11.glPushMatrix();
 				if(vehicle.activeHitchPart != null){
 					GL11.glTranslated(vehicle.activeHitchPart.localOffset.x, vehicle.activeHitchPart.localOffset.y, vehicle.activeHitchPart.localOffset.z);
@@ -195,7 +195,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 	/**
 	 *  Renders a single connector.  Used to isolate connector rendering from the above method.
 	 */
-	private static void renderConnector(VehicleConnectionConnector connector, String connectorPackID){
+	private static void renderConnector(JSONConnectionConnector connector, String connectorPackID){
 		String connectorName = "/assets/" + connectorPackID + "/connectors/" + connector.modelName;
 		String modelLocation = connectorName + ".obj";
 		String textureLocation = connectorName + ".png";
@@ -236,7 +236,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 		GL11.glEnable(GL11.GL_NORMALIZE);
 		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
 			if(vehicle.instruments.containsKey(i)){
-				PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
+				JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
 				
 				//Translate and rotate to standard position.
 				GL11.glPushMatrix();

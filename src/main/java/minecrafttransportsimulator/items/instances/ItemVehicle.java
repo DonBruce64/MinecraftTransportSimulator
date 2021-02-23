@@ -12,7 +12,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -79,7 +79,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				}
 				
 				//Add default instruments.
-				for(PackInstrument packInstrument : newVehicle.definition.motorized.instruments){
+				for(JSONInstrumentDefinition packInstrument : newVehicle.definition.motorized.instruments){
 					if(packInstrument.defaultInstrument != null){
 						try{
 							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));

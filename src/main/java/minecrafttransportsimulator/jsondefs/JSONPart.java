@@ -4,7 +4,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -47,10 +46,6 @@ public class JSONPart extends AJSONPartProvider{
 	@JSONRequired(dependentField="type", dependentValues={"effector"}, subField="general")
 	@JSONDescription("Properties for effectors.")
     public JSONPartEffector effector;
-	
-	@JSONDescription("The connections this part has.  These will allow the vehicle to connect to other vehicles when this part is present.")
-    public List<VehicleConnection> connections;
-    
 
 	@Deprecated
 	public List<JSONPartDefinition> subParts;

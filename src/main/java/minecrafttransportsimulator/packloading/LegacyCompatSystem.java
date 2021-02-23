@@ -12,6 +12,7 @@ import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -31,7 +32,6 @@ import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -122,9 +122,9 @@ public final class LegacyCompatSystem{
 		
 		//Check for old hitches and hookups.
 		if(definition.motorized.hitchPos != null){
-			definition.connections = new ArrayList<VehicleConnection>();
+			definition.connections = new ArrayList<JSONConnection>();
 			for(String hitchName : definition.motorized.hitchTypes){
-				VehicleConnection connection = definition.new VehicleConnection();
+				JSONConnection connection = new JSONConnection();
 				connection.hookup = false;
 				connection.type = hitchName;
 				connection.pos = definition.motorized.hitchPos;
@@ -135,9 +135,9 @@ public final class LegacyCompatSystem{
 		}
 		if(definition.motorized.hookupPos != null){
 			if(definition.connections == null){
-				definition.connections = new ArrayList<VehicleConnection>();
+				definition.connections = new ArrayList<JSONConnection>();
 			}
-			VehicleConnection connection = definition.new VehicleConnection();
+			JSONConnection connection = new JSONConnection();
 			connection.hookup = true;
 			connection.type = definition.motorized.hookupType;
 			connection.pos = definition.motorized.hookupPos;

@@ -19,7 +19,7 @@ public class JSONRendering{
 	@JSONDescription("A list of custom variable names.  Currently only supported on vehicles, and will appear as switches in the panel with the names below them.  These may be assigned any name, and are used for custom animation that don't fit neatly into the pre-defined definitions.  You may have up to 4 custom variables on any vehicle.  Surely, that's enough?")
     public List<String> customVariables;
 	
-	@JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.")
+	@JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.  While you can hook sounds to animations, they are rather limited in how they can be triggered and manipulated.  Sounds here allow for looping, pitch-shifting, volume control, etc.  This is where you'll want to define your sounds for engines, horns, and annoying carnival music.")
     public List<JSONSound> sounds;
 	
 

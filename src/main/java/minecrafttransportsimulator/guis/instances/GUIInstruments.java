@@ -16,7 +16,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
+import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -51,7 +51,7 @@ public class GUIInstruments extends AGUIBase{
 	private TexturelessButton hudButton;
 	private TexturelessButton panelButton;
 	private GUIComponentLabel infoLabel;
-	private PackInstrument selectedInstrumentOnVehicle;
+	private JSONInstrumentDefinition selectedInstrumentOnVehicle;
 	
 	private final List<TexturelessButton> instrumentSlots = new ArrayList<TexturelessButton>();
 	private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<GUIComponentItem>();
@@ -167,7 +167,7 @@ public class GUIInstruments extends AGUIBase{
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.
 		vehicleInstrumentSlots.clear();
-		for(PackInstrument packInstrument : vehicle.definition.motorized.instruments){
+		for(JSONInstrumentDefinition packInstrument : vehicle.definition.motorized.instruments){
 			int instrumentRadius = (int) (64F*packInstrument.hudScale);
 			if(hudSelected ^ packInstrument.optionalPartNumber != 0){
 				TexturelessButton instrumentSlotButton = new TexturelessButton(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, "", 2*instrumentRadius, false){
@@ -208,7 +208,7 @@ public class GUIInstruments extends AGUIBase{
 		//This allows us to render instruments as they are added or removed.
 		vehicleInstruments.clear();
 		for(byte i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-			PackInstrument packInstrument = vehicle.definition.motorized.instruments.get(i);
+			JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
 			if(hudSelected ^ packInstrument.optionalPartNumber != 0){
 				GUIComponentInstrument vehicleInstrument = new GUIComponentInstrument(guiLeft, guiTop, i, vehicle){
 					@Override
