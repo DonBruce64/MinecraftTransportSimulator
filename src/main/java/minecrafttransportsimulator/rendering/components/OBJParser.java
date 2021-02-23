@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.

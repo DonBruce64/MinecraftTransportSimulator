@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.guis.instances;
 
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
+import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to

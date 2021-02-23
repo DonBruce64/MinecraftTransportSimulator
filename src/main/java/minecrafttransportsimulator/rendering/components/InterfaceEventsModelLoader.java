@@ -15,7 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;

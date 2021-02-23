@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 /**Beacon class.  Responsible for containing the state of a beacon, which includes

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 
 /**This class represents a translucent object of a model.  The transform will set the blending state of this object
  * to allow for translucent texture rendering.

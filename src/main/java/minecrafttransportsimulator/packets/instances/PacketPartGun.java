@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Packet used to send signals to guns.  This can be either to start/stop the firing of the gun,
  * or to re-load the gun with the specified bullets.  If we are doing start/stop commands, then

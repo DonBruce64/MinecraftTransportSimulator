@@ -2,6 +2,7 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.Map;
 
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;

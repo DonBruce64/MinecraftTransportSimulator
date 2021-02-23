@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,8 +22,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 import net.minecraft.item.ItemStack;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,

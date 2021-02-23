@@ -3,7 +3,9 @@ package minecrafttransportsimulator.items.instances;
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -16,8 +18,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
 
 public class ItemY2KButton extends AItemBase{
 	

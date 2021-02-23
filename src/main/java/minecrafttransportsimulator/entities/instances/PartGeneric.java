@@ -1,6 +1,6 @@
-package minecrafttransportsimulator.vehicles.parts;
+package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 

@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.vehicles.parts;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;

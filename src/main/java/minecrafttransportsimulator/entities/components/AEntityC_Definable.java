@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;

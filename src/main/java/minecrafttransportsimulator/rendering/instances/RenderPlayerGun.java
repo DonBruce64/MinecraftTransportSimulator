@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
-import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 
 public class RenderPlayerGun extends ARenderEntity<EntityPlayerGun>{
 	

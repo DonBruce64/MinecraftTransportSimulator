@@ -2,10 +2,10 @@ package minecrafttransportsimulator.guis.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.PackInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
  * the GUI.  This instrument will render as if it was on the vehicle itself, and will have

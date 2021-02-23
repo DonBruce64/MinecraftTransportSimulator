@@ -6,9 +6,10 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -19,7 +20,6 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 public class GUITextEditor extends AGUIBase{
 	//Buttons.

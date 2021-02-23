@@ -12,8 +12,8 @@ import java.util.Set;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import net.minecraftforge.event.world.WorldEvent;

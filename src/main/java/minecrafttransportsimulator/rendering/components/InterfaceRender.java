@@ -16,9 +16,9 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
-import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;

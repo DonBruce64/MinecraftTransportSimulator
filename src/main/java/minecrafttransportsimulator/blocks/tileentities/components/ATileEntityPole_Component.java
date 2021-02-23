@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.instances.AnimationsDecor;

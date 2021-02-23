@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -14,7 +15,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Packet used for sending bullet hit information to and from the server.  The first instance of this packet
  * is sent from clients to the server when they detect that a bullet that was spawned by the client player

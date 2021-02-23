@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -14,7 +15,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTickable, IFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;

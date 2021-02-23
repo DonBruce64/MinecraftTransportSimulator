@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
 import java.util.Collection;

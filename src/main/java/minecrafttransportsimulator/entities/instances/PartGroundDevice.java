@@ -1,9 +1,9 @@
-package minecrafttransportsimulator.vehicles.parts;
+package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -14,7 +14,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A ground device is simply a part of a vehicle that touches the ground.
  * This class is used to perform ground physics, which include steering, 

@@ -2,10 +2,10 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BeaconManager;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet sent to vehicles to update their selected beacons.  This is sent from clients when they
  * change the beacon parameters in the panel.  A callback packet is then sent from the server to

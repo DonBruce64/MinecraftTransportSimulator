@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.components;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 

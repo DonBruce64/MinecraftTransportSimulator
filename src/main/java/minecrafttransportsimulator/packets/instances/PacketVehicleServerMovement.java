@@ -2,10 +2,10 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Packet used to send server vehicle movement to clients.  This packet doesn't directly
  * move the vehicle (such an action results in horrid movement lag due to network

@@ -1,7 +1,8 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.sound.InterfaceSound;

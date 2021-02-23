@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents a window object of a model.  The only transform this applies is binding

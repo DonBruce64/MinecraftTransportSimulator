@@ -1,11 +1,11 @@
-package minecrafttransportsimulator.vehicles.parts;
+package minecrafttransportsimulator.entities.instances;
 
 import java.awt.Color;
 
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
@@ -21,7 +21,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleDrip;
 import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 public class PartEngine extends APart{
 	

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;

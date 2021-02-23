@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,6 +9,9 @@ import java.util.Set;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;

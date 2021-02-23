@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**Class that when extended allows for a common method of applying

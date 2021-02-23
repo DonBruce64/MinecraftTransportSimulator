@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
@@ -22,7 +23,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does

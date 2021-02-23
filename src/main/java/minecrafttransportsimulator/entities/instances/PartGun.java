@@ -1,10 +1,10 @@
-package minecrafttransportsimulator.vehicles.parts;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -22,8 +22,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
  * can be placed on anything and modeled by anything as the code is only for controlling the firing

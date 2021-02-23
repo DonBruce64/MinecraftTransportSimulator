@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.controls.ControlSystem;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;

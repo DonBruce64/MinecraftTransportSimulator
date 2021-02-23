@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Packet used to send signals to seats.  Currently, this is only used to change the currently-selected
  * gun that the seat is set to fire.  Sent to servers when a player presses the gun key.  Sent back to all

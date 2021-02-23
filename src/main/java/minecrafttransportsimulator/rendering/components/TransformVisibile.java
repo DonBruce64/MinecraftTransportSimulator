@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**This class represents a visibility animation of a model.  This transform will disable the rendering of this

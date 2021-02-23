@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
 
 /**Packet used to send signals to ground devices.  Currently only used to make wheel-typed
  * ground devices flat on clients after they have been set as such on the server.

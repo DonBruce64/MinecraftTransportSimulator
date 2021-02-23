@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.AEntityA_Base;
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -26,7 +27,6 @@ import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**This GUI is normally locked, and is only available in devMode.  It allows
  * pack importing and exporting to and from files.  The idea is that pack authors 

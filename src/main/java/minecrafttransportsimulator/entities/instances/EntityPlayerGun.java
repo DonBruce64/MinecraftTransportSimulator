@@ -1,12 +1,12 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
@@ -19,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.AnimationsPlayerGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.

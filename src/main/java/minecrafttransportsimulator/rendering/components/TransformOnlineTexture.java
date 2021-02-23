@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 
 /**This class represents a section of a model that uses a texture from an online source.

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.items.components;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;

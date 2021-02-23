@@ -3,9 +3,10 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
 import net.minecraft.util.math.AxisAlignedBB;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values

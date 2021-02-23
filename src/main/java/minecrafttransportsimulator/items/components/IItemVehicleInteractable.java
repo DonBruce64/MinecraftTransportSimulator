@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.items.components;
 
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Interface that performs an action on vehicles.  The methods in here will be called 
  * from {@link PacketVehicleInteract} on the server when a player clicks a vehicle on a client.

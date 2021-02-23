@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +14,6 @@ import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as

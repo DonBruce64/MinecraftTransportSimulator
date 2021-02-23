@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
  * in the {@link InterfaceSound}.  This class holds data such as the current

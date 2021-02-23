@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
-import minecrafttransportsimulator.vehicles.main.EntityPlayerGun;
 
 /**This class contains methods for player gun animations.
  * Nothing is done here as those entities don't have animations

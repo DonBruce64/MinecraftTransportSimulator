@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition

@@ -1,13 +1,13 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityD_Interactable;
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.controls.InterfaceInput;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -19,10 +19,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartGun;
-import minecrafttransportsimulator.vehicles.parts.PartInteractable;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 
 /**This is the next class level above the base vehicle.

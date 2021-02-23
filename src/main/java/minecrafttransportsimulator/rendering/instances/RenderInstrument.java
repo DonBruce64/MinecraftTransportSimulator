@@ -7,6 +7,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -15,7 +16,6 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.main.EntityVehicleF_Physics;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
  * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an

@@ -1,8 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.AEntityC_Definable;
-import minecrafttransportsimulator.baseclasses.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -10,7 +11,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
 
 /**Packet sent to entities to update their their subName (color).  This gets sent from
  * a client when they change the color in the paint gun GUI.  Change is applied to the

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.baseclasses.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;

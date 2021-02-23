@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,10 +28,6 @@ import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartInteractable;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.

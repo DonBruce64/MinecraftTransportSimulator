@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -19,8 +22,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartSeat;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
  * entities may be added or removed from this entity based on the implementation, but assurances

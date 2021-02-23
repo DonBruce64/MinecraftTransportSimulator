@@ -1,9 +1,8 @@
-package minecrafttransportsimulator.vehicles.main;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.AEntityA_Base;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingS
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.VehicleConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -23,10 +23,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.vehicles.parts.APart;
-import minecrafttransportsimulator.vehicles.parts.PartEngine;
-import minecrafttransportsimulator.vehicles.parts.PartGroundDevice;
-import minecrafttransportsimulator.vehicles.parts.PartPropeller;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
