@@ -110,6 +110,8 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
   					tooltipLines.add(InterfaceCore.translate("info.item.bullet.type." + type));
 				}
 				tooltipLines.add(InterfaceCore.translate("info.item.bullet.diameter") + definition.bullet.diameter);
+				tooltipLines.add(InterfaceCore.translate("info.item.bullet.caseLength") + definition.bullet.caseLength);
+				tooltipLines.add(InterfaceCore.translate("info.item.bullet.penetration") + definition.bullet.armorPenetration);
 				tooltipLines.add(InterfaceCore.translate("info.item.bullet.quantity") + definition.bullet.quantity);
 				break;
 			}
@@ -164,9 +166,9 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 				break;
 			}
 			case GUN : {
-				tooltipLines.add(InterfaceCore.translate("info.item.gun.type." + definition.generic.type.substring("gun_".length())));
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.diameter") + definition.gun.diameter);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.length") + definition.gun.length);
+				tooltipLines.add(InterfaceCore.translate("info.item.gun.caseRange") + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.fireDelay") + definition.gun.fireDelay);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.muzzleVelocity") + definition.gun.muzzleVelocity);
 				tooltipLines.add(InterfaceCore.translate("info.item.gun.capacity") + definition.gun.capacity);

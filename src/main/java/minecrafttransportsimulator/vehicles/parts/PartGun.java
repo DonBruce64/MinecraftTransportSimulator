@@ -407,7 +407,8 @@ public class PartGun extends APart{
 		//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
 		//Also don't fill bullets if we are currently reloading bullets.
 		if(part.definition.bullet != null){
-			if((bulletsReloading == 0 && (loadedBullet == null ? part.definition.bullet.diameter == definition.gun.diameter : loadedBullet.equals(part))) || world.isClient()){
+			boolean isNewBulletValid = part.definition.bullet.diameter == definition.gun.diameter && part.definition.bullet.caseLength >= definition.gun.minCaseLength && part.definition.bullet.caseLength <= definition.gun.maxCaseLength; 
+			if((bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(part))) || world.isClient()){
 				//Make sure we don't over-fill the gun.
 				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || world.isClient()){
 					loadedBullet = part;

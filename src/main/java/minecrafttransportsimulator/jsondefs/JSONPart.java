@@ -323,6 +323,12 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns (unless their travel speed is specified), but greater accuracy at long ranges.  Units are in meters.")
     	public float length;
 		
+		@JSONDescription("The minimum case length of bullets that can go into this gun.  Useful for preventing extra-long bullets from going into a gun that normally fires short ones.  Units are in mm.")
+    	public float minCaseLength;
+		
+		@JSONDescription("Like minCaseLength, but the maximum.")
+    	public float maxCaseLength;
+		
 		@JSONDescription("How fast, in degrees/tick, the gun can rotate.  This is normally auto-calculated from the gun's length, but it may be specified here if desired.")
     	public float travelSpeed;
 		
@@ -364,13 +370,16 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
     	public int quantity;
 		
-		@JSONDescription("The diameter of the bullet.  This determines what guns can fire it, as well as the damage it inflicts.")
+		@JSONDescription("The diameter of the bullet.  This determines what guns can fire it, as well as the damage it inflicts.  Units are in mm.")
     	public float diameter;
+		
+		@JSONDescription("The case length of the bullet.  This determines what guns can fire it, but does not affect damage.  Units are in mm.")
+    	public float caseLength;
 		
 		@JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
     	public float blastStrength;
 		
-		@JSONDescription("How much armor this bullet can penetrate.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
+		@JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
     	public float armorPenetration;
 		
 		@JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
