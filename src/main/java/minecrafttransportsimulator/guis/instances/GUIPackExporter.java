@@ -19,6 +19,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -88,6 +89,8 @@ public class GUIPackExporter extends AGUIBase{
 								jsonFile = new File(packDir, "part_" + packItem.definition.systemName + ".json");
 							}else if(packItem.definition instanceof JSONInstrument){
 								jsonFile = new File(packDir, "instrument_" + packItem.definition.systemName + ".json");
+							}else if(packItem.definition instanceof JSONDecor){
+								jsonFile = new File(packDir, "decor_" + packItem.definition.systemName + ".json");
 							}else if(packItem.definition instanceof JSONPoleComponent){
 								jsonFile = new File(packDir, "polesign_" + packItem.definition.systemName + ".json");
 							}else{
@@ -149,6 +152,8 @@ public class GUIPackExporter extends AGUIBase{
 										jsonFile = new File(packDir, "part_" + packItem.definition.systemName + ".json");
 									}else if(packItem.definition instanceof JSONInstrument){
 										jsonFile = new File(packDir, "instrument_" + packItem.definition.systemName + ".json");
+									}else if(packItem.definition instanceof JSONDecor){
+										jsonFile = new File(packDir, "decor_" + packItem.definition.systemName + ".json");
 									}else if(packItem.definition instanceof JSONPoleComponent){
 										jsonFile = new File(packDir, "polesign_" + packItem.definition.systemName + ".json");
 									}else{
@@ -195,6 +200,14 @@ public class GUIPackExporter extends AGUIBase{
 												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, definition.packID, definition.systemName);
 												definition.general = loadedDefinition.general;
 												definition.components = loadedDefinition.components;
+												
+											}else if(packItem.definition instanceof JSONDecor){
+												JSONDecor definition = (JSONDecor) packItem.definition;
+												JSONDecor loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, definition.packID, definition.systemName);
+												definition.general = loadedDefinition.general;
+												definition.definitions = loadedDefinition.definitions;
+												definition.decor = loadedDefinition.decor;
+												definition.rendering = loadedDefinition.rendering;
 												
 											}else if(packItem.definition instanceof JSONPoleComponent){
 												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
