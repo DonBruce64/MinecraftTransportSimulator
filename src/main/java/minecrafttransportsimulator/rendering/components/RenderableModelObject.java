@@ -47,6 +47,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(objectName.toLowerCase().contains("window")){
 			transforms.add(new TransformWindow<AnimationEntity>(vertices));
 		}
+		if(objectName.toLowerCase().contains("translucent")){
+			transforms.add(new TransformTranslucent<AnimationEntity>());
+		}else{
+			transforms.add(new TransformSolid<AnimationEntity>());
+		}
 		if(objectName.toLowerCase().endsWith("url")){
 			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));
 		}
@@ -60,17 +65,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		GL11.glPushMatrix();
 		if(doPreRenderTransforms(entity, partialTicks)){
 			//Render, caching the displayList if needed.
-			//Don't render on pass 1, as that's for transparency.
-			if(InterfaceRender.getRenderPass() != 1){
-				if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
-					int displayListIndex = OBJParser.generateDisplayList(vertices);
-					if(!displayLists.containsKey(modelName)){
-						displayLists.put(modelName, new HashMap<String, Integer>());
-					}
-					displayLists.get(modelName).put(objectName, displayListIndex);
+			if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
+				int displayListIndex = OBJParser.generateDisplayList(vertices);
+				if(!displayLists.containsKey(modelName)){
+					displayLists.put(modelName, new HashMap<String, Integer>());
 				}
-				GL11.glCallList(displayLists.get(modelName).get(objectName));
+				displayLists.get(modelName).put(objectName, displayListIndex);
 			}
+			GL11.glCallList(displayLists.get(modelName).get(objectName));
 			
 			//Do post-render logic.
 			doPostRenderTransforms(entity, partialTicks);
