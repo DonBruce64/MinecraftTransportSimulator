@@ -171,42 +171,42 @@ public class JSONPart extends AJSONPartProvider{
 		@Deprecated
     	public boolean isCrankingNotPitched;
 		
-		@JSONDescription("This parameter is a list of sounds and properties that may be used in lieu of the default MTS sound set.  If this is included, neither the _running nor _supercharger sound will be played.  Instead, MTS will use the definitions set in this list to play the sounds.  Each entry is one sound.  When the engine starts, all sounds will be set to play, though it is quite possible to not hear multiple sounds in the set if their volume ends up at 0.\nNote that to get the actual volume and pitch of the sound, interpolation is done between the min and max values.  So if your min volume is 0, and the max volume is 0.5 at 3000RPM, then at 1500RPM the volume would be 0.25.  Volume itself is clamped from 0.0 to 1.0, while pitch is clamped from 0.0-Infinity.  This means that you can make a sound that plays only at higher RPMs by giving it a negative value for volumeMin, which will cause the interpolation to clamp the volume to 0 far above the idle RPM.")
+		@Deprecated
 		public EngineSound customSoundset[];
 		
+		@Deprecated
 		public class EngineSound{
-			@JSONRequired
-			@JSONDescription("The name of the sound.  Similar to horns and sirens, this is in the form of packID:soundName.")
+			@Deprecated
 			public String soundName;
 			
-			@JSONDescription("The pitch of the sound at idle RPM.")
+			@Deprecated
 			public float pitchIdle;
 			
-			@JSONDescription("The pitch of the sound at maxRPM.")
+			@Deprecated
 			public float pitchMax;
 			
-			@JSONDescription("Similar to volumeLength, but for pitch. The longer the pitchLength, the higher the pitch will get, though this has a small effect over small pitchLength values.")
+			@Deprecated
 			public float pitchLength;
 			
-			@JSONDescription("The volume of the sound at idle RPM.")
+			@Deprecated
 			public float volumeIdle;
 			
-			@JSONDescription("The volume of the sound at maxRPM.")
+			@Deprecated
 			public float volumeMax;
 			
-			@JSONDescription("The amount in RPM the sound will last.")
+			@Deprecated
 			public float volumeLength;
 			
-			@JSONDescription("Same as volumeCenter, but for pitch.")
+			@Deprecated
 			public int pitchCenter;
 			
-			@JSONDescription("The center of where the sound will be located, in RPM")
+			@Deprecated
 			public int volumeCenter;
 			
-			@JSONDescription("Same as volumeAdvanced, but for pitch.")
+			@Deprecated
 			public boolean pitchAdvanced;
 			
-			@JSONDescription("Instead of linearly interpolating between Min and Max, the sound will last for a defined region, fading in and out.")
+			@Deprecated
 			public boolean volumeAdvanced;
 		}
     }

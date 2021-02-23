@@ -19,6 +19,7 @@ import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
@@ -513,30 +514,84 @@ public final class LegacyCompatSystem{
 					crankingPitchDef.variable = "engine_rpm";
 					crankingPitchDef.axis = new Point3d(0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D), 0);
 					crankingSound.pitchAnimations.add(crankingPitchDef);
+				}else{
+					definition.engine.isCrankingNotPitched = false;
 				}
 				definition.rendering.sounds.add(crankingSound);
 				
 				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
-				JSONSound runningSound = new JSONSound();
-				runningSound.name = packID + ":" + systemName + "_running";
-				runningSound.looping = true;
-				runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
-				runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
-				runningVolumeDef.variable = "engine_running";
-				runningVolumeDef.clampMin = 1.0F;
-				runningVolumeDef.clampMax = 1.0F;
-				runningSound.volumeAnimations.add(runningVolumeDef);
-				
-				runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
-				runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
-				runningPitchDef.variable = "engine_rpm";
-				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-				runningPitchDef.axis = new Point3d(0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000), 0);
-				runningPitchDef.offset = 0.35F;
-				runningSound.pitchAnimations.add(runningPitchDef);
-				definition.rendering.sounds.add(runningSound);
+				if(definition.engine.customSoundset != null){
+					for(EngineSound customSound : definition.engine.customSoundset){
+						JSONSound runningSound = new JSONSound();
+						runningSound.name = customSound.soundName;
+						runningSound.looping = true;
+						runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+						runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+						
+						//Add default sound on/off variable.
+						JSONAnimationDefinition runningStartDef = new JSONAnimationDefinition();
+						runningStartDef.animationType = AnimationComponentType.VISIBILITY;
+						runningStartDef.variable = "engine_powered";
+						runningStartDef.clampMin = 1.0F;
+						runningStartDef.clampMax = 1.0F;
+						runningSound.volumeAnimations.add(runningStartDef);
+						
+						//Add volume variable.
+						JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
+						if(customSound.volumeAdvanced){
+							runningVolumeDef.animationType = AnimationComponentType.ROTATION;
+							runningVolumeDef.variable = "engine_rpm";
+							runningVolumeDef.axis = new Point3d(-0.000001/(customSound.volumeLength/1000), 0, customSound.volumeCenter);
+							runningVolumeDef.offset = (customSound.volumeLength/20000) + 1;
+						}else{
+							runningVolumeDef.animationType = AnimationComponentType.TRANSLATION;
+							runningVolumeDef.variable = "engine_rpm_percent";
+							runningVolumeDef.axis = new Point3d(0, (customSound.volumeMax - customSound.volumeIdle), 0);
+							runningVolumeDef.offset = customSound.volumeIdle + (definition.engine.maxRPM < 15000 ? 500 : 2000)/definition.engine.maxRPM;
+						}
+						runningSound.volumeAnimations.add(runningVolumeDef);
+						
+						//Add pitch variable.
+						JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
+						if(customSound.pitchAdvanced){
+							runningPitchDef.animationType = AnimationComponentType.ROTATION;
+							runningPitchDef.variable = "engine_rpm";
+							runningPitchDef.axis = new Point3d(-0.000001/(customSound.pitchLength/1000), 0, customSound.pitchCenter);
+							runningPitchDef.offset = (customSound.pitchLength/20000) + 1;
+						}else{
+							runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
+							runningPitchDef.variable = "engine_rpm_percent";
+							runningPitchDef.axis = new Point3d(0, (customSound.pitchMax - customSound.pitchIdle), 0);
+							runningPitchDef.offset = customSound.pitchIdle + (definition.engine.maxRPM < 15000 ? 500 : 2000)/definition.engine.maxRPM;
+						}
+						runningSound.pitchAnimations.add(runningPitchDef);
+						
+						//Add the sound.
+						definition.rendering.sounds.add(runningSound);
+					}
+					definition.engine.customSoundset = null;
+				}else{
+					JSONSound runningSound = new JSONSound();
+					runningSound.name = packID + ":" + systemName + "_running";
+					runningSound.looping = true;
+					runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
+					runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
+					runningVolumeDef.variable = "engine_powered";
+					runningVolumeDef.clampMin = 1.0F;
+					runningVolumeDef.clampMax = 1.0F;
+					runningSound.volumeAnimations.add(runningVolumeDef);
+					
+					runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
+					runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
+					runningPitchDef.variable = "engine_rpm";
+					//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
+					runningPitchDef.axis = new Point3d(0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000), 0);
+					runningPitchDef.offset = 0.35F;
+					runningSound.pitchAnimations.add(runningPitchDef);
+					definition.rendering.sounds.add(runningSound);
+				}
 				
 				
 			}else if(definition.gun != null){

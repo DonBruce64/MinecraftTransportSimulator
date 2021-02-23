@@ -71,8 +71,8 @@ public class PartEngine extends APart{
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
-	private final int startRPM;
-	private final int stallRPM;
+	public final int startRPM;
+	public final int stallRPM;
 	private static final float COLD_TEMP = 30F;
 	private static final float OVERHEAT_TEMP_1 = 115.556F;
 	private static final float OVERHEAT_TEMP_2 = 121.111F;
