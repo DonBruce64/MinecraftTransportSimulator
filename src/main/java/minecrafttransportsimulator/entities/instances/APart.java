@@ -153,7 +153,7 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 			//it's close enough.
 			localAngles.add(parentPart.localAngles);
 			
-			//Now that we have the proper relative offset, add our parent's offset to get our next offset.
+			//Now that we have the proper relative offset, add our parent's offset to get our net offset.
 			//This is our final offset point.
 			localOffset.add(parentPart.localOffset);
 		}

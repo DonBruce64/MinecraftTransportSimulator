@@ -5,7 +5,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 
-/**A specific class of {@link TransformRotatable2}, designed
+/**A specific class of {@link TransformRotatable}, designed
  * for tread rollers.  Contains an extra method for calculating things.
  * Also auto-creates rotatableModelObject definitions in the relevant JSON.
  *

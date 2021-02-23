@@ -25,8 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.instances.RenderPart;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**This GUI is normally locked, and is only available in devMode.  It allows
@@ -173,7 +171,6 @@ public class GUIPackExporter extends AGUIBase{
 												definition.doors = loadedDefinition.doors;
 												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
-												RenderVehicle.clearVehicleCaches(definition);
 												
 											}else if(packItem.definition instanceof JSONPart){
 												JSONPart definition = (JSONPart) packItem.definition;
@@ -193,7 +190,6 @@ public class GUIPackExporter extends AGUIBase{
 												definition.doors = loadedDefinition.doors;
 												definition.connections = loadedDefinition.connections;
 												definition.rendering = loadedDefinition.rendering;
-												RenderPart.clearPartCaches(definition);
 												
 											}else if(packItem.definition instanceof JSONInstrument){
 												JSONInstrument definition = (JSONInstrument) packItem.definition;
@@ -216,6 +212,16 @@ public class GUIPackExporter extends AGUIBase{
 												
 											}else{
 												continue;
+											}
+											
+											//Reset renderers.
+											for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicleClicked.world)){
+												if(entity instanceof AEntityC_Definable){
+													AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
+													if(packItem.equals(definableEntity.getItem())){
+														definableEntity.getRenderer().clearObjectCaches(definableEntity);
+													}
+												}
 											}
 										}catch(Exception e){
 											//e.printStackTrace();

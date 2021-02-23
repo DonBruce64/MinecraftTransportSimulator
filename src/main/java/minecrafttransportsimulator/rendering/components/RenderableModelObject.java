@@ -8,6 +8,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -20,26 +21,40 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  */
 public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>> extends RenderableTransform<AnimationEntity>{
 	private final String modelName;
-	public final String objectName;
-	private final Float[][] vertices;
+	private final String objectName;
 	public final String applyAfter;
 	
 	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
 	
 	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, AnimationEntity entity){
 		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
+		
+		//Cache the displayList, if we haven't already.
+		if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
+			int displayListIndex = OBJParser.generateDisplayList(vertices);
+			if(!displayLists.containsKey(modelName)){
+				displayLists.put(modelName, new HashMap<String, Integer>());
+			}
+			displayLists.get(modelName).put(objectName, displayListIndex);
+		}
+		
+		//Set all parameters for the appropriate transforms.
 		this.modelName = modelName;
 		this.objectName = objectName;
-		this.vertices = vertices;
-		
 		if(definition != null){
 			this.applyAfter = definition.applyAfter;
 		}else{
-			//Roller found.  Create a transform for it.
 			this.applyAfter = null;
+			//Roller found.  Create a transform for it.
 			if(objectName.toLowerCase().contains("roller")){
 				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices));
-			}	
+			}else if(entity instanceof PartGroundDevice){
+				PartGroundDevice grounder = (PartGroundDevice) entity;
+				if(grounder.definition.ground != null && grounder.definition.ground.isTread){
+					//Found tread-based ground device.  Need a transform for tread rendering.
+					transforms.add(new TransformTreadRenderer<AnimationEntity>(displayLists.get(modelName).get(objectName)));
+				}
+			}
 		}
 		if(objectName.contains("&")){
 			transforms.add(new TransformLight<AnimationEntity>(modelName, objectName, vertices));
@@ -64,14 +79,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	public void render(AnimationEntity entity, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
 		if(doPreRenderTransforms(entity, partialTicks)){
-			//Render, caching the displayList if needed.
-			if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
-				int displayListIndex = OBJParser.generateDisplayList(vertices);
-				if(!displayLists.containsKey(modelName)){
-					displayLists.put(modelName, new HashMap<String, Integer>());
-				}
-				displayLists.get(modelName).put(objectName, displayListIndex);
-			}
+			//Render the model.
 			GL11.glCallList(displayLists.get(modelName).get(objectName));
 			
 			//Do post-render logic.
@@ -92,14 +100,5 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		
 		//Pop state.
 		GL11.glPopMatrix();
-	}
-	
-	/**
-	 *  Used to reset the display list in dev mode to allow the re-loading of models.
-	 */
-	public void resetDisplayList(){
-		if(displayLists.containsKey(modelName) && displayLists.get(modelName).containsKey(objectName)){
-			GL11.glDeleteLists(displayLists.get(modelName).remove(objectName), 1);
-		}
 	}
 }

@@ -469,7 +469,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 	protected void dampenControlSurfaces(){
 		if(cruiseControl){
 			if(velocity < cruiseControlSpeed){
-				if(throttle < 100){
+				if(throttle < MAX_THROTTLE){
 					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
 					++throttle;
 				}
@@ -487,9 +487,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				//Change throttle to maintain altitude.
 				//Only do this once every 1/2 second to allow for thrust changes.
 				if(world.getTick()%10 == 0){
-					if(motion.y < 0 && throttle < 100){
+					if(motion.y < 0 && throttle < MAX_THROTTLE){
 						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, Byte.MAX_VALUE));
-					}else if(motion.y > 0 && throttle < 100){
+					}else if(motion.y > 0 && throttle < MAX_THROTTLE){
 						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, --throttle, Byte.MAX_VALUE));
 					}
 				}

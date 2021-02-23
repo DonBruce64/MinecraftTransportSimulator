@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -13,6 +17,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
  * @author don_bruce
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>>{
+	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
+	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -88,4 +94,38 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  so see the comments on the called methods for information on what is rendered when.
 	 */
 	public abstract void renderModel(RenderedEntity entity, float partialTicks);
+	
+	/**
+	 *  Call to clear out the object caches for this entity definition.  This resets all caches to cause the rendering
+	 *  JSON to be re-parsed.
+	 */
+	public void clearObjectCaches(RenderedEntity entity){
+		String modelLocation = entity.definition.getModelLocation();
+		if(objectLists.containsKey(modelLocation)){
+			objectLists.remove(modelLocation);
+		}
+	}
+	
+	/**
+	 *  Returns true if this entity has the passed-in light on it.
+	 */
+	public boolean doesEntityHaveLight(RenderedEntity entity, LightType light){
+		for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(entity.definition.getModelLocation())){
+			for(ATransform<RenderedEntity> transform : modelObject.transforms){
+				if(transform instanceof TransformLight){
+					if(((TransformLight<RenderedEntity>) transform).type.equals(light)){
+						return true;
+					}
+				}
+			}
+		}
+		if(entity instanceof AEntityE_Multipart<?>){
+			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+				if(part.getRenderer().doesEntityHaveLight(part, light)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

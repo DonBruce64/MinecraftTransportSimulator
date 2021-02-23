@@ -22,18 +22,14 @@ import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
-import minecrafttransportsimulator.rendering.components.ATransform;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.RenderableTransform;
-import minecrafttransportsimulator.rendering.components.TransformLight;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -48,8 +44,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{	
 	//VEHICLE MAPS.  Maps are keyed by system name.
-	private static final Map<String, Integer> vehicleDisplayLists = new HashMap<String, Integer>();
-	private static final Map<String, List<RenderableModelObject<EntityVehicleF_Physics>>> vehicleObjectLists = new HashMap<String, List<RenderableModelObject<EntityVehicleF_Physics>>>();
 	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
 	
 	//CONNECTOR MAPS.  Maps are keyed by model name.
@@ -57,35 +51,10 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 	//Connector data to prevent re-binding textures.
 	private static String lastBoundConnectorTexture;
 	
-	/**Used to clear out the rendering caches of any vehicles with the passed-in definition.
-	 * Used in dev mode to allow the re-loading of models.**/
-	public static void clearVehicleCaches(JSONVehicle definition){
-		if(vehicleDisplayLists.containsKey(definition.systemName)){
-			GL11.glDeleteLists(vehicleDisplayLists.remove(definition.systemName), 1);
-			for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(definition.systemName)){
-				modelObject.resetDisplayList();
-			}
-			vehicleObjectLists.remove(definition.systemName);
-			vehicleInstrumentTransforms.remove(definition.systemName);
-		}
-	}
-	
-	public static boolean doesVehicleHaveLight(EntityVehicleF_Physics vehicle, LightType light){
-		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : vehicleObjectLists.get(vehicle.definition.systemName)){
-			for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
-				if(transform instanceof TransformLight){
-					if(((TransformLight<EntityVehicleF_Physics>) transform).type.equals(light)){
-						return true;
-					}
-				}
-			}
-		}
-		for(APart part : vehicle.parts){
-			if(RenderPart.doesPartHaveLight(part, light)){
-				return true;
-			}
-		}
-		return false;
+	@Override
+	public void clearObjectCaches(EntityVehicleF_Physics vehicle){
+		super.clearObjectCaches(vehicle);
+		vehicleInstrumentTransforms.remove(vehicle.definition.getModelLocation());
 	}
 	
 	@Override
@@ -94,10 +63,9 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 		//Normally we use the model name, but since vehicles don't share models
 		//we can use the systemName.  This is due to them historically not having a modelName parameter.
 		//That parameter is deprecated, but some things still use it.  Mainly parts and decor blocks.
-		if(!vehicleDisplayLists.containsKey(vehicle.definition.systemName)){
+		if(!objectLists.containsKey(vehicle.definition.systemName)){
 			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.getModelLocation());
-			vehicleObjectLists.put(vehicle.definition.systemName, OBJParser.generateRenderables(vehicle, vehicle.definition.getModelLocation(), parsedModel, vehicle.definition.rendering.animatedObjects));
-			vehicleDisplayLists.put(vehicle.definition.systemName, OBJParser.generateDisplayList(parsedModel));
+			objectLists.put(vehicle.definition.systemName, OBJParser.generateRenderables(vehicle, vehicle.definition.getModelLocation(), parsedModel, vehicle.definition.rendering.animatedObjects));
 			
 			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
 			Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
@@ -110,25 +78,17 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 			vehicleInstrumentTransforms.put(vehicle.definition.systemName, instrumentTransforms);
 		}
 		
-		//Bind the texture and render.
-		//Don't render on the transparent pass.
+		//Render all modelObjects.
 		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.subName));
-		if(InterfaceRender.getRenderPass() != 1){
-			GL11.glCallList(vehicleDisplayLists.get(vehicle.definition.systemName));
-		}
-		
-		//Render any static text.
-		if(InterfaceRender.renderTextMarkings(vehicle, null)){
-			InterfaceRender.recallTexture();
-		}
-		
-		//The display list only renders static objects.  We need to render dynamic ones manually.
-		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = vehicleObjectLists.get(vehicle.definition.systemName);
+		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = objectLists.get(vehicle.definition.systemName);
 		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, partialTicks, modelObjects);
 			}
 		}
+		
+		//Render any static text.
+		InterfaceRender.renderTextMarkings(vehicle, null);
 		
 		//Render all connectors.
 		renderConnectors(vehicle);

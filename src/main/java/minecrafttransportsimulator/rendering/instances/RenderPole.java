@@ -21,7 +21,6 @@ import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> connectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
 	private static final Map<JSONPoleComponent, Map<Axis, Integer>> solidConnectorDisplayListMap = new HashMap<JSONPoleComponent, Map<Axis, Integer>>();
-	private static final Map<JSONPoleComponent, Integer> componentDisplayListMap = new HashMap<JSONPoleComponent, Integer>();
 	private static final Map<JSONPoleComponent, List<RenderableModelObject<ATileEntityPole_Component>>> componentObjectListMap = new HashMap<JSONPoleComponent, List<RenderableModelObject<ATileEntityPole_Component>>>();
 	
 	@Override
@@ -104,11 +103,10 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 				if(pole.components.containsKey(axis)){
 					//Cache the displaylists and lights if we haven't already.
 					ATileEntityPole_Component component = pole.components.get(axis);
-					if(!componentDisplayListMap.containsKey(component.definition)){
+					if(!componentObjectListMap.containsKey(component.definition)){
 						String modelLocation = component.definition.getModelLocation();
 						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
 						componentObjectListMap.put(component.definition, OBJParser.generateRenderables(component, modelLocation, parsedModel, component.definition.rendering != null ? component.definition.rendering.animatedObjects : null));
-						componentDisplayListMap.put(component.definition, OBJParser.generateDisplayList(parsedModel));
 					}
 					
 					//Rotate to component axis and render.
@@ -116,24 +114,18 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 					GL11.glRotatef(axis.yRotation, 0, 1, 0);
 					GL11.glTranslatef(0, 0, pole.definition.pole.radius + 0.001F);
 					
-					//Don't do solid model rendering on the blend pass.
-					if(InterfaceRender.getRenderPass() != 1){
-						InterfaceRender.setTexture(component.definition.getTextureLocation(component.subName));
-						GL11.glCallList(componentDisplayListMap.get(component.definition));
-					}
-					
-					//Render any static text.
-					if(InterfaceRender.renderTextMarkings(component, null)){
-						InterfaceRender.recallTexture();
-					}
-					
-					//Render the dynamic parts.  This will mostly just be lights.
+					//Render the component parts.
+					InterfaceRender.setTexture(component.definition.getTextureLocation(component.subName));
 					List<RenderableModelObject<ATileEntityPole_Component>> modelObjects = componentObjectListMap.get(component.definition);
 					for(RenderableModelObject<ATileEntityPole_Component> modelObject : modelObjects){
 						if(modelObject.applyAfter == null){
 							modelObject.render(component, partialTicks, modelObjects);
 						}
 					}
+					
+					//Render any static text.
+					InterfaceRender.renderTextMarkings(component, null);
+					
 					GL11.glPopMatrix();
 				}
 			}

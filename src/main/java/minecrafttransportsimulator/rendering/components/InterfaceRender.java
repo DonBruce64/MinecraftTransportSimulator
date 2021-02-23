@@ -326,7 +326,7 @@ public class InterfaceRender{
 	
 	/**
 	 *  Renders all the text markings on the passed-in entity.
-	 *  This should only be called in pass 0, as we don't do any alpha blending in this routine.
+	 *  This will only be done in the main pass, as we don't do any alpha blending in this routine.
 	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
 	 */
 	public static boolean renderTextMarkings(AEntityC_Definable<?> entity, String objectRendering){

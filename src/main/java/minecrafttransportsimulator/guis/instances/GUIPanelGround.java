@@ -14,12 +14,11 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -67,7 +66,7 @@ public class GUIPanelGround extends AGUIPanel{
 	protected void setupLightComponents(int guiLeft, int guiTop){
 		//Create a tri-state selector for the running lights and headlights.
 		//For the tri-state we need to make sure we don't try to turn on running lights if we don't have any.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, LightType.HEADLIGHT)){
+		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RUNNINGLIGHT) || vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.HEADLIGHT)){
 			lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.headlights"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -79,7 +78,7 @@ public class GUIPanelGround extends AGUIPanel{
 						}
 					}else{
 						if(selectorState == 0){
-							if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RUNNINGLIGHT)){
+							if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RUNNINGLIGHT)){
 								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
 							}else{
 								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
@@ -97,7 +96,7 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//Add the turn signal selector if we have turn signals.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.LEFTTURNLIGHT) || RenderVehicle.doesVehicleHaveLight(vehicle, LightType.RIGHTTURNLIGHT)){
+		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.LEFTTURNLIGHT) || vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RIGHTTURNLIGHT)){
 			turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.turnsignals"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
@@ -115,7 +114,7 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//Add the emergency light selector if we have those.
-		if(RenderVehicle.doesVehicleHaveLight(vehicle, LightType.EMERGENCYLIGHT)){
+		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.EMERGENCYLIGHT)){
 			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.emergencylights"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
