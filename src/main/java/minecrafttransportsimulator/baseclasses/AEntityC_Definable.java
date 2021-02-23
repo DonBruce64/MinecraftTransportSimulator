@@ -202,14 +202,23 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 								case TRANSLATION :{
 									if(!inhibitAnimations){
 										definedVolume = true;
-										sound.volume += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
+										sound.volume += Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
 									}
 									break;
 								}
 								case ROTATION :{
 									if(!inhibitAnimations){
 										definedVolume = true;
-										sound.volume += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+										//Need to parse out parabola params here to not upset the axis calcs.
+										double parabolaParamA = animation.axis.x;
+										animation.axis.x = 0;
+										double parabolaParamH = animation.axis.z;
+										animation.axis.z = 0;
+										double parabolaValue = Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0);
+										sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
+										
+										animation.axis.x = parabolaParamA;
+										animation.axis.z = parabolaParamH;
 									}
 									break;
 								}
@@ -252,13 +261,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							switch(animation.animationType){
 								case TRANSLATION :{
 									if(!inhibitAnimations){
-										sound.pitch += Math.signum(animation.axis.z)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
+										sound.pitch += Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
 									}
 									break;
 								}
 								case ROTATION :{
 									if(!inhibitAnimations){
-										sound.pitch += Math.signum(animation.axis.z)*Math.pow(getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0), 2) + animation.offset;
+										//Need to parse out parabola params here to not upset the axis calcs.
+										double parabolaParamA = animation.axis.x;
+										animation.axis.x = 0;
+										double parabolaParamH = animation.axis.z;
+										animation.axis.z = 0;
+										double parabolaValue = Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0);
+										sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
+										
+										animation.axis.x = parabolaParamA;
+										animation.axis.z = parabolaParamH;
 									}
 									break;
 								}

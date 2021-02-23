@@ -503,7 +503,7 @@ public final class LegacyCompatSystem{
 				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
 				crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
 				crankingPitchDef.variable = "electric_power";
-				crankingPitchDef.axis = new Point3d(0, 0, 1D/10D);
+				crankingPitchDef.axis = new Point3d(0, 1D/10D, 0);
 				crankingPitchDef.offset = 0.3F;
 				crankingPitchDef.clampMax = 1.0F;
 				crankingSound.pitchAnimations.add(crankingPitchDef);
@@ -511,7 +511,7 @@ public final class LegacyCompatSystem{
 					crankingPitchDef = new JSONAnimationDefinition();
 					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
 					crankingPitchDef.variable = "engine_rpm";
-					crankingPitchDef.axis = new Point3d(0, 0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D));
+					crankingPitchDef.axis = new Point3d(0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D), 0);
 					crankingSound.pitchAnimations.add(crankingPitchDef);
 				}
 				definition.rendering.sounds.add(crankingSound);
@@ -533,7 +533,7 @@ public final class LegacyCompatSystem{
 				runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
 				runningPitchDef.variable = "engine_rpm";
 				//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-				runningPitchDef.axis = new Point3d(0, 0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000));
+				runningPitchDef.axis = new Point3d(0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000), 0);
 				runningPitchDef.offset = 0.35F;
 				runningSound.pitchAnimations.add(runningPitchDef);
 				definition.rendering.sounds.add(runningSound);

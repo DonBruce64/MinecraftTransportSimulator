@@ -133,6 +133,8 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 		prevMotion.setTo(entityOn.prevMotion);
 		motion.setTo(entityOn.motion);
 		prevLocalOffset.setTo(localOffset);
+		variablesOn.clear();
+		variablesOn.addAll(entityOn.variablesOn);
 		updatePositionAndRotation();
 		//If we have a parent part, we need to change our offsets to be relative to it.
 		if(parentPart != null && placementDefinition.isSubPart){
