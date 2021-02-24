@@ -6,7 +6,13 @@ import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 public class RenderPlayerGun extends ARenderEntityMultipart<EntityPlayerGun>{
 	
 	@Override
-	public void renderModel(EntityPlayerGun entity, float partialTicks){
-		//Don't render anything, as the player gun doesn't have a model.
+	public String getTexture(EntityPlayerGun entity){
+		//We never render, so we'll never call this method.
+		return null;
+	}
+	
+	@Override
+	public boolean disableMainRendering(EntityPlayerGun entity, float partialTicks){
+		return true;
 	}
 }

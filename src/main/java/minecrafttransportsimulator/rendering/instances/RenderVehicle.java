@@ -28,7 +28,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
-import minecrafttransportsimulator.rendering.components.RenderableModelObject;
 import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -52,42 +51,26 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	private static String lastBoundConnectorTexture;
 	
 	@Override
-	public void clearObjectCaches(EntityVehicleF_Physics vehicle){
-		super.clearObjectCaches(vehicle);
-		vehicleInstrumentTransforms.remove(vehicle.definition.getModelLocation());
+	public String getTexture(EntityVehicleF_Physics vehicle){
+		return vehicle.definition.getTextureLocation(vehicle.subName);
 	}
 	
 	@Override
-	public void renderModel(EntityVehicleF_Physics vehicle, float partialTicks){
-        //Render the main model.
-		String modelLocation = vehicle.definition.getModelLocation();
-		if(!objectLists.containsKey(modelLocation)){
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
-			objectLists.put(modelLocation, OBJParser.generateRenderables(vehicle, modelLocation, parsedModel, vehicle.definition.rendering.animatedObjects));
-			
-			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
-			Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
-			for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-				JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
-				if(packInstrument.animations != null){
-					instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
-				}
-			}
-			vehicleInstrumentTransforms.put(modelLocation, instrumentTransforms);
-		}
-		
-		//Render all modelObjects.
-		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.subName));
-		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = objectLists.get(modelLocation);
-		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : modelObjects){
-			if(modelObject.applyAfter == null){
-				modelObject.render(vehicle, partialTicks, modelObjects);
+	public void parseModel(EntityVehicleF_Physics vehicle, String modelLocation){
+		super.parseModel(vehicle, modelLocation);
+		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
+		Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
+		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
+			JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
+			if(packInstrument.animations != null){
+				instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
 			}
 		}
-		
-		//Render any static text.
-		InterfaceRender.renderTextMarkings(vehicle, null);
-		
+		vehicleInstrumentTransforms.put(modelLocation, instrumentTransforms);
+	}
+	
+	@Override
+	public void renderAdditionalModels(EntityVehicleF_Physics vehicle, float partialTicks){
 		//Render all connectors.
 		renderConnectors(vehicle);
 		
@@ -104,6 +87,12 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 		if(InterfaceRender.shouldRenderBoundingBoxes()){
 			renderBoundingBoxes(vehicle);
 		}
+	}
+	
+	@Override
+	public void clearObjectCaches(EntityVehicleF_Physics vehicle){
+		super.clearObjectCaches(vehicle);
+		vehicleInstrumentTransforms.remove(vehicle.definition.getModelLocation());
 	}
 	
 	/**

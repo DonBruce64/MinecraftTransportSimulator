@@ -24,7 +24,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadDisplayListMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
 	
 	@Override
-	public void renderModel(TileEntityRoad road, float partialTicks){
+	public void renderAdditionalModels(TileEntityRoad road, float partialTicks){
 		//Render road components.
 		//First set helper variables.
 		Point3d position = new Point3d();
@@ -299,6 +299,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			GL11.glEnd();
 			InterfaceRender.resetStates();
 		}
+	}
+	
+	@Override
+	public String getTexture(TileEntityRoad road){
+		//We never render, so we'll never call this method.
+		return null;
+	}
+	
+	@Override
+	public boolean disableMainRendering(TileEntityRoad road, float partialTicks){
+		return true;
 	}
 	
 	@Override
