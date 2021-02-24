@@ -199,14 +199,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
-				//If we need NBT, create it here.  Make sure to save creative stats for engines.
-				if(partData == null){
-					partData = partItem.generateDefaultData();
-				}else if(partData != null && partData.getString("packID").isEmpty()){
-					WrapperNBT newData = partItem.generateDefaultData();
-					newData.setBoolean("isCreative", partData.getBoolean("isCreative"));
-					partData = newData;
-				}
 				partToAdd = partItem.createPart(this, newPartDef, partData, parentPart); 
 			}
 		}
@@ -225,7 +217,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				
 				//If we are a new part, add default parts.  We need to do this after we send a packet.
 				//We need to make sure to convert them to the right type as they're offset.
-	    		boolean newPart = partData.getString("uniqueUUID").isEmpty();
+	    		boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
 				if(newPart && partToAdd.definition.parts != null){
 					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
@@ -482,7 +474,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
 						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						if(addPartFromItem(partItem, partItem.generateDefaultData(), partDef.pos, addedDuringConstruction)){
+						if(addPartFromItem(partItem, null, partDef.pos, addedDuringConstruction)){
 							
 							//Check if we have an additional parts.
 							//If so, we need to check that for default parts.

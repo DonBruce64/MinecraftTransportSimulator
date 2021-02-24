@@ -6,7 +6,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -14,7 +13,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the client.
  * Packet does server-side checks to see if the player could change the pole, and if so, it applies those
@@ -30,46 +28,37 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 	private final Axis axis;
-	private final ItemPoleComponent componentItem;
-	private final WrapperNBT data;
+	private final boolean addition;
 	private final boolean removal;
+	private final WrapperNBT data;
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, ItemPoleComponent componentItem, WrapperNBT data, boolean removal){
+	
+	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, boolean addition, boolean removal, WrapperNBT data){
 		super(pole);
 		this.axis = axis;
-		this.componentItem = componentItem;
-		this.data = data;
+		this.addition = addition;
 		this.removal = removal;
+		this.data = data;
 	}
 	
 	public PacketTileEntityPoleChange(ByteBuf buf){
 		super(buf);
 		this.axis = Axis.values()[buf.readByte()];
-		if(buf.readBoolean()){
-			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
-		}else{
-			this.componentItem = null;
-		}
-		if(buf.readBoolean()){
+		this.addition = buf.readBoolean();
+		this.removal = buf.readBoolean();
+		if(addition){
 			this.data = readDataFromBuffer(buf);
 		}else{
 			this.data = null;
 		}
-		this.removal = buf.readBoolean();
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeByte(axis.ordinal());
-		if(componentItem != null){
-			buf.writeBoolean(true);
-			writeStringToBuffer(componentItem.definition.packID, buf);
-			writeStringToBuffer(componentItem.definition.systemName, buf);
-			writeStringToBuffer(componentItem.subName, buf);
-		}else{
-			buf.writeBoolean(false);
-		}
+		buf.writeBoolean(addition);
+		buf.writeBoolean(removal);
 		if(data != null){
 			buf.writeBoolean(true);
 			writeDataToBuffer(data, buf);
@@ -96,18 +85,7 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 						return true;
 					}
 				}
-			}else if(componentItem == null){
-				//Player didn't click with anything.  See if we can exit text.
-				if(!pole.components.get(axis).text.isEmpty()){
-					if(world.isClient()){
-						InterfaceGUI.openGUI(new GUITextEditor(component));
-					}else{
-						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
-						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, null, null, false));
-					}
-				}
-				return false;
-			}else if(componentItem != null && !pole.components.containsKey(axis)){
+			}else if(addition && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, data);
 				newComponent.variablesOn.add(LightType.UNLINKEDLIGHT.lowercaseName);
@@ -117,7 +95,22 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 				if(!player.isCreative()){
 					player.getInventory().removeStack(player.getHeldStack(), 1);
 				}
+				if(!world.isClient()){
+					//Need to pack-in updated data before letting this packet go back to clients.
+					newComponent.save(data);
+				}
 				return true;
+			}else{
+				//Player didn't click with anything.  See if we can exit text.
+				if(!pole.components.get(axis).text.isEmpty()){
+					if(world.isClient()){
+						InterfaceGUI.openGUI(new GUITextEditor(component));
+					}else{
+						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
+						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, false, false, null));
+					}
+				}
+				return false;
 			}
 		}
 		return false;

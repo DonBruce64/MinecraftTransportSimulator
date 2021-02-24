@@ -10,7 +10,6 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -35,19 +34,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			++position.y;
 			
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
-			WrapperNBT data = new WrapperNBT(heldStack);
-			boolean wasSaved = !data.getString("packID").isEmpty();
-			data.setString("packID", definition.packID);
-			data.setString("systemName", definition.systemName);
-			data.setString("subName", subName);
-			
-			//Make sure we don't restore any world-based entity properties.
-			data.setInteger("lookupID", 0);
-			data.setPoint3d("position", new Point3d());
-			data.setPoint3d("motion", new Point3d());
-			data.setPoint3d("angles", new Point3d());
-			data.setPoint3d("rotation", new Point3d());
-			
+			WrapperNBT data = validateData(new WrapperNBT(heldStack));
+			boolean wasSaved = !data.getString("uniqueUUID").isEmpty();
 			
 			//First construct the class.
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
@@ -70,13 +58,6 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				
 				//Add default parts via the vehicle's recursion.
 				newVehicle.addDefaultParts(newVehicle.definition.parts, true);
-
-				//Set default vehicle text.
-				if(newVehicle.definition.rendering.textObjects != null){
-					for(JSONText textObject : newVehicle.definition.rendering.textObjects){
-						newVehicle.text.put(textObject, textObject.defaultText);
-					}
-				}
 				
 				//Add default instruments.
 				for(JSONInstrumentDefinition packInstrument : newVehicle.definition.motorized.instruments){
@@ -176,6 +157,16 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			}
 		}
 		return true;
+	}
+	
+	@Override
+	protected void populateDefaultData(WrapperNBT data){
+		super.populateDefaultData(data);
+		//Make sure we don't restore any world-based entity properties.
+		data.setPoint3d("position", new Point3d());
+		data.setPoint3d("motion", new Point3d());
+		data.setPoint3d("angles", new Point3d());
+		data.setPoint3d("rotation", new Point3d());
 	}
 
 	@Override

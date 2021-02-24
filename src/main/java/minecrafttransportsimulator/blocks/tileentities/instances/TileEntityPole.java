@@ -38,12 +38,14 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		super(world, position, data);
 		//Load components back in.
 		for(Axis axis : Axis.values()){
-			if(!axis.equals(Axis.NONE)){
-				WrapperNBT componentData = data.getData(axis.name());
-				if(componentData != null){
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
-					components.put(axis, newComponent);
-				}
+			WrapperNBT componentData = data.getData(axis.name());
+			if(componentData != null){
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
+				components.put(axis, newComponent);
+			}else if(axis.equals(Axis.NONE)){
+				//Add our core component to the NONE axis.
+				//This is done for ease of rendering and lookup routines.
+				components.put(axis, PoleComponentType.createComponent(this, getItem().validateData(null)));
 			}
 		}
 		
@@ -68,12 +70,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, fakeData);
 				components.put(axis, newComponent);
 			}
-		}
-		
-		//Add our core component to the NONE axis.
-		//This is done for ease of rendering and lookup routines.
-		if(!components.containsKey(Axis.NONE)){
-			components.put(Axis.NONE, PoleComponentType.createComponent(this, data));
 		}
 	}
 	
@@ -126,13 +122,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
-			Axis axis = connectedObjectEntry.getKey();
-			if(!axis.equals(Axis.NONE)){
-				ATileEntityPole_Component component = connectedObjectEntry.getValue();
-				WrapperNBT componentData = new WrapperNBT();
-				component.save(componentData);
-				data.setData(axis.name(), componentData);
-			}
+			WrapperNBT componentData = new WrapperNBT();
+			connectedObjectEntry.getValue().save(componentData);
+			data.setData(connectedObjectEntry.getKey().name(), componentData);
 		}
 	}
 }

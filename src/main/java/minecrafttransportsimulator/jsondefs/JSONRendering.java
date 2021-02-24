@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -31,11 +30,11 @@ public class JSONRendering{
     @Deprecated
     public String defaultDisplayText;
     @Deprecated
-    public List<VehicleDisplayText> textMarkings = new ArrayList<VehicleDisplayText>();
+    public List<VehicleDisplayText> textMarkings;
     @Deprecated
-    public List<VehicleRotatableModelObject> rotatableModelObjects = new ArrayList<VehicleRotatableModelObject>();
+    public List<VehicleRotatableModelObject> rotatableModelObjects;
     @Deprecated
-    public List<VehicleTranslatableModelObject> translatableModelObjects = new ArrayList<VehicleTranslatableModelObject>();
+    public List<VehicleTranslatableModelObject> translatableModelObjects;
     @Deprecated
     public String hudTexture;
     @Deprecated

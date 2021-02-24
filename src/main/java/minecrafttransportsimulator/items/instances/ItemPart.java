@@ -23,7 +23,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.PartType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -80,10 +79,11 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	
 	/**
 	 * Creates a new part from the saved data.  This is used both in the construction of new parts, and loading
-	 * of saved parts from data.  In both cases, the passed-in data should consist of everything required
-	 * to construct the part, including it's packID and systemName.
+	 * of saved parts from data.  In both cases, the passed-in data can be whatever is present, as data-validation
+	 * is performed on the data to ensure it has all the required bits.
 	 */
 	public APart createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+		partData = validateData(partData);
 		switch(partType){
 			case GENERIC : return new PartGeneric(entity, packVehicleDef, partData, parentPart);
 			//Note that this case is invalid, as bullets are NOT parts that can be placed on entities.
@@ -226,23 +226,6 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 			data.setBoolean("isCreative", true);
 			dataBlocks.add(data);
 		}
-	}
-	
-	/**
-	 * Helper method to return a new NBT tag for construction use for parts.
-	 * Packs-in the part's packID, systemName, subName, and other defaults.
-	 */
-	public WrapperNBT generateDefaultData(){
-		WrapperNBT data = new WrapperNBT();
-		data.setString("packID", definition.packID);
-		data.setString("systemName", definition.systemName);
-		data.setString("subName", subName);
-		if(definition.rendering != null && definition.rendering.textObjects != null){
-			for(JSONText textObject : definition.rendering.textObjects){
-				data.setString("textLine" + definition.rendering.textObjects.indexOf(textObject), textObject.defaultText);
-			}
-		}
-		return data;
 	}
 	
 	@Override

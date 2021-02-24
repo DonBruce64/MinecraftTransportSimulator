@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvider> extends AItemPack<JSONDefinition>{
@@ -39,6 +40,17 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 						tooltipLines.add(tooltipLine);
 					}
 				}
+			}
+		}
+	}
+	
+	@Override
+	protected void populateDefaultData(WrapperNBT data){
+		super.populateDefaultData(data);
+		data.setString("subName", subName);
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(JSONText textObject : definition.rendering.textObjects){
+				data.setString("textLine" + definition.rendering.textObjects.indexOf(textObject), textObject.defaultText);
 			}
 		}
 	}

@@ -69,4 +69,28 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 			}
 		}
 	}
+	
+	/**
+	 * This method ensures that the passed-in data contains everything required to
+	 * create whatever this item represents.  Data is added to the passed-in data
+	 * if required to ensure it contains the minimal information for the creation
+	 * of the entity.  If the data block is null, a new one is returned.
+	 */
+	public WrapperNBT validateData(WrapperNBT data){
+		if(data == null){
+			data = new WrapperNBT();
+		}
+		if(data.getString("packID").isEmpty()){
+			populateDefaultData(data);
+		}
+		return data;
+	}
+	
+	/**
+	 * Helper method to populate default data.
+	 */
+	protected void populateDefaultData(WrapperNBT data){
+		data.setString("packID", definition.packID);
+		data.setString("systemName", definition.systemName);
+	}
 }

@@ -83,13 +83,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new FluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
 		
-		//Load text.
-		if(definition.rendering.textObjects != null){
-			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
-			}
-		}
-		
 		//Load instruments.
 		for(int i = 0; i<definition.motorized.instruments.size(); ++i){
 			String instrumentPackID = data.getString("instrument" + i + "_packID");
