@@ -10,13 +10,14 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
+import minecrafttransportsimulator.rendering.instances.AnimationsPole;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -26,10 +27,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 *
 * @author don_bruce
 */
-public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
+public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implements ITileEntityTickable{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	private static final AnimationsDecor animator = new AnimationsDecor();
+	private static final AnimationsPole animator = new AnimationsPole();
 	private static RenderPole renderer;
 	
 	private float maxTotalLightLevel;
@@ -73,6 +74,26 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		}
 	}
 	
+	@Override
+	public void update(){
+		super.update();
+		//Update positions for our components.
+		for(Axis axis : Axis.values()){
+			if(components.containsKey(axis)){
+				ATileEntityPole_Component component = components.get(axis);
+				if(axis.equals(Axis.NONE)){
+					component.position.setTo(position);
+					component.angles.setTo(angles);
+				}else{
+					component.position.set(0, 0, definition.pole.radius + 0.001).rotateY(axis.yRotation).add(position);
+					component.angles.set(0, axis.yRotation, 0).add(angles);
+				}
+				component.prevPosition.setTo(component.position);
+				component.prevAngles.setTo(component.angles);
+			}
+		}
+	}
+	
 	/**
 	 * Helper method to update light state and re-do world lighting if required.
 	 */
@@ -104,7 +125,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public AnimationsDecor getAnimator(){
+	public AnimationsPole getAnimator(){
 		return animator;
 	}
 	

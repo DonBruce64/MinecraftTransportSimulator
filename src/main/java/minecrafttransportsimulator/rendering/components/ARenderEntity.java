@@ -8,8 +8,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 
 /**Base Entity rendering class.  
@@ -65,16 +63,12 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			GL11.glPopMatrix();
 			InterfaceRender.resetStates();
 			
+			//Render supplementals.
+			renderSupplementalModels(entity, partialTicks);
+			
 			//Spawn particles, if we aren't paused and this is the main render pass.
 			if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 				entity.spawnParticles();
-			}
-			
-			//Render parts, if we are they type of entity to have them.
-			if(entity instanceof AEntityE_Multipart){
-				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-					part.getRenderer().render(part, partialTicks);
-				}
 			}
 		}
 	}
@@ -94,6 +88,12 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  so see the comments on the called methods for information on what is rendered when.
 	 */
 	public abstract void renderModel(RenderedEntity entity, float partialTicks);
+	
+	/**
+	 *  Called to render supplemental models on this entity.  Used mainly for entities that have other entities
+	 *  on them that need to render with the main entity.
+	 */
+	protected void renderSupplementalModels(RenderedEntity entity, float partialTicks){}
 	
 	/**
 	 *  Call to clear out the object caches for this entity definition.  This resets all caches to cause the rendering
@@ -116,13 +116,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 					if(((TransformLight<RenderedEntity>) transform).type.equals(light)){
 						return true;
 					}
-				}
-			}
-		}
-		if(entity instanceof AEntityE_Multipart<?>){
-			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-				if(part.getRenderer().doesEntityHaveLight(part, light)){
-					return true;
 				}
 			}
 		}

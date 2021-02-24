@@ -546,11 +546,15 @@ public class WrapperWorld{
 	 *  things placed or connected to it.
 	 */
 	public boolean isBlockSolid(Point3d position, Axis axis){
-		BlockPos pos = new BlockPos(position.x, position.y, position.z);
-		IBlockState state = world.getBlockState(pos);
-		Block offsetMCBlock = state.getBlock();
-		EnumFacing facing = EnumFacing.valueOf(axis.name());
-        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing) : false;
+		if(axis.blockBased){
+			BlockPos pos = new BlockPos(position.x, position.y, position.z);
+			IBlockState state = world.getBlockState(pos);
+			Block offsetMCBlock = state.getBlock();
+			EnumFacing facing = EnumFacing.valueOf(axis.name());
+	        return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing) : false;
+		}else{
+			return false;
+		}
 	}
 	
 	/**

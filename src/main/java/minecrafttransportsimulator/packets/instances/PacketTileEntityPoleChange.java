@@ -46,7 +46,7 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 		this.axis = Axis.values()[buf.readByte()];
 		this.addition = buf.readBoolean();
 		this.removal = buf.readBoolean();
-		if(addition){
+		if(buf.readBoolean()){
 			this.data = readDataFromBuffer(buf);
 		}else{
 			this.data = null;

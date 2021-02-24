@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
@@ -753,6 +754,50 @@ public final class LegacyCompatSystem{
 			definition.general.type = null;
 			definition.pole.radius = definition.general.radius;
 			definition.general.radius = 0;
+		}
+		
+		//Create a animation set for core poles if they don't have one and use the old auto-render systems.
+		if(definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering == null){
+			definition.rendering = new JSONRendering();
+			definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+			for(Axis axis : Axis.values()){
+				if(!axis.equals(Axis.NONE)){
+					JSONAnimatedObject connectorModelObject = new JSONAnimatedObject();
+					connectorModelObject.objectName = axis.name().toLowerCase();
+					connectorModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition connectorVisibility = new JSONAnimationDefinition();
+					connectorVisibility.animationType = AnimationComponentType.VISIBILITY;
+					connectorVisibility.variable = "neighbor_present_" + axis.name().toLowerCase();
+					connectorVisibility.clampMin = 1.0F;
+					connectorVisibility.clampMax = 1.0F;
+					connectorModelObject.animations.add(connectorVisibility);
+					definition.rendering.animatedObjects.add(connectorModelObject);
+					
+					JSONAnimatedObject solidModelObject = new JSONAnimatedObject();
+					solidModelObject.objectName = axis.name().toLowerCase() + "_solid";
+					solidModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition solidVisibility = new JSONAnimationDefinition();
+					solidVisibility.animationType = AnimationComponentType.VISIBILITY;
+					solidVisibility.variable = "solid_present_" + axis.name().toLowerCase();
+					solidVisibility.clampMin = 1.0F;
+					solidVisibility.clampMax = 1.0F;
+					solidModelObject.animations.add(solidVisibility);
+					definition.rendering.animatedObjects.add(solidModelObject);
+					
+					if(axis.equals(Axis.UP) || axis.equals(Axis.DOWN)){
+						JSONAnimatedObject slabModelObject = new JSONAnimatedObject();
+						slabModelObject.objectName = axis.name().toLowerCase() + "_slab";
+						slabModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+						JSONAnimationDefinition slabVisibility = new JSONAnimationDefinition();
+						slabVisibility.animationType = AnimationComponentType.VISIBILITY;
+						slabVisibility.variable = "slab_present_" + axis.name().toLowerCase();
+						slabVisibility.clampMin = 1.0F;
+						slabVisibility.clampMax = 1.0F;
+						slabModelObject.animations.add(slabVisibility);
+						definition.rendering.animatedObjects.add(slabModelObject);
+					}
+				}
+			}
 		}
 	}
 	

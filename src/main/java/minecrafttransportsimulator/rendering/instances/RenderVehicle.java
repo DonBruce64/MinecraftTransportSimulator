@@ -25,7 +25,7 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableModelObject;
@@ -42,7 +42,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{	
+public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_Physics>{	
 	//VEHICLE MAPS.  Maps are keyed by system name.
 	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
 	
@@ -60,12 +60,10 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 	@Override
 	public void renderModel(EntityVehicleF_Physics vehicle, float partialTicks){
         //Render the main model.
-		//Normally we use the model name, but since vehicles don't share models
-		//we can use the systemName.  This is due to them historically not having a modelName parameter.
-		//That parameter is deprecated, but some things still use it.  Mainly parts and decor blocks.
-		if(!objectLists.containsKey(vehicle.definition.systemName)){
-			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(vehicle.definition.getModelLocation());
-			objectLists.put(vehicle.definition.systemName, OBJParser.generateRenderables(vehicle, vehicle.definition.getModelLocation(), parsedModel, vehicle.definition.rendering.animatedObjects));
+		String modelLocation = vehicle.definition.getModelLocation();
+		if(!objectLists.containsKey(modelLocation)){
+			Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
+			objectLists.put(modelLocation, OBJParser.generateRenderables(vehicle, modelLocation, parsedModel, vehicle.definition.rendering.animatedObjects));
 			
 			//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
 			Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
@@ -75,12 +73,12 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
 				}
 			}
-			vehicleInstrumentTransforms.put(vehicle.definition.systemName, instrumentTransforms);
+			vehicleInstrumentTransforms.put(modelLocation, instrumentTransforms);
 		}
 		
 		//Render all modelObjects.
 		InterfaceRender.setTexture(vehicle.definition.getTextureLocation(vehicle.subName));
-		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = objectLists.get(vehicle.definition.systemName);
+		List<RenderableModelObject<EntityVehicleF_Physics>> modelObjects = objectLists.get(modelLocation);
 		for(RenderableModelObject<EntityVehicleF_Physics> modelObject : modelObjects){
 			if(modelObject.applyAfter == null){
 				modelObject.render(vehicle, partialTicks, modelObjects);
@@ -206,7 +204,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 				
 				//Do transforms if required.
-				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.systemName).get(i);
+				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.getModelLocation()).get(i);
 				boolean doRender = true;
 				if(transform != null){
 					doRender = transform.doPreRenderTransforms(vehicle, 0);

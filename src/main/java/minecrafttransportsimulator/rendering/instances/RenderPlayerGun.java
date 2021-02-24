@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 
-public class RenderPlayerGun extends ARenderEntity<EntityPlayerGun>{
+public class RenderPlayerGun extends ARenderEntityMultipart<EntityPlayerGun>{
 	
 	@Override
 	public void renderModel(EntityPlayerGun entity, float partialTicks){

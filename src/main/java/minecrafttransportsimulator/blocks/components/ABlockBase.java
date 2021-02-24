@@ -91,10 +91,10 @@ public abstract class ABlockBase{
 		EAST(1, 0, 0, 90, true, true),
 		WEST(-1, 0, 0, 270, true, true),
 		
-		NORTHEAST(0, 0, -1, 135, false, true),
-		SOUTHEAST(0, 0, 1, 45, false, true),
-		NORTHWEST(0, 0, -1, 225, false, true),
-		SOUTHWEST(0, 0, 1, 315, false, true);
+		NORTHEAST(1, 0, -1, 135, false, true),
+		SOUTHEAST(1, 0, 1, 45, false, true),
+		NORTHWEST(-1, 0, -1, 225, false, true),
+		SOUTHWEST(-1, 0, 1, 315, false, true);
 		
 		public final int xOffset;
 		public final int yOffset;

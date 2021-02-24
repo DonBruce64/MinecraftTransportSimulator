@@ -40,7 +40,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 	}
 	
 	public static enum PoleComponentType{
-		@JSONDescription("The base of any pole system is the core type. This is the central structure that connects to other pole bits and allows placement of components on it.  You cannot place other components without placing one of these first.")
+		@JSONDescription("The base of any pole system is the core type. This is the central structure that connects to other pole bits and allows placement of components on it.  You cannot place other components without placing one of these first.\nThe pole model you'll make will look like nothing you'll see in-game.  This is because it contains all possible model components that could be rendered.  Each of these components has a specific object name, and should only be rendered in specific conditions based on what the pole is connected to (other poles, solids, slabs, etc.).")
 		CORE,
 		@JSONDescription("Perhaps the most standard of lights, traffic signals consist of a main model (named anything you like), plus the lights (see the lights section).  You may omit any or all lights should you wish to change your sinal's behavior.  This may include making fewer or more bulbs than the standard 3 light.  Say a 2-light unit for a crossing signal.")
 		TRAFFIC_SIGNAL,
