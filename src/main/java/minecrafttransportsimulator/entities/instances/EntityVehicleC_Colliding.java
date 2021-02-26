@@ -12,6 +12,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -245,6 +246,11 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 				//If the part is linked to doors, and none are open, don't add it.
 				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
 				if(areDoorsBlocking(part.placementDefinition, clientPlayer)){
+					continue;
+				}
+				
+				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
+				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){
 					continue;
 				}
 			}
