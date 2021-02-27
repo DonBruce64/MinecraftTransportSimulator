@@ -45,7 +45,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 				//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
 				//Search through rotatable parts on the model and grab the rollers.
 				Map<Integer, TransformTreadRoller<EntityVehicleF_Physics>> parsedRollers = new HashMap<Integer, TransformTreadRoller<EntityVehicleF_Physics>>();
-				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(tread.entityOn.definition.getModelLocation());
+				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(treadPathModel);
 				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : OBJParser.generateRenderables((EntityVehicleF_Physics) tread.entityOn, tread.entityOn.definition.getModelLocation(), parsedModel, tread.entityOn.definition.rendering.animatedObjects)){
 					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 						if(transform instanceof TransformTreadRoller){
