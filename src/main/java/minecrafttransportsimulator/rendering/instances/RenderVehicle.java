@@ -271,15 +271,17 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
 				GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
-					InterfaceRender.setColorState(0, 0, 1, 0.5F);
-					BoundingBox currentBox = partSlotEntry.getKey();
-					GL11.glPushMatrix();
-					GL11.glTranslated(currentBox.globalCenter.x - vehicle.position.x, currentBox.globalCenter.y - vehicle.position.y, currentBox.globalCenter.z - vehicle.position.z);
-					RenderBoundingBox.renderSolid(currentBox);
-					GL11.glPopMatrix();
-					if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
-						if(highlightedBox == null || (currentBox.globalCenter.distanceTo(playerEyes) < highlightedBox.globalCenter.distanceTo(playerEyes))){
-							highlightedBox = currentBox;
+					if(!vehicle.areDoorsBlocking(partSlotEntry.getValue(), player)){
+						InterfaceRender.setColorState(0, 0, 1, 0.5F);
+						BoundingBox currentBox = partSlotEntry.getKey();
+						GL11.glPushMatrix();
+						GL11.glTranslated(currentBox.globalCenter.x - vehicle.position.x, currentBox.globalCenter.y - vehicle.position.y, currentBox.globalCenter.z - vehicle.position.z);
+						RenderBoundingBox.renderSolid(currentBox);
+						GL11.glPopMatrix();
+						if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
+							if(highlightedBox == null || (currentBox.globalCenter.distanceTo(playerEyes) < highlightedBox.globalCenter.distanceTo(playerEyes))){
+								highlightedBox = currentBox;
+							}
 						}
 					}
 				}
