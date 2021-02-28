@@ -68,8 +68,7 @@ public class DurationDelayClock{
 				if(timeForwards < forwardsCycleTime){
 					//Didn't make it to the end of the cycle.  Adjust start time to compensate.
 					timeCommandedReverse += timeForwards - forwardsCycleTime;
-				}
-				if(timeForwards >= forwardsCycleTime - animation.reverseDelay*50){
+				}else{
 					//Made it to the end of travel, so we aren't in the reversing process.
 					startedReverseMovement = false;
 				}

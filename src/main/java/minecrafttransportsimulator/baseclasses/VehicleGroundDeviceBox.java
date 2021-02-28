@@ -53,18 +53,31 @@ public class VehicleGroundDeviceBox{
 	public void updateMembers(){
 		//Get all liquid collision boxes.  Parts can add these via their collision boxes.
 		liquidCollisionBoxes.clear();
-		for(BoundingBox box : vehicle.blockCollisionBoxes){
+		for(BoundingBox box : vehicle.allBlockCollisionBoxes){
+			APart partOn = vehicle.getPartWithBox(box);
+			final boolean boxFront;
+			final boolean boxLeft;
+			final boolean boxRight;
+			if(partOn != null){
+				boxFront = partOn.placementOffset.z > 0;
+				boxLeft = partOn.placementOffset.x >= 0;
+				boxRight = partOn.placementOffset.x <= 0;
+			}else{
+				boxFront = box.localCenter.z > 0;
+				boxLeft = box.localCenter.x >= 0;
+				boxRight = box.localCenter.x <= 0;
+			}
 			if(box.collidesWithLiquids){
-				if(isFront && box.localCenter.z > 0){
-					if(isLeft && box.localCenter.x >= 0){
+				if(isFront && boxFront){
+					if(isLeft && boxLeft){
 						liquidCollisionBoxes.add(box);
-					}else if(!isLeft && box.localCenter.x <= 0){
+					}else if(!isLeft && boxRight){
 						liquidCollisionBoxes.add(box);
 					}
-				}else if(!isFront && box.localCenter.z <= 0){
-					if(isLeft && box.localCenter.x >= 0){
+				}else if(!isFront && !boxFront){
+					if(isLeft && boxLeft){
 						liquidCollisionBoxes.add(box);
-					}else if(!isLeft && box.localCenter.x <= 0){
+					}else if(!isLeft && boxRight){
 						liquidCollisionBoxes.add(box);
 					}
 				}

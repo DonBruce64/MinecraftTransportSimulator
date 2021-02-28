@@ -3,8 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -96,35 +95,12 @@ public class BoundingBox{
 	 *  better interaction while standing on entities.  Optional extra offset is present should
 	 *  a supplemental translation need to be performed before aligning to the entity.
 	 */
-	public void updateToEntity(AEntityD_Interactable<?> entity, Point3d optionalOffset){
+	public void updateToEntity(AEntityC_Definable<?> entity, Point3d optionalOffset){
 		globalCenter.setTo(localCenter);
 		if(optionalOffset != null){
 			globalCenter.add(optionalOffset);
 		}
 		globalCenter.rotateFine(entity.angles).add(entity.position);
-		if(isCollision){
-			//Need to round box to prevent floating-point errors.
-			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-			globalCenter.y = ((int) (globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-			globalCenter.z = ((int) (globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-		}
-	}
-	
-	/**
-	 *  Sets the global center of this box to the position of the passed-in part, rotated by the
-	 *  part and entity's rotation and offset by the local center.  This is like {@link #updateToEntity(AEntityD_Interactable)}
-	 *  but for parts on entities which have offsets.
-	 */
-	public void updateToPart(APart part){
-		//First rotate the box based on the part's rotation.
-		globalCenter.setTo(localCenter).rotateFine(part.localAngles);
-		//Now translate the box to it's actual position relative to the entity.
-		globalCenter.add(part.localOffset);
-		//Now rotate the collision box by the entity's rotation.
-		globalCenter.rotateFine(part.entityOn.angles);
-		//Add the worldOffset based on the entity's current position.
-		globalCenter.add(part.entityOn.position);
-		//Clamp the box's points if required.
 		if(isCollision){
 			//Need to round box to prevent floating-point errors.
 			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;

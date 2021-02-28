@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.BiMap;
@@ -12,12 +15,15 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base entity class containing riders and their positions on this entity.  Used for
  * entities that need to keep track of riders and their locations.  This also contains
@@ -26,13 +32,22 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
  * 
  * @author don_bruce
  */
-public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Definable<JSONDefinition>{
+public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityC_Definable<JSONDefinition>{
 	
-	/**List of bounding boxes that should be used for collision of other entities with this entity.**/
-	public List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
+	/**List of bounding boxes that should be used for collision of other entities with this entity.
+	 * This includes {@link #collisionBoxes}, and {@link #blockCollisionBoxes}, but may include others.**/
+	public final List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
 	
-	/**List of bounding boxes that should be used for interaction of other entities with this entity.**/
-	public List<BoundingBox> interactionBoxes = new ArrayList<BoundingBox>();
+	/**List of bounding boxes that should be used to check collision of this entity with blocks.
+	 * This only includes {@link #blockCollisionBoxes}, as it's only for blocks.**/
+	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
+	
+	/**List of bounding boxes that should be used for interaction of other entities with this entity.
+	 * This includes all {@link #collisionBoxes} and {@link #doorBoxes} by default, but may include others.**/
+	public final List<BoundingBox> interactionBoxes = new ArrayList<BoundingBox>();
+	
+	/**Map of door boxes.  Key is the box, value is the JSON entry that it was created from.**/
+	public final Map<BoundingBox, JSONDoor> doorBoxes = new HashMap<BoundingBox, JSONDoor>();
 	
 	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
 	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
@@ -41,12 +56,12 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 	 * hash equality in the keys.  If you need to interface with the map with a new Point3d object, you should do equality
 	 * checks on this list to find the "same" point and use that in map operations to ensure hash-matching of the map.
 	 **/
-	public Set<Point3d> ridableLocations = new HashSet<Point3d>();
+	public final Set<Point3d> ridableLocations = new HashSet<Point3d>();
 	
 	/**List of locations where rider were last save.  This is used to re-populate riders on reloads.
 	 * It can be assumed that riders will be re-added in the same order the location list was saved.
 	 **/
-	public List<Point3d> savedRiderLocations = new ArrayList<Point3d>();
+	public final List<Point3d> savedRiderLocations = new ArrayList<Point3d>();
 	
 	/**Maps relative position locations to riders riding at those positions.  Only one rider
 	 * may be present per position.  Positions should be modified via mutable modification to
@@ -54,7 +69,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
+	public final BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
@@ -73,6 +88,49 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONMultiMod
 		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
 		this.locked = data.getBoolean("locked");
 		this.ownerUUID = data.getString("ownerUUID");
+		
+		//Create collision boxes.
+		if(definition.collision != null){
+			for(JSONCollisionBox boxDef : definition.collision){
+				BoundingBox newBox = new BoundingBox(boxDef.pos, boxDef.pos.copy(), boxDef.width/2D, boxDef.height/2D, boxDef.width/2D, boxDef.collidesWithLiquids, boxDef.isInterior, true, boxDef.armorThickness);
+				collisionBoxes.add(newBox);
+				if(!newBox.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
+					blockCollisionBoxes.add(newBox);
+				}
+			}
+		}
+		
+		//Create door boxes.
+		if(definition.doors != null){
+			for(JSONDoor doorDef : definition.doors){
+				BoundingBox box = new BoundingBox(doorDef.closedPos, doorDef.closedPos.copy(), doorDef.width/2D, doorDef.height/2D, doorDef.width/2D, false, true, false, 0);
+				doorBoxes.put(box, doorDef);
+				collisionBoxes.add(box);
+			}
+		}
+		
+		//Add collision and door boxes to interaction list.
+		interactionBoxes.addAll(collisionBoxes);
+		interactionBoxes.addAll(doorBoxes.keySet());
+	}
+	
+	@Override
+	public void update(){
+		super.update();
+		
+		//Update collision boxes.
+		for(BoundingBox box : collisionBoxes){
+			box.updateToEntity(this, null);
+		}
+		
+		//Update door boxes.
+		for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
+			if(variablesOn.contains(doorEntry.getValue().name)){
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateCoarse(angles).add(position);
+			}else{
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateCoarse(angles).add(position);
+			}
+		}
 	}
 	
 	/**

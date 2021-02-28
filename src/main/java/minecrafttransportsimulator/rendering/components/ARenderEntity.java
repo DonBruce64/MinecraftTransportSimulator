@@ -6,9 +6,12 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 
 /**Base Entity rendering class.  
  *
@@ -22,22 +25,16 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
 	 *  After this, the main model rendering method is called.
 	 */
-	public final void render(RenderedEntity entity, float partialTicks){
-		//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-		int renderPass = InterfaceRender.getRenderPass();
-		if(renderPass == -1){
-			renderPass = 2;
-		}
-		
+	public final void render(RenderedEntity entity, int renderPass, float partialTicks, boolean isSupplemental){
 		//If we need to render, do so now.
-		if(entity.renderData.shouldRender(renderPass, partialTicks)){
+		if(isSupplemental || entity.renderData.shouldRender(renderPass, partialTicks)){
 			if(!disableMainRendering(entity, partialTicks)){
 				//Get the render offset.
 				//This is the interpolated movement, plus the prior position.
-				Point3d entityPosition = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
+				Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
 				
 				//Subtract the entity's position by the render entity position to get the delta for translating.
-				entityPosition.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+				entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 				
 				//Get the entity rotation.
 				Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
@@ -49,9 +46,9 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				GL11.glShadeModel(GL11.GL_SMOOTH);
 		        
 		        //Push the matrix on the stack and translate and rotate to the enitty's position.
-				adjustPositionRotation(entity, partialTicks, entityPosition, entityRotation);
-		        GL11.glPushMatrix();
-		        GL11.glTranslated(entityPosition.x, entityPosition.y, entityPosition.z);
+				adjustPositionRotation(entity, partialTicks, entityPositionDelta, entityRotation);
+				GL11.glPushMatrix();
+		        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
 		        GL11.glRotated(entityRotation.y, 0, 1, 0);
 		        GL11.glRotated(entityRotation.x, 1, 0, 0);
 		        GL11.glRotated(entityRotation.z, 0, 0, 1);
@@ -83,7 +80,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				//Render any static text.
 				InterfaceRender.renderTextMarkings(entity, null);
 				
-				//End render matrix and reset states.
+				//End rotation render matrix and reset states.
 				if(mirrored){
 					GL11.glCullFace(GL11.GL_BACK);
 				}
@@ -91,14 +88,26 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				GL11.glPopMatrix();
 				InterfaceRender.resetStates();
 				
+				//Render bounding boxes for parts and collision points.
+				if(InterfaceRender.shouldRenderBoundingBoxes() && entity instanceof AEntityD_Interactable){
+					//Set states for box render.
+					InterfaceRender.setLightingState(false);
+					GL11.glDisable(GL11.GL_TEXTURE_2D);
+					GL11.glLineWidth(3.0F);
+					renderBoundingBoxes(entity, entityPositionDelta);
+					GL11.glLineWidth(1.0F);
+					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					InterfaceRender.setLightingState(true);
+				}
+				
 				//Spawn particles, if we aren't paused and this is the main render pass.
 				if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 					entity.spawnParticles();
 				}
+				
+				//Render supplementals.
+				renderSupplementalModels(entity, renderPass, partialTicks);
 			}
-			
-			//Render supplementals.
-			renderSupplementalModels(entity, partialTicks);
 		}
 	}
 	
@@ -153,7 +162,41 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Called to render supplemental models on this entity.  Used mainly for entities that have other entities
 	 *  on them that need to render with the main entity.
 	 */
-	protected void renderSupplementalModels(RenderedEntity entity, float partialTicks){}
+	protected void renderSupplementalModels(RenderedEntity entity, int renderPass, float partialTicks){}
+	
+	/**
+	 *  Renders the bounding boxes for the entity collision.
+	 *  At this point, the rotation done for the rendering 
+	 *  will be un-done, as boxes need to be rendered according to their world state.
+	 *  Translation, however, will still be in effect as that allows for relative rendering.
+	 */
+	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
+		if(entity instanceof AEntityD_Interactable){
+			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+			//Draw collision boxes for the entity.
+			for(BoundingBox box : interactable.interactionBoxes){
+				if(interactable.doorBoxes.containsKey(box)){
+					//Green for doors.
+					InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+				}else if(interactable.blockCollisionBoxes.contains(box)){
+					//Red for block collisions.
+					InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 1.0F);
+				}else if(interactable.collisionBoxes.contains(box)){
+					//Black for general collisions.
+					InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+				}else{
+					//None of the above.  Must be an interaction box.  Yellow.
+					InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
+				}
+				
+				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
+				GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
+				RenderBoundingBox.renderWireframe(box);
+				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
+			}
+			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		}
+	}
 	
 	/**
 	 *  Call to clear out the object caches for this entity definition.  This resets all caches to cause the rendering

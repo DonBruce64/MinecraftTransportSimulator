@@ -56,12 +56,8 @@ public class PartGroundDevice extends APart{
 			placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
 			fakePart = new PartGroundDeviceFake(this, placementDefinition, data, null);
 			placementDefinition.pos = actualPlacement;
-			//This hack prevents us from adding this part to the main list during vehicle construction.
-			if(vehicleOn.partSlotBoxes != null){
-				vehicleOn.addPart(fakePart, true);
-			}else{
-				vehicleOn.partsFromNBT.add(fakePart);
-			}
+			//Add the fake part to the NBT list, as we don't want to foul up construction operations.
+			vehicleOn.partsFromNBT.add(fakePart);
 		}else{
 			fakePart = null;
 		}

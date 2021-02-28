@@ -108,7 +108,7 @@ public class ParticleBullet extends AParticle{
 						isValid = false;
 					}else{
 						for(BoundingBox hitBox : hitBoxes){
-							if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartAtLocation(hitBox.localCenter) != null){
+							if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
 								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, hitBox, velocity, bullet, bulletNumber, entity, gunController));
 								isValid = false;
 								break;

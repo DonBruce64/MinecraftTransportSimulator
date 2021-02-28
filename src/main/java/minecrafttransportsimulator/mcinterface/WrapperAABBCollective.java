@@ -19,7 +19,7 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public class WrapperAABBCollective extends AxisAlignedBB{
-	private final List<BoundingBox> boxes;
+	public final List<BoundingBox> boxes;
 	public BoundingBox lastBoxRayTraced;
 	
 	public WrapperAABBCollective(BuilderEntity entity, List<BoundingBox> boxes){

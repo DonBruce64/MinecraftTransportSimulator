@@ -12,7 +12,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
@@ -82,11 +81,20 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 		
 		//Render holograms for missing parts.
 		renderPartBoxes(vehicle);
-		
-		//Render bounding boxes for parts and collision points.
-		if(InterfaceRender.shouldRenderBoundingBoxes()){
-			renderBoundingBoxes(vehicle);
+	}
+	
+	@Override
+	protected void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Point3d entityPositionDelta){
+		super.renderBoundingBoxes(vehicle, entityPositionDelta);
+		//Draw the ground bounding boxes.
+		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
+		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
+			Point3d boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position).add(entityPositionDelta);
+			GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
+			RenderBoundingBox.renderWireframe(box);
+			GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 		}
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 	
 	@Override
@@ -270,7 +278,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
 				GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
 				GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
-				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.partSlotBoxes.entrySet()){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.allPartSlotBoxes.entrySet()){
 					if(!vehicle.areDoorsBlocking(partSlotEntry.getValue(), player)){
 						InterfaceRender.setColorState(0, 0, 1, 0.5F);
 						BoundingBox currentBox = partSlotEntry.getKey();
@@ -289,7 +297,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				
 				if(highlightedBox != null){
 					//Get the definition for this box.
-					JSONPartDefinition packVehicleDef = vehicle.partSlotBoxes.get(highlightedBox);
+					JSONPartDefinition packVehicleDef = vehicle.allPartSlotBoxes.get(highlightedBox);
 					
 					//Set blending back to false and re-enable 2D texture before rendering item and text.
 					InterfaceRender.setBlendState(false, false);
@@ -353,60 +361,5 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				}
 			}
 		}
-	}
-	
-	/**
-	 *  Renders the bounding boxes for the vehicle collision, and centers of all
-	 *  parts currently on the vehicle.
-	 */
-	private static void renderBoundingBoxes(EntityVehicleF_Physics vehicle){
-		//Set states for box render.
-		GL11.glPushMatrix();
-		//Need to undo rotation so boxes render as axis-aligned.
-		GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
-		GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
-		GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
-		InterfaceRender.setLightingState(false);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glLineWidth(3.0F);
-		
-		//Draw collision boxes for the vehicle.
-		for(BoundingBox box : vehicle.interactionBoxes){
-			if(vehicle.partInteractionBoxes.contains(box)){
-				InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
-			}else if(vehicle.vehicleDoorBoxes.containsKey(box) || vehicle.partDoorBoxes.containsKey(box)){
-				InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
-			}else if(vehicle.blockCollisionBoxes.contains(box)){
-				InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 1.0F);
-			}else{
-				InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
-			}
-			GL11.glPushMatrix();
-			GL11.glTranslated(box.globalCenter.x - vehicle.position.x, box.globalCenter.y - vehicle.position.y, box.globalCenter.z - vehicle.position.z);
-			RenderBoundingBox.renderWireframe(box);
-			GL11.glPopMatrix();
-		}
-		
-		//Draw the ground bounding boxes.
-		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
-		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
-			GL11.glPushMatrix();
-			GL11.glTranslated(box.globalCenter.x - vehicle.position.x, box.globalCenter.y - vehicle.position.y, box.globalCenter.z - vehicle.position.z);
-			RenderBoundingBox.renderWireframe(box);
-			GL11.glPopMatrix();
-		}
-		GL11.glPopMatrix();
-		
-		//Draw part center points.
-		InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
-		GL11.glBegin(GL11.GL_LINES);
-		for(APart part : vehicle.parts){
-			if(!part.isFake()){
-				GL11.glVertex3d(part.localOffset.x, part.localOffset.y - part.getHeight(), part.localOffset.z);
-				GL11.glVertex3d(part.localOffset.x, part.localOffset.y + part.getHeight(), part.localOffset.z);
-			}
-		}
-		GL11.glEnd();
-		GL11.glLineWidth(1.0F);
 	}
 }

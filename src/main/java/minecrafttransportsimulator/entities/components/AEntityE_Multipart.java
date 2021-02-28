@@ -8,15 +8,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
@@ -51,11 +59,34 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
+	
+	/**List of collision boxes, with all part collision boxes included.**/
+	public final List<BoundingBox> allCollisionBoxes = new ArrayList<BoundingBox>();
+	
+	/**List of block collision boxes, with all part block collision boxes included.**/
+	public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<BoundingBox>();
+	
+	/**Map of door boxes, with all part doors included.**/
+	public final Map<BoundingBox, JSONDoor> allDoorBoxes = new HashMap<BoundingBox, JSONDoor>();
+	
+	/**List of interaction boxes, plus all part boxes included.**/
+	public final List<BoundingBox> allInteractionBoxes = new ArrayList<BoundingBox>();
+	
+	/**Map of part slot boxes.  Key is the box, value is the definition for that slot.**/
+	public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+	
+	/**Map of active part slot boxes.  Contains {@link #allPartSlotBoxes}, though may not contain all of them due to them not being active.**/
+	public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+	
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
 	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private static final Map<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>> SUBPACK_MAPPINGS = new HashMap<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>>();
+	
+	//Constants
+	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
+	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
 	public AEntityE_Multipart(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -74,6 +105,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
 			}
 		}
+		
+		//Create the initial boxes and slots.
+		recalculateBoxes();
+		recalculatePartSlots();
 	}
 	
 	@Override
@@ -87,21 +122,117 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			}
 			partsFromNBT.clear();
 		}
+		
+		//Update part slot box positions.
+		for(BoundingBox box : allPartSlotBoxes.keySet()){
+			JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
+			boolean updatedToSubPart = false;
+			for(APart part : parts){
+				if(part.definition.parts != null){
+					for(JSONPartDefinition subPartDef : part.definition.parts){
+						if(packVehicleDef.equals(getPackForSubPart(part.placementDefinition, subPartDef))){
+							//Need to find the delta between our 0-degree position and our current position.
+							Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
+							box.updateToEntity(this, delta);
+							updatedToSubPart = true;
+							break;
+						}
+					}
+				}
+			}
+			if(!updatedToSubPart){
+				box.updateToEntity(this, null);
+			}
+		}
+		
+		//Populate active part slot list.
+		//Only do this on clients; servers reference the main list to handle clicks.
+		//Boxes added on clients depend on what the player is holding.
+		//We add these before part boxes so the player can click them before clicking a part.
+		if(world.isClient()){
+			activePartSlotBoxes.clear();
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof ItemPart){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
+					ItemPart heldPart = (ItemPart) heldItem;
+					//Does the part held match this packPart?
+					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.generic.type)){
+						//Are there any doors blocking us from clicking this part?
+						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
+							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
+							//special bounds of the generic part if we're holding one.
+							BoundingBox box = partSlotBoxEntry.getKey();
+							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+						}
+					}
+				}
+			}
+		}
+		
+		//Update all-box lists now that all other lists are populated.
+		recalculateBoxes();
 	}
 	
-	/**
-	 * Called to update the parts on this entity.  This should be called after all movement on the
-	 * entity has been performed, as parts need to do their actions based on the updated movement
-	 * of the entity.  Calling this before the entity finishes moving will lead to the parts "lagging"
-	 * behind the entity.
-	 */
-	public void updateParts(){
-		Iterator<APart> iterator = parts.iterator();
-		while(iterator.hasNext()){
-			APart part = iterator.next();
-			part.update();
-			if(!part.isValid){
-				removePart(part, iterator);
+	@Override
+	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
+		if(super.addRider(rider, riderLocation)){
+			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+			if(seat.placementDefinition.linkedDoors != null){
+				for(String linkedDoor : seat.placementDefinition.linkedDoors){
+					if(variablesOn.contains(linkedDoor)){
+						for(JSONDoor doorDef : allDoorBoxes.values()){
+							if(doorDef.name.equals(linkedDoor)){
+								if(doorDef.activateOnSeated){
+									variablesOn.remove(linkedDoor);
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	@Override
+	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+		//Auto-open doors for the rider in the seat they were in, if such doors exist.
+		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+		if(seat != null && seat.placementDefinition.linkedDoors != null){
+			for(String linkedDoor : seat.placementDefinition.linkedDoors){
+				if(!variablesOn.contains(linkedDoor)){
+					for(JSONDoor doorDef : allDoorBoxes.values()){
+						if(doorDef.name.equals(linkedDoor)){
+							if(doorDef.activateOnSeated){
+								variablesOn.add(linkedDoor);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		super.removeRider(rider, iterator);
+	}
+	
+	@Override
+	public void attack(Damage damage){
+		//This is called if we attack the entity with something, rather than click it with an item.
+		//This attack can come from a player with a hand-held item, or a projectile such as an arrow.
+		//If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
+		//Need to make sure we are valid, however, as our death explosions can get us into infinite loops.
+		if(isValid){
+			APart part = getPartWithBox(damage.box);
+			if(part != null){
+				part.attack(damage);
 			}
 		}
 	}
@@ -128,6 +259,52 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				textEntry.setValue(textLines.get(linesChecked));
 				++linesChecked;
 			}
+		}
+	}
+	
+	/**
+	 * Called to update the parts on this entity.  This should be called after all movement on the
+	 * entity has been performed, as parts need to do their actions based on the updated movement
+	 * of the entity.  Calling this before the entity finishes moving will lead to the parts "lagging"
+	 * behind the entity.
+	 */
+	public void updateParts(){
+		Iterator<APart> iterator = parts.iterator();
+		while(iterator.hasNext()){
+			APart part = iterator.next();
+			part.update();
+			if(!part.isValid){
+				removePart(part, iterator);
+			}
+		}
+	}
+	
+	/**
+	 * Returns true if any linked doors are blocking the player from
+	 * accessing the passed-in part slot.
+	 */
+	public boolean areDoorsBlocking(JSONPartDefinition partDef, WrapperPlayer player){
+		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
+			//If the door exists and is not open, we are blocked.
+			boolean doorExists = false;
+			for(String doorName : partDef.linkedDoors){
+				if(variablesOn.contains(doorName)){
+					//We have the door open, no need to check any further.
+					return false;
+				}else if(!doorExists){
+					for(JSONDoor doorDef : allDoorBoxes.values()){
+						if(partDef.linkedDoors.contains(doorDef.name)){
+							doorExists = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			//Didn't find open door, if the door exists, return true as it's blocking.
+			return doorExists;
+		}else{
+			return false;
 		}
 	}
     
@@ -253,6 +430,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			ridableLocations.add(part.placementOffset);
 		}
 		
+		//Recalculate slots.
+		recalculatePartSlots();
+		
 		//If we are on the server, and need to notify clients, do so.
 		if(sendPacket && !world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketPartChange(this, part));
@@ -294,6 +474,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		if(part instanceof PartSeat){
 			ridableLocations.remove(part.placementOffset);
 		}
+		
+		//Recalculate slots.
+		recalculatePartSlots();
 	}
 	
 	/**
@@ -309,6 +492,20 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 		for(APart part : partsFromNBT){
 			if(part.placementOffset.equals(offset)){
+				return part;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Gets the part that has the passed-in bounding box.
+	 * Useful if we interacted with  a box on this multipart and need
+	 * to know which part it went to.
+	 */
+	public APart getPartWithBox(BoundingBox box){
+		for(APart part : parts){
+			if(part.interactionBoxes.contains(box)){
 				return part;
 			}
 		}
@@ -499,6 +696,82 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Call to re-create the list of all valid part slot boxes.
+	 * This should be called after part addition or part removal.
+	 * Also must be called at construction time to create the initial slot set.
+	 */
+	private void recalculatePartSlots(){
+		allPartSlotBoxes.clear();
+		for(Entry<Point3d, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
+			if(getPartAtLocation(packPartEntry.getKey()) == null){
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false, false, false, 0);
+				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
+			}
+		}
+	}
+	
+	
+	/**
+	 * Call to re-create the lists of the collision and interaction boxes.
+	 * This should be run at construction, and every tick so we have up-to-date lists.
+	 */
+	private void recalculateBoxes(){
+		//Set active collision box, door box, and interaction box lists to current boxes.
+		allCollisionBoxes.clear();
+		allCollisionBoxes.addAll(collisionBoxes);
+		allBlockCollisionBoxes.clear();
+		allBlockCollisionBoxes.addAll(blockCollisionBoxes);
+		allDoorBoxes.clear();
+		allDoorBoxes.putAll(doorBoxes);
+		
+		allInteractionBoxes.clear();
+		allInteractionBoxes.addAll(interactionBoxes);
+		if(world.isClient()){
+			allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
+		}else{
+			allInteractionBoxes.addAll(allPartSlotBoxes.keySet());
+		}
+		
+		//Add all part boxes.
+		for(APart part : parts){
+			allCollisionBoxes.addAll(part.collisionBoxes);
+			allBlockCollisionBoxes.addAll(part.blockCollisionBoxes);
+			allDoorBoxes.putAll(part.doorBoxes);
+			
+			//Part interaction boxes are updated by the part, so we don't need to update those.
+			//Rather, the part will update them on it's own update call.
+			//However, we do need to decide if we need to add those boxes to the interaction list.
+			//While we add all the boxes on the server, we only add some on the clients.
+			//This is dependent on what the current player entity is holding.
+			if(world.isClient()){
+				WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+				
+				//If the part is a seat, and we are riding it, don't add it.
+				//This keeps us from clicking our own seat when we want to click other things.
+				if(part instanceof PartSeat){
+					if(part.placementOffset.equals(locationRiderMap.inverse().get(clientPlayer))){
+						continue;
+					}
+				}
+				
+				//If the part is linked to doors, and none are open, don't add it.
+				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
+				if(areDoorsBlocking(part.placementDefinition, clientPlayer)){
+					continue;
+				}
+				
+				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
+				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){
+					continue;
+				}
+			}
+				
+			//Conditions to add have been met, add boxes.
+			allInteractionBoxes.addAll(part.interactionBoxes);
 		}
 	}
 	

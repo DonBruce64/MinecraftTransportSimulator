@@ -378,7 +378,13 @@ public class WrapperWorld{
 				//Get hitboxes hit if we are a moving source of damage.
 				if(motion != null){
 					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
-					if(entityAttacked instanceof AEntityD_Interactable){
+					if(entityAttacked instanceof AEntityE_Multipart){
+						for(BoundingBox box : ((AEntityE_Multipart<?>) entityAttacked).allInteractionBoxes){
+							if(box.getIntersectionPoint(startPoint, endPoint) != null){
+								hitBoxes.add(box);
+							}
+						}
+					}else if(entityAttacked instanceof AEntityD_Interactable){
 						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
 							if(box.getIntersectionPoint(startPoint, endPoint) != null){
 								hitBoxes.add(box);

@@ -97,9 +97,9 @@ public class InterfaceEventsOverlay{
 	    	if(InterfaceClient.inFirstPerson()){
 				if(mousedOverEntity instanceof EntityVehicleF_Physics){
 					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
-					for(BoundingBox box : vehicle.interactionBoxes){
+					for(BoundingBox box : vehicle.allInteractionBoxes){
 						if(box.isPointInside(mousedOverPoint)){
-							APart part = vehicle.getPartAtLocation(box.localCenter);
+							APart part = vehicle.getPartWithBox(box);
 							if(part instanceof PartInteractable){
 								FluidTank tank = ((PartInteractable) part).tank;
 								if(tank != null){

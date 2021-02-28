@@ -2,9 +2,7 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -15,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -111,12 +110,12 @@ public class BuilderEntity extends Entity{
 	        		//Only do this after the first tick of the entity, as we might have some states that need updating
 	        		//on that first tick that would cause bad maths.
 	        		//We also do this only every second, as it prevents excess checks.
-	        		interactionBoxes = new WrapperAABBCollective(this, interactable.interactionBoxes);
-	        		collisionBoxes = new WrapperAABBCollective(this, interactable.collisionBoxes);
+	        		interactionBoxes = new WrapperAABBCollective(this, interactable instanceof AEntityE_Multipart ? ((AEntityE_Multipart<?>) interactable).allInteractionBoxes : interactable.interactionBoxes);
+	        		collisionBoxes = new WrapperAABBCollective(this, interactable instanceof AEntityE_Multipart ? ((AEntityE_Multipart<?>) interactable).allCollisionBoxes : interactable.collisionBoxes);
 	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
 	    	    		double furthestWidthRadius = 0;
 	    	    		double furthestHeightRadius = 0;
-	    	    		for(BoundingBox box : interactable.interactionBoxes){
+	    	    		for(BoundingBox box : interactionBoxes.boxes){
 	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - interactable.position.x + box.widthRadius));
 	    	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - interactable.position.y + box.heightRadius));
 	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - interactable.position.z + box.depthRadius));
@@ -226,7 +225,7 @@ public class BuilderEntity extends Entity{
 				//it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
 				//Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
 				BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
-				for(BoundingBox box : interactable.interactionBoxes){
+				for(BoundingBox box : interactionBoxes.boxes){
 					if(box.intersects(explosiveBounds)){
 						interactable.attack(new Damage(source.damageType, amount, box, null, playerSource).setExplosive());
 					}
@@ -236,7 +235,7 @@ public class BuilderEntity extends Entity{
 				Damage damage = null;
 				//Check the damage at the current position of the attacker.
 				Point3d attackerPosition = new Point3d(attacker.posX, attacker.posY, attacker.posZ);
-				for(BoundingBox box : interactable.interactionBoxes){
+				for(BoundingBox box : interactionBoxes.boxes){
 					if(box.isPointInside(attackerPosition)){
 						damage = new Damage(source.damageType, amount, box, null, playerSource);
 						break;
@@ -302,29 +301,10 @@ public class BuilderEntity extends Entity{
 	
 	@Override
 	public ItemStack getPickedResult(RayTraceResult target){
-		if(entity instanceof EntityVehicleF_Physics){
-			EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-			for(BoundingBox box : vehicle.interactionBoxes){
-				if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
-					APart part = vehicle.getPartAtLocation(box.localCenter);
-					
-					//If the part is null, see if we clicked a part's collision box instead.
-					if(part == null){
-						for(Entry<APart, List<BoundingBox>> partCollisionEntry : vehicle.partCollisionBoxes.entrySet()){
-							for(BoundingBox collisionBox : partCollisionEntry.getValue()){
-								if(collisionBox.equals(box)){
-									part = partCollisionEntry.getKey();
-									break;
-								}
-							}
-							if(part != null){
-								break;
-							}
-						}
-					}
-					
-					//If we found a part, return it as an item.
-					if(part != null){
+		if(entity instanceof AEntityE_Multipart){
+			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+				for(BoundingBox box : part.interactionBoxes){
+					if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
 						ItemStack stack = part.getItem().getNewStack();
 						WrapperNBT partData = new WrapperNBT();
 						part.save(partData);
@@ -427,7 +407,7 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
 	    		if(boxClicked != null){
-		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, true));
+		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, true));
 	    		}else{
 	    			InterfaceCore.logError("A entity was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
@@ -452,7 +432,7 @@ public class BuilderEntity extends Entity{
     		if(event.getEntityPlayer().world.isRemote){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
     			if(boxClicked != null){
-    				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked.localCenter, false));
+    				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, false));
         		}else{
         			InterfaceCore.logError("A entity was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}

@@ -76,7 +76,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d motionApplied = new Point3d();
 	private final Point3d rotationApplied = new Point3d();
 	private final Point3d tempBoxPosition = new Point3d();
-	private final Point3d tempBoxAngles = new Point3d();
+	private final Point3d tempBoxRotation = new Point3d();
 	private final Point3d normalizedGroundVelocityVector = new Point3d();
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
@@ -332,7 +332,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		}
 		
 		//Get any contributions from the colliding collision bits.
-		for(BoundingBox box : blockCollisionBoxes){
+		for(BoundingBox box : allBlockCollisionBoxes){
 			if(!box.collidingBlockPositions.isEmpty()){
 				if(!world.isAir(box.globalCenter)){
 					float frictionLoss = 0.6F - world.getBlockSlipperiness(box.globalCenter) + world.getRainStrength(box.globalCenter)*0.1F;
@@ -650,7 +650,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Note that we need to interpolate the delta here based on actual movement, so don't use the vehicle motion!
 		//Also note we use the entire hitbox set, not just the block hitboxes.
 		if(!motionApplied.isZero() || !rotationApplied.isZero()){
-			world.moveEntities(collisionBoxes, position, angles, motionApplied, rotationApplied);
+			world.moveEntities(allCollisionBoxes, position, angles, motionApplied, rotationApplied);
 		}
 		
 		//Now add actual position and angles.
@@ -669,9 +669,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		tempBoxAngles.setTo(rotation).add(angles);
-		for(BoundingBox box : blockCollisionBoxes){
-			tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+		tempBoxRotation.setTo(rotation);
+		for(BoundingBox box : allBlockCollisionBoxes){
+			tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 			if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 				return true;
 			}
@@ -690,7 +690,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private void correctCollidingMovement(){
 		//First check the X-axis.
 		if(motion.x != 0){
-			for(BoundingBox box : blockCollisionBoxes){
+			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, true, false, false);
 				if(collisionDepth == -1){
 					return;
@@ -706,7 +706,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Do the same for the Z-axis
 		if(motion.z != 0){
-			for(BoundingBox box : blockCollisionBoxes){
+			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, false, false, true);
 				if(collisionDepth == -1){
 					return;
@@ -722,7 +722,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Now that the XZ motion has been limited based on collision we can move in the Y.
 		if(motion.y != 0){
-			for(BoundingBox box : blockCollisionBoxes){
+			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, false, true, false);
 				if(collisionDepth == -1){
 					return;
@@ -738,10 +738,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//Check the yaw.
 		if(rotation.y != 0){
-			tempBoxAngles.set(0D, rotation.y, 0D).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
+			tempBoxRotation.set(0D, rotation.y, 0D);
+			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.y != 0){
-					tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					tempBoxPosition.add(0D, 0.1D, 0D);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
@@ -759,10 +759,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		//Now do pitch.
 		//Make sure to take into account yaw as it's already been checked.
 		if(rotation.x != 0){
-			tempBoxAngles.set(rotation.x, rotation.y, 0D).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
+			tempBoxRotation.set(rotation.x, rotation.y, 0D);
+			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.x != 0){
-					tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
@@ -777,10 +777,10 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		
 		//And lastly the roll.
 		if(rotation.z != 0){
-			tempBoxAngles.setTo(rotation).add(angles);
-			for(BoundingBox box : blockCollisionBoxes){
+			tempBoxRotation.setTo(rotation);
+			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.z != 0){
-					tempBoxPosition.setTo(box.localCenter).rotateCoarse(tempBoxAngles).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}

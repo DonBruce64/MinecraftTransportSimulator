@@ -1,14 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -31,25 +27,30 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>{
-	private final Point3d hitPosition;
-	private boolean rightClick;
+	private final int hitPartLookupID;
+	private final Point3d hitBoxLocalCenter;
+	private final boolean rightClick;
 		
-	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, Point3d hitPosition, boolean rightClick){
+	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, BoundingBox hitBox, boolean rightClick){
 		super(vehicle);
-		this.hitPosition = hitPosition;
+		APart hitPart = vehicle.getPartWithBox(hitBox);
+		this.hitPartLookupID = hitPart != null ? hitPart.lookupID : -1;
+		this.hitBoxLocalCenter = hitBox.localCenter;
 		this.rightClick = rightClick;
 	}
 	
 	public PacketVehicleInteract(ByteBuf buf){
 		super(buf);
-		this.hitPosition = readPoint3dFromBuffer(buf);
+		this.hitPartLookupID = buf.readInt();
+		this.hitBoxLocalCenter = readPoint3dFromBuffer(buf);
 		this.rightClick = buf.readBoolean();
 	}
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writePoint3dToBuffer(hitPosition, buf);
+		buf.writeInt(hitPartLookupID);
+		writePoint3dToBuffer(hitBoxLocalCenter, buf);
 		buf.writeBoolean(rightClick);
 	}
 
@@ -60,40 +61,49 @@ public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>
 		ItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = player.getHeldItem();
 		
-		//Check if we clicked a part slot box.  This takes priority as part placement
-		//should always be checked before part interaction.
-		for(BoundingBox slotBox : vehicle.partSlotBoxes.keySet()){
-			if(slotBox.localCenter.equals(hitPosition)){
-				//Only owners can add vehicle parts.
-				if(!canPlayerEditVehicle){
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
-				}else{
-					//Attempt to add a part.  Vehicle is responsible for callback packet here.
-					if(heldItem instanceof ItemPart){
-						if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitPosition, false) && !player.isCreative()){				
-							player.getInventory().removeStack(heldStack, 1);
-						}
+		//Get the part we hit, if one was specified.
+		APart part = hitPartLookupID != -1 ? AEntityA_Base.getEntity(world, hitPartLookupID) : null;
+		
+		//Next, get the bounding box.  This is either from the part or the main entity.
+		BoundingBox hitBox = null;
+		for(BoundingBox box : (part != null ? part.interactionBoxes : vehicle.interactionBoxes)){
+			if(box.localCenter.equals(hitBoxLocalCenter)){
+				hitBox = box;
+				break;
+			}
+		}
+		if(hitBox == null){
+			//Try part interaction boxes, as they're not in the normal list.
+			if(part == null){
+				for(BoundingBox box : vehicle.allPartSlotBoxes.keySet()){
+					if(box.localCenter.equals(hitBoxLocalCenter)){
+						hitBox = box;
+						break;
 					}
 				}
+			}
+			
+			if(hitBox == null){
+				//Not sure how the heck this happened, but it did.
 				return false;
 			}
 		}
 		
-		//Didn't click a slot.  Check to see if we clicked a part directly.
-		//If our part is null, see if we clicked a part's collision box instead.
-		APart part = vehicle.getPartAtLocation(hitPosition);
-		if(part == null){
-			for(Entry<APart, List<BoundingBox>> partCollisionEntry : vehicle.partCollisionBoxes.entrySet()){
-				for(BoundingBox box : partCollisionEntry.getValue()){
-					if(box.localCenter.equals(hitPosition)){
-						part = partCollisionEntry.getKey();
-						break;
+		//Check if we clicked a part slot box.  This takes priority as part placement
+		//should always be checked before part interaction.
+		if(vehicle.allPartSlotBoxes.containsKey(hitBox)){
+			//Only owners can add vehicle parts.
+			if(!canPlayerEditVehicle){
+				player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+			}else{
+				//Attempt to add a part.  Vehicle is responsible for callback packet here.
+				if(heldItem instanceof ItemPart){
+					if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitBoxLocalCenter, false) && !player.isCreative()){				
+						player.getInventory().removeStack(heldStack, 1);
 					}
 				}
-				if(part != null){
-					break;
-				}
 			}
+			return false;
 		}
 		
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
@@ -107,38 +117,32 @@ public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>
 			}
 		}
 		
+		//Check if we clicked a door.
+		JSONDoor hitDoor = vehicle.allDoorBoxes.get(hitBox); 
+		if(hitDoor != null){
+			if(!hitDoor.ignoresClicks){
+				//Can't open locked vehicles.
+				if(vehicle.locked){
+					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+				}else{
+					//Open or close the clicked door.
+					if(vehicle.variablesOn.contains(hitDoor.name)){
+						vehicle.variablesOn.remove(hitDoor.name);
+					}else{
+						vehicle.variablesOn.add(hitDoor.name);
+					}
+					return true;
+				}
+			}
+			return false;
+		}
+		
 		//Not holding an item that can interact with a vehicle.  Try to interact with the vehicle itself.
 		if(part != null){
 			if(rightClick){
 				part.interact(player);
 			}else{
 				part.attack(new Damage("player", 1.0F, part.boundingBox, null, player));
-			}
-		}else{
-			//Check if we clicked a door.
-			Map<BoundingBox, JSONDoor> allDoors = new HashMap<BoundingBox, JSONDoor>();
-			allDoors.putAll(vehicle.vehicleDoorBoxes);
-			for(Map<BoundingBox, JSONDoor> doorMap : vehicle.partDoorBoxes.values()){
-				allDoors.putAll(doorMap);
-			}
-			for(Entry<BoundingBox, JSONDoor> doorEntry : allDoors.entrySet()){
-				if(doorEntry.getKey().localCenter.equals(hitPosition)){
-					if(!doorEntry.getValue().ignoresClicks){
-						//Can't open locked vehicles.
-						if(vehicle.locked){
-							player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
-						}else{
-							//Open or close the clicked door.
-							if(vehicle.variablesOn.contains(doorEntry.getValue().name)){
-								vehicle.variablesOn.remove(doorEntry.getValue().name);
-							}else{
-								vehicle.variablesOn.add(doorEntry.getValue().name);
-							}
-							return true;
-						}
-					}
-					return false;
-				}
 			}
 		}
 		return false;

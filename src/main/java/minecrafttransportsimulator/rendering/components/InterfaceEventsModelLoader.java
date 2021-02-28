@@ -75,8 +75,14 @@ public class InterfaceEventsModelLoader{
 				@Override
 				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
 					if(builder.entity != null && builder.entity instanceof AEntityC_Definable){
+						//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
+						int renderPass = InterfaceRender.getRenderPass();
+						if(renderPass == -1){
+							renderPass = 2;
+						}
+						
 						AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
-						internalEntity.getRenderer().render(internalEntity, partialTicks);
+						internalEntity.getRenderer().render(internalEntity, renderPass, partialTicks, false);
 					}
 				}
 			};
@@ -87,7 +93,13 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public void render(BuilderTileEntity builder, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 				if(builder.tileEntity != null){
-					builder.tileEntity.getRenderer().render(builder.tileEntity, partialTicks);
+					//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
+					int renderPass = InterfaceRender.getRenderPass();
+					if(renderPass == -1){
+						renderPass = 2;
+					}
+					
+					builder.tileEntity.getRenderer().render(builder.tileEntity, renderPass, partialTicks, false);
 				}
 			}
 		});

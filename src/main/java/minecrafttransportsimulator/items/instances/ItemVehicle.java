@@ -139,7 +139,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//If the core collisions are colliding, set the vehicle as dead and abort.
 			//We need to update the boxes first, however, as they haven't been updated yet.
 			newVehicle.position.y += -furthestDownPoint;
-			for(BoundingBox coreBox : newVehicle.blockCollisionBoxes){
+			for(BoundingBox coreBox : newVehicle.allBlockCollisionBoxes){
 				coreBox.updateToEntity(newVehicle, null);
 				if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't be spawned.  Bail out.

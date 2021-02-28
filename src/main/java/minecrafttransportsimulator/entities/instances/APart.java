@@ -5,9 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -27,7 +26,7 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
  * 
  * @author don_bruce
  */
-public abstract class APart extends AEntityC_Definable<JSONPart>{
+public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	private static final Point3d ZERO_POINT = new Point3d();
 	private static final AnimationsPart animator = new AnimationsPart();
 	private static RenderPart renderer;
@@ -82,6 +81,16 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 			this.parentPart = null;
 		}
 		
+		//If we are a fake part, remove collisions, doors, and the like.
+		if(isFake()){
+			collisionBoxes.clear();
+			blockCollisionBoxes.clear();
+			doorBoxes.clear();
+			interactionBoxes.clear();
+		}else{
+			interactionBoxes.add(boundingBox);
+		}
+		
 		//Create movement animation clocks.
 		if(placementDefinition.animations != null){
 			for(JSONAnimationDefinition animation : placementDefinition.animations){
@@ -113,12 +122,6 @@ public abstract class APart extends AEntityC_Definable<JSONPart>{
 	public boolean interact(WrapperPlayer player){
 		return false;
 	}
-	
-	/**
-	 * Called when the entity this part is on sees this part being attacked.
-	 * Only called on the server.
-	 */
-	public void attack(Damage damage){}
 	
 	/**
 	 * This gets called every tick by the entity after it finishes its update loop.
