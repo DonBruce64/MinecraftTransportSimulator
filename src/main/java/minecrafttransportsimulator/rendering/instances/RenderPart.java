@@ -39,7 +39,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 	
 	@Override
 	public boolean isMirrored(APart part){
-		return ((part.placementOffset.x < 0 && !part.placementDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.placementDefinition.inverseMirroring)) && !part.disableMirroring && (part.definition.ground == null || !part.definition.ground.isTread || part.placementDefinition.isSpare);
+		return ((part.placementOffset.x < 0 && !part.placementDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.placementDefinition.inverseMirroring)) && !part.disableMirroring;
 	}
 	
 	@Override
