@@ -39,8 +39,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				//Get the entity rotation.
 				Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
 		       
-		        //Set up lighting.
+		        //Set up lighting.  Set it to 1 block above, as entities can travel low and easily clip into blocks.
+				//That results in black entities.
+				++entity.position.y;
 		        InterfaceRender.setLightingToPosition(entity.position);
+		        --entity.position.y;
 		        
 		        //Use smooth shading for main model rendering.
 				GL11.glShadeModel(GL11.GL_SMOOTH);

@@ -326,7 +326,6 @@ public class VehicleGroundDeviceCollection{
 					side1Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.z);
 					side2Delta = -Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.z);
 					groundedSideOffset = Math.hypot(activeHookup.y, activeHookup.z);
-					System.out.println(side2Delta);
 					side1Delta -= groundedSideOffset;
 					side2Delta -= groundedSideOffset;
 					testBox1 = frontLeftGDB;
@@ -357,7 +356,7 @@ public class VehicleGroundDeviceCollection{
 		VehicleGroundDeviceBox testBox1 = null;
 		VehicleGroundDeviceBox testBox2 = null;
 		if(rearLeftGDB.isGrounded || frontLeftGDB.isGrounded){
-			if((!rearRightGDB.isGrounded && (!frontRightGDB.isGrounded || frontRightGDB.contactPoint.x == 0)) || (!frontRightGDB.isGrounded && (!rearRightGDB.isGrounded || rearRightGDB.contactPoint.x == 0))){
+			if((!rearRightGDB.isGrounded || rearRightGDB.contactPoint.x == 0) && (!frontRightGDB.isGrounded || frontRightGDB.contactPoint.x == 0)){
 				side1Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
 				side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
 				if(rearLeftGDB.isGrounded && !frontRightGDB.isGrounded){
@@ -372,7 +371,7 @@ public class VehicleGroundDeviceCollection{
 			}
 		}
 		if(rearRightGDB.isGrounded || frontRightGDB.isGrounded){
-			if((!rearLeftGDB.isGrounded && (!frontLeftGDB.isGrounded || frontLeftGDB.contactPoint.x == 0)) || (!frontLeftGDB.isGrounded && (!rearLeftGDB.isGrounded || rearLeftGDB.contactPoint.x == 0))){
+			if((!rearLeftGDB.isGrounded || rearLeftGDB.contactPoint.x == 0) && (!frontLeftGDB.isGrounded || frontLeftGDB.contactPoint.x == 0)){
 				side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
 				side2Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
 				if(rearRightGDB.isGrounded && !frontRightGDB.isGrounded){

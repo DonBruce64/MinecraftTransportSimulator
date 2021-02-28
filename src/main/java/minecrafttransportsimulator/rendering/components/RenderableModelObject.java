@@ -58,14 +58,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 		if(objectName.contains("&")){
 			transforms.add(new TransformLight<AnimationEntity>(modelName, objectName, vertices));
-		}
-		if(objectName.toLowerCase().contains("window")){
-			transforms.add(new TransformWindow<AnimationEntity>(vertices));
-		}
-		if(objectName.toLowerCase().contains("translucent")){
+		}else if(objectName.toLowerCase().contains("translucent")){
 			transforms.add(new TransformTranslucent<AnimationEntity>());
 		}else{
 			transforms.add(new TransformSolid<AnimationEntity>());
+		}
+		if(objectName.toLowerCase().contains("window")){
+			transforms.add(new TransformWindow<AnimationEntity>(vertices));
 		}
 		if(objectName.toLowerCase().endsWith("url")){
 			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));

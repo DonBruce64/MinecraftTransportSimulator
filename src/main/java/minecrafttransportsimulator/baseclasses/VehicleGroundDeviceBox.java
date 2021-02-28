@@ -186,6 +186,8 @@ public class VehicleGroundDeviceBox{
 		Point3d vehicleMotionOffset = vehicle.motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR);
 		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
+			contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
+			
 			solidBox.globalCenter.setTo(solidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
 			isCollided = !solidBox.collidingBlockPositions.isEmpty();
@@ -198,7 +200,6 @@ public class VehicleGroundDeviceBox{
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
 				isGrounded = !solidBox.collidingBlockPositions.isEmpty();
-				contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
 			}
 			
 			if(isCollided || isGrounded){
