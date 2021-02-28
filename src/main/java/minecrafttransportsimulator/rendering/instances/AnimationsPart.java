@@ -129,6 +129,8 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("gun_fired"): return gun.active && gun.firing && gun.cooldownTimeRemaining == gun.definition.gun.fireDelay ? 1 : 0;
 				case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
 				case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
+				case("gun_pitching"): return gun.prevOrientation.x != gun.currentOrientation.x ? 1 : 0;
+				case("gun_yawing"): return gun.prevOrientation.y != gun.currentOrientation.y ? 1 : 0;
 				case("gun_cooldown"): return gun.cooldownTimeRemaining > 0 ? 1 : 0;
 				case("gun_windup_time"): return gun.windupTimeCurrent;
 				case("gun_windup_rotation"): return gun.windupRotation;
