@@ -152,6 +152,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(propeller.currentPitch / (propeller.definition.propeller.diameter*0.75D*Math.PI)));
 				case("propeller_pitch_in"): return propeller.currentPitch;
 				case("propeller_pitch_percent"): return 1D*(propeller.currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(propeller.definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
+				case("propeller_rotation"): return propeller.getRenderingRotation(partialTicks, true).z;
 			}
 		}else if(part instanceof PartGroundDevice){
 			PartGroundDevice groundDevice = (PartGroundDevice) part;
