@@ -21,8 +21,8 @@ import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.InterfaceEventsCamera;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Class that handles all control operations.
@@ -81,10 +81,10 @@ public final class ControlSystem{
 		}
 		
 		if(zoomIn.isPressed()){
-			InterfaceEventsCamera.changeCameraZoom(true);
+			CameraSystem.changeCameraZoom(true);
 		}
 		if(zoomOut.isPressed()){
-			InterfaceEventsCamera.changeCameraZoom(false);
+			CameraSystem.changeCameraZoom(false);
 		}
 		
 		if(changeView.isPressed()){

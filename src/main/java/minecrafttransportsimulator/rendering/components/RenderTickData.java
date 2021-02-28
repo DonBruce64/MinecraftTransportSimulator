@@ -12,12 +12,10 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 public class RenderTickData{
 	private final WrapperWorld world;
 	private long[] lastTickPass = new long[]{0L, 0L, 0L};
-	private float[] lastPartialTicks = new float[] {0F, 0F, 0F};
 	private boolean doneRenderingShaders;
 	
 	public RenderTickData(WrapperWorld world){
 		this.world = world;
-		this.lastTickPass[0] = world.getTick(); 
 	}
 	
 	public boolean shouldRender(int renderPass, float partialTicks){
@@ -34,7 +32,6 @@ public class RenderTickData{
 		if(!InterfaceRender.shadersDetected || doneRenderingShaders){
 			//Rendering the actual model now.
 			lastTickPass[renderPass] = world.getTick();
-			lastPartialTicks[renderPass] = partialTicks;
 		}else if(InterfaceRender.shadersDetected && !doneRenderingShaders){
 			//Rendering shader components.  If we're on pass 1, then shaders should be done rendering this cycle.
 			if(renderPass == 1){

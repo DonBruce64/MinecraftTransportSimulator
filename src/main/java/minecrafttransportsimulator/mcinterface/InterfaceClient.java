@@ -19,6 +19,7 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceClient{
+	private static boolean lastPassFirstPerson;
 
 	/**
 	 *  Returns true if the game is paused.
@@ -38,7 +39,15 @@ public class InterfaceClient{
 	 *  Returns true if the game is in first-person mode.
 	 */
 	public static boolean inFirstPerson(){
-		return Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		//Need to check if we are really in third-person or not.
+		//Shaders cause a fake third-person render pass.
+		boolean inFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+		if(inFirstPerson || lastPassFirstPerson){
+			lastPassFirstPerson = inFirstPerson;
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -53,7 +62,7 @@ public class InterfaceClient{
 	 *  Toggles first-person mode.  This is essentially the same operation as the F5 key.
 	 */
 	public static void toggleFirstPerson(){
-		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+		if(inFirstPerson()){
 			Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
 		}else{
 			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;

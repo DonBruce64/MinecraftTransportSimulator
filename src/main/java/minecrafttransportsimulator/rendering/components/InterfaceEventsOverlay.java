@@ -22,6 +22,7 @@ import minecrafttransportsimulator.mcinterface.BuilderGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.RayTraceResult;
@@ -54,13 +55,14 @@ public class InterfaceEventsOverlay{
      * Also responsible for rendering overlays on custom cameras.  If we need to render a GUI,
      * it should be returned.  Otherwise, return null.
      */
-	 @SubscribeEvent
+	@SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){
 		 //If we have a custom camera overlay active, don't render the crosshairs or the hotbar.
-    	if(InterfaceEventsCamera.customCameraOverlay != null && (event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR))){
-    		event.setCanceled(true);
-    		return;
-    	}
+		 String cameraOverlay = CameraSystem.getOverlay();
+		 if(CameraSystem.getOverlay() != null && (event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR))){
+			 event.setCanceled(true);
+			 return;
+		 }
     	
     	//Do overlay rendering before the chat window is rendered.
     	//This rendered them over the main hotbar, but doesn't block the chat window.
@@ -82,8 +84,8 @@ public class InterfaceEventsOverlay{
 	    	
 	    	//If we have a custom camera overlay, render it.
 	    	//Don't render anything else but this if we do.
-	    	if(InterfaceEventsCamera.customCameraOverlay != null){
-				InterfaceRender.bindTexture(InterfaceEventsCamera.customCameraOverlay);
+	    	if(cameraOverlay != null){
+				InterfaceRender.bindTexture(cameraOverlay);
 				InterfaceRender.setBlendState(true, false);
 				InterfaceGUI.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
 				InterfaceRender.setBlendState(false, false);

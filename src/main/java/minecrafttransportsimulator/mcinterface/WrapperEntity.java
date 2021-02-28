@@ -198,10 +198,15 @@ public class WrapperEntity{
 	/**
 	 *  Returns a vector in the direction of the entity's line of sight,
 	 *  with a magnitude equal to the passed-in distance. 
+	 *  The returned vector  may by modified without affecting the entity's actual line of sight.
+	 *  However, the object itself may be re-used on the next call, so do not keep references to it.
 	 */
 	public Point3d getLineOfSight(double distance){
-		return (new Point3d(0D, 0D, distance)).rotateFine(new Point3d(entity.rotationPitch, 0D, 0D)).rotateFine(new Point3d(0D, -entity.rotationYaw, 0));
+		mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
+		return mutableSight.set(0,  0,  distance).rotateFine(mutableSightRotation);
 	}
+	private final Point3d mutableSight = new Point3d();
+	private final Point3d mutableSightRotation = new Point3d();
 	
 	/**
 	 *  Sets the entity's yaw to the passed-in yaw.
