@@ -37,7 +37,7 @@ public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?
 			//Get the texture from the text objects of the entity.
 			for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
 				if(textEntry.getKey().fieldName.equals(objectName)){
-					if(!textEntry.getValue().isEmpty()){
+					if(!textEntry.getValue().isEmpty() && !textEntry.getValue().contains(" ")){
 						String errorString = InterfaceRender.bindURLTexture(textEntry.getValue());
 						if(errorString != null){
 							textEntry.setValue(errorString);

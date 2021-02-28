@@ -107,7 +107,7 @@ public class GIFParser{
 	    }
 	    reader.dispose();
 
-	    return new ParsedGIF(frames);
+	    return !frames.isEmpty() ? new ParsedGIF(frames) : null;
 	}
 	
 	public static class ParsedGIF{

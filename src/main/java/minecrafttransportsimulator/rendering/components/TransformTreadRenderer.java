@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -256,9 +255,9 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 			
 			//Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
 			//We need to undo the offset of the tread part for this routine.
-			Point3d delta = entityTreadAttachedTo instanceof APart ? ((APart) entityTreadAttachedTo).localOffset.copy() : new Point3d();
-			delta.subtract(tread.localOffset);
-			GL11.glTranslated(0, delta.y, delta.z);
+			if(!(entityTreadAttachedTo instanceof APart)){
+				GL11.glTranslated(0, -tread.localOffset.y, -tread.localOffset.z);	
+			}
 			
 			for(int i=0; i<points.size() - 1; ++i){
 				//Update variables.

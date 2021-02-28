@@ -120,7 +120,12 @@ public class InterfaceRender{
 							ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
 						    ImageInputStream stream = ImageIO.createImageInputStream(url.openStream());
 						    reader.setInput(stream);
-						    animatedGIFs.put(textureURL, GIFParser.parseGIF(reader));
+						    ParsedGIF gif = GIFParser.parseGIF(reader);
+						    if(gif != null){
+						    	animatedGIFs.put(textureURL, gif);
+						    }else{
+						    	return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
+						    }
 						}else{
 							BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
 							int glTexturePointer = TextureUtil.glGenTextures();
