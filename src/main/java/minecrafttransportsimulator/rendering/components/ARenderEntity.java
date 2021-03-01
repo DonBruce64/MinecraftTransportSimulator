@@ -107,10 +107,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
 					entity.spawnParticles();
 				}
-				
-				//Render supplementals.
-				renderSupplementalModels(entity, renderPass, partialTicks);
 			}
+			
+			//Render supplementals.
+			renderSupplementalModels(entity, renderPass, partialTicks);
 		}
 	}
 	
@@ -130,10 +130,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
-	 *  If the main model needs to be skipped in rendering for any reason, return false here.
+	 *  If the main model needs to be skipped in rendering for any reason, return true here.
 	 *  This should be done in place of just leaving the {@link #renderModel(AEntityC_Definable, float)}
 	 *  method blank, as that method will do OpenGL setups which have a performance cost.  Note
-	 *  that this won't disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)} 
+	 *  that this will NOT disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)}.
 	 */
 	public boolean disableMainRendering(RenderedEntity entity, float partialTicks){
 		return false;

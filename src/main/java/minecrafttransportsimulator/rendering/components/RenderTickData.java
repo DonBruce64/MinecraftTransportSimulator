@@ -42,7 +42,7 @@ public class RenderTickData{
 		if(renderPass == 2){
 			//If we already rendered in pass 0, don't render now.
 			//Note that shaders may do operations in pass 0 for lighting, but won't render the actual model.
-			//In this case, the lastPartialTicks won't have been updated, so we do render here.
+			//In this case, the lastTickPass won't have been updated, so we do render here.
 			//We also need to reset the shader render state variable to ensure we are ready for the next cycle.
 			if(InterfaceRender.shadersDetected){
 				doneRenderingShaders = false;
