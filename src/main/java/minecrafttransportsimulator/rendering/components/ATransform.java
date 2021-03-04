@@ -25,9 +25,19 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	/**
 	 *  This method should return true if this transform should be rendered.
 	 *  By default, all transforms are rendered, but this may be overridden should
-	 *  the object this transform is on need to be made invisible.
+	 *  the object this transform is on need to be made invisible.  If this transform
+	 *  is not rendered, than all objects dependent on this one will not render either.
 	 */
 	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		return true;
+	}
+	
+	/**
+	 *  This method should return true if this transform should be rendered with the specified
+	 *  blending state.  This will disable further transforms, but will not disable rendering of
+	 *  objects that depend on this one.
+	 */
+	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
 		return true;
 	}
 	

@@ -6,6 +6,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.instances.AnimationsPoleComponent;
 import minecrafttransportsimulator.rendering.instances.RenderPoleComponent;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
  * 
@@ -22,6 +23,11 @@ public abstract class ATileEntityPole_Component extends AEntityC_Definable<JSONP
 		super(core.world, data);
 		this.core = core;
 	}
+	
+	@Override
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
+    }
 	
 	@Override
 	@SuppressWarnings("unchecked")

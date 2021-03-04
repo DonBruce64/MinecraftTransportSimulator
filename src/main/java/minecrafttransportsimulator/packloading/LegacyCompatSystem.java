@@ -88,7 +88,7 @@ public final class LegacyCompatSystem{
 		//If we still have the old type parameter and are an aircraft, set the flag to true.
 		if(definition.general.type != null){
 			if(definition.general.type.equals("plane") || definition.general.type.equals("blimp") || definition.general.type.equals("helicopter")){
-				definition.general.isAircraft = true;
+				definition.motorized.isAircraft = true;
 			}
 			definition.general.type = null;
 		}

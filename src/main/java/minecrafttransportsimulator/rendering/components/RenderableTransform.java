@@ -76,6 +76,18 @@ public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
 	}
 	
 	/**
+	 *  Returns true if this model should render with the blend state, false if not.
+	 */
+	public boolean renderModelWithBlendState(boolean blendingEnabled){
+		for(ATransform<AnimationEntity> transform : transforms){
+			if(!transform.shouldRenderWithBlendState(blendingEnabled)){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
 	 *  Does post-render transform logic.  This is transform-dependent, and should be done after rendering
 	 *  has been completed.
 	 */

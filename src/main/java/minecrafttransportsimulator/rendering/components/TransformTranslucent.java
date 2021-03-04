@@ -14,7 +14,7 @@ public class TransformTranslucent<AnimationEntity extends AEntityC_Definable<?>>
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
 		return blendingEnabled;
 	}
 

@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
  * All TileEntities are used for making pack-based blocks, so they have JSON parameters
@@ -33,6 +34,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 			rotation.y = data.getDouble("rotation");
 		}
 	}
+	
+	@Override
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
+    }
 	
 	/**
 	 *  Returns all items that make up this TE.  Used to spawn

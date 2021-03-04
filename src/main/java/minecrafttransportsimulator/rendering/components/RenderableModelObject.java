@@ -78,8 +78,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
 		if(doPreRenderTransforms(entity, blendingEnabled, partialTicks)){
-			//Render the model.
-			GL11.glCallList(displayLists.get(modelName).get(objectName));
+			if(renderModelWithBlendState(blendingEnabled)){
+				//Render the model.
+				GL11.glCallList(displayLists.get(modelName).get(objectName));
+			}
 			
 			//Do post-render logic.
 			doPostRenderTransforms(entity, blendingEnabled, partialTicks);

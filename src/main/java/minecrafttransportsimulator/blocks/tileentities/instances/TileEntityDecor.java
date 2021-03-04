@@ -8,7 +8,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
@@ -30,11 +29,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		this.boundingBoxes[2] = boundingBoxes[0];
 		this.boundingBoxes[3] = boundingBoxes[1];
 	}
-	
-	@Override
-	public boolean shouldRenderBeams(){
-    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
-    }
 	
 	@Override
 	@SuppressWarnings("unchecked")
