@@ -730,7 +730,7 @@ public class WrapperWorld{
 			            			data.setString("packID", ((AItemPack<?>) item).definition.packID);
 				            		data.setString("systemName", ((AItemPack<?>) item).definition.systemName);
 				            		if(item instanceof AItemSubTyped){
-				            			data.setString("currentSubName", ((AItemSubTyped<?>) item).subName);
+				            			data.setString("subName", ((AItemSubTyped<?>) item).subName);
 				            		}
 		            			}
 		            		}

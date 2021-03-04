@@ -179,7 +179,6 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("turn_indicator"): return (vehicle.angles.y - vehicle.prevAngles.y)/0.15F*25F;
 			case("slip"): return 75*vehicle.sideVector.dotProduct(vehicle.normalizedVelocityVector);
 			case("gear_setpoint"): return vehicle.gearUpCommand ? 1 : 0;
-			case("gear_actual"): return vehicle.gearMovementTime/((double) vehicle.definition.motorized.gearSequenceDuration);
 			case("gear_moving"): return (vehicle.gearUpCommand ? vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration : vehicle.gearMovementTime == 0) ? 1 : 0;
 			case("beacon_direction"): return vehicle.selectedBeacon != null ? vehicle.angles.getClampedYDelta(Math.toDegrees(Math.atan2(vehicle.selectedBeacon.position.x - vehicle.position.x, vehicle.selectedBeacon.position.z - vehicle.position.z))) : 0;
 			case("beacon_bearing_setpoint"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.bearing : 0;

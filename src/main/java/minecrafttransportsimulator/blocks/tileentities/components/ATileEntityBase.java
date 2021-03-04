@@ -29,9 +29,6 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		this.position.setTo(position);
 		
 		//TODO remove when packs have converted, as we previously used these fields on TEs.
-		if(subName.isEmpty()){
-			subName = data.getString("currentSubName");
-		}
 		if(rotation.y == 0){
 			rotation.y = data.getDouble("rotation");
 		}

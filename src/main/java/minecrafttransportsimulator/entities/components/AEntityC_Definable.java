@@ -51,13 +51,18 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition and current subName.
-		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
+		//TODO remove when packs have converted, as we previously used these fields on TEs.
+		this.subName = data.getString("subName");
+		if(subName.isEmpty()){
+			subName = data.getString("currentSubName");
+		}
+		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
 		if(item != null){
 			this.definition = item.definition;
-			this.subName = item.subName;
+			//this.subName = item.subName;
 		}else{
 			this.definition = generateDefaultDefinition();
-			this.subName = "";
+			//this.subName = "";
 		}
 		
 		//Load text.
