@@ -811,7 +811,7 @@ public final class LegacyCompatSystem{
 			}
 			definition.decor.width = definition.general.width;
 			definition.general.width = 0;
-			definition.decor.width = definition.general.height;
+			definition.decor.height = definition.general.height;
 			definition.general.height = 0;
 			definition.decor.depth = definition.general.depth;
 			definition.general.depth = 0;
