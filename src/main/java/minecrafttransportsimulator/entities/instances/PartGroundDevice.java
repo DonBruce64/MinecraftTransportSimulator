@@ -246,14 +246,14 @@ public class PartGroundDevice extends APart{
 		if(vehicleOn != null){
 			if(contactThisTick){
 				for(byte i=0; i<4; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(world, position, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 				}
 				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
 				contactThisTick = false;
 			}
 			if(skipAngularCalcs && vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
 				for(byte i=0; i<4; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(world, position, new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 				}
 				InterfaceRender.spawnBlockBreakParticles(position.copy().add(0, -1, 0), false);
 			}

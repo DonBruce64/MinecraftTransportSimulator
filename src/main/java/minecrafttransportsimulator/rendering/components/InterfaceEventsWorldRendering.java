@@ -2,13 +2,14 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
 import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -31,25 +32,50 @@ public class InterfaceEventsWorldRendering{
 	 */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event){
-        for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
-            if(entity instanceof BuilderEntity){
-            	Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(entity).doRender(entity, 0, 0, 0, 0, event.getPartialTicks());
-            }
-        }
-        Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();
-		double playerX = renderViewEntity.lastTickPosX + (renderViewEntity.posX - renderViewEntity.lastTickPosX) * event.getPartialTicks();
-		double playerY = renderViewEntity.lastTickPosY + (renderViewEntity.posY - renderViewEntity.lastTickPosY) * event.getPartialTicks();
-		double playerZ = renderViewEntity.lastTickPosZ + (renderViewEntity.posZ - renderViewEntity.lastTickPosZ) * event.getPartialTicks();
-        List<TileEntity> teList = Minecraft.getMinecraft().world.loadedTileEntityList; 
-		for(int i=0; i<teList.size(); ++i){
-			TileEntity tile = teList.get(i);
-			if(tile instanceof BuilderTileEntity){
-        		Vec3d delta = new Vec3d(tile.getPos()).add(-playerX, -playerY, -playerZ);
-        		//Prevent crashing on corrupted TEs.
-        		if(TileEntityRendererDispatcher.instance.getRenderer(tile) != null){
-        			TileEntityRendererDispatcher.instance.getRenderer(tile).render(tile, delta.x, delta.y, delta.z, event.getPartialTicks(), 0, 0);
-        		}
-        	}
-        }
+    	float partialTicks = event.getPartialTicks();
+    	
+    	//Enable lighting as pass -1 has that disabled.
+    	RenderHelper.enableStandardItemLighting();
+    	InterfaceRender.setLightingState(true);
+    	
+    	//Render pass 0 and 1 here manually.
+    	for(int pass=0; pass<2; ++pass){
+    		if(pass == 1){
+    			InterfaceRender.setBlend(true);
+    			GlStateManager.depthMask(false);
+    		}
+    	
+	    	for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
+	            if(entity instanceof BuilderEntity){
+	            	BuilderEntity builder = (BuilderEntity) entity;
+	            	if(builder.entity != null && builder.entity instanceof AEntityC_Definable){
+						if(builder.renderData.shouldRender()){
+							AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
+							internalEntity.getRenderer().render(internalEntity, pass == 1, partialTicks);
+						}
+					}
+	            }
+	        }
+	        
+	        List<TileEntity> teList = Minecraft.getMinecraft().world.loadedTileEntityList; 
+			for(int i=0; i<teList.size(); ++i){
+				TileEntity tile = teList.get(i);
+				if(tile instanceof BuilderTileEntity){
+					BuilderTileEntity<?> builder = (BuilderTileEntity<?>) tile;
+					if(builder.tileEntity != null && builder.renderData.shouldRender()){
+		        		builder.tileEntity.getRenderer().render(builder.tileEntity, pass == 1, partialTicks);
+					}
+				}
+	        }
+			
+			if(pass == 1){
+    			InterfaceRender.setBlend(false);
+    			GlStateManager.depthMask(true);
+    		}
+    	}
+		
+		//Turn lighting back off.
+		RenderHelper.disableStandardItemLighting();
+		InterfaceRender.setLightingState(false);
     }
 }

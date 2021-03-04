@@ -19,7 +19,7 @@ public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		//Make sure the provider has a texture for us.
 		for(JSONText text : entity.text.keySet()){
 			if(text.fieldName.equals(objectName)){
@@ -32,18 +32,16 @@ public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
-		if(InterfaceRender.getRenderPass() != 1){
-			//Get the texture from the text objects of the entity.
-			for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
-				if(textEntry.getKey().fieldName.equals(objectName)){
-					if(!textEntry.getValue().isEmpty() && !textEntry.getValue().contains(" ")){
-						String errorString = InterfaceRender.bindURLTexture(textEntry.getValue());
-						if(errorString != null){
-							textEntry.setValue(errorString);
-						}
-						return 0;
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
+		//Get the texture from the text objects of the entity.
+		for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
+			if(textEntry.getKey().fieldName.equals(objectName)){
+				if(!textEntry.getValue().isEmpty() && !textEntry.getValue().contains(" ")){
+					String errorString = InterfaceRender.bindURLTexture(textEntry.getValue());
+					if(errorString != null){
+						textEntry.setValue(errorString);
 					}
+					return 0;
 				}
 			}
 		}
@@ -51,10 +49,8 @@ public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?
 	}
 	
 	@Override
-	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
-		if(InterfaceRender.getRenderPass() != 1){
-			//Un-bind the URL texture.
-			InterfaceRender.recallTexture();
-		}
+	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		//Un-bind the URL texture.
+		InterfaceRender.recallTexture();
 	}
 }

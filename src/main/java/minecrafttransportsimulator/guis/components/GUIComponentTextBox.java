@@ -152,12 +152,12 @@ public class GUIComponentTextBox{
     		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && AGUIBase.inClockPeriod(20, 10)){
-    				InterfaceGUI.drawBasicText(flashText, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				InterfaceGUI.drawBasicText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
     			}else{
-    				InterfaceGUI.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
     			}
     		}else{
-    			InterfaceGUI.drawBasicText(text, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, TextPosition.LEFT_ALIGNED, width);
+    			InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, TextPosition.LEFT_ALIGNED, width);
     		}
     	}
     }

@@ -63,13 +63,13 @@ public class GUITextEditor extends AGUIBase{
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textObject = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), textLines.get(i), TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), textLines.get(i), textObject.fontName, TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
 					@Override
 					public void renderText(){
 						GL11.glPushMatrix();
 						GL11.glTranslatef(x, y, 0);
 						GL11.glScalef(64F/16F, 64F/16F, 64F/16F);
-						InterfaceGUI.drawScaledText(text, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
+						InterfaceGUI.drawScaledText(text, fontName, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
 						GL11.glPopMatrix();
 				    }
 				};

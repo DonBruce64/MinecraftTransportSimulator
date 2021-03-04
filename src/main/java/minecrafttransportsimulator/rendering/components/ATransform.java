@@ -27,7 +27,7 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  By default, all transforms are rendered, but this may be overridden should
 	 *  the object this transform is on need to be made invisible.
 	 */
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		return true;
 	}
 	
@@ -36,14 +36,14 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  from being rendered. This allows disabling certain animations if this animation's
 	 *  criteria are met.
 	 */
-	public boolean shouldInhibit(AnimationEntity entity, float partialTicks){
+	public boolean shouldInhibit(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		return false;
 	}
 	
 	/*
 	 *  This method should return true if this transform should negate a previous inhibitor.
 	 */
-	public boolean shouldActivate(AnimationEntity entity, float partialTicks){
+	public boolean shouldActivate(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		return false;
 	}
 	
@@ -52,13 +52,13 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  Passed-in offset may or may not be used depending on the transform.
 	 *  Returned offset should be able to be fed to the next transform down the JSON for its use, if required.
 	 */
-	public abstract double applyTransform(AnimationEntity entity, float partialTicks, double offset);
+	public abstract double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset);
 	
 	/**
 	 *  This method allows for post-render logic.  This allows for additional transforms,
 	 *  or transform clean-up (say if lighting was modified).
 	 */
-	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){};
+	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){};
 	
 	/**
 	 *  Returns the current animation clock for the passed-in entity.  Clocks are not shared between

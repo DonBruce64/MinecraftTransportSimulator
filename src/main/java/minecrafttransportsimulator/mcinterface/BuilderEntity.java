@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
+import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -77,12 +78,17 @@ public class BuilderEntity extends Entity{
 	private WrapperAABBCollective interactionBoxes;
 	/**Collective for collision boxes.  These are used by this entity to make things collide with it.**/
 	private WrapperAABBCollective collisionBoxes;
+	/**Render data to help us render on the proper tick and time.**/
+	public final RenderTickData renderData;
 	
 	public BuilderEntity(World world){
 		super(world);
 		if(world.isRemote){
 			requestDataFromServer = true;
 		}
+		
+		//Create render data if we are on the client.
+		this.renderData = world.isRemote ? new RenderTickData(world) : null;
 	}
     
     @Override

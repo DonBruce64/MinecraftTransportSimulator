@@ -13,17 +13,13 @@ public class TransformSolid<AnimationEntity extends AEntityC_Definable<?>> exten
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
-		return InterfaceRender.getRenderPass() != 1;
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		return !blendingEnabled;
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
-		return offset;
-	}
-	
-	@Override
-	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//Do nothing.
+		return 0;
 	}
 }

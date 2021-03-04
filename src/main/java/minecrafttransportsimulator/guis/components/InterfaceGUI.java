@@ -1,9 +1,13 @@
 package minecrafttransportsimulator.guis.components;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
@@ -15,8 +19,11 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -26,8 +33,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 * @author don_bruce
 */
 public class InterfaceGUI{
-	private static FontRenderer fontRenderer;
 	private static RenderItem itemRenderer;
+	private static Map<String, FontRenderer> fontRenderers = new HashMap<String, FontRenderer>();
 	
 	/**
 	 *  Draws the item's tooltip on the GUI.  This should be
@@ -35,7 +42,8 @@ public class InterfaceGUI{
 	 *  behind other components.
 	 */
 	public static void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack){
-		List<String> tooltipText = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+		Minecraft mc = Minecraft.getMinecraft();
+		List<String> tooltipText = stack.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
         for(int i = 0; i < tooltipText.size(); ++i){
             if(i == 0){
                 tooltipText.set(i, tooltipText.get(i));
@@ -43,7 +51,7 @@ public class InterfaceGUI{
                 tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
             }
         }
-		GuiUtils.drawHoveringText(stack, tooltipText, mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
+		GuiUtils.drawHoveringText(stack, tooltipText, mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height, -1, mc.fontRenderer);
 	}
 	
 	/**
@@ -53,20 +61,78 @@ public class InterfaceGUI{
 	 *  binding of this method from conflicting from other renders.
 	 */
 	public static void drawGenericTooltip(AGUIBase gui, int mouseX, int mouseY, String tooltip){
-		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, -1, fontRenderer);
+		Minecraft mc = Minecraft.getMinecraft();
+		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height, -1, mc.fontRenderer);
 	}
 	
 	/**
-	 *  Draws the specified text using the MC fontRenderer.  This method can render the text in multiple ways depending
+	 *  Helper method for getting the font renderer for a font.
+	 */
+	private static FontRenderer getRenderer(String fontName){
+		FontRenderer fontRenderer = fontRenderers.get(fontName);
+		if(fontRenderer == null){
+			if(fontName != null){
+				fontRenderer = new CustomFontRenderer(fontName);
+			}else{
+				fontRenderer = Minecraft.getMinecraft().fontRenderer;
+			}
+			fontRenderers.put(fontName, fontRenderer);
+		}
+		return fontRenderer;
+	}
+	
+	private static class CustomFontRenderer extends FontRenderer{
+		private final String fontName;
+		
+		public CustomFontRenderer(String fontName){
+			super(Minecraft.getMinecraft().gameSettings, new ResourceLocation(fontName + ".png"), Minecraft.getMinecraft().renderEngine, false);
+			this.fontName = fontName;
+			
+			//Manually parse glyph sizes because MC hard-codes it like a stupid game.
+			readGlyphSizes();
+		}
+		
+		@Override
+		public void onResourceManagerReload(IResourceManager resourceManager){
+	        super.onResourceManagerReload(resourceManager);
+	        this.readGlyphSizes();
+	    }
+		
+		private void readGlyphSizes(){
+			IResource iresource = null;
+			try{
+				//Try custom sizes.
+	            iresource = getResource(new ResourceLocation(fontName + ".bin"));
+	            iresource.getInputStream().read(this.glyphWidth);
+	            return;
+	        }catch(IOException ioexception){
+	        	//Do nothing.  Try normal sizes later.
+	        }finally{
+	            IOUtils.closeQuietly(iresource);
+	        }
+			
+			try{
+        		//Try normal sizes.
+                iresource = getResource(new ResourceLocation("font/glyph_sizes.bin"));
+                iresource.getInputStream().read(this.glyphWidth);
+            }catch (IOException ioexception){
+                throw new RuntimeException(ioexception);
+            }finally{
+                IOUtils.closeQuietly(iresource);
+            }
+		}
+	};
+	
+	/**
+	 *  Draws the specified text using the font passed-in.  May be null to use the default font as specified by MC
+	 *  or loaded by the current ResourcePack..  This method can render the text in multiple ways depending
 	 *  on the parameters passed-in.  If a centered string is specified, then the point passed-in should be  the center 
 	 *  point of the string, rather that the top-left of the string like normal.  If wrapWidth is anything else but 0, 
 	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
 	 *  will be bound, so take care when calling this method in the middle of rendering operations.
 	 */
-	public static void drawBasicText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
-		if(fontRenderer == null){
-			fontRenderer = Minecraft.getMinecraft().fontRenderer;
-		}
+	public static void drawBasicText(String text, String customFontName, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
+		FontRenderer fontRenderer = getRenderer(customFontName);
 		if(renderPosition.equals(TextPosition.CENTERED)){
 			if(wrapWidth == 0){
 				x -= fontRenderer.getStringWidth(text)/2;
@@ -93,12 +159,8 @@ public class InterfaceGUI{
 	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
-	public static void drawScaledText(String text, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
-		//Get font renderer, if we don't have it yet.
-		if(fontRenderer == null){
-			fontRenderer = Minecraft.getMinecraft().fontRenderer;
-		}
-		
+	public static void drawScaledText(String text, String customFontName, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
+		FontRenderer fontRenderer = getRenderer(customFontName);
 		//Check for auto-scaling.
 		float heightOffset = 0F;
 		if(autoScaled){
@@ -128,15 +190,15 @@ public class InterfaceGUI{
 			GL11.glTranslatef(x, y + heightOffset, 0);
 		}
 		GL11.glScalef(scale, scale, scale);
-		drawBasicText(text, 0, 0, color, TextPosition.LEFT_ALIGNED, wrapWidth);
+		drawBasicText(text, customFontName, 0, 0, color, TextPosition.LEFT_ALIGNED, wrapWidth);
 		GL11.glPopMatrix();
 	}
 	
 	/**
 	 *  Returns the width of the passed-in text string.
 	 */
-	public static int getStringWidth(String text){
-		return fontRenderer.getStringWidth(text);
+	public static int getStringWidth(String text, String fontName){
+		return getRenderer(fontName).getStringWidth(text);
 	}
 	
 	/**
@@ -166,13 +228,13 @@ public class InterfaceGUI{
 			GL11.glScalef(scale, scale, scale);
 			itemRenderer.renderItemAndEffectIntoGUI(stack, 0, 0);
 			if(stack.getCount() > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, stack, 0, 0);
+				itemRenderer.renderItemOverlays(Minecraft.getMinecraft().fontRenderer, stack, 0, 0);
 			}
 			GL11.glPopMatrix();
 		}else{
 			itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
 			if(stack.getCount() > 1){
-				itemRenderer.renderItemOverlays(fontRenderer, stack, x, y);
+				itemRenderer.renderItemOverlays(Minecraft.getMinecraft().fontRenderer, stack, x, y);
 			}
 		}
 	}

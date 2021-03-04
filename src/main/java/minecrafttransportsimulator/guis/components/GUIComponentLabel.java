@@ -15,6 +15,7 @@ public class GUIComponentLabel{
 	public final int x;
 	public final int y;
 	public final Color color;
+	public final String fontName;
 	public final TextPosition renderMode;
 	public final int wrapWidth;
 	public final float scale;
@@ -26,14 +27,15 @@ public class GUIComponentLabel{
 	private GUIComponentTextBox box;
 
 	public GUIComponentLabel(int x, int y, Color color, String text){
-		this(x, y, color, text, TextPosition.LEFT_ALIGNED, 0, 1.0F, false);
+		this(x, y, color, text, null, TextPosition.LEFT_ALIGNED, 0, 1.0F, false);
 	}
 	
-	public GUIComponentLabel(int x, int y, Color color, String text, TextPosition renderMode, int wrapWidth, float scale, boolean autoScale){
+	public GUIComponentLabel(int x, int y, Color color, String text, String fontName, TextPosition renderMode, int wrapWidth, float scale, boolean autoScale){
 		this.x = x;
 		this.y = y;
 		this.color = color;
 		this.text = text;
+		this.fontName = fontName;
 		this.renderMode = renderMode;
 		this.autoScale = autoScale;
 		this.scale = scale;
@@ -66,7 +68,7 @@ public class GUIComponentLabel{
 	 */
     public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
-			InterfaceGUI.drawScaledText(text, x, y, color, renderMode, wrapWidth, scale, autoScale);
+			InterfaceGUI.drawScaledText(text, fontName, x, y, color, renderMode, wrapWidth, scale, autoScale);
 		}
     }
 }

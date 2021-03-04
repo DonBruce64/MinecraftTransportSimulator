@@ -19,11 +19,11 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	}
 	
 	@Override
-	protected void renderSupplementalModels(TileEntityPole pole, int renderPass, float partialTicks){
+	protected void renderSupplementalModels(TileEntityPole pole, boolean blendingEnabled, float partialTicks){
 		for(Axis axis : Axis.values()){
 			if(pole.components.containsKey(axis)){
 				ATileEntityPole_Component component = pole.components.get(axis);
-				component.getRenderer().render(component, renderPass, partialTicks, true);
+				component.getRenderer().render(component, blendingEnabled, partialTicks);
 			}
 		}
 	}

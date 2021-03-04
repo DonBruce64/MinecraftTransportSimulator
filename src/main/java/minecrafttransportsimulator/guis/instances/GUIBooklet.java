@@ -54,7 +54,7 @@ public class GUIBooklet extends AGUIBase{
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
 		for(JSONText text : booklet.definition.booklet.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, text.fontName, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -98,7 +98,7 @@ public class GUIBooklet extends AGUIBase{
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, Color.decode(text.color), text.defaultText, text.fontName, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
@@ -196,7 +196,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		InterfaceGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		InterfaceGUI.drawBasicText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, Color.decode(booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color), centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
 	    	}
 	    }
 	}

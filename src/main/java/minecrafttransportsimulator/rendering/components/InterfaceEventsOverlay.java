@@ -86,9 +86,9 @@ public class InterfaceEventsOverlay{
 	    	//Don't render anything else but this if we do.
 	    	if(cameraOverlay != null){
 				InterfaceRender.bindTexture(cameraOverlay);
-				InterfaceRender.setBlendState(true, false);
+				InterfaceRender.setBlend(true);
 				InterfaceGUI.renderSheetTexture(0, 0, screenWidth, screenHeight, 0.0F, 0.0F, 1.0F, 1.0F, 1, 1);
-				InterfaceRender.setBlendState(false, false);
+				InterfaceRender.setBlend(false);
 				return;
 			}
 	    	
@@ -104,7 +104,7 @@ public class InterfaceEventsOverlay{
 								FluidTank tank = ((PartInteractable) part).tank;
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-									InterfaceGUI.drawBasicText(tankText, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
+									InterfaceGUI.drawBasicText(tankText, null, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
 								}
 							}
 						}
@@ -121,12 +121,12 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							InterfaceGUI.drawBasicText("Active Gun:", screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							InterfaceGUI.drawBasicText("Active Gun:", null, screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							}else{
-								InterfaceGUI.drawBasicText("None", screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								InterfaceGUI.drawBasicText("None", null, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							}
 						}
 						
@@ -153,7 +153,7 @@ public class InterfaceEventsOverlay{
 			        		//We don't want to enable blending though, as that's on-demand.
 			        		//Just in case it is enabled, however, disable it.
 			        		//This ensures the blending state is as it will be for the main rendering pass of -1.
-			        		GL11.glDisable(GL11.GL_BLEND);
+			        		InterfaceRender.setBlend(false);
 			        		GL11.glEnable(GL11.GL_ALPHA_TEST);
 			        		
 			        		//Draw the GUI.
@@ -161,7 +161,7 @@ public class InterfaceEventsOverlay{
 			        		
 			        		//Pop the matrix, and set blending and lighting back to normal.
 			        		GL11.glPopMatrix();
-			        		GL11.glEnable(GL11.GL_BLEND);
+			        		InterfaceRender.setBlend(true);
 			        		InterfaceRender.setInternalLightingState(false);
 			        		
 			        		//Return to prevent resetting the GUI.

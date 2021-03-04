@@ -15,13 +15,13 @@ public class TransformVisibile<AnimationEntity extends AEntityC_Definable<?>> ex
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		double value = definition.offset + entity.getAnimator().getAnimatedVariableValue(entity, definition, 0, getClock(entity), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity provider, boolean blendingEnabled, float partialTicks, double offset){
 		//Do nothing.
 		return 0;
 	}

@@ -75,24 +75,26 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(AnimationEntity entity, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
+	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
-		if(doPreRenderTransforms(entity, partialTicks)){
+		if(doPreRenderTransforms(entity, blendingEnabled, partialTicks)){
 			//Render the model.
 			GL11.glCallList(displayLists.get(modelName).get(objectName));
 			
 			//Do post-render logic.
-			doPostRenderTransforms(entity, partialTicks);
+			doPostRenderTransforms(entity, blendingEnabled, partialTicks);
 			
 			//Render text on this object.
-			if(InterfaceRender.renderTextMarkings(entity, objectName)){
-				InterfaceRender.recallTexture();
+			if(!blendingEnabled){
+				if(InterfaceRender.renderTextMarkings(entity, objectName)){
+					InterfaceRender.recallTexture();
+				}
 			}
 			
 			//Render any parts that depend on us before we pop our state.
 			for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
 				if(objectName.equals(modelObject.applyAfter)){
-					modelObject.render(entity, partialTicks, allObjects);
+					modelObject.render(entity, blendingEnabled, partialTicks, allObjects);
 				}
 			}
 		}

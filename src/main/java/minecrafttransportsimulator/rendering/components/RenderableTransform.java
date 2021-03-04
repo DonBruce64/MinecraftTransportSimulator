@@ -49,25 +49,25 @@ public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  Does all the transforms for this object.  If the object should render, return true. 
 	 *  If the object should not render due to a transform, return false.
 	 */
-	public boolean doPreRenderTransforms(AnimationEntity entity, float partialTicks){
+	public boolean doPreRenderTransforms(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		double priorOffset = 0;
 		boolean inhibitAnimations = false;
 		for(ATransform<AnimationEntity> transform : transforms){
 			if(inhibitAnimations){
-				if(transform.shouldActivate(entity, partialTicks)){
+				if(transform.shouldActivate(entity, blendingEnabled, partialTicks)){
 					inhibitAnimations = false;
 				}
 			}else{
-				if(transform.shouldInhibit(entity, partialTicks)){
+				if(transform.shouldInhibit(entity, blendingEnabled, partialTicks)){
 					inhibitAnimations = true;
-				}else if(!transform.shouldRender(entity, partialTicks)){
+				}else if(!transform.shouldRender(entity, blendingEnabled, partialTicks)){
 					return false;
 				}else{
 					//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
 					if(transform.definition != null && transform.definition.addPriorOffset){
-						priorOffset = transform.applyTransform(entity, partialTicks, priorOffset);
+						priorOffset = transform.applyTransform(entity, blendingEnabled, partialTicks, priorOffset);
 					}else{
-						priorOffset = transform.applyTransform(entity, partialTicks, 0);
+						priorOffset = transform.applyTransform(entity, blendingEnabled, partialTicks, 0);
 					}
 				}
 			}
@@ -79,9 +79,9 @@ public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  Does post-render transform logic.  This is transform-dependent, and should be done after rendering
 	 *  has been completed.
 	 */
-	public void doPostRenderTransforms(AnimationEntity entity, float partialTicks){
+	public void doPostRenderTransforms(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		for(ATransform<AnimationEntity> transform : transforms){
-			transform.doPostRenderLogic(entity, partialTicks);
+			transform.doPostRenderLogic(entity, blendingEnabled, partialTicks);
 		}
 	}
 }

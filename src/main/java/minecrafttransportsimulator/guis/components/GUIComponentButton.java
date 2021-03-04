@@ -116,7 +116,7 @@ public abstract class GUIComponentButton{
 	 */
     public void renderText(){
     	if(visible){
-    		InterfaceGUI.drawBasicText(text, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+    		InterfaceGUI.drawBasicText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, Color.DARK_GRAY, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
     	}
     }
     

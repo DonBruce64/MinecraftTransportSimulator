@@ -25,93 +25,93 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
 	 *  After this, the main model rendering method is called.
 	 */
-	public final void render(RenderedEntity entity, int renderPass, float partialTicks, boolean isSupplemental){
+	public final void render(RenderedEntity entity, boolean blendingEnabled, float partialTicks){
 		//If we need to render, do so now.
-		if(isSupplemental || entity.renderData.shouldRender(renderPass, partialTicks)){
-			if(!disableMainRendering(entity, partialTicks)){
-				//Get the render offset.
-				//This is the interpolated movement, plus the prior position.
-				Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
-				
-				//Subtract the entity's position by the render entity position to get the delta for translating.
-				entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
-				
-				//Get the entity rotation.
-				Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
-		       
-		        //Set up lighting.  Set it to 1 block above, as entities can travel low and easily clip into blocks.
-				//That results in black entities.
-				++entity.position.y;
-		        InterfaceRender.setLightingToPosition(entity.position);
-		        --entity.position.y;
-		        
-		        //Use smooth shading for main model rendering.
-				GL11.glShadeModel(GL11.GL_SMOOTH);
-		        
-		        //Push the matrix on the stack and translate and rotate to the enitty's position.
-				adjustPositionRotation(entity, partialTicks, entityPositionDelta, entityRotation);
-				GL11.glPushMatrix();
-		        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-		        GL11.glRotated(entityRotation.y, 0, 1, 0);
-		        GL11.glRotated(entityRotation.x, 1, 0, 0);
-		        GL11.glRotated(entityRotation.z, 0, 0, 1);
-				
-		        //Render the main model.
-		        InterfaceRender.setTexture(getTexture(entity));
-		        String modelLocation = entity.definition.getModelLocation();
-		        if(!objectLists.containsKey(modelLocation)){
-		        	parseModel(entity, modelLocation);
-		        }
-		        
-		        boolean mirrored = isMirrored(entity);
-        		if(mirrored){
-        			GL11.glScalef(-1.0F, 1.0F, 1.0F);
-        			GL11.glCullFace(GL11.GL_FRONT);
-        		}
-				
-				//Render all modelObjects.
-				List<RenderableModelObject<RenderedEntity>> modelObjects = objectLists.get(modelLocation);
-				for(RenderableModelObject<RenderedEntity> modelObject : modelObjects){
-					if(modelObject.applyAfter == null){
-						modelObject.render(entity, partialTicks, modelObjects);
-					}
-				}
-				
-				//Render any additional model bits before we render text.
-				renderAdditionalModels(entity, partialTicks);
-				
-				//Render any static text.
-				InterfaceRender.renderTextMarkings(entity, null);
-				
-				//End rotation render matrix and reset states.
-				if(mirrored){
-					GL11.glCullFace(GL11.GL_BACK);
-				}
-				GL11.glShadeModel(GL11.GL_FLAT);
-				GL11.glPopMatrix();
-				InterfaceRender.resetStates();
-				
-				//Render bounding boxes for parts and collision points.
-				if(InterfaceRender.shouldRenderBoundingBoxes() && entity instanceof AEntityD_Interactable){
-					//Set states for box render.
-					InterfaceRender.setLightingState(false);
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					GL11.glLineWidth(3.0F);
-					renderBoundingBoxes(entity, entityPositionDelta);
-					GL11.glLineWidth(1.0F);
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-					InterfaceRender.setLightingState(true);
-				}
-				
-				//Spawn particles, if we aren't paused and this is the main render pass.
-				if(InterfaceRender.getRenderPass() != 1 && !InterfaceClient.isGamePaused()){
-					entity.spawnParticles();
+		if(!disableMainRendering(entity, partialTicks)){
+			//Get the render offset.
+			//This is the interpolated movement, plus the prior position.
+			Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
+			
+			//Subtract the entity's position by the render entity position to get the delta for translating.
+			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+			
+			//Get the entity rotation.
+			Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
+	       
+	        //Set up lighting.  Set it to 1 block above, as entities can travel low and easily clip into blocks.
+			//That results in black entities.
+			++entity.position.y;
+	        InterfaceRender.setLightingToPosition(entity.position);
+	        --entity.position.y;
+	        
+	        //Use smooth shading for main model rendering.
+			GL11.glShadeModel(GL11.GL_SMOOTH);
+	        
+	        //Push the matrix on the stack and translate and rotate to the enitty's position.
+			adjustPositionRotation(entity, partialTicks, entityPositionDelta, entityRotation);
+			GL11.glPushMatrix();
+	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
+	        GL11.glRotated(entityRotation.y, 0, 1, 0);
+	        GL11.glRotated(entityRotation.x, 1, 0, 0);
+	        GL11.glRotated(entityRotation.z, 0, 0, 1);
+			
+	        //Render the main model.
+	        InterfaceRender.setTexture(getTexture(entity));
+	        String modelLocation = entity.definition.getModelLocation();
+	        if(!objectLists.containsKey(modelLocation)){
+	        	parseModel(entity, modelLocation);
+	        }
+	        
+	        boolean mirrored = isMirrored(entity);
+    		if(mirrored){
+    			GL11.glScalef(-1.0F, 1.0F, 1.0F);
+    			GL11.glCullFace(GL11.GL_FRONT);
+    		}
+			
+			//Render all modelObjects.
+			List<RenderableModelObject<RenderedEntity>> modelObjects = objectLists.get(modelLocation);
+			for(RenderableModelObject<RenderedEntity> modelObject : modelObjects){
+				if(modelObject.applyAfter == null){
+					modelObject.render(entity, blendingEnabled, partialTicks, modelObjects);
 				}
 			}
 			
-			//Render supplementals.
-			renderSupplementalModels(entity, renderPass, partialTicks);
+			//Render any additional model bits before we render text.
+			renderAdditionalModels(entity, blendingEnabled, partialTicks);
+			
+			//Render any static text.
+			if(!blendingEnabled){
+				InterfaceRender.renderTextMarkings(entity, null);
+			}
+			
+			//End rotation render matrix and reset states.
+			if(mirrored){
+				GL11.glCullFace(GL11.GL_BACK);
+			}
+			GL11.glShadeModel(GL11.GL_FLAT);
+			GL11.glPopMatrix();
+			InterfaceRender.resetStates();
+			
+			//Render bounding boxes for parts and collision points.
+			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes() && entity instanceof AEntityD_Interactable){
+				//Set states for box render.
+				InterfaceRender.setLightingState(false);
+				InterfaceRender.setTextureState(false);
+				GL11.glLineWidth(3.0F);
+				renderBoundingBoxes(entity, entityPositionDelta);
+				GL11.glLineWidth(1.0F);
+				InterfaceRender.setTextureState(true);
+				InterfaceRender.setLightingState(true);
+			}
+			
+			//Spawn particles, if we aren't paused and this is the main render pass.
+			if(!blendingEnabled && !InterfaceClient.isGamePaused()){
+				entity.spawnParticles();
+			}
 		}
+		
+		//Render supplementals.
+		renderSupplementalModels(entity, blendingEnabled, partialTicks);
 	}
 	
 	/**
@@ -159,13 +159,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Called after the main model objects have been rendered on this entity, but before the states for setting up the render have
 	 *  been reset.  At this point, the texture will still be bound, which allows for additional rendering if so desired.
 	 */
-	public void renderAdditionalModels(RenderedEntity entity, float partialTicks){}
+	public void renderAdditionalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
 	
 	/**
 	 *  Called to render supplemental models on this entity.  Used mainly for entities that have other entities
 	 *  on them that need to render with the main entity.
 	 */
-	protected void renderSupplementalModels(RenderedEntity entity, int renderPass, float partialTicks){}
+	protected void renderSupplementalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
 	
 	/**
 	 *  Renders the bounding boxes for the entity collision.

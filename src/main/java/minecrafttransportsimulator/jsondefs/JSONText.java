@@ -20,6 +20,9 @@ public class JSONText{
 	@JSONDescription("The name for this text field.  If two text fields share a name, then they both will be combined in the text GUI into one entry, and changing the text in the GUI will affect both of them.  Useful for license plates and route signs.\nNote: if this object is part of text-based rendering system, this defines which variable is displayed.")
 	public String fieldName;
 	
+	@JSONDescription("An optional path to a font to use for this field.  If included, this text will be rendered with this font rather than the default font.  Valid only for ASCII.  Format is [packID:textures/fontname].  Fonts then go in the assets/packID/textures folder with the proper name.  If you have a bin file for the font, name it the same, just with the .bin extension.")
+	public String fontName;
+	
 	@JSONRequired
 	@JSONDescription("The default text to display.  This is what the field will have when the model is first placed down, and will persist until a player changes it.  Required, but may be blank.")
     public String defaultText;

@@ -103,16 +103,22 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 2/3 power.
-		double electricPower = entity.getLightPower();
-		setLightupTextureState(entity.variablesOn.contains(type.lowercaseName), (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1));
+		//Only do this for normal passes.
+		if(!blendingEnabled){
+			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
+			double electricPower = entity.getLightPower();
+			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
+			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
+			InterfaceRender.setLightingState(!(lightActuallyOn && electricFactor > 0));
+		}
 		return 0;
 	}
 	
 	@Override
-	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
+	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		//We cheat here and render our light bits at this point.
 		//It's safe to do this, as we'll already have applied all the other transforms we need, and
 		//we'll have rendered the object so we can safely change textures.
@@ -125,16 +131,16 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		
 		//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
 		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams());
+		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams(), blendingEnabled);
 	}
 	
 	/**
 	 *  Renders this light based on the state of the lighting at the passed-in position.  This main call can be used for
 	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes, though -1 is a combination of 0 and 1.
 	 */
-	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness, boolean beamEnabled){
-		//Render the texture, color, and cover in pass 0 or -1 as we don't want blending.
-		if(InterfaceRender.getRenderPass() != 1){
+	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness, boolean beamEnabled, boolean blendingEnabled){
+		//Render the texture, color, and cover in the solid pass.
+		if(!blendingEnabled){
 			//Render the color portion of the light if required and we have power.
 			//We use electricFactor as color shows up even in daylight.
 			if(renderColor && lightOn && electricFactor > 0){
@@ -149,7 +155,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsPass0.value ? InterfaceRender.getRenderPass() != 1 : InterfaceRender.getRenderPass() != 0); 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsPass0.value ? !blendingEnabled : blendingEnabled); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
@@ -164,11 +170,8 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness));
 		}
 		
-		//Set color back to normal, turn off blending, turn on lighting, and un-bind the light textures.
-		//This resets the operations in here for other transforms.
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		InterfaceRender.setBlendState(false, false);
-		InterfaceRender.setLightingState(true);
+		//Reset states and recall texture.
+		InterfaceRender.resetStates();
 		InterfaceRender.recallTexture();
 	}
 	
@@ -179,15 +182,6 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	protected boolean isFlashingLightOn(){
 		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
 		return ((flashBits >> (20*System.currentTimeMillis()/1000)%20) & 1) > 0;
-	}
-	
-	/**
-	 *  Sets the lighting status for light-up texture rendering.  Has no effect if such rendering isn't part of this light.
-	 */
-	public void setLightupTextureState(boolean lightOn, float electricFactor){
-		if(InterfaceRender.getRenderPass() != 1 && isLightupTexture){
-			InterfaceRender.setLightingState(!(lightOn && isFlashingLightOn() && electricFactor > 0));
-		}
 	}
 	
 	/**
@@ -236,7 +230,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private void renderFlare(float alphaValue){
 		InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
 		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendState(true, ConfigSystem.configObject.clientRendering.flareBlending.value);
+		InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.flareBlending.value);
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(int i=0; i<centerPoints.length; ++i){
@@ -261,7 +255,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private void renderBeam(float alphaValue){
 		InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
 		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendState(true, ConfigSystem.configObject.clientRendering.beamBlending.value);
+		InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.beamBlending.value);
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.

@@ -38,7 +38,7 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, EntityVehicleF_Physics vehicle){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, EntityVehicleF_Physics vehicle, boolean blendingEnabled){
 		//First bind the texture file for this insturment's pack.
 		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
@@ -50,7 +50,7 @@ public final class RenderInstrument{
 			Component component = instrument.definition.components.get(i);
 			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
 			//If the overlay lights up, only render it when the lights are on.
-			if(component.overlayTexture ? (!component.lightUpTexture || lightsOn) && InterfaceRender.getRenderPass() != 0 : InterfaceRender.getRenderPass() != 1){
+			if((component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value) ? (!component.lightUpTexture || lightsOn) && blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
@@ -65,10 +65,10 @@ public final class RenderInstrument{
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
 						InterfaceRender.setLightingState(false);
-						InterfaceGUI.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 						InterfaceRender.setLightingState(true);
 					}else{
-						InterfaceGUI.drawScaledText(text, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 					}
 					InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
 					InterfaceRender.recallTexture();
@@ -225,19 +225,12 @@ public final class RenderInstrument{
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
 						
 						//If the shape is lit, disable lighting.
-						//If the shape is an overlay, do blending.
 						if(component.lightUpTexture && lightsOn){
 							InterfaceRender.setLightingState(false);
-						}
-						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value){
-							GL11.glEnable(GL11.GL_BLEND);
-						}	
-						renderSquareUV(component.textureWidth, component.textureHeight);
-						if(component.lightUpTexture && lightsOn){
+							renderSquareUV(component.textureWidth, component.textureHeight);
 							InterfaceRender.setLightingState(true);
-						}
-						if(component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value && InterfaceRender.getRenderPass() != 1){
-							GL11.glDisable(GL11.GL_BLEND);
+						}else{
+							renderSquareUV(component.textureWidth, component.textureHeight);
 						}
 					}
 				}

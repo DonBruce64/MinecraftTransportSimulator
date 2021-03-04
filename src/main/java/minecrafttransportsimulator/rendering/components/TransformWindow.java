@@ -19,34 +19,30 @@ public class TransformWindow<AnimationEntity extends AEntityC_Definable<?>> exte
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		return ConfigSystem.configObject.clientRendering.renderWindows.value;
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
-		if(InterfaceRender.getRenderPass() != 1){
-			InterfaceRender.bindTexture("mts:textures/rendering/glass.png");
-		}
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
+		InterfaceRender.bindTexture("mts:textures/rendering/glass.png");
 		return 0;
 	}
 	
 	@Override
-	public void doPostRenderLogic(AnimationEntity entity, float partialTicks){
-		if(InterfaceRender.getRenderPass() != 1){
-			//Render inner windows, if set.
-			if(ConfigSystem.configObject.clientRendering.innerWindows.value){
-				GL11.glBegin(GL11.GL_TRIANGLES);
-				for(int j=vertices.length - 1; j>=0; --j){
-					GL11.glTexCoord2f(vertices[j][3], vertices[j][4]);
-					GL11.glNormal3f(vertices[j][5], vertices[j][6], vertices[j][7]);
-					GL11.glVertex3f(vertices[j][0], vertices[j][1], vertices[j][2]);
-				}
-				GL11.glEnd();
+	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		//Render inner windows, if set.
+		if(ConfigSystem.configObject.clientRendering.innerWindows.value){
+			GL11.glBegin(GL11.GL_TRIANGLES);
+			for(int j=vertices.length - 1; j>=0; --j){
+				GL11.glTexCoord2f(vertices[j][3], vertices[j][4]);
+				GL11.glNormal3f(vertices[j][5], vertices[j][6], vertices[j][7]);
+				GL11.glVertex3f(vertices[j][0], vertices[j][1], vertices[j][2]);
 			}
-			
-			//Un-bind the glass texture.
-			InterfaceRender.recallTexture();
+			GL11.glEnd();
 		}
+		
+		//Un-bind the glass texture.
+		InterfaceRender.recallTexture();
 	}
 }

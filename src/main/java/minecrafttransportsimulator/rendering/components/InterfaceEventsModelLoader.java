@@ -35,6 +35,7 @@ import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
@@ -75,14 +76,10 @@ public class InterfaceEventsModelLoader{
 				@Override
 				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
 					if(builder.entity != null && builder.entity instanceof AEntityC_Definable){
-						//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-						int renderPass = InterfaceRender.getRenderPass();
-						if(renderPass == -1){
-							renderPass = 2;
+						if(builder.renderData.shouldRender()){
+							AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
+							internalEntity.getRenderer().render(internalEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 						}
-						
-						AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
-						internalEntity.getRenderer().render(internalEntity, renderPass, partialTicks, false);
 					}
 				}
 			};
@@ -93,13 +90,9 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public void render(BuilderTileEntity builder, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 				if(builder.tileEntity != null){
-					//Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.
-					int renderPass = InterfaceRender.getRenderPass();
-					if(renderPass == -1){
-						renderPass = 2;
+					if(builder.renderData.shouldRender()){
+						builder.tileEntity.getRenderer().render(builder.tileEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 					}
-					
-					builder.tileEntity.getRenderer().render(builder.tileEntity, renderPass, partialTicks, false);
 				}
 			}
 		});

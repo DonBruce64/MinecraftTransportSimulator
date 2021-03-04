@@ -20,7 +20,6 @@ import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -45,9 +44,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
-	
-	/**Render data to help us render on the proper tick and time.**/
-	public final RenderTickData renderData;
 	
 	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundVolumeClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
 	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundPitchClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
@@ -76,9 +72,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		//Make sure the generic light is in the variable set.
 		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
-		
-		//Create render data if we are on the client.
-		this.renderData = world.isClient() ? new RenderTickData(world) : null;
 		
 		//Create all sound clocks.
 		populateSoundMaps();

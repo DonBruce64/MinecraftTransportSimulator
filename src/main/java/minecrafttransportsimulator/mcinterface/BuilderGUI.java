@@ -152,8 +152,14 @@ public class BuilderGUI extends GuiScreen{
 		//so the text texture will be overridden at this point.
 		InterfaceRender.setLightingState(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument();
+			instrument.renderInstrument(false);
 		}
+		//Now render blended parts of the instrument.
+		InterfaceRender.setBlend(true);
+		for(GUIComponentInstrument instrument : gui.instruments){
+			instrument.renderInstrument(true);
+		}
+		InterfaceRender.setBlend(false);
 		
 		//Now render items.
 		//These will cause a texture re-bind, so they need to go after the components.

@@ -97,7 +97,7 @@ public abstract class GUIComponentSelector{
 	 */
     public void renderText(boolean lightsOn){
     	if(visible){
-    		InterfaceGUI.drawScaledText(text, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextPosition.CENTERED, 0, 0.75F, false);
+    		InterfaceGUI.drawScaledText(text, null, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextPosition.CENTERED, 0, 0.75F, false);
     	}
     }
 }

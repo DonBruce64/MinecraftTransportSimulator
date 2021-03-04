@@ -16,13 +16,13 @@ public class TransformInhibitor<AnimationEntity extends AEntityC_Definable<?>> e
 	}
 	
 	@Override
-	public boolean shouldInhibit(AnimationEntity entity, float partialTicks){
+	public boolean shouldInhibit(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		double value = definition.offset + entity.getAnimator().getAnimatedVariableValue(entity, definition, 0D, getClock(entity), partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 
 	@Override
-	public double applyTransform(AnimationEntity entity, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//Do nothing.
 		return 0;
 	}

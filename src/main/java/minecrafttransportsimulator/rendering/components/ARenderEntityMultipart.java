@@ -13,9 +13,9 @@ import minecrafttransportsimulator.entities.instances.APart;
 public abstract class ARenderEntityMultipart<RenderedEntity extends AEntityE_Multipart<?>> extends ARenderEntity<RenderedEntity>{
 	
 	@Override
-	protected void renderSupplementalModels(RenderedEntity entity, int renderPass, float partialTicks){
+	protected void renderSupplementalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){
 		for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-			part.getRenderer().render(part, renderPass, partialTicks, true);
+			part.getRenderer().render(part, blendingEnabled, partialTicks);
 		}
 	}
 	

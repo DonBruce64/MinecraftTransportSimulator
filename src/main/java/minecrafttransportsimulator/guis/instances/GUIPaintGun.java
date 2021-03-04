@@ -75,7 +75,7 @@ public class GUIPaintGun extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, Color.WHITE, "", TextPosition.LEFT_ALIGNED, 98, 1.0F, false));
+		addLabel(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, Color.WHITE, "", null, TextPosition.LEFT_ALIGNED, 98, 1.0F, false));
 		
 		//Create the crafting item slots.  8 18X18 slots (8X2) need to be made here.
 		craftingItemIcons.clear();

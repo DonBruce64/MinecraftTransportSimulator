@@ -24,7 +24,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadDisplayListMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
 	
 	@Override
-	public void renderAdditionalModels(TileEntityRoad road, float partialTicks){
+	public void renderAdditionalModels(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
 		//Render road components.
 		//First set helper variables.
 		Point3d position = new Point3d();
@@ -38,9 +38,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		
 		//If the road is inactive, we render everything as a hologram.
 		if(!road.isActive()){
-			if(InterfaceRender.getRenderPass() != 0){
-				InterfaceRender.setBlendState(true, false);
-				GL11.glDisable(GL11.GL_TEXTURE_2D);
+			if(blendingEnabled){
+				InterfaceRender.setTextureState(false);
 				InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 0.5F);
 			}else{
 				return;
@@ -187,8 +186,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		if(ConfigSystem.configObject.clientControls.devMode.value){
 			//Render the information hashes.
 			//First set states.
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			GL11.glDisable(GL11.GL_LIGHTING);
+			InterfaceRender.setTextureState(false);
+			InterfaceRender.setSystemLightingState(false);
 			GL11.glLineWidth(2);
 			GL11.glBegin(GL11.GL_LINES);
 			

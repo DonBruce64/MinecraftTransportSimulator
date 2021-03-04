@@ -31,13 +31,11 @@ import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 /**Interface for the various MC rendering engines.  This class has functions for
  * binding textures, changing lightmap statuses, etc.
@@ -48,21 +46,13 @@ public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
-	public static boolean shadersDetected;
 	
-	/**
-	 *  Gets the current render pass.  0 for solid blocks, 1 for transparent,
-	 *  and -1 for end-of world final renders.
-	 */
-	public static int getRenderPass(){
-		return MinecraftForgeClient.getRenderPass();
-	}
 	
 	/**
 	 *  Returns true if bounding boxes should be rendered.
 	 */
 	public static boolean shouldRenderBoundingBoxes(){
-		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox() && getRenderPass() != 1;
+		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox();
 	}
 	
 	/**
@@ -220,37 +210,36 @@ public class InterfaceRender{
 	
 	/**
 	 *  Updates the internal lightmap to be consistent with the light at the
-	 *  passed-in position.  This will also enable lighting should
-	 *  the current render pass be -1.
+	 *  passed-in position.
 	 */
 	public static void setLightingToPosition(Point3d position){
-		if(getRenderPass() == -1){
-	        RenderHelper.enableStandardItemLighting();
-	        setLightingState(true);
-        }
 		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
 	/**
-	 *  Sets the blend state to enabled or disabled.  Also allows for
-	 *  the blend state to be set to accommodate beam lights with brightening
-	 *  properties rather than regular alpha blending.
+	 *  Manually enables and disables blending. Do NOT use this during normal model rendering, as it
+	 *  can seriously mess up states.  Only use this for simple things, like GUIs or screen overlays.
+	 *  This is not reset with resetting states, so make sure to turn it back off when you're done.
 	 */
-	public static void setBlendState(boolean enabled, boolean brightBlend){
+	public static void setBlend(boolean enabled){
 		if(enabled){
 			GlStateManager.enableBlend();
-			GlStateManager.disableAlpha();
-			GlStateManager.depthMask(false);
-			if(brightBlend){
-				GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
-			}else{
-				GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			}
 		}else{
 			GlStateManager.disableBlend();
+		}
+	}
+	
+	/**
+	 *  Sets the blend state to bright.  This does special blending
+	 *  when blending is enabled.
+	 */
+	public static void setBlendBright(boolean enabled){
+		if(enabled){
+			GlStateManager.disableAlpha();
+			GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
+		}else{
 			GlStateManager.enableAlpha();
-			GlStateManager.depthMask(true);
 			GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		}
 	}
@@ -265,22 +254,26 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Resets all the rendering states to the appropriate values for the pass we are in.
-	 *  Useful after doing a rendering routine where states may not be correct for the pass.
+	 *  Enables or disables textures.  If textures are disabled, rendering will be
+	 *  solid-color shapes.
+	 */
+	public static void setTextureState(boolean enabled){
+		if(enabled){
+			GlStateManager.enableTexture2D();
+		}else{
+			GlStateManager.disableTexture2D();
+		}
+	}
+	
+	/**
+	 *  Resets all the rendering states.
+	 *  Useful after doing a rendering routine where states may not be correct.
 	 */
 	public static void resetStates(){
-		//For pass 0, we do lighting but not blending.
-		//For pass 1, we do blending and lighting.
-		//For pass -1, we don't do blending or lighting.
 		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		setBlendState(getRenderPass() == 1, false);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		if(getRenderPass() != -1){
-			setLightingState(true);
-		}else{
-			setLightingState(false);
-			RenderHelper.disableStandardItemLighting();
-		}
+		setTextureState(true);
+		setBlendBright(false);
+		setLightingState(true);
 	}
 	
 	/**
@@ -331,70 +324,66 @@ public class InterfaceRender{
 	
 	/**
 	 *  Renders all the text markings on the passed-in entity.
-	 *  This will only be done in the main pass, as we don't do any alpha blending in this routine.
+	 *  This should only be done in the main pass, as we don't do any alpha blending in this routine.
 	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
 	 */
 	public static boolean renderTextMarkings(AEntityC_Definable<?> entity, String objectRendering){
-		if(getRenderPass() != 1){
-			boolean systemLightingEnabled = true;
-			boolean internalLightingEnabled = true;
-			for(Entry<JSONText, String> textLine : entity.text.entrySet()){
-				JSONText textDefinition = textLine.getKey();
-				String text = textLine.getValue();
+		boolean systemLightingEnabled = true;
+		boolean internalLightingEnabled = true;
+		for(Entry<JSONText, String> textLine : entity.text.entrySet()){
+			JSONText textDefinition = textLine.getKey();
+			String text = textLine.getValue();
+			
+			//Render if our attached object and the object we are rendering on match.
+			if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
+				//Disable system lighting if we haven't already.
+				//System lighting doesn't work well with text.
+				if(systemLightingEnabled){
+					setSystemLightingState(false);
+					systemLightingEnabled = false;
+				}
 				
-				//Render if our attached object and the object we are rendering on match.
-				if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
-					//Disable system lighting if we haven't already.
-					//System lighting doesn't work well with text.
-					if(systemLightingEnabled){
-						setSystemLightingState(false);
-						systemLightingEnabled = false;
-					}
-					
-					//If we have light-up text, disable lightmap.
-					if(textDefinition.lightsUp && entity.renderTextLit()){
-						if(internalLightingEnabled){
-							internalLightingEnabled = false;
-							setInternalLightingState(internalLightingEnabled);
-						}
-					}else if(!internalLightingEnabled){
-						internalLightingEnabled = true;
+				//If we have light-up text, disable lightmap.
+				if(textDefinition.lightsUp && entity.renderTextLit()){
+					if(internalLightingEnabled){
+						internalLightingEnabled = false;
 						setInternalLightingState(internalLightingEnabled);
 					}
-					
-					GL11.glPushMatrix();
-					//Translate to the position to render.
-					GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
-					//First rotate 180 along the X-axis to get us rendering right-side up.
-					GL11.glRotatef(180F, 1, 0, 0);
-					//Next, apply rotations.  Y is inverted due to the inverted X axis.
-					if(!textDefinition.rot.isZero()){
-						GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
-						GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
-						GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
-					}
-					//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
-					GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-					//Finally, render the text.
-					String inheritedColor = entity.getSecondaryTextColor();
-					String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-					InterfaceGUI.drawScaledText(text, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
-					GL11.glPopMatrix();
+				}else if(!internalLightingEnabled){
+					internalLightingEnabled = true;
+					setInternalLightingState(internalLightingEnabled);
 				}
+				
+				GL11.glPushMatrix();
+				//Translate to the position to render.
+				GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
+				//First rotate 180 along the X-axis to get us rendering right-side up.
+				GL11.glRotatef(180F, 1, 0, 0);
+				//Next, apply rotations.  Y is inverted due to the inverted X axis.
+				if(!textDefinition.rot.isZero()){
+					GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
+					GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
+					GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
+				}
+				//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
+				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
+				//Finally, render the text.
+				String inheritedColor = entity.getSecondaryTextColor();
+				String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
+				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+				GL11.glPopMatrix();
 			}
-			
-			//Reset lighting.
-			if(!internalLightingEnabled){
-				setInternalLightingState(true);
-			}
-			if(!systemLightingEnabled){
-				setSystemLightingState(true);
-				//Set color back to white, the font renderer sets this to not-white.
-				setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-				return true;
-			}else{
-				return false;
-			}
+		}
+		
+		//Reset lighting.
+		if(!internalLightingEnabled){
+			setInternalLightingState(true);
+		}
+		if(!systemLightingEnabled){
+			setSystemLightingState(true);
+			//Set color back to white, the font renderer sets this to not-white.
+			setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			return true;
 		}else{
 			return false;
 		}

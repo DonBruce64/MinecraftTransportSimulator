@@ -162,7 +162,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", TextPosition.CENTERED, 150, 1.0F, false));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", null, TextPosition.CENTERED, 150, 1.0F, false));
 		
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.
@@ -212,13 +212,13 @@ public class GUIInstruments extends AGUIBase{
 			if(hudSelected ^ packInstrument.optionalPartNumber != 0){
 				GUIComponentInstrument vehicleInstrument = new GUIComponentInstrument(guiLeft, guiTop, i, vehicle){
 					@Override
-					public void renderInstrument(){
+					public void renderInstrument(boolean blendingEnabled){
 						//Only render this instrument if it exits in the vehicle.
 						if(vehicle.instruments.containsKey(instrumentPackIndex)){
 							GL11.glPushMatrix();
 							GL11.glTranslated(x, y, 0);
 							GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-							RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, vehicle);
+							RenderInstrument.drawInstrument(vehicle.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, vehicle, blendingEnabled);
 							GL11.glPopMatrix();
 						}
 					}

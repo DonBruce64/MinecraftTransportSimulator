@@ -127,7 +127,7 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
-		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, Color.WHITE, "", TextPosition.CENTERED, 0, 1.0F, false));
+		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, Color.WHITE, "", null, TextPosition.CENTERED, 0, 1.0F, false));
 		
 		
 		//Create part navigation section.
@@ -145,9 +145,9 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", TextPosition.CENTERED, 0, 0.75F, false));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", TextPosition.LEFT_ALIGNED, (int) (150/0.75F), 0.75F, false));
-		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", TextPosition.LEFT_ALIGNED, 150, 1.0F, false));
+		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, Color.WHITE, "", null, TextPosition.CENTERED, 0, 0.75F, false));
+		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", null, TextPosition.LEFT_ALIGNED, (int) (150/0.75F), 0.75F, false));
+		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, Color.WHITE, "", null, TextPosition.LEFT_ALIGNED, 150, 1.0F, false));
 		
 		
 		//Create color navigation section.
@@ -165,7 +165,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, Color.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), null, TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.

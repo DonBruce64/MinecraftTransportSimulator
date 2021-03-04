@@ -31,7 +31,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 	}
 	
 	@Override
-	public boolean shouldRender(AnimationEntity entity, float partialTicks){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		//If we are a ground device, and we aren't a spare, do tread-path rendering.
 		//Otherwise, do normal rendering by returning true.
 		PartGroundDevice tread = (PartGroundDevice) entity;
@@ -314,13 +314,13 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 			GL11.glPopMatrix();
 		}else{
 			//Return super.
-			return super.shouldRender(entity, partialTicks);
+			return super.shouldRender(entity, blendingEnabled, partialTicks);
 		}
 		return false;
 	}
 	
 	@Override
-	public double applyTransform(AnimationEntity provider, float partialTicks, double offset){
+	public double applyTransform(AnimationEntity provider, boolean blendingEnabled, float partialTicks, double offset){
 		//Do nothing here.
 		return 0;
 	}
