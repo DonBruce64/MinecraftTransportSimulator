@@ -364,13 +364,18 @@ public class BuilderEntity extends Entity{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
-		if(entity != null){
-			entity.save(new WrapperNBT(tag));
+		if(lastLoadedNBT != null){
+			//Got packet before we had a chance to transform this to an entity.
+			//Merge data to this tag rather than trying to get new data.
+			tag.merge(lastLoadedNBT);
+		}else if(entity != null){
+			//Entity is valid, save it and return the modified tag.
 			//Also save the class ID so we know what to construct when MC loads this Entity back up.
+			entity.save(new WrapperNBT(tag));
 			tag.setString("entityid", entity.getClass().getSimpleName());
 		}else if(!world.isRemote){
-			//Invalid vehicle detected, don't save.
-			this.setDead();
+			//Invalid entity detected, don't save.
+			setDead();
 		}
 		return tag;
 	}
