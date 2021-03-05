@@ -220,6 +220,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 									}
 									break;
 								}
+								case SCALING :{
+									//Do nothing.
+									break;
+								}
 								case VISIBILITY :{
 									//Do nothing.
 									break;
@@ -276,6 +280,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 										animation.axis.x = parabolaParamA;
 										animation.axis.z = parabolaParamH;
 									}
+									break;
+								}
+								case SCALING :{
+									//Do nothing.
 									break;
 								}
 								case VISIBILITY :{

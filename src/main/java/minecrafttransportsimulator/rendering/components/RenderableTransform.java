@@ -29,6 +29,10 @@ public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
 					transforms.add(new TransformRotatable<AnimationEntity>(animation));
 					break;
 				}
+				case SCALING :{
+					transforms.add(new TransformScaleable<AnimationEntity>(animation));
+					break;
+				}
 				case VISIBILITY :{
 					transforms.add(new TransformVisibile<AnimationEntity>(animation));
 					break;

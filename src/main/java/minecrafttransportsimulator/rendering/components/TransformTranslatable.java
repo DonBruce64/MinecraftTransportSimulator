@@ -13,7 +13,6 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	private final Point3d translationAxis;
 	
-	
 	public TransformTranslatable(JSONAnimationDefinition definition){
 		super(definition);
 		//For the axis defined in the JSON, the axis is the normalized value of the defined vector, while the 

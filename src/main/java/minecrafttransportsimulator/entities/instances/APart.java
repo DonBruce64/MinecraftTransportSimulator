@@ -212,6 +212,10 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						}
 						break;
 					}
+					case SCALING :{
+						//Do nothing.
+						break;
+					}
 					case VISIBILITY :{
 						//Do nothing.
 						break;

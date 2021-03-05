@@ -178,6 +178,10 @@ public final class RenderInstrument{
 									}
 									break;
 								}
+								case SCALING :{
+									//Do nothing.  Translation does scaling here.
+									break;
+								}
 								case VISIBILITY:{
 									//Skip rendering this component if this is false.
 									skipRender = value < animation.clampMin || value > animation.clampMax;

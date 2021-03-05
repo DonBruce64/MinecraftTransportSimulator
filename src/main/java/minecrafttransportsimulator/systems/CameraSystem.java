@@ -158,6 +158,10 @@ public class CameraSystem{
             						}
 	        						break;
 	        					}
+	        					case SCALING :{
+	        						//Do nothing, cameras don't scale.
+	        						break;
+	        					}
 	        					case VISIBILITY :{
 	        						//Do nothing.  We checked this earlier.
 	        						break;

@@ -70,6 +70,8 @@ public class JSONAnimationDefinition{
 		TRANSLATION,
 		@JSONDescription("This animation rotates this component around the X/Y/Z-axis by the number of degrees specified.  This rotation is offset by the centerPoint parameter.  Note: most animations are done in sequence, where rotation is first done around the Y-axis, then the X-axis, and then the Z-axis.  However, for the rendering of OBJ model objects, the rotation is done all at once, with the rotation assuming that the axis parameter is a vector to rotate around and the length of that vector being the amount to rotate.  This won't matter in single-axis and some double-axis rotation, but it will cause differences in movement in triple-axis rotation.  In particular is the movement of parts on vehicles versus the movement of the OBJ model components.")
 		ROTATION,
+		@JSONDescription("This animation scales this component along the X/Y/Z-axis by the factor specified.  Scaling values of 0 will, in effect, make that axis be 2D.  Scaling values of 2.0 will double the size.  This only affects models, and cannot be used on non-rendering animations like part movement.")
+		SCALING,
 		@JSONDescription("This isn't as much an animation as it is a requirement for this component to be rendered.  If the value of the variable is outside the min and max clamps, the component will not be rendered.")
 		VISIBILITY,
 		@JSONDescription("This animation will block, or inhibit, any animations after it if the variable value is inside the min and max clamp.  Useful for disabling animations if things aren't present or in the right sequence.")
