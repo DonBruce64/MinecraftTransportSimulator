@@ -155,19 +155,19 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		}
 		
 		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsPass0.value ? !blendingEnabled : blendingEnabled); 
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsSolid.value ? !blendingEnabled : blendingEnabled); 
 		
 		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
 		//This needs to be done in pass 1 or -1 to do blending.
 		if(renderFlare && lightOn && doBlendRenders){
-			renderFlare(lightBrightness);
+			renderFlare(lightBrightness, blendingEnabled);
 		}
 		
 		//Render beam if the light is on and the brightness is non-zero.
 		//This must be done in pass 1 or -1 to do proper blending.
 		//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
 		if(beamEnabled && renderBeam && lightOn && doBlendRenders){
-			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness));
+			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness), blendingEnabled);
 		}
 		
 		//Reset states and recall texture.
@@ -227,10 +227,12 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	 *  Parameter is the alpha value for the light.  Need to disable
 	 *  both lighting and lightmap here to prevent the flare from being dim.
 	 */
-	private void renderFlare(float alphaValue){
+	private void renderFlare(float alphaValue, boolean blendingEnabled){
 		InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
 		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.flareBlending.value);
+		if(blendingEnabled){
+			InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.flaresBright.value);
+		}
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(int i=0; i<centerPoints.length; ++i){
@@ -252,10 +254,12 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	 *  Renders the beam portion of this light, if so configured.
 	 *  Parameter is the alpha value for the light.
 	 */
-	private void renderBeam(float alphaValue){
+	private void renderBeam(float alphaValue, boolean blendingEnabled){
 		InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
 		InterfaceRender.setLightingState(false);
-		InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.beamBlending.value);
+		if(blendingEnabled){
+			InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.beamsBright.value);
+		}
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
 		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.

@@ -249,7 +249,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	
 	@Override
 	public float getLightProvided(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.DAYTIMELIGHT.isInCollection(variablesOn) ? 1.0F : 0.0F;
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3 ? 1.0F : 0.0F;
 	}
 	
 	@Override
@@ -347,7 +347,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	
 	@Override
 	public boolean renderTextLit(){
-		return (LightType.NAVIGATIONLIGHT.isInCollection(variablesOn) || LightType.RUNNINGLIGHT.isInCollection(variablesOn) || LightType.HEADLIGHT.isInCollection(variablesOn)) && electricPower > 3;
+		return LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3;
 	}
 	
 	@Override

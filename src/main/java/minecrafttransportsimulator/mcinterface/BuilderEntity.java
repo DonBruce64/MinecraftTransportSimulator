@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -80,6 +82,10 @@ public class BuilderEntity extends Entity{
 	private WrapperAABBCollective collisionBoxes;
 	/**Render data to help us render on the proper tick and time.**/
 	public final RenderTickData renderData;
+	/**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
+	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
+	 * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
+	public final List<WrapperPlayer> playersRequestingData = new ArrayList<WrapperPlayer>();
 	
 	public BuilderEntity(World world){
 		super(world);
@@ -174,6 +180,16 @@ public class BuilderEntity extends Entity{
 	    				world.checkLight(fakeLightPosition);
 	    				fakeLightPosition = null;
 	    			}
+	    		}
+	    		
+	    		//Send any packets to clients that requested them.
+	    		if(!playersRequestingData.isEmpty()){
+		    		for(WrapperPlayer player : playersRequestingData){
+		    			WrapperNBT data = new WrapperNBT();
+		    			writeToNBT(data.tag);
+		    			player.sendPacket(new PacketEntityCSHandshake(getEntityId(), data));
+		    		}
+		    		playersRequestingData.clear();
 	    		}
     		}
     	}else if(world.isRemote){
@@ -364,17 +380,14 @@ public class BuilderEntity extends Entity{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
-		if(lastLoadedNBT != null){
-			//Got packet before we had a chance to transform this to an entity.
-			//Merge data to this tag rather than trying to get new data.
-			tag.merge(lastLoadedNBT);
-		}else if(entity != null){
+		if(entity != null){
 			//Entity is valid, save it and return the modified tag.
 			//Also save the class ID so we know what to construct when MC loads this Entity back up.
 			entity.save(new WrapperNBT(tag));
 			tag.setString("entityid", entity.getClass().getSimpleName());
 		}else if(!world.isRemote){
 			//Invalid entity detected, don't save.
+			InterfaceCore.logError("Tried to save NBT on a BuilderEntity that did not have an entity assigned to it.  Did you remove a pack with a vehicle still in the world?");
 			setDead();
 		}
 		return tag;
