@@ -15,7 +15,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 */
 public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	public final LightType type;
-	public final boolean isLightupTexture;
 	
 	private final Color color;
 	private final int flashBits;
@@ -23,6 +22,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private final boolean renderColor;
 	private final boolean renderCover;
 	private final boolean renderBeam;
+	private final boolean isLightupTexture;
 	
 	private final Float[][] vertices;
 	private final Point3d[] centerPoints;
@@ -107,7 +107,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 2/3 power.
 		//Only do this for normal passes.
-		if(!blendingEnabled){
+		if(isLightupTexture){
 			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
 			double electricPower = entity.getLightPower();
 			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
