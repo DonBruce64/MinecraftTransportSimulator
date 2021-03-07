@@ -153,11 +153,11 @@ public class Point3d{
 	}
 	
 	/**
-	 * Normalizes this point to be a unit vector.  Note that the
+	 * Normalizes this point to be a unit vector.
 	 */
 	public Point3d normalize(){
 		double length = length();
-		if(length > 1.0E-4D){
+		if(length > 1.0E-8D){
 			x /= length;
 			y /= length;
 			z /= length;
