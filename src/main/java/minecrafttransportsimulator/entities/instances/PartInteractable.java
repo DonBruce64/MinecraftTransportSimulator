@@ -12,6 +12,8 @@ import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperTileEntity;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -32,6 +34,7 @@ public final class PartInteractable extends APart{
 			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", world, data, 0); break;
 			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", world, data, 0); break;
 			case JERRYCAN: this.interactable = null; break;
+			case CRAFTING_BENCH: this.interactable = null; break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
 		this.inventory = interactable != null ? interactable.getInventory() : null;
@@ -44,6 +47,8 @@ public final class PartInteractable extends APart{
 		if(!entityOn.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
+			}else if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
+				InterfacePacket.sendToAllClients(new PacketPartInteractable(this));
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 				entityOn.removePart(this, null);
 				WrapperNBT data = new WrapperNBT();

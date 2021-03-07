@@ -27,14 +27,15 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		@JSONRequired
 		@JSONDescription("How deep a decor is.  1 is a full block depth.  Numbers over 1 will result in unpredictable operations, so don't use them.")
     	public float depth;
+		
+		@JSONDescription("A optional crafting definition for this decor.  If this is included, the decor will open a GUI for crafting pack components when clicked.")
+		public JSONCraftingBench crafting;
     	
-    	@JSONDescription("A optional list of item types this decor can craft.  This is the first layer of filtering, and restricts the items displayed to only crafting items that have the same type.  Valid types correspond to JSON definition types, those being the types that you make sub-folders for in your pack.")
+    	@Deprecated
     	public List<String> itemTypes;
-    	
-    	@JSONDescription("A optional list of part types this decor can craft.  Only used to filter “part” itemTypes.  For example, adding “engine” would allow the decor to craft all engines, but adding “engine_car” and “engine_boat” would prevent it from crafting aircraft engines.")
+    	@Deprecated
     	public List<String> partTypes;
-    	
-    	@JSONDescription("A list of items this decor may craft.  This overrides all other filters, and may be used to specify exactly what this decor may craft.  The format for this is [packID:systemName], where systemName is the name of the item with the subName appended.")
+    	@Deprecated
     	public List<String> items;
     }
 }

@@ -14,6 +14,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -876,6 +877,17 @@ public final class LegacyCompatSystem{
 					text.defaultText = "";
 				}
 			}
+		}
+		
+		//If we have crafting things in the decor, move them.
+		if(definition.decor.items != null || definition.decor.itemTypes != null){
+			definition.decor.crafting = new JSONCraftingBench();
+			definition.decor.crafting.itemTypes = definition.decor.itemTypes;
+			definition.decor.itemTypes = null;
+			definition.decor.crafting.partTypes = definition.decor.partTypes;
+			definition.decor.partTypes = null;
+			definition.decor.crafting.items = definition.decor.items;
+			definition.decor.items = null;
 		}
 	}
 	

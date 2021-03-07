@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -19,6 +18,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -42,11 +42,11 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public class GUIPartBench extends AGUIBase{
-	/*Last item this GUI was on when closed.  Keyed by block instance.*/
-	private static final Map<TileEntityDecor, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<TileEntityDecor, AItemPack<? extends AJSONItem>>();
+	/*Last item this GUI was on when closed.  Keyed by definition instance to keep all benches in-sync.*/
+	private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<JSONCraftingBench, AItemPack<? extends AJSONItem>>();
 	
 	//Init variables.
-	private final TileEntityDecor decor;
+	private final JSONCraftingBench definition;
 	private final WrapperPlayer player;
 	
 	//Buttons and labels.
@@ -89,11 +89,11 @@ public class GUIPartBench extends AGUIBase{
 	boolean displayVehicleInfo = false;
 	
 
-	public GUIPartBench(TileEntityDecor decor, WrapperPlayer player){
-		this.decor = decor;
+	public GUIPartBench(JSONCraftingBench definition, WrapperPlayer player){
+		this.definition = definition;
 		this.player = player;
-		if(lastOpenedItem.containsKey(decor)){
-			currentItem = lastOpenedItem.get(decor);
+		if(lastOpenedItem.containsKey(definition)){
+			currentItem = lastOpenedItem.get(definition);
 			currentPack = currentItem.definition.packID;
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
@@ -421,7 +421,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Now update the last saved item.
-		lastOpenedItem.put(decor, currentItem);
+		lastOpenedItem.put(definition, currentItem);
 	}
 	
 	private boolean isItemValid(AItemPack<?> item){
@@ -436,11 +436,11 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		if(hasMaterials){
-			if(decor.definition.decor.items != null){
-				return decor.definition.decor.items.contains(item.definition.packID + ":" + item.definition.systemName);
-			}else if(decor.definition.decor.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
-				if(item.definition instanceof JSONPart && decor.definition.decor.partTypes != null){
-					for(String partType : decor.definition.decor.partTypes){
+			if(definition.items != null){
+				return definition.items.contains(item.definition.packID + ":" + item.definition.systemName);
+			}else if(definition.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
+				if(item.definition instanceof JSONPart && definition.partTypes != null){
+					for(String partType : definition.partTypes){
 						if(((JSONPart) item.definition).generic.type.contains(partType)){
 							return true;
 						}

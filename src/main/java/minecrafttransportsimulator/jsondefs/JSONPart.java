@@ -412,6 +412,9 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("If this part is a crate or barrel, this defines the size of its inventory. This is also what is used for min/max value calculations on vehicles.  For crates, this is how many rows (of 9 slots) the inventory has.  For barrels, this is how many buckets the barrel can store x10.  The idea being that 1 unit for crates holds a bit less than 1 unit of barrels, as with barrels you're storing the raw material, and not the container.")
     	public int inventoryUnits;
+		
+		@JSONDescription("A optional crafting definition for this interactable.  Requires an interactable type of crafting_bench to do anything.")
+		public JSONCraftingBench crafting;
     }
     
     public static enum InteractableComponentType{
@@ -426,7 +429,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Works as a standard brewing stand when clicked.")
 		BREWING_STAND,
 		@JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
-		JERRYCAN;
+		JERRYCAN,
+		@JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
+		CRAFTING_BENCH;
 	}
     
     public class JSONPartEffector{

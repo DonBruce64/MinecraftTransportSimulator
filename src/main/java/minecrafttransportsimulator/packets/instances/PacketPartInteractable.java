@@ -6,12 +6,17 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet used to send signals to interactable parts.  Currently, this is only used to link the interactable with
- * a vehicle or part tank for fluid-pumping operations.  Sent to servers by the fuel hose item when it does linking.
+/**Packet used to send signals to interactable parts.  This is either used used to link the interactable with
+ * a vehicle or part tank for fluid-pumping operations, or trigger the crafting GUI to appear on the interactable.
+ * Sent to servers by the fuel hose item when it does linking in the first case, and when a player clicks the
+ * interactable in the second.
  * 
  * @author don_bruce
  */
@@ -24,9 +29,12 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 		if(interactable.linkedVehicle != null){
 			this.linkedID = interactable.linkedVehicle.lookupID;
 			this.linkedOffset = null;
-		}else{
+		}else if(interactable.linkedPart != null){
 			this.linkedID = interactable.linkedPart.entityOn.lookupID;
 			this.linkedOffset = interactable.linkedPart.placementOffset;
+		}else{
+			this.linkedID = -1;
+			this.linkedOffset = null;
 		}
 	}
 	
@@ -50,12 +58,18 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 	
 	@Override
 	public boolean handle(WrapperWorld world, WrapperPlayer player, PartInteractable interactable){
-		AEntityA_Base linkedEntity = AEntityA_Base.getEntity(world, linkedID);
-		if(linkedEntity != null){
-			if(linkedOffset == null){
-				interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
-			}else{
-				interactable.linkedPart = (PartInteractable) ((AEntityE_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
+		if(linkedID != -1){
+			AEntityA_Base linkedEntity = AEntityA_Base.getEntity(world, linkedID);
+			if(linkedEntity != null){
+				if(linkedOffset == null){
+					interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
+				}else{
+					interactable.linkedPart = (PartInteractable) ((AEntityE_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
+				}
+			}
+		}else{
+			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
+				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting, player));
 			}
 		}
 		return true;
