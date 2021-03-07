@@ -101,13 +101,18 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		//Set the light-up texture status.
 		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !renderBeam;
 	}
+	
+	@Override
+	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
+		return isLightupTexture ? !blendingEnabled : true;
+	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Lights start dimming due to low power at 2/3 power.
 		//Only do this for normal passes.
-		if(isLightupTexture){
+		if(isLightupTexture && !blendingEnabled){
 			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
 			double electricPower = entity.getLightPower();
 			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
@@ -119,19 +124,24 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		//We cheat here and render our light bits at this point.
-		//It's safe to do this, as we'll already have applied all the other transforms we need, and
-		//we'll have rendered the object so we can safely change textures.
-		//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
-		boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
-		float sunLight = entity.world.getLightBrightness(entity.position, false);
-		float electricPower = entity.getLightPower();
-		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
-		float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
-		
-		//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
-		float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-		render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams(), blendingEnabled);
+		if(isLightupTexture && !blendingEnabled){
+			//Reset lighting state.
+			InterfaceRender.setLightingState(true);
+		}else if(!isLightupTexture){
+			//We cheat here and render our light bits at this point.
+			//It's safe to do this, as we'll already have applied all the other transforms we need, and
+			//we'll have rendered the object so we can safely change textures.
+			//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
+			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
+			float sunLight = entity.world.getLightBrightness(entity.position, false);
+			float electricPower = entity.getLightPower();
+			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
+			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
+			
+			//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
+			float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
+			render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams(), blendingEnabled);
+		}
 	}
 	
 	/**
