@@ -17,6 +17,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -402,11 +403,20 @@ public class WrapperWorld{
 				}
 			}else{
 				if(damage.damgeSource != null){
-					if(mcEntityCollided.getRidingEntity() instanceof BuilderEntity){
-						if(damage.damgeSource.equals(((BuilderEntity) mcEntityCollided.getRidingEntity()).entity)){
+					Entity ridingEntity = mcEntityCollided.getRidingEntity();
+					if(ridingEntity instanceof BuilderEntity){
+						AEntityB_Existing internalEntity = ((BuilderEntity) ridingEntity).entity;
+						if(damage.damgeSource.equals(internalEntity)){
 							//Don't attack riders of the source of the damage.
 							iterator.remove();
 							continue;
+						}else if(damage.damgeSource instanceof APart){
+							APart damagingPart = (APart) damage.damgeSource;
+							if(damagingPart.entityOn.equals(internalEntity)){
+								//Don't attack riders of the multipart the part applying damage is a part of.
+								iterator.remove();
+								continue;
+							}
 						}
 					}
 				}
