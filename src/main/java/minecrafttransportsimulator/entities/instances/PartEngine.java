@@ -755,7 +755,7 @@ public class PartEngine extends APart{
 	//--------------------START OF ENGINE PROPERTY METHODS--------------------
 	
 	public static int getSafeRPM(JSONPartEngine engineDef){
-		return engineDef.maxSafeRPM != 0 ? engineDef.maxRPM : (engineDef.maxRPM < 15000 ? engineDef.maxRPM - (engineDef.maxRPM - 2500)/2 : (int) (engineDef.maxRPM/1.1));
+		return engineDef.maxSafeRPM != 0 ? engineDef.maxSafeRPM : (engineDef.maxRPM < 15000 ? engineDef.maxRPM - (engineDef.maxRPM - 2500)/2 : (int) (engineDef.maxRPM/1.1));
 	}
 	
 	public float getTotalFuelConsumption(){
