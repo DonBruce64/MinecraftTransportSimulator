@@ -56,12 +56,26 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				}
 			}
 		}
+		
+		//Get the light transform, if we have it.
+		TransformLight<AnimationEntity> lightTransform = null;
 		if(objectName.contains("&")){
-			transforms.add(new TransformLight<AnimationEntity>(modelName, objectName, vertices));
-		}else if(objectName.toLowerCase().contains("translucent")){
-			transforms.add(new TransformTranslucent<AnimationEntity>());
-		}else{
-			transforms.add(new TransformSolid<AnimationEntity>());
+			lightTransform = new TransformLight<AnimationEntity>(modelName, objectName, vertices);
+		}
+		
+		//If we have a light transform, and it's not a light-up texture, don't add other transforms.
+		//If it is a light-up texture, add other transforms before the light.  This prevents us from
+		//calling the light transform's calls if we shouldn't even be rendering it.
+		if(lightTransform == null || lightTransform.isLightupTexture){
+			if(objectName.toLowerCase().contains("translucent")){
+				transforms.add(new TransformTranslucent<AnimationEntity>());
+			}else{
+				transforms.add(new TransformSolid<AnimationEntity>());
+			}
+		}
+		
+		if(lightTransform != null){
+			transforms.add(lightTransform);
 		}
 		if(objectName.toLowerCase().contains("window")){
 			transforms.add(new TransformWindow<AnimationEntity>(vertices));
@@ -78,7 +92,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
 		if(doPreRenderTransforms(entity, blendingEnabled, partialTicks)){
-			if(renderModelWithBlendState(blendingEnabled)){
+			if(renderModelWithBlendState(entity, blendingEnabled)){
 				//Render the model.
 				GL11.glCallList(displayLists.get(modelName).get(objectName));
 			}

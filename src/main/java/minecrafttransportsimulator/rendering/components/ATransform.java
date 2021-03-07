@@ -37,7 +37,7 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  blending state.  This will disable further transforms, but will not disable rendering of
 	 *  objects that depend on this one.
 	 */
-	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
+	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
 		return true;
 	}
 	

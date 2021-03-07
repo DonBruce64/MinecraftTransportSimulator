@@ -13,7 +13,7 @@ public class TransformSolid<AnimationEntity extends AEntityC_Definable<?>> exten
 	}
 	
 	@Override
-	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
+	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
 		return !blendingEnabled;
 	}
 

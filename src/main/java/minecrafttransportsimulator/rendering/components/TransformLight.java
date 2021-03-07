@@ -15,6 +15,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 */
 public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	public final LightType type;
+	public final boolean isLightupTexture;
 	
 	private final Color color;
 	private final int flashBits;
@@ -22,7 +23,6 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private final boolean renderColor;
 	private final boolean renderCover;
 	private final boolean renderBeam;
-	private final boolean isLightupTexture;
 	
 	private final Float[][] vertices;
 	private final Point3d[] centerPoints;
@@ -103,31 +103,33 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	}
 	
 	@Override
-	public boolean shouldRenderWithBlendState(boolean blendingEnabled){
-		return isLightupTexture ? !blendingEnabled : true;
+	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
+		//If we are a light-up texture, disable lighting prior to the render call.
+		//Don't do this when we apply transforms, as those might block rendering if we have more than one.
+		//That would lead to an un-defined state if we had active lighting changes.
+		if(isLightupTexture){
+			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
+			double electricPower = entity.getLightPower();
+			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
+			//Lights start dimming due to low power at 2/3 power.
+			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
+			InterfaceRender.setLightingState(!(lightActuallyOn && electricFactor > 0));
+		}
+		return true;
 	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		//If we are a light-up texture, disable lighting prior to the render call.
-		//Lights start dimming due to low power at 2/3 power.
-		//Only do this for normal passes.
-		if(isLightupTexture && !blendingEnabled){
-			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
-			double electricPower = entity.getLightPower();
-			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
-			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
-			InterfaceRender.setLightingState(!(lightActuallyOn && electricFactor > 0));
-		}
+		//Don't do any transforms.  We do those after model rendering.
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(isLightupTexture && !blendingEnabled){
+		if(isLightupTexture){
 			//Reset lighting state.
 			InterfaceRender.setLightingState(true);
-		}else if(!isLightupTexture){
+		}else{
 			//We cheat here and render our light bits at this point.
 			//It's safe to do this, as we'll already have applied all the other transforms we need, and
 			//we'll have rendered the object so we can safely change textures.
