@@ -36,7 +36,9 @@ public class TransformScaleable<AnimationEntity extends AEntityC_Definable<?>> e
 		}
 		
 		//Do the actual scaling.
+		GL11.glTranslated(definition.centerPoint.x, definition.centerPoint.y, definition.centerPoint.z);
 		GL11.glScaled(scalingValue.x, scalingValue.y, scalingValue.z);
+		GL11.glTranslated(-definition.centerPoint.x, -definition.centerPoint.y, -definition.centerPoint.z);
 		return scaling;
 	}
 }
