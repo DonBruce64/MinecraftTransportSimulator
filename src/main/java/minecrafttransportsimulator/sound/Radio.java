@@ -40,6 +40,12 @@ public class Radio extends AEntityB_Existing{
 		}
 	}
 	
+	@Override
+	public boolean shouldSavePosition(){
+		//Don't save positional data.  We don't care about that as that comes from our provider.
+		return false;
+	}
+	
 	/**
 	 * Starts radio playback, making a new sound instance to do so.
 	 * This command comes from the currently-selected radio station when
@@ -150,7 +156,7 @@ public class Radio extends AEntityB_Existing{
 	
 	@Override
 	public void save(WrapperNBT data){
-		//Don't save positional data.  We don't care about that as that comes from our provider.
+		super.save(data);
 		data.setInteger("currentSource", currentSource.ordinal());
 		data.setBoolean("savedRadio", true);
 		data.setInteger("preset", preset);
