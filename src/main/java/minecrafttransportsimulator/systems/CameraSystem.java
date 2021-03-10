@@ -185,7 +185,7 @@ public class CameraSystem{
     				//Now that the transformed camera is ready, add the camera initial offset position and rotation.
 					Point3d entityAnglesDelta = cameraProvider.prevAngles.getInterpolatedPoint(cameraProvider.angles, partialTicks);
 					cameraRotation.add(entityAnglesDelta);
-					cameraPosition.add(camera.pos.copy().rotateFine(entityAnglesDelta));
+					cameraPosition.add(camera.pos).rotateFine(entityAnglesDelta);
     				if(camera.rot != null){
     					cameraRotation.add(camera.rot);
     				}
