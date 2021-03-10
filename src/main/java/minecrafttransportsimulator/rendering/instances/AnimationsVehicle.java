@@ -141,6 +141,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("roll"): return vehicle.angles.z;
 			case("altitude"): return vehicle.position.y;
 			case("speed"): return vehicle.axialVelocity*EntityVehicleF_Physics.SPEED_FACTOR*20;
+			case("acceleration"): return vehicle.motion.length() - vehicle.prevMotion.length();
 
 			//Vehicle state cases.
 			case("throttle"): return vehicle.throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
