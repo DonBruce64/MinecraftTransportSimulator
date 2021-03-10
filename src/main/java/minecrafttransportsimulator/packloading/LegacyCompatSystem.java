@@ -203,6 +203,10 @@ public final class LegacyCompatSystem{
 				sirenDef.clampMax = 1.0F;
 				sirenSound.volumeAnimations.add(sirenDef);
 				definition.rendering.sounds.add(sirenSound);
+				if(definition.rendering.customVariables == null){
+					definition.rendering.customVariables = new ArrayList<String>();
+				}
+				definition.rendering.customVariables.add("siren");
 				definition.motorized.sirenSound = null;
 			}
 			if(definition.motorized.isBigTruck){
