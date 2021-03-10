@@ -99,6 +99,9 @@ public class BuilderEntity extends Entity{
     
     @Override
     public void onEntityUpdate(){
+    	//Need to call super to maintain compats with other systems and mods.
+    	super.onEntityUpdate();
+    	
     	//If our entity isn't null, update it and our position.
     	if(entity != null){
     		//Check if we are still valid, or need to be set dead.
