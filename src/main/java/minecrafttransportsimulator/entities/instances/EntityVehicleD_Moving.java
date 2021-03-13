@@ -107,7 +107,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
 			try{
 				if(!towedVehicleSavedID.isEmpty()){
-					towedVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
+					towedVehicle = AEntityA_Base.getEntity(world, towedVehicleSavedID);
 					if(towedVehicle != null){
 						if(!activeHitchPartSavedOffset.isZero()){
 							activeHitchPart = getPartAtLocation(activeHitchPartSavedOffset);
