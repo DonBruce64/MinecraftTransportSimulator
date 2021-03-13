@@ -28,6 +28,13 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private final Point3d[] centerPoints;
 	private final Float[] size;
 	
+	//Temp variables for states.
+	private boolean lightOn;
+	private float electricPower;
+	private float electricFactor;
+	private float sunLight;
+	private float lightBrightness;
+	
 	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
 		super(null);
 		this.type = getTypeFromName(objectName);
@@ -104,18 +111,35 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	
 	@Override
 	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
+		//Set states for this transform.  States will be used here, and in the transform logic.
+		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
+		lightOn = entity.variablesOn.contains(type.lowercaseName) && ((flashBits >> (20*System.currentTimeMillis()/1000)%20) & 1) > 0;
+		electricPower = entity.getLightPower();
+		//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
+		electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
+		sunLight = entity.world.getLightBrightness(entity.position, false);
+		//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
+		lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
+		
 		//If we are a light-up texture, disable lighting prior to the render call.
 		//Don't do this when we apply transforms, as those might block rendering if we have more than one.
 		//That would lead to an un-defined state if we had active lighting changes.
+		//If we aren't, but we should light-up color, set states to render that color rather than the model.
 		if(isLightupTexture){
-			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
-			double electricPower = entity.getLightPower();
-			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
-			//Lights start dimming due to low power at 2/3 power.
-			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
-			InterfaceRender.setLightingState(!(lightActuallyOn && electricFactor > 0));
+			InterfaceRender.setLightingState(!(lightOn && electricFactor > 0));
+			return true;
+		}else{
+			if(blendingEnabled){
+				return false;
+			}else{
+				if(renderColor && lightOn && electricFactor > 0){
+					InterfaceRender.bindTexture("mts:textures/rendering/light.png");
+					InterfaceRender.setLightingState(false);
+					InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, electricFactor);
+				}
+				return true;
+			}
 		}
-		return true;
 	}
 
 	@Override
@@ -131,88 +155,36 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 			InterfaceRender.setLightingState(true);
 		}else{
 			//We cheat here and render our light bits at this point.
-			//It's safe to do this, as we'll already have applied all the other transforms we need, and
-			//we'll have rendered the object so we can safely change textures.
+			//It's safe to do this, as we'll already have applied all the other transforms we need, 
+			//and we'll have rendered the object so we can safely change textures.
 			//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
-			boolean lightActuallyOn = entity.variablesOn.contains(type.lowercaseName) && isFlashingLightOn();
-			float sunLight = entity.world.getLightBrightness(entity.position, false);
-			float electricPower = entity.getLightPower();
-			//Turn all lights off if the power is down to 0.15.  Otherwise dim them based on a linear factor.
-			float electricFactor = (float) Math.min(electricPower > 0.15 ? (electricPower-0.15)/0.75F : 0, 1);
 			
-			//Max brightness occurs when ambient light is 0 and we have at least 2/3 power.
-			float lightBrightness = Math.min((1 - sunLight)*electricFactor, 1);
-			render(lightActuallyOn, electricPower, electricFactor, lightBrightness, entity.shouldRenderBeams(), blendingEnabled);
-		}
-	}
-	
-	/**
-	 *  Renders this light based on the state of the lighting at the passed-in position.  This main call can be used for
-	 *  multiple sources of light, not just vehicles.  Rendering is done in all passes, though -1 is a combination of 0 and 1.
-	 */
-	public void render(boolean lightOn, float electricPower, float electricFactor, float lightBrightness, boolean beamEnabled, boolean blendingEnabled){
-		//Render the texture, color, and cover in the solid pass.
-		if(!blendingEnabled){
-			//Render the color portion of the light if required and we have power.
-			//We use electricFactor as color shows up even in daylight.
-			if(renderColor && lightOn && electricFactor > 0){
-				renderColor(electricFactor);
-			}
-			
-			//Render the cover portion of this light if required.
-			//If the light is on, and the vehicle has power, we want to make the cover bright.
-			if(renderCover){
+			//Render the cover in the solid pass.
+			if(!blendingEnabled && renderCover){
+				//If the light is on, and the vehicle has power, we want to make the cover bright.
 				renderCover(lightOn && electricFactor > 0);
 			}
+			
+			//Flag for flare and beam rendering.
+			boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsSolid.value ? !blendingEnabled : blendingEnabled); 
+			
+			//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
+			//This needs to be done in pass 1 or -1 to do blending.
+			if(renderFlare && lightOn && doBlendRenders){
+				renderFlare(lightBrightness, blendingEnabled);
+			}
+			
+			//Render beam if the light is on and the brightness is non-zero.
+			//This must be done in pass 1 or -1 to do proper blending.
+			//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
+			if(entity.shouldRenderBeams() && renderBeam && lightOn && doBlendRenders){
+				renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness), blendingEnabled);
+			}
+			
+			//Reset states and recall texture.
+			InterfaceRender.resetStates();
+			InterfaceRender.recallTexture();
 		}
-		
-		//Flag for flare and beam rendering.
-		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsSolid.value ? !blendingEnabled : blendingEnabled); 
-		
-		//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
-		//This needs to be done in pass 1 or -1 to do blending.
-		if(renderFlare && lightOn && doBlendRenders){
-			renderFlare(lightBrightness, blendingEnabled);
-		}
-		
-		//Render beam if the light is on and the brightness is non-zero.
-		//This must be done in pass 1 or -1 to do proper blending.
-		//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
-		if(beamEnabled && renderBeam && lightOn && doBlendRenders){
-			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness), blendingEnabled);
-		}
-		
-		//Reset states and recall texture.
-		InterfaceRender.resetStates();
-		InterfaceRender.recallTexture();
-	}
-	
-	/**
-	 *  Returns true if this light is actually on.  This takes into account the flashing
-	 *  bit portion of the light.
-	 */
-	protected boolean isFlashingLightOn(){
-		//Fun with bit shifting!  20 bits make up the light on index here, so align to a 20 tick cycle.
-		return ((flashBits >> (20*System.currentTimeMillis()/1000)%20) & 1) > 0;
-	}
-	
-	/**
-	 *  Renders the solid color portion of this light, if so configured.
-	 *  Parameter is the alpha value for the light.
-	 */
-	private void renderColor(float alphaValue){
-		InterfaceRender.bindTexture("mts:textures/rendering/light.png");
-		InterfaceRender.setLightingState(false);
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[] vertex : vertices){
-			//Add a slight translation and scaling to the light coords based on the normals to make the light
-			//a little bit off of the main shape.  Prevents z-fighting.
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glVertex3f(vertex[0]+vertex[5]*0.0001F, vertex[1]+vertex[6]*0.0001F, vertex[2]+vertex[7]*0.0001F);	
-		}
-		GL11.glEnd();
 	}
 	
 	/**
@@ -229,7 +201,7 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 			//a little bit off of the main shape.  Prevents z-fighting.
 			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glVertex3f(vertex[0]+vertex[5]*0.0003F, vertex[1]+vertex[6]*0.0003F, vertex[2]+vertex[7]*0.0003F);	
+			GL11.glVertex3f(vertex[0]+vertex[5]*0.002F, vertex[1]+vertex[6]*0.002F, vertex[2]+vertex[7]*0.002F);	
 		}
 		GL11.glEnd();
 	}
@@ -254,9 +226,9 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 				//Then apply scaling factor to make the flare larger than the light.
 				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3d(vertex[0]+vertex[5]*0.0002F + (vertex[0] - centerPoints[i].x)*(2 + size[i]*0.25F), 
-						vertex[1]+vertex[6]*0.0002F + (vertex[1] - centerPoints[i].y)*(2 + size[i]*0.25F), 
-						vertex[2]+vertex[7]*0.0002F + (vertex[2] - centerPoints[i].z)*(2 + size[i]*0.25F));	
+				GL11.glVertex3d(vertex[0]+vertex[5]*0.002F + (vertex[0] - centerPoints[i].x)*(2 + size[i]*0.25F), 
+						vertex[1]+vertex[6]*0.002F + (vertex[1] - centerPoints[i].y)*(2 + size[i]*0.25F), 
+						vertex[2]+vertex[7]*0.002F + (vertex[2] - centerPoints[i].z)*(2 + size[i]*0.25F));	
 			}
 		}
 		GL11.glEnd();
