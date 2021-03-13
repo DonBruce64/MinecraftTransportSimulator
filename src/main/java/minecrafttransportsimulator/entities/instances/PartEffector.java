@@ -100,7 +100,17 @@ public class PartEffector extends APart{
 						break;
 					}
 					case PLOW:{
-						world.plowBlock(affectedBlocks[i]);
+						if(world.plowBlock(affectedBlocks[i])){
+							//Harvest blocks on top of this block in case they need to be dropped.
+							List<ItemStack> drops = world.harvestBlock(affectedBlocks[i].copy().add(0, 1, 0));
+							if(drops != null){
+								for(ItemStack stack : drops){
+									if(stack.getCount() > 0){
+										world.spawnItemStack(stack, position);
+									}
+								}
+							}
+						}
 						break;
 					}
 				}
