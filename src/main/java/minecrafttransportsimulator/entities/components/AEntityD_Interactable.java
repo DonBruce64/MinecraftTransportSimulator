@@ -126,9 +126,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Update door boxes.
 		for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
 			if(variablesOn.contains(doorEntry.getValue().name)){
-				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateCoarse(angles).add(position);
+				
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
 			}else{
-				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateCoarse(angles).add(position);
+				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
 			}
 		}
 	}
