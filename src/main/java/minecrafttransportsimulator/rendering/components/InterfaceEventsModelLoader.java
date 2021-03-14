@@ -91,7 +91,9 @@ public class InterfaceEventsModelLoader{
 			public void render(BuilderTileEntity builder, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
 				if(builder.tileEntity != null){
 					if(builder.renderData.shouldRender()){
-						builder.tileEntity.getRenderer().render(builder.tileEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+						if(!builder.getWorld().isAirBlock(builder.getPos())){
+							builder.tileEntity.getRenderer().render(builder.tileEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+						}
 					}
 				}
 			}

@@ -63,7 +63,9 @@ public class InterfaceEventsWorldRendering{
 				if(tile instanceof BuilderTileEntity){
 					BuilderTileEntity<?> builder = (BuilderTileEntity<?>) tile;
 					if(builder.tileEntity != null && builder.renderData.shouldRender()){
-		        		builder.tileEntity.getRenderer().render(builder.tileEntity, pass == 1, partialTicks);
+						if(!builder.getWorld().isAirBlock(builder.getPos())){
+							builder.tileEntity.getRenderer().render(builder.tileEntity, pass == 1, partialTicks);
+						}
 					}
 				}
 	        }
