@@ -70,6 +70,14 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					rollers.add(parsedRollers.get(i));
 				}
 				
+				//TODO remove when DPL converts his treads.
+				//If we have no rollers, bail.
+				if(rollers.isEmpty()){
+					points = new ArrayList<Double[]>();
+					treadPoints.put(treadPathModel, points);
+					return false;
+				}
+				
 				//We need to ensure the endpoints are all angle-aligned.
 				//It's possible to have a start angle of -181 and end angle of
 				//181, which is really just 2 degress of angle (179-181).
