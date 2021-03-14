@@ -770,6 +770,14 @@ public final class LegacyCompatSystem{
 					JSONAnimatedObject connectorModelObject = new JSONAnimatedObject();
 					connectorModelObject.objectName = axis.name().toLowerCase();
 					connectorModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition connectorVisibilityInhibitor = new JSONAnimationDefinition();
+					
+					connectorVisibilityInhibitor.animationType = AnimationComponentType.INHIBITOR;
+					connectorVisibilityInhibitor.variable = "solid_present_" + axis.name().toLowerCase();
+					connectorVisibilityInhibitor.clampMin = 1.0F;
+					connectorVisibilityInhibitor.clampMax = 1.0F;
+					connectorModelObject.animations.add(connectorVisibilityInhibitor);
+					
 					JSONAnimationDefinition connectorVisibility = new JSONAnimationDefinition();
 					connectorVisibility.animationType = AnimationComponentType.VISIBILITY;
 					connectorVisibility.variable = "neighbor_present_" + axis.name().toLowerCase();
@@ -777,6 +785,7 @@ public final class LegacyCompatSystem{
 					connectorVisibility.clampMax = 1.0F;
 					connectorModelObject.animations.add(connectorVisibility);
 					definition.rendering.animatedObjects.add(connectorModelObject);
+					
 					
 					JSONAnimatedObject solidModelObject = new JSONAnimatedObject();
 					solidModelObject.objectName = axis.name().toLowerCase() + "_solid";
