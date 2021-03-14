@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_StreetLight;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
@@ -40,17 +39,11 @@ public class GUISignalController extends AGUIBase{
 	
 	//Labels and items for scan results.
 	private byte trafficSignals;
-	private byte streetLights;
-	
 	private GUIComponentLabel trafficSignalCount;
-	private GUIComponentLabel streetLightCount;
 	private GUIComponentItem trafficSignalItem;
-	private GUIComponentItem streetLightItem;
 	
 	//These are only used to save the items until we create the components.
 	private ItemStack trafficSignalItemTemp;
-	private ItemStack streetLightItemTemp;
-	
 	
 	//Internal controller locations point list.
 	//We set this to prevent the player from seeing changes on their clients.
@@ -71,10 +64,6 @@ public class GUISignalController extends AGUIBase{
 						trafficSignalItemTemp = component.getItem().getNewStack();
 						++trafficSignals;
 						componentLocations.add(location);
-					}else if(component instanceof TileEntityPole_StreetLight){
-						streetLightItemTemp = component.getItem().getNewStack();
-						++streetLights;
-						componentLocations.add(location);
 					}
 				}
 			}
@@ -87,24 +76,18 @@ public class GUISignalController extends AGUIBase{
 			@Override
 			public void onClicked(){
 				trafficSignals = 0;
-				streetLights = 0;
 				componentLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
-				Point3d checkPosition = new Point3d();
 				for(double i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
 					for(double j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
 						for(double k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
-							checkPosition.set(i, j, k);
+							Point3d checkPosition = new Point3d(i, j, k);
 							ATileEntityBase<?> tile = controller.world.getTileEntity(checkPosition);
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
 										trafficSignalItem.stack = component.getItem().getNewStack();
 										++trafficSignals;
-										componentLocations.add(checkPosition);
-									}else if(component instanceof TileEntityPole_StreetLight){
-										streetLightItem.stack = component.getItem().getNewStack();
-										++streetLights;
 										componentLocations.add(checkPosition);
 									}
 								}
@@ -121,10 +104,6 @@ public class GUISignalController extends AGUIBase{
 		//Traffic signal scan results.
 		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemTemp));
 		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + trafficSignals));
-		
-		//Street lamp scan results.
-		addItem(streetLightItem = new GUIComponentItem(guiLeft + 200, guiTop + 52, 1.0F, streetLightItemTemp));
-		addLabel(streetLightCount = new GUIComponentLabel(guiLeft + 215, guiTop + 56, Color.WHITE, " X" + streetLights));
 		
 		
 		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionXAxis ? "X" : "Z", 15, true){
@@ -229,10 +208,8 @@ public class GUISignalController extends AGUIBase{
 	@Override
 	public void setStates(){
 		trafficSignalCount.visible = trafficSignals > 0;
-		streetLightCount.visible = streetLights > 0;
 		
 		trafficSignalCount.text = " X" + trafficSignals;
-		streetLightCount.text = " X" + streetLights;
 		
 		if(trafficSignals > 0){
 			orientationButton.enabled = true;
