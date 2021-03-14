@@ -16,7 +16,6 @@ public class JSONSubDefinition{
 	@JSONDescription("This parameter is optional.  If set, any textObjects marked as colorInherited will use this color rather than their own.  Useful when you have multiple textures for your model that would cause issues with a single text color.")
 	public String secondColor;
 	
-	@JSONRequired
 	@JSONDescription("The name of this component.  Will be displayed in item form and in the benches.  Note that this is just a display name, and is NOT used in any file-linking operations like subName is, so you can put whatever you want here.  Also note that this overrides the “name” parameter in the general section.")
 	public String name;
 	
