@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -50,13 +51,19 @@ public class PacketEntityCSHandshake extends APacketBase{
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		if(world.isClient()){
-			//Create the entity from loaded data.
-			BuilderEntity builder = (BuilderEntity) world.getEntity(builderID).entity; 
-			builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, player, data);
-		}else{
-			//Queue up the builder to send the player data back next update.
-			((BuilderEntity) world.getEntity(builderID).entity).playersRequestingData.add(player);
+		//Need to do null checks here as some entities may not exist due to them being unloaded during packet transfer.
+		WrapperEntity wrapper = world.getEntity(builderID);
+		if(wrapper != null){
+			BuilderEntity builder = (BuilderEntity) wrapper.entity;
+			if(builder != null){
+				if(world.isClient()){
+					//Create the entity from loaded data.
+					builder.entity = BuilderEntity.entityMap.get(data.getString("entityid")).createEntity(world, player, data);
+				}else{
+					//Queue up the builder to send the player data back next update.
+					builder.playersRequestingData.add(player);
+				}
+			}
 		}
 	}
 }
