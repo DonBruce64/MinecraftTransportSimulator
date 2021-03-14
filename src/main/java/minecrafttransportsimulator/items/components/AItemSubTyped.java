@@ -24,7 +24,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	public String getItemName(){
 		for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
-				return subDefinition.name != null ? subDefinition.name : definition.general.name;
+				return subDefinition.name != null ? subDefinition.name : super.getItemName();
 			}
 		}
 		return "";
