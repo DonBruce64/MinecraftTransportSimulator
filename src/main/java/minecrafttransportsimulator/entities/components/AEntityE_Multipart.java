@@ -392,15 +392,15 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
     		}else{
 	    		addPart(partToAdd, true);
 				
-				//If we are a new part, add default parts.  We need to do this after we send a packet.
-				//We need to make sure to convert them to the right type as they're offset.
+				//Add default parts.  We need to do this after we send a packet so our slots are valid.
+				//Also need to make sure to convert the part placement defs to the right type as they're offset.
 	    		boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
-				if(newPart && partToAdd.definition.parts != null){
+				if(partToAdd.definition.parts != null){
 					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
 						subPartsToAdd.add(getPackForSubPart(partToAdd.placementDefinition, subPartPack));
 					}
-					addDefaultParts(subPartsToAdd, addedDuringConstruction);
+					addDefaultParts(subPartsToAdd, addedDuringConstruction, !newPart);
 				}
     		}
 			return true;
@@ -446,6 +446,17 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
    	 */
 	public void removePart(APart part, Iterator<APart> iterator){
 		if(parts.contains(part)){
+			//If the part has any parts, remove those first.
+			if(!part.childParts.isEmpty()){
+				if(iterator == null){
+					while(!part.childParts.isEmpty()){
+						removePart(part.childParts.get(0), null);
+					}
+				}else{
+					throw new IllegalStateException("Attempted to remove a part with child parts from an entity during an update loop.  This is NOT allowed!");
+				}
+			}
+			
 			//Remove part from main list of parts.
 			if(iterator != null){
 				iterator.remove();
@@ -661,11 +672,13 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * The part list should consist of a "parts" JSON definition, and can either
 	 * be on the main entity, or a part on this entity (subParts).
 	 * This method should only be called when the entity or part with the
-	 * passed-in definition is first placed, not when it's being loaded from saved data.
+	 * passed-in definition is placed on this entity, not when it's being loaded from saved data.
+	 * The savedParent flag is to let this method add only default permanent parts, as they get
+	 * removed with the part when wrenched, and added back when placed again, and don't save their states.
 	 */
-	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, boolean addedDuringConstruction){
+	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, boolean addedDuringConstruction, boolean savedParent){
 		for(JSONPartDefinition partDef : partsToAdd){
-			if(partDef.defaultPart != null){
+			if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
 				try{
 					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
@@ -676,7 +689,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							//Check if we have an additional parts.
 							//If so, we need to check that for default parts.
 							if(partDef.additionalParts != null){
-								addDefaultParts(partDef.additionalParts, addedDuringConstruction);
+								addDefaultParts(partDef.additionalParts, addedDuringConstruction, savedParent);
 							}
 							
 							//Check all sub-parts, if we have any.
@@ -686,7 +699,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 								for(JSONPartDefinition subPartPack : partItem.definition.parts){
 									subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
 								}
-								addDefaultParts(subPartsToAdd, addedDuringConstruction);
+								addDefaultParts(subPartsToAdd, addedDuringConstruction, savedParent);
 							}
 						}
 					}catch(NullPointerException e){
@@ -765,8 +778,19 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
-				if(clientPlayer.getHeldItem() instanceof ItemWrench && !part.childParts.isEmpty()){
-					continue;
+				//The only exception are parts that have permanent-default parts on them.  These can be wrenched.
+				if(clientPlayer.getHeldItem() instanceof ItemWrench){
+					boolean partHasRemovablePart = false;
+					for(APart childPart : part.childParts){
+						if(!childPart.placementDefinition.isPermanent){
+							partHasRemovablePart = true;
+							break;
+						}
+					}
+					
+					if(partHasRemovablePart){
+						continue;
+					}
 				}
 			}
 				

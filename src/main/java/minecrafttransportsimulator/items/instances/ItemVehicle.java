@@ -57,7 +57,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				newVehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recursion.
-				newVehicle.addDefaultParts(newVehicle.definition.parts, true);
+				newVehicle.addDefaultParts(newVehicle.definition.parts, true, false);
 				
 				//Add default instruments.
 				for(JSONInstrumentDefinition packInstrument : newVehicle.definition.motorized.instruments){
