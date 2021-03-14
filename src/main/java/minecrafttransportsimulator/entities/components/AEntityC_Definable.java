@@ -323,6 +323,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		for(JSONSound soundDef : soundVolumeClocks.keySet()){
 			//Check if we should be playing this sound.
 			boolean shouldSoundPlay = true;
+			boolean anyClockMovedThisUpdate = false;
 			for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
 					//We use the clock here to check if the state of the variable changed, not
@@ -334,12 +335,21 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}else{
 						//Need to use the state-change bit here.
 						clock.getFactoredState(this, value);
+						if(!anyClockMovedThisUpdate){
+							anyClockMovedThisUpdate = clock.movedThisUpdate;
+						}
 					}
-					if(value < animation.clampMin || value > animation.clampMax || (!soundDef.looping && !soundDef.repeating && !clock.movedThisUpdate)){
+					
+					if(value < animation.clampMin || value > animation.clampMax){
 						shouldSoundPlay = false;
 						break;
 					}
 				}
+			}
+			
+			//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
+			if(!soundDef.looping && !soundDef.repeating && !anyClockMovedThisUpdate){
+				shouldSoundPlay = false;
 			}
 			
 			if(shouldSoundPlay){
