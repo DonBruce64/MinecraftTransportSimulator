@@ -14,7 +14,6 @@ import minecrafttransportsimulator.items.instances.ItemFuelHose;
 import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
-import minecrafttransportsimulator.items.instances.ItemPartScanner;
 import minecrafttransportsimulator.items.instances.ItemTicket;
 import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
@@ -44,7 +43,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.15.2";
+	public static final String MODVER = "19.15.3-BETA20";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -62,7 +61,6 @@ public class MasterLoader{
 		
 		//Create main items.
 		createItem(new ItemWrench());
-		createItem(new ItemPartScanner());
 		createItem(new ItemKey());
 		createItem(new ItemFuelHose());
 		createItem(new ItemJumperCable());
@@ -84,6 +82,7 @@ public class MasterLoader{
 			
 			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_en.json"), "UTF-8"), "handbook_en", resourceDomain);
 			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_ru.json"), "UTF-8"), "handbook_ru", resourceDomain);
+			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/partscanner.json"), "UTF-8"), "partscanner", resourceDomain);
 			PackParserSystem.addPartDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/parts/jerrycan.json"), "UTF-8"), "jerrycan", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/fuelpump.json"), "UTF-8"), "fuelpump", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/vehiclebench.json"), "UTF-8"), "vehiclebench", resourceDomain);

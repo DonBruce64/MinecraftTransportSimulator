@@ -17,8 +17,9 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.items.instances.ItemPartScanner;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
@@ -270,7 +271,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					GL11.glPopMatrix();
 				}
 			}
-		}else if(heldItem instanceof ItemPartScanner){
+		}else if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.SCANNER)){
 			Point3d playerEyes = player.getPosition().add(0, player.getEyeHeight(), 0);
 			Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getHeadYaw(), 0)));
 			BoundingBox highlightedBox = null;

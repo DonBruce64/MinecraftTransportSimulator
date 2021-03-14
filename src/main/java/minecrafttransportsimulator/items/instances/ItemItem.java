@@ -59,6 +59,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemFood{
 		@JSONDescription("Creates a booklet, which is a book-like item.")
 		BOOKLET,
 		@JSONDescription("Creates an item that can be eaten.")
-		FOOD;
+		FOOD,
+		@JSONDescription("Creates an item that works as a part scanner.")
+		SCANNER;
 	}
 }

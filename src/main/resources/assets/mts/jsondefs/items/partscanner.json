@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Part Scanner",
+	"description" : "Hover over a part box to see what can be placed at that slot.\nSneak while using to cycle slower.",
+	"materials" : ["oredict:ingotIron:0:4", "minecraft:glass_pane:0:1", "minecraft:gold_nugget:0:1", "minecraft:repeater:0:1", "minecraft:redstone:0:1", "minecraft:stone_button:0:1"],
+	"type" : "scanner"
+  }
+}
