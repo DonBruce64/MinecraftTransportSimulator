@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 
 /**A specific class of {@link TransformRotatable}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -12,6 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
  * @author don_bruce
  */
 public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends TransformRotatable<AnimationEntity>{
+	public final boolean isRight;
 	public final int rollerNumber;
 	public final double yPos;
 	public final double zPos;
@@ -25,8 +29,9 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	public double endZ;
 	public double endAngle;
 	
-	public TransformTreadRoller(String objectName, Float[][] vertices){
-		super(generateDefaultDefinition());
+	public TransformTreadRoller(String objectName, Float[][] vertices, List<JSONPartDefinition> partDefs){
+		super(generateDefaultDefinition(partDefs, objectName.toLowerCase().startsWith("r")));
+		this.isRight = objectName.toLowerCase().startsWith("r");
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		
 		//Get the points that define this roller.
@@ -56,10 +61,19 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 		this.rotationAxis.set(1.0, 0, 0);
 	}
 	
-	private static JSONAnimationDefinition generateDefaultDefinition(){
+	private static JSONAnimationDefinition generateDefaultDefinition(List<JSONPartDefinition> partDefs, boolean isRight){
 		JSONAnimationDefinition definition = new JSONAnimationDefinition();
 		definition.animationType = AnimationComponentType.ROTATION;
-		definition.variable = "ground_rotation_1";
+		int partIndex = 1;
+		for(JSONPartDefinition partDef : partDefs){
+			if(partDef.types.contains("ground_tread")){
+				if(!(partDef.pos.x < 0 ^ isRight)){
+					break;
+				}
+				++partIndex;
+			}
+		}
+		definition.variable = "ground_rotation_" + partIndex;
 		definition.centerPoint = new Point3d();
 		definition.axis = new Point3d();
 		return definition;

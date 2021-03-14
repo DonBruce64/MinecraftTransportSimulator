@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
@@ -47,7 +48,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.applyAfter = null;
 			//Roller found.  Create a transform for it.
 			if(objectName.toLowerCase().contains("roller")){
-				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices));
+				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices, ((AJSONPartProvider) entity.definition).parts));
 			}else if(entity instanceof PartGroundDevice){
 				PartGroundDevice grounder = (PartGroundDevice) entity;
 				if(grounder.definition.ground != null && grounder.definition.ground.isTread){

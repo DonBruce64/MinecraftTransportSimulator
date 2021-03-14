@@ -118,14 +118,7 @@ public class JSONPartDefinition{
     public float rotationClampMax;
     @Deprecated
     public boolean rotationAbsolute;
-
-    //Tread-specific part variables.
-    @Deprecated
-    public float[] treadYPoints;
-    @Deprecated
-    public float[] treadZPoints;
-    @Deprecated
-    public float[] treadAngles;
+    
     
     //Engine-specific part variables.
     @Deprecated
