@@ -298,11 +298,6 @@ public class PartGun extends APart{
 			firing = false;
 		}
 		
-		//Decrement cooldown time blocking gun from firing, if we have any.
-		if(cooldownTimeRemaining > 0){
-			--cooldownTimeRemaining;
-		}
-		
 		//Increment or decrement windup.
 		if(firing && windupTimeCurrent < definition.gun.windupTime){
 			++windupTimeCurrent;
@@ -394,6 +389,11 @@ public class PartGun extends APart{
 		}else if(bulletsReloading != 0){
 			bulletsLeft += bulletsReloading;
 			bulletsReloading = 0;
+		}
+		
+		//Decrement cooldown time blocking gun from firing, if we have any.
+		if(cooldownTimeRemaining > 0){
+			--cooldownTimeRemaining;
 		}
 	}
 	
