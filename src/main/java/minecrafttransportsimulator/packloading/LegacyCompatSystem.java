@@ -181,13 +181,13 @@ public final class LegacyCompatSystem{
 				JSONSound hornSound = new JSONSound();
 				hornSound.name = definition.motorized.hornSound;
 				hornSound.looping = true;
-				hornSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				hornSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
 				hornDef.animationType = AnimationComponentType.VISIBILITY;
 				hornDef.variable = "horn";
 				hornDef.clampMin = 1.0F;
 				hornDef.clampMax = 1.0F;
-				hornSound.volumeAnimations.add(hornDef);
+				hornSound.activeAnimations.add(hornDef);
 				definition.rendering.sounds.add(hornSound);
 				definition.motorized.hornSound = null;
 			}
@@ -195,13 +195,13 @@ public final class LegacyCompatSystem{
 				JSONSound sirenSound = new JSONSound();
 				sirenSound.name = definition.motorized.sirenSound;
 				sirenSound.looping = true;
-				sirenSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				sirenSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
 				sirenDef.animationType = AnimationComponentType.VISIBILITY;
 				sirenDef.variable = "siren";
 				sirenDef.clampMin = 1.0F;
 				sirenDef.clampMax = 1.0F;
-				sirenSound.volumeAnimations.add(sirenDef);
+				sirenSound.activeAnimations.add(sirenDef);
 				definition.rendering.sounds.add(sirenSound);
 				if(definition.rendering.customVariables == null){
 					definition.rendering.customVariables = new ArrayList<String>();
@@ -212,25 +212,25 @@ public final class LegacyCompatSystem{
 			if(definition.motorized.isBigTruck){
 				JSONSound airbrakeSound = new JSONSound();
 				airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
-				airbrakeSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				airbrakeSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
 				airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
 				airbrakeDef.variable = "p_brake";
 				airbrakeDef.clampMin = 1.0F;
 				airbrakeDef.clampMax = 1.0F;
-				airbrakeSound.volumeAnimations.add(airbrakeDef);
+				airbrakeSound.activeAnimations.add(airbrakeDef);
 				definition.rendering.sounds.add(airbrakeSound);
 				
 				JSONSound backupBeeperSound = new JSONSound();
 				backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
 				backupBeeperSound.looping = true;
-				backupBeeperSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				backupBeeperSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
 				backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
 				backupBeeperDef.variable = "engine_gear_1";
 				backupBeeperDef.clampMin = -10.0F;
 				backupBeeperDef.clampMax = -1.0F;
-				backupBeeperSound.volumeAnimations.add(backupBeeperDef);
+				backupBeeperSound.activeAnimations.add(backupBeeperDef);
 				definition.rendering.sounds.add(backupBeeperSound);
 				
 				definition.motorized.isBigTruck = false;
@@ -461,50 +461,50 @@ public final class LegacyCompatSystem{
 				//Starting sound plays when engine goes from stopped to running.
 				JSONSound startingSound = new JSONSound();
 				startingSound.name = packID + ":" + systemName + "_starting";
-				startingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				startingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition startingVolumeDef = new JSONAnimationDefinition();
 				startingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
 				startingVolumeDef.variable = "engine_running";
 				startingVolumeDef.clampMin = 1.0F;
 				startingVolumeDef.clampMax = 1.0F;
-				startingSound.volumeAnimations.add(startingVolumeDef);
+				startingSound.activeAnimations.add(startingVolumeDef);
 				definition.rendering.sounds.add(startingSound);
 				
 				//Stopping sound plays when engine goes from running to stopped.
 				JSONSound stoppingSound = new JSONSound();
 				stoppingSound.name = packID + ":" + systemName + "_stopping";
-				stoppingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				stoppingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition stoppingVolumeDef = new JSONAnimationDefinition();
 				stoppingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
 				stoppingVolumeDef.variable = "engine_running";
 				stoppingVolumeDef.clampMin = 0.0F;
 				stoppingVolumeDef.clampMax = 0.0F;
-				stoppingSound.volumeAnimations.add(stoppingVolumeDef);
+				stoppingSound.activeAnimations.add(stoppingVolumeDef);
 				definition.rendering.sounds.add(stoppingSound);
 				
 				//Sputtering sound plays when engine backfires.
 				JSONSound sputteringSound = new JSONSound();
 				sputteringSound.name = packID + ":" + systemName + "_sputter";
-				sputteringSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				sputteringSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition sputteringVolumeDef = new JSONAnimationDefinition();
 				sputteringVolumeDef.animationType = AnimationComponentType.VISIBILITY;
 				sputteringVolumeDef.variable = "engine_backfired";
 				sputteringVolumeDef.clampMin = 1.0F;
 				sputteringVolumeDef.clampMax = 1.0F;
-				sputteringSound.volumeAnimations.add(sputteringVolumeDef);
+				sputteringSound.activeAnimations.add(sputteringVolumeDef);
 				definition.rendering.sounds.add(sputteringSound);
 				
 				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
 				crankingSound.name = packID + ":" + systemName + "_cranking";
 				crankingSound.looping = true;
-				crankingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				crankingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingVolumeDef = new JSONAnimationDefinition();
 				crankingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
 				crankingVolumeDef.variable = "engine_starter";
 				crankingVolumeDef.clampMin = 1.0F;
 				crankingVolumeDef.clampMax = 1.0F;
-				crankingSound.volumeAnimations.add(crankingVolumeDef);
+				crankingSound.activeAnimations.add(crankingVolumeDef);
 				
 				crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
@@ -531,6 +531,7 @@ public final class LegacyCompatSystem{
 						JSONSound runningSound = new JSONSound();
 						runningSound.name = customSound.soundName;
 						runningSound.looping = true;
+						runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 						runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
 						runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
 						
@@ -540,7 +541,7 @@ public final class LegacyCompatSystem{
 						runningStartDef.variable = "engine_powered";
 						runningStartDef.clampMin = 1.0F;
 						runningStartDef.clampMax = 1.0F;
-						runningSound.volumeAnimations.add(runningStartDef);
+						runningSound.activeAnimations.add(runningStartDef);
 						
 						//Add volume variable.
 						JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
@@ -580,13 +581,13 @@ public final class LegacyCompatSystem{
 					JSONSound runningSound = new JSONSound();
 					runningSound.name = packID + ":" + systemName + "_running";
 					runningSound.looping = true;
-					runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+					runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
 					runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
 					runningVolumeDef.variable = "engine_powered";
 					runningVolumeDef.clampMin = 1.0F;
 					runningVolumeDef.clampMax = 1.0F;
-					runningSound.volumeAnimations.add(runningVolumeDef);
+					runningSound.activeAnimations.add(runningVolumeDef);
 					
 					runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
@@ -610,25 +611,25 @@ public final class LegacyCompatSystem{
 				
 				JSONSound firingSound = new JSONSound();
 				firingSound.name = packID + ":" + systemName + "_firing";
-				firingSound.repeating = true;
-				firingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				firingSound.forceSound = true;
+				firingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
 				firingDef.animationType = AnimationComponentType.VISIBILITY;
 				firingDef.variable = "gun_fired";
 				firingDef.clampMin = 1.0F;
 				firingDef.clampMax = 1.0F;
-				firingSound.volumeAnimations.add(firingDef);
+				firingSound.activeAnimations.add(firingDef);
 				definition.rendering.sounds.add(firingSound);
 				
 				JSONSound reloadingSound = new JSONSound();
 				reloadingSound.name = packID + ":" + systemName + "_reloading";
-				reloadingSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
+				reloadingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
 				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
 				reloadingDef.variable = "gun_reload";
 				reloadingDef.clampMin = 1.0F;
 				reloadingDef.clampMax = 1.0F;
-				reloadingSound.volumeAnimations.add(reloadingDef);
+				reloadingSound.activeAnimations.add(reloadingDef);
 				definition.rendering.sounds.add(reloadingSound);
 			}
 		}
