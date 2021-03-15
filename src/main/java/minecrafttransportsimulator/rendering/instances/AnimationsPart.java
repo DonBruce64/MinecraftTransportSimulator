@@ -126,7 +126,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("gun_inhand"): return gun.entityOn instanceof EntityPlayerGun ? 1 : 0;	
 				case("gun_active"): return gun.active ? 1 : 0;
 				case("gun_firing"): return gun.firing ? 1 : 0;
-				case("gun_fired"): return gun.active && gun.firing && gun.cooldownTimeRemaining == gun.definition.gun.fireDelay ? 1 : 0;
+				case("gun_fired"): return gun.firedThisTick ? 1 : 0;
 				case("gun_pitch"): return gun.prevOrientation.x + (gun.currentOrientation.x - gun.prevOrientation.x)*partialTicks;
 				case("gun_yaw"): return gun.prevOrientation.y + (gun.currentOrientation.y - gun.prevOrientation.y)*partialTicks;
 				case("gun_pitching"): return gun.prevOrientation.x != gun.currentOrientation.x ? 1 : 0;
