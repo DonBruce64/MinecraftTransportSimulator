@@ -55,10 +55,13 @@ public class ItemPaintGun extends AItemBase implements IItemVehicleInteractable{
 				InterfaceGUI.openGUI(new GUIPaintGun(tile, player));
 				return true;
 			}else if(tile instanceof TileEntityPole){
-				//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
-				axis = Axis.getFromRotation(player.getYaw()).getOpposite();
-				if(((TileEntityPole) tile).components.containsKey(axis)){
-					InterfaceGUI.openGUI(new GUIPaintGun(((TileEntityPole) tile).components.get(axis), player));
+				TileEntityPole pole = (TileEntityPole) tile;
+				if(pole.definition.pole.allowsDiagonals){
+					//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
+					axis = Axis.getFromRotation(player.getYaw()).getOpposite();
+				}
+				if(pole.components.containsKey(axis)){
+					InterfaceGUI.openGUI(new GUIPaintGun(pole.components.get(axis), player));
 				}
 				return true;
 			}

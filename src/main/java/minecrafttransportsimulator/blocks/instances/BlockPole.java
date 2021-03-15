@@ -46,14 +46,15 @@ public class BlockPole extends ABlockBase implements IBlockTileEntity<TileEntity
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
-		axis = Axis.getFromRotation(player.getYaw()).getOpposite();
-		
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
 		if(pole != null){
+			if(pole.definition.pole.allowsDiagonals){
+				//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
+				axis = Axis.getFromRotation(player.getYaw()).getOpposite();
+			}
 			ItemStack heldStack = player.getHeldStack();
 			AItemBase heldItem = player.getHeldItem();
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);

@@ -18,5 +18,8 @@ public class JSONPoleComponent extends AJSONMultiModelProvider{
     	@JSONRequired
     	@JSONDescription("This parameter tells MTS how much to offset components put on this pole.\nThis is because some poles may be larger than others, and making it so models always render at the same point would lead to clipping on large poles and floating on small ones. \nFor all cases, you should set this to the offset from the center where all components should attach to your pole.")
     	public float radius;
+    	
+    	@JSONDescription("Normally poles don't allow components to be placed diagonally on them.  If you want this with your poles, set this to true.")
+    	public boolean allowsDiagonals;
     }
 }
