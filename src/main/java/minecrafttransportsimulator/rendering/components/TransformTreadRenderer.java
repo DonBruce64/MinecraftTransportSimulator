@@ -49,7 +49,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 						if(transform instanceof TransformTreadRoller){
 							TransformTreadRoller<EntityVehicleF_Physics> treadTransform = (TransformTreadRoller<EntityVehicleF_Physics>) transform;
-							if(!treadTransform.isRight){
+							if(!treadTransform.isLeft){
 								parsedRollers.put(treadTransform.rollerNumber, treadTransform);
 							}
 						}

@@ -15,7 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
  * @author don_bruce
  */
 public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends TransformRotatable<AnimationEntity>{
-	public final boolean isRight;
+	public final boolean isLeft;
 	public final int rollerNumber;
 	public final double yPos;
 	public final double zPos;
@@ -30,8 +30,8 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	public double endAngle;
 	
 	public TransformTreadRoller(String objectName, Float[][] vertices, List<JSONPartDefinition> partDefs){
-		super(generateDefaultDefinition(partDefs, objectName.toLowerCase().startsWith("r")));
-		this.isRight = objectName.toLowerCase().startsWith("r");
+		super(generateDefaultDefinition(partDefs, objectName.toLowerCase().startsWith("l")));
+		this.isLeft = objectName.toLowerCase().startsWith("l");
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
 		
 		//Get the points that define this roller.
@@ -61,13 +61,13 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 		this.rotationAxis.set(1.0, 0, 0);
 	}
 	
-	private static JSONAnimationDefinition generateDefaultDefinition(List<JSONPartDefinition> partDefs, boolean isRight){
+	private static JSONAnimationDefinition generateDefaultDefinition(List<JSONPartDefinition> partDefs, boolean isLeft){
 		JSONAnimationDefinition definition = new JSONAnimationDefinition();
 		definition.animationType = AnimationComponentType.ROTATION;
 		int partIndex = 1;
 		for(JSONPartDefinition partDef : partDefs){
 			if(partDef.types.contains("ground_tread")){
-				if(!(partDef.pos.x < 0 ^ isRight)){
+				if(!(partDef.pos.x >= 0 ^ isLeft)){
 					break;
 				}
 				++partIndex;
