@@ -21,11 +21,13 @@ public class Radio extends AEntityB_Existing{
 	public RadioStation currentStation;
 	
 	//Private runtime variables.
+	private final AEntityB_Existing provider;
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
 	public Radio(AEntityB_Existing provider, WrapperNBT data){
 		super(provider.world, data);
+		this.provider = provider;
 		if(world.isClient()){
 			if(data.getBoolean("savedRadio")){
 				changeSource(RadioSources.values()[data.getInteger("currentSource")], false);
@@ -44,6 +46,12 @@ public class Radio extends AEntityB_Existing{
 	public boolean shouldSavePosition(){
 		//Don't save positional data.  We don't care about that as that comes from our provider.
 		return false;
+	}
+	
+	@Override
+	public void update(){
+		super.update();
+		position.setTo(provider.position);
 	}
 	
 	/**

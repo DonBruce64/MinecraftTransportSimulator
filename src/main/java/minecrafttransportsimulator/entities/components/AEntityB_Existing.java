@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.sound.InterfaceSound;
+import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Base class for entities that exist in the world. In addition to the normal functions
@@ -27,6 +28,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevRotation;
 	public double airDensity;
 	
+	//Internal radio variables.
+	public final Radio radio;
+	
 	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
@@ -38,6 +42,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
 		
+		//Create radio.
+		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
+		
 		//Start sounds.
 		if(world.isClient()){
 			InterfaceSound.startSounds(this);
@@ -47,11 +54,22 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	@Override
 	public void update(){
 		super.update();
+		if(radio != null){
+			radio.update();
+		}
 		prevPosition.setTo(position);
 		prevMotion.setTo(motion);
 		prevAngles.setTo(angles);
 		prevRotation.setTo(rotation);
 		airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		if(radio != null){
+			radio.stop();
+		}
 	}
 	
 	/**
@@ -101,6 +119,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
     }
     
     /**
+	 *  Returns true if this entity has a radio.  Radios are updated to sync with the entity and
+	 *  will save on them as applicable.
+	 */
+	public boolean hasRadio(){
+		return false;
+	}
+    
+    /**
 	 *  Called by the audio system to query this entity to update its sounds.
 	 *  The entity should start/stop any sounds, and change their properties,
 	 *  when this method is called.  All existing sounds this entity is playing
@@ -130,6 +156,11 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			data.setPoint3d("motion", motion);
 			data.setPoint3d("angles", angles);
 			data.setPoint3d("rotation", rotation);
+		}
+		if(radio != null){
+			WrapperNBT radioData = new WrapperNBT();
+			radio.save(radioData);
+			data.setData("radio", radioData);
 		}
 	}
 }

@@ -25,7 +25,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
-import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -67,9 +66,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	//Map containing incoming missiles, sorted by distance.
 	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
 	
-	//Internal radio variables.
-	public final Radio radio;
-	
 	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		
@@ -95,9 +91,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 				}
 			}
 		}
-		
-		//Start create radio.
-		this.radio = new Radio(this, data.getDataOrNew("radio"));
 	}
 	
 	@Override
@@ -189,12 +182,6 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			}
 		}
 		missilesIncoming.putAll(tempMap);
-	}
-	
-	@Override
-	public void remove(){
-		super.remove();
-		radio.stop();
 	}
 	
 	@Override
@@ -341,6 +328,11 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	
 	//-----START OF SOUND AND ANIMATION CODE-----
 	@Override
+	public boolean hasRadio(){
+		return true;
+	}
+	
+	@Override
 	public float getLightPower(){
 		return (float) (electricPower/12F);
 	}
@@ -370,9 +362,5 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 				data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
 			}
 		}
-		
-		WrapperNBT radioData = new WrapperNBT();
-		radio.save(radioData);
-		data.setData("radio", radioData);
 	}
 }
