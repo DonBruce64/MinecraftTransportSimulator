@@ -340,17 +340,6 @@ item.paintgun.name=Paint Gun
 item.ticket.name=Ticket
 item.y2kbutton.name=Y2K Button
 
-tile.vehiclebench.name=Drafting Table (Vehicles)
-tile.propellerbench.name=Propeller Bench
-tile.enginebench.name=Engine Hoist
-tile.wheelbench.name=Wheel Workbench
-tile.seatbench.name=Table Saw (Seats & Cargo)
-tile.gunbench.name=Rifling Machine (Guns & Ammo)
-tile.custombench.name=Tool Bench (Custom Parts)
-tile.instrumentbench.name=Instrument Bench
-tile.itembench.name=Component Bench (Custom Items)
-tile.decorbench.name=Decor Bench (Decorative Blocks)
-
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:
 
