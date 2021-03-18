@@ -96,7 +96,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> activeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
 				if(soundDef.activeAnimations !=  null){
 					for(JSONAnimationDefinition animation : soundDef.activeAnimations){
-						activeClocks.put(animation, new DurationDelayClock(animation));
+						activeClocks.put(animation, new DurationDelayClock(animation, true));
 					}
 				}
 				soundActiveClocks.put(soundDef, activeClocks);
@@ -212,18 +212,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double value = getAnimator().getAnimatedVariableValue(this, animation, 0, null, 0);
 								DurationDelayClock clock = soundActiveClocks.get(soundDef).get(animation);
-								if(animation.forwardsDelay != 0 || animation.duration != 0 || animation.reverseDelay != 0){
-									value = clock.getFactoredState(this, value);
-								}else{
-									//Need to use the state-change bit here.
-									clock.getFactoredState(this, value);
-									if(!anyClockMovedThisUpdate){
-										anyClockMovedThisUpdate = clock.movedThisUpdate;
-									}
+								double value = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, 0);
+								if(!anyClockMovedThisUpdate){
+									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
-								
 								if(value < animation.clampMin || value > animation.clampMax){
 									shouldSoundPlay = false;
 								}
@@ -270,6 +263,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 			
 			//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
+			//If we didn't, then we shouldn't play, even if all states are true.
 			if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
 				shouldSoundPlay = false;
 			}

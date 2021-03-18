@@ -35,7 +35,7 @@ public abstract class AAnimationsBase<AnimationEntity extends AEntityC_Definable
 	 */
 	public final double getAnimatedVariableValue(AnimationEntity entity, JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
 		double value = getRawVariableValue(entity, animation.variable, partialTicks);
-		if(clock == null || !clock.isUseful()){
+		if(clock == null || !clock.isUseful){
 			return clampAndScale(value, animation, offset);
 		}else{
 			return clampAndScale(clock.getFactoredState(entity, value), animation, offset);

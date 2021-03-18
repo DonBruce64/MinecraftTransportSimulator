@@ -12,6 +12,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
  */
 public class DurationDelayClock{
 	public final JSONAnimationDefinition animation;
+	public final boolean isUseful;
 	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;
 	private Long timeCommandedReverse = 0L;
@@ -21,15 +22,12 @@ public class DurationDelayClock{
 	private boolean endedReverseMovement = false;
 	
 	public DurationDelayClock(JSONAnimationDefinition animation){
-		this.animation = animation;
+		this(animation, false);
 	}
 	
-	/**
-	 *  Returns true if this clock should be queried for {@link #getFactoredState(AEntityC_Definable, double)}.
-	 *  This can be false to bypass factored states that won't affect the variable value.  
-	 */
-	public boolean isUseful(){
-		return animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0 || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null; 
+	public DurationDelayClock(JSONAnimationDefinition animation, boolean forceUseful){
+		this.animation = animation;
+		this.isUseful = forceUseful || animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0 || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
 	/**
