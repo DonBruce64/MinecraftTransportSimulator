@@ -99,9 +99,10 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		}
 		
 		//Set initial position and rotation.
-		updateRelativePositionRotation();
-		this.prevPosition.setTo(position);
-		this.prevAngles.setTo(angles);
+		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
+		angles.setTo(localAngles).add(entityOn.angles);
+		angles.setTo(placementAngles);
+		prevAngles.setTo(angles);
 	}
 	
 	/**
@@ -133,14 +134,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	@Override
 	public void update(){
 		super.update();
-		updateRelativePositionRotation();
-	}
-	
-	/**
-	 * Helper method for updating positional data to our parent.  Called during
-	 * updates and during construction to align our position and rotation.
-	 */
-	private void updateRelativePositionRotation(){
 		prevMotion.setTo(entityOn.prevMotion);
 		motion.setTo(entityOn.motion);
 		prevLocalOffset.setTo(localOffset);

@@ -429,14 +429,11 @@ public class PartGun extends APart{
 	public void updatePositionAndRotation(){
 		super.updatePositionAndRotation();
 		//Need to use prev orientation here, as otherwise we get into a feedback loop.
-		//Also need to do a null check as this is called in the super constructor.
-		if(prevOrientation != null){
-			if(!definition.gun.yawIsInternal){
-				localAngles.add(0, prevOrientation.y, 0);
-			}
-			if(!definition.gun.pitchIsInternal){
-				localAngles.add(prevOrientation.x, 0, 0);
-			}
+		if(!definition.gun.yawIsInternal){
+			localAngles.add(0, prevOrientation.y, 0);
+		}
+		if(!definition.gun.pitchIsInternal){
+			localAngles.add(prevOrientation.x, 0, 0);
 		}
 	}
 
