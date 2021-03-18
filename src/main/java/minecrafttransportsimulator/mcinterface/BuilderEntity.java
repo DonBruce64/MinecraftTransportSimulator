@@ -211,11 +211,13 @@ public class BuilderEntity extends Entity{
     			try{
     				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
     			}catch(Exception e){
+    				InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
     				InterfaceCore.logError(e.getMessage());
     				setDead();
     			}
     			lastLoadedNBT = null;
     		}else{
+    			InterfaceCore.logError("Tried to tick a builder without first loading NBT on the server.  This is NOT allowed!  Removing builder.");
     			setDead();
     		}
     	}
@@ -389,9 +391,12 @@ public class BuilderEntity extends Entity{
 			entity.save(new WrapperNBT(tag));
 			tag.setString("entityid", entity.getClass().getSimpleName());
 		}else if(!world.isRemote){
-			//Invalid entity detected, don't save.
-			InterfaceCore.logError("Tried to save NBT on a BuilderEntity that did not have an entity assigned to it.  Did you remove a pack with a vehicle still in the world?");
-			setDead();
+			if(lastLoadedNBT != null){
+				tag.merge(lastLoadedNBT);
+			}else{
+				InterfaceCore.logError("Tried to save a builder without an entity on it and no NBT.  This shouldn't happen as it means we are trying to save an invalid builder that hasn't had NBT loaded yet.  Smells like coremod hackery...");
+				setDead();
+			}
 		}
 		return tag;
 	}
