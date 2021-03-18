@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.AnimationsPlayerGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.ItemStack;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
@@ -34,6 +35,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	
 	public final WrapperPlayer player;
 	private int hotbarSelected = -1;
+	private ItemStack gunStack;
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
 	
@@ -133,7 +135,8 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					if(heldItem instanceof ItemPart){
 						ItemPart heldPart = (ItemPart) heldItem;
 						if(heldPart.isHandHeldGun()){
-							addPartFromItem(heldPart, new WrapperNBT(player.getHeldStack()), new Point3d(), false);
+							gunStack = player.getHeldStack();
+							addPartFromItem(heldPart, new WrapperNBT(gunStack), new Point3d(), false);
 							hotbarSelected = player.getHotbarIndex();
 						}
 					}
@@ -210,7 +213,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	private void saveGun(boolean remove){
 		WrapperNBT data = new WrapperNBT();
 		activeGun.save(data);
-		player.getHeldStack().setTagCompound(data.tag);
+		gunStack.setTagCompound(data.tag);
 		didGunFireLastTick = false;
 		if(remove){
 			removePart(activeGun, null);

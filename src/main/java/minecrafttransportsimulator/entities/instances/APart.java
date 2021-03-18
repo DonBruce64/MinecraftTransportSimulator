@@ -99,8 +99,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		}
 		
 		//Set initial position and rotation.
-		this.position.setTo(placementOffset).rotateFine(entityOn.angles).add(entityOn.position);
-		this.angles.setTo(placementAngles);
+		updateRelativePositionRotation();
+		this.prevPosition.setTo(position);
+		this.prevAngles.setTo(angles);
 	}
 	
 	/**
@@ -132,6 +133,14 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	@Override
 	public void update(){
 		super.update();
+		updateRelativePositionRotation();
+	}
+	
+	/**
+	 * Helper method for updating positional data to our parent.  Called during
+	 * updates and during construction to align our position and rotation.
+	 */
+	private void updateRelativePositionRotation(){
 		prevMotion.setTo(entityOn.prevMotion);
 		motion.setTo(entityOn.motion);
 		prevLocalOffset.setTo(localOffset);
@@ -175,6 +184,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	 * Updates the position and rotation totals to the current position and rotation, 
 	 * as defined by the various animations and offsets defined in the JSON.
 	 * This may be extended by parts to modify this behavior.
+	 * Note that this is called in the constructor of this class for the initial state-setting,
+	 * so if you sub-class this method, ensure your variables have been created before accessing them!
 	 */
 	protected void updatePositionAndRotation(){
 		boolean inhibitAnimations = false;
