@@ -80,26 +80,16 @@ public class GUIPackExporter extends AGUIBase{
 					}
 					for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
 						try{
-							File jsonFile;
-							if(packItem.definition instanceof JSONVehicle){
-								jsonFile = new File(packDir, "vehicle_" + packItem.definition.systemName + ".json");
-							}else if(packItem.definition instanceof JSONPart){
-								jsonFile = new File(packDir, "part_" + packItem.definition.systemName + ".json");
-							}else if(packItem.definition instanceof JSONInstrument){
-								jsonFile = new File(packDir, "instrument_" + packItem.definition.systemName + ".json");
-							}else if(packItem.definition instanceof JSONDecor){
-								jsonFile = new File(packDir, "decor_" + packItem.definition.systemName + ".json");
-							}else if(packItem.definition instanceof JSONPoleComponent){
-								jsonFile = new File(packDir, "polesign_" + packItem.definition.systemName + ".json");
-							}else{
-								continue;
-							}
+							File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders);
+							jsonFile.mkdirs();
+							jsonFile = new File(jsonFile, packItem.definition.systemName + ".json");
 							FileWriter writer = new FileWriter(jsonFile);
 							JSONParser.exportStream(packItem.definition, writer);
 							lastTimeModified = jsonFile.lastModified();
 							writer.flush();
 							writer.close();
 						}catch (IOException e){
+							e.printStackTrace();
 							debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
 							return;
 						}
@@ -141,24 +131,10 @@ public class GUIPackExporter extends AGUIBase{
 						for(String packID : PackParserSystem.getAllPackIDs()){
 							File packDir = new File(jsonDir, packID);
 							if(packDir.exists()){
-								debug.setText(debug.getText() + "\nChecking pack: " + packID);
 								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
-									File jsonFile;
-									if(packItem.definition instanceof JSONVehicle){
-										jsonFile = new File(packDir, "vehicle_" + packItem.definition.systemName + ".json");
-									}else if(packItem.definition instanceof JSONPart){
-										jsonFile = new File(packDir, "part_" + packItem.definition.systemName + ".json");
-									}else if(packItem.definition instanceof JSONInstrument){
-										jsonFile = new File(packDir, "instrument_" + packItem.definition.systemName + ".json");
-									}else if(packItem.definition instanceof JSONDecor){
-										jsonFile = new File(packDir, "decor_" + packItem.definition.systemName + ".json");
-									}else if(packItem.definition instanceof JSONPoleComponent){
-										jsonFile = new File(packDir, "polesign_" + packItem.definition.systemName + ".json");
-									}else{
-										continue;
-									}
+									File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders + packItem.definition.systemName + ".json");
 									if(jsonFile.lastModified() > lastTimeModified){
-										debug.setText(debug.getText() + "\nImporting file: " + jsonFile.getName());
+										debug.setText(debug.getText() + "\nImporting file: " + packItem.definition.packID + ":" + jsonFile.getName());
 										try{
 											if(packItem.definition instanceof JSONVehicle){
 												JSONVehicle definition = (JSONVehicle) packItem.definition;
