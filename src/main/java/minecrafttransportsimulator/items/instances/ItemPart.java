@@ -102,6 +102,11 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
     }
 	
 	@Override
+	public boolean canBreakBlocks(){
+		return !isHandHeldGun();
+	}
+	
+	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		switch(partType){

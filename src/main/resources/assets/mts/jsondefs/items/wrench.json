@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Wrench",
+	"description" : "Use on vehicle to change instruments.\nSneak-use on vehicle to change text.\Use on pole components to remove them.\nAttack a vehicle part to remove it.\nSneak-attack a vehicle to remove entire vehicle.",
+	"materials" : [],
+	"type" : "wrench"
+  }
+}

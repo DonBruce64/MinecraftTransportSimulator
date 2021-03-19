@@ -39,6 +39,14 @@ public abstract class AItemBase{
 	}
 	
 	/**
+	 *  Returns true if this item can break blocks.  Only called in creative for
+	 *  allowing normal block-breaking to occur when this item is held.
+	 */
+	public boolean canBreakBlocks(){
+		return true;
+	}
+	
+	/**
 	 *  Called when the item tooltip is being displayed.  The passed-in list will contain
 	 *  all the lines in the tooltip, so add or remove lines as you see fit.  If you don't
 	 *  want to add any lines just leave this method blank. Data is assured not to be null.

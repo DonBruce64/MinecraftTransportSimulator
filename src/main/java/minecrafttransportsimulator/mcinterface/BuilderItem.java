@@ -199,6 +199,11 @@ public class BuilderItem extends Item{
 		return stack;
 	}
 	
+	@Override
+	public boolean canDestroyBlockInCreative(World world, BlockPos pos, ItemStack stack, EntityPlayer player){
+		return item.canBreakBlocks();
+	}
+	
 	/**
 	 * Registers all items we have created up to this point.
 	 */

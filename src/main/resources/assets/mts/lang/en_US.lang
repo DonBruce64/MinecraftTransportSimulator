@@ -296,11 +296,6 @@ info.item.bullet.penetration=Penetration (mm):
 info.item.bullet.quantity=Quantity: 
 info.item.interactable.capacity=Capacity: 
 
-info.item.wrench.use=Use on vehicle to change instruments.
-info.item.wrench.sneakuse=Sneak-use on vehicle to change text.
-info.item.wrench.useblock=Use on pole components to remove them.
-info.item.wrench.attack=Attack a vehicle part to remove.
-info.item.wrench.sneakattack=Sneak-attack a vehicle to remove.
 info.item.fuelhose.line1=Use on a vehicle tank to select.
 info.item.fuelhose.line2=Use on second tank or vehicle to link.
 info.item.fuelhose.line3=Hose will transfer liquids from tank 1 to selected.
@@ -330,8 +325,6 @@ info.item.y2kbutton.line2=This will also turn off all of their lights,
 info.item.y2kbutton.line3=as well as engaging their parking brakes.
 info.item.y2kbutton.line4=Only usable by admins.
 
-item.wrench.name=Wrench
-item.partscanner.name=Part Scanner
 item.key.name=Key
 item.fuelhose.name=Fuel Hose
 item.jumpercable.name=Jumper Cables

@@ -14,8 +14,9 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -779,7 +780,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				
 				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
 				//The only exception are parts that have permanent-default parts on them.  These can be wrenched.
-				if(clientPlayer.getHeldItem() instanceof ItemWrench){
+				AItemBase heldItem = clientPlayer.getHeldItem();
+				if(heldItem instanceof ItemItem && ItemComponentType.WRENCH.equals(((ItemItem) heldItem).definition.item.type)){
 					boolean partHasRemovablePart = false;
 					for(APart childPart : part.childParts){
 						if(!childPart.placementDefinition.isPermanent){
