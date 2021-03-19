@@ -5,7 +5,7 @@
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
-		"materials" : ["minecraft:dye:1:2", "minecraft:glass_pane:0:1", "minecraft:dye:0:2", "minecraft:iron_ingot:0:1", "minecraft:stone_slab:0:3"],
+		"materials" : [],
 		"textObjects": [
 		  {
 			"pos": [0.0, 1.078125, 0.251],

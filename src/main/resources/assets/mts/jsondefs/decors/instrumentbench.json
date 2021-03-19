@@ -1,7 +1,7 @@
 {
 	"general": {
 		"name" : "Instrument Bench",
-		"materials" : ["minecraft:iron_ingot:0:2", "minecraft:glowstone:0:2", "minecraft:planks:0:4", "minecraft:redstone_block:0:1"],
+		"materials" : [],
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,

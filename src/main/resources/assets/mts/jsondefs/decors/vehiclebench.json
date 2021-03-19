@@ -1,7 +1,7 @@
 {
 	"general": {
 		"name" : "Vehicle Bench",
-		"materials" : ["minecraft:planks:0:5", "minecraft:fence:0:2", "minecraft:glass_pane:0:2"],
+		"materials" : [],
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
