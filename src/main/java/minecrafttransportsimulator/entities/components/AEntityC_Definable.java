@@ -371,6 +371,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}else if(sound.volume < 0){
 						sound.volume = 0;
 					}
+				}else{
+					sound.volume = 1;
 				}
 				
 				//Adjust pitch.
