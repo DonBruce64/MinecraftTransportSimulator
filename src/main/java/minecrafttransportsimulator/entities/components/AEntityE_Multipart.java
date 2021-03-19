@@ -781,7 +781,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
 				//The only exception are parts that have permanent-default parts on them.  These can be wrenched.
 				AItemBase heldItem = clientPlayer.getHeldItem();
-				if(heldItem instanceof ItemItem && ItemComponentType.WRENCH.equals(((ItemItem) heldItem).definition.item.type)){
+				if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH)){
 					boolean partHasRemovablePart = false;
 					for(APart childPart : part.childParts){
 						if(!childPart.placementDefinition.isPermanent){

@@ -27,7 +27,7 @@
 		"recipes": [
 			"mts:fuelpump",
 			"mts:jumpercable",
-			"mts:batteryjumper"
+			"mts:jumperpack"
 		]
 	}
 }

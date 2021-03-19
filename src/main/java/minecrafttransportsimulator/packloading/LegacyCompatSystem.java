@@ -915,6 +915,11 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
+		//Set item type to NONE if null.
+		if(definition.item.type == null){
+			definition.item.type = ItemComponentType.NONE;
+		}
+		
 		//Add blank fieldNames for booklets, as they shouldn't exist.
 		if(definition.booklet != null){
 			for(JSONText text : definition.booklet.titleText){

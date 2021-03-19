@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Jumper Cables",
+	"description" : "Use on an engine to select.\nUse on second engine to link.\nLinked engines will exchange power.\nEngines will un-link when power is even or if they get too far away.",
+	"materials" : [],
+	"type" : "jumper_cables"
+  }
+}

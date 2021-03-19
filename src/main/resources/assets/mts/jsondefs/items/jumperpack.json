@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Jumper Pack",
+	"description" : "Use on a vehicle to charge battery to max level.",
+	"materials" : [],
+	"type" : "jumper_pack"
+  }
+}

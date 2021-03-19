@@ -9,13 +9,10 @@ import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.instances.ItemBatteryJumper;
 import minecrafttransportsimulator.items.instances.ItemFuelHose;
-import minecrafttransportsimulator.items.instances.ItemJumperCable;
 import minecrafttransportsimulator.items.instances.ItemKey;
 import minecrafttransportsimulator.items.instances.ItemPaintGun;
 import minecrafttransportsimulator.items.instances.ItemTicket;
-import minecrafttransportsimulator.items.instances.ItemWrench;
 import minecrafttransportsimulator.items.instances.ItemY2KButton;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
@@ -43,7 +40,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.15.4-BETA7";
+	public static final String MODVER = "19.15.4-BETA14";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -60,11 +57,8 @@ public class MasterLoader{
 		resourceDomain = MODID;
 		
 		//Create main items.
-		createItem(new ItemWrench());
 		createItem(new ItemKey());
 		createItem(new ItemFuelHose());
-		createItem(new ItemJumperCable());
-		createItem(new ItemBatteryJumper());
 		createItem(new ItemPaintGun());
 		createItem(new ItemTicket());
 		createItem(new ItemY2KButton());
@@ -82,7 +76,10 @@ public class MasterLoader{
 			
 			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_en.json"), "UTF-8"), "handbook_en", resourceDomain);
 			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_ru.json"), "UTF-8"), "handbook_ru", resourceDomain);
+			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/jumpercable.json"), "UTF-8"), "jumpercable", resourceDomain);
+			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/jumperpack.json"), "UTF-8"), "jumperpack", resourceDomain);
 			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/partscanner.json"), "UTF-8"), "partscanner", resourceDomain);
+			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/wrench.json"), "UTF-8"), "wrench", resourceDomain);
 			PackParserSystem.addPartDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/parts/jerrycan.json"), "UTF-8"), "jerrycan", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/fuelpump.json"), "UTF-8"), "fuelpump", resourceDomain);
 			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/vehiclebench.json"), "UTF-8"), "vehiclebench", resourceDomain);
