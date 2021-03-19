@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.items.instances.ItemWrench;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * to process the instrument change, and then sent to all clients if
  * the change is able to be made.  Does not check ownership as that's
  * done before {@link GUIInstruments} is opened by checking for
- * ownership in {@link ItemWrench#doVehicleInteraction}.
+ * ownership in {@link ItemItem#doVehicleInteraction}.
  * 
  * @author don_bruce
  */
