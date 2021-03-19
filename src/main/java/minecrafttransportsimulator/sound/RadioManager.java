@@ -24,7 +24,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 public class RadioManager{
 	private static File musicDir;
 	private static File radioStationsFile;
-	private static Map<RadioSources, Map<Integer, RadioStation>> sourceMap = new HashMap<RadioSources, Map<Integer, RadioStation>>();
+	private static Map<Integer, RadioStation> localSourcesMap = new HashMap<Integer, RadioStation>();
+	private static Map<String, RadioStation> internetSourcesMap = new HashMap<String, RadioStation>();
 	
 	/**
 	 * Need to set up global radio variables before we can create an instance of a radio.
@@ -43,26 +44,34 @@ public class RadioManager{
 	}
 	
 	/**
-	 * Gets the station for the specific source and preset.
+	 * Gets the local station for the specific preset.
 	 * Creates one it if it hasn't been created yet.
 	 */
-	public static RadioStation getStation(RadioSources source, int index){
+	public static RadioStation getLocalStation(int index, boolean randomOrder){
 		//No clue why we have to use Integer.valueOf, but whatever...
 		Integer mapKey = Integer.valueOf(index);
-		if(!sourceMap.containsKey(source)){
-			sourceMap.put(source, new HashMap<Integer, RadioStation>());
+		if(!localSourcesMap.containsKey(mapKey)){
+			localSourcesMap.put(mapKey, new RadioStation(index, randomOrder));
 		}
-		if(!sourceMap.get(source).containsKey(mapKey)){
-			sourceMap.get(source).put(mapKey, new RadioStation(source, index));
+		return localSourcesMap.get(mapKey);
+	}
+	
+	/**
+	 * Gets the internet station for the specific URL.
+	 * Creates one it if it hasn't been created yet.
+	 */
+	public static RadioStation getInternetStation(String url){
+		if(!internetSourcesMap.containsKey(url)){
+			internetSourcesMap.put(url, new RadioStation(url));
 		}
-		return sourceMap.get(source).get(mapKey);
+		return internetSourcesMap.get(url);
 	}
 	
 	/**
 	 * Queues up songs from the preset directory for playing.
 	 * Returns the files in the directory if they were found, or an empty list otherwise.
 	 */
-	public static List<File> parseLocalDirectory(int index){
+	public static List<File> parseLocalDirectory(int index, boolean randomOrder){
 		List<File> musicDirectories = new ArrayList<File>();
 		List<File> musicFiles = new ArrayList<File>();
 		for(File file : musicDir.listFiles()){
@@ -79,7 +88,11 @@ public class RadioManager{
 					musicFiles.add(musicFile);
 				}
 			}
-			Collections.sort(musicFiles);
+			if(randomOrder){
+				Collections.shuffle(musicFiles);
+			}else{
+				Collections.sort(musicFiles);
+			}
 		}
 		return musicFiles;
 	}
@@ -95,6 +108,9 @@ public class RadioManager{
 				stations.add(radioStationFileReader.readLine());
 			}
 			radioStationFileReader.close();
+			
+			//Subtract one off the index as presets are 1-indexed.
+			--index;
 			if(stations.size() > index){
 				return stations.get(index);
 			}else{
@@ -119,9 +135,9 @@ public class RadioManager{
 			}
 			radioStationFileReader.close();
 			
-			//If we have no stations, make 6 blanks ones to avoid crashes.
-			if(stations.size() == 0){
-				for(byte i=0; i<6; ++i){
+			//If we have less than 6 stations, make 6 blanks ones to avoid crashes.
+			if(stations.size() < 6){
+				for(int i=stations.size(); i<6; ++i){
 					stations.add("");
 				}
 			}

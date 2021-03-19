@@ -21,33 +21,46 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 * @author don_bruce
 */
 public class RadioStation{
-	//Public variables for checking and modifying state.
-	public String displayText = "";
-	public final Equalizer equalizer;
-	
-	//Runtime variables.
+	//Created variables.
 	private final RadioSources source;
 	private final int index;
+	private final boolean randomOrder;
+	private final String url;
 	private final List<File> musicFiles;
 	private final Set<Radio> queuedRadios = new HashSet<Radio>();
 	private final Set<Radio> playingRadios = new HashSet<Radio>();
+	
+	//Runtime variables.
+	//Due to how the mp3 parser works, we can only have one equalizer per station.
+	public String displayText = "";
+	public final Equalizer equalizer;
 	private volatile List<Integer> activeBuffers = new ArrayList<Integer>();
 	private volatile IStreamDecoder decoder;
 	private volatile DecoderThread decoderThread;
 	
-	public RadioStation(RadioSources source, int index){
-		this.source = source;
-		this.index = index;
-		//Due to how the mp3 parser works, we can only have one equalizer per station.
+	public RadioStation(int index, boolean randomOrder){
+		this.source = RadioSources.LOCAL;
 		this.equalizer = new Equalizer();
-		if(source.equals(RadioSources.LOCAL)){
-			musicFiles = RadioManager.parseLocalDirectory(index);
-			if(musicFiles.isEmpty()){
-				displayText = "Fewer than " + (index + 1) + " folders in mts_music.\nGo add some!";
-			}
-		}else{
-			musicFiles = new ArrayList<File>();
+		this.index = index;
+		this.randomOrder = randomOrder;
+		this.url = null;
+		musicFiles = RadioManager.parseLocalDirectory(index, randomOrder);
+		if(musicFiles.isEmpty()){
+			displayText = "Fewer than " + (index + 1) + " folders in mts_music.\nGo add some!";
 		}
+		InterfaceSound.addRadioStation(this);
+	}
+	
+	public RadioStation(String url){
+		this.source = RadioSources.INTERNET;
+		this.equalizer = new Equalizer();
+		this.index = 0;
+		this.randomOrder = false;
+		this.url = url;
+		if(url.isEmpty()){
+			displayText =  "No station set for this preset.  Press SET to teach a station.";
+		}
+		musicFiles = new ArrayList<File>();
 		InterfaceSound.addRadioStation(this);
 	}
 	
@@ -173,11 +186,17 @@ public class RadioStation{
 		//Start decoder creation routines.
 		if(source.equals(RadioSources.LOCAL)){
 			if(musicFiles.isEmpty()){
-				musicFiles.addAll(RadioManager.parseLocalDirectory(index));
+				//Try to parse files again in case the user added some.
+				musicFiles.addAll(RadioManager.parseLocalDirectory(index, randomOrder));
 			}
 			playFromLocalFiles();
 		}else{
-			playFromInternet();
+			if(!url.isEmpty()){
+				if(playFromInternet()){
+					return;
+				}
+			}
+			queuedRadios.clear();
 		}
 	}
 	
@@ -210,59 +229,54 @@ public class RadioStation{
 	}
 	
 	/**
-	 * Starts playing the Internet stream for this station.
+	 * Starts playing the Internet stream for this station.  Returns true if the stream started, false if there
+	 * was an error.
 	 */
-	private void playFromInternet(){
-		String station = RadioManager.getLocalStationURL(index);
-		if(station.isEmpty()){
-			displayText =  "Press SET to teach a station.";
-			playingRadios.clear();
-			queuedRadios.clear();
-			return;
-		}else{
-			try{
-				//Create a URL and open a connection.
-				URL url = new URL(station);
-				URLConnection connection = url.openConnection();
-				
-				//Verify stream is actually an HTTP stream.
-				String contentType = connection.getHeaderField("Content-Type");
-				if(contentType == null){
-					displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
-					return;
-				}
-				
-				//Check to make sure stream isn't an invalid type.
-				switch(contentType){
-					case("audio/mpeg") : break;
-					case("application/ogg") : break;
-					case("audio/x-wav") : displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author."; return;
-					case("audio/flac") : displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author."; return;
-					default : {
-						if(contentType.startsWith("audio")){
-							displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
-						}else{
-							displayText = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
-						}
-						return;
-					}
-				}
-				
-				//Parse out information from header.
-				displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
-				displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
-				displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
-				displayText += "\nBuffers:";
-				
-				//Create a thread to start up the sound once the parsing is done.
-				//This keeps us from blocking the main thread.
-				decoder = null;
-				decoderThread = new DecoderThread(this, contentType, url);
-				decoderThread.start();
-			}catch(Exception e){
-				e.printStackTrace();
-				displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
+	private boolean playFromInternet(){
+		try{
+			//Create a URL and open a connection.
+			URL urlObj = new URL(url);
+			URLConnection connection = urlObj.openConnection();
+			
+			//Verify stream is actually an HTTP stream.
+			String contentType = connection.getHeaderField("Content-Type");
+			if(contentType == null){
+				displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
+				return false;
 			}
+			
+			//Check to make sure stream isn't an invalid type.
+			switch(contentType){
+				case("audio/mpeg") : break;
+				case("application/ogg") : break;
+				case("audio/x-wav") : displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author."; return false;
+				case("audio/flac") : displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author."; return false;
+				default : {
+					if(contentType.startsWith("audio")){
+						displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
+					}else{
+						displayText = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
+					}
+					return false;
+				}
+			}
+			
+			//Parse out information from header.
+			displayText = "Name: " + (connection.getHeaderField("icy-name") != null ? connection.getHeaderField("icy-name") : "");
+			displayText += "\nDesc: " + (connection.getHeaderField("icy-description") != null ? connection.getHeaderField("icy-description") : "");
+			displayText += "\nGenre: " + (connection.getHeaderField("icy-genre") != null ? connection.getHeaderField("icy-genre") : "");
+			displayText += "\nBuffers:";
+			
+			//Create a thread to start up the sound once the parsing is done.
+			//This keeps us from blocking the main thread.
+			decoder = null;
+			decoderThread = new DecoderThread(this, contentType, urlObj);
+			decoderThread.start();
+			return true;
+		}catch(Exception e){
+			e.printStackTrace();
+			displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
+			return false;
 		}
 	}
 	
