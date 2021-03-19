@@ -1045,7 +1045,7 @@ public final class LegacyCompatSystem{
 				partDef.animations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.centerPoint = new Point3d();
-				animation.axis = new Point3d(0, -1, 0);
+				animation.axis = new Point3d(0, partDef.pos.z > 0 ? -1 : 1, 0);
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = "rudder";
 				partDef.animations.add(animation);
