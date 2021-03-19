@@ -2,7 +2,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "mts:items/paintgun"
+		"0": "mts:items/items/paintgun"
 	},
 	"elements": [
 		{

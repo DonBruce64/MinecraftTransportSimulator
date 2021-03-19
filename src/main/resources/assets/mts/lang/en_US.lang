@@ -300,30 +300,6 @@ info.item.jerrycan.drain=Fill vehicle by right-clicking with full can.
 info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
 
-info.item.fuelhose.line1=Use on a vehicle tank to select.
-info.item.fuelhose.line2=Use on second tank or vehicle to link.
-info.item.fuelhose.line3=Hose will transfer liquids from tank 1 to selected.
-info.item.fuelhose.line4=Hose will stop when tank 1 is empty, selected is full,
-info.item.fuelhose.line5=or if tank 1 and selected are too far away.
-info.item.key.line1=Use on a vehicle to lock.
-info.item.key.line2=Vehicle may only be opened with key.
-info.item.key.line3=Sneak-use to take ownership.
-info.item.key.line4=Sneak-use again to relinquish.
-info.item.key.line5=Owned vehicles may only be destroyed by you and OPs.
-info.item.paintgun.use=Use on a vehicle to change its color.
-info.item.ticket.line1=Right-click on a vehicle to load nearby entities.
-info.item.ticket.line2=Sneak-click on a vehicle to unload all entities.
-info.item.ticket.line3=Note: Will not unload players.
-info.item.y2kbutton.line1=Use in a world to turn off all vehicle engines.
-info.item.y2kbutton.line2=This will also turn off all of their lights,
-info.item.y2kbutton.line3=as well as engaging their parking brakes.
-info.item.y2kbutton.line4=Only usable by admins.
-
-item.key.name=Key
-item.fuelhose.name=Fuel Hose
-item.paintgun.name=Paint Gun
-item.ticket.name=Ticket
-item.y2kbutton.name=Y2K Button
 
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:

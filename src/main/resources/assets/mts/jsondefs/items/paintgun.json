@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Paint Gun",
+	"description" : "Use on a vehicle, a part, decor, or sign to change its color.\nNote: Not all things you can click will have multiple colors.",
+	"materials" : [],
+	"type" : "paint_gun"
+  }
+}

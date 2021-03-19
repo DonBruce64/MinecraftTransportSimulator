@@ -6,7 +6,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.items.instances.ItemPaintGun;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -20,7 +22,8 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
     @Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
     	TileEntityDecor decor = (TileEntityDecor) world.getTileEntity(position);
-		if(player.getHeldItem() instanceof ItemPaintGun){
+    	AItemBase heldItem = player.getHeldItem();
+		if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.equals(ItemComponentType.PAINT_GUN)){
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
 		}else if(decor.definition.decor.crafting != null){

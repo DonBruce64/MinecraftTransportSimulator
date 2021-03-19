@@ -11,15 +11,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.BuilderEntity;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
@@ -33,7 +30,6 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -129,19 +125,6 @@ public class InterfaceEventsModelLoader{
 		//This one auto-generates item JSONs.
 		defaultPacks.add(new PackResourcePack(MasterLoader.MODID + "_packs"));
 		
-		//Register the core item models.  Some of these are pack-based.
-		//Don't add those as they get added during the pack registration processing. 
-		for(Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()){
-			try{
-				//TODO remove this when we don't have non-pack items.
-				if(!(entry.getValue().item instanceof AItemPack)){
-					registerCoreItemRender(entry.getValue());
-				}
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
 		//Now register items for the packs.
 		//If we ever register a pack item from a non-external pack, we'll need to make a resource loader for it.
 		//This is done to allow MC/Forge to play nice with item textures.
@@ -159,13 +142,6 @@ public class InterfaceEventsModelLoader{
 		
 		//Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
 		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
-	}
-	
-	/**
-	 *  Helper method to register renders.
-	 */
-	private static void registerCoreItemRender(Item item){
-		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(MasterLoader.MODID + ":" + item.getRegistryName().getPath(), "inventory"));
 	}
 	
 	/**

@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Fuel Hose",
+	"description" : "Use on a vehicle tank to select.\nUse on second tank or vehicle to link.\nHose will transfer liquids from tank 1 to selected.\nHose will stop when tank 1 is empty, selected is full or if tank 1 and selected are too far away.",
+	"materials" : [],
+	"type" : "fuel_hose"
+  }
+}

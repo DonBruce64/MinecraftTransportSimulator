@@ -1,0 +1,8 @@
+{
+  "general": {
+	"name" : "Ticket",
+	"description" : "Right-click on a vehicle to load nearby entities.\nSneak-click on a vehicle to unload all entities.\nNote: Will not unload players.",
+	"materials" : [],
+	"type" : "ticket"
+  }
+}
