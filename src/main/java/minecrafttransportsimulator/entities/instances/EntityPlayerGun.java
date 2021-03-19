@@ -210,6 +210,11 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		}
 	}
 	
+	@Override
+	protected void recalculateBoxes(){
+		//Do nothing and don't add any collision.  This could block player actions.
+	}
+	
 	private void saveGun(boolean remove){
 		WrapperNBT data = new WrapperNBT();
 		activeGun.save(data);

@@ -733,7 +733,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Call to re-create the lists of the collision and interaction boxes.
 	 * This should be run at construction, and every tick so we have up-to-date lists.
 	 */
-	private void recalculateBoxes(){
+	protected void recalculateBoxes(){
 		//Set active collision box, door box, and interaction box lists to current boxes.
 		allCollisionBoxes.clear();
 		allCollisionBoxes.addAll(collisionBoxes);
