@@ -97,10 +97,20 @@ public class BuilderEntity extends Entity{
 		this.renderData = world.isRemote ? new RenderTickData(world) : null;
 	}
     
+	@Override
+	public void onUpdate(){
+		//Don't call the super, because some mods muck with our logic here.
+    	//Said mods are Sponge plugins, but I'm sure there are others.
+		//super.onUpdate();
+		
+		onEntityUpdate();
+	}
+	
     @Override
     public void onEntityUpdate(){
-    	//Need to call super to maintain compats with other systems and mods.
-    	super.onEntityUpdate();
+    	//Don't call the super, because some mods muck with our logic here.
+    	//Said mods are Sponge plugins, but I'm sure there are others.
+    	//super.onEntityUpdate();
     	
     	//If our entity isn't null, update it and our position.
     	if(entity != null){
@@ -115,6 +125,12 @@ public class BuilderEntity extends Entity{
 	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
 	    		rotationYaw = (float) -entity.angles.y;
 	    		rotationPitch = (float) entity.angles.x;
+	    		
+	    		//If we are outside valid bounds on the server, set us as dead and exit.
+	    		if(!world.isRemote && posY < 0 && world.isOutsideBuildHeight(getPosition())){
+	    			setDead();
+	    			return;
+	    		}
 	    		
 	    		if(entity instanceof AEntityD_Interactable){
 	    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
