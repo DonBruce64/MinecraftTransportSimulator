@@ -26,6 +26,7 @@ import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -68,12 +69,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				if(!ownerState.equals(PlayerOwnerState.USER)){
 					if(rightClick){
 						if(vehicle.world.isClient()){
-							if(ConfigSystem.configObject.clientControls.devMode.value && vehicle.equals(player.getEntityRiding())){
-								InterfaceGUI.openGUI(new GUIPackExporter(vehicle));
-							}else if(player.isSneaking()){
-								InterfaceGUI.openGUI(new GUITextEditor(vehicle));
-							}else{
-								InterfaceGUI.openGUI(new GUIInstruments(vehicle, player));
+							if(player.equals(InterfaceClient.getClientPlayer())){
+								if(ConfigSystem.configObject.clientControls.devMode.value && vehicle.equals(player.getEntityRiding())){
+									InterfaceGUI.openGUI(new GUIPackExporter(vehicle));
+								}else if(player.isSneaking()){
+									InterfaceGUI.openGUI(new GUITextEditor(vehicle));
+								}else{
+									InterfaceGUI.openGUI(new GUIInstruments(vehicle, player));
+								}
 							}
 						}else{
 							return CallbackType.PLAYER;
@@ -122,10 +125,12 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				if(!ownerState.equals(PlayerOwnerState.USER)){
 					if(rightClick){
 						if(vehicle.world.isClient()){
-							if(part != null){
-								InterfaceGUI.openGUI(new GUIPaintGun(part, player));
-							}else{
-								InterfaceGUI.openGUI(new GUIPaintGun(vehicle, player));
+							if(player.equals(InterfaceClient.getClientPlayer())){
+								if(part != null){
+									InterfaceGUI.openGUI(new GUIPaintGun(part, player));
+								}else{
+									InterfaceGUI.openGUI(new GUIPaintGun(vehicle, player));
+								}
 							}
 						}else{
 							return CallbackType.PLAYER;
