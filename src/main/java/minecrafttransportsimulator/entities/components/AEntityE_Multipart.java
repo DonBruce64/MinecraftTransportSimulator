@@ -183,7 +183,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-			if(seat.placementDefinition.linkedDoors != null){
+			if(seat != null && seat.placementDefinition.linkedDoors != null){
 				for(String linkedDoor : seat.placementDefinition.linkedDoors){
 					if(variablesOn.contains(linkedDoor)){
 						for(JSONDoor doorDef : allDoorBoxes.values()){
