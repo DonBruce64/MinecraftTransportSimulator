@@ -159,7 +159,7 @@ public class InterfaceSound{
 									playerVelocity.y = 0;
 									double initalDelta = player.getPosition().subtract(entity.position).length();
 									double finalDelta = player.getPosition().add(playerVelocity).subtract(entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();
-									float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + (initalDelta - finalDelta)/initalDelta : 1 - (finalDelta - initalDelta)/finalDelta);
+									float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + 0.25*(initalDelta - finalDelta)/initalDelta : 1 - 0.25*(finalDelta - initalDelta)/finalDelta);
 									AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch*dopplerFactor);
 								}else{
 									AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
