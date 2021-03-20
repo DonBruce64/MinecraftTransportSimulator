@@ -234,8 +234,8 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	}
 	
 	@Override
-	public EntityPlayerGun createEntity(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
-		return new EntityPlayerGun(world, playerSpawning, data);
+	public EntityPlayerGun createEntity(WrapperWorld world, WrapperNBT data){
+		return new EntityPlayerGun(world, null, data);
 	}
 
 	@Override

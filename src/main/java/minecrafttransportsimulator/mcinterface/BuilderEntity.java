@@ -225,7 +225,7 @@ public class BuilderEntity extends Entity{
     		if(lastLoadedNBT != null){
     			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
     			try{
-    				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+    				entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, new WrapperNBT(lastLoadedNBT));
     			}catch(Exception e){
     				InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
     				InterfaceCore.logError(e.getMessage());

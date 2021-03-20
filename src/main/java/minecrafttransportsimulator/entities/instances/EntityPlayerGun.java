@@ -57,7 +57,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
 			String playerUUID = data.getString("playerUUID");
 			WrapperPlayer foundPlayer = null;
-			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 10, 10, 10))){
+			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 				if(entity instanceof WrapperPlayer){
 					if(((WrapperPlayer) entity).getUUID().equals(playerUUID)){
 						foundPlayer = (WrapperPlayer) entity;
@@ -191,11 +191,6 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		
 		//Update the gun now, if we have one.
 		updateParts();
-	}
-	
-	@Override
-	public boolean shouldSavePosition(){
-		return false;
 	}
 	
 	@Override

@@ -41,7 +41,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
-			EntityVehicleF_Physics newVehicle = createEntity(world, player, data);
+			EntityVehicleF_Physics newVehicle = createEntity(world, data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -170,7 +170,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
+	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperNBT data){
 		return new EntityVehicleF_Physics(world, data);
 	}
 
