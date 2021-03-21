@@ -314,7 +314,6 @@ public class PartGun extends APart{
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
 		firedThisTick = false;
-		System.out.println(bulletsLeft);
 		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
 			//First update gun number so we know if we need to apply a cam offset.
 			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.

@@ -50,6 +50,10 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 		}else{
 			//Send back a packet to the player who requested it.
 			WrapperNBT savedData = new WrapperNBT();
+			if(world.savedDataAccessor == null){
+				//Call the getData method here to create data.
+				world.getData();
+			}
 			world.savedDataAccessor.writeToNBT(savedData.tag);
 			player.sendPacket(new PacketWorldSavedDataCSHandshake(savedData));
 		}
