@@ -681,7 +681,7 @@ public class WrapperWorld{
 	 *  Returns the current redstone power at the passed-in position.
 	 */
 	public int getRedstonePower(Point3d position){
-		return world.getStrongPower(new BlockPos(position.x, position.y, position.z));
+		return world.getRedstonePowerFromNeighbors(new BlockPos(position.x, position.y, position.z));
 	}
 
 	/**
