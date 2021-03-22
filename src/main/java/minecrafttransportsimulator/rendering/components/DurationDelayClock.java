@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -17,7 +16,7 @@ public class DurationDelayClock{
 	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;
 	private Long timeCommandedReverse = 0L;
-	private final boolean isNaturallyUseful;
+	private final boolean shouldDoFactoring;
 	private boolean startedForwardsMovement = false;
 	private boolean endedForwardsMovement = false;
 	private boolean startedReverseMovement = false;
@@ -29,8 +28,8 @@ public class DurationDelayClock{
 	
 	public DurationDelayClock(JSONAnimationDefinition animation, boolean forceUseful){
 		this.animation = animation;
-		this.isNaturallyUseful = animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0 || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
-		this.isUseful = forceUseful || isNaturallyUseful;
+		this.shouldDoFactoring = animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0;
+		this.isUseful = forceUseful || shouldDoFactoring || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
 	/**
@@ -38,7 +37,7 @@ public class DurationDelayClock{
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
 	public double getFactoredState(AEntityC_Definable<?> entity, double value){
-		boolean commandForwards = value == 1;
+		boolean commandForwards = value >= 1;
 		long currentTime = System.currentTimeMillis();
 		long forwardsCycleTime = animation.forwardsDelay*50;
 		if(!animation.skipForwardsMovement){
@@ -145,10 +144,6 @@ public class DurationDelayClock{
 			movementFactor = 1 - movementFactor;
 		}
 		
-		if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-			return isNaturallyUseful ? movementFactor : value;
-		}else{
-			return movementFactor;
-		}
+		return shouldDoFactoring ? movementFactor : value;
 	}
 }
