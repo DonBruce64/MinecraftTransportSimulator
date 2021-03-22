@@ -35,6 +35,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -43,6 +44,8 @@ import javax.swing.border.TitledBorder;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPack;
@@ -54,6 +57,7 @@ import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 
 /**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
@@ -74,6 +78,7 @@ public class GUIPackEditor extends JFrame{
 	
 	//Run-time variables.
 	private static File lastDirectoryAccessed = new File(MasterLoader.gameDirectory);
+	private static File lastFileAccessed = new File(MasterLoader.gameDirectory);
 	private Class<?> currentJSONClass = null;
 	private Object currentJSON = null;
 	private final JPanel editingPanel;
@@ -132,6 +137,7 @@ public class GUIPackEditor extends JFrame{
 			            lastDirectoryAccessed = file.getParentFile();
 			            if(currentJSON != null){
 			            	initEditor();
+			            	lastFileAccessed = file;
 			            }
 		        	}catch(Exception e){}
 		        }
@@ -152,6 +158,9 @@ public class GUIPackEditor extends JFrame{
 				fileSelection.setApproveButtonToolTipText("Saves the JSON in the editor to the file.");				
 		        fileSelection.setFont(MAIN_BUTTON_FONT);
 		        fileSelection.setDialogTitle(saveButton.getText());
+		        if(lastFileAccessed != null){
+		        	fileSelection.setSelectedFile(lastFileAccessed);
+		        }
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
@@ -159,6 +168,18 @@ public class GUIPackEditor extends JFrame{
 			        	JSONParser.exportStream(currentJSON, writer);
 			            writer.close();
 			            lastDirectoryAccessed = file.getParentFile();
+			            try{
+			            	if(currentJSON instanceof AJSONItem){
+			            		AJSONItem definition = (AJSONItem) currentJSON;
+			            		if(definition.packID != null && definition.systemName != null){
+			            			if(definition instanceof AJSONMultiModelProvider){
+			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParserSystem.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition));
+			            			}else{
+			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParserSystem.getItem(definition.packID, definition.systemName).definition));
+			            			}
+			            		}
+			            	}
+			            }catch(Exception e){}
 		        	}catch(Exception e){}
 		        }
 			}
@@ -310,9 +331,9 @@ public class GUIPackEditor extends JFrame{
 				public void actionPerformed(ActionEvent event){
 					try{
 						Object listEntry = createNewObjectInstance(paramClass, declaringObject);
+						listObject.add(listEntry);
 						ListElementPanel newPanel = new ListElementPanel(listContentsPanel, listObject, listEntry);
 						listContentsPanel.add(newPanel);
-						listObject.add(listEntry);
 						listContentsPanel.revalidate();
 						listContentsPanel.repaint();
 					}catch(Exception e){e.printStackTrace();}
@@ -408,13 +429,13 @@ public class GUIPackEditor extends JFrame{
 			pointPanel.add(zText);
 			return pointPanel;
 		}else if(objectClass.isEnum()){
-			return createNewEnumBox(objectClass, listener);
+			return createNewEnumBox(obj, objectClass, listener);
 		}else{
 			return null;
 		}
 	}
 	
-	private static <EnumType> JComboBox<EnumType> createNewEnumBox(Class<EnumType> objectClass, FocusListener listener){
+	private static <EnumType> JComboBox<EnumType> createNewEnumBox(Object obj, Class<EnumType> objectClass, FocusListener listener){
 		JComboBox<EnumType> comboBox = new JComboBox<EnumType>();
 		comboBox.setFont(NORMAL_FONT);
 		comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
@@ -424,6 +445,7 @@ public class GUIPackEditor extends JFrame{
 		}
 		comboBox.addFocusListener(listener);
 		comboBox.setRenderer(generateEnumTooltipRenderer(enumConstants));
+		comboBox.setSelectedItem(obj);
 		return comboBox;
 	}
 	
@@ -705,12 +727,10 @@ public class GUIPackEditor extends JFrame{
 
 		@Override
 		public void itemStateChanged(ItemEvent event){
-			System.out.println("VERE");
 			if(event.getStateChange() == ItemEvent.DESELECTED){
 				try{
 					if(component instanceof JComboBox){
 						String text = ((JComboBox<?>) component).getSelectedItem().toString();
-						System.out.println(text);
 						if(text == null || text.isEmpty()){
 							objectField.set(declaringObject, null);
 						}else{

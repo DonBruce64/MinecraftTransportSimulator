@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packloading;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -24,7 +26,15 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 
 /**This class contains various methods to parse out JSON data from JSON files.
  * Contains  custom type adapters used in JSON parsing operations, and annotations for fields.
@@ -252,6 +262,88 @@ public class JSONParser{
 	@SuppressWarnings("unchecked")
 	public static <JSONClass extends Object> JSONClass duplicateJSON(JSONClass objToDuplicate){
 		return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
+	}
+	
+	/**
+	 *  Hot-loads the passed-in JSON, replacing the passed-in JSON with this one.
+	 *  Status message is returned, which either indicates import success, or error.
+	 */
+	public static String hotloadJSON(File jsonFile, AJSONItem definitionToOverride){
+		try{
+			switch(definitionToOverride.classification){
+				case VEHICLE : {
+					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
+					JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					vehicleDefinition.general = loadedDefinition.general;
+					vehicleDefinition.definitions = loadedDefinition.definitions;
+					vehicleDefinition.motorized = loadedDefinition.motorized;
+					vehicleDefinition.parts = loadedDefinition.parts;
+					vehicleDefinition.collision = loadedDefinition.collision;
+					vehicleDefinition.doors = loadedDefinition.doors;
+					vehicleDefinition.connections = loadedDefinition.connections;
+					vehicleDefinition.rendering = loadedDefinition.rendering;
+					break;
+				}
+				case PART : {
+					JSONPart partDefinition = (JSONPart) definitionToOverride;
+					JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					partDefinition.general = loadedDefinition.general;
+					partDefinition.engine = loadedDefinition.engine;
+					partDefinition.ground = loadedDefinition.ground;
+					partDefinition.propeller = loadedDefinition.propeller;
+					partDefinition.seat = loadedDefinition.seat;
+					partDefinition.gun = loadedDefinition.gun;
+					partDefinition.bullet = loadedDefinition.bullet;
+					partDefinition.interactable = loadedDefinition.interactable;
+					partDefinition.effector = loadedDefinition.effector;
+					partDefinition.generic = loadedDefinition.generic;
+					partDefinition.parts = loadedDefinition.parts;
+					partDefinition.collision = loadedDefinition.collision;
+					partDefinition.doors = loadedDefinition.doors;
+					partDefinition.connections = loadedDefinition.connections;
+					partDefinition.rendering = loadedDefinition.rendering;
+					break;
+				}
+				case INSTRUMENT : {
+					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
+					JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					instrumentDefinition.general = loadedDefinition.general;
+					instrumentDefinition.components = loadedDefinition.components;
+					break;
+				}
+				case DECOR : {
+					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
+					JSONDecor loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					decorDefinition.general = loadedDefinition.general;
+					decorDefinition.definitions = loadedDefinition.definitions;
+					decorDefinition.decor = loadedDefinition.decor;
+					decorDefinition.rendering = loadedDefinition.rendering;
+					break;
+				}
+				case POLE : {
+					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
+					JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					poleDefinition.general = loadedDefinition.general;
+					break;
+				}
+				default : return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
+			}
+		
+			//Reset renderers and send reset commands to entities.
+			for(AEntityA_Base entity : AEntityA_Base.getEntities(InterfaceClient.getClientWorld())){
+				if(entity instanceof AEntityC_Definable){
+					AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
+					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
+						((AEntityC_Definable<?>) entity).onDefinitionReset();
+						definableEntity.getRenderer().clearObjectCaches(definableEntity);
+					}
+				}
+			}
+			
+			return "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
+		}catch(Exception e){
+			return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();
+		}
 	}
 	
 	@Retention(RetentionPolicy.RUNTIME)

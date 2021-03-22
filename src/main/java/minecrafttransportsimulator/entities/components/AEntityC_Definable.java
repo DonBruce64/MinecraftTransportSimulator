@@ -182,8 +182,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  already updated, so this is more for updating cached variables.
 	 */
     public void onDefinitionReset(){
-    	soundVolumeClocks.clear();
-    	soundPitchClocks.clear();
     	populateSoundMaps();
     }
     

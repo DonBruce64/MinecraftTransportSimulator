@@ -7,11 +7,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -19,11 +19,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -128,93 +123,21 @@ public class GUIPackExporter extends AGUIBase{
 							return;
 						}
 						
+						Set<File> parsedFiles = new HashSet<File>();
 						for(String packID : PackParserSystem.getAllPackIDs()){
 							File packDir = new File(jsonDir, packID);
 							if(packDir.exists()){
 								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
 									File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders + packItem.definition.systemName + ".json");
-									if(jsonFile.lastModified() > lastTimeModified){
-										debug.setText(debug.getText() + "\nImporting file: " + packItem.definition.packID + ":" + jsonFile.getName());
-										try{
-											if(packItem.definition instanceof JSONVehicle){
-												JSONVehicle definition = (JSONVehicle) packItem.definition;
-												JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, definition.packID, definition.systemName);
-												definition.general = loadedDefinition.general;
-												definition.definitions = loadedDefinition.definitions;
-												definition.motorized = loadedDefinition.motorized;
-												definition.parts = loadedDefinition.parts;
-												definition.collision = loadedDefinition.collision;
-												definition.doors = loadedDefinition.doors;
-												definition.connections = loadedDefinition.connections;
-												definition.rendering = loadedDefinition.rendering;
-												
-											}else if(packItem.definition instanceof JSONPart){
-												JSONPart definition = (JSONPart) packItem.definition;
-												JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, definition.packID, definition.systemName);
-												definition.general = loadedDefinition.general;
-												definition.engine = loadedDefinition.engine;
-												definition.ground = loadedDefinition.ground;
-												definition.propeller = loadedDefinition.propeller;
-												definition.seat = loadedDefinition.seat;
-												definition.gun = loadedDefinition.gun;
-												definition.bullet = loadedDefinition.bullet;
-												definition.interactable = loadedDefinition.interactable;
-												definition.effector = loadedDefinition.effector;
-												definition.generic = loadedDefinition.generic;
-												definition.parts = loadedDefinition.parts;
-												definition.collision = loadedDefinition.collision;
-												definition.doors = loadedDefinition.doors;
-												definition.connections = loadedDefinition.connections;
-												definition.rendering = loadedDefinition.rendering;
-												
-											}else if(packItem.definition instanceof JSONInstrument){
-												JSONInstrument definition = (JSONInstrument) packItem.definition;
-												JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, definition.packID, definition.systemName);
-												definition.general = loadedDefinition.general;
-												definition.components = loadedDefinition.components;
-												
-											}else if(packItem.definition instanceof JSONDecor){
-												JSONDecor definition = (JSONDecor) packItem.definition;
-												JSONDecor loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, definition.packID, definition.systemName);
-												definition.general = loadedDefinition.general;
-												definition.definitions = loadedDefinition.definitions;
-												definition.decor = loadedDefinition.decor;
-												definition.rendering = loadedDefinition.rendering;
-												
-											}else if(packItem.definition instanceof JSONPoleComponent){
-												JSONPoleComponent definition = (JSONPoleComponent) packItem.definition;
-												JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, definition.packID, definition.systemName);
-												definition.general = loadedDefinition.general;
-												
-											}else{
-												continue;
-											}
-											
-											//Reset renderers.
-											for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicleClicked.world)){
-												if(entity instanceof AEntityC_Definable){
-													AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
-													if(packItem.equals(definableEntity.getItem())){
-														definableEntity.getRenderer().clearObjectCaches(definableEntity);
-													}
-												}
-											}
-										}catch(Exception e){
-											//e.printStackTrace();
-											debug.setText(debug.getText() + "\nERROR: " + e.getMessage());
+									if(!parsedFiles.contains(jsonFile)){
+										if(jsonFile.lastModified() > lastTimeModified){
+											debug.setText(debug.getText() + JSONParser.hotloadJSON(jsonFile, packItem.definition));
 										}
+										parsedFiles.add(jsonFile);
 									}
 								}
 							}
 						}
-						
-						//Send reset commands to entities.
-						for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicleClicked.world)){
-							if(entity instanceof AEntityC_Definable){
-								((AEntityC_Definable<?>) entity).onDefinitionReset();
-							}
-						}
-						
 						debug.setText(debug.getText() + "\nImporting finished.");
 					}else{
 						debug.setText("ERROR: No last modified timestamp file found at location: " + lastModifiedFile.getAbsolutePath() + "\nPlease re-export your pack data.");
