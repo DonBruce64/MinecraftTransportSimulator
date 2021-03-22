@@ -37,7 +37,7 @@ public class DurationDelayClock{
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
 	public double getFactoredState(AEntityC_Definable<?> entity, double value){
-		boolean commandForwards = value >= 1;
+		boolean commandForwards = value > 0;
 		long currentTime = System.currentTimeMillis();
 		long forwardsCycleTime = animation.forwardsDelay*50;
 		if(!animation.skipForwardsMovement){
