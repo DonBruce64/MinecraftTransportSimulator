@@ -24,4 +24,10 @@ public class JSONSound{
 	
 	@JSONDescription("Normally, sounds won't play if there's already a sound playing.  If you want this sound to be played every tick the activeAnimations say that it should be active, set this to true.  Mainly used for sounds on guns that need to be played every tick the gun fires, even if such a sound is still playing from the last firing tick, but may be used for other things.  Looping sounds is HIGHLY preferred to this if possible.")
 	public boolean forceSound;
+	
+	@JSONDescription("This causes the sound to only play if the player is riding this entity and is in first-person.")
+	public boolean isInterior;
+	
+	@JSONDescription("Like isInterior, but blocks this sound if the player is in first-person and riding this entity.")
+	public boolean isExterior;
 }

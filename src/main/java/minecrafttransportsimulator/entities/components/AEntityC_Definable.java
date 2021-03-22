@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -14,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
@@ -89,6 +92,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public void populateSoundMaps(){
 		allSoundDefs.clear();
+		soundActiveClocks.clear();
+		soundVolumeClocks.clear();
+		soundPitchClocks.clear();
 		if(definition.rendering != null && definition.rendering.sounds != null){
 			for(JSONSound soundDef : definition.rendering.sounds){
 				allSoundDefs.add(soundDef);
@@ -202,9 +208,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     	//Check all sound defs and update the passed-in sounds accordingly.
     	for(JSONSound soundDef : allSoundDefs){
     		//Check if the sound should be playing before we try to update state.
-    		boolean shouldSoundPlay = true;
+    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
+    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() ? !soundDef.isExterior : !soundDef.isInterior;
 			boolean anyClockMovedThisUpdate = false;
-			if(soundDef.activeAnimations != null){
+			if(shouldSoundPlay && soundDef.activeAnimations != null){
 				boolean inhibitAnimations = false;
 				for(JSONAnimationDefinition animation : soundDef.activeAnimations){
 					switch(animation.animationType){
@@ -308,6 +316,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			
 			if(sound != null){
 				//Adjust volume.
+				sound.volume = 1;
 				if(soundDef.volumeAnimations != null && !soundDef.volumeAnimations.isEmpty()){
 					boolean inhibitAnimations = false;
 					boolean definedVolume = false;
@@ -371,8 +380,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}else if(sound.volume < 0){
 						sound.volume = 0;
 					}
-				}else{
-					sound.volume = 1;
+				}
+				
+				//If the player is in a closed-top vehicle that isn't this one, dampen the sound
+				//Unless it's a radio, in which case don't do so.
+				if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson()){
+					sound.volume *= 0.5F;
 				}
 				
 				//Adjust pitch.

@@ -1,12 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
-import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.controls.InterfaceInput;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -17,7 +15,6 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 
@@ -184,21 +181,6 @@ abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			InterfaceGUI.closeGUI();
 		}
 	}
-	
-	@Override
-    public void updateSounds(List<SoundInstance> sounds){
-    	super.updateSounds(sounds);
-    	//If we are in an closed-top vehicle, dampen the sound.
-    	//Unless it's a radio, in which case don't do so.
-    	AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
-		if(entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson()){
-			for(SoundInstance sound : sounds){
-				if(sound.radio == null || !entityRiding.equals(this)){
-					sound.volume *= 0.5F;
-				}
-			}
-		}
-    }
 	
 	/**
 	 *  Helper method used to get the controlling player for this vehicle.
