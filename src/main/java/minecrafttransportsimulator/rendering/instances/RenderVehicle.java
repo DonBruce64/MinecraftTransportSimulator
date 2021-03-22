@@ -247,9 +247,9 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				boolean isHoldingPart = false;
 				boolean isPartValid = false;
 				
-				if(partSlotEntry.getValue().types.contains(heldPart.definition.generic.type)){
+				if(heldPart.isPartValidForPackDef(partSlotEntry.getValue(), vehicle.subName, false)){
 					isHoldingPart = true;
-					if(heldPart.isPartValidForPackDef(partSlotEntry.getValue())){
+					if(heldPart.isPartValidForPackDef(partSlotEntry.getValue(), vehicle.subName, true)){
 						isPartValid = true;
 					}
 				}
@@ -280,7 +280,8 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 			GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
 			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 			for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.allPartSlotBoxes.entrySet()){
-				if(!vehicle.areDoorsBlocking(partSlotEntry.getValue(), player)){
+				JSONPartDefinition placementDefinition = partSlotEntry.getValue();
+				if(!vehicle.areDoorsBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
 					InterfaceRender.setColorState(0, 0, 1, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					GL11.glPushMatrix();
@@ -308,7 +309,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
 					if(packItem instanceof ItemPart){
 						ItemPart part = (ItemPart) packItem;
-						if(part.isPartValidForPackDef(packVehicleDef)){
+						if(part.isPartValidForPackDef(packVehicleDef, vehicle.subName, true)){
 							validParts.add(part);
 						}
 					}

@@ -158,7 +158,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
 					ItemPart heldPart = (ItemPart) heldItem;
 					//Does the part held match this packPart?
-					if(partSlotBoxEntry.getValue().types.contains(heldPart.definition.generic.type)){
+					if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
 						//Are there any doors blocking us from clicking this part?
 						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
@@ -326,7 +326,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//Check to make sure the spot is free.
 		if(getPartAtLocation(offset) == null){
 			//Check to make sure the part is valid.
-			if(partItem.isPartValidForPackDef(newPartDef)){
+			if(partItem.isPartValidForPackDef(newPartDef, subName, true)){
 				//Try to find the parent part, if this part would have one.
 				for(JSONPartDefinition partDef : definition.parts){
 					if(partDef.additionalParts != null){

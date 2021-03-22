@@ -46,31 +46,35 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 		}
 	}
 	
-	public boolean isPartValidForPackDef(JSONPartDefinition packVehicleDef){
+	public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax){
 		//First make sure we are the right type.
-		if(packVehicleDef.types.contains(definition.generic.type)){
+		if(placementDefinition.types.contains(definition.generic.type) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subNameToPlaceOn))){
 			//Check if our custom type matches, or if we aren't a custom type and the definition doesn't care.
 			boolean customTypesValid;
-			if(packVehicleDef.customTypes == null){
+			if(placementDefinition.customTypes == null){
 				customTypesValid = definition.generic.customType == null;
 			}else if(definition.generic.customType == null){
-				customTypesValid = packVehicleDef.customTypes == null || packVehicleDef.customTypes.contains("");
+				customTypesValid = placementDefinition.customTypes == null || placementDefinition.customTypes.contains("");
 			}else{
-				customTypesValid = packVehicleDef.customTypes.contains(definition.generic.customType);
+				customTypesValid = placementDefinition.customTypes.contains(definition.generic.customType);
 			}
 			
 			if(customTypesValid){
-				//Do extra part checks for specific part types, or just return the custom def.
-				switch(partType){
-					case BULLET : return packVehicleDef.minValue <= definition.bullet.diameter && packVehicleDef.maxValue >= definition.bullet.diameter;
-					case EFFECTOR: return true;
-					case ENGINE : return packVehicleDef.minValue <= definition.engine.fuelConsumption && packVehicleDef.maxValue >= definition.engine.fuelConsumption;
-					case GENERIC : return ((packVehicleDef.minValue <= definition.generic.height && packVehicleDef.maxValue >= definition.generic.height) || (packVehicleDef.minValue == 0 && packVehicleDef.maxValue == 0));
-					case GROUND : return packVehicleDef.minValue <= definition.ground.height && packVehicleDef.maxValue >= definition.ground.height;
-					case GUN : return packVehicleDef.minValue <= definition.gun.diameter && packVehicleDef.maxValue >= definition.gun.diameter;
-					case INTERACTABLE : return packVehicleDef.minValue <= definition.interactable.inventoryUnits && packVehicleDef.maxValue >= definition.interactable.inventoryUnits;
-					case PROPELLER : return packVehicleDef.minValue <= definition.propeller.diameter && packVehicleDef.maxValue >= definition.propeller.diameter;
-					case SEAT: return true;
+				if(checkMinMax){
+					//Do extra part checks for specific part types, or just return the custom def.
+					switch(partType){
+						case BULLET : return placementDefinition.minValue <= definition.bullet.diameter && placementDefinition.maxValue >= definition.bullet.diameter;
+						case EFFECTOR: return true;
+						case ENGINE : return placementDefinition.minValue <= definition.engine.fuelConsumption && placementDefinition.maxValue >= definition.engine.fuelConsumption;
+						case GENERIC : return ((placementDefinition.minValue <= definition.generic.height && placementDefinition.maxValue >= definition.generic.height) || (placementDefinition.minValue == 0 && placementDefinition.maxValue == 0));
+						case GROUND : return placementDefinition.minValue <= definition.ground.height && placementDefinition.maxValue >= definition.ground.height;
+						case GUN : return placementDefinition.minValue <= definition.gun.diameter && placementDefinition.maxValue >= definition.gun.diameter;
+						case INTERACTABLE : return placementDefinition.minValue <= definition.interactable.inventoryUnits && placementDefinition.maxValue >= definition.interactable.inventoryUnits;
+						case PROPELLER : return placementDefinition.minValue <= definition.propeller.diameter && placementDefinition.maxValue >= definition.propeller.diameter;
+						case SEAT: return true;
+					}
+				}else{
+					return true;
 				}
 			}
 		}
