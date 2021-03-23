@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -10,8 +9,6 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.sound.InterfaceSound;
-import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Packet used to send signals to engines.  This can be a state change or damage from an attack.
  * Constructors are present for each of these situations, though the side this packet is present
@@ -111,6 +108,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 			case HS_ON: engine.handStartEngine(); break;
 			case AS_ON: engine.autoStartEngine(); break;
 			case BACKFIRE: engine.backfireEngine(); break;
+			case BAD_SHIFT: engine.badShiftEngine(); break;
 			case START: engine.startEngine(); break;
 			case FUEL_OUT: engine.stallEngine(packetType); break;
 			case TOO_SLOW: engine.stallEngine(packetType); break;
@@ -126,9 +124,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 				if(brokenStarter){
 					engine.brokenStarter = true;
 				}
-				break;
-			}case BAD_SHIFT: {
-				InterfaceSound.playQuickSound(new SoundInstance(engine, MasterLoader.resourceDomain + ":engine_shifting_grinding"));
 				break;
 			}case LINK: {
 				AEntityE_Multipart<?> otherEntity = (AEntityE_Multipart<?>) AEntityA_Base.getEntity(world, linkedID);
@@ -154,12 +149,12 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		HS_ON,
 		AS_ON,
 		BACKFIRE,
+		BAD_SHIFT,
 		START,
 		FUEL_OUT,
 		TOO_SLOW,
 		DROWN,
 		DAMAGE,
-		BAD_SHIFT,
 		LINK;
 	}
 }

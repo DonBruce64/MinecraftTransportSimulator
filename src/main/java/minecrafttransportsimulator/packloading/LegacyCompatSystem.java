@@ -462,49 +462,63 @@ public final class LegacyCompatSystem{
 				JSONSound startingSound = new JSONSound();
 				startingSound.name = packID + ":" + systemName + "_starting";
 				startingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition startingVolumeDef = new JSONAnimationDefinition();
-				startingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
-				startingVolumeDef.variable = "engine_running";
-				startingVolumeDef.clampMin = 1.0F;
-				startingVolumeDef.clampMax = 1.0F;
-				startingSound.activeAnimations.add(startingVolumeDef);
+				JSONAnimationDefinition startingActiveDef = new JSONAnimationDefinition();
+				startingActiveDef.animationType = AnimationComponentType.VISIBILITY;
+				startingActiveDef.variable = "engine_running";
+				startingActiveDef.clampMin = 1.0F;
+				startingActiveDef.clampMax = 1.0F;
+				startingSound.activeAnimations.add(startingActiveDef);
 				definition.rendering.sounds.add(startingSound);
 				
 				//Stopping sound plays when engine goes from running to stopped.
 				JSONSound stoppingSound = new JSONSound();
 				stoppingSound.name = packID + ":" + systemName + "_stopping";
 				stoppingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition stoppingVolumeDef = new JSONAnimationDefinition();
-				stoppingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
-				stoppingVolumeDef.variable = "engine_running";
-				stoppingVolumeDef.clampMin = 0.0F;
-				stoppingVolumeDef.clampMax = 0.0F;
-				stoppingSound.activeAnimations.add(stoppingVolumeDef);
+				JSONAnimationDefinition stoppingActiveDef = new JSONAnimationDefinition();
+				stoppingActiveDef.animationType = AnimationComponentType.VISIBILITY;
+				stoppingActiveDef.variable = "engine_running";
+				stoppingActiveDef.clampMin = 0.0F;
+				stoppingActiveDef.clampMax = 0.0F;
+				stoppingSound.activeAnimations.add(stoppingActiveDef);
 				definition.rendering.sounds.add(stoppingSound);
 				
 				//Sputtering sound plays when engine backfires.
 				JSONSound sputteringSound = new JSONSound();
 				sputteringSound.name = packID + ":" + systemName + "_sputter";
+				sputteringSound.forceSound = true;
 				sputteringSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition sputteringVolumeDef = new JSONAnimationDefinition();
-				sputteringVolumeDef.animationType = AnimationComponentType.VISIBILITY;
-				sputteringVolumeDef.variable = "engine_backfired";
-				sputteringVolumeDef.clampMin = 1.0F;
-				sputteringVolumeDef.clampMax = 1.0F;
-				sputteringSound.activeAnimations.add(sputteringVolumeDef);
+				JSONAnimationDefinition sputteringActiveDef = new JSONAnimationDefinition();
+				sputteringActiveDef.animationType = AnimationComponentType.VISIBILITY;
+				sputteringActiveDef.variable = "engine_backfired";
+				sputteringActiveDef.clampMin = 1.0F;
+				sputteringActiveDef.clampMax = 1.0F;
+				sputteringSound.activeAnimations.add(sputteringActiveDef);
 				definition.rendering.sounds.add(sputteringSound);
+				
+				//Griding sound plays when engine has a bad shift.
+				JSONSound grindingSound = new JSONSound();
+				grindingSound.name = MasterLoader.resourceDomain + ":engine_shifting_grinding";
+				grindingSound.forceSound = true;
+				grindingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition grindingActiveDef = new JSONAnimationDefinition();
+				grindingActiveDef.animationType = AnimationComponentType.VISIBILITY;
+				grindingActiveDef.variable = "engine_badshift";
+				grindingActiveDef.clampMin = 1.0F;
+				grindingActiveDef.clampMax = 1.0F;
+				grindingSound.activeAnimations.add(grindingActiveDef);
+				definition.rendering.sounds.add(grindingSound);
 				
 				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
 				crankingSound.name = packID + ":" + systemName + "_cranking";
 				crankingSound.looping = true;
 				crankingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition crankingVolumeDef = new JSONAnimationDefinition();
-				crankingVolumeDef.animationType = AnimationComponentType.VISIBILITY;
-				crankingVolumeDef.variable = "engine_starter";
-				crankingVolumeDef.clampMin = 1.0F;
-				crankingVolumeDef.clampMax = 1.0F;
-				crankingSound.activeAnimations.add(crankingVolumeDef);
+				JSONAnimationDefinition crankingActiveDef = new JSONAnimationDefinition();
+				crankingActiveDef.animationType = AnimationComponentType.VISIBILITY;
+				crankingActiveDef.variable = "engine_starter";
+				crankingActiveDef.clampMin = 1.0F;
+				crankingActiveDef.clampMax = 1.0F;
+				crankingSound.activeAnimations.add(crankingActiveDef);
 				
 				crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
@@ -631,6 +645,48 @@ public final class LegacyCompatSystem{
 				reloadingDef.clampMax = 1.0F;
 				reloadingSound.activeAnimations.add(reloadingDef);
 				definition.rendering.sounds.add(reloadingSound);
+			}else if(definition.ground != null){
+				if(definition.rendering == null){
+					definition.rendering = new JSONRendering();
+				}
+				if(definition.rendering.sounds == null){
+					definition.rendering.sounds = new ArrayList<JSONSound>();
+				}
+				
+				JSONSound blowoutSound = new JSONSound();
+				blowoutSound.name = MasterLoader.resourceDomain + ":wheel_blowout";
+				blowoutSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition blowoutDef = new JSONAnimationDefinition();
+				blowoutDef.animationType = AnimationComponentType.VISIBILITY;
+				blowoutDef.variable = "ground_isflat";
+				blowoutDef.clampMin = 1.0F;
+				blowoutDef.clampMax = 1.0F;
+				blowoutSound.activeAnimations.add(blowoutDef);
+				definition.rendering.sounds.add(blowoutSound);
+				
+				JSONSound strikingSound = new JSONSound();
+				strikingSound.name = MasterLoader.resourceDomain + ":" + "wheel_striking";
+				strikingSound.forceSound = true;
+				strikingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition strikingDef = new JSONAnimationDefinition();
+				strikingDef.animationType = AnimationComponentType.VISIBILITY;
+				strikingDef.variable = "ground_contacted";
+				strikingDef.clampMin = 1.0F;
+				strikingDef.clampMax = 1.0F;
+				strikingSound.activeAnimations.add(strikingDef);
+				definition.rendering.sounds.add(strikingSound);
+				
+				JSONSound skiddingSound = new JSONSound();
+				skiddingSound.name = MasterLoader.resourceDomain + ":" + "wheel_skidding";
+				skiddingSound.looping = true;
+				skiddingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition skiddingDef = new JSONAnimationDefinition();
+				skiddingDef.animationType = AnimationComponentType.VISIBILITY;
+				skiddingDef.variable = "ground_slipping";
+				skiddingDef.clampMin = 1.0F;
+				skiddingDef.clampMax = 1.0F;
+				skiddingSound.activeAnimations.add(skiddingDef);
+				definition.rendering.sounds.add(skiddingSound);
 			}
 		}
 	}

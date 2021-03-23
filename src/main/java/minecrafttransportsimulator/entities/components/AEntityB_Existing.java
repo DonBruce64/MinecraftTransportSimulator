@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -28,8 +28,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevRotation;
 	public double airDensity;
 	
-	//Internal radio variables.
+	//Internal sound variables.
 	public final Radio radio;
+	public List<SoundInstance> sounds = new ArrayList<SoundInstance>();
 	
 	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -44,18 +45,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		
 		//Create radio.
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
-		
-		//Start sounds.
-		if(world.isClient()){
-			InterfaceSound.startSounds(this);
-		}
 	}
 	
 	@Override
 	public void update(){
 		super.update();
-		if(radio != null){
-			radio.update();
+		if(world.isClient()){
+			updateSounds();
 		}
 		prevPosition.setTo(position);
 		prevMotion.setTo(motion);
@@ -67,8 +63,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	@Override
 	public void remove(){
 		super.remove();
-		if(radio != null){
-			radio.stop();
+		if(world.isClient()){
+			if(radio != null){
+				radio.stop();
+			}
+			for(SoundInstance sound : sounds){
+				sound.stopSound = true;
+			}
 		}
 	}
 	
@@ -127,17 +128,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
     
     /**
-	 *  Called by the audio system to query this entity to update its sounds.
-	 *  The entity should start/stop any sounds, and change their properties,
-	 *  when this method is called.  All existing sounds this entity is playing
-	 *  are passed-in to allow the entity to know if we need to start them or not.
+	 *  This method should start/stop any sounds, and change any existing sound properties when called.
+	 *  Called at the start of every update tick to update sounds, as this catches the updates from the prior tick
+	 *  and allows for use of a simplified super() call in updates while at the same time keeping all sound code isolated.
 	 */
-    public void updateSounds(List<SoundInstance> sounds){
-    	if(!isValid){
-    		for(SoundInstance sound : sounds){
-    			sound.stop();
-    		}
-    	}
+    public void updateSounds(){
+    	//Update radio of we have one.
+    	if(radio != null){
+			radio.update();
+		}
     }
     
     /**

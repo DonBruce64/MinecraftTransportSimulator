@@ -83,7 +83,7 @@ public class Radio extends AEntityB_Existing{
 			currentStation.removeRadio(this);
 			currentStation = null;
 			if(currentSound != null){
-				currentSound.stop();
+				currentSound.stopSound = true;
 			}
 			displayText = "Radio turned off.";
 		}

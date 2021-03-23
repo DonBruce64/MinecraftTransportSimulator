@@ -30,6 +30,7 @@ public class PartEngine extends APart{
 	public boolean fuelLeak;
 	public boolean brokenStarter;
 	public boolean backfired;
+	public boolean badShift;
 	public byte reverseGears;
 	public byte currentGear;
 	public int upshiftCountdown;
@@ -132,8 +133,9 @@ public class PartEngine extends APart{
 	@Override
 	public void update(){
 		super.update();
-		//Reset backfire state.
+		//Reset states.
 		backfired = false;
+		badShift = false;
 		
 		//Set fuel flow to 0 for the start of this cycle.
 		fuelFlow = 0;
@@ -193,6 +195,7 @@ public class PartEngine extends APart{
 						starterLevel += 4;
 					}else{
 						setElectricStarterStatus(false);
+						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
 					}
 				}
 				if(starterLevel > 0){
@@ -207,6 +210,7 @@ public class PartEngine extends APart{
 					++autoStarterWindDown;
 					if((state.running && autoStarterWindDown >= 20) || (rpm > startRPM && autoStarterWindDown >= 40)){
 						setElectricStarterStatus(false);
+						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
 					}
 				}
 			}else if(state.hsOn){
@@ -289,6 +293,7 @@ public class PartEngine extends APart{
 					if(hours > 100 && !world.isClient()){
 						if(Math.random() < hours/1000*(getSafeRPM(definition.engine)/(rpm+getSafeRPM(definition.engine)/2))){
 							backfireEngine();
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 						}
 					}
 					
@@ -296,10 +301,13 @@ public class PartEngine extends APart{
 					if(!world.isClient()){
 						if(!world.isClient() && isInLiquid()){
 							stallEngine(Signal.DROWN);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
 						}else if(!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0){
 							stallEngine(Signal.FUEL_OUT);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
 						}else if(rpm < stallRPM){
 							stallEngine(Signal.TOO_SLOW);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
 						}
 					}
 				}
@@ -360,6 +368,7 @@ public class PartEngine extends APart{
 					if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 						if(!isInLiquid() && state.magnetoOn){
 							startEngine();
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
 						}
 					}
 				}
@@ -596,11 +605,6 @@ public class PartEngine extends APart{
 		if(!definition.engine.isSteamPowered){
 			pressure = 60;
 		}
-		
-		//Send off packet.
-		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
-		}
 	}
 	
 	public void handStartEngine(){
@@ -640,23 +644,21 @@ public class PartEngine extends APart{
 				internalFuel = 100;
 			}
 		}
-		
-		//Send off packet.
-		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketPartEngine(this, signal));
-		}
 	}
 	
 	public void backfireEngine(){
 		//Decrease RPM and send off packet to have clients do the same.
 		//This also causes particles to spawn and sounds to play.
+		backfired = true;
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
-		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
-		}else{
-			backfired = true;
+		if(world.isClient()){
 			spawnBackfireParticles = true;
 		}
+	}
+	
+	public void badShiftEngine(){
+		//Just set bad shifting variable here.
+		badShift = true;
 	}
 	
 	protected void explodeEngine(){

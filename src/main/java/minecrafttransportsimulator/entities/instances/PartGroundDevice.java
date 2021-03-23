@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -11,8 +10,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
-import minecrafttransportsimulator.sound.InterfaceSound;
-import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**A ground device is simply a part of a vehicle that touches the ground.
@@ -35,8 +32,8 @@ public class PartGroundDevice extends APart{
 	public double angularVelocity;
 	
 	//Internal states for control and physics.
-	private boolean isFlat;
-	private boolean contactThisTick = false;
+	public boolean isFlat;
+	public boolean contactThisTick = false;
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
@@ -83,6 +80,7 @@ public class PartGroundDevice extends APart{
 				
 				//Set contact for wheel skidding effects.
 				if(definition.ground.isWheel){
+					contactThisTick = false;
 					if(Math.abs(prevAngularVelocity)/(vehicleOn.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicleOn.velocity > 0.3){
 						//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
 						Point3d blockPositionBelow = position.copy().add(0, -1, 0);
@@ -166,11 +164,7 @@ public class PartGroundDevice extends APart{
 	 * sure the ground device can actually go flat if it is being requested to do so.
 	 */
 	public void setFlatState(boolean setFlat){
-		if(world.isClient()){
-			if(setFlat){
-				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":wheel_blowout"));
-			}
-		}else{
+		if(!world.isClient()){
 			//On the server, can we go flat and does the config let us?
 			//Or if we are repairing, are we flat in the first place?
 			if(setFlat){
@@ -192,10 +186,6 @@ public class PartGroundDevice extends APart{
 		if(vehicleOn != null){
 			vehicleOn.groundDeviceCollective.updateBounds();
 		}
-	}
-	
-	public boolean getFlatState(){
-		return isFlat;
 	}
 	
 	public float getFrictionLoss(){
@@ -248,10 +238,8 @@ public class PartGroundDevice extends APart{
 				for(byte i=0; i<4; ++i){
 					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 				}
-				InterfaceSound.playQuickSound(new SoundInstance(this, MasterLoader.resourceDomain + ":" + "wheel_striking"));
-				contactThisTick = false;
 			}
-			if(skipAngularCalcs && vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
+			if(skipAngularCalcs){
 				for(byte i=0; i<4; ++i){
 					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
 				}

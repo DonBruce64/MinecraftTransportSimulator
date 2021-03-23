@@ -201,8 +201,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public abstract <AnimatorInstance extends AAnimationsBase<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> AnimatorInstance getAnimator();
     
     @Override
-    public void updateSounds(List<SoundInstance> sounds){
-    	super.updateSounds(sounds);
+    public void updateSounds(){
+    	super.updateSounds();
     	//Check all sound defs and update the passed-in sounds accordingly.
     	for(JSONSound soundDef : allSoundDefs){
     		//Check if the sound should be playing before we try to update state.
@@ -293,7 +293,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					//If sound is playing, stop it.
 					for(SoundInstance sound : sounds){
 						if(sound.soundName.equals(soundDef.name)){
-							sound.stop();
+							sound.stopSound = true;
 							break;
 						}
 					}
@@ -303,7 +303,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				continue;
 			}
 			
-			//Sound should be playing.  If it's part of the passed-in sound list, update properties.
+			//Sound should be playing.  If it's part of the sound list, update properties.
+			//Sounds may not be in the list if they have just been queued and haven't started yet.
 			SoundInstance sound = null;
 			for(SoundInstance activeSound : sounds){
 				if(activeSound.soundName.equals(soundDef.name)){

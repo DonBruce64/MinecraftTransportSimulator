@@ -42,12 +42,4 @@ public class SoundInstance{
 		this.looping = looping;
 		this.radio = radio;
 	}
-	
-	/**
-	 *  Flags the sound as stopped.  This will cause the audio system to stop
-	 *  playing it the next update call.
-	 */
-	public void stop(){
-		this.stopSound = true;
-	}
 }

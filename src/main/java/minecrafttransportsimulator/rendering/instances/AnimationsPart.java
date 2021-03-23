@@ -102,6 +102,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_gearshift_hhorizontal"): return engine.getGearshiftPosition_Horizontal();
 				case("engine_clutch_upshift"): return engine.upshiftCountdown > 0 ? 1 : 0;
 				case("engine_clutch_downshift"): return engine.downshiftCountdown > 0 ? 1 : 0;
+				case("engine_badshift"): return engine.badShift ? 1 : 0;
 				case("engine_magneto"): return engine.state.magnetoOn ? 1 : 0;
 				case("engine_starter"): return engine.state.esOn || engine.state.hsOn ? 1 : 0;
 				case("engine_running"): return engine.state.running ? 1 : 0;
@@ -160,7 +161,9 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("ground_rotation"): return groundDevice.getRenderingRotation(partialTicks, true).x;
 				case("ground_onground"): return part.entityOn instanceof EntityVehicleF_Physics ? ((EntityVehicleF_Physics) part.entityOn).groundDeviceCollective.groundedGroundDevices.contains(groundDevice) ? 1 : 0 : 0;
 				case("ground_inliquid"): return groundDevice.isInLiquid() ? 1 : 0;
-				case("ground_isflat"): return groundDevice.getFlatState() ? 1 : 0;
+				case("ground_isflat"): return groundDevice.isFlat ? 1 : 0;
+				case("ground_contacted"): return groundDevice.contactThisTick ? 1 : 0;
+				case("ground_slipping"): return groundDevice.skipAngularCalcs ? 1 : 0;
 			}
 		}else if(part instanceof PartSeat){
 			PartSeat seat = (PartSeat) part;
