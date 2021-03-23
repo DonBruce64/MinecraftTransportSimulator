@@ -26,6 +26,7 @@ public class VehicleGroundDeviceBox{
 	private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
 	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
 	
+	public boolean canRollOnGround;
 	public boolean isCollided;
 	public boolean isCollidedLiquid;
 	public boolean isGrounded;
@@ -87,6 +88,7 @@ public class VehicleGroundDeviceBox{
 		//Get all part-based collision boxes.  This includes solid and liquid ground devices.
 		groundDevices.clear();
 		liquidDevices.clear();
+		canRollOnGround = false;
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
 				if(!part.placementDefinition.isSpare){
@@ -95,11 +97,17 @@ public class VehicleGroundDeviceBox{
 					if(isFront && part.placementOffset.z > 0){
 						if(isLeft && part.placementOffset.x >= 0){
 							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.isWheel || part.definition.ground.isTread){
+								canRollOnGround = true;
+							}
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
 						}else if(!isLeft && part.placementOffset.x <= 0){
 							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.isWheel || part.definition.ground.isTread){
+								canRollOnGround = true;
+							}
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
@@ -107,11 +115,17 @@ public class VehicleGroundDeviceBox{
 					}else if(!isFront && part.placementOffset.z <= 0){
 						if(isLeft && part.placementOffset.x >= 0){
 							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.isWheel || part.definition.ground.isTread){
+								canRollOnGround = true;
+							}
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
 						}else if(!isLeft && part.placementOffset.x <= 0){
 							groundDevices.add((PartGroundDevice) part);
+							if(part.definition.ground.isWheel || part.definition.ground.isTread){
+								canRollOnGround = true;
+							}
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
@@ -202,7 +216,7 @@ public class VehicleGroundDeviceBox{
 				isGrounded = !solidBox.collidingBlockPositions.isEmpty();
 			}
 			
-			if(isCollided || isGrounded){
+			if(isGrounded){
 				isAbleToDoGroundOperations = true;
 			}else{
 				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
@@ -213,48 +227,54 @@ public class VehicleGroundDeviceBox{
 			}
 		}
 		
-		if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
-			liquidBox.globalCenter.setTo(liquidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
-			vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
-			isCollidedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
-			double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;
-			
-			if(isCollidedLiquid){
-				isGroundedLiquid = true;
-			}else{
-				liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
-				vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
-				liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-				isGroundedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
-			}
-			
-			if(isCollidedLiquid || isGroundedLiquid){
-				isAbleToDoGroundOperationsLiquid = true;
-			}else{
-				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
-				liquidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
-				vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
-				liquidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-				isAbleToDoGroundOperationsLiquid = !liquidBox.collidingBlockPositions.isEmpty();
-			}
-			
-			isLiquidCollidedWithGround = false;
-			for(Point3d blockPosition : liquidBox.collidingBlockPositions){
-				if(!vehicle.world.isBlockLiquid(blockPosition)){
-					isLiquidCollidedWithGround = true;
-					break;
+		if(!canRollOnGround || !isAbleToDoGroundOperations){
+			if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
+				liquidBox.globalCenter.setTo(liquidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
+				vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
+				isCollidedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
+				double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;
+				
+				if(isCollidedLiquid){
+					isGroundedLiquid = true;
+				}else{
+					liquidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
+					vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
+					liquidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
+					isGroundedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
+				}
+				
+				if(isGroundedLiquid){
+					isAbleToDoGroundOperationsLiquid = true;
+				}else{
+					groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
+					liquidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
+					vehicle.world.updateBoundingBoxCollisions(liquidBox, groundCollisionOffset, false);
+					liquidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
+					isAbleToDoGroundOperationsLiquid = !liquidBox.collidingBlockPositions.isEmpty();
+				}
+				
+				isLiquidCollidedWithGround = false;
+				for(Point3d blockPosition : liquidBox.collidingBlockPositions){
+					if(!vehicle.world.isBlockLiquid(blockPosition)){
+						isLiquidCollidedWithGround = true;
+						break;
+					}
+				}
+				
+				//If the liquid boxes are grounded and are more collided, use liquid values.
+				//Otherwise, use the solid values.
+				if(isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)){
+					isCollided = isCollidedLiquid;
+					isGrounded = isGroundedLiquid;
+					isAbleToDoGroundOperations = isAbleToDoGroundOperationsLiquid;
+					collisionDepth = liquidCollisionDepth;
+					contactPoint.setTo(liquidBox.localCenter).add(0D, -liquidBox.heightRadius, 0D);
 				}
 			}
-			
-			//If the liquid boxes are grounded and are more collided, use liquid values.
-			//Otherwise, use the solid values.
-			if(isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)){
-				isCollided = isCollidedLiquid;
-				isGrounded = isGroundedLiquid;
-				isAbleToDoGroundOperations = isAbleToDoGroundOperationsLiquid;
-				collisionDepth = liquidCollisionDepth;
-				contactPoint.setTo(liquidBox.localCenter).add(0D, -liquidBox.heightRadius, 0D);
-			}
+		}else{
+			isCollidedLiquid = false;
+			isGroundedLiquid = false;
+			isAbleToDoGroundOperationsLiquid = false;
 		}
 		
 		//Add ground devices to the list.
