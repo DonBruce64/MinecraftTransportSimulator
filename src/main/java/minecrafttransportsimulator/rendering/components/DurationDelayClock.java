@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 
@@ -23,13 +24,9 @@ public class DurationDelayClock{
 	private boolean endedReverseMovement = false;
 	
 	public DurationDelayClock(JSONAnimationDefinition animation){
-		this(animation, false);
-	}
-	
-	public DurationDelayClock(JSONAnimationDefinition animation, boolean forceUseful){
 		this.animation = animation;
 		this.shouldDoFactoring = animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0;
-		this.isUseful = forceUseful || shouldDoFactoring || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
+		this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY)  || animation.animationType.equals(AnimationComponentType.INHIBITOR)  || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
 	/**

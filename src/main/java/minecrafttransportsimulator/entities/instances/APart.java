@@ -49,6 +49,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
+	public boolean isDisabled;
 	public final Point3d localOffset;
 	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
@@ -92,11 +93,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		}
 		
 		//Create movement animation clocks.
-		if(placementDefinition.animations != null){
-			for(JSONAnimationDefinition animation : placementDefinition.animations){
-				clocks.add(new DurationDelayClock(animation));
-			}
-		}
+		createMovementClocks();
 		
 		//Set initial position and rotation.
 		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
@@ -106,31 +103,17 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	/**
-	 * This is called during part save/load calls.  Fakes parts are
-	 * added to entities, but they aren't saved with the NBT.  Rather, 
-	 * they should be re-created in the constructor of the part that added
-	 * them in the first place.
+	 *  Helper method for creating duration/delay clocks.
 	 */
-	public boolean isFake(){
-		return false;
-	}
-
-	/**
-	 * Called when checking if this part can be interacted with.
-	 * If a part does interactions it should do so and then return true.
-	 * Call this ONLY from the server-side!  The server will handle the
-	 * interaction by notifying the client via packet if appropriate.
-	 */
-	public boolean interact(WrapperPlayer player){
-		return false;
+	public void createMovementClocks(){
+		clocks.clear();
+		if(placementDefinition.animations != null){
+			for(JSONAnimationDefinition animation : placementDefinition.animations){
+				clocks.add(new DurationDelayClock(animation));
+			}
+		}
 	}
 	
-	/**
-	 * This gets called every tick by the entity after it finishes its update loop.
-	 * Use this for reactions that this part can take based on its surroundings if need be.
-	 * Do NOT remove the part from the entity in this loop.  Instead, set it to invalid.
-	 * Removing the part during this loop will earn you a CME.
-	 */
 	@Override
 	public void update(){
 		super.update();
@@ -139,7 +122,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		prevLocalOffset.setTo(localOffset);
 		variablesOn.clear();
 		variablesOn.addAll(entityOn.variablesOn);
-		updatePositionAndRotation();
+		isDisabled = updateLocals();
 		//If we have a parent part, we need to change our offsets to be relative to it.
 		if(parentPart != null && placementDefinition.isSubPart){
 			//Get parent offset and rotation.  The parent will have been updated already as it has
@@ -169,19 +152,28 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
+	public void remove(){
+		super.remove();
+		if(parentPart != null){
+			parentPart.childParts.remove(this);
+		}
+	}
+	
+	@Override
 	public boolean shouldSavePosition(){
 		return false;
 	}
 	
 	/**
-	 * Updates the position and rotation totals to the current position and rotation, 
-	 * as defined by the various animations and offsets defined in the JSON.
-	 * This may be extended by parts to modify this behavior.
-	 * Note that this is called in the constructor of this class for the initial state-setting,
-	 * so if you sub-class this method, ensure your variables have been created before accessing them!
+	 * Updates the passed-in position and angles to the current position and rotation, 
+	 * as defined by the various animations and offsets defined in the passed-in JSON.
+	 * This is a local offset, and should be used to get the part's position and angles relative
+	 * to the parent entity.  If the part should be invisible, given the animations, true is returned.
+	 * This can be used to disable both the part and the hitbox, if desired.
 	 */
-	protected void updatePositionAndRotation(){
+	protected boolean updateLocals(){
 		boolean inhibitAnimations = false;
+		boolean disablePart = false;
 		localOffset.set(0D, 0D, 0D);
 		localAngles.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
@@ -221,30 +213,43 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						break;
 					}
 					case VISIBILITY :{
-						//Do nothing.
+						if(!inhibitAnimations){
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
+								disablePart = true;
+							}
+						}
 						break;
 					}
 					case INHIBITOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
-						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-							inhibitAnimations = true;
+						if(!inhibitAnimations){
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								inhibitAnimations = true;
+							}
 						}
 						break;
 					}
 					case ACTIVATOR :{
-						double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
-						if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-							inhibitAnimations = false;
+						if(inhibitAnimations){
+							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								inhibitAnimations = false;
+							}
 						}
 						break;
 					}
 				}
+				if(disablePart){
+					break;
+				}
 			}
 		}
 		
-		//Add on the placement offset and rotation  now that we have our dynamic values.
+		//Add on the placement offset and angles now that we have our dynamic values.
 		localOffset.add(placementOffset);
 		localAngles.add(placementAngles);
+		return disablePart;
 	}
 	
 	/**
@@ -262,25 +267,26 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public boolean isInLiquid(){
 		return world.isBlockLiquid(position);
 	}
+
 	
 	/**
-	 * Called when the part is removed from the entity.
-	 * Allows for parts to trigger logic that happens when they are removed.
-	 * Note that hitboxes are configured to not allow this part to be
-	 * removed if it has children, so it may be assumed that no child
-	 * parts are present when this action occurs.  Do note that it's possible
-	 * this part is a child to another part, so you will need to remove this
-	 * part as the child from its parent if is has one.  Also note that you may
-	 * NOT remove any other parts in this method.  Doing so will get you a CME.
-	 * If you need to remove another part, set it to invalid instead.  This will
-	 * have it be removed at the end of the update loop.
+	 * This is called during part save/load calls.  Fakes parts are
+	 * added to entities, but they aren't saved with the NBT.  Rather, 
+	 * they should be re-created in the constructor of the part that added
+	 * them in the first place.
 	 */
-	@Override
-	public void remove(){
-		super.remove();
-		if(parentPart != null){
-			parentPart.childParts.remove(this);
-		}
+	public boolean isFake(){
+		return false;
+	}
+
+	/**
+	 * Called when checking if this part can be interacted with.
+	 * If a part does interactions it should do so and then return true.
+	 * Call this ONLY from the server-side!  The server will handle the
+	 * interaction by notifying the client via packet if appropriate.
+	 */
+	public boolean interact(WrapperPlayer player){
+		return false;
 	}
 	
 	public float getWidth(){

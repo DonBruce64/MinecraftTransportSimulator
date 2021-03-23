@@ -90,7 +90,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**
 	 *  Helper method for populating sound maps.
 	 */
-	public void populateSoundMaps(){
+	private void populateSoundMaps(){
 		allSoundDefs.clear();
 		soundActiveClocks.clear();
 		soundVolumeClocks.clear();
@@ -102,7 +102,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> activeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
 				if(soundDef.activeAnimations !=  null){
 					for(JSONAnimationDefinition animation : soundDef.activeAnimations){
-						activeClocks.put(animation, new DurationDelayClock(animation, true));
+						activeClocks.put(animation, new DurationDelayClock(animation));
 					}
 				}
 				soundActiveClocks.put(soundDef, activeClocks);
@@ -219,11 +219,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
 								DurationDelayClock clock = soundActiveClocks.get(soundDef).get(animation);
-								double value = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, 0);
+								double variableValue = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, 0);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
-								if(value < animation.clampMin || value > animation.clampMax){
+								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
 									shouldSoundPlay = false;
 								}
 							}

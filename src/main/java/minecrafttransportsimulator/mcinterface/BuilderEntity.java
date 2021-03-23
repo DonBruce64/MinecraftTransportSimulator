@@ -26,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
 import minecrafttransportsimulator.rendering.components.RenderTickData;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -452,7 +453,7 @@ public class BuilderEntity extends Entity{
     public static void on(PlayerInteractEvent.EntityInteract event){
     	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
     		BuilderEntity builder = (BuilderEntity) event.getTarget();
-    		if(event.getEntityPlayer().world.isRemote && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
+    		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player) && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
 	    		if(boxClicked != null){
 		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, true));
@@ -477,7 +478,7 @@ public class BuilderEntity extends Entity{
     public static void on(AttackEntityEvent event){
     	if(event.getTarget() instanceof BuilderEntity && ((BuilderEntity) event.getTarget()).entity instanceof EntityVehicleF_Physics){
     		BuilderEntity builder = (BuilderEntity) event.getTarget();
-    		if(event.getEntityPlayer().world.isRemote){
+    		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player)){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
     			if(boxClicked != null){
     				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, false));

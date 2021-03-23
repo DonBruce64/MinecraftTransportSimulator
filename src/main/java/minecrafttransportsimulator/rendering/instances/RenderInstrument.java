@@ -97,14 +97,14 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double value = vehicle.getAnimator().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							double variableValue = vehicle.getAnimator().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}
 							
 							switch(animation.animationType){
 								case ROTATION :{
-									value *= Math.signum(animation.axis.z);
+									variableValue *= Math.signum(animation.axis.z);
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
@@ -116,7 +116,7 @@ public final class RenderInstrument{
 										p4.add(animation.centerPoint);
 										
 										//Rotate the points by the rotation.
-										r.set(0, 0, value);
+										r.set(0, 0, variableValue);
 										p1.rotateFine(r);
 										p2.rotateFine(r);
 										p3.rotateFine(r);
@@ -129,7 +129,7 @@ public final class RenderInstrument{
 										p4.subtract(animation.centerPoint);
 									}else{
 										GL11.glTranslated(component.xCenter + animation.centerPoint.x, component.yCenter + animation.centerPoint.y, 0.0F);
-										GL11.glRotated(value, 0, 0, 1);
+										GL11.glRotated(variableValue, 0, 0, 1);
 										GL11.glTranslated(-component.xCenter - animation.centerPoint.x, -component.yCenter - animation.centerPoint.y, 0.0F);
 									}
 									break;
@@ -138,8 +138,8 @@ public final class RenderInstrument{
 									//Offset the coords based on the translated amount.
 									//Adjust the window to either move or scale depending on settings.
 									double axisLength = animation.axis.length();
-									double xTranslation = value*animation.axis.x/axisLength;
-									double yTranslation = value*animation.axis.y/axisLength;
+									double xTranslation = variableValue*animation.axis.x/axisLength;
+									double yTranslation = variableValue*animation.axis.y/axisLength;
 									if(component.extendWindow){
 										//We need to add to the edge of the window in this case rather than move the entire window.
 										if(animation.axis.x < 0){
@@ -184,21 +184,21 @@ public final class RenderInstrument{
 								}
 								case VISIBILITY:{
 									//Skip rendering this component if this is false.
-									skipRender = value < animation.clampMin || value > animation.clampMax;
+									skipRender = variableValue < animation.clampMin || variableValue > animation.clampMax;
 									skipFurtherTransforms = skipRender;
 									break;
 								}
 								case INHIBITOR:{
 									//Skip further operations if this is true.
 									if(!skipFurtherTransforms){
-										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
+										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
 									}
 									break;
 								}
 								case ACTIVATOR:{
 									//Prevent skipping  further operations if this is true.
 									if(skipFurtherTransforms){
-										skipFurtherTransforms = value >= animation.clampMin && value <= animation.clampMax;
+										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
 									}
 									break;
 								}

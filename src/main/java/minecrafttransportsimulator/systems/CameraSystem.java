@@ -138,7 +138,7 @@ public class CameraSystem{
 					if(camera.animations != null){
 						boolean inhibitAnimations = false;
         				for(JSONAnimationDefinition animation : camera.animations){
-        					double variableValue= cameraProvider.getAnimator().getAnimatedVariableValue(cameraProvider, animation, 0, null, partialTicks);
+        					double variableValue = cameraProvider.getAnimator().getAnimatedVariableValue(cameraProvider, animation, 0, null, partialTicks);
         					switch(animation.animationType){
 	        					case TRANSLATION :{
             						if(!inhibitAnimations && variableValue != 0){

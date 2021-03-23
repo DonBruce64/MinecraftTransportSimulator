@@ -263,6 +263,25 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 	}
 	
+	@Override
+    public void onDefinitionReset(){
+    	super.onDefinitionReset();
+    	//Also reset any parts on us.
+    	//Don't reset sub-parts though, as they don't use our movement.
+    	for(APart part : parts){
+    		if(!part.placementDefinition.isSubPart){
+    			//Find the actual definition in the JSON and get the new animations to use.
+    			for(JSONPartDefinition packDef : definition.parts){
+    				if(packDef.pos.equals(part.placementDefinition.pos)){
+    					part.placementDefinition.animations = packDef.animations;
+    					part.createMovementClocks();
+    					break;
+    				}
+    			}
+    		}
+    	}
+    }
+	
 	/**
 	 * Called to update the parts on this entity.  This should be called after all movement on the
 	 * entity has been performed, as parts need to do their actions based on the updated movement

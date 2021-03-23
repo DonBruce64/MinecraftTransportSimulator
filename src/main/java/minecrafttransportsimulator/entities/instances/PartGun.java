@@ -426,14 +426,18 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public void updatePositionAndRotation(){
-		super.updatePositionAndRotation();
-		//Need to use prev orientation here, as otherwise we get into a feedback loop.
-		if(!definition.gun.yawIsInternal){
-			localAngles.add(0, prevOrientation.y, 0);
-		}
-		if(!definition.gun.pitchIsInternal){
-			localAngles.add(prevOrientation.x, 0, 0);
+	public boolean updateLocals(){
+		if(super.updateLocals()){
+			return true;
+		}else{
+			//Need to use prev orientation here, as otherwise we get into a feedback loop.
+			if(!definition.gun.yawIsInternal){
+				localAngles.add(0, prevOrientation.y, 0);
+			}
+			if(!definition.gun.pitchIsInternal){
+				localAngles.add(prevOrientation.x, 0, 0);
+			}
+			return false;
 		}
 	}
 

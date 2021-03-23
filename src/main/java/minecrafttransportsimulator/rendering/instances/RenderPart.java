@@ -2,8 +2,6 @@ package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 
 public final class RenderPart extends ARenderEntity<APart>{
@@ -19,22 +17,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 	
 	@Override
 	public boolean disableMainRendering(APart part, float partialTicks){
-		if(part.isFake()){
-			return true;
-		}else{
-			//Check to see if the part has a visibility animation and it's set to not be visible.
-			if(part.placementDefinition.animations != null){
-				for(JSONAnimationDefinition animation : part.placementDefinition.animations){
-					if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-						double value = part.getAnimator().getAnimatedVariableValue(part, animation, 0, null, partialTicks);
-						if(value < animation.clampMin || value > animation.clampMax){
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
+		return part.isFake() || part.isDisabled;
 	}
 	
 	@Override
