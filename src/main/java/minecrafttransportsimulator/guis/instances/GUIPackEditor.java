@@ -413,8 +413,8 @@ public class GUIPackEditor extends JFrame{
 			if(obj != null){
 				Point3d point = ((Point3d) obj);
 				xText.setText(String.valueOf(point.x));
-				yText.setText(String.valueOf(point.x));
-				zText.setText(String.valueOf(point.x));
+				yText.setText(String.valueOf(point.y));
+				zText.setText(String.valueOf(point.z));
 			}else{
 				xText.setText(String.valueOf(0.0));
 				yText.setText(String.valueOf(0.0));
