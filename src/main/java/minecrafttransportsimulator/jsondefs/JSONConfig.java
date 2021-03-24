@@ -103,7 +103,7 @@ public class JSONConfig{
 						if(!fuels.containsKey(part.definition.engine.fuelType)){
 							Map<String, Double> fluids = new HashMap<String, Double>();
 							try{
-								switch(FuelDefaults.valueOf(part.definition.engine.fuelType)){
+								switch(FuelDefaults.valueOf(part.definition.engine.fuelType.toUpperCase())){
 									case GASOLINE :{
 										fluids.put("lava", 1.0);
 										fluids.put("gasoline", 1.0);
