@@ -55,8 +55,18 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	@Override
 	public void invalidate(){
 		super.invalidate();
+		//Invalidate happens when we break the block this TE is on.
 		if(tileEntity != null){
 			tileEntity.remove();
+		}
+	}
+	
+	@Override
+	public void onChunkUnload(){
+		super.onChunkUnload();
+		//Catch unloaded TEs from when the chunk goes away.
+		if(tileEntity != null && tileEntity.isValid){
+			invalidate();
 		}
 	}
 	

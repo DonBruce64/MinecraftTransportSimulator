@@ -41,26 +41,26 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//This takes into account all saved data in the stack, so the vehicle will re-load its data from it
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
-			EntityVehicleF_Physics newVehicle = createEntity(world, data);
+			EntityVehicleF_Physics vehicle = createEntity(world, data);
 			
 			//Set position to the spot that was clicked by the player.
 			//Add a -90 rotation offset so the vehicle is facing perpendicular.
 			//Makes placement easier and is less likely for players to get stuck.
-			newVehicle.position.setTo(position);
-			newVehicle.prevPosition.setTo(newVehicle.position);
-			newVehicle.angles.set(0, player.getYaw() + 90, 0);
-			newVehicle.prevAngles.setTo(newVehicle.angles);
+			vehicle.position.setTo(position);
+			vehicle.prevPosition.setTo(vehicle.position);
+			vehicle.angles.set(0, player.getYaw() + 90, 0);
+			vehicle.prevAngles.setTo(vehicle.angles);
 			
 			//If we are a new vehicle, set default properties, if required.
 			if(!wasSaved){
 				//Set initial electrical power.
-				newVehicle.electricPower = 12;
+				vehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recursion.
-				newVehicle.addDefaultParts(newVehicle.definition.parts, true, false);
+				vehicle.addDefaultParts(vehicle.definition.parts, true, false);
 				
 				//Add default instruments.
-				for(JSONInstrumentDefinition packInstrument : newVehicle.definition.motorized.instruments){
+				for(JSONInstrumentDefinition packInstrument : vehicle.definition.motorized.instruments){
 					if(packInstrument.defaultInstrument != null){
 						try{
 							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
@@ -68,12 +68,15 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 							try{
 								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
-									newVehicle.instruments.put(newVehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
+									vehicle.instruments.put(vehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
 									continue;
 								}
-							}catch(NullPointerException e){}
-							throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
+							}catch(NullPointerException e){
+								vehicle.remove();
+								throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
+							}
 						}catch(IndexOutOfBoundsException e){
+							vehicle.remove();
 							throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
 						}
 					}
@@ -81,8 +84,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				
 				//If we have a default fuel, add it now as we SHOULD have an engine to tell
 				//us what fuel type we will need to add.
-				if(newVehicle.definition.motorized.defaultFuelQty > 0){
-					for(APart part : newVehicle.partsFromNBT){
+				if(vehicle.definition.motorized.defaultFuelQty > 0){
+					for(APart part : vehicle.partsFromNBT){
 						if(part instanceof PartEngine){
 							//Get the most potent fuel for the vehicle from the fuel configs.
 							String mostPotentFluid = "";
@@ -91,12 +94,13 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 									mostPotentFluid = fluidName;
 								}
 							}
-							newVehicle.fuelTank.manuallySet(mostPotentFluid, newVehicle.definition.motorized.defaultFuelQty);
+							vehicle.fuelTank.manuallySet(mostPotentFluid, vehicle.definition.motorized.defaultFuelQty);
 							break;
 						}
 					}
-					if(newVehicle.fuelTank.getFluid().isEmpty()){
-						throw new IllegalArgumentException("A defaultFuelQty was specified for: " + newVehicle.definition.packID + ":" + newVehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
+					if(vehicle.fuelTank.getFluid().isEmpty()){
+						vehicle.remove();
+						throw new IllegalArgumentException("A defaultFuelQty was specified for: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.");
 					}
 				}
 				
@@ -104,15 +108,15 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				if(definition.doors != null){
 					for(JSONDoor door : definition.doors){
 						if(!door.closedByDefault){
-							newVehicle.variablesOn.add(door.name);
+							vehicle.variablesOn.add(door.name);
 						}
 					}
 				}
-				for(APart part : newVehicle.parts){
+				for(APart part : vehicle.parts){
 					if(part.definition.doors != null){
 						for(JSONDoor door : part.definition.doors){
 							if(!door.closedByDefault){
-								newVehicle.variablesOn.add(door.name);
+								vehicle.variablesOn.add(door.name);
 							}
 						}
 					}
@@ -122,12 +126,12 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
 			//First boost Y based on collision boxes.
 			double furthestDownPoint = 0;
-			for(JSONCollisionBox collisionBox : newVehicle.definition.collision){
+			for(JSONCollisionBox collisionBox : vehicle.definition.collision){
 				furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
 			}
 			
 			//Next, boost based on parts.
-			for(APart part : newVehicle.parts){
+			for(APart part : vehicle.parts){
 				furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
 			}
 			
@@ -138,18 +142,19 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Apply the boost, and check collisions.
 			//If the core collisions are colliding, set the vehicle as dead and abort.
 			//We need to update the boxes first, however, as they haven't been updated yet.
-			newVehicle.position.y += -furthestDownPoint;
-			for(BoundingBox coreBox : newVehicle.allBlockCollisionBoxes){
-				coreBox.updateToEntity(newVehicle, null);
-				if(coreBox.updateCollidingBlocks(newVehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
+			vehicle.position.y += -furthestDownPoint;
+			for(BoundingBox coreBox : vehicle.allBlockCollisionBoxes){
+				coreBox.updateToEntity(vehicle, null);
+				if(coreBox.updateCollidingBlocks(vehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't be spawned.  Bail out.
+					vehicle.remove();
 					player.sendPacket(new PacketPlayerChatMessage("interact.failure.nospace"));
 					return false;
 				}
 			}
 			
 			//Entity is valid.  Spawn it into the world.
-			newVehicle.world.spawnEntity(newVehicle);
+			vehicle.world.spawnEntity(vehicle);
 			
 			//Decrement stack if we are not in creative.
 			if(!player.isCreative()){

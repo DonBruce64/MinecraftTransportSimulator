@@ -256,6 +256,15 @@ public class BuilderEntity extends Entity{
 			entity.remove();
 		}
 	}
+	
+	@Override
+	public void onRemovedFromWorld(){
+		super.onRemovedFromWorld();
+		//Catch unloaded entities from when the chunk goes away.
+		if(entity != null && entity.isValid){
+			setDead();
+		}
+	}
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){

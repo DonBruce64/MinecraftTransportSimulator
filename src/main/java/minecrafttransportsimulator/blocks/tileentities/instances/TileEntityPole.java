@@ -94,6 +94,15 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 		}
 	}
 	
+	@Override
+	public void remove(){
+		super.remove();
+		//Remove components as these all come with the main pole.
+		for(ATileEntityPole_Component component : components.values()){
+			component.remove();
+		}
+	}
+	
 	/**
 	 * Helper method to update light state and re-do world lighting if required.
 	 */
