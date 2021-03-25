@@ -581,10 +581,12 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			if(isCollisionBoxCollided()){
 				if(towedByVehicle != null){
 					Point3d initalMotion = motion.copy();
-					correctCollidingMovement();
+					if(correctCollidingMovement()){
+						return;
+					}
 					towedByVehicle.motion.add(motion).subtract(initalMotion);
-				}else{
-					correctCollidingMovement();
+				}else if(correctCollidingMovement()){
+					return;
 				}
 				
 			}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
@@ -686,14 +688,16 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 *  Note that even though motionY may have been adjusted for ground device operation prior to this call,
 	 *  we shouldn't have an issue with the change as this logic takes priority over that logic to ensure 
 	 *  no collision box collides with another block, even if it requires all the ground devices to be collided.
+	 *  If true is returned here, it means this vehicle was destroyed in a collision, and no further processing should
+	 *  be done on it as states may be un-defined.
 	 */
-	private void correctCollidingMovement(){
+	private boolean correctCollidingMovement(){
 		//First check the X-axis.
 		if(motion.x != 0){
 			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, true, false, false);
 				if(collisionDepth == -1){
-					return;
+					return true;
 				}else{
 					if(motion.x > 0){
 						motion.x = Math.max(motion.x - collisionDepth/SPEED_FACTOR, 0);
@@ -709,7 +713,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, false, false, true);
 				if(collisionDepth == -1){
-					return;
+					return true;
 				}else{
 					if(motion.z > 0){
 						motion.z = Math.max(motion.z - collisionDepth/SPEED_FACTOR, 0);
@@ -725,7 +729,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			for(BoundingBox box : allBlockCollisionBoxes){
 				double collisionDepth = getCollisionForAxis(box, false, true, false);
 				if(collisionDepth == -1){
-					return;
+					return true;
 				}else if(collisionDepth != 0){
 					if(motion.y > 0){
 						motion.y = Math.max(motion.y - collisionDepth/SPEED_FACTOR, 0);
@@ -792,6 +796,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				}
 			}
 		}
+		return false;
 	}
 	
 	/**
