@@ -401,7 +401,13 @@ public class VehicleGroundDeviceCollection{
 			//Now that we know we can rotate, get the angle required to put the boxes on the ground.
 			//We first try to rotate the boxes by the max angle defined by the linear movement, if this doesn't ground
 			//them, we return 0.  If it does ground them, then we inverse-calculate the exact angle required to ground them.
-			double testRotation = Math.toDegrees(Math.asin(Math.min(MAX_LINEAR_MOVEMENT_PER_TICK/Math.max(side1Delta, side2Delta), 1)));
+			double testSin = MAX_LINEAR_MOVEMENT_PER_TICK/Math.max(side1Delta, side2Delta);
+			if(testSin > 1){
+				testSin = 1;
+			}else if(testSin < -1){
+				testSin = -1;
+			}
+			double testRotation = Math.toDegrees(Math.asin(testSin));
 			
 			//If we are moving towards the ground, apply corrections.
 			//We need to take into account the ground boost here, as we might have some fake motion.y from prior GDB collisions.
