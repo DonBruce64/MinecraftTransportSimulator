@@ -22,8 +22,9 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 	
 	private final int displayListIndex;
 	
-	//Map of tread points, keyed by the vehicle the tread is on, or the parent part of the part, if this tread is a subPart.
-	private static final Map<String, List<Double[]>> treadPoints = new HashMap<String, List<Double[]>>();
+	/**Map of tread points, keyed by the vehicle the tread is on, or the parent part of the part, if this tread is a subPart.
+	 * Second map key is the tread spacing.  This can be shared for two different treads of the same spacing as they render the same.**/
+	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
 	
 	public TransformTreadRenderer(int displayListIndex){
 		super(null);
@@ -38,7 +39,11 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		if(tread.definition.ground != null && tread.definition.ground.isTread && !tread.placementDefinition.isSpare){
 			AEntityC_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
 			String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(); 
-			List<Double[]> points = treadPoints.get(treadPathModel);
+			Map<Float, List<Double[]>> objectMap = treadPoints.get(treadPathModel);
+			if(objectMap == null){
+				objectMap = new HashMap<Float, List<Double[]>>();
+			}
+			List<Double[]> points = objectMap.get(tread.definition.ground.spacing);
 			
 			if(points == null){
 				//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
@@ -76,7 +81,8 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 				//If we have no rollers, bail.
 				if(rollers.isEmpty()){
 					points = new ArrayList<Double[]>();
-					treadPoints.put(treadPathModel, points);
+					objectMap.put(tread.definition.ground.spacing, points);
+					treadPoints.put(treadPathModel, objectMap);
 					return false;
 				}
 				
@@ -244,7 +250,8 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 						leftoverPathLength = straightPathLength;
 					}
 				}
-				treadPoints.put(treadPathModel, points);
+				objectMap.put(tread.definition.ground.spacing, points);
+				treadPoints.put(treadPathModel, objectMap);
 			}
 					
 			//Render the treads along their points.
