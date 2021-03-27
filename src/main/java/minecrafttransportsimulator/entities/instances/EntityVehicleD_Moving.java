@@ -626,6 +626,15 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
 				clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
 				clientDeltaMApplied.multiply(1D/25D);
+				if(clientDeltaMApplied.x > 5){
+					clientDeltaMApplied.x = 5;
+				}
+				if(clientDeltaMApplied.y > 5){
+					clientDeltaMApplied.y = 5;
+				}
+				if(clientDeltaMApplied.z > 5){
+					clientDeltaMApplied.z = 5;
+				}
 				motionApplied.add(clientDeltaMApplied);
 				
 				clientDeltaRApplied.setTo(serverDeltaR).subtract(clientDeltaR);
