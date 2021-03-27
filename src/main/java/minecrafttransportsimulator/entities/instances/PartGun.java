@@ -38,10 +38,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class PartGun extends APart{
 	//Variables based on the specific gun's properties.
-	private final double minYawAngle;
-	private final double maxYawAngle;
-	private final double minPitchAngle;
-	private final double maxPitchAngle;
+	private final double minYaw;
+	private final double maxYaw;
+	private final double minPitch;
+	private final double maxPitch;
+	private final double defaultYaw;
+	private final double defaultPitch;
 	
 	//Stored variables used to determine bullet firing behavior.
 	public int bulletsFired;
@@ -75,29 +77,39 @@ public class PartGun extends APart{
 		//If the entity definition min/max yaw is -180 to 180, set it to that.  Otherwise, get the max bounds.
 		//Yaw/Pitch set to 0 is ignored as it's assumed to be un-defined.
 		if(placementDefinition.minYaw == -180 && placementDefinition.maxYaw == 180){
-			this.minYawAngle = -180;
-			this.maxYawAngle = 180;
+			this.minYaw = -180;
+			this.maxYaw = 180;
 		}else{
 			if(definition.gun.minYaw != 0){
-				this.minYawAngle = placementDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, placementDefinition.minYaw) : definition.gun.minYaw;
+				this.minYaw = placementDefinition.minYaw != 0 ? Math.max(definition.gun.minYaw, placementDefinition.minYaw) : definition.gun.minYaw;
 			}else{
-				this.minYawAngle =  placementDefinition.minYaw;
+				this.minYaw =  placementDefinition.minYaw;
 			}
 			if(definition.gun.maxYaw != 0){
-				this.maxYawAngle = placementDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, placementDefinition.maxYaw) : definition.gun.maxYaw;
+				this.maxYaw = placementDefinition.maxYaw != 0 ? Math.min(definition.gun.maxYaw, placementDefinition.maxYaw) : definition.gun.maxYaw;
 			}else{
-				this.maxYawAngle =  placementDefinition.maxYaw;
+				this.maxYaw =  placementDefinition.maxYaw;
 			}
 		}
 		if(definition.gun.minPitch != 0){
-			this.minPitchAngle = placementDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, placementDefinition.minPitch) : -definition.gun.minPitch;
+			this.minPitch = placementDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, placementDefinition.minPitch) : -definition.gun.minPitch;
 		}else{
-			this.minPitchAngle = -placementDefinition.minPitch;
+			this.minPitch = -placementDefinition.minPitch;
 		}	
 		if(definition.gun.maxPitch != 0){
-			this.maxPitchAngle = placementDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, placementDefinition.maxPitch) : -definition.gun.maxPitch;
+			this.maxPitch = placementDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, placementDefinition.maxPitch) : -definition.gun.maxPitch;
 		}else{
-			this.maxPitchAngle = -placementDefinition.maxPitch;
+			this.maxPitch = -placementDefinition.maxPitch;
+		}
+		if(placementDefinition.defaultYaw != 0 && placementDefinition.defaultYaw >= minYaw && placementDefinition.defaultYaw <= maxYaw){
+			this.defaultYaw = placementDefinition.defaultYaw;
+		}else{
+			this.defaultYaw = definition.gun.defaultYaw;
+		}
+		if(placementDefinition.defaultPitch != 0 && placementDefinition.defaultPitch >= minPitch && placementDefinition.defaultPitch <= maxPitch){
+			this.defaultPitch = -placementDefinition.defaultPitch;
+		}else{
+			this.defaultPitch = -definition.gun.defaultPitch;
 		}
 		
 		//Load saved data.
@@ -216,8 +228,8 @@ public class PartGun extends APart{
 				targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
 				targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
 			}else{
-				targetYaw = definition.gun.defaultYaw;
-				targetPitch = definition.gun.defaultPitch;
+				targetYaw = defaultYaw;
+				targetPitch = defaultPitch;
 			}
 			prevOrientation.setTo(currentOrientation);
 			
@@ -239,7 +251,7 @@ public class PartGun extends APart{
 			//Apply yaw clamps.
 			//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 			//We need to do special logic for this type of gun.
-			if(minYawAngle == -180  && maxYawAngle == 180){
+			if(minYaw == -180  && maxYaw == 180){
 				if(currentOrientation.y > 180 ){
 					currentOrientation.y -= 360;
 					prevOrientation.y -= 360;
@@ -248,11 +260,11 @@ public class PartGun extends APart{
 					prevOrientation.y += 360;
 				}
 			}else{
-				if(currentOrientation.y > maxYawAngle){
-					currentOrientation.y = maxYawAngle;
+				if(currentOrientation.y > maxYaw){
+					currentOrientation.y = maxYaw;
 				}
-				if(currentOrientation.y < minYawAngle){
-					currentOrientation.y = minYawAngle;
+				if(currentOrientation.y < minYaw){
+					currentOrientation.y = minYaw;
 				}
 			}
 			
@@ -272,17 +284,17 @@ public class PartGun extends APart{
 				currentOrientation.x += deltaPitch;
 			}
 			//Apply pitch clamps.
-			if(currentOrientation.x < maxPitchAngle){
-				currentOrientation.x = maxPitchAngle;
+			if(currentOrientation.x < maxPitch){
+				currentOrientation.x = maxPitch;
 			}
-			if(currentOrientation.x > minPitchAngle){
-				currentOrientation.x = minPitchAngle;
+			if(currentOrientation.x > minPitch){
+				currentOrientation.x = minPitch;
 			}
 			
 			//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
 			//This keeps NPCs from wasting ammo.
 			if(!(controller instanceof WrapperPlayer)){
-				if(!lockedOn || currentOrientation.y == minYawAngle || currentOrientation.y == maxYawAngle || currentOrientation.x == minPitchAngle || currentOrientation.x == maxPitchAngle){
+				if(!lockedOn || currentOrientation.y == minYaw || currentOrientation.y == maxYaw || currentOrientation.x == minPitch || currentOrientation.x == maxPitch){
 					firing = false;
 				}
 			}

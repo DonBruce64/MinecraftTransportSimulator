@@ -52,11 +52,17 @@ public class JSONPartDefinition{
     @JSONDescription("Like minYaw, but the max value.")
     public float maxYaw;
     
+    @JSONDescription("The default yaw for the gun in this slot.  If the gun has resetPosition to true, then it will move to this position if it's not active.  This takes into account the gun's min/max yaw, and if this default exceedes those bounds, it will not be used.")
+	public float defaultYaw;
+    
     @JSONDescription("Like minYaw, but the pitch value.")
     public float minPitch;
     
     @JSONDescription("Like minPitch, but the max value.")
     public float maxPitch;
+    
+    @JSONDescription("Like defaultYaw, but for pitch.")
+	public float defaultPitch;	
     
     @JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for treads, where the length depends on the vehicle the tread is placed on.  This parameter overrides the same-named parameter in the part JSON, if that parameter is set.")
     public float extraCollisionBoxOffset;
