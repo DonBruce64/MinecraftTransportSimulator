@@ -35,7 +35,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "19.15.5-BETA17";
+	public static final String MODVER = "19.15.5-BETA19";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -122,6 +122,10 @@ public class MasterLoader{
 	public void init(FMLInitializationEvent event){
 		//Init networking interface.  This will register packets as well.
 		InterfacePacket.init();
+		
+		//Put all liquids into the config file for use by modpack makers.
+		ConfigSystem.configObject.fuel.lastLoadedFluids = InterfaceCore.getAllFluids();
+		ConfigSystem.saveToDisk();
 		
 		//Init chunkloader system.
 		ForgeChunkManager.setForcedChunkLoadingCallback(INSTANCE, InterfaceChunkloader.INSTANCE);
