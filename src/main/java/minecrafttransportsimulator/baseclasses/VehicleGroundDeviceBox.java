@@ -262,8 +262,8 @@ public class VehicleGroundDeviceBox{
 				}
 				
 				//If the liquid boxes are grounded and are more collided, use liquid values.
-				//Otherwise, use the solid values.
-				if(isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)){
+				//Otherwise, use the solid values (if we have them).
+				if((isGroundedLiquid && (liquidCollisionDepth >= collisionDepth)) || groundDevices.isEmpty()){
 					isCollided = isCollidedLiquid;
 					isGrounded = isGroundedLiquid;
 					isAbleToDoGroundOperations = isAbleToDoGroundOperationsLiquid;
@@ -295,6 +295,6 @@ public class VehicleGroundDeviceBox{
 	 * ground devices we have and if we are colliding with liquids or solids.
 	 */
 	public BoundingBox getBoundingBox(){
-		return isAbleToDoGroundOperationsLiquid ? liquidBox : solidBox;
+		return isAbleToDoGroundOperationsLiquid || groundDevices.isEmpty() ? liquidBox : solidBox;
 	}
 }

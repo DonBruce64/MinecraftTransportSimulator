@@ -395,7 +395,7 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			
 			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(definition.motorized.wingArea > 0 && trackAngle > 40 && angles.x < 45 && groundDeviceCollective.groundedGroundDevices.isEmpty()){
+			if(definition.motorized.wingArea > 0 && trackAngle > 40 && angles.x < 45 && !groundDeviceCollective.isAnythingOnGround()){
 				elevatorTorque += 100;
 			}
 			

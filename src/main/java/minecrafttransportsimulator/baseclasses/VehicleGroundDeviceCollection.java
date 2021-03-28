@@ -221,6 +221,13 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
+	 * Returns the number of devices on the ground.
+	 */
+	public boolean isAnythingOnGround(){
+		return frontLeftGDB.isGrounded || frontRightGDB.isGrounded || rearLeftGDB.isGrounded || rearRightGDB.isGrounded;
+	}
+	
+	/**
 	 * Returns true if the boxes in this collective can do roll operations.
 	 * More formally, it checks that they aren't all aligned on the Z-axis.
 	 */
@@ -429,10 +436,10 @@ public class VehicleGroundDeviceCollection{
 				//If we are tilting and a box along the axis centerline collided, ignore it, as these shouldn't be taken into account.
 				double angularCorrection = 0;
 				double linearCorrection = 0;
-				if(testBox1.collisionDepth > 0 && pitch ? testBox1.contactPoint.z != 0 : testBox1.contactPoint.x != 0){
+				if(testBox1.collisionDepth > 0 && (pitch ? testBox1.contactPoint.z != 0 : testBox1.contactPoint.x != 0)){
 					angularCorrection = Math.toDegrees(Math.asin(testBox1.collisionDepth/side1Delta));
 				}
-				if(testBox2.collisionDepth > 0 && pitch ? testBox2.contactPoint.z != 0 : testBox2.contactPoint.x != 0){
+				if(testBox2.collisionDepth > 0 && (pitch ? testBox2.contactPoint.z != 0 : testBox2.contactPoint.x != 0)){
 					double angularCorrection2 = Math.toDegrees(Math.asin(testBox2.collisionDepth/side2Delta));
 					if(angularCorrection == 0 || (angularCorrection > 0 ? angularCorrection2 > angularCorrection : angularCorrection2 < angularCorrection)){
 						angularCorrection = angularCorrection2;
@@ -440,7 +447,7 @@ public class VehicleGroundDeviceCollection{
 				}
 				//If the angular correction is greater than our initial angle, don't change movement.
 				//This can happen if we rotate via an angle into a block.
-				if(Math.abs(angularCorrection) > Math.abs(testRotation) || Double.isNaN(angularCorrection)){
+				if(angularCorrection != 0 && (Math.abs(angularCorrection) > Math.abs(testRotation) || Double.isNaN(angularCorrection))){
 					if(pitch){
 						vehicle.rotation.x -= testRotation;
 					}else{
