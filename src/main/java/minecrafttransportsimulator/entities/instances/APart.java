@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -13,6 +15,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.AnimationsPart;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
@@ -49,6 +52,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	
 	//Runtime variables.
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
+	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
+	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
+	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
+	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
+	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isDisabled;
 	public final Point3d localOffset;
 	public final Point3d prevLocalOffset;
@@ -250,6 +258,39 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		localOffset.add(placementOffset);
 		localAngles.add(placementAngles);
 		return disablePart;
+	}
+	
+	/**
+	 * Returns a definition with the correct properties for a SubPart.  This is because
+	 * subParts inherit some properties from their parent parts.  All created sub-part
+	 * packs are cached locally once created, as they need to not create new instances.
+	 * If they did, then the lookup relation between them and their spot in the vehicle would
+	 * get broken for maps on each reference.
+	 */
+	public JSONPartDefinition getPackForSubPart(JSONPartDefinition subPartDef){
+		if(!subpackMappings.containsKey(subPartDef)){
+			//Use GSON to make a deep copy of the JSON-defined pack definition.
+			//Set the sub-part flag to ensure we know this is a subPart for rendering operations.
+			JSONPartDefinition correctedPartDef = JSONParser.duplicateJSON(subPartDef);
+			correctedPartDef.isSubPart = true;
+			
+			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
+			//First add the parent pack's position to the sub-pack.
+			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
+			correctedPartDef.pos.add(placementOffset);
+			
+			//If the parent part is mirrored, we need to invert our X-position to match.
+			if(placementOffset.x < 0 ^ disableMirroring){
+				correctedPartDef.pos.x -= 2*subPartDef.pos.x;
+			}
+			
+			//Use the parent's turnsWithSteer variable, as that's based on the vehicle, not the part.
+			correctedPartDef.turnsWithSteer = placementDefinition.turnsWithSteer;
+			
+			//Save the corrected pack into the mappings for later use.
+	        subpackMappings.put(subPartDef, correctedPartDef);
+		}
+		return subpackMappings.get(subPartDef);
 	}
 	
 	/**

@@ -29,7 +29,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
-import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -79,12 +78,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	/**Map of active part slot boxes.  Contains {@link #allPartSlotBoxes}, though may not contain all of them due to them not being active.**/
 	public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
 	
-	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
-	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
-	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
-	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
-	private static final Map<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>> SUBPACK_MAPPINGS = new HashMap<JSONPartDefinition, Map<JSONPartDefinition, JSONPartDefinition>>();
-	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
@@ -131,7 +124,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			for(APart part : parts){
 				if(part.definition.parts != null){
 					for(JSONPartDefinition subPartDef : part.definition.parts){
-						if(packVehicleDef.equals(getPackForSubPart(part.placementDefinition, subPartDef))){
+						if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
 							//Need to find the delta between our 0-degree position and our current position.
 							Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
 							box.updateToEntity(this, delta);
@@ -335,9 +328,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * if all operations completed, false if the part was not able to be added.
 	 * If the part is being added during construction, set doingConstruction to true to
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
-	 * This method returns true if the part was able to be added, false if something prevented it.
+	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public boolean addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -369,7 +362,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				for(APart part : partsToCheck){
 					if(part.definition.parts != null){
 						for(JSONPartDefinition subPartDef : part.definition.parts){
-							JSONPartDefinition correctedDef = getPackForSubPart(part.placementDefinition, subPartDef);
+							JSONPartDefinition correctedDef = part.getPackForSubPart(subPartDef);
 							if(offset.equals(correctedDef.pos)){
 								parentPart = part;
 								break;
@@ -378,7 +371,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							//Check sub-part additional parts.
 							if(subPartDef.additionalParts != null){
 								for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
-									JSONPartDefinition correctedAdditionalDef = getPackForSubPart(part.placementDefinition, additionalPartDef);
+									JSONPartDefinition correctedAdditionalDef = part.getPackForSubPart(additionalPartDef);
 									if(offset.equals(correctedAdditionalDef.pos)){
 										parentPart = getPartAtLocation(correctedDef.pos);
 										break;
@@ -418,15 +411,13 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				if(partToAdd.definition.parts != null){
 					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						subPartsToAdd.add(getPackForSubPart(partToAdd.placementDefinition, subPartPack));
+						subPartsToAdd.add(partToAdd.getPackForSubPart(subPartPack));
 					}
 					addDefaultParts(subPartsToAdd, addedDuringConstruction, !newPart);
 				}
     		}
-			return true;
-    	}else{
-    		return false;
     	}
+    	return partToAdd;
     }
 	
     /**
@@ -573,9 +564,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//Next get any sub parts on parts that are present.
 		for(APart part : parts){
 			if(part.definition.parts != null){
-				JSONPartDefinition parentPartDef = getPackDefForLocation(part.placementOffset);
 				for(JSONPartDefinition subPartDef : part.definition.parts){
-					JSONPartDefinition correctedPartDef = getPackForSubPart(parentPartDef, subPartDef);
+					JSONPartDefinition correctedPartDef = part.getPackForSubPart(subPartDef);
 					partDefs.put(correctedPartDef.pos, correctedPartDef);
 					
 					//Check to see if we can put a additional parts in this location.
@@ -584,7 +574,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						for(APart part2 : parts){
 							if(part2.placementOffset.equals(correctedPartDef.pos)){
 								for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
-									correctedPartDef = getPackForSubPart(parentPartDef, additionalPartDef);
+									correctedPartDef = part.getPackForSubPart(additionalPartDef);
 									partDefs.put(correctedPartDef.pos, correctedPartDef);
 								}
 								break;
@@ -625,9 +615,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		allParts.addAll(partsFromNBT);
 		for(APart part : allParts){
 			if(part.definition.parts != null){
-				JSONPartDefinition parentPartDef = getPackDefForLocation(part.placementOffset);
 				for(JSONPartDefinition subPartDef : part.definition.parts){
-					JSONPartDefinition correctedPartDef = getPackForSubPart(parentPartDef, subPartDef);
+					JSONPartDefinition correctedPartDef = part.getPackForSubPart(subPartDef);
 					if(correctedPartDef.pos.equals(offset)){
 						return correctedPartDef;
 					}
@@ -635,7 +624,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					//Check additional part definitions.
 					if(subPartDef.additionalParts != null){
 						for(JSONPartDefinition additionalPartDef : subPartDef.additionalParts){
-							correctedPartDef = getPackForSubPart(parentPartDef, additionalPartDef);
+							correctedPartDef = part.getPackForSubPart(additionalPartDef);
 							if(correctedPartDef.pos.equals(offset)){
 								return correctedPartDef;
 							}
@@ -646,44 +635,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 		
 		return null;
-	}
-	
-	/**
-	 * Returns a PackPart with the correct properties for a SubPart.  This is because
-	 * subParts inherit some properties from their parent parts.  All created sub-part
-	 * packs are cached locally once created, as they need to not create new Point3d instances.
-	 * If they did, then the lookup relation between them and their spot in the vehicle would
-	 * get broken for maps on each reference.
-	 */
-	public JSONPartDefinition getPackForSubPart(JSONPartDefinition parentPack, JSONPartDefinition subPack){
-		if(!SUBPACK_MAPPINGS.containsKey(parentPack)){
-			SUBPACK_MAPPINGS.put(parentPack, new HashMap<JSONPartDefinition, JSONPartDefinition>());
-		}
-		
-		JSONPartDefinition correctedPartDef = SUBPACK_MAPPINGS.get(parentPack).get(subPack);
-		if(correctedPartDef == null){
-			//Use GSON to make a deep copy of the current pack definition.
-			//Set the sub-part flag to ensure we know this is a subPart for rendering operations.
-			correctedPartDef = JSONParser.duplicateJSON(subPack);
-			correctedPartDef.isSubPart = true;
-			
-			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
-			//First add the parent pack's position to the sub-pack.
-			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
-			correctedPartDef.pos.add(parentPack.pos);
-			
-			//If the parent pack is mirrored, we need to invert our X-position to match.
-			if(parentPack.pos.x < 0 ^ parentPack.inverseMirroring){
-				correctedPartDef.pos.x -= 2*subPack.pos.x;
-			}
-			
-			//Use the parent's turnsWithSteer variable, as that's based on the vehicle, not the part.
-			correctedPartDef.turnsWithSteer = parentPack.turnsWithSteer;
-			
-			//Save the corrected pack into the mappings for later use.
-	        SUBPACK_MAPPINGS.get(parentPack).put(subPack, correctedPartDef);
-		}
-		return correctedPartDef;
 	}
 	
 	/**
@@ -703,8 +654,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 					try{
-						ItemPart partItem = PackParserSystem.getItem(partPackID, partSystemName);
-						if(addPartFromItem(partItem, null, partDef.pos, addedDuringConstruction)){
+						APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), null, partDef.pos, addedDuringConstruction);
+						if(addedPart != null){
 							
 							//Check if we have an additional parts.
 							//If so, we need to check that for default parts.
@@ -714,10 +665,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							
 							//Check all sub-parts, if we have any.
 							//We need to make sure to convert them to the right type as they're offset.
-							if(partItem.definition.parts != null){
+							if(addedPart.definition.parts != null){
 								List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
-								for(JSONPartDefinition subPartPack : partItem.definition.parts){
-									subPartsToAdd.add(getPackForSubPart(partDef, subPartPack));
+								for(JSONPartDefinition subPartPack : addedPart.definition.parts){
+									subPartsToAdd.add(addedPart.getPackForSubPart(subPartPack));
 								}
 								addDefaultParts(subPartsToAdd, addedDuringConstruction, savedParent);
 							}

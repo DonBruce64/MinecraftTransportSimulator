@@ -63,7 +63,7 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 						if(foundDef != null){
 							//Get the part at this location.  If it's of the same class as what we need, use it for animation.
 							//If it's not, or it doesn't exist, return 0.
-							APart foundPart = part.entityOn.getPartAtLocation(part.entityOn.getPackForSubPart(part.placementDefinition, foundDef).pos);
+							APart foundPart = part.entityOn.getPartAtLocation(part.getPackForSubPart(foundDef).pos);
 							if(foundPart != null && partClass.isInstance(foundPart)){
 								return foundPart.getAnimator().getRawVariableValue(foundPart, variable.substring(0, variable.lastIndexOf("_")), partialTicks);
 							}else{
