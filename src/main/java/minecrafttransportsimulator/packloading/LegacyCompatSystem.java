@@ -522,21 +522,20 @@ public final class LegacyCompatSystem{
 				
 				crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
-				crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
-				crankingPitchDef.variable = "electric_power";
-				crankingPitchDef.axis = new Point3d(0, 1D/10D, 0);
-				crankingPitchDef.offset = 0.3F;
-				crankingPitchDef.clampMax = 1.0F;
-				crankingSound.pitchAnimations.add(crankingPitchDef);
 				if(!definition.engine.isCrankingNotPitched){
+					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
+					crankingPitchDef.variable = "electric_power";
+					crankingPitchDef.axis = new Point3d(0, 1D/10D, 0);
+					crankingPitchDef.offset = 0.3F;
+					crankingPitchDef.clampMax = 1.0F;
+					definition.engine.isCrankingNotPitched = false;
+				}else{
 					crankingPitchDef = new JSONAnimationDefinition();
 					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
 					crankingPitchDef.variable = "engine_rpm";
 					crankingPitchDef.axis = new Point3d(0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D), 0);
-					crankingSound.pitchAnimations.add(crankingPitchDef);
-				}else{
-					definition.engine.isCrankingNotPitched = false;
 				}
+				crankingSound.pitchAnimations.add(crankingPitchDef);
 				definition.rendering.sounds.add(crankingSound);
 				
 				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
