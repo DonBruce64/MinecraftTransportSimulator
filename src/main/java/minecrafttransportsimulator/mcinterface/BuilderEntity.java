@@ -358,11 +358,14 @@ public class BuilderEntity extends Entity{
 			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
 				for(BoundingBox box : part.interactionBoxes){
 					if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
-						ItemStack stack = part.getItem().getNewStack();
-						WrapperNBT partData = new WrapperNBT();
-						part.save(partData);
-						stack.setTagCompound(partData.tag);
-						return stack;
+						AItemPack<?> partItem = part.getItem();
+						if(partItem != null){
+							ItemStack stack = part.getItem().getNewStack();
+							WrapperNBT partData = new WrapperNBT();
+							part.save(partData);
+							stack.setTagCompound(partData.tag);
+							return stack;
+						}
 					}
 				}
 			}
