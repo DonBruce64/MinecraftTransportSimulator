@@ -98,7 +98,7 @@ public final class PackParserSystem{
     	createAllItems();
     	
     	//Have the config system dump the crafting, if so required.
-    	ConfigSystem.dumpCrafting();
+    	ConfigSystem.initCraftingOverrides();
     } 
 
 	/**

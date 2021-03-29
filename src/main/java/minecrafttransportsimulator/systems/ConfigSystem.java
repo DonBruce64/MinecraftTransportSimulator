@@ -3,11 +3,13 @@ package minecrafttransportsimulator.systems;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
@@ -57,25 +59,6 @@ public final class ConfigSystem{
 		//After parsing the config save it.  This allows new entries to be populated.
 		saveToDisk();
 		
-		
-		//Now parse the crafting override file.
-		if(craftingFile.exists() && !configObject.general.dumpCraftingConfig.value){
-			try{
-				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
-				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
-					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
-						AItemPack<? extends AJSONItem> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);
-						if(item != null){
-							item.definition.general.materials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName);
-						}
-					}
-				}
-			}catch(Exception e){
-				InterfaceCore.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-				InterfaceCore.logError(e.getMessage());
-			}
-		}
-		
 		//If we have the old config file, delete it.
 		File oldConfigFile = new File(configDirectory, "mts.cfg");
 		if(oldConfigFile.exists()){
@@ -83,9 +66,9 @@ public final class ConfigSystem{
 		}
 	}
 	
-	/**Called to dump the crafting file.  Only dumps if required by the config.
+	/**Called to do crafting overrides.  Must be called afer all packs are loaded.
 	 */
-	public static void dumpCrafting(){
+	public static void initCraftingOverrides(){
 		if(configObject.general.dumpCraftingConfig.value){
 			//Make the default override file and save it.
 			try{
@@ -95,6 +78,29 @@ public final class ConfigSystem{
 				writer.close();
 			}catch(Exception e){
 				InterfaceCore.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
+			}
+		}else if(craftingFile.exists()){
+			try{
+				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
+				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
+					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
+						AItemPack<? extends AJSONItem> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);
+						if(item instanceof AItemSubTyped){
+							List<String> extraMaterials = ((AItemSubTyped<?>) item).getExtraMaterials();
+							extraMaterials.clear();
+							extraMaterials.addAll(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+							item.definition.general.materials.clear();
+						}else if(item != null){
+							item.definition.general.materials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName);
+						}
+						if(item != null){
+							
+						}
+					}
+				}
+			}catch(Exception e){
+				InterfaceCore.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+				InterfaceCore.logError(e.getMessage());
 			}
 		}
 	}
