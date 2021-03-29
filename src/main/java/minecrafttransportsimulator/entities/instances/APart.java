@@ -58,6 +58,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isDisabled;
+	public double prevScale = 1.0;
+	public double scale = 1.0;
 	public final Point3d localOffset;
 	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
@@ -182,6 +184,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	protected boolean updateLocals(){
 		boolean inhibitAnimations = false;
 		boolean disablePart = false;
+		prevScale = scale;
+		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0;
 		localOffset.set(0D, 0D, 0D);
 		localAngles.set(0D, 0D, 0D);
 		if(!clocks.isEmpty()){
@@ -218,6 +222,15 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case SCALING :{
 						//Do nothing.
+						if(!inhibitAnimations){
+							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
+							//Instead, we save it and use it later.
+							scale *= animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							//Update bounding box, as scale changes width/height.
+							boundingBox.widthRadius = getWidth()/2D;
+							boundingBox.heightRadius = getHeight()/2D;
+							boundingBox.depthRadius = getWidth()/2D;
+						}
 						break;
 					}
 					case VISIBILITY :{
@@ -255,7 +268,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		}
 		
 		//Add on the placement offset and angles now that we have our dynamic values.
-		localOffset.add(placementOffset);
+		if(placementDefinition.isSubPart && parentPart != null && parentPart.scale != 1){
+			localOffset.add(placementOffset.copy().multiply(parentPart.scale));
+		}else{
+			localOffset.add(placementOffset);
+		}
 		localAngles.add(placementAngles);
 		return disablePart;
 	}

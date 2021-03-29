@@ -63,9 +63,12 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        }
 	        
 	        boolean mirrored = isMirrored(entity);
+	        double scale = getScale(entity, partialTicks);
     		if(mirrored){
-    			GL11.glScalef(-1.0F, 1.0F, 1.0F);
+    			GL11.glScaled(-scale, scale, scale);
     			GL11.glCullFace(GL11.GL_FRONT);
+    		}else if(scale != 1.0){
+    			GL11.glScaled(scale, scale, scale);
     		}
 			
 			//Render all modelObjects.
@@ -154,6 +157,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
 	public void adjustPositionRotation(RenderedEntity entity, float partialTicks, Point3d entityPosition, Point3d entityRotation){}
+	
+	/**
+	 *  Returns the scale to render this model at.  Is normally 1.0, but may be scaled if desired.
+	 */
+	public double getScale(RenderedEntity entity, float partialTicks){
+		return 1.0;
+	}
 	
 	/**
 	 *  Called after the main model objects have been rendered on this entity, but before the states for setting up the render have

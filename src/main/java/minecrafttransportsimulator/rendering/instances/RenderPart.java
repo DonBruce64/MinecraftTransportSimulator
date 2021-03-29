@@ -30,4 +30,9 @@ public final class RenderPart extends ARenderEntity<APart>{
 		//Rotate the part according to its rendering rotation if we need to do so.
 		entityRotation.add(part.getRenderingRotation(partialTicks, false));
 	}
+	
+	@Override
+	public double getScale(APart part, float partialTicks){
+		return part.prevScale + (part.scale - part.prevScale)*partialTicks;
+	}
 }
