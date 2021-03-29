@@ -93,10 +93,12 @@ public class WrapperWorld{
 	 */
 	public static WrapperWorld getWrapperFor(World world){
 		if(world != null){
-			if(!worldWrappers.containsKey(world)){
-				worldWrappers.put(world, new WrapperWorld(world));
+			WrapperWorld wrapper = worldWrappers.get(world);
+			if(wrapper == null || world != wrapper.world){
+				wrapper = new WrapperWorld(world);
+				worldWrappers.put(world, wrapper);
 			}
-			return worldWrappers.get(world);
+			return wrapper;
 		}else{
 			return null;
 		}
@@ -112,11 +114,8 @@ public class WrapperWorld{
 		if(entity instanceof EntityPlayer){
 			return getWrapperFor((EntityPlayer) entity);
 		}else if(entity != null){
-			if(!entityWrappers.containsKey(entity)){
-				entityWrappers.put(entity, new WrapperEntity(entity));
-			}
 			WrapperEntity wrapper = entityWrappers.get(entity);
-			if(!wrapper.isValid() || entity != wrapper.entity){
+			if(wrapper == null || !wrapper.isValid() || entity != wrapper.entity){
 				wrapper = new WrapperEntity(entity);
 				entityWrappers.put(entity, wrapper);
 			}
@@ -135,11 +134,8 @@ public class WrapperWorld{
 	 */
 	public WrapperPlayer getWrapperFor(EntityPlayer player){
 		if(player != null){
-			if(!playerWrappers.containsKey(player)){
-				playerWrappers.put(player, new WrapperPlayer(player));
-			}
 			WrapperPlayer wrapper = playerWrappers.get(player);
-			if(!wrapper.isValid() || player != wrapper.player){
+			if(wrapper == null || !wrapper.isValid() || player != wrapper.player){
 				wrapper = new WrapperPlayer(player);
 				playerWrappers.put(player, wrapper);
 			}
