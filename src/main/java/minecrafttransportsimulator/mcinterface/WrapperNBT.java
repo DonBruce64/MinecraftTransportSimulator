@@ -110,7 +110,7 @@ public class WrapperNBT{
 		setInteger(name + "count", values.size());
 		int index = 0;
 		for(Point3d value : values){
-			setPoint3d(name + index, value);
+			setPoint3d(name + index++, value);
 		}
 	}
 	
@@ -142,7 +142,7 @@ public class WrapperNBT{
 		setInteger(name + "count", values.size());
 		int index = 0;
 		for(Point3d value : values){
-			setPoint3dCompact(name + index, value);
+			setPoint3dCompact(name + index++, value);
 		}
 	}
 	

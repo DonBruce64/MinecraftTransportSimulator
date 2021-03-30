@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -186,9 +185,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		if(cycleUpdate){
 			timeOperationStarted = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
 		}
-		Iterator<Point3d> iterator = componentLocations.iterator();
-		while(iterator.hasNext()){
-			TileEntityPole pole = (TileEntityPole) world.getTileEntity(iterator.next());
+		
+		for(Point3d poleLocation : componentLocations){
+			TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
 			if(pole != null){
 				for(Axis axis : pole.components.keySet()){
 					ATileEntityPole_Component component = pole.components.get(axis);
