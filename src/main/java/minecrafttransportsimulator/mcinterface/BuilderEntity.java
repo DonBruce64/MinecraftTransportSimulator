@@ -272,7 +272,7 @@ public class BuilderEntity extends Entity{
 			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
 			Entity attacker = source.getImmediateSource();
 			Entity trueSource = source.getTrueSource();
-			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? interactable.world.getWrapperFor((EntityPlayer) trueSource) : null;
+			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) trueSource) : null;
 			if(lastExplosionPosition != null && source.isExplosion()){
 				//We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
 				//it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
@@ -328,7 +328,7 @@ public class BuilderEntity extends Entity{
     			}
     		}
     		//Couldn't find rider in entity list.  Add them as a passenger.
-    		interactable.addRider(interactable.world.getWrapperFor(passenger), null);
+    		interactable.addRider(WrapperEntity.getWrapperFor(passenger), null);
     	}
     }
     

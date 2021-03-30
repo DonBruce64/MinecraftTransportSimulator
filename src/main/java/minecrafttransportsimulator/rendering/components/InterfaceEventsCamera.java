@@ -4,7 +4,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.CameraSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
@@ -27,7 +26,7 @@ public class InterfaceEventsCamera{
     public static void on(CameraSetup event){
     	if(event.getEntity() instanceof EntityPlayer){
     		EntityPlayer mcPlayer = (EntityPlayer) event.getEntity();
-    		WrapperPlayer player = WrapperWorld.getWrapperFor(mcPlayer.world).getWrapperFor(mcPlayer);
+    		WrapperPlayer player = WrapperPlayer.getWrapperFor(mcPlayer);
     		cameraAdjustedPosition.set(0, 0, 0);
     		cameraAdjustedRotation.set(0, 0, 0);
     		if(CameraSystem.adjustCamera(player, cameraAdjustedPosition, cameraAdjustedRotation, (float) event.getRenderPartialTicks())){

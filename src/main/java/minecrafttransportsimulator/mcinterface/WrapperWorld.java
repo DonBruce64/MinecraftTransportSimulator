@@ -41,7 +41,6 @@ import net.minecraft.entity.INpc;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -73,8 +72,6 @@ import net.minecraftforge.common.IPlantable;
  */
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-	private final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
-	private final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
@@ -97,47 +94,6 @@ public class WrapperWorld{
 			if(wrapper == null || world != wrapper.world){
 				wrapper = new WrapperWorld(world);
 				worldWrappers.put(world, wrapper);
-			}
-			return wrapper;
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 *  Returns a wrapper instance for the passed-in entity instance.
-	 *  Null may be passed-in safely to ease function-forwarding.
-	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
-	 *  If the entity is a player, then a player wrapper is returned.
-	 */
-	public WrapperEntity getWrapperFor(Entity entity){
-		if(entity instanceof EntityPlayer){
-			return getWrapperFor((EntityPlayer) entity);
-		}else if(entity != null){
-			WrapperEntity wrapper = entityWrappers.get(entity);
-			if(wrapper == null || !wrapper.isValid() || entity != wrapper.entity){
-				wrapper = new WrapperEntity(entity);
-				entityWrappers.put(entity, wrapper);
-			}
-			return wrapper;
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 *  Returns a wrapper instance for the passed-in player instance.
-	 *  Null may be passed-in safely to ease function-forwarding.
-	 *  Note that the wrapped player class MAY be side-specific, so avoid casting
-	 *  the wrapped entity directly if you aren't sure what its class is.
-	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
-	 */
-	public WrapperPlayer getWrapperFor(EntityPlayer player){
-		if(player != null){
-			WrapperPlayer wrapper = playerWrappers.get(player);
-			if(wrapper == null || !wrapper.isValid() || player != wrapper.player){
-				wrapper = new WrapperPlayer(player);
-				playerWrappers.put(player, wrapper);
 			}
 			return wrapper;
 		}else{
@@ -229,7 +185,7 @@ public class WrapperWorld{
 	 */
 	public WrapperEntity getEntity(int id){
 		Entity entity = world.getEntityByID(id);
-		return entity instanceof EntityPlayer ? getWrapperFor((EntityPlayer) entity) : getWrapperFor(entity);
+		return WrapperEntity.getWrapperFor(entity);
 	}
 	
 	/**
@@ -238,7 +194,7 @@ public class WrapperWorld{
 	public List<WrapperEntity> getEntitiesWithin(BoundingBox box){
 		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
 		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
-			entities.add(getWrapperFor(entity));
+			entities.add(WrapperEntity.getWrapperFor(entity));
 		}
 		return entities;
 	}
@@ -260,7 +216,7 @@ public class WrapperWorld{
 				}
 			}
 		}
-		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
+		return WrapperEntity.getWrapperFor(foundEntity);
 	}
 	
 	/**
@@ -286,19 +242,8 @@ public class WrapperWorld{
 				}
 			}
 		}
-		return foundEntity != null ? this.getWrapperFor(foundEntity) : null;
+		return WrapperEntity.getWrapperFor(foundEntity);
 	}
-	
-	/**
-	 *  Generates a new wrapper to be used for entity tracking.
-	 *  This should be fed into the constructor of {@link AEntityB_Existing}
-	 *  at construction time to allow it to interface with the world.
-	 */
-	public WrapperEntity generateEntity(){
-		//Generate a new builder to hold the entity and return the wrapper for it.
-    	BuilderEntity builder = new BuilderEntity(world);
-    	return getWrapperFor(builder);
-    }
 	
 	/**
 	 *  Spawns the entity into the world.
@@ -394,7 +339,7 @@ public class WrapperWorld{
 					if(hitBoxes.isEmpty()){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(mcEntityCollided), hitBoxes);
+						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), hitBoxes);
 					}
 				}
 			}else{
@@ -423,7 +368,7 @@ public class WrapperWorld{
 					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(getWrapperFor(mcEntityCollided), null);
+						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), null);
 					}
 				}
 			}
@@ -435,7 +380,7 @@ public class WrapperWorld{
 			return rayTraceHits;
 		}else{
 			for(Entity entity : collidedEntities){
-				getWrapperFor(entity).attack(damage);
+				WrapperEntity.getWrapperFor(entity).attack(damage);
 			}
 			return null;
 		}

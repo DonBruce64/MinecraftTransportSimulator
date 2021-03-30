@@ -127,7 +127,7 @@ public class BuilderBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		return mcBlock.onClicked(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperWorld.getWrapperFor(world).getWrapperFor(player));
+		return mcBlock.onClicked(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperPlayer.getWrapperFor(player));
 	}
     
     @Override

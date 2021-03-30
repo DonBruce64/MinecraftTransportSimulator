@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -34,12 +37,33 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
  */
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity{
+	private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
 	public final EntityPlayer player;
 	
 	public WrapperPlayer(EntityPlayer player){
 		super(player);
 		this.player = player;
+	}
+	
+	/**
+	 *  Returns a wrapper instance for the passed-in player instance.
+	 *  Null may be passed-in safely to ease function-forwarding.
+	 *  Note that the wrapped player class MAY be side-specific, so avoid casting
+	 *  the wrapped entity directly if you aren't sure what its class is.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 */
+	public static WrapperPlayer getWrapperFor(EntityPlayer player){
+		if(player != null){
+			WrapperPlayer wrapper = playerWrappers.get(player);
+			if(wrapper == null || !wrapper.isValid() || player != wrapper.player){
+				wrapper = new WrapperPlayer(player);
+				playerWrappers.put(player, wrapper);
+			}
+			return wrapper;
+		}else{
+			return null;
+		}
 	}
 	
 	@Override
@@ -97,7 +121,7 @@ public class WrapperPlayer extends WrapperEntity{
 		for(EntityLiving entityLiving : player.world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 7.0D, player.posY - 7.0D, player.posZ - 7.0D, player.posX + 7.0D, player.posY + 7.0D, player.posZ + 7.0D))){
 			if(entityLiving.getLeashed() && player.equals(entityLiving.getLeashHolder())){
 				entityLiving.clearLeashed(true, !player.capabilities.isCreativeMode);
-				return WrapperWorld.getWrapperFor(entityLiving.world).getWrapperFor(entityLiving);
+				return getWrapperFor(entityLiving);
 			}
 		}
 		return null;
@@ -213,7 +237,7 @@ public class WrapperPlayer extends WrapperEntity{
     			EntityPlayerGun gunEntity = EntityPlayerGun.playerServerGuns.get(event.player.getUniqueID().toString());
             	if(gunEntity == null && !event.player.isDead){
             		WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(event.player.world);
-            		WrapperPlayer playerWrapper = worldWrapper.getWrapperFor(event.player);
+            		WrapperPlayer playerWrapper = getWrapperFor(event.player);
             		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
             		worldWrapper.spawnEntity(entity);
             	}

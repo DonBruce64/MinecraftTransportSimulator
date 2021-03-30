@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
@@ -28,7 +31,30 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class WrapperEntity{
+	private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
+	
 	public final Entity entity;
+	
+	/**
+	 *  Returns a wrapper instance for the passed-in entity instance.
+	 *  Null may be passed-in safely to ease function-forwarding.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 *  If the entity is a player, then a player wrapper is returned.
+	 */
+	public static WrapperEntity getWrapperFor(Entity entity){
+		if(entity instanceof EntityPlayer){
+			return WrapperPlayer.getWrapperFor((EntityPlayer) entity);
+		}else if(entity != null){
+			WrapperEntity wrapper = entityWrappers.get(entity);
+			if(wrapper == null || !wrapper.isValid() || entity != wrapper.entity){
+				wrapper = new WrapperEntity(entity);
+				entityWrappers.put(entity, wrapper);
+			}
+			return wrapper;
+		}else{
+			return null;
+		}
+	}
 	
 	public WrapperEntity(Entity entity){
 		this.entity = entity;

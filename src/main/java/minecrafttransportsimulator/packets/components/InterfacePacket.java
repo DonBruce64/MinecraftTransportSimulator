@@ -173,7 +173,7 @@ public class InterfacePacket{
 	 *  Used for handling packets arriving on the server.
 	 */
 	private static WrapperPlayer getServerPlayer(MessageContext ctx){
-		return getServerWorld(ctx).getWrapperFor(ctx.getServerHandler().player);
+		return WrapperPlayer.getWrapperFor(ctx.getServerHandler().player);
 	}
 	
 	

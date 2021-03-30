@@ -99,7 +99,7 @@ public class InterfaceClient{
 	 */
 	public static WrapperPlayer getClientPlayer(){
 		EntityPlayer player = Minecraft.getMinecraft().player;
-		return player != null ? WrapperWorld.getWrapperFor(player.world).getWrapperFor(player) : null;
+		return WrapperPlayer.getWrapperFor(player);
 	}
 	
 	/**
@@ -108,7 +108,7 @@ public class InterfaceClient{
 	 */
 	public static WrapperEntity getRenderViewEntity(){
 		Entity entity = Minecraft.getMinecraft().getRenderViewEntity();
-		return WrapperWorld.getWrapperFor(entity.world).getWrapperFor(entity);
+		return WrapperEntity.getWrapperFor(entity);
 	}
 	
 	/**
