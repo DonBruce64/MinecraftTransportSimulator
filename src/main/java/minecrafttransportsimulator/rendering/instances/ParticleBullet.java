@@ -165,7 +165,7 @@ public class ParticleBullet extends AParticle{
 		//And if the bullet is still accelerating, increase the velocity appropriately.
 		if (this.burnTimeLeft == 0) {
 			motion.multiply(0.98D);
-			motion.y -= 0.0245D;
+			motion.y -= gun.definition.gun.gravitationalVelocity;
 		}
 		else if(this.accelerationLeft > 0) {
 			//Missiles should behave like a rocket in the first tick only.
