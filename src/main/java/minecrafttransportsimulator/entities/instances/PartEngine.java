@@ -31,6 +31,7 @@ public class PartEngine extends APart{
 	public boolean brokenStarter;
 	public boolean backfired;
 	public boolean badShift;
+	public byte forwardsGears;
 	public byte reverseGears;
 	public byte currentGear;
 	public int upshiftCountdown;
@@ -96,6 +97,8 @@ public class PartEngine extends APart{
 		for(float gear : definition.engine.gearRatios){
 			if(gear < 0){
 				++reverseGears;
+			}else if(gear > 0){
+				++forwardsGears;
 			}
 		}
 		this.startRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
@@ -313,37 +316,42 @@ public class PartEngine extends APart{
 				}
 				
 				//Do automatic transmission functions if needed.
-				if(definition.engine.isAutomatic && !world.isClient()){
-					if(currentGear > 0){
-						if(shiftCooldown == 0){
-							if(definition.engine.upShiftRPM != null && definition.engine.downShiftRPM != null){
-								if(rpm > definition.engine.upShiftRPM[currentGear - 1]*0.5*(1.0F + vehicleOn.throttle/100F)) {
+				if(definition.engine.isAutomatic && !world.isClient() && currentGear != 0){
+					if(shiftCooldown == 0){
+						if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
+							//Can shift up, try to do so.
+							if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM[currentGear + reverseGears - 2] : getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F))){
+								if(currentGear > 0){
 									if(shiftUp(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
 										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
 									}
-								}else if(rpm < definition.engine.downShiftRPM[currentGear - 1]*0.5*(1.0F + vehicleOn.throttle/100F) && currentGear > 1){
-									if(shiftDown(true)){
-										shiftCooldown = definition.engine.shiftSpeed;
-										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
-									}
-								}
-							}else{
-								if(rpm > getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F)){
-									if(shiftUp(true)){
-										shiftCooldown = definition.engine.shiftSpeed;
-										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
-									}
-								}else if(rpm < getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F) && currentGear > 1){
+								}else{
 									if(shiftDown(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
 										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
 									}
 								}
 							}
-						}else{
-							--shiftCooldown;
 						}
+						if(currentGear > 1 || currentGear < -1){
+							//Can shift down, try to do so.
+							if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM[currentGear + reverseGears - 2] : getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(currentGear > 0){
+									if(shiftDown(true)){
+										shiftCooldown = definition.engine.shiftSpeed;
+										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
+									}
+								}else{
+									if(shiftUp(true)){
+										shiftCooldown = definition.engine.shiftSpeed;
+										InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
+									}
+								}
+							}
+						}
+					}else{
+						--shiftCooldown;
 					}
 				}
 			}else{
@@ -708,16 +716,22 @@ public class PartEngine extends APart{
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0){
-			if(currentGear < 0){//Reverse to neutral or higher reverse.
-				doShift = true;
-				nextGear = !autoShift ? 0 : (byte) (currentGear + 1);
-			}else if(currentGear == 0){//Neutral to 1st.
+			//Check to make sure we can shift.
+			if(currentGear == 0){//Neutral to 1st.
 				nextGear = 1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse;
-			}else if(currentGear < definition.engine.gearRatios.length - (1 + reverseGears)){//Forwards gear to higher forwards gear.
-				doShift = !definition.engine.isAutomatic || (autoShift && !world.isClient());
-				nextGear = (byte) (currentGear + 1);
+			}else if(currentGear < forwardsGears){//Gear to next gear.
+				if(definition.engine.isAutomatic && !autoShift && currentGear < 0){
+					//Automatic engine with shift-up pressed while in reverse.  Shift to neutral.
+					nextGear = 0;
+					doShift = true;
+				}else if(!definition.engine.isAutomatic || autoShift){
+					//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
+					nextGear = (byte) (currentGear + 1);
+					doShift = true;
+				}
 			}
+				
 			if(doShift || world.isClient()){
 				currentGear = nextGear;
 				upshiftCountdown = definition.engine.clutchTime;
@@ -732,16 +746,22 @@ public class PartEngine extends APart{
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0){
-			if(currentGear >= 1){//Forwards gear to lower forwards gear or neutral.
-				doShift = true;
-				nextGear = definition.engine.isAutomatic && !autoShift ? 0 : (byte) (currentGear - 1);
-			}else if(currentGear == 0){//Neutral to reverse.
+			//Check to make sure we can shift.
+			if(currentGear == 0){//Neutral to 1st reverse.
 				nextGear = -1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse;
-			}else if(currentGear + reverseGears > 0){//Reverse to lower reverse.
-				doShift = true;
-				nextGear = (byte) (currentGear - 1);
+			}else if(currentGear > 0 || -currentGear < reverseGears){//Gear to next gear.
+				if(definition.engine.isAutomatic && !autoShift && currentGear > 0){
+					//Automatic engine with shift-down pressed while in forwards.  Shift to neutral.
+					nextGear = 0;
+					doShift = true;
+				}else if(!definition.engine.isAutomatic || autoShift){
+					//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
+					nextGear = (byte) (currentGear - 1);
+					doShift = true;
+				}
 			}
+				
 			if(doShift || world.isClient()){
 				currentGear = nextGear;
 				downshiftCountdown = definition.engine.clutchTime;
