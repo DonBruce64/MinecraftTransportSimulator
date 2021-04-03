@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
@@ -78,11 +78,11 @@ public class ParticleBullet extends AParticle{
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
-		Map<WrapperEntity, List<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
+		Map<WrapperEntity, Collection<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
 			double armorPenetrated = 0;
 			for(WrapperEntity entity : attackedEntities.keySet()){
-				List<BoundingBox> hitBoxes = attackedEntities.get(entity);
+				Collection<BoundingBox> hitBoxes = attackedEntities.get(entity);
 				if(hitBoxes != null){
 					AEntityA_Base baseEntity = entity.getBaseEntity();
 					BoundingBox armorBoxHit = null;
@@ -97,6 +97,10 @@ public class ParticleBullet extends AParticle{
 								hitBoxIterator.remove();
 							}else{
 								armorBoxHit = hitBox;
+							}
+						}else if(baseEntity instanceof AEntityE_Multipart){
+							if(((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
+								break;
 							}
 						}
 					}	

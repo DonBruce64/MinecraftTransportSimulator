@@ -1,10 +1,12 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -270,7 +272,7 @@ public class WrapperWorld{
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, List<BoundingBox>> attackEntities(Damage damage, Point3d motion){
+	public Map<WrapperEntity, Collection<BoundingBox>> attackEntities(Damage damage, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		
@@ -287,13 +289,13 @@ public class WrapperWorld{
 		Point3d endPoint = null;
 		Vec3d start = null;
 		Vec3d end = null;
-		Map<WrapperEntity, List<BoundingBox>> rayTraceHits = null;
+		Map<WrapperEntity, Collection<BoundingBox>> rayTraceHits = null;
 		if(motion != null){
 			startPoint = damage.box.globalCenter;
 			endPoint = damage.box.globalCenter.copy().add(motion);
 			start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
 			end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
-			rayTraceHits = new HashMap<WrapperEntity, List<BoundingBox>>();
+			rayTraceHits = new HashMap<WrapperEntity, Collection<BoundingBox>>();
 		}
 		
 		//Validate the collided entities to make sure we didn't hit something we shouldn't have.
@@ -319,17 +321,19 @@ public class WrapperWorld{
 				
 				//Get hitboxes hit if we are a moving source of damage.
 				if(motion != null){
-					List<BoundingBox> hitBoxes = new ArrayList<BoundingBox>();
+					TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
 					if(entityAttacked instanceof AEntityE_Multipart){
 						for(BoundingBox box : ((AEntityE_Multipart<?>) entityAttacked).allInteractionBoxes){
-							if(box.getIntersectionPoint(startPoint, endPoint) != null){
-								hitBoxes.add(box);
+							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
+							if(delta != null){
+								hitBoxes.put(delta.distanceTo(startPoint), box);
 							}
 						}
 					}else if(entityAttacked instanceof AEntityD_Interactable){
 						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
-							if(box.getIntersectionPoint(startPoint, endPoint) != null){
-								hitBoxes.add(box);
+							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
+							if(delta != null){
+								hitBoxes.put(delta.distanceTo(startPoint), box);
 							}
 						}
 					}
@@ -339,7 +343,7 @@ public class WrapperWorld{
 					if(hitBoxes.isEmpty()){
 						iterator.remove();
 					}else{
-						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), hitBoxes);
+						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), hitBoxes.values());
 					}
 				}
 			}else{
