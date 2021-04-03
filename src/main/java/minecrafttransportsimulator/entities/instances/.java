@@ -277,7 +277,9 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					vectorDelta = 180 + vectorDelta;
 				}
 			}
-			
+			if (velocity > 1.5){
+			rotation.y = rotation.y + (crossProduct.y * definition.motorized.overSteer);
+			}
 			//If we are offset, adjust our angle.
 			if(Math.abs(vectorDelta) > 0.001){
 				//Get factor of how much we can correct our turning.
