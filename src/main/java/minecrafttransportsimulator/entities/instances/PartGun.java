@@ -498,7 +498,10 @@ public class PartGun extends APart{
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
 			//This is based on the barrel length and shell size.
-			Point3d spreadAngle = new Point3d((Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), (Math.random() - 0.5F)*(10*definition.gun.diameter/(definition.gun.length*1000)), 0D);
+			Point3d spreadAngle = new Point3d();
+			if(definition.gun.bulletSpreadFactor > 0){
+				spreadAngle.add((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
+			}
 			spreadAngle.add(internalOrientation);
 			
 			//Set the bullet's direction the the provider's orientation.
