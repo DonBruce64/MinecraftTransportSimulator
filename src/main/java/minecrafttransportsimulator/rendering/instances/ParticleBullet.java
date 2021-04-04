@@ -163,8 +163,10 @@ public class ParticleBullet extends AParticle{
 		//Now that we have checked for collision, adjust motion to compensate for bullet movement and gravity.
 		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
 		//And if the bullet is still accelerating, increase the velocity appropriately.
-		if (this.burnTimeLeft == 0) {
-			motion.multiply(0.98D);
+		if(burnTimeLeft == 0){
+			if(bullet.definition.bullet.slowdownSpeed > 0){
+				motion.add(motion.copy().normalize().multiply(-bullet.definition.bullet.slowdownSpeed));
+			}
 			motion.y -= gun.definition.gun.gravitationalVelocity;
 		}
 		else if(this.accelerationLeft > 0) {

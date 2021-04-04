@@ -383,6 +383,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
     	public float armorPenetration;
 		
+		@JSONDescription("How much velocity, each tick, should be deducted from the bullet's velocity.")
+    	public float slowdownSpeed;
+		
 		@JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
     	public int burnTime;
 		
