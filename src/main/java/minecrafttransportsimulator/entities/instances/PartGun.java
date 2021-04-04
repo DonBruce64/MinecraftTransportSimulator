@@ -574,7 +574,11 @@ public class PartGun extends APart{
 		//If muzzle count is the same as capacity, use the muzzles in order
 		//Otherwise, iterate through the available muzzles.
 		if(definition.gun.muzzlePositions != null) {
-			currentMuzzle = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - bulletsLeft : bulletsFired%definition.gun.muzzlePositions.size();
+			if(bulletsLeft > 0){
+				currentMuzzle = definition.gun.muzzlePositions.size() == definition.gun.capacity ? definition.gun.capacity - bulletsLeft : bulletsFired%definition.gun.muzzlePositions.size(); 
+			}else{
+				currentMuzzle = 0;
+			}
 			firingOrigin.add(definition.gun.muzzlePositions.get(currentMuzzle));
 			
 		}
