@@ -566,7 +566,7 @@ public class PartGun extends APart{
 	/**
 	 * Helper method for getting the firing origin of the gun.
 	 */
-	private Point3d getFiringOrigin(){
+	public Point3d getFiringOrigin(){
 		Point3d firingOrigin = new Point3d(0, 0, definition.gun.length).rotateFine(internalOrientation);
 		//If muzzle count is the same as capacity, use the muzzles in order
 		//Otherwise, iterate through the available muzzles.
