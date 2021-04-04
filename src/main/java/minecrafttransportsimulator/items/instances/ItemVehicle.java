@@ -10,6 +10,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -57,7 +58,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				vehicle.electricPower = 12;
 				
 				//Add default parts via the vehicle's recursion.
-				vehicle.addDefaultParts(vehicle.definition.parts, true, false);
+				for(JSONPartDefinition partDef : vehicle.definition.parts){
+					vehicle.addDefaultPart(partDef, true, false);
+				}
 				
 				//Add default instruments.
 				for(JSONInstrumentDefinition packInstrument : vehicle.definition.motorized.instruments){

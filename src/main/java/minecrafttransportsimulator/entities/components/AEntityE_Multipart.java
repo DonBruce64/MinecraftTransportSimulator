@@ -409,11 +409,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				//Also need to make sure to convert the part placement defs to the right type as they're offset.
 	    		boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
 				if(partToAdd.definition.parts != null){
-					List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						subPartsToAdd.add(partToAdd.getPackForSubPart(subPartPack));
+						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), addedDuringConstruction, !newPart);
 					}
-					addDefaultParts(subPartsToAdd, addedDuringConstruction, !newPart);
+					
 				}
     		}
     	}
@@ -639,46 +638,43 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	/**
 	 * Helper method to allow for recursion when adding default parts.
-	 * This method adds all default parts for the passed-in list of parts.
-	 * The part list should consist of a "parts" JSON definition, and can either
-	 * be on the main entity, or a part on this entity (subParts).
+	 * This method adds all default parts for the passed-in part entry.
+	 * The entry can either be on the main entity, or a part on this entity.
 	 * This method should only be called when the entity or part with the
 	 * passed-in definition is placed on this entity, not when it's being loaded from saved data.
 	 * The savedParent flag is to let this method add only default permanent parts, as they get
 	 * removed with the part when wrenched, and added back when placed again, and don't save their states.
 	 */
-	public void addDefaultParts(List<JSONPartDefinition> partsToAdd, boolean addedDuringConstruction, boolean savedParent){
-		for(JSONPartDefinition partDef : partsToAdd){
-			if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
+	public void addDefaultPart(JSONPartDefinition partDef, boolean addedDuringConstruction, boolean savedParent){
+		if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
+			try{
+				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
+				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
-					String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
-					try{
-						APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), null, partDef.pos, addedDuringConstruction);
-						if(addedPart != null){
-							
-							//Check if we have an additional parts.
-							//If so, we need to check that for default parts.
-							if(partDef.additionalParts != null){
-								addDefaultParts(partDef.additionalParts, addedDuringConstruction, savedParent);
-							}
-							
-							//Check all sub-parts, if we have any.
-							//We need to make sure to convert them to the right type as they're offset.
-							if(addedPart.definition.parts != null){
-								List<JSONPartDefinition> subPartsToAdd = new ArrayList<JSONPartDefinition>();
-								for(JSONPartDefinition subPartPack : addedPart.definition.parts){
-									subPartsToAdd.add(addedPart.getPackForSubPart(subPartPack));
-								}
-								addDefaultParts(subPartsToAdd, addedDuringConstruction, savedParent);
+					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), null, partDef.pos, addedDuringConstruction);
+					if(addedPart != null){
+						
+						//Check if we have an additional parts.
+						//If so, we need to check that for default parts.
+						if(partDef.additionalParts != null){
+							for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
+								addDefaultPart(addedPart.placementDefinition.isSubPart ? addedPart.parentPart.getPackForSubPart(additionalPartDef) : additionalPartDef, addedDuringConstruction, savedParent);
 							}
 						}
-					}catch(NullPointerException e){
-						throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");
+						
+						//Check all sub-parts, if we have any.
+						//We need to make sure to convert them to the right type as they're offset.
+						if(addedPart.definition.parts != null){
+							for(JSONPartDefinition subPartPack : addedPart.definition.parts){
+								addDefaultPart(addedPart.getPackForSubPart(subPartPack), addedDuringConstruction, savedParent);
+							}							
+						}
 					}
-				}catch(IndexOutOfBoundsException e){
-					throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
+				}catch(NullPointerException e){
+					throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");
 				}
+			}catch(IndexOutOfBoundsException e){
+				throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
 			}
 		}
 	}
