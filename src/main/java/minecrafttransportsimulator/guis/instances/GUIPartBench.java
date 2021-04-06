@@ -222,19 +222,25 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Set materials.
 		//Get the offset index based on the clock-time and the number of materials.
-		int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
-		materialOffset = (int) (InterfaceClient.getClientWorld().getTick()%(materialOffset*100)/100);
-		materialOffset *= craftingItemIcons.size();
-		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			int materialIndex = i + materialOffset;
-			if(materialIndex < materials.size()){
-				craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-				for(ItemStack stack : craftingItemIcons.get(i).stacks){
-					stack.setCount(materials.get(materialIndex).qty);
-				}
-	    	}else{
-	    		craftingItemIcons.get(i).stacks = null;
-	    	}			
+		if(currentItem != null){
+			int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
+			materialOffset = (int) (InterfaceClient.getClientWorld().getTick()%(materialOffset*100)/100);
+			materialOffset *= craftingItemIcons.size();
+			for(byte i=0; i<craftingItemIcons.size(); ++i){
+				int materialIndex = i + materialOffset;
+				if(materialIndex < materials.size()){
+					craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
+					for(ItemStack stack : craftingItemIcons.get(i).stacks){
+						stack.setCount(materials.get(materialIndex).qty);
+					}
+		    	}else{
+		    		craftingItemIcons.get(i).stacks = null;
+		    	}			
+			}
+		}else{
+			for(byte i=0; i<craftingItemIcons.size(); ++i){
+				craftingItemIcons.get(i).stacks = null;
+			}
 		}
 		
 		//Set confirm button based on if player has materials.
