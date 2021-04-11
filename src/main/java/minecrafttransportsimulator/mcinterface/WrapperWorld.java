@@ -420,7 +420,9 @@ public class WrapperWorld{
 							movedEntities.add(entity);
 							
 							//Set entity as on ground to allow them to jump on the collision box.
+							//Also set fallDistance to 0 to prevent damage.
 							entity.onGround = true;
+							entity.fallDistance = 0;
 						}
 					}
 				}
