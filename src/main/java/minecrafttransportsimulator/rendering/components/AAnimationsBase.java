@@ -71,6 +71,7 @@ public abstract class AAnimationsBase<AnimationEntity extends AEntityC_Definable
 			}	
 			case("light_sunlight"): return entity.world.getLightBrightness(entity.position, false);
 			case("light_total"): return entity.world.getLightBrightness(entity.position, true);
+			case("ground_distance"): return entity.world.getHeight(entity.position);
 		}
 		
 		//Check if this is a cycle variable.

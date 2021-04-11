@@ -550,6 +550,13 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns the distance from the passed-in position to the top block in the world, at the position's X/Z coords.
+	 */
+	public double getHeight(Point3d position){
+		return position.y - world.getHeight((int) position.x, (int) position.z);
+	}
+	
+	/**
 	 * Updates the blocks and depths of collisions for the passed-in BoundingBox to the box's internal variables.
 	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
 	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
