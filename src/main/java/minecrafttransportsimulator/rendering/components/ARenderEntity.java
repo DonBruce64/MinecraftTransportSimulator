@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 
@@ -20,6 +22,12 @@ import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>>{
 	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
 	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
+	
+	private static final List<ARenderEntity<?>> createdRenderers = new ArrayList<ARenderEntity<?>>();
+	
+	public ARenderEntity(){
+		createdRenderers.add(this);
+	}
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -212,11 +220,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
-	 *  Call to clear out the object caches for this entity definition.  This resets all caches to cause the rendering
+	 *  Call to clear out the object caches for this model.  This resets all caches to cause the rendering
 	 *  JSON to be re-parsed.
 	 */
-	public void clearObjectCaches(RenderedEntity entity){
-		String modelLocation = entity.definition.getModelLocation();
+	protected void resetModelCache(String modelLocation){
 		if(objectLists.containsKey(modelLocation)){
 			objectLists.remove(modelLocation);
 		}
@@ -236,5 +243,17 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 *  Called externally to reset all caches for all renders with this definition.  Actual renderer will extend
+	 *  the non-static method: this is to allow external systems to trigger this call without them accessing
+	 *  the list of created objects.
+	 */
+	public static void clearObjectCaches(AJSONMultiModelProvider definition){
+		String modelLocation = definition.getModelLocation();
+		for(ARenderEntity<?> render : createdRenderers){
+			render.resetModelCache(modelLocation);
+		}
 	}
 }

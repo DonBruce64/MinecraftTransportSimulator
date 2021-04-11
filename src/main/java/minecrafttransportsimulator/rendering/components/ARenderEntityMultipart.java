@@ -20,14 +20,6 @@ public abstract class ARenderEntityMultipart<RenderedEntity extends AEntityE_Mul
 	}
 	
 	@Override
-	public void clearObjectCaches(RenderedEntity entity){
-		super.clearObjectCaches(entity);
-		for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-			part.getRenderer().clearObjectCaches(part);
-		}
-	}
-	
-	@Override
 	public boolean doesEntityHaveLight(RenderedEntity entity, LightType light){
 		if(!super.doesEntityHaveLight(entity, light)){
 			for(APart part : ((AEntityE_Multipart<?>) entity).parts){

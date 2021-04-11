@@ -29,12 +29,14 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.rendering.components.ARenderEntity;
 
 /**This class contains various methods to parse out JSON data from JSON files.
  * Contains  custom type adapters used in JSON parsing operations, and annotations for fields.
@@ -330,12 +332,14 @@ public class JSONParser{
 			}
 		
 			//Reset renderers and send reset commands to entities.
+			if(definitionToOverride instanceof AJSONMultiModelProvider){
+				ARenderEntity.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
+			}
 			for(AEntityA_Base entity : AEntityA_Base.getEntities(InterfaceClient.getClientWorld())){
 				if(entity instanceof AEntityC_Definable){
 					AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
 					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
 						((AEntityC_Definable<?>) entity).onDefinitionReset();
-						definableEntity.getRenderer().clearObjectCaches(definableEntity);
 					}
 				}
 			}

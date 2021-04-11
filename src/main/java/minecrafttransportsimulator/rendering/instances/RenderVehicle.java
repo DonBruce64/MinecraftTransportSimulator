@@ -18,8 +18,8 @@ import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
@@ -101,9 +101,9 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	}
 	
 	@Override
-	public void clearObjectCaches(EntityVehicleF_Physics vehicle){
-		super.clearObjectCaches(vehicle);
-		vehicleInstrumentTransforms.remove(vehicle.definition.getModelLocation());
+	protected void resetModelCache(String modelLocation){
+		super.resetModelCache(modelLocation);
+		vehicleInstrumentTransforms.remove(modelLocation);
 	}
 	
 	/**

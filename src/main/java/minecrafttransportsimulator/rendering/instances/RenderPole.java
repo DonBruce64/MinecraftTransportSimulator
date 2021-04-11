@@ -29,19 +29,6 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	}
 	
 	@Override
-	public void clearObjectCaches(TileEntityPole pole){
-		super.clearObjectCaches(pole);
-		for(Axis axis : Axis.values()){
-			if(!axis.equals(Axis.NONE)){
-				if(pole.components.containsKey(axis)){
-					ATileEntityPole_Component component = pole.components.get(axis);
-					component.getRenderer().clearObjectCaches(component);
-				}
-			}
-		}
-	}
-	
-	@Override
 	public boolean rotateToBlock(){
 		return false;
 	}
