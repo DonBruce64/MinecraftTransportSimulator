@@ -126,12 +126,17 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 			if(towedByVehicle != null && !towedByVehicle.isValid){
 				towedByVehicle = null;
 			}else{
-				//If we are being towed update our variables to match the vehicle we are being towed by.
+				//If we are being towed update our light variables to match the vehicle we are being towed by.
 				//Also set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
 				if(towedByVehicle != null){
-					variablesOn.clear();
-					variablesOn.addAll(towedByVehicle.variablesOn);
+					for(LightType light : LightType.values()){
+						if(towedByVehicle.variablesOn.contains(light.lowercaseName)){
+							variablesOn.add(light.lowercaseName);
+						}else{
+							variablesOn.remove(light.lowercaseName);
+						}
+					}
 					parkingBrakeOn = false;
 					brake = towedByVehicle.brake;
 				}else{
