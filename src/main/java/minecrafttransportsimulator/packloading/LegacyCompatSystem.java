@@ -285,14 +285,17 @@ public final class LegacyCompatSystem{
 			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
 			if(definition.generic.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
 				definition.engine.jetPowerFactor = 1.0F;
-				definition.engine.bypassRatio = definition.engine.gearRatios[0];
-				definition.engine.gearRatios[0] = 1.0F;
+				definition.engine.bypassRatio = definition.engine.gearRatios.get(0);
+				definition.engine.gearRatios.set(0, 1.0F);
 			}
 			
 			//If we only have one gearRatio, add two more gears as we're a legacy propeller-based engine.
-			if(definition.engine.gearRatios.length == 1){
-				definition.engine.propellerRatio = 1/definition.engine.gearRatios[0];
-				definition.engine.gearRatios = new float[]{-1, 0, 1};
+			if(definition.engine.gearRatios.size() == 1){
+				definition.engine.propellerRatio = 1/definition.engine.gearRatios.get(0);
+				definition.engine.gearRatios.clear();
+				definition.engine.gearRatios.add(-1F);
+				definition.engine.gearRatios.add(0F);
+				definition.engine.gearRatios.add(1F);
 			}
 			
 			//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.

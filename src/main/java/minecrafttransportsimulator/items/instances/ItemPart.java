@@ -139,19 +139,19 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.fueltype") + definition.engine.fuelType);
 				tooltipLines.add(InterfaceCore.translate("info.item.engine.hours") + Math.round(data.getDouble("hours")*100D)/100D);
 				
-				if(definition.engine.gearRatios.length > 3){
+				if(definition.engine.gearRatios.size() > 3){
 					tooltipLines.add(definition.engine.isAutomatic ? InterfaceCore.translate("info.item.engine.automatic") : InterfaceCore.translate("info.item.engine.manual"));
 					tooltipLines.add(InterfaceCore.translate("info.item.engine.gearratios"));
-					for(byte i=0; i<definition.engine.gearRatios.length; i+=5){
+					for(byte i=0; i<definition.engine.gearRatios.size() ; i+=5){
 						String gearRatios = "";
-						for(byte j=i; j<i+5 && j<definition.engine.gearRatios.length; ++j){
-							gearRatios += String.valueOf(definition.engine.gearRatios[j]) + ",  ";
+						for(byte j=i; j<i+5 && j<definition.engine.gearRatios.size() ; ++j){
+							gearRatios += String.valueOf(definition.engine.gearRatios.get(j)) + ",  ";
 						}
 						tooltipLines.add(gearRatios);
 					}
 					
 				}else{
-					tooltipLines.add(InterfaceCore.translate("info.item.engine.gearratios") + definition.engine.gearRatios[definition.engine.gearRatios.length - 1]);
+					tooltipLines.add(InterfaceCore.translate("info.item.engine.gearratios") + definition.engine.gearRatios.get(definition.engine.gearRatios.size() - 1));
 				}
 				
 				if(data.getBoolean("oilLeak")){

@@ -147,6 +147,76 @@ public class JSONParser{
 		}
 	};
 	
+	private static final TypeAdapter<List<Integer>> intListAdapter = new TypeAdapter<List<Integer>>(){	
+		@Override
+		public List<Integer> read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				List<Integer> value = new ArrayList<Integer>();
+				reader.beginArray();
+				while(reader.hasNext()){
+					value.add(reader.nextInt());
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, List<Integer> value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				for(Integer item : value){
+					writer.value(item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
+	private static final TypeAdapter<List<Float>> floatListAdapter = new TypeAdapter<List<Float>>(){	
+		@Override
+		public List<Float> read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				List<Float> value = new ArrayList<Float>();
+				reader.beginArray();
+				while(reader.hasNext()){
+					value.add((float) reader.nextDouble());
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, List<Float> value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				for(Float item : value){
+					writer.value(item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
 	private static final TypeAdapter<List<String>> stringListAdapter = new TypeAdapter<List<String>>(){	
 		@Override
 		public List<String> read(JsonReader reader) throws IOException{
@@ -169,7 +239,7 @@ public class JSONParser{
 			if(value == null){
 				writer.nullValue();
 			}else{
-				//Setting the indent to nothing prevents GSON from applying newlines to String lists.
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
 				//We need to set the indent to the value afterwards though to keep pretty printing.
 				writer.beginArray();
 				writer.setIndent("");
@@ -232,6 +302,8 @@ public class JSONParser{
 				.registerTypeAdapter(Integer.class, integerAdapter)
 				.registerTypeAdapter(Float.class, floatAdapter)
 				.registerTypeAdapter(Point3d.class, point3dAdapter)
+				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
+				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
 				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				.create();

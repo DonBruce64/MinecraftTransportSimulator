@@ -152,7 +152,7 @@ public class PartEngine extends APart{
 		}
 		
 		//Set current gear ratio based on current gear.
-		currentGearRatio = definition.engine.gearRatios[currentGear + reverseGears];
+		currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
 				
 		if(vehicleOn != null){
 			//Check to see if we are linked and need to equalize power between us and another engine.
@@ -320,7 +320,7 @@ public class PartEngine extends APart{
 					if(shiftCooldown == 0){
 						if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 							//Can shift up, try to do so.
-							if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM[currentGear + reverseGears - 2] : getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F))){
+							if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears - 2) : getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F))){
 								if(currentGear > 0){
 									if(shiftUp(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
@@ -336,7 +336,7 @@ public class PartEngine extends APart{
 						}
 						if(currentGear > 1 || currentGear < -1){
 							//Can shift down, try to do so.
-							if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM[currentGear + reverseGears - 2] : getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F))){
+							if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears - 2) : getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F))){
 								if(currentGear > 0){
 									if(shiftDown(true)){
 										shiftCooldown = definition.engine.shiftSpeed;
@@ -688,7 +688,7 @@ public class PartEngine extends APart{
 	
 	public float getGearshiftPosition_Vertical(){
 		if(currentGear < 0){
-			return definition.engine.gearRatios.length%2 == 0 ? 15 : -15; 
+			return definition.engine.gearRatios.size()%2 == 0 ? 15 : -15; 
 		}else if(currentGear == 0){
 			return 0;
 		}else{
@@ -697,7 +697,7 @@ public class PartEngine extends APart{
 	}
 	
 	public float getGearshiftPosition_Horizontal(){
-		int columns = (definition.engine.gearRatios.length)/2;
+		int columns = (definition.engine.gearRatios.size())/2;
 		int firstColumnAngle = columns/2*-5;
 		float columnAngleDelta = columns != 1 ? -firstColumnAngle*2/(columns - 1) : 0; 
 		if(currentGear < 0){
