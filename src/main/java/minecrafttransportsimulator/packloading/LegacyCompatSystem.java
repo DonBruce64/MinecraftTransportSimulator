@@ -306,6 +306,18 @@ public final class LegacyCompatSystem{
 			if (definition.engine.revResistance == 0){
 				definition.engine.revResistance = 10;
 			}
+			
+			//If we don't have matching up-shift and down-shift numbers, we are an engine that came before multiple reverse gears.
+			if(definition.engine.upShiftRPM != null){
+				while(definition.engine.upShiftRPM.size() < definition.engine.gearRatios.size()){
+					definition.engine.upShiftRPM.add(0, 0);
+				}
+			}
+			if(definition.engine.downShiftRPM != null){
+				while(definition.engine.downShiftRPM.size() < definition.engine.gearRatios.size()){
+					definition.engine.downShiftRPM.add(0, 0);
+				}
+			}
 		}else if(definition.bullet != null) {
 			if (definition.bullet.type != null) {
 				definition.bullet.types = new ArrayList<String>();
