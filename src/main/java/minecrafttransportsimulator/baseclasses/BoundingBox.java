@@ -5,7 +5,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.util.math.AxisAlignedBB;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -25,6 +24,7 @@ import net.minecraft.util.math.AxisAlignedBB;
  * @author don_bruce
  */
 public class BoundingBox{
+	private static final double HITBOX_CLAMP = 0.015625;
 	public final Point3d localCenter;
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
@@ -103,9 +103,9 @@ public class BoundingBox{
 		globalCenter.rotateFine(entity.angles).add(entity.position);
 		if(isCollision){
 			//Need to round box to prevent floating-point errors.
-			globalCenter.x = ((int) (globalCenter.x/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-			globalCenter.y = ((int) (globalCenter.y/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
-			globalCenter.z = ((int) (globalCenter.z/ConfigSystem.configObject.general.hitboxClamp.value))*ConfigSystem.configObject.general.hitboxClamp.value;
+			globalCenter.x = ((int) (globalCenter.x/HITBOX_CLAMP))*HITBOX_CLAMP;
+			globalCenter.y = ((int) (globalCenter.y/HITBOX_CLAMP))*HITBOX_CLAMP;
+			globalCenter.z = ((int) (globalCenter.z/HITBOX_CLAMP))*HITBOX_CLAMP;
 		}
 	}
 	
