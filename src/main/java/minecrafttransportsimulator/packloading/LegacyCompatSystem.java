@@ -301,13 +301,15 @@ public final class LegacyCompatSystem{
 				definition.engine.gearRatios.add(1F);
 			}
 			
-			//If our shiftSpeed is 0, we are a legacy engine that didn't set a shift speed.
+			//Check various engine parameters that shouldn't be 0 as they might not be set.
 			if(definition.engine.shiftSpeed == 0){
 				definition.engine.shiftSpeed = 20;
 			}
-			//If our revResistance is 0, we are a legacy engine that didn't set a rev Resistance.
-			if (definition.engine.revResistance == 0){
+			if(definition.engine.revResistance == 0){
 				definition.engine.revResistance = 10;
+			}
+			if(definition.engine.idleRPM == 0){
+				definition.engine.idleRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 			}
 			
 			//If we don't have matching up-shift and down-shift numbers, we are an engine that came before multiple reverse gears.

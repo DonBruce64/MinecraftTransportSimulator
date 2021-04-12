@@ -69,11 +69,10 @@ public class PartEngine extends APart{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
+	private final int stallRPM;
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
-	public final int startRPM;
-	public final int stallRPM;
 	private static final float COLD_TEMP = 30F;
 	private static final float OVERHEAT_TEMP_1 = 115.556F;
 	private static final float OVERHEAT_TEMP_2 = 121.111F;
@@ -101,8 +100,7 @@ public class PartEngine extends APart{
 				++forwardsGears;
 			}
 		}
-		this.startRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
-		this.stallRPM = definition.engine.maxRPM < 15000 ? 300 : 1500;
+		this.stallRPM = (int) (definition.engine.idleRPM*0.65);
 		
 		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
 		//Well, except blimps, but that's a special case.
@@ -211,7 +209,7 @@ public class PartEngine extends APart{
 				}
 				if(autoStarterEngaged){
 					++autoStarterWindDown;
-					if((state.running && autoStarterWindDown >= 20) || (rpm > startRPM && autoStarterWindDown >= 40)){
+					if((state.running && autoStarterWindDown >= 20) || (rpm > definition.engine.idleRPM && autoStarterWindDown >= 40)){
 						setElectricStarterStatus(false);
 						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
 					}
@@ -229,10 +227,10 @@ public class PartEngine extends APart{
 			//If the starter is running, adjust RPM.
 			if(starterLevel > 0){
 				--starterLevel;
-				if(rpm < startRPM*1.2){
-					rpm = Math.min(rpm + definition.engine.starterPower, startRPM*1.2);
+				if(rpm < definition.engine.idleRPM*1.2){
+					rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.idleRPM*1.2);
 				}else{
-					rpm = Math.max(rpm - definition.engine.starterPower, startRPM*1.2);
+					rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.idleRPM*1.2);
 				}
 			}
 			
@@ -271,7 +269,7 @@ public class PartEngine extends APart{
 					temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 					
 					//Adjust oil pressure based on RPM and leak status.
-					pressure = Math.min(90 - temp/10, pressure + rpm/startRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+					pressure = Math.min(90 - temp/10, pressure + rpm/definition.engine.idleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
 								
 					//Add extra hours and temp if we have low oil.
 					if(pressure < LOW_OIL_PRESSURE && !isCreative){
@@ -280,8 +278,8 @@ public class PartEngine extends APart{
 					}
 					
 					//Add extra hours if we tried to run the engine fast without it being warmed up.
-					if(rpm > startRPM*1.5 && temp < COLD_TEMP && !isCreative){
-						hours += 0.001*(rpm/startRPM - 1)*getTotalWearFactor();
+					if(rpm > definition.engine.idleRPM*1.5 && temp < COLD_TEMP && !isCreative){
+						hours += 0.001*(rpm/definition.engine.idleRPM - 1)*getTotalWearFactor();
 					}
 					
 					//Add extra hours, and possibly explode the engine, if its too hot.
@@ -364,7 +362,7 @@ public class PartEngine extends APart{
 				//Internal fuel is used for engine sound wind down.  NOT used for power.
 				if(internalFuel > 0){
 					--internalFuel;
-					if(rpm < startRPM){
+					if(rpm < definition.engine.idleRPM){
 						internalFuel = 0;
 					}
 				}
@@ -372,7 +370,7 @@ public class PartEngine extends APart{
 				//Start engine if the RPM is high enough to cause it to start by itself.
 				//Used for drowned engines that come out of the water, or engines that don't
 				//have the ability to engage a starter.
-				if(rpm > startRPM && !world.isClient()){
+				if(rpm > definition.engine.idleRPM && !world.isClient()){
 					if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 						if(!isInLiquid() && state.magnetoOn){
 							startEngine();
@@ -390,7 +388,7 @@ public class PartEngine extends APart{
 				lowestWheelVelocity = 999F;
 				desiredWheelVelocity = -999F;
 				wheelFriction = 0;
-				engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - startRPM/1.25 - hours*10) + startRPM/1.25 : startRPM*1.2;
+				engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM/1.25 - hours*10) + definition.engine.idleRPM/1.25 : definition.engine.idleRPM*1.2;
 				
 				//Update wheel friction and velocity.
 				for(PartGroundDevice wheel : vehicleOn.wheels){
@@ -455,7 +453,7 @@ public class PartEngine extends APart{
 						
 						if(state.running){
 							propellerFeedback += propellerForcePenalty*50;
-							engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours) + startRPM*1.25;
+							engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM*1.25 - hours) + definition.engine.idleRPM*1.25;
 							double engineRPMDifference = engineTargetRPM - rpm;
 							
 							//propellerFeedback can't make an engine stall, but hours can.
@@ -475,7 +473,7 @@ public class PartEngine extends APart{
 			//Or, if we are not on, just slowly spin the engine down.
 			if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 				if(state.running){
-					engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - startRPM*1.25 - hours*10) + startRPM*1.25;
+					engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM*1.25 - hours*10) + definition.engine.idleRPM*1.25;
 					rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 					if(rpm > getSafeRPM(definition.engine) && definition.engine.jetPowerFactor == 0){
 						rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
