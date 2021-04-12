@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityBrewingStand;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.ITickable;
 
@@ -37,13 +35,6 @@ public class WrapperTileEntity{
 	}
 	
 	/**
-	 *  Gets the inventory for this TE, or null if it doesn't have one.
-	 */
-	public WrapperInventory getInventory(){
-		return tile instanceof IInventory ? new WrapperInventory((IInventory) tile) : null;
-	}
-	
-	/**
 	 *  Loads the TE data from the passed-in source.
 	 */
 	public void load(WrapperNBT data){
@@ -55,48 +46,6 @@ public class WrapperTileEntity{
 	 */
 	public void save(WrapperNBT data){
 		tile.writeToNBT(data.tag);
-	}
-	
-	/**Wrapper for Chests.
-    *
-    * @author don_bruce
-    */
-	public static class WrapperEntityChest extends WrapperTileEntity{
-		public WrapperEntityChest(WrapperWorld world, WrapperNBT data, int numberSlots){
-			super(new EntityChest(numberSlots));
-			tile.setWorld(world.world);
-			tile.readFromNBT(data.tag);
-		}
-		
-		private static class EntityChest extends TileEntityChest{
-			final int numberSlots;
-			
-			public EntityChest(int numberSlots){
-				super();
-				this.numberSlots = numberSlots;
-				//Make sure we have registered our chest.  If not, the game won't save it.
-				if(TileEntity.getKey(EntityChest.class) == null){
-					TileEntity.register("chest_entity", EntityChest.class);
-				}
-			}
-			
-			@Override
-			public boolean isUsableByPlayer(EntityPlayer player){
-				//Always return true to prevent chest GUI from closing.
-				return true; 
-		    }
-			
-			@Override
-			public int getSizeInventory(){
-		        return numberSlots;
-		    }
-			
-			@Override
-			public void update(){
-				//Don't let the super do update logic.  That will result in Bad Stuff
-				//as the super method checks for adjacent chests and players in the world.
-		    }
-		}
 	}
 	
 	/**Wrapper for Furnaces.

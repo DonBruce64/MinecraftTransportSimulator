@@ -9,6 +9,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONParticleObject;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -22,6 +23,8 @@ import minecrafttransportsimulator.rendering.instances.ParticleFlame;
 import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
  * can be placed on anything and modeled by anything as the code is only for controlling the firing
@@ -365,7 +368,7 @@ public class PartGun extends APart{
 						if(item instanceof ItemPart){
 							if(tryToReload((ItemPart) item)){
 								//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-								inventory.decrementSlot(i);
+								inventory.decrementSlot(i, 1);
 								return;
 							}
 						}
@@ -376,15 +379,15 @@ public class PartGun extends APart{
 					//Iterate through all the inventory slots in crates to try to find matching ammo.
 					for(APart part : entityOn.parts){
 						if(part instanceof PartInteractable){
-							WrapperInventory inventory = ((PartInteractable) part).inventory;
-							if(inventory != null && part.definition.interactable.feedsVehicles){
-								for(byte i=0; i<inventory.getSize(); ++i){
-									AItemBase item = inventory.getItemInSlot(i);
-									if(item instanceof ItemPart){
-										if(tryToReload((ItemPart) item)){
+							if(part.definition.interactable.feedsVehicles){
+								for(ItemStack stack : ((PartInteractable) part).inventory){
+									Item item = stack.getItem();
+									if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemPart){
+										
+										if(tryToReload((ItemPart) ((BuilderItem) item).item)){
 											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-											inventory.decrementSlot(i);
+											stack.shrink(1);
 											return;
 										}
 									}

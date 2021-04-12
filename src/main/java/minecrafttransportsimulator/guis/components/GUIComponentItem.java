@@ -55,7 +55,7 @@ public class GUIComponentItem{
     	}else if(stacks != null && !stacks.isEmpty()){
     		stackToRender = stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*20)/20));
     	}
-    	if(stackToRender != null){
+    	if(stackToRender != null && !stackToRender.isEmpty()){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
     			InterfaceGUI.drawItemTooltip(gui, mouseX, mouseY, stackToRender);

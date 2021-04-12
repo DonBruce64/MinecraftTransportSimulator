@@ -7,22 +7,28 @@ import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.guis.instances.GUIInteractableCrate;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to interactable parts.  This is either used used to link the interactable with
- * a vehicle or part tank for fluid-pumping operations, or trigger the crafting GUI to appear on the interactable.
- * Sent to servers by the fuel hose item when it does linking in the first case, and when a player clicks the
- * interactable in the second.
+ * a vehicle or part tank for fluid-pumping operations, trigger a GUI to appear on the interactable, or transfer
+ * an item from the interactable's inventory from to or from the player's inventory.
+ * Sent to servers by the fuel hose item when it does linking in the first case, when a player clicks the
+ * interactable in the second, and when a player clicks an item in the interactable GUI (spawned by the second case)
+ * in the third.
  * 
  * @author don_bruce
  */
 public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 	private final int linkedID;
 	private final Point3d linkedOffset;
+	private final int interactableSlot;
+	private final int playerSlot;
 	
 	public PacketPartInteractable(PartInteractable interactable){
 		super(interactable);
@@ -36,12 +42,32 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 			this.linkedID = -1;
 			this.linkedOffset = null;
 		}
+		this.interactableSlot = -1;
+		this.playerSlot = -1;
+	}
+	
+	public PacketPartInteractable(PartInteractable interactable, int interactableSlot, int playerSlot){
+		super(interactable);
+		if(interactable.linkedVehicle != null){
+			this.linkedID = interactable.linkedVehicle.lookupID;
+			this.linkedOffset = null;
+		}else if(interactable.linkedPart != null){
+			this.linkedID = interactable.linkedPart.entityOn.lookupID;
+			this.linkedOffset = interactable.linkedPart.placementOffset;
+		}else{
+			this.linkedID = -1;
+			this.linkedOffset = null;
+		}
+		this.interactableSlot = interactableSlot;
+		this.playerSlot = playerSlot;
 	}
 	
 	public PacketPartInteractable(ByteBuf buf){
 		super(buf);
 		this.linkedID = buf.readInt();
 		this.linkedOffset = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
+		this.interactableSlot = buf.readInt();
+		this.playerSlot = buf.readInt();
 	}
 	
 	@Override
@@ -54,6 +80,8 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 		}else{
 			buf.writeBoolean(false);
 		}
+		buf.writeInt(interactableSlot);
+		buf.writeInt(playerSlot);
 	}
 	
 	@Override
@@ -67,9 +95,16 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 					interactable.linkedPart = (PartInteractable) ((AEntityE_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
 				}
 			}
+		}else if(interactableSlot != -1){
+			player.getInventory().addStack(interactable.inventory.get(interactableSlot));
+		}else if(playerSlot != -1){
+			WrapperInventory playerInventory = player.getInventory();
+			playerInventory.decrementSlot(playerSlot, interactable.addStackToInventory(playerInventory.getStackInSlot(playerSlot)));
 		}else{
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
 				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting, player));
+			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+				InterfaceGUI.openGUI(new GUIInteractableCrate(interactable, player));
 			}
 		}
 		return true;

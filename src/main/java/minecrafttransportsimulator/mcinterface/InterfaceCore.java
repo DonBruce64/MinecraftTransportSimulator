@@ -101,7 +101,6 @@ public class InterfaceCore{
 	 */
 	public static WrapperTileEntity getFakeTileEntity(String type, WrapperWorld world, WrapperNBT data, int inventoryUnits){
 		switch(type){
-			case("chest") : return new WrapperTileEntity.WrapperEntityChest(world, data, inventoryUnits);
 			case("furnace") : return new WrapperTileEntity.WrapperEntityFurnace(world, data);
 			case("brewing_stand") : return new WrapperTileEntity.WrapperEntityBrewingStand(world, data);
 			default : return null;

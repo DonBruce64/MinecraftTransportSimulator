@@ -1,25 +1,31 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperTileEntity;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.inventory.ItemStackHelper;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 
 public final class PartInteractable extends APart{
 	private final WrapperTileEntity interactable;
-	public final WrapperInventory inventory;
+	public final NonNullList<ItemStack> inventory;
 	public final FluidTank tank;
 	public PartInteractable linkedPart;
 	public String jerrycanFluid;
@@ -28,8 +34,8 @@ public final class PartInteractable extends APart{
 	public PartInteractable(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
 		switch(definition.interactable.interactionType){
-			case CRATE: this.interactable = InterfaceCore.getFakeTileEntity("chest", world, data, definition.interactable.inventoryUnits*9); break;
-			case BARREL: this.interactable = null; break;
+			case CRATE: this.interactable = null;  break;
+			case BARREL: this.interactable = null;; break;
 			case CRAFTING_TABLE: this.interactable = null; break;
 			case FURNACE: this.interactable = InterfaceCore.getFakeTileEntity("furnace", world, data, 0); break;
 			case BREWING_STAND: this.interactable = InterfaceCore.getFakeTileEntity("brewing_stand", world, data, 0); break;
@@ -37,18 +43,19 @@ public final class PartInteractable extends APart{
 			case CRAFTING_BENCH: this.interactable = null; break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
-		this.inventory = interactable != null ? interactable.getInventory() : null;
-		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data.getDataOrNew("tank"), definition.interactable.inventoryUnits*10000) : null;
+		this.inventory = NonNullList.<ItemStack>withSize((int) (definition.interactable.inventoryUnits*9F), ItemStack.EMPTY);
+		ItemStackHelper.loadAllItems(data.tag, inventory);
+		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000) : null;
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	
 	@Override
 	public boolean interact(WrapperPlayer player){
 		if(!entityOn.locked){
-			if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
+			if(definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
+				player.sendPacket(new PacketPartInteractable(this));
+			}else if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
-			}else if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
-				InterfacePacket.sendToAllClients(new PacketPartInteractable(this));
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 				entityOn.removePart(this, null);
 				WrapperNBT data = new WrapperNBT();
@@ -139,65 +146,107 @@ public final class PartInteractable extends APart{
 	
 	public int getInventoryCount(){
 		int count = 0;
-		if(inventory != null){
-			for(int i=0; i<inventory.getSize(); ++i){
-				if(inventory.getItemInSlot(i) != null){
-					++count;
-				}
+		for(ItemStack stack : inventory){
+			if(!stack.isEmpty()){
+				++count;
 			}
 		}
 		return count;
 	}
 	
 	public double getInventoryPercent(){
-		if(inventory != null){
-			int count = 0;
-			for(int i=0; i<inventory.getSize(); ++i){
-				if(inventory.getItemInSlot(i) != null){
-					++count;
-				}
-			}
-			return count/(double)inventory.getSize();
-		}else if(tank != null){
+		if(tank != null){
 			return tank.getFluidLevel()/tank.getMaxLevel();
 		}else{
-			return 0;
+			return getInventoryCount()/(double)inventory.size();
 		}
 	}
 	
 	public int getInventoryCapacity(){
-		if(inventory != null){
-			return inventory.getSize();
-		}else if(tank != null){
+		if(tank != null){
 			return tank.getMaxLevel()/1000;
 		}else{
-			return 0;
+			return inventory.size();
 		}
 	}
 	
 	public double getInventoryWeight(){
-		if(inventory != null){
-			return inventory.getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
-		}else if(tank != null){
+		if(tank != null){
 			return tank.getWeight();
 		}else{
-			return 0;
+			return getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
 		}
 	}
 	
+	/**
+	 *  Tries to add the passed-in stack to this inventory.  Removes as many items from the
+	 *  stack as possible, but may or may not remove all of them.  As such, the actual number of items
+	 *  removed is returned.
+	 */
+	public int addStackToInventory(ItemStack stackToAdd){
+		int priorCount = stackToAdd.getCount();
+		for(int i=0; i<inventory.size() && !stackToAdd.isEmpty(); ++i){
+			ItemStack stack = inventory.get(i);
+			if(stack.isEmpty()){
+				inventory.set(i, stackToAdd.copy());
+				stackToAdd.setCount(0);
+			}else if(stackToAdd.isItemEqual(stack) && (stackToAdd.hasTagCompound() ? stackToAdd.getTagCompound().equals(stack.getTagCompound()) : !stack.hasTagCompound())){
+				int amountToAdd = stack.getMaxStackSize() - stack.getCount();
+				stack.grow(amountToAdd);
+				stackToAdd.shrink(amountToAdd);
+			}
+		}
+		return priorCount - stackToAdd.getCount();
+	}
+	
+	/**
+	 *  Gets the explosive power of this part.  Used when it is blown up or attacked.
+	 *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
+	 *  that fuel-containing items are stable enough to not blow up when this container is hit.
+	 */
 	public double getExplosiveContribution(){
-		if(inventory != null){
-			return inventory.getExplosiveness();
-		}else if(tank != null){
+		if(tank != null){
 			return tank.getExplosiveness();
 		}else{
-			return 0;
+			double explosivePower = 0;
+			for(ItemStack stack : inventory){
+				Item item = stack.getItem();
+				if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemPart){
+					ItemPart part = (ItemPart) ((BuilderItem) item).item;
+					if(part.definition.bullet != null){
+						double blastSize = part.definition.bullet.blastStrength == 0 ? part.definition.bullet.diameter/10D : part.definition.bullet.blastStrength;
+						explosivePower += stack.getCount()*blastSize/10D;
+					}
+				}
+			}
+			return explosivePower;
 		}
+	}
+	
+	/**
+	 * Gets the weight of this inventory.
+	 */
+	public float getInventoryWeight(Map<String, Double> heavyItems){
+		float weight = 0;
+		for(ItemStack stack : inventory){
+			if(stack != null){
+				double weightMultiplier = 1.0;
+				for(String heavyItemName : heavyItems.keySet()){
+					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
+						weightMultiplier = heavyItems.get(heavyItemName);
+						break;
+					}
+				}
+				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
+			}
+		}
+		return weight;
 	}
 	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
+		ItemStackHelper.saveAllItems(data.tag, inventory);
 		if(interactable != null){
 			interactable.save(data);
 		}else if(tank != null){

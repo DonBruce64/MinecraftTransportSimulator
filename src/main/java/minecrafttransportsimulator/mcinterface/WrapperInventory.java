@@ -1,10 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.Map;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
@@ -41,10 +38,10 @@ public class WrapperInventory{
 	}
 	
 	/**
-	 *  Removes a single item from the passed-in slot.
+	 *  Removes the specified number of items from the passed-in slot.
 	 */
-	public void decrementSlot(int slot){
-		inventory.getStackInSlot(slot).setCount(inventory.getStackInSlot(slot).getCount() - 1);
+	public void decrementSlot(int slot, int qty){
+		inventory.getStackInSlot(slot).setCount(inventory.getStackInSlot(slot).getCount() - qty);
 		inventory.markDirty();
 	}
 
@@ -203,47 +200,5 @@ public class WrapperInventory{
 				removeStack(stack, material.qty);
 			}
 		}
-		inventory.markDirty();
-	}
-	
-	/**
-	 * Gets the weight of this inventory.
-	 */
-	public float getInventoryWeight(Map<String, Double> heavyItems){
-		float weight = 0;
-		for(int i=0; i<inventory.getSizeInventory(); ++i){
-			ItemStack stack = inventory.getStackInSlot(i);
-			if(stack != null){
-				double weightMultiplier = 1.0;
-				for(String heavyItemName : heavyItems.keySet()){
-					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
-						weightMultiplier = heavyItems.get(heavyItemName);
-						break;
-					}
-				}
-				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
-			}
-		}
-		return weight;
-	}
-	
-	/**
-	 *  Gets the explosive power of this inventory.  Used when this container is blown up.
-	 *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
-	 *  that fuel-containing items are stable enough to not blow up when this container is hit.
-	 */
-	public double getExplosiveness(){
-		double explosivePower = 0;
-		for(int i=0; i<getSize(); ++i){
-			AItemBase item = getItemInSlot(i);
-			if(item instanceof ItemPart){
-				ItemPart part = ((ItemPart) item);
-				if(part.definition.bullet != null){
-					double blastSize = part.definition.bullet.blastStrength == 0 ? part.definition.bullet.diameter/10D : part.definition.bullet.blastStrength;
-					explosivePower += getStackInSlot(i).getCount()*blastSize/10D;
-				}
-			}
-		}
-		return explosivePower;
 	}
 }
