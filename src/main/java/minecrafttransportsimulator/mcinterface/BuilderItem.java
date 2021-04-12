@@ -213,8 +213,8 @@ public class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
-					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID);
+				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(tabID) != null){
+					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
 					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
 				}else{
 					//TODO remove this when all packs use the new system.
