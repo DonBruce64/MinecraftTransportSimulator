@@ -91,6 +91,9 @@ public final class LegacyCompatSystem{
 			if(definition.general.type.equals("plane") || definition.general.type.equals("blimp") || definition.general.type.equals("helicopter")){
 				definition.motorized.isAircraft = true;
 			}
+			if(definition.general.type.equals("blimp")){
+				definition.motorized.isBlimp = true;
+			}
 			definition.general.type = null;
 		}
 		
