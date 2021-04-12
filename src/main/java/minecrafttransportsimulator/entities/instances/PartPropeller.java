@@ -73,7 +73,11 @@ public class PartPropeller extends APart{
 		
 		//Adjust angular position and velocity.
 		if(connectedEngine.propellerGearboxRatio != 0){
-			angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
+			if(connectedEngine.currentGear > 0){
+				angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
+			}else{
+				angularVelocity = (float) (-connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
+			}
 		}else if(angularVelocity > .01){
 			angularVelocity -= 0.01;
 		}else if(angularVelocity < -.01){
@@ -149,6 +153,9 @@ public class PartPropeller extends APart{
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
 			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(localAngles.copy().add(entityOn.angles));
+			if(connectedEngine.currentGear < 0){
+				propellerThrustAxis.multiply(-1);
+			}
 			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft

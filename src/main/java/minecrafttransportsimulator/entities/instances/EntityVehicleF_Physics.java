@@ -290,13 +290,6 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 			//Get the track angle.  This is used for control surfaces.
 			trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));
 			
-			//Get the lift coefficients and states for control surfaces.
-			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
-			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector))), 2);
-			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
-			
 			//Set blimp-specific states before calculating forces.
 			if(definition.motorized.isBlimp){
 				//Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
@@ -307,9 +300,9 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 					rudderCooldown = aileronCooldown;
 				}
 				
-				//If the throttle is idle, and we have the brake pressed at a slow speed, stop the blimp.
+				//If we have the brake pressed at a slow speed, stop the blimp.
 				//This is needed to prevent runaway blimps.
-				if(throttle == 0 && Math.abs(velocity) < 0.15 && (brake > 0 || parkingBrakeOn)){
+				if(Math.abs(velocity) < 0.15 && (brake > 0 || parkingBrakeOn)){
 					motion.x = 0;
 					motion.z = 0;
 					thrustForce.set(0D, 0D, 0D);
@@ -317,8 +310,18 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				}
 			}
 			
+			//Get the lift coefficients and states for control surfaces.
+			double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector)));
+			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
+			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
+			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
+			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - yawAngleDelta, 2);
+			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
+			
 			//Get the drag coefficient and force.
-			if(definition.motorized.isAircraft){
+			if(definition.motorized.isBlimp){
+				dragCoeff = 0.004F*Math.pow(Math.abs(yawAngleDelta), 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
+			}else if(definition.motorized.isAircraft){
 				//Aircraft are 0.03 by default, or whatever is specified.
 				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
 			}else{
@@ -378,18 +381,24 @@ public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
 				//Roll and pitch are applied only if we aren't level.
 				//This only happens if we fall out of the sky and land on the ground and tilt.
 				if(angles.z > 0){
-					aileronTorque = -Math.min(0.5F, angles.z)*currentMass;
+					aileronTorque = -Math.min(0.5F, angles.z)*currentMass/100;
 				}else if(angles.z < 0){
-					aileronTorque = -Math.max(-0.5F, angles.z)*currentMass;
+					aileronTorque = -Math.max(-0.5F, angles.z)*currentMass/100;
 				}else{
 					aileronTorque = 0;
 				}
 				if(angles.x > 0){
-					elevatorTorque = -Math.min(0.5F, angles.x)*currentMass;
+					elevatorTorque = -Math.min(0.5F, angles.x)*currentMass/100;
 				}else if(angles.x < 0){
-					elevatorTorque = -Math.max(-0.5F, angles.x)*currentMass;
+					elevatorTorque = -Math.max(-0.5F, angles.x)*currentMass/100;
 				}else{
 					elevatorTorque = 0;
+				}
+				
+				//If we are turning with the rudder, don't let us heel out of line easily.
+				//Rudder force should be minimal for blimps due to their moment of inertia.
+				if(rudderTorque*rudderAngle <= 0){
+					rudderTorque = 0;
 				}
 			}
 			
