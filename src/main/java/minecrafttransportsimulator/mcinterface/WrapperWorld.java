@@ -40,7 +40,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.init.Blocks;
@@ -387,46 +386,6 @@ public class WrapperWorld{
 				WrapperEntity.getWrapperFor(entity).attack(damage);
 			}
 			return null;
-		}
-	}
-	
-	/**
-	 *  Moves all entities that collide with the passed-in bounding boxes by the passed-in offset.
-	 *  Offset is determined by the passed-in vector, and the passed-in angle of said vector.
-	 *  This allows for angular movement as well as linear.
-	 */
-	public void moveEntities(List<BoundingBox> boxesToCheck, Point3d intialPosition, Point3d initalRotation, Point3d linearMovement, Point3d angularMovement){
-		List<Entity> movedEntities = new ArrayList<Entity>();
-		for(BoundingBox box : boxesToCheck){
-			//Check if we collide with any entities.
-			//We expand the passed-in box by 0.25 in the Y direction to "grab" any entities that might be above us.
-			for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert().expand(0, 0.25, 0))){
-				//Don't move riding entities or our own builders, or entities we've already moved.
-				if(!movedEntities.contains(entity)){
-					if(!(entity instanceof BuilderEntity) && entity.getRidingEntity() == null){
-						AxisAlignedBB entityBox = entity.getEntityBoundingBox();
-						//If the entity is within 0.5 units of the top of the box, we can move them.
-						//If not, they are just colliding and not riding the vehicle and we should leave them be.
-						double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY;
-						if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (entity.motionY < 0 || entity.motionY < entityBottomDelta)){
-							//Get how much the vehicle moved the collision box the entity collided with so we know how much to move the entity.
-							//This lets entities "move along" with vehicles when touching a collision box.
-							Point3d entityDeltaOffset = new Point3d(entity.posX - intialPosition.x, entity.posY - intialPosition.y, entity.posZ - intialPosition.z);
-							Point3d vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
-							
-							//Apply motions to move entity, and add them to the moved entity list.
-							entity.move(MoverType.SELF, vehicleBoxMovement.x, vehicleBoxMovement.y + entityBottomDelta, vehicleBoxMovement.z);
-							entity.rotationYaw += -angularMovement.y;
-							movedEntities.add(entity);
-							
-							//Set entity as on ground to allow them to jump on the collision box.
-							//Also set fallDistance to 0 to prevent damage.
-							entity.onGround = true;
-							entity.fallDistance = 0;
-						}
-					}
-				}
-			}
 		}
 	}
 	

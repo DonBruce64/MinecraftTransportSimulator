@@ -13,7 +13,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 
 /**A GUI that is used to interface intractable parts.  Displays the player's items on the bottom,
  * and the items in the parts in the top.  Works a bit differently than the MC GUIs, as it

@@ -657,13 +657,6 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 			}
 		}
 		
-		//After all movement is calculated, try and move players on hitboxes.
-		//Note that we need to interpolate the delta here based on actual movement, so don't use the vehicle motion!
-		//Also note we use the entire hitbox set, not just the block hitboxes.
-		if(!motionApplied.isZero() || !rotationApplied.isZero()){
-			world.moveEntities(allCollisionBoxes, position, angles, motionApplied, rotationApplied);
-		}
-		
 		//Now add actual position and angles.
 		position.add(motionApplied);
 		angles.add(rotationApplied);
