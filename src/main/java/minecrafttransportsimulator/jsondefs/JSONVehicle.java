@@ -62,7 +62,7 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
     	public int gearSequenceDuration;
     	
-    	@JSONDescription("The amount of steering force output for cars. The value functions between -1 and 1, with 1 being full steering force at any speed and 0 being normal MTS steering force.")
+    	@JSONDescription("The amount of steering force output for cars. The value functions between 0 and 1, with 1 being full steering force at any speed and 0 being normal MTS steering force.")
         public float downForce;
 	
     	@JSONDescription("Controls the amount of spinning force a vehicle has while skidding. Can be set to negative for understeer. In most applications, it is ideal to use this in combination with downForce. anything under 8 or 9 should be good, except for specific cases.")
