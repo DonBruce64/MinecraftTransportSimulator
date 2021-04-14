@@ -277,6 +277,14 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					vectorDelta = 180 + vectorDelta;
 				}
 			}
+			if (this.towedByVehicle == null){
+				double overSteerForce = velocity;
+				//used to reduce overSteer force at low speeds to reduce jank
+				if (overSteerForce >= 1){
+					overSteerForce = 1;
+				}
+				rotation.y = rotation.y + (crossProduct.y * definition.motorized.overSteer) * (overSteerForce - (definition.motorized.overSteer / 12));
+			}
 			
 			//If we are offset, adjust our angle.
 			if(Math.abs(vectorDelta) > 0.001){
@@ -443,7 +451,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 				double turningForce = steeringAngle/turningDistance;
 				//Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
 				if(groundVelocity > 0.35D){
-					turningForce *= Math.pow(0.25F, (groundVelocity - 0.35D)) + (groundVelocity * (definition.motorized.downForce / 100));
+					turningForce *= Math.pow(0.3F, (groundVelocity*(1 - definition.motorized.downForce) - 0.35D));
 				}
 				//Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
 				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
