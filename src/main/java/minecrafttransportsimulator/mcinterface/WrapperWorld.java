@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -42,6 +43,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.INpc;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -62,6 +64,9 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -71,6 +76,7 @@ import net.minecraftforge.common.IPlantable;
  *
  * @author don_bruce
  */
+@EventBusSubscriber
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	
@@ -250,10 +256,12 @@ public class WrapperWorld{
 	 *  Spawns the entity into the world.
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
-		BuilderEntity builder = new BuilderEntity(entity.world.world);
+		BuilderEntityExisting builder = new BuilderEntityExisting(entity.world.world);
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		builder.entity = entity;
 		world.spawnEntity(builder);
+		//Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
+		builder.loadedFromNBT = true;
     }
 	
 	/**
@@ -265,7 +273,7 @@ public class WrapperWorld{
 	 *  Note that if this is called on clients, then this method will not attack
 	 *  any entities. Instead, it will return a map of all entities that could have
 	 *  been attacked with the bounding boxes attacked if they are of type 
-	 *  {@link BuilderEntity} (returned in wrapper form) as the value and the key being the boxes hit.
+	 *  {@link BuilderEntityExisting} (returned in wrapper form) as the value and the key being the boxes hit.
 	 *  This is because attacking cannot be done on clients, but it may be useful to 
 	 *  know what entities could have been attacked should the call have been made on a server.
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
@@ -302,8 +310,8 @@ public class WrapperWorld{
 		Iterator<Entity> iterator = collidedEntities.iterator();
 		while(iterator.hasNext()){
 			Entity mcEntityCollided = iterator.next();
-			if(mcEntityCollided instanceof BuilderEntity){
-				AEntityB_Existing entityAttacked = ((BuilderEntity) mcEntityCollided).entity;
+			if(mcEntityCollided instanceof BuilderEntityExisting){
+				AEntityB_Existing entityAttacked = ((BuilderEntityExisting) mcEntityCollided).entity;
 				if(damage.damgeSource != null){
 					if(damage.damgeSource.equals(entityAttacked)){
 						//Don't attack ourselves.
@@ -348,8 +356,8 @@ public class WrapperWorld{
 			}else{
 				if(damage.damgeSource != null){
 					Entity ridingEntity = mcEntityCollided.getRidingEntity();
-					if(ridingEntity instanceof BuilderEntity){
-						AEntityB_Existing internalEntity = ((BuilderEntity) ridingEntity).entity;
+					if(ridingEntity instanceof BuilderEntityExisting){
+						AEntityB_Existing internalEntity = ((BuilderEntityExisting) ridingEntity).entity;
 						if(damage.damgeSource.equals(internalEntity)){
 							//Don't attack riders of the source of the damage.
 							iterator.remove();
@@ -914,6 +922,19 @@ public class WrapperWorld{
 	public void spawnExplosion(Point3d location, double strength, boolean flames){
 		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
 	}
+	
+	/**
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     * Also remove this wrapper from the created lists, as it's invalid.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	AEntityA_Base.removaAllEntities(WrapperWorld.getWrapperFor(event.getWorld()));
+    	worldWrappers.remove(event.getWorld());
+    	for(EntityPlayer player : event.getWorld().playerEntities){
+    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());
+    	}
+    }
 	
 	/**
 	 *  Class used to interface with world saved data methods.

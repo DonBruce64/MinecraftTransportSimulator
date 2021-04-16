@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,11 +15,12 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.mcinterface.BuilderEntity;
-import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
+import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -26,7 +28,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
@@ -36,7 +37,6 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -60,40 +60,33 @@ public class InterfaceEventsModelLoader{
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the global entity rendering class.
-		RenderingRegistry.registerEntityRenderingHandler(BuilderEntity.class, new IRenderFactory<BuilderEntity>(){
+		RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.class, new IRenderFactory<BuilderEntityRenderForwarder>(){
 			@Override
-			public Render<? super BuilderEntity> createRenderFor(RenderManager manager){
-			return new Render<BuilderEntity>(manager){
+			public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager){
+			return new Render<BuilderEntityRenderForwarder>(manager){
 				@Override
-				protected ResourceLocation getEntityTexture(BuilderEntity builder){
+				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
 				}
 				
 				@Override
-				public void doRender(BuilderEntity builder, double x, double y, double z, float entityYaw, float partialTicks){
-					if(builder.entity != null && builder.entity instanceof AEntityC_Definable){
-						if(builder.renderData.shouldRender()){
-							AEntityC_Definable<?> internalEntity = ((AEntityC_Definable<?>) builder.entity);
-							internalEntity.getRenderer().render(internalEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+				public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks){
+					//Get all entities in the world, and render them manually for this one builder.
+					//Only do this if the player the builder is following is the client player.
+					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing)){
+						Collection<AEntityA_Base> entities = AEntityA_Base.getEntities(WrapperWorld.getWrapperFor(builder.world));
+						if(entities != null){
+							for(AEntityA_Base entity : entities){
+								if(entity instanceof AEntityC_Definable){
+									AEntityC_Definable definableEntity = (AEntityC_Definable<?>) entity;
+									definableEntity.getRenderer().render(definableEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+								}
+							}
 						}
 					}
 				}
 			};
 		}});
-		
-		//Register the TESR wrapper.
-		ClientRegistry.bindTileEntitySpecialRenderer(BuilderTileEntity.class, new TileEntitySpecialRenderer<BuilderTileEntity>(){
-			@Override
-			public void render(BuilderTileEntity builder, double x, double y, double z, float partialTicks, int destroyStage, float alpha){
-				if(builder.tileEntity != null){
-					if(builder.renderData.shouldRender()){
-						if(!builder.getWorld().isAirBlock(builder.getPos())){
-							builder.tileEntity.getRenderer().render(builder.tileEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
-						}
-					}
-				}
-			}
-		});
 		
 		//Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
 		//FAR easier than trying to use the bloody bakery system.

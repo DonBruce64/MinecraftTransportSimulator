@@ -312,11 +312,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	public boolean rotateToBlock(){
-		return false;
-	}
-	
-	@Override
 	public boolean translateToSlabs(){
 		return false;
 	}

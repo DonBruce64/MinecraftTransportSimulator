@@ -34,7 +34,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -254,14 +253,14 @@ public class BuilderBlock extends Block{
     @Override
     @SuppressWarnings("deprecation")
     public boolean isOpaqueCube(IBlockState state){
-    	//If this is opaque, we block light.  None of our blocks are opaque.
+    	//If this is opaque, we block light.  None of our blocks are opaque and block light.
         return false;
     }
     
     @Override
     @SuppressWarnings("deprecation")
     public boolean isFullCube(IBlockState state){
-    	//If this is a full cube, we do culling on faces.  None of our blocks are full cubes.
+    	//If this is a full cube, we do culling on faces and potentially connections.  None of our blocks are full cubes.
         return false;
     }
     
@@ -275,26 +274,8 @@ public class BuilderBlock extends Block{
     @Override
     @SuppressWarnings("deprecation")
     public EnumBlockRenderType getRenderType(IBlockState state){
-    	//Handles if we render a block model or not.
-        return mcBlock instanceof IBlockTileEntity<?> ? EnumBlockRenderType.ENTITYBLOCK_ANIMATED : EnumBlockRenderType.MODEL;
-    }
-    
-  	@Override
-  	public BlockRenderLayer getRenderLayer(){
-  		//Gets the block layer.  Needs to be CUTOUT so textures with alpha in them render.
-  		return BlockRenderLayer.CUTOUT;
-  	}
-  	
-  	@Override
-  	public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos){
-  		//Gets the light level.  We need to override this as light level can change.
-  		if(mcBlock instanceof IBlockTileEntity){
-  			BuilderTileEntity<?> builder = (BuilderTileEntity<?>) world.getTileEntity(pos);
-  			if(builder != null && builder.tileEntity != null){
-  				return (int) (builder.tileEntity.getLightProvided()*15F);
-  			}
-  		}
-        return super.getLightValue(state, world, pos);
+    	//Don't render this block.  We manually render via the TE.
+        return EnumBlockRenderType.INVISIBLE;
     }
   	
   	/**

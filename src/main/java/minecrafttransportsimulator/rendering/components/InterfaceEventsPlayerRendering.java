@@ -11,7 +11,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.mcinterface.BuilderEntity;
+import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
@@ -67,8 +67,8 @@ public class InterfaceEventsPlayerRendering{
     	}
     	
     	//If we are riding an entity, adjust seating.
-    	if(player.getRidingEntity() instanceof BuilderEntity){
-        	AEntityD_Interactable<?> ridingEntity = (AEntityD_Interactable<?>) ((BuilderEntity) player.getRidingEntity()).entity;
+    	if(player.getRidingEntity() instanceof BuilderEntityExisting){
+        	AEntityD_Interactable<?> ridingEntity = (AEntityD_Interactable<?>) ((BuilderEntityExisting) player.getRidingEntity()).entity;
         	float playerWidthScale = 1.0F;
         	float playerHeightScale = 1.0F;
         	GL11.glPushMatrix();
@@ -170,8 +170,8 @@ public class InterfaceEventsPlayerRendering{
 		Point3d leftArmAngles = null;
 		
 		//Get riding entity.
-		if(player.getRidingEntity() instanceof BuilderEntity){
-			ridingEntity = ((BuilderEntity) player.getRidingEntity()).entity;
+		if(player.getRidingEntity() instanceof BuilderEntityExisting){
+			ridingEntity = ((BuilderEntityExisting) player.getRidingEntity()).entity;
 		}
     	
     	//Reset limb states to normal.
@@ -253,7 +253,7 @@ public class InterfaceEventsPlayerRendering{
     	}
     	
     	//Pop the final matrix.
-    	if(player.getRidingEntity() instanceof BuilderEntity){
+    	if(player.getRidingEntity() instanceof BuilderEntityExisting){
     		GL11.glPopMatrix();
         }
     }

@@ -210,7 +210,7 @@ public class WrapperPlayer extends WrapperEntity{
         if(event.phase.equals(Phase.END)){
     		if(event.side.isServer()){
     			//If we are on the integrated server, and riding a vehicle, reduce render height.
-    			if(event.player.getRidingEntity() instanceof BuilderEntity && ((BuilderEntity) event.player.getRidingEntity()).entity instanceof EntityVehicleF_Physics){
+    			if(event.player.getRidingEntity() instanceof BuilderEntityExisting && ((BuilderEntityExisting) event.player.getRidingEntity()).entity instanceof EntityVehicleF_Physics){
             		WorldServer serverWorld = (WorldServer) event.player.world;
             		if(serverWorld.getMinecraftServer().isSinglePlayer()){
         	    		//If default render distance is 0, we must have not set it yet.
@@ -231,6 +231,12 @@ public class WrapperPlayer extends WrapperEntity{
         	    			serverWorld.getPlayerChunkMap().setPlayerViewRadius(defaultRenderDistance);
         	    		}
         	    	}
+    			}
+    			
+    			//If we don't have a follower, spawn one now.
+    			if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(event.player.getUniqueID())){
+    				BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(event.player);
+    				event.player.world.spawnEntity(forwarder);
     			}
             	
     			//If we don't have an associated gun entity, spawn one now.

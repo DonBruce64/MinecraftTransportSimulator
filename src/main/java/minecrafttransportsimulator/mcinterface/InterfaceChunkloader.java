@@ -21,7 +21,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 @EventBusSubscriber
 public class InterfaceChunkloader implements LoadingCallback{
-	private static Map<BuilderEntity, Ticket> entityTickets = new HashMap<BuilderEntity, Ticket>();
+	private static Map<BuilderEntityExisting, Ticket> entityTickets = new HashMap<BuilderEntityExisting, Ticket>();
 	public static final InterfaceChunkloader INSTANCE = new InterfaceChunkloader();
 	
 	@Override
@@ -30,13 +30,13 @@ public class InterfaceChunkloader implements LoadingCallback{
 			if(modTicket.getModId().equals(MasterLoader.MODID) && ConfigSystem.configObject.general.chunkloadVehicles.value){
 				modTicket.setChunkListDepth(1);
 				if(modTicket.getType().equals(Type.ENTITY)){
-					entityTickets.put((BuilderEntity) modTicket.getEntity(), modTicket);
+					entityTickets.put((BuilderEntityExisting) modTicket.getEntity(), modTicket);
 				}
 			}
 		}
 	}
 	
-	public static void removeEntityTicket(BuilderEntity entity){
+	public static void removeEntityTicket(BuilderEntityExisting entity){
 		if(!entity.world.isRemote){
 			if(entityTickets.containsKey(entity)){
 				ForgeChunkManager.releaseTicket(entityTickets.get(entity));
@@ -49,9 +49,9 @@ public class InterfaceChunkloader implements LoadingCallback{
 	public static void onWorldUnloadEvent(WorldEvent.Unload event){
 		if(!event.getWorld().isRemote){
 			//Remove all tickets for entities in this world.
-			Iterator<BuilderEntity> iterator = entityTickets.keySet().iterator();
+			Iterator<BuilderEntityExisting> iterator = entityTickets.keySet().iterator();
 			while(iterator.hasNext()){
-				BuilderEntity builder = iterator.next();
+				BuilderEntityExisting builder = iterator.next();
 				//Not sure HOW this can be null during boot, but it can be....
 				if(builder != null){
 					if(builder.world.provider.getDimension() == event.getWorld().provider.getDimension()){
@@ -70,8 +70,8 @@ public class InterfaceChunkloader implements LoadingCallback{
 		if(!event.world.isRemote && ConfigSystem.configObject.general.chunkloadVehicles.value){
 			for(int i=0; i<event.world.loadedEntityList.size(); ++i){
 				Entity entity = event.world.loadedEntityList.get(i);
-				if(entity instanceof BuilderEntity){
-					BuilderEntity builder = (BuilderEntity) entity;
+				if(entity instanceof BuilderEntityExisting){
+					BuilderEntityExisting builder = (BuilderEntityExisting) entity;
 					if(builder.entity != null){
 						if(!builder.isDead && builder.entity.needsChunkloading()){
 							if(entityTickets.containsKey(builder)){

@@ -22,7 +22,7 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	public final List<BoundingBox> boxes;
 	public BoundingBox lastBoxRayTraced;
 	
-	public WrapperAABBCollective(BuilderEntity entity, List<BoundingBox> boxes){
+	public WrapperAABBCollective(BuilderEntityExisting entity, List<BoundingBox> boxes){
 		super(	entity.posX - entity.width/2D,
 				entity.posY - entity.height/2D,
 				entity.posZ - entity.width/2D,

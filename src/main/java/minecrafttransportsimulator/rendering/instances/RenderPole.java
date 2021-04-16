@@ -29,11 +29,6 @@ public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	}
 	
 	@Override
-	public boolean rotateToBlock(){
-		return false;
-	}
-	
-	@Override
 	public boolean translateToSlabs(){
 		return false;
 	}

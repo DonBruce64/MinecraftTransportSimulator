@@ -102,7 +102,7 @@ public class WrapperEntity{
 	 *  a vanilla entity).
 	 */
 	public AEntityD_Interactable<?> getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntity ? (AEntityD_Interactable<?>) ((BuilderEntity) entity.getRidingEntity()).entity : null;
+		return entity.getRidingEntity() instanceof BuilderEntityExisting ? (AEntityD_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity : null;
 	}
 	
 	/**
@@ -114,7 +114,7 @@ public class WrapperEntity{
 		if(entityToRide != null){
 			//Get the builder for this entity and set the player to riding it.
 			AxisAlignedBB searchBounds = new AxisAlignedBB(new BlockPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z)).grow(World.MAX_ENTITY_RADIUS);
-			for(BuilderEntity builder : getWorld().world.getEntitiesWithinAABB(BuilderEntity.class, searchBounds)){
+			for(BuilderEntityExisting builder : getWorld().world.getEntitiesWithinAABB(BuilderEntityExisting.class, searchBounds)){
 				if(entityToRide.equals(builder.entity)){
 					entity.startRiding(builder, true);
 					return;
@@ -130,7 +130,7 @@ public class WrapperEntity{
 	 *  base entity. Otherwise return null.
 	 */
 	public AEntityA_Base getBaseEntity(){
-		return entity instanceof BuilderEntity ? ((BuilderEntity) entity).entity : null;
+		return entity instanceof BuilderEntityExisting ? ((BuilderEntityExisting) entity).entity : null;
 	}
 	
 	/**
@@ -304,9 +304,9 @@ public class WrapperEntity{
 	 */
 	public void attack(Damage damage){
 		//If this entity is one of ours, just forward the damage and exit.
-		if(entity instanceof BuilderEntity){
-			if(((BuilderEntity) entity).entity instanceof AEntityD_Interactable){
-				((AEntityD_Interactable<?>) ((BuilderEntity) entity).entity).attack(damage);
+		if(entity instanceof BuilderEntityExisting){
+			if(((BuilderEntityExisting) entity).entity instanceof AEntityD_Interactable){
+				((AEntityD_Interactable<?>) ((BuilderEntityExisting) entity).entity).attack(damage);
 				return;
 			}
 		}

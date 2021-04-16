@@ -94,7 +94,12 @@ public abstract class AEntityA_Base{
 	 * Call to get all entities from the world.
 	 */
 	public static Collection<AEntityA_Base> getEntities(WrapperWorld world){
-		return createdEntities.get(world).values();
+		HashMap<Integer, AEntityA_Base> entities = createdEntities.get(world);
+		if(entities != null){
+			return entities.values();
+		}else{
+			return null;
+		}
 	}
 	
 	/**
@@ -112,6 +117,7 @@ public abstract class AEntityA_Base{
 					entityMap.get(lookupID).remove();
 				}
 			}
+			createdEntities.remove(world);
 		}
 	}
 	

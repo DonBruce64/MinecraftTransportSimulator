@@ -17,7 +17,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
-import minecrafttransportsimulator.mcinterface.BuilderEntity;
+import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
 import minecrafttransportsimulator.mcinterface.BuilderGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -71,8 +71,8 @@ public class InterfaceEventsOverlay{
     		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
     		AEntityB_Existing mousedOverEntity = null;
     		Point3d mousedOverPoint = null;
-			if(lastHit != null && lastHit.entityHit instanceof BuilderEntity){
-				mousedOverEntity = ((BuilderEntity) lastHit.entityHit).entity;
+			if(lastHit != null && lastHit.entityHit instanceof BuilderEntityExisting){
+				mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
 				mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
 			}
 			

@@ -28,7 +28,7 @@ public class BuilderBlockFakeLight extends BlockAir{
     	//Destroy ourselves if there's no entity on top of us.
     	//This prevents abandoned fake blocks.
     	for(Entity entity : world.loadedEntityList){
-    		if(entity instanceof BuilderEntity){
+    		if(entity instanceof BuilderEntityExisting){
     			if(entity.getPosition().equals(pos)){
     				return;
     			}
