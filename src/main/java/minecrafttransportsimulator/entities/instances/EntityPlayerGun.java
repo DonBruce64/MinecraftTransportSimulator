@@ -6,12 +6,14 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -176,12 +178,17 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
 				}
 				
-				//Save gun data if we stopped firing.
 				if(!world.isClient()){
+					//Save gun data if we stopped firing the prior tick.
 					if(activeGun.firing){
 						didGunFireLastTick = true;
 					}else if(!activeGun.firing && didGunFireLastTick){
 						saveGun(false);
+					}
+				}else{
+					//Check for player input.  Only do this for the main player.
+					if(player.equals(InterfaceClient.getClientPlayer())){
+						ControlSystem.controlPlayerGun(this);
 					}
 				}
 			}
