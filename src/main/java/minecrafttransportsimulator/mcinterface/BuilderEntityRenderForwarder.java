@@ -31,9 +31,10 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	public BuilderEntityRenderForwarder(World world){
 		super(world);
 		setSize(0.05F, 0.05F);
-		//Don't restore forwarders on the server.  Instead, create new ones.
 		if(!world.isRemote){
-			setDead();
+			//Need to set this so we don't try to re-load the player data.
+			//We'll then get marked dead on the next update.
+			loadedFromNBT = true;
 		}
 	}
 	
@@ -45,6 +46,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		activeFollowers.put(playerFollowing.getUniqueID(), this);
 		//Need to set this as we don't spawn this builder normally.
 		loadedFromNBT = true;
+		System.out.println(this.getPositionVector());
 	}
 	
     @Override

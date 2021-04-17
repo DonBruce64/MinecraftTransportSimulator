@@ -21,6 +21,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -64,6 +65,7 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -924,15 +926,43 @@ public class WrapperWorld{
 	}
 	
 	/**
+    * Spawn "follower" entities for the player if they don't exist already.
+    * This should be done when the player joins a world.
+    */
+   @SubscribeEvent
+   public static void on(EntityJoinWorldEvent event){
+	   if(event.getEntity() instanceof EntityPlayer && !event.getWorld().isRemote){
+		   EntityPlayer player = (EntityPlayer) event.getEntity();
+			//If we don't have a follower, spawn one now.
+			if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
+				BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
+				//Need to force spawn, as player might not yet have loaded the chunks.
+				forwarder.forceSpawn = true;
+				event.getWorld().spawnEntity(forwarder);
+			}
+       	
+			//If we don't have an associated gun entity, spawn one now.
+			if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
+	       		WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
+	       		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+	       		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
+	       		worldWrapper.spawnEntity(entity);
+			}
+	   }
+   }
+	
+	/**
      * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
      * Also remove this wrapper from the created lists, as it's invalid.
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
-    	AEntityA_Base.removaAllEntities(WrapperWorld.getWrapperFor(event.getWorld()));
-    	worldWrappers.remove(event.getWorld());
-    	for(EntityPlayer player : event.getWorld().playerEntities){
-    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());
+    	if(worldWrappers.containsKey(event.getWorld())){
+	    	AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
+	    	worldWrappers.remove(event.getWorld());
+	    	for(EntityPlayer player : event.getWorld().playerEntities){
+	    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());
+	    	}
     	}
     }
 	

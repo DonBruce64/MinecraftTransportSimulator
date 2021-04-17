@@ -91,7 +91,8 @@ public abstract class AEntityA_Base{
 	}
 	
 	/**
-	 * Call to get all entities from the world.
+	 * Call to get all entities from the world.  This may be a null list if
+	 * no entities have yet been added to the world, so keep this in mind.
 	 */
 	public static Collection<AEntityA_Base> getEntities(WrapperWorld world){
 		HashMap<Integer, AEntityA_Base> entities = createdEntities.get(world);
