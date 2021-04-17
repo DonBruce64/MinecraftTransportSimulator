@@ -8,12 +8,15 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Multimap;
+
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
+import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -22,9 +25,12 @@ import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -132,6 +138,21 @@ public class BuilderItem extends Item{
     		}
 		}
     	return EnumAction.NONE;
+    }
+	
+	@Override
+	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack){
+        Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
+        if(item instanceof ItemItem && ((ItemItem) item).definition.weapon != null && slot.equals(EntityEquipmentSlot.MAINHAND)){
+        	ItemItem weapon = (ItemItem) item;
+        	if(weapon.definition.weapon.attackDamage != 0){
+        		multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, 0));
+        	}
+        	if(weapon.definition.weapon.attackCooldown != 0){
+        		multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", 20/weapon.definition.weapon.attackCooldown, 0));
+        	}
+        }
+        return multimap;
     }
 	
 	/**

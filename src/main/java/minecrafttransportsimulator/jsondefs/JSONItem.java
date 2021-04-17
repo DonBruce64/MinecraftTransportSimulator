@@ -16,6 +16,10 @@ public class JSONItem extends AJSONItem{
 	@JSONDescription("Food-specific item section.")
 	public JSONFood food;
 	
+	@JSONRequired(dependentField="type", dependentValues={"weapon"}, subField="general")
+	@JSONDescription("Weapon-specific item section.")
+	public JSONWeapon weapon;
+	
 	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
 	@JSONDescription("Booklet-specific item section.")
 	public JSONBooklet booklet;
@@ -71,5 +75,13 @@ public class JSONItem extends AJSONItem{
     	
     	@JSONDescription("A optional list of effects that this food item provides.")
     	public List<JSONPotionEffect> effects;
+    }
+    
+    public class JSONWeapon{
+    	@JSONDescription("How much damage this weapon will inflict when it hits an entity.")
+    	public double attackDamage;
+    	
+    	@JSONDescription("How long, in ticks, between each strike of this weapon.")
+    	public double attackCooldown;
     }
 }

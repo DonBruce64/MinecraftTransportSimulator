@@ -420,6 +420,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 		BOOKLET,
 		@JSONDescription("Creates an item that can be eaten.")
 		FOOD,
+		@JSONDescription("Creates an item that can be used as a weapon.")
+		WEAPON,
 		@JSONDescription("Creates an item that works as a part scanner.")
 		SCANNER,
 		@JSONDescription("Creates an item that works as a wrench.")

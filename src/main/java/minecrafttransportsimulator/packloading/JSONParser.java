@@ -32,6 +32,7 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -398,6 +399,16 @@ public class JSONParser{
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
 					JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
 					poleDefinition.general = loadedDefinition.general;
+					break;
+				}
+				case ITEM : {
+					JSONItem itemDefinition = (JSONItem) definitionToOverride;
+					JSONItem loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					itemDefinition.general = loadedDefinition.general;
+					itemDefinition.item = loadedDefinition.item;
+					itemDefinition.booklet = loadedDefinition.booklet;
+					itemDefinition.food = loadedDefinition.food;
+					itemDefinition.weapon = loadedDefinition.weapon;
 					break;
 				}
 				default : return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
