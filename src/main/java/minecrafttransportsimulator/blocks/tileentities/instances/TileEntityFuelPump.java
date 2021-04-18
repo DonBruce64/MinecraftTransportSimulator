@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.components.IFluidTankProvider;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -18,11 +18,11 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpCon
 
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTickable, IFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;
-    private FluidTank tank;
+    private EntityFluidTank tank;
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new FluidTank(world, data, 15000);
+    	this.tank = new EntityFluidTank(world, data, 15000);
     }
 	
 	@Override
@@ -97,7 +97,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	}
 	
 	@Override
-	public FluidTank getTank(){
+	public EntityFluidTank getTank(){
 		return tank;
 	}
 	

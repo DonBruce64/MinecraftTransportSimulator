@@ -117,7 +117,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 			//Spawn particles, if we aren't paused and this is the main render pass.
 			if(!blendingEnabled && !InterfaceClient.isGamePaused()){
-				entity.spawnParticles();
+				entity.spawnParticles(partialTicks);
 			}
 		}
 		

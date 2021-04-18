@@ -35,10 +35,6 @@ public class JSONPart extends AJSONPartProvider{
 	@JSONDescription("Properties for guns.")
     public JSONPartGun gun;
 	
-	@JSONRequired(dependentField="type", dependentValues={"bullet"}, subField="general")
-	@JSONDescription("Properties for bullets.")
-    public JSONPartBullet bullet;
-	
 	@JSONRequired(dependentField="type", dependentValues={"interactable"}, subField="general")
 	@JSONDescription("Properties for interactables.")
     public JSONPartInteractable interactable;
@@ -73,8 +69,6 @@ public class JSONPart extends AJSONPartProvider{
 		SEAT,
 		@JSONDescription("What's a vehicle without guns?  That's right: it's a target!  Guns may either be placed on vehicles or held in the player's hand to allow them to shoot things.\nNote that if a gun is placed as a subPart of a seat or an additionalPart on a vehicle where a seat is required to place it, then the gun will be controlled by the player in the seat.  The player may then rotate the gun to the direction they are facing.  The limits of how far the gun rotates and the speed at which it rotates is dictated by both the gun's parameters, and the seat's parameters.  Should a gun be placed on a vehicle normally it will be controlled by players in seats marked as controllers.  These guns can also rotate, though, so be mindful of this when designing tanks and other such vehicles.")
 		GUN,
-		@JSONDescription("Unlike guns, bullets are pretty simple.  They only have a few parameters that define their basic properties, as the good chunk of the complex work of actually firing the bullet is done by the gun.  As to damage dealt, that is dependent on the speed and size of the bullet, and cannot be directly configured in the JSON (though some bullet types will do more damage than others).")
-		BULLET,
 		@JSONDescription("Interactable is a generic bucket for parts that can be interacted with.  These parts don't do anything to the vehicle.  Rather, they are mainly for player interaction.  They may display a GUI for the player to use, store items, or run tasks set by the player.  Exactly what they do depends on the interactionType parameter.")
 		INTERACTABLE,
 		@JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
@@ -108,9 +102,6 @@ public class JSONPart extends AJSONPartProvider{
     	public boolean isAutomatic;
 		
     	public boolean isSteamPowered;
-		
-		@JSONDescription("Should the engine spawn flames when starting?  If true, flames will be spawned at the exhaustPos on the vehicle this engine is in.  Note that if the vehicle doesn't have any exhaustPos, no flames will be spawned, even if this is set.")
-    	public boolean flamesOnStartup;
 		
 		@JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
     	public int starterPower;
@@ -165,7 +156,7 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("The efficiency of the supercharger on this engine (if any). The supercharger fuel consumption of this engine (but not the base fuel consumption) will be multiplied by this value. A value of 1 will make the supercharger add the same amount of power for its fuel consumption as adding that number to the base fuel consumption, so make sure to set it to greater than that if you want your supercharger to have any power benefits!\nThis also affects the engine wear calculations, with a value of 1 or below leaving them the same as what it would be without a supercharger. By setting this value to significantly below 1 you can simulate inefficient, gas-guzzling engines if you have a high supercharger fuel consumption, as it won't add much power but will make the engine use a lot more fuel.\nAs a final note: supercharged engines heat up faster than non-supercharged engines. A supercharger efficiency of 0 would make the calculations the same as a non-supercharged engine in this case; setting it to 1 will not make the engine heat up twice as fast. This is intended behavior, as real supercharged engines heat up faster than naturally aspirated ones even if the supercharger itself isn't very efficient.  This variable can be omitted if your engine doesn't have a supercharger.")
 		public float superchargerEfficiency;
-
+		
 		@Deprecated
     	public boolean isCrankingNotPitched;
 		
@@ -347,9 +338,6 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultYaw;
-		
-		@JSONDescription("A list of particleObjects.  If present in a gun JSON, these particles will be spawned as a bullet is fired. This allows things like gun smoke.")
-        public List<JSONParticleObject> particleObjects;
         
 		@JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
         public boolean handHeld;
@@ -361,57 +349,6 @@ public class JSONPart extends AJSONPartProvider{
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
 		public Point3d handHeldAimedOffset;
-    }
-    
-    public class JSONPartBullet{
-    	@Deprecated
-    	public String type;
-		
-    	@JSONRequired
-		@JSONDescription("A list of strings describing the bullet.  This defines how it inflicts damage on whatever it hits.")
-    	public List<String> types;
-		
-		@JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
-    	public int quantity;
-		
-		@JSONDescription("The diameter of the bullet.  This determines what guns can fire it, as well as the damage it inflicts.  Units are in mm.")
-    	public float diameter;
-		
-		@JSONDescription("The case length of the bullet.  This determines what guns can fire it, but does not affect damage.  Units are in mm.")
-    	public float caseLength;
-		
-		@JSONDescription("Only affects explosive bullets.  The damage dealt and size of the blast radius are normally determined by the diameter of the bullet, but you can override that by setting this value. A value of 1 is about equivalent to a single block of TNT. Useful if you want a little more oomph in your explosions, or if you want to tone them down.")
-    	public float blastStrength;
-		
-		@JSONDescription("How much armor this bullet can penetrate, in mm.  This allows the bullet to pass through any collision boxes with armorThickness set less than this value.  Note that as the bullet slows down, this value will decrease, so a bullet with 100 penetration may not pass through a collision box with 90 armor if it slows down enough prior to contact.")
-    	public float armorPenetration;
-		
-		@JSONDescription("How much velocity, each tick, should be deducted from the bullet's velocity.")
-    	public float slowdownSpeed;
-		
-		@JSONDescription("How long, in ticks, the bullet should keep its initial velocity. This simulates a rocket motor that is present in rockets and missiles. The bullet will not be affected by gravity or slow down until this amount of time has elapsed.")
-    	public int burnTime;
-		
-		@JSONDescription("How long, in ticks, the bullet should take to accelerate from its initial velocity to its maxVelocity (if maxVelocity is used). Note that if this is greater than burnTime, it will not continue to accelerate once burnTime has expired.")
-    	public int accelerationTime;
-		
-		@JSONDescription("The maximum velocity of this bullet, in m/s. If this and accelerationTime are used, the bullet will be spawned with the gun's muzzleVelocity + the vehicle's motion, then it will accelerate at a constant rate and reach maxVelocity when the accelerationTime is about to expire.")
-    	public int maxVelocity;
-		
-		@JSONDescription("If used and set to anything greater than 0, the bullet will have guided behavior like a missile, and turnFactor will affect how quickly it can turn. When fired, the bullet will try to find an entity or block that the player is looking at, up to 2000 blocks away. While in the air, it will constantly try to turn and fly toward the target it was given at the time of firing. A good baseline turnFactor is 1.0. Higher values will cause the bullet to turn more quickly, while values between 0 and 1 will turn more slowly.")
-    	public float turnFactor;
-		
-		@JSONDescription("If used, this defines the size of the vertical angle (in degrees), from which a guided bullet will try to approach its target. The bullet will stay level or even climb up to come down on its target on this angle. This works like a Javelin missile in Call of Duty, and it's useful for making sure that the bullet doesn't hit the ground before it reaches your target. Note that this only affects bullets where the turnFactor is > 1, and this should be a positive number.")
-    	public float angleOfAttack;
-		
-		@JSONDescription("If this is a guided bullet, it will detonate this many meters away from its target. For a non-guided bullet, it will detonate when it has a block this many meters or less in front of it. This allows things like missiles and artillery rounds that blow up in the air right above the target or the ground, ensuring that the target receives some of the blast rather than it all going into the ground. If used on a non-explosive bullet, it will not detonate, but will despawn at this distance.")
-    	public float proximityFuze;
-		
-		@JSONDescription("Causes the bullet to explode or despawn after this many ticks. This is a 'dumber' cousin of the proximityFuze, but may be useful for anti-aircraft rounds that explode in mid-air.")
-    	public int airBurstDelay;
-		
-		@JSONDescription("A list of particleObject. If present in a bullet JSON, these particles will be spawned as the bullet flies, like a rocket leaving a trail of smoke. If the bullet's type is 'smoke', these particles will just be spawned at the gun, so that the gun will create a stream of smoke.")
-    	public List<JSONParticleObject> particleObjects;
     }
     
     public class JSONPartInteractable{

@@ -12,6 +12,10 @@ public class JSONItem extends AJSONItem{
 	@JSONDescription("Properties for all items..")
 	public JSONItemGeneric item;
 	
+	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
+	@JSONDescription("Booklet-specific item section.")
+	public JSONBooklet booklet;
+	
 	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="general")
 	@JSONDescription("Food-specific item section.")
 	public JSONFood food;
@@ -19,10 +23,6 @@ public class JSONItem extends AJSONItem{
 	@JSONRequired(dependentField="type", dependentValues={"weapon"}, subField="general")
 	@JSONDescription("Weapon-specific item section.")
 	public JSONWeapon weapon;
-	
-	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
-	@JSONDescription("Booklet-specific item section.")
-	public JSONBooklet booklet;
 
     public class JSONItemGeneric{
     	@JSONDescription("The functionality to give this item.")

@@ -32,7 +32,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
+abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 
 	//External state control.
 	public static final byte MAX_BRAKE = 100;
@@ -81,7 +81,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
   	public final VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public EntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
+	public AEntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
@@ -867,7 +867,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	/**
 	 * Tries to connect the passed-in vehicle to this vehicle.
 	 */
-	public TrailerConnectionResult tryToConnect(EntityVehicleD_Moving trailer){
+	public TrailerConnectionResult tryToConnect(AEntityVehicleD_Moving trailer){
 		//Init variables.
 		boolean matchingConnection = false;
 		boolean trailerInRange = false;
@@ -933,7 +933,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	/**
 	 * Helper block for checking if two connection sets can connect.
 	 */
-	private static TrailerConnectionResult tryToConnectConnections(List<JSONConnection> firstConnections, List<JSONConnection> secondConnections, EntityVehicleD_Moving firstVehicle, EntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
+	private static TrailerConnectionResult tryToConnectConnections(List<JSONConnection> firstConnections, List<JSONConnection> secondConnections, AEntityVehicleD_Moving firstVehicle, AEntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
 		//Check to make sure wer're being fed actual connections.
 		if(firstConnections != null && secondConnections != null){
 			//Create status variables.
@@ -987,7 +987,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 	 * Hitch and hookup index should be part of our and the trailer's respective
 	 * definitions.
 	 */
-	public void changeTrailer(EntityVehicleD_Moving trailer, JSONConnection hitchConnection, JSONConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
+	public void changeTrailer(AEntityVehicleD_Moving trailer, JSONConnection hitchConnection, JSONConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
 		if(trailer == null){
 			towedVehicle.towedByVehicle = null;
 			towedVehicle.activeHookupConnection = null;
@@ -1008,7 +1008,7 @@ abstract class EntityVehicleD_Moving extends EntityVehicleC_Colliding{
 					trailer.angles.add(activeHitchPart.localAngles);
 					trailer.prevAngles.add(activeHitchPart.localAngles);
 				}
-				EntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
+				AEntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
 				while(trailerTrailer != null){
 					trailerTrailer.angles.setTo(angles);
 					trailerTrailer.prevAngles.setTo(prevAngles);

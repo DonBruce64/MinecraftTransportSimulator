@@ -1,6 +1,7 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.components;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 
 /**Interface that allows an object to contain a fluid tank.
  * Actual saving/loading of the tank is up to the object.  This interface
@@ -13,7 +14,7 @@ public interface IFluidTankProvider{
 	/**
 	 *  Gets the tank for this interface.
 	 */
-	public FluidTank getTank();
+	public EntityFluidTank getTank();
 	
 	/**
 	 *  Returns true if pipes can connect to the tank on the passed-in axis.

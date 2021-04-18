@@ -21,6 +21,9 @@ public class JSONRendering{
 	@JSONDescription("Sounds allow for, well, sounds.  Each sound block is keyed to variables that define if the sound is playing or not, how loud it it, etc.  While you can hook sounds to animations, they are rather limited in how they can be triggered and manipulated.  Sounds here allow for looping, pitch-shifting, volume control, etc.  This is where you'll want to define your sounds for engines, horns, and annoying carnival music.")
     public List<JSONSound> sounds;
 	
+	@JSONDescription("Particles are the little things spawned into the game to add a bit of flair to your model.  Think exhausts and burnout smoke, but also dirt from tires and water from outboard motors.")
+    public List<JSONParticle> particles;
+	
 
 	//Moved from old vehicle rendering classes.
     @Deprecated

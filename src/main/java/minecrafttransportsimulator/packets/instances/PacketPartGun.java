@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -32,7 +32,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 		this.bulletSubName = null;
 	}
 	
-	public PacketPartGun(PartGun gun, ItemPart bullet){
+	public PacketPartGun(PartGun gun, ItemBullet bullet){
 		super(gun);
 		this.controlPulse = false;
 		this.triggerState = false;

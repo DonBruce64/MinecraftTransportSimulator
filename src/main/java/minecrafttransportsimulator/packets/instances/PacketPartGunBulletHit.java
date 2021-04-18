@@ -5,9 +5,10 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.items.instances.ItemPart;
-import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.items.instances.ItemBullet;
+import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -28,20 +29,20 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 	private final Point3d localCenter;
 	private final Point3d globalCenter;
 	private final double bulletVelocity;
-	private final ItemPart bullet;
+	private final ItemBullet bulletItem;
 	private final int bulletNumber;
 	private final int hitEntityID;
 	private final int controllerEntityID;
 
-	public PacketPartGunBulletHit(PartGun gun, BoundingBox box, double velocity, ItemPart bullet,  int bulletNumber, WrapperEntity hitEntity, WrapperEntity controllerEntity){
+	public PacketPartGunBulletHit(PartGun gun, EntityBullet bullet, BoundingBox box, WrapperEntity hitEntity){
 		super(gun);
 		this.localCenter = box.localCenter;
 		this.globalCenter = box.globalCenter;
-		this.bulletVelocity = velocity;
-		this.bullet = bullet;
-		this.bulletNumber = bulletNumber;
+		this.bulletVelocity = bullet.velocity;
+		this.bulletItem = bullet.getItem();
+		this.bulletNumber = bullet.bulletNumber;
 		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
-		this.controllerEntityID = controllerEntity != null ? controllerEntity.getID() : -1;
+		this.controllerEntityID = gun.lastController != null ? gun.lastController.getID() : -1;
 	}
 	
 	public PacketPartGunBulletHit(ByteBuf buf){
@@ -49,7 +50,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		this.localCenter = readPoint3dFromBuffer(buf);
 		this.globalCenter = readPoint3dFromBuffer(buf);
 		this.bulletVelocity = buf.readDouble();
-		this.bullet = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
+		this.bulletItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 		this.bulletNumber = buf.readInt();
 		this.hitEntityID = buf.readInt();
 		this.controllerEntityID = buf.readInt();
@@ -61,9 +62,9 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		writePoint3dToBuffer(localCenter, buf);
 		writePoint3dToBuffer(globalCenter, buf);
 		buf.writeDouble(bulletVelocity);
-		writeStringToBuffer(bullet.definition.packID, buf);
-		writeStringToBuffer(bullet.definition.systemName, buf);
-		writeStringToBuffer(bullet.subName, buf);
+		writeStringToBuffer(bulletItem.definition.packID, buf);
+		writeStringToBuffer(bulletItem.definition.systemName, buf);
+		writeStringToBuffer(bulletItem.subName, buf);
 		buf.writeInt(bulletNumber);
 		buf.writeInt(hitEntityID);
 		buf.writeInt(controllerEntityID);
@@ -74,16 +75,15 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
-			JSONPart bulletDefinition = bullet.definition;
-			float blastSize = bulletDefinition.bullet.blastStrength == 0f ? bulletDefinition.bullet.diameter/10f : bulletDefinition.bullet.blastStrength;
+			float blastSize = bulletItem.definition.bullet.blastStrength == 0f ? bulletItem.definition.bullet.diameter/10f : bulletItem.definition.bullet.blastStrength;
 			
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
 				gun.bulletsHitOnServer.add(bulletNumber);
 				//If we are an explosive bullet, blow up at our current position.
 				//Otherwise do attack logic.
-				if(bulletDefinition.bullet.types.contains("explosive")){
-					world.spawnExplosion(globalCenter, blastSize, bulletDefinition.bullet.types.contains("incendiary"));
+				if(bulletItem.definition.bullet.types.contains(BulletType.EXPLOSIVE)){
+					world.spawnExplosion(globalCenter, blastSize, bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY));
 				}else{
 					//If we hit an entity, apply damage to them.
 					if(hitEntityID != -1){
@@ -104,15 +104,15 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 							}
 							//Create damage object and attack the entity.
 							WrapperEntity attacker = world.getEntity(controllerEntityID);
-							double damageAmount = bulletVelocity*bulletDefinition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
+							double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
 							Damage damage = new Damage("bullet", damageAmount, hitBox, gun, attacker).ignoreCooldown();
-							if(bulletDefinition.bullet.types.contains("water")){
+							if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
 								damage.isWater = true;
 							}
-							if(bulletDefinition.bullet.types.contains("incendiary")){
+							if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
 								damage.isFire = true;
 							}
-							if(bulletDefinition.bullet.types.contains("armor_piercing")){
+							if(bulletItem.definition.bullet.types.contains(BulletType.ARMOR_PIERCING)){
 								damage.ignoreArmor = true;
 							}
 							entityHit.attack(damage);
@@ -125,7 +125,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 						//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
 						//In this case, we need to simply spawn a few block particles to alert the player of a hit.
 						Point3d hitPosition = globalCenter.copy();
-						if(bulletDefinition.bullet.types.contains("water")){
+						if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
 							hitPosition.add(0, 1, 0);
 							if(world.isFire(hitPosition)){
 								world.destroyBlock(hitPosition);
@@ -134,9 +134,9 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
 							float hardnessHit = world.getBlockHardness(hitPosition);
-							if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletDefinition.bullet.diameter/20F)){
+							if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletItem.definition.bullet.diameter/20F)){
 								world.destroyBlock(hitPosition);
-							}else if(bulletDefinition.bullet.types.contains("incendiary")){
+							}else if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
 								//Couldn't break block, but we might be able to set it on fire.
 								hitPosition.add(0, 1, 0);
 								if(world.isAir(hitPosition)){

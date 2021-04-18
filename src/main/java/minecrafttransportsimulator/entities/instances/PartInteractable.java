@@ -4,9 +4,8 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
@@ -26,7 +25,7 @@ import net.minecraft.util.NonNullList;
 public final class PartInteractable extends APart{
 	private final WrapperTileEntity interactable;
 	public final NonNullList<ItemStack> inventory;
-	public final FluidTank tank;
+	public final EntityFluidTank tank;
 	public PartInteractable linkedPart;
 	public String jerrycanFluid;
 	public EntityVehicleF_Physics linkedVehicle;
@@ -45,7 +44,7 @@ public final class PartInteractable extends APart{
 		}
 		this.inventory = NonNullList.<ItemStack>withSize((int) (definition.interactable.inventoryUnits*9F), ItemStack.EMPTY);
 		ItemStackHelper.loadAllItems(data.tag, inventory);
-		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new FluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000) : null;
+		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new EntityFluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000) : null;
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	
@@ -95,7 +94,7 @@ public final class PartInteractable extends APart{
 		//Check to see if we are linked and need to send fluid to the linked tank.
 		//Only do checks on the server.  Clients get packets.
 		if(!world.isClient()){
-			FluidTank linkedTank =  null;
+			EntityFluidTank linkedTank =  null;
 			String linkedMessage = null;
 			if(linkedVehicle != null){
 				if(linkedVehicle.position.distanceTo(position) > 16){
@@ -211,10 +210,10 @@ public final class PartInteractable extends APart{
 			double explosivePower = 0;
 			for(ItemStack stack : inventory){
 				Item item = stack.getItem();
-				if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemPart){
-					ItemPart part = (ItemPart) ((BuilderItem) item).item;
-					if(part.definition.bullet != null){
-						double blastSize = part.definition.bullet.blastStrength == 0 ? part.definition.bullet.diameter/10D : part.definition.bullet.blastStrength;
+				if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
+					ItemBullet bullet = (ItemBullet) ((BuilderItem) item).item;
+					if(bullet.definition.bullet != null){
+						double blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter/10D : bullet.definition.bullet.blastStrength;
 						explosivePower += stack.getCount()*blastSize/10D;
 					}
 				}

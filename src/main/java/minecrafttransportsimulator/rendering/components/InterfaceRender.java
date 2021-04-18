@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -298,7 +299,7 @@ public class InterfaceRender{
 	 *  This is handy if you have a lot of them flying around but could care less where they are and
 	 *  don't want to hamper the server with tons of ticking entities.
 	 */
-	public static void spawnParticle(AParticle particle){
+	public static void spawnParticle(EntityParticle particle){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
 		}

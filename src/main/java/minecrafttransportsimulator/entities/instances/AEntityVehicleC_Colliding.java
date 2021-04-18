@@ -22,19 +22,18 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
+abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	
 	//Internal states.
 	private float hardnessHitThisTick = 0;
 	public double currentMass;
-	public double velocity;
 	public double axialVelocity;
 	public final Point3d headingVector = new Point3d();
 	public final Point3d verticalVector = new Point3d();
 	public final Point3d sideVector = new Point3d();
 	public final Point3d normalizedVelocityVector = new Point3d();
 	
-	public EntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
+	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 	}
 	
@@ -46,7 +45,6 @@ abstract class EntityVehicleC_Colliding extends EntityVehicleB_Rideable{
 		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
 		sideVector.setTo(verticalVector.crossProduct(headingVector));
 		normalizedVelocityVector.setTo(motion).normalize();
-		velocity = motion.length();
 		axialVelocity = Math.abs(motion.dotProduct(headingVector));
 		
 		//Update mass.

@@ -6,9 +6,9 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -16,12 +16,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.rendering.components.AParticle;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.instances.ParticleBullet;
-import minecrafttransportsimulator.rendering.instances.ParticleFlame;
-import minecrafttransportsimulator.rendering.instances.ParticleMissile;
-import minecrafttransportsimulator.rendering.instances.ParticleSuspendedSmoke;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -56,7 +50,7 @@ public class PartGun extends APart{
 	public final Point3d currentOrientation;
 	public final Point3d prevOrientation;
 	private final Point3d internalOrientation;
-	private ItemPart loadedBullet;
+	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
 	public boolean firing;
@@ -67,7 +61,7 @@ public class PartGun extends APart{
 	public int reloadTimeRemaining;
 	public int windupTimeCurrent;
 	public int windupRotation;
-	private WrapperEntity lastController;
+	public WrapperEntity lastController;
 	private long lastTimeFired;
 	private long timeToFire;
 	private final double anglePerTickSpeed;
@@ -141,8 +135,8 @@ public class PartGun extends APart{
 		//Check to see if we have any bullets in our hands.
 		//If so, try to re-load this gun with them.
 		AItemBase heldItem = player.getHeldItem();
-		if(heldItem instanceof ItemPart){
-			if(tryToReload((ItemPart) heldItem) && !player.isCreative()){
+		if(heldItem instanceof ItemBullet){
+			if(tryToReload((ItemBullet) heldItem) && !player.isCreative()){
 				player.getInventory().removeItem(heldItem, null);
 			}
 		}
@@ -365,8 +359,8 @@ public class PartGun extends APart{
 					WrapperInventory inventory = playerHolding.getInventory();
 					for(int i=0; i<inventory.getSize(); ++i){
 						AItemBase item = inventory.getItemInSlot(i);
-						if(item instanceof ItemPart){
-							if(tryToReload((ItemPart) item)){
+						if(item instanceof ItemBullet){
+							if(tryToReload((ItemBullet) item)){
 								//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
 								inventory.decrementSlot(i, 1);
 								return;
@@ -382,9 +376,8 @@ public class PartGun extends APart{
 							if(part.definition.interactable.feedsVehicles){
 								for(ItemStack stack : ((PartInteractable) part).inventory){
 									Item item = stack.getItem();
-									if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemPart){
-										
-										if(tryToReload((ItemPart) ((BuilderItem) item).item)){
+									if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
+										if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
 											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
 											stack.shrink(1);
@@ -419,16 +412,16 @@ public class PartGun extends APart{
 	 * Attempts to reload the gun with the passed-in item.  Returns true if the item is a bullet
 	 * and was loaded, false if not.  Provider methods are then called for packet callbacks.
 	 */
-	public boolean tryToReload(ItemPart part){
+	public boolean tryToReload(ItemBullet item){
 		//Only fill bullets if we match the bullet already in the gun, or if our diameter matches, or if we got a signal on the client.
 		//Also don't fill bullets if we are currently reloading bullets.
-		if(part.definition.bullet != null){
-			boolean isNewBulletValid = part.definition.bullet.diameter == definition.gun.diameter && part.definition.bullet.caseLength >= definition.gun.minCaseLength && part.definition.bullet.caseLength <= definition.gun.maxCaseLength; 
-			if((bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(part))) || world.isClient()){
+		if(item.definition.bullet != null){
+			boolean isNewBulletValid = item.definition.bullet.diameter == definition.gun.diameter && item.definition.bullet.caseLength >= definition.gun.minCaseLength && item.definition.bullet.caseLength <= definition.gun.maxCaseLength; 
+			if((bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) || world.isClient()){
 				//Make sure we don't over-fill the gun.
-				if(part.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || world.isClient()){
-					loadedBullet = part;
-					bulletsReloading = part.definition.bullet.quantity;
+				if(item.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || world.isClient()){
+					loadedBullet = item;
+					bulletsReloading = item.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
 					if(!world.isClient()){
 						InterfacePacket.sendToAllClients(new PacketPartGun(this, loadedBullet));
@@ -496,7 +489,10 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public void spawnParticles(){
+	public void spawnParticles(float partialTicks){
+		super.spawnParticles(partialTicks);
+		
+		//Spawn bullets here.  We do this to allow for the cam offsets.
 		if(timeToFire != lastTimeFired && System.currentTimeMillis() >= timeToFire && bulletsLeft > 0){
 			//Fire a bullet by spawning it with the appropriate muzzle velocity and angle.
 			//Angle is based on the current gun orientation, plus a slight fudge-factor.
@@ -527,37 +523,24 @@ public class PartGun extends APart{
 
 			//Add the bullet as a particle.
 			//If the bullet is a missile, give it a target.
-			if (loadedBullet.definition.bullet.turnFactor > 0){
-				//First find the block the controller is looking at, if possible
-				double maxDistance = 2000D;
-				Point3d lineOfSight = lastController.getLineOfSight(maxDistance);
-				Point3d blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
-				
-				//Try to find the closest entity between the controller and the block
-				//If no block was found, set target position to maxDistance in the direction of the line of sight
-				if(blockTarget != null){
-					maxDistance = lastController.getPosition().distanceTo(blockTarget);
+			if(loadedBullet.definition.bullet.turnFactor > 0){
+				//Try to find the entity the controller is looking at.
+				WrapperEntity entityTarget = world.getEntityLookingAt(lastController, 2000F);
+				if(entityTarget != null){
+					new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this, entityTarget);
 				}else{
-					blockTarget = lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D).add(lineOfSight);
+					//No entity found, try blocks.
+					Point3d lineOfSight = lastController.getLineOfSight(2000F);
+					Point3d blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+					if(blockTarget != null){
+						new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this, blockTarget);
+					}else{
+						//No block found, just fire missile off in direction facing.
+						new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this);
+					}
 				}
-				WrapperEntity entityTarget = world.getEntityLookingAt(lastController, (float) maxDistance);
-				
-				//Fire a missile with the found entity as its target, if valid
-				//Otherwise, fall back to the block target
-				if(entityTarget != null) {
-					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, entityTarget));
-				}
-				else {
-					InterfaceRender.spawnParticle(new ParticleMissile(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController, blockTarget));
-				}
-			}
-			else {
-				InterfaceRender.spawnParticle(new ParticleBullet(bulletPosition, bulletVelocity, bulletDirection, loadedBullet, this, lastController));
-			}
-			
-			//Do effects.
-			if(definition.gun.particleObjects != null){
-				spawnEffectParticles();
+			}else{
+				new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this);
 			}
 			
 			//Set last firing time to current time.
@@ -586,50 +569,6 @@ public class PartGun extends APart{
 			
 		}
 		return firingOrigin;
-	}
-	
-	/**
-	 * Helper method for spawning particles.  This spawns the smoke and other particles.
-	 * The actual bullet is spawned in {@link #spawnParticles()}.
-	 */
-	private void spawnEffectParticles(){
-		for(JSONParticleObject gunParticle : definition.gun.particleObjects){
-			//Set initial velocity to the be opposite the direction of motion in the magnitude of the defined velocity.
-			//Add a little variation to this.
-			Point3d particleVelocity = gunParticle.velocityVector.copy().multiply(1/20D/10D).rotateFine(internalOrientation);
-			particleVelocity.rotateFine(localAngles).rotateFine(entityOn.angles);
-			
-			//Get the particle's initial position.
-			Point3d particlePosition = position.copy();
-			if(gunParticle.pos != null) {
-				particlePosition.add(gunParticle.pos.copy().rotateFine(internalOrientation));
-				particlePosition.rotateFine(localAngles).rotateFine(entityOn.angles);
-			}
-
-			//Spawn the appropriate type and amount of particles.
-			//Change default values from 0 to 1.
-			if(gunParticle.quantity == 0) gunParticle.quantity = 1;
-			if(gunParticle.scale == 0f && gunParticle.toScale == 0f) gunParticle.scale = 1f;
-			AParticle currentParticle;
-			switch(gunParticle.type) {
-				case SMOKE: {
-					if(gunParticle.transparency == 0f && gunParticle.toTransparency == 0F) gunParticle.transparency = 1f;
-					for(int i=0; i<gunParticle.quantity; i++) {
-						currentParticle = new ParticleSuspendedSmoke(world, particlePosition, particleVelocity.copy(), gunParticle);
-						InterfaceRender.spawnParticle(currentParticle);
-					}
-					break;
-				}
-				case FLAME: {
-					for(int i=0; i<gunParticle.quantity; i++) {
-						currentParticle = new ParticleFlame(world, particlePosition, particleVelocity.copy().add(new Point3d(0.04*Math.random(), 0.04*Math.random(), 0.04*Math.random())), gunParticle.scale);
-						currentParticle.deltaScale = (gunParticle.toScale - currentParticle.scale) / (currentParticle.maxAge - currentParticle.age);
-						InterfaceRender.spawnParticle(currentParticle);
-					}
-					break;
-				}
-			}
-		}
 	}
 	
 	@Override

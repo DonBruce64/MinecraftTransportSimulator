@@ -2,10 +2,10 @@ package minecrafttransportsimulator.mcinterface;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.entities.components.IFluidTankProvider;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;

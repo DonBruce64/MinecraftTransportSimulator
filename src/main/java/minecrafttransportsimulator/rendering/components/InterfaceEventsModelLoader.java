@@ -64,6 +64,7 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager){
 			return new Render<BuilderEntityRenderForwarder>(manager){
+				Collection<AEntityA_Base> entities = new HashSet<AEntityA_Base>();
 				@Override
 				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
@@ -74,8 +75,11 @@ public class InterfaceEventsModelLoader{
 					//Get all entities in the world, and render them manually for this one builder.
 					//Only do this if the player the builder is following is the client player.
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing)){
-						Collection<AEntityA_Base> entities = AEntityA_Base.getEntities(WrapperWorld.getWrapperFor(builder.world));
-						if(entities != null){
+						Collection<AEntityA_Base> allEntities = AEntityA_Base.getEntities(WrapperWorld.getWrapperFor(builder.world));
+						if(allEntities != null){
+							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
+							entities.clear();
+							entities.addAll(allEntities);
 							for(AEntityA_Base entity : entities){
 								if(entity instanceof AEntityC_Definable){
 									AEntityC_Definable definableEntity = (AEntityC_Definable<?>) entity;

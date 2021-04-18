@@ -1,13 +1,16 @@
 package minecrafttransportsimulator.mcinterface;
 
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.rendering.components.AParticle;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
+import minecrafttransportsimulator.entities.instances.EntityParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.Item;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 
 /**Builder for a MC particles.  This builder doesn't do much that the default implementation
  * already does, so it's mainly a way to avoid any MC changes down the line.
@@ -15,9 +18,9 @@ import net.minecraft.util.math.AxisAlignedBB;
  * @author don_bruce
  */
 public class BuilderParticle extends Particle{
-	private final AParticle particle;
+	private final EntityParticle particle;
 	
-    public BuilderParticle(AParticle particle){
+    public BuilderParticle(EntityParticle particle){
 		super(particle.world.world, particle.position.x, particle.position.y, particle.position.z);
 		this.particle = particle;
 		this.particleMaxAge = particle.maxAge;
@@ -26,6 +29,12 @@ public class BuilderParticle extends Particle{
 		this.motionZ = particle.motion.z;
 		this.setSize(particle.getSize(), particle.getSize());
 		this.setBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
+		if(particle.definition.type.equals(ParticleType.BREAK)){
+			BlockPos belowPos = new BlockPos(particle.position.x, particle.position.y, particle.position.z);
+			IBlockState belowState = world.getBlockState(belowPos);
+			Block blockBelow = world.getBlockState(belowPos).getBlock();
+			this.setParticleTexture(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getParticleIcon(Item.getItemFromBlock(blockBelow), blockBelow.getMetaFromState(belowState)));
+		}
 	}
     
     @Override
@@ -51,7 +60,7 @@ public class BuilderParticle extends Particle{
     
     @Override
 	public int getBrightnessForRender(float partialTicks){
-        if(particle.isBright()){
+        if(particle.definition.type.equals(ParticleType.FLAME)){
 			int i = super.getBrightnessForRender(partialTicks);
 		    int k = i >> 16 & 255;
 		    return 240 | k << 16;
@@ -62,41 +71,31 @@ public class BuilderParticle extends Particle{
     
     @Override
     public int getFXLayer(){
-        return particle.getTextureIndex() == -1 ? 3 : 0;
+        return particle.definition.type.equals(ParticleType.BREAK) ? 1 : 0;
     }
     
     @Override
     public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ){
     	//Need to set rendering parameters before rendering.
-    	particleRed = particle.red;
-		particleGreen = particle.green;
-		particleBlue = particle.blue;
-		particleAlpha = particle.alpha;
+    	particleRed = particle.getRed();
+		particleGreen = particle.getGreen();
+		particleBlue = particle.getBlue();
+		particleAlpha = particle.getAlpha();
     	particleScale = particle.getScale(partialTicks);
-    	if(getFXLayer() == 0){
-	    	setParticleTextureIndex(particle.getTextureIndex());
-	    	super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
-    	}else{
-    		//Translate by the rendering offset.
-    		GL11.glPushMatrix();
-            GL11.glTranslated(
-        		prevPosX + (posX - prevPosX) * partialTicks - interpPosX,
-        		prevPosY + (posY - prevPosY) * partialTicks - interpPosY,
-        		prevPosZ + (posZ - prevPosZ) * partialTicks - interpPosZ
-        	);
-            
-            //Set brightness and render.
-    	    InterfaceRender.setLightingToPosition(particle.position);
-    	    if(particle.isBright()){
-    	    	InterfaceRender.setLightingState(false);
-    	    	particle.render(partialTicks);
-    	    	InterfaceRender.setLightingState(true);
-    	    }else{
-    	    	particle.render(partialTicks);
-    	    }
-    		
-    		//Pop the matrix.
-    		GL11.glPopMatrix();
-    	}
+    	/* Sets the packed UV index for this texture.
+		 * The packed UV index is a single integer divided by 16, with the
+		 * quotient of the value being the U value, and the remainder
+		 * being the V value.  So for example, a texture index of 22
+		 * would have a quotient of 1, and a remainder of 6, so would have
+		 * a UV of 1,6.
+		 */
+		switch(particle.definition.type){
+			case SMOKE: setParticleTextureIndex((int)(7 - 8F*particle.age/particle.maxAge)); break;//Smoke gets smaller as it ages.
+			case FLAME: setParticleTextureIndex(48); break;
+			case DRIP: setParticleTextureIndex(particle.touchingBlocks ? 113 : 112); break;//Drips become flat when they hit the ground.
+			case BUBBLE: setParticleTextureIndex(32); break;
+			case BREAK: break;//Do nothing, as breaking particles don't use the normal texture.
+		}
+    	super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
     }
 }

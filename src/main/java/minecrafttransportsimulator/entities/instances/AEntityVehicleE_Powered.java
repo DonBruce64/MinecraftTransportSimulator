@@ -1,14 +1,13 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BeaconManager;
-import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.RadioBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -24,7 +23,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.rendering.instances.ParticleMissile;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -38,7 +36,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
+abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	//External state control.
 	public boolean hornOn;
@@ -56,17 +54,17 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 	public double electricFlow;
 	public String selectedBeaconName;
 	public RadioBeacon selectedBeacon;
-	public FluidTank fuelTank;
+	public EntityFluidTank fuelTank;
 	
 	//Part maps.
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	
-	//Map containing incoming missiles, sorted by distance.
-	public final TreeMap<Double, ParticleMissile> missilesIncoming = new TreeMap<Double, ParticleMissile>();
+	//Map containing incoming missiles, sorted by distance, which is the value for this map.
+	public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
 	
-	public EntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
+	public AEntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		
 		//Load simple variables.
@@ -77,7 +75,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
-		this.fuelTank = new FluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
+		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
 		
 		//Load instruments.
 		for(int i = 0; i<definition.motorized.instruments.size(); ++i){
@@ -101,7 +99,7 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
 			for(APart part : parts){
 				if(part instanceof PartInteractable && part.definition.interactable.feedsVehicles){
-					FluidTank tank = ((PartInteractable) part).tank;
+					EntityFluidTank tank = ((PartInteractable) part).tank;
 					if(tank != null){
 						double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
 						if(amountFilled > 0){
@@ -175,18 +173,18 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		
 		//Check that missiles are still valid.
 		//If they are, update their distances. Otherwise, remove them.
-		ParticleMissile missile;
-		Iterator<Double> iterator = missilesIncoming.keySet().iterator();
-		final TreeMap<Double, ParticleMissile> tempMap = new TreeMap<Double, ParticleMissile>();
-		while(iterator.hasNext()) {
-			double dist = iterator.next();
-			missile = missilesIncoming.get(dist);
-			iterator.remove();
-			if(missile != null && missile.isValid) {
-				tempMap.put(position.distanceTo(missile.position), missile);
+		Iterator<EntityBullet> iterator = missilesIncoming.iterator();
+		while(iterator.hasNext()){
+			if(!iterator.next().isValid){
+				iterator.remove();
 			}
 		}
-		missilesIncoming.putAll(tempMap);
+		missilesIncoming.sort(new Comparator<EntityBullet>(){
+			@Override
+			public int compare(EntityBullet missle1, EntityBullet missile2){
+				return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
+			}
+		});
 	}
 	
 	@Override
@@ -324,10 +322,10 @@ abstract class EntityVehicleE_Powered extends EntityVehicleD_Moving{
 		}
 	}
 	
-	public void acquireMissile(ParticleMissile missile) {
+	public void acquireMissile(EntityBullet missile){
 		//Add this missile with its current distance
-		if(!missilesIncoming.containsValue(missile)) {
-			missilesIncoming.put(position.distanceTo(missile.position), missile);
+		if(!missilesIncoming.contains(missile)){
+			missilesIncoming.add(missile);
 		}
 	}
 	

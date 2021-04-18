@@ -1,14 +1,11 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.awt.Color;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONParticleObject;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -16,10 +13,6 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.instances.ParticleDrip;
-import minecrafttransportsimulator.rendering.instances.ParticleFlame;
-import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class PartEngine extends APart{
@@ -49,13 +42,11 @@ public class PartEngine extends APart{
 	public PartEngine linkedEngine;
 	
 	//Internal variables.
-	private boolean spawnBackfireParticles;
 	private boolean isPropellerInLiquid;
 	private boolean autoStarterEngaged;
 	private int starterLevel;
 	private int autoStarterWindDown;
 	private int shiftCooldown;
-	private long lastTimeParticleSpawned;
 	private float currentGearRatio;
 	private double lowestWheelVelocity;
 	private double desiredWheelVelocity;
@@ -73,11 +64,11 @@ public class PartEngine extends APart{
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
-	private static final float COLD_TEMP = 30F;
-	private static final float OVERHEAT_TEMP_1 = 115.556F;
-	private static final float OVERHEAT_TEMP_2 = 121.111F;
-	private static final float FAILURE_TEMP = 132.222F;
-	private static final float LOW_OIL_PRESSURE = 40F;
+	public static final float COLD_TEMP = 30F;
+	public static final float OVERHEAT_TEMP_1 = 115.556F;
+	public static final float OVERHEAT_TEMP_2 = 121.111F;
+	public static final float FAILURE_TEMP = 132.222F;
+	public static final float LOW_OIL_PRESSURE = 40F;
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
@@ -654,12 +645,8 @@ public class PartEngine extends APart{
 	
 	public void backfireEngine(){
 		//Decrease RPM and send off packet to have clients do the same.
-		//This also causes particles to spawn and sounds to play.
 		backfired = true;
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
-		if(world.isClient()){
-			spawnBackfireParticles = true;
-		}
 	}
 	
 	public void badShiftEngine(){
@@ -877,112 +864,6 @@ public class PartEngine extends APart{
 		
 		//Finally, return the force we calculated.
 		return engineForce;
-	}
-	
-	
-	//--------------------START OF ENGINE PARTICLE METHODS--------------------
-	
-	@Override
-	public void spawnParticles(){
-		//Render exhaust smoke if we have any exhausts and are running.
-		//If we are starting and have flames set, render those instead.
-		if(placementDefinition.particleObjects != null && (state.running || (definition.engine.flamesOnStartup && state.esOn))){
-			//Render a smoke for every cycle the exhaust makes.
-			//Depending on the number of positions we have, render an exhaust for every one.
-			//So for 1 position, we render 1 every 2 engine cycles (4 stroke), and for 4, we render 4.
-			//Note that the rendering is offset for multi-position points to simulate the cylinders firing
-			//in their aligned order.
-			
-			//Get timing information and particle information.
-			//Need to check for 0 cycle time if RPM is somehow 0 here.
-			long engineCycleTimeMills = (long) (2D*(1D/(rpm/60D/1000D)));
-			long currentTime = System.currentTimeMillis();
-			if(engineCycleTimeMills != 0){
-				long camTime = currentTime%engineCycleTimeMills;
-				
-				boolean singleExhaust = placementDefinition.particleObjects.size() == 1;
-				
-				//Iterate through all the exhaust positions and fire them if it is time to do so.
-				//We need to offset the time we are supposed to spawn by the cycle time for multi-point exhausts.
-				//For single-point exhausts, we only fire if we didn't fire this cycle.
-				for(JSONParticleObject particle : placementDefinition.particleObjects){
-					if(singleExhaust){
-						if(lastTimeParticleSpawned + camTime > currentTime){
-							continue;
-						}
-					}else{
-						long camOffset = engineCycleTimeMills/placementDefinition.particleObjects.size();
-						long camMin = placementDefinition.particleObjects.indexOf(particle)*camOffset;
-						long camMax = camMin + camOffset;
-						if(camTime < camMin || camTime > camMax || (lastTimeParticleSpawned > camMin && lastTimeParticleSpawned < camMax)){
-							continue;
-						}
-					}
-					
-					Point3d exhaustOffset = particle.pos.copy().rotateFine(entityOn.angles).add(entityOn.position);
-					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(entityOn.angles);
-					velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
-					velocityOffset.y = velocityOffset.y/10D;
-					velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
-					
-					Color particleColor = Color.decode(particle.color);
-					
-					if(state.running){
-						InterfaceRender.spawnParticle(new ParticleSmoke(world, exhaustOffset, velocityOffset, particleColor.getRed()/255F, particleColor.getGreen()/255F, particleColor.getBlue()/255F, particle.transparency, particle.scale));
-					}
-					if(definition.engine.flamesOnStartup && state.esOn){
-						InterfaceRender.spawnParticle(new ParticleFlame(world, exhaustOffset, velocityOffset, 1.0F));
-					}
-					lastTimeParticleSpawned = singleExhaust ? currentTime : camTime;
-				}
-			}
-		}
-		
-		//If we backfired, render a few puffs.
-		//Will be from the engine or the exhaust if we have any.
-		if(spawnBackfireParticles){
-			spawnBackfireParticles = false;
-			if(placementDefinition.particleObjects != null){
-				for(JSONParticleObject particle : placementDefinition.particleObjects){
-					Point3d exhaustOffset = particle.pos.copy().rotateFine(entityOn.angles).add(entityOn.position);
-					Point3d velocityOffset = particle.velocityVector.copy().rotateFine(entityOn.angles);
-					velocityOffset.x = velocityOffset.x/10D + 0.07 - Math.random()*0.14;
-					velocityOffset.y = velocityOffset.y/10D;
-					velocityOffset.z = velocityOffset.z/10D + 0.07 - Math.random()*0.14;
-					for(byte j=0; j<5; ++j){
-						InterfaceRender.spawnParticle(new ParticleSmoke(world, exhaustOffset, velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, particle.scale*2.5F));
-					}
-				}
-			}else{
-				for(byte i=0; i<5; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(0.07 - Math.random()*0.14, 0.15, 0.07 - Math.random()*0.14), 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
-				}
-			}
-		}
-		
-		//Render oil and fuel leak particles.
-		if(oilLeak){
-			if(entityOn.ticksExisted%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(world, position.copy(), entityOn.motion.copy(), 0.0F, 0.0F, 0.0F, 1.0F));
-			}
-		}
-		if(fuelLeak){
-			if((entityOn.ticksExisted + 5)%20 == 0){
-				InterfaceRender.spawnParticle(new ParticleDrip(world, position.copy(), entityOn.motion.copy(), 1.0F, 0.0F, 0.0F, 1.0F));
-			}
-		}
-		
-		//Render engine smoke if we're overheating.  Only for non-steam engines.
-		if(!definition.engine.isSteamPowered && temp > OVERHEAT_TEMP_1){
-			Point3d velocityOffset = entityOn.motion.copy().rotateFine(entityOn.angles);
-			velocityOffset.x = velocityOffset.x/10D + 0.02 - Math.random()*0.04;
-			velocityOffset.y = velocityOffset.y/10D;
-			velocityOffset.z = velocityOffset.z/10D + 0.02 - Math.random()*0.04;
-			InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F));
-			if(temp > OVERHEAT_TEMP_2){
-				InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), velocityOffset, 0.0F, 0.0F, 0.0F, 1.0F, 2.5F));
-			}
-		}
 	}
 	
 	@Override

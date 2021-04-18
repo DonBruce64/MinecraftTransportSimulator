@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.entities.instances;
 
 import java.util.Map;
 
@@ -22,13 +22,13 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
  *
  * @author don_bruce
  */
-public class FluidTank extends AEntityA_Base{
+public class EntityFluidTank extends AEntityA_Base{
 	private final int maxLevel;
 	private String currentFluid;
 	private double fluidLevel;
 	private double fluidDispensed;
 	
-	public FluidTank(WrapperWorld world, WrapperNBT data, int maxLevel){
+	public EntityFluidTank(WrapperWorld world, WrapperNBT data, int maxLevel){
 		super(world, data);
 		this.maxLevel = maxLevel;
 		this.currentFluid = data.getString("currentFluid");

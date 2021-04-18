@@ -95,9 +95,6 @@ public class JSONPartDefinition{
     @JSONDescription("If this part is a seat, this list of potion effects will be applied to the rider. This section works the same as the normal vehicle-based effects, but apply only to the rider of a specific seat, rather than the entire vehicle")
     public List<JSONPotionEffect> seatEffects;
     
-    @JSONDescription("A list of particleObjects.  If present, and this part is an engine, this will be used for engine exhaust particles.  As this is a list, you can specify as many or as few as you wish.  If you specify more than one, then MTS will fire each one in-time with the RPM as if it were a cylinder in the engine.  Note that backfiring smoke will be moved to this position, but overheating smoke will still spawn at the engine, as that's where it spawns in real-life.")
-    public List<JSONParticleObject> particleObjects;
-    
     @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. In general, this should only be used in the part needs to physically move, such as wheels being retracted into plane landing gear, or a gun that needs to have an offset mounting track.  However, since these objects actually move the part rather than change how it looks, there are some caveats and quirks that aren't normally present for all other animations.  They are as follows:\naddPriorOffset has no function with part movement animations.  This is because that relies of vector-based clamping, which part movement does not support.\nAs part rotation is angle-based rather than vector-based, the axis parameter is actually the angles the part will move in, not the axis the part will move around.  For simple rotations that only are applied in one axis, this has no effect on the JSON.  However, for multiple animations it may cause issues.  In particular, the order the animations are applied is key to proper function.  This is because as an animation is applied, it changes the axis for following animations.  So if you have an animation that rotates the part 90 degrees on the Y-axis, and then want to rotate it on the +X axis, you'd actually have to put in +Z rotation as the part has been rotated to a different orientation.")
     public List<JSONAnimationDefinition> animations;
     
@@ -136,6 +133,8 @@ public class JSONPartDefinition{
     public float[] exhaustVelocity;
     @Deprecated
     public List<ExhaustObject> exhaustObjects;
+    @Deprecated
+    public List<JSONParticle> particleObjects;
     
     @Deprecated
 	public class ExhaustObject{

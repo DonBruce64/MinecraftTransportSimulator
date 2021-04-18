@@ -27,11 +27,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d rotation;
 	public final Point3d prevRotation;
 	public double airDensity;
+	public double velocity;
 	
 	//Internal sound variables.
 	public final Radio radio;
 	public List<SoundInstance> sounds = new ArrayList<SoundInstance>();
 	
+	/**Constructor for synced entities**/
 	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
@@ -42,9 +44,21 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
-		
-		//Create radio.
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
+	}
+	
+	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
+	public AEntityB_Existing(WrapperWorld world, Point3d position, Point3d motion, Point3d angles){
+		super(world, null);
+		this.position = position.copy();
+		this.prevPosition = position.copy();
+		this.motion = motion.copy();
+		this.prevMotion = motion.copy();
+		this.angles = angles.copy();
+		this.prevAngles = angles.copy();
+		this.rotation = new Point3d();
+		this.prevRotation = rotation.copy();
+		this.radio = null;
 	}
 	
 	@Override
@@ -58,6 +72,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		prevAngles.setTo(angles);
 		prevRotation.setTo(rotation);
 		airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+		velocity = motion.length();
 	}
 	
 	@Override
@@ -85,8 +100,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	/**
 	 *  Returning false here will prevent this entity's positional data from being saved during saving
 	 *  operations.  Normally you want this, but if your entity dynamically calculates its position based
-	 *  on other data, such as an entity on another entity, then you may not care for this data and can
-	 *  return false.  This will save on disk space and networking if you have a lot of entities.
+	 *  on other data, such as another entity, then you may not care for this data and can return false.
+	 *  This will save on disk space and networking if you have a lot of entities.
 	 */
 	public boolean shouldSavePosition(){
 		return true;
@@ -138,14 +153,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			radio.update();
 		}
     }
-    
-    /**
-   	 *  Spawns particles for this entity.  This is called after every render frame, so
-   	 *  watch your methods to prevent spam.  Note that this method is not called if the
-   	 *  game is paused, as particles are assumed to only be spawned during normal entity
-   	 *  updates.
-   	 */
-    public void spawnParticles(){}
 	
 	@Override
 	public void save(WrapperNBT data){

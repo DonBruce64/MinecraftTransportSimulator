@@ -199,10 +199,9 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 							return 0;
 						}else{
 							switch(missileVariable){
-								case("distance"): return (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
+								case("distance"): return vehicle.missilesIncoming.get(missileNumber).targetDistance;
 								case("direction"): {
-									double dist = (double)vehicle.missilesIncoming.keySet().toArray()[missileNumber];
-									Point3d missilePos = vehicle.missilesIncoming.get(dist).position;
+									Point3d missilePos = vehicle.missilesIncoming.get(missileNumber).position;
 									return Math.toDegrees(Math.atan2(-missilePos.z + vehicle.position.z, -missilePos.x + vehicle.position.x)) + 90 + vehicle.angles.y;
 								}
 							}

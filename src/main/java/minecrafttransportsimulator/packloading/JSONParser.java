@@ -30,6 +30,7 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -368,7 +369,6 @@ public class JSONParser{
 					partDefinition.propeller = loadedDefinition.propeller;
 					partDefinition.seat = loadedDefinition.seat;
 					partDefinition.gun = loadedDefinition.gun;
-					partDefinition.bullet = loadedDefinition.bullet;
 					partDefinition.interactable = loadedDefinition.interactable;
 					partDefinition.effector = loadedDefinition.effector;
 					partDefinition.generic = loadedDefinition.generic;
@@ -399,6 +399,13 @@ public class JSONParser{
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
 					JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
 					poleDefinition.general = loadedDefinition.general;
+					break;
+				}
+				case BULLET : {
+					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
+					JSONBullet loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					bulletDefinition.general = loadedDefinition.general;
+					bulletDefinition.bullet = loadedDefinition.bullet;
 					break;
 				}
 				case ITEM : {

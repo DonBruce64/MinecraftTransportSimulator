@@ -22,7 +22,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * 
  * @author don_bruce
  */
-public class EntityVehicleF_Physics extends EntityVehicleE_Powered{
+public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Aileron.
 	public static final short MAX_AILERON_ANGLE = 250;
 	public static final short MAX_AILERON_TRIM = 100;

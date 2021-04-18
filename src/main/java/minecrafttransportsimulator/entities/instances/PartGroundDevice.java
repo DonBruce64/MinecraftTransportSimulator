@@ -8,8 +8,6 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.instances.ParticleSmoke;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**A ground device is simply a part of a vehicle that touches the ground.
@@ -229,23 +227,6 @@ public class PartGroundDevice extends APart{
 		
 	public float getLongPartOffset(){
 		return placementDefinition.extraCollisionBoxOffset != 0 ? placementDefinition.extraCollisionBoxOffset : definition.ground.extraCollisionBoxOffset;
-	}
-	
-	@Override
-	public void spawnParticles(){
-		if(vehicleOn != null){
-			if(contactThisTick){
-				for(byte i=0; i<4; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
-				}
-			}
-			if(skipAngularCalcs){
-				for(byte i=0; i<4; ++i){
-					InterfaceRender.spawnParticle(new ParticleSmoke(world, position.copy(), new Point3d(Math.random()*0.10 - 0.05, 0.15, Math.random()*0.10 - 0.05), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
-				}
-				InterfaceRender.spawnBlockBreakParticles(position.copy().add(0, -1, 0), false);
-			}
-		}
 	}
 	
 	@Override

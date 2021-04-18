@@ -59,6 +59,7 @@ public final class PackResourceLoader{
     	POLE,
     	ROAD,
     	DECOR,
+    	BULLET,
     	ITEM,
     	SKIN;
     	

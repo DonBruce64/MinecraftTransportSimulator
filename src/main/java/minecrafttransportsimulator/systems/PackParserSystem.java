@@ -18,6 +18,7 @@ import java.util.zip.ZipFile;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -27,6 +28,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -241,6 +243,7 @@ public final class PackParserSystem{
 										case POLE : jsonClass = JSONPoleComponent.class; break;
 										case ROAD : jsonClass = JSONRoadComponent.class; break;
 										case DECOR : jsonClass = JSONDecor.class; break;
+										case BULLET : jsonClass = JSONBullet.class; break;
 										case ITEM : jsonClass = JSONItem.class; break;
 										case SKIN : jsonClass = JSONSkin.class; break;
 									}
@@ -313,6 +316,7 @@ public final class PackParserSystem{
 					jarFile.close();
 				}catch(Exception e){
 					InterfaceCore.logError("Could not start parsing of pack: " + packDef.packID);
+					e.printStackTrace();
 				}
     		}
     	}
@@ -361,10 +365,18 @@ public final class PackParserSystem{
 			AItemPack<?> item;
 			switch(mainDefinition.classification){
 				case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName, sourcePackID); break;
-				case PART : item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case PART : {
+					if(((JSONPart) mainDefinition).generic.type.equals("bullet")){
+						//FIXME see if we can LC the parts to bullets?
+						continue;
+					}else{
+						item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName, sourcePackID); break;
+					}
+				}
 				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case BULLET : item = new ItemBullet((JSONBullet) mainDefinition, subDefinition.subName, sourcePackID); break;
 				default : {
 					throw new IllegalArgumentException("A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);
 				}
@@ -501,6 +513,11 @@ public final class PackParserSystem{
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());
     	}
+    }
+    
+    /**Packs should call this upon load to add their bullet components to the mod.**/
+    public static void addBulletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
+    	//NOOP.  Packs better get used to that new loader if they want these!
     }
     
     /**Packs should call this upon load to add their crafting items to the mod.**/

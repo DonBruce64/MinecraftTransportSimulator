@@ -2,11 +2,11 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.FluidTank;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartEffector;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGeneric;
@@ -63,7 +63,6 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 				if(checkMinMax){
 					//Do extra part checks for specific part types, or just return the custom def.
 					switch(partType){
-						case BULLET : return placementDefinition.minValue <= definition.bullet.diameter && placementDefinition.maxValue >= definition.bullet.diameter;
 						case EFFECTOR: return true;
 						case ENGINE : return placementDefinition.minValue <= definition.engine.fuelConsumption && placementDefinition.maxValue >= definition.engine.fuelConsumption;
 						case GENERIC : return ((placementDefinition.minValue <= definition.generic.height && placementDefinition.maxValue >= definition.generic.height) || (placementDefinition.minValue == 0 && placementDefinition.maxValue == 0));
@@ -90,9 +89,6 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 		partData = validateData(partData);
 		switch(partType){
 			case GENERIC : return new PartGeneric(entity, packVehicleDef, partData, parentPart);
-			//Note that this case is invalid, as bullets are NOT parts that can be placed on entities.
-			//Rather, they are items that get loaded into the gun, so they never actually become parts themselves.
-			case BULLET : return null;
 			case EFFECTOR : return new PartEffector(entity, packVehicleDef, partData, parentPart);
 			case ENGINE : return new PartEngine(entity, packVehicleDef, partData, parentPart);
 			case GROUND : return new PartGroundDevice(entity, packVehicleDef, partData, parentPart);
@@ -114,16 +110,6 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		switch(partType){
-			case BULLET : {
-				for(String type : definition.bullet.types) {
-  					tooltipLines.add(InterfaceCore.translate("info.item.bullet.type." + type));
-				}
-				tooltipLines.add(InterfaceCore.translate("info.item.bullet.diameter") + definition.bullet.diameter);
-				tooltipLines.add(InterfaceCore.translate("info.item.bullet.caseLength") + definition.bullet.caseLength);
-				tooltipLines.add(InterfaceCore.translate("info.item.bullet.penetration") + definition.bullet.armorPenetration);
-				tooltipLines.add(InterfaceCore.translate("info.item.bullet.quantity") + definition.bullet.quantity);
-				break;
-			}
 			case EFFECTOR : break; //No tooltip for effectors.
 			case ENGINE : {
 				if(data.getBoolean("isCreative")){
@@ -258,7 +244,7 @@ public class ItemPart extends AItemSubTyped<JSONPart> implements IItemEntityProv
 					
 					//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
 					if(part instanceof PartInteractable){
-						FluidTank tank = ((PartInteractable) part).tank;
+						EntityFluidTank tank = ((PartInteractable) part).tank;
 						if(tank != null){
 							if(jerrrycanFluid.isEmpty()){
 								if(tank.getFluidLevel() >= 1000){

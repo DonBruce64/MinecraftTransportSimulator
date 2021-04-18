@@ -7,12 +7,15 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -22,12 +25,13 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
-/**Base class for entities that are defined via JSON definitions.
+/**Base class for entities that are defined via JSON definitions and can be modeled in 3D.
  * This level adds various method for said definitions, which include rendering functions. 
  * 
  * @author don_bruce
@@ -52,7 +56,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundActiveClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
 	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundVolumeClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
 	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundPitchClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
+	private final LinkedHashMap<JSONParticle, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> particleActiveClocks = new LinkedHashMap<JSONParticle, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
+	private final LinkedHashMap<JSONParticle, Long> lastTickParticleSpawned = new LinkedHashMap<JSONParticle, Long>();
 	
+	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition and current subName.
@@ -83,14 +90,27 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		//Make sure the generic light is in the variable set.
 		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
 		
-		//Create all sound clocks.
-		populateSoundMaps();
+		//Create all clocks.
+		populateMaps();
+	}
+	
+	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
+	public AEntityC_Definable(WrapperWorld world, Point3d position, Point3d motion, Point3d angles, AItemSubTyped<JSONDefinition> creatingItem){
+		super(world, position, motion, angles);
+		this.subName = creatingItem.subName;
+		this.definition = creatingItem.definition;
+		
+		//Make sure the generic light is in the variable set.
+		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
+		
+		//Create all clocks.
+		populateMaps();
 	}
 	
 	/**
-	 *  Helper method for populating sound maps.
+	 *  Helper method for populating sound and particle maps.
 	 */
-	private void populateSoundMaps(){
+	private void populateMaps(){
 		allSoundDefs.clear();
 		soundActiveClocks.clear();
 		soundVolumeClocks.clear();
@@ -122,6 +142,19 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 				}
 				soundPitchClocks.put(soundDef, pitchClocks);
+			}
+		}
+		particleActiveClocks.clear();
+		if(definition.rendering != null && definition.rendering.particles != null){
+			for(JSONParticle particleDef : definition.rendering.particles){
+				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> activeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				if(particleDef.activeAnimations !=  null){
+					for(JSONAnimationDefinition animation : particleDef.activeAnimations){
+						activeClocks.put(animation, new DurationDelayClock(animation));
+					}
+				}
+				particleActiveClocks.put(particleDef, activeClocks);
+				lastTickParticleSpawned.put(particleDef, ticksExisted);
 			}
 		}
 	}
@@ -182,7 +215,91 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  already updated, so this is more for updating cached variables.
 	 */
     public void onDefinitionReset(){
-    	populateSoundMaps();
+    	populateMaps();
+    }
+    
+    /**
+   	 *  Spawns particles for this entity.  This is called after every render frame, so
+   	 *  watch your methods to prevent spam.  Note that this method is not called if the
+   	 *  game is paused, as particles are assumed to only be spawned during normal entity
+   	 *  updates.
+   	 */
+    public void spawnParticles(float partialTicks){
+    	//Check all particle defs and update the existing particles accordingly.
+    	for(JSONParticle particleDef : particleActiveClocks.keySet()){
+    		//Check if the particle should be spawned this tick.
+    		boolean shouldParticleSpawn = true;
+			boolean anyClockMovedThisUpdate = false;
+			if(particleDef.activeAnimations != null){
+				boolean inhibitAnimations = false;
+				for(JSONAnimationDefinition animation : particleDef.activeAnimations){
+					switch(animation.animationType){
+						case VISIBILITY :{
+							//We use the clock here to check if the state of the variable changed, not
+							//to clamp the value used in the testing.
+							if(!inhibitAnimations){
+								DurationDelayClock clock = particleActiveClocks.get(particleDef).get(animation);
+								double variableValue = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+								if(!anyClockMovedThisUpdate){
+									anyClockMovedThisUpdate = clock.movedThisUpdate;
+								}
+								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
+									shouldParticleSpawn = false;
+								}
+							}
+							break;
+						}
+						case INHIBITOR :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
+								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									inhibitAnimations = true;
+								}
+							}
+							break;
+						}
+						case ACTIVATOR :{
+							if(inhibitAnimations){
+								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
+								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									inhibitAnimations = false;
+								}
+							}
+							break;
+						}
+						case TRANSLATION :{
+							//Do nothing.
+							break;
+						}
+						case ROTATION :{
+							//Do nothing.
+							break;
+						}
+						case SCALING :{
+							//Do nothing.
+							break;
+						}
+					}
+					
+					if(!shouldParticleSpawn){
+						//Don't need to process any further as we can't spawn.
+						break;
+					}
+				}
+			}
+			
+			//Make the particle spawn if able.
+			if(shouldParticleSpawn && (anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))){
+				lastTickParticleSpawned.put(particleDef, ticksExisted);
+				if(particleDef.quantity > 0){
+					for(int i=0; i<particleDef.quantity; ++i){
+						InterfaceRender.spawnParticle(new EntityParticle(this, particleDef));
+					}
+				}else{
+					InterfaceRender.spawnParticle(new EntityParticle(this, particleDef));
+				}
+			}
+    	}
     }
     
     /**
@@ -203,7 +320,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     public void updateSounds(){
     	super.updateSounds();
-    	//Check all sound defs and update the passed-in sounds accordingly.
+    	//Check all sound defs and update the existing sounds accordingly.
     	for(JSONSound soundDef : allSoundDefs){
     		//Check if the sound should be playing before we try to update state.
     		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();

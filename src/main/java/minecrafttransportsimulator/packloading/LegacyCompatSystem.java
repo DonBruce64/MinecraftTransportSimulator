@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
@@ -25,8 +26,8 @@ import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
-import minecrafttransportsimulator.jsondefs.JSONParticleObject;
-import minecrafttransportsimulator.jsondefs.JSONParticleObject.ParticleComponentType;
+import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
@@ -240,6 +241,49 @@ public final class LegacyCompatSystem{
 			}
 		}
 		
+		//Do compats for particles.
+		if(definition.rendering.particles == null){
+			definition.rendering.particles = new ArrayList<JSONParticle>();
+			int engineNumber = 0;
+			for(JSONPartDefinition partDef : definition.parts){
+				if(partDef.particleObjects != null){
+					++engineNumber;
+					int pistonNumber = 0;
+					for(JSONParticle exhaustDef : partDef.particleObjects){
+						++pistonNumber;
+						exhaustDef.type = ParticleType.SMOKE;
+						exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						exhaustDef.initialVelocity = exhaustDef.velocityVector;
+						exhaustDef.velocityVector = null;
+						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						exhaustDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(exhaustDef);
+						
+						JSONParticle backfireDef = new JSONParticle();
+						backfireDef.type = exhaustDef.type;
+						backfireDef.color = "#000000";
+						backfireDef.scale = 2.5F;
+						backfireDef.quantity = 5;
+						backfireDef.pos = exhaustDef.pos;
+						backfireDef.initialVelocity = exhaustDef.initialVelocity;
+						backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_backfired_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						backfireDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(backfireDef);
+					}
+					partDef.particleObjects = null;
+				}
+			}
+		}
+		
 		//Check if we didn't specify a braking force.
 		if(definition.motorized.brakingFactor == 0){
 			definition.motorized.brakingFactor = 1.0F;
@@ -321,18 +365,6 @@ public final class LegacyCompatSystem{
 			if(definition.engine.downShiftRPM != null){
 				while(definition.engine.downShiftRPM.size() < definition.engine.gearRatios.size()){
 					definition.engine.downShiftRPM.add(0, 0);
-				}
-			}
-		}else if(definition.bullet != null) {
-			if (definition.bullet.type != null) {
-				definition.bullet.types = new ArrayList<String>();
-				definition.bullet.types.add(definition.bullet.type);
-			}
-			if (definition.bullet.particleObjects != null) {
-				for (JSONParticleObject particle : definition.bullet.particleObjects) {
-					if(particle.velocityVector == null) {
-						particle.velocityVector = new Point3d(0, 0, -particle.velocity);
-					}
 				}
 			}
 		}else{
@@ -708,6 +740,125 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(skiddingSound);
 			}
 		}
+		
+		//Do compats for particles.
+		if(definition.rendering != null && definition.rendering.particles == null){
+			definition.rendering.particles = new ArrayList<JSONParticle>();
+			if(definition.engine != null){
+				//Small overheat.
+				JSONParticle particleDef = new JSONParticle();
+				particleDef.type = ParticleType.SMOKE;
+				particleDef.color = "#000000";
+				particleDef.spawnEveryTick = true;
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "engine_temp";
+				activeAnimation.clampMin = PartEngine.OVERHEAT_TEMP_1;
+				activeAnimation.clampMax = 999F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Large overheat.
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.SMOKE;
+				particleDef.color = "#000000";
+				particleDef.spawnEveryTick = true;
+				particleDef.quantity = 1;
+				particleDef.scale = 2.5F;
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "engine_temp";
+				activeAnimation.clampMin = PartEngine.OVERHEAT_TEMP_2;
+				activeAnimation.clampMax = 999F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Oil drip.
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.DRIP;
+				particleDef.color = "#000000";
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "engine_oilleak";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "cycle_10_20";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Fuel drip.
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.DRIP;
+				particleDef.color = "#FF0000";
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "engine_fuelleak";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "cycle_10_20";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+			}else if(definition.ground != null){
+				//Contact smoke.
+				JSONParticle particleDef = new JSONParticle();
+				particleDef.type = ParticleType.SMOKE;
+				particleDef.color = "#FFFFFF";
+				particleDef.quantity = 4;
+				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "ground_contacted";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Burnout smoke.
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.SMOKE;
+				particleDef.color = "#FFFFFF";
+				particleDef.quantity = 4;
+				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "ground_slipping";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Wheel dirt.
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.BREAK;
+				particleDef.color = "#FFFFFF";
+				particleDef.quantity = 1;
+				particleDef.initialVelocity = new Point3d(0, 0.2, -0.2);
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "ground_slipping";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+			}
+		}
 	}
 	
 	private static void performInstrumentLegacyCompats(JSONInstrument definition){
@@ -1033,16 +1184,14 @@ public final class LegacyCompatSystem{
 			partDef.linkedDoor = null;
 		}
 		if(partDef.exhaustPos != null){
-			partDef.particleObjects = new ArrayList<JSONParticleObject>();
+			partDef.particleObjects = new ArrayList<JSONParticle>();
 			for(int i=0; i<partDef.exhaustPos.length; i+=3){
-				JSONParticleObject particle = new JSONParticleObject();
-				particle.type = ParticleComponentType.SMOKE;
+				JSONParticle particle = new JSONParticle();
+				particle.type = ParticleType.SMOKE;
 				particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
 				particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
 				particle.scale = 1.0F;
-				particle.quantity = 1;
 				particle.color = "#D9D9D9";
-				particle.toColor = "#D9D9D9";
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
 				partDef.particleObjects.add(particle);
@@ -1051,16 +1200,14 @@ public final class LegacyCompatSystem{
 			partDef.exhaustVelocity = null;
 		}
 		if(partDef.exhaustObjects != null) {
-			partDef.particleObjects = new ArrayList<JSONParticleObject>();
+			partDef.particleObjects = new ArrayList<JSONParticle>();
 			for(ExhaustObject exhaust : partDef.exhaustObjects) {
-				JSONParticleObject particle = new JSONParticleObject();
-				particle.type = ParticleComponentType.SMOKE;
+				JSONParticle particle = new JSONParticle();
+				particle.type = ParticleType.SMOKE;
 				particle.pos = exhaust.pos;
 				particle.velocityVector = exhaust.velocity;
 				particle.scale = exhaust.scale;
-				particle.quantity = 1;
 				particle.color = "#D9D9D9";
-				particle.toColor = "#D9D9D9";
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
 				partDef.particleObjects.add(particle);

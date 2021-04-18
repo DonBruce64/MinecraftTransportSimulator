@@ -110,6 +110,31 @@ public final class AnimationsPart extends AAnimationsBase<APart>{
 				case("engine_backfired"): return engine.backfired ? 1 : 0;
 				case("engine_jumper_cable"): return engine.linkedEngine != null ? 1 : 0;
 				case("engine_hours"): return engine.hours;
+				case("engine_oilleak"): return engine.oilLeak ? 1 : 0;
+				case("engine_fuelleak"): return engine.fuelLeak ? 1 : 0;
+			}
+			if(variable.startsWith("engine_piston_")){
+				String pistonVariable = variable.substring("engine_piston_".length());
+				int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+				pistonVariable.substring(pistonVariable.indexOf("_"));
+				int totalPistons = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+				long engineCycleTime = (long) (2D*(1D/(engine.rpm/60D/1000D)));
+				
+				if(engineCycleTime != 0){
+					long currentEngineTime = (long) ((engine.ticksExisted + partialTicks)*50D);
+					long engineTimeInCycle = currentEngineTime%engineCycleTime;
+					
+					long pistonCycleTime = totalPistons > 1 ? engineCycleTime/totalPistons : engineCycleTime/2;
+					long camMin = (pistonNumber - 1)*pistonCycleTime;
+					long camMax = camMin + pistonCycleTime;
+					if(camMax > engineCycleTime){
+						return engineTimeInCycle < camMin && engineTimeInCycle > camMax ? 1 : 0;
+					}else{
+						return engineTimeInCycle > camMin && engineTimeInCycle < camMax ? 1 : 0;	
+					}
+				}else{
+					return 0;
+				}
 			}
 		}else if(part instanceof PartGun){
 			PartGun gun = (PartGun) part;

@@ -18,20 +18,20 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 
-/**This is the next class level above the base vehicle.
- * This level adds support for riders.  Various methods are overridden here
+/**This is the first vehicle class level.  This class sits on top of the base
+ * entity class, and overrides many of the base entity class functions
  * to add greater flexibility to the riding systems.  This allows for riders to
  * change their position and rotation based on what seat they are currently in.
  * 
  * @author don_bruce
  */
-abstract class EntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
+abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public EntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
+	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 	}
 	

@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.FluidTank;
-import minecrafttransportsimulator.baseclasses.IFluidTankProvider;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.IFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -19,11 +19,11 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	public boolean unloadMode;
 	public boolean loading;
 	public boolean unloading;
-    private FluidTank tank;
+    private EntityFluidTank tank;
 
     public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new FluidTank(world, data, 1000);
+    	this.tank = new EntityFluidTank(world, data, 1000);
     	this.unloadMode = data.getBoolean("unloadMode");
     }
 	
@@ -86,7 +86,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 						for(APart part : multipart.parts){
 							if(part.position.distanceTo(position) < 10){
 								if(part instanceof PartInteractable){
-									FluidTank partTank = ((PartInteractable) part).tank;
+									EntityFluidTank partTank = ((PartInteractable) part).tank;
 									if(partTank != null){
 										if(unloadMode){
 											if(partTank.drain(tank.getFluid(), 1, false) > 0){
@@ -119,7 +119,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	}
 	
 	@Override
-	public FluidTank getTank(){
+	public EntityFluidTank getTank(){
 		return tank;
 	}
 	

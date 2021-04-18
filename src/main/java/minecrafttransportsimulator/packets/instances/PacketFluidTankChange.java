@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.FluidTank;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -10,11 +10,11 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketFluidTankChange extends APacketEntity<FluidTank>{
+public class PacketFluidTankChange extends APacketEntity<EntityFluidTank>{
 	private final String fluidName;
 	private final double fluidDelta;
 	
-	public PacketFluidTankChange(FluidTank tank, double fluidDelta){
+	public PacketFluidTankChange(EntityFluidTank tank, double fluidDelta){
 		super(tank);
 		this.fluidName = tank.getFluid();
 		this.fluidDelta = fluidDelta;
@@ -34,7 +34,7 @@ public class PacketFluidTankChange extends APacketEntity<FluidTank>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, FluidTank tank){
+	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityFluidTank tank){
 		if(fluidDelta < 0){
 			tank.drain(fluidName, -fluidDelta, true);
 		}else{
