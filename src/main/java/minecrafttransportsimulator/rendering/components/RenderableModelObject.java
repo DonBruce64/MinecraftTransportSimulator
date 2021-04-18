@@ -81,7 +81,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(objectName.toLowerCase().contains("window")){
 			transforms.add(new TransformWindow<AnimationEntity>(vertices));
 		}
-		if(objectName.toLowerCase().endsWith("url")){
+		if(objectName.toLowerCase().startsWith("url") || objectName.toLowerCase().endsWith("url")){
 			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));
 		}
 	}
