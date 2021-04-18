@@ -27,7 +27,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.APackResourceLoader.ItemClassification;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.common.ForgeChunkManager;

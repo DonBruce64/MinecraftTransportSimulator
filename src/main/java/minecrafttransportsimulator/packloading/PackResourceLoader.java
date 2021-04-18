@@ -13,20 +13,39 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**
  * Class responsible for loading pack resource files from pack archives.  This happens both during load
- * and during gameplay as different references are requested.  One loader is created for every pack
+ * and during gameplay as different references are requested.
  *
  * @author don_bruce
  */
-public abstract class APackResourceLoader{
-	
+public class PackResourceLoader{
 	/**
 	 *  Returns the requested resource for the passed-in definition.  Name in this case is used
 	 *  for the file-name, and may be different than the definition system name.
 	 */
-    public abstract String getPackResource(AJSONItem definition, ResourceType type, String name);
+	public static String getPackResource(AJSONItem definition, ResourceType type, String name){
+    	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
+    		case DEFAULT : {
+    			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + name + type.normalSuffix;
+    		}
+    		case LAYERED : {
+    			return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + definition.prefixFolders + name + type.normalSuffix;
+    		}
+    		case MODULAR : {
+    			return "/assets/" + definition.packID + "/" + definition.classification.toDirectory() + definition.prefixFolders + name + type.modularSuffix;
+    		}
+    	}
+    	return null;
+    }
+	
+	public enum PackStructure{
+    	DEFAULT,
+    	LAYERED,
+    	MODULAR;
+    }
     
     public enum ResourceType{
     	OBJ("objmodels/", ".obj", ".obj"),

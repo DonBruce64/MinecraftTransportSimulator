@@ -4,7 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-import minecrafttransportsimulator.packloading.APackResourceLoader.ItemClassification;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base JSON class for all pack-loaded JSONs.  All pack-loaded JSONs MUST extend this class.

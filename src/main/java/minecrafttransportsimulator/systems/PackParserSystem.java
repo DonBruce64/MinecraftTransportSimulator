@@ -41,9 +41,9 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.packloading.APackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackResourceLoaderDefault.PackStructure;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
+import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts

@@ -21,8 +21,8 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packloading.APackResourceLoader.ResourceType;
-import minecrafttransportsimulator.packloading.PackResourceLoaderDefault;
+import minecrafttransportsimulator.packloading.PackResourceLoader;
+import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -189,13 +189,13 @@ public class InterfaceEventsModelLoader{
 						String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR));
 						String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR) + 1);
 						AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
-						resourcePath = PackResourceLoaderDefault.INSTANCE.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
+						resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 						
 						//Try to load the item JSON, or create it if it doesn't exist.
 						stream = getClass().getResourceAsStream(resourcePath);
 						if(stream == null){
 							//Get the actual texture path.
-							itemTexturePath = PackResourceLoaderDefault.INSTANCE.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+							itemTexturePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
 							
 							//Remove the "/assets/packID/" portion as it's implied with JSON.
 							itemTexturePath = itemTexturePath.substring(("/assets/"  + packID + "/").length());
@@ -242,7 +242,7 @@ public class InterfaceEventsModelLoader{
 					String streamLocation = null;
 					if(packItem != null){
 						//Get the actual resource path for this resource and return its stream.
-						streamLocation = PackResourceLoaderDefault.INSTANCE.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+						streamLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
 						stream = getClass().getResourceAsStream(streamLocation);
 					}else{
 						stream = null;
