@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -149,7 +149,7 @@ public class PartGun extends APart{
 		
 		//Get the current controller and item reference for this gun.
 		WrapperEntity controller = getController();
-		ItemPart gunItem = getItem();
+		ItemPartGun gunItem = getItem();
 		WrapperPlayer playerHolding;
 		if(entityOn instanceof EntityPlayerGun){
 			playerHolding = ((EntityPlayerGun) entityOn).player;

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
@@ -39,7 +39,7 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public ItemPart getItem(){
+	public ItemPartGroundDevice getItem(){
 		return null;
 	}
 	

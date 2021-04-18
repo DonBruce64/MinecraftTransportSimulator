@@ -5,11 +5,11 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -41,9 +41,9 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 			}
 			
 			//Check if the item is a jerrycan.
-			if(item instanceof ItemPart){
-				ItemPart part = (ItemPart) item;
-				if(part.definition.interactable != null && part.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
+			if(item instanceof ItemPartInteractable){
+				ItemPartInteractable interactable = (ItemPartInteractable) item;
+				if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 					WrapperNBT data = new WrapperNBT(stack);
 					if(data.getString("jerrycanFluid").isEmpty()){
 						if(tank.getFluidLevel() >= 1000){

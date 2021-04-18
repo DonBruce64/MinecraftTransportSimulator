@@ -8,9 +8,9 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -97,8 +97,8 @@ public class PacketVehicleInteract extends APacketEntity<EntityVehicleF_Physics>
 				player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
 			}else{
 				//Attempt to add a part.  Vehicle is responsible for callback packet here.
-				if(heldItem instanceof ItemPart){
-					if(vehicle.addPartFromItem((ItemPart) heldItem, new WrapperNBT(heldStack), hitBoxLocalCenter, false) != null && !player.isCreative()){				
+				if(heldItem instanceof AItemPart){
+					if(vehicle.addPartFromItem((AItemPart) heldItem, new WrapperNBT(heldStack), hitBoxLocalCenter, false) != null && !player.isCreative()){				
 						player.getInventory().removeStack(heldStack, 1);
 					}
 				}

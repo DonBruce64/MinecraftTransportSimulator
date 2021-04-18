@@ -14,9 +14,9 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -50,7 +50,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * to obtain all parts of a specific type on this entity in cases where such information is needed.
 	 * Note that the CME/iterator rules do not apply to this map as it's not used for iterative operations.
 	 */
-	public final HashMap<ItemPart, List<APart>> partsByItem = new LinkedHashMap<ItemPart, List<APart>>();
+	public final HashMap<AItemPart, List<APart>> partsByItem = new LinkedHashMap<AItemPart, List<APart>>();
 	
 	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
 	 * due to the potential of various sub-class variables not being ready at construction time.  To compensate, 
@@ -92,7 +92,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			//Don't want crashes due to pack updates.
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
-				ItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
+				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
 				Point3d partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, partData, partOffset, true);
 			}catch(Exception e){
@@ -147,9 +147,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			activePartSlotBoxes.clear();
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
-			if(heldItem instanceof ItemPart){
+			if(heldItem instanceof AItemPart){
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
-					ItemPart heldPart = (ItemPart) heldItem;
+					AItemPart heldPart = (AItemPart) heldItem;
 					//Does the part held match this packPart?
 					if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
 						//Are there any doors blocking us from clicking this part?
@@ -330,7 +330,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public APart addPartFromItem(ItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(AItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -425,7 +425,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
    	 */
 	public void addPart(APart part, boolean sendPacket){
 		parts.add(part);
-		ItemPart partItem = part.getItem();
+		AItemPart partItem = part.getItem();
 		//Check for null, as the part may not have an item it will return, as is
 		//the case for fake parts or flat wheels.
 		if(partItem != null){
@@ -474,7 +474,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				parts.remove(part);
 			}
 			//Remove from mappings.
-			ItemPart partItem = part.getItem();
+			AItemPart partItem = part.getItem();
 			if(partsByItem.containsKey(partItem)){
 				partsByItem.get(partItem).remove(part);
 			}

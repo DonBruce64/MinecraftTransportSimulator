@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -138,7 +138,7 @@ public class PartGroundDevice extends APart{
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public ItemPart getItem(){
+	public ItemPartGroundDevice getItem(){
 		return isFlat ? null : super.getItem();
 	}
 	

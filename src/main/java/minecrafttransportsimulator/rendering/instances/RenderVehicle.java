@@ -17,9 +17,9 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
@@ -241,8 +241,8 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 		WrapperPlayer player = InterfaceClient.getClientPlayer();
 		AItemBase heldItem = player.getHeldItem();
 		
-		if(heldItem instanceof ItemPart){
-			ItemPart heldPart = (ItemPart) heldItem;
+		if(heldItem instanceof AItemPart){
+			AItemPart heldPart = (AItemPart) heldItem;
 			for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.activePartSlotBoxes.entrySet()){
 				boolean isHoldingPart = false;
 				boolean isPartValid = false;
@@ -305,10 +305,10 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				InterfaceRender.setTextureState(true);
 				
 				//Get all parts that go to this boxes position.
-				List<ItemPart> validParts = new ArrayList<ItemPart>();
+				List<AItemPart> validParts = new ArrayList<AItemPart>();
 				for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-					if(packItem instanceof ItemPart){
-						ItemPart part = (ItemPart) packItem;
+					if(packItem instanceof AItemPart){
+						AItemPart part = (AItemPart) packItem;
 						if(part.isPartValidForPackDef(packVehicleDef, vehicle.subName, true)){
 							validParts.add(part);
 						}
@@ -342,7 +342,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				if(!validParts.isEmpty()){
 					//Get current part to render based on the cycle.
 					int cycle = player.isSneaking() ? 30 : 15;
-					ItemPart partToRender = validParts.get((int) ((vehicle.world.getTick()/cycle)%validParts.size()));
+					AItemPart partToRender = validParts.get((int) ((vehicle.world.getTick()/cycle)%validParts.size()));
 					
 					//If we are on the start of the cycle, beep.
 					if(vehicle.world.getTick()%cycle == 0){

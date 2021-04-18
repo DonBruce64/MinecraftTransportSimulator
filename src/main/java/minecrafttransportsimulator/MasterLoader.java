@@ -9,6 +9,14 @@ import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.instances.ItemPartEffector;
+import minecrafttransportsimulator.items.instances.ItemPartEngine;
+import minecrafttransportsimulator.items.instances.ItemPartGeneric;
+import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.items.instances.ItemPartPropeller;
+import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
@@ -50,6 +58,17 @@ public class MasterLoader{
 		
 		//Set main resource domain location..
 		resourceDomain = MODID;
+		
+    	//Add part constructors to the part map.
+		//TODO move to pack parser main init call when old loadrs are gone.
+    	PackParserSystem.addItemPartCreator(ItemPartEffector.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartEngine.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartGeneric.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartGroundDevice.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartGun.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartInteractable.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartPropeller.CREATOR);
+    	PackParserSystem.addItemPartCreator(ItemPartSeat.CREATOR);
 		
 		//Manually create the internal core mod pack items.
 		//These need to be created before we do checks for block registration.

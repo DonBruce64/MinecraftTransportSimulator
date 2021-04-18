@@ -22,6 +22,7 @@ import minecrafttransportsimulator.guis.instances.GUIPackExporter;
 import minecrafttransportsimulator.guis.instances.GUIPaintGun;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -89,7 +90,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//care about this order and won't spawn items unless they've been removed.
 							if(!part.placementDefinition.isPermanent){
 								vehicle.removePart(part, null);
-								ItemPart droppedItem = part.getItem();
+								AItemPart droppedItem = part.getItem();
 								if(droppedItem != null){
 									WrapperNBT partData = new WrapperNBT();
 									part.save(partData);

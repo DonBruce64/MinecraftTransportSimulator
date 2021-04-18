@@ -17,12 +17,12 @@ import java.util.zip.ZipFile;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.items.instances.ItemPart;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -58,6 +58,9 @@ public final class PackParserSystem{
 	/**All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.**/
 	public static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
 	//TODO make this private when we get rid of the old loader system.
+	
+	/**Part creators are put here during the boot process prior to parsing.  This allows for creators to be added after first parsing for custom items.**/
+	private static List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
 
 	/**All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.**/
 	private static Map<String, Map<String, JSONSkin>> skinMap = new HashMap<String, Map<String, JSONSkin>>();
@@ -78,7 +81,7 @@ public final class PackParserSystem{
     //-----START OF NEW INIT LOGIC-----
 	/**
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
-     * for pack definitions.  After this, they will be created and loaded into the main mod.
+     * for pack definitions.  After this, they will be created and loaded into the main mod.  Note that all
      */
     public static void parsePacks(List<File> packDirectories){
     	//First get all pack definitions from the passed-in directories.
@@ -101,7 +104,14 @@ public final class PackParserSystem{
     	
     	//Have the config system dump the crafting, if so required.
     	ConfigSystem.initCraftingOverrides();
-    } 
+    }
+    
+    /**
+     * Called to add a part item creator to the main listing. 
+     */
+    public static void addItemPartCreator(AItemPartCreator creator){
+    	partCreators.add(0, creator);
+    }
 
 	/**
      * Called to check if the passed-in jar file is a pack.  If so, it, and all the pack
@@ -265,49 +275,7 @@ public final class PackParserSystem{
 								//Remove the classification folder from the assetPath.  We don't use this for the resource-loading code.
 								//Instead, this will be loaded by referencing the definition.  This also allows us to omit the path
 								//if we are loading a non-default pack format.
-								assetPath = assetPath.substring(classification.toDirectory().length());
-								
-								//Create all required items.
-								if(definition instanceof AJSONMultiModelProvider){
-									//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
-									//We don't create skin items right away as the pack they go to might not yet be loaded.
-									if(definition instanceof JSONSkin){
-										JSONSkin skinDef = (JSONSkin) definition;
-										if(!skinMap.containsKey(skinDef.skin.packID)){
-											skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
-										}
-										definition.packID = packDef.packID;
-										skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
-									}else{
-										//Set code-based definition values prior to parsing all definitions out.
-					    		    	definition.packID = packDef.packID;
-					    		    	definition.systemName = fileName.substring(0, fileName.length() - ".json".length());
-					    		    	definition.prefixFolders = assetPath;
-					    		    	definition.classification = classification;
-										parseAllDefinitions((AJSONMultiModelProvider) definition, ((AJSONMultiModelProvider) definition).definitions, definition.packID);
-									}
-								}else{
-									AItemPack<?> item;
-				    				switch(classification){
-										case INSTRUMENT : item = new ItemInstrument((JSONInstrument) definition); break;
-										case ITEM : item = new ItemItem((JSONItem) definition); break;
-										default : {
-											throw new IllegalArgumentException("No corresponding classification found for asset: " + fileName + " Contact the mod author!");
-										}
-									}
-				    				
-				    				//Set code-based definition values.
-				    		    	item.definition.packID = packDef.packID;
-				    		    	item.definition.systemName = fileName.substring(0, fileName.length() - ".json".length());
-				    		    	item.definition.prefixFolders = assetPath;
-				    		    	item.definition.classification = classification;
-				    		    	
-				    		    	//Put the item in the map in the registry.
-				    		    	if(!packItemMap.containsKey(item.definition.packID)){
-				    		    		packItemMap.put(item.definition.packID, new TreeMap<String, AItemPack<?>>());
-				    		    	}
-				    		    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
-								}
+								registerItem(packDef, definition, fileName.substring(0, fileName.length() - ".json".length()), assetPath.substring(classification.toDirectory().length()), classification);
 							}
 						}
 					}
@@ -320,6 +288,58 @@ public final class PackParserSystem{
 				}
     		}
     	}
+    }
+    
+    /**
+     * Called to add the passed-in item to the pack registry.  While this is normally called automatically by the
+     * parser as it goes over the jar files, this may be called manually if other mods (or the core mod) want
+     * to manually register things that aren't in jars.  The other assets like OBJs models and PNG textures 
+     * must exist somewhere in a jar in the classpath, however.  This simply bypasses the requirement that the
+     * JSON file exists.  For this reason, prefixFolders is able to be defined to specify where those assets are,
+     * while resourceLoader is used to specify the loader to use to load those assets.
+     */
+    public static void registerItem(JSONPack packDef, AJSONItem itemDef, String systemName, String prefixFolders, ItemClassification classification){
+    	//Create all required items.
+		if(itemDef instanceof AJSONMultiModelProvider){
+			//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
+			//We don't create skin items right away as the pack they go to might not yet be loaded.
+			if(itemDef instanceof JSONSkin){
+				JSONSkin skinDef = (JSONSkin) itemDef;
+				if(!skinMap.containsKey(skinDef.skin.packID)){
+					skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
+				}
+				itemDef.packID = packDef.packID;
+				skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
+			}else{
+				//Set code-based definition values prior to parsing all definitions out.
+		    	itemDef.packID = packDef.packID;
+		    	itemDef.systemName = systemName;
+		    	itemDef.prefixFolders = prefixFolders;
+		    	itemDef.classification = classification;
+				parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
+			}
+		}else{
+			AItemPack<?> item;
+			switch(classification){
+				case INSTRUMENT : item = new ItemInstrument((JSONInstrument) itemDef); break;
+				case ITEM : item = new ItemItem((JSONItem) itemDef); break;
+				default : {
+					throw new IllegalArgumentException("No corresponding classification found for asset: " + prefixFolders + " Contact the mod author!");
+				}
+			}
+			
+			//Set code-based definition values.
+	    	item.definition.packID = packDef.packID;
+	    	item.definition.systemName = systemName;
+	    	item.definition.prefixFolders = prefixFolders;
+	    	item.definition.classification = classification;
+	    	
+	    	//Put the item in the map in the registry.
+	    	if(!packItemMap.containsKey(item.definition.packID)){
+	    		packItemMap.put(item.definition.packID, new TreeMap<String, AItemPack<?>>());
+	    	}
+	    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
+		}
     }
     
     /**
@@ -362,16 +382,22 @@ public final class PackParserSystem{
     private static void parseAllDefinitions(AJSONMultiModelProvider mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID){
     	Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
     	for(JSONSubDefinition subDefinition : subDefinitions){
-			AItemPack<?> item;
+			AItemPack<?> item = null;
 			switch(mainDefinition.classification){
 				case VEHICLE : item = new ItemVehicle((JSONVehicle) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case PART : {
-					if(((JSONPart) mainDefinition).generic.type.equals("bullet")){
-						//FIXME see if we can LC the parts to bullets?
-						continue;
-					}else{
-						item = new ItemPart((JSONPart) mainDefinition, subDefinition.subName, sourcePackID); break;
+					JSONPart partDef = (JSONPart) mainDefinition;
+					for(AItemPartCreator creator : partCreators){
+						if(creator.isCreatorValid(partDef)){
+							item = creator.createItem(partDef, subDefinition.subName, sourcePackID);
+							break;
+						}
 					}
+					if(item == null){
+						InterfaceCore.logError("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
+						return;
+					}
+					break;
 				}
 				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
@@ -464,9 +490,15 @@ public final class PackParserSystem{
     public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
     	try{
     		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class, null, null);
-    		for(JSONSubDefinition subDefinition : definition.definitions){
-	    		setupItem(new ItemPart(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
-    		}
+    		for(AItemPartCreator creator : partCreators){
+				if(creator.isCreatorValid(definition)){
+					for(JSONSubDefinition subDefinition : definition.definitions){
+	        			setupItem(creator.createItem(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
+	        		}
+					return;
+				}
+			}
+    		InterfaceCore.logError("OBSOLETE LOADER DETECTED: Was told to parse part from " + packID + " with part type " + definition.generic.type + ", but that's not a valid type for creating a part.");
     	}catch(Exception e){
     		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
     		InterfaceCore.logError(e.getMessage());

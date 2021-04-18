@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -13,7 +14,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 
 public final class PartSeat extends APart{
 	public boolean canControlGuns;
-	public ItemPart activeGun;
+	public ItemPartGun activeGun;
 	public int gunIndex;
 	
 	public PartSeat(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
@@ -55,7 +56,7 @@ public final class PartSeat extends APart{
 							setNextActiveGun();
 							InterfacePacket.sendToAllClients(new PacketPartSeat(this));
 						}else{
-							for(ItemPart partItem : entityOn.partsByItem.keySet()){
+							for(AItemPart partItem : entityOn.partsByItem.keySet()){
 								if(partItem.definition.gun != null){
 									for(APart part : entityOn.partsByItem.get(partItem)){
 										if(player.equals(((PartGun) part).getController())){
@@ -89,11 +90,11 @@ public final class PartSeat extends APart{
 		//If we don't have an active gun, just get the next possible unit.
 		if(activeGun == null){
 			WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
-			for(ItemPart partItem : entityOn.partsByItem.keySet()){
-				if(partItem.definition.gun != null){
+			for(AItemPart partItem : entityOn.partsByItem.keySet()){
+				if(partItem instanceof ItemPartGun){
 					for(APart part : entityOn.partsByItem.get(partItem)){
 						if(rider.equals(((PartGun) part).getController())){
-							activeGun = partItem;
+							activeGun = (ItemPartGun) partItem;
 							gunIndex = 0;
 							return;
 						}
@@ -111,25 +112,25 @@ public final class PartSeat extends APart{
 	/**
 	 * Helper method to get the next active gun in the gun listings.
 	 */
-	private ItemPart getNextActiveGun(){
+	private ItemPartGun getNextActiveGun(){
 		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		boolean pastActiveGun = false;
-		ItemPart firstPossibleGun = null;
+		ItemPartGun firstPossibleGun = null;
 		
 		//Iterate over all the gun types, attempting to get the type after our selected type.
-		for(ItemPart partItem : entityOn.partsByItem.keySet()){
-			if(partItem.definition.gun != null){
+		for(AItemPart partItem : entityOn.partsByItem.keySet()){
+			if(partItem instanceof ItemPartGun){
 				for(APart part : entityOn.partsByItem.get(partItem)){
 					
 					//Can the player control this gun, or is it for another seat?
 					if(rider.equals(((PartGun) part).getController())){
 						//If we already found our active gun in our gun list, we use the next entry as our next gun.
 						if(pastActiveGun){
-							return partItem;
+							return (ItemPartGun) partItem;
 						}else{
 							//Add the first possible gun in case we go all the way around.
 							if(firstPossibleGun == null){
-								firstPossibleGun = partItem;
+								firstPossibleGun = (ItemPartGun) partItem;
 							}
 							//If the gun type is the same as the active gun, check if it's set to fireSolo.
 							//If we, we didn't group it and need to go to the next active gun with that type.
@@ -139,7 +140,7 @@ public final class PartSeat extends APart{
 										gunIndex = 0;
 										pastActiveGun = true;
 									}else{
-										return partItem;
+										return (ItemPartGun) partItem;
 									}
 								}else{
 									pastActiveGun = true;

@@ -10,7 +10,7 @@ import minecrafttransportsimulator.controls.ControlSystem;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.instances.ItemPart;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -97,11 +97,11 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			if(packItem instanceof ItemPart){
-				ItemPart partItem = (ItemPart) packItem;
-				if(partItem.isHandHeldGun()){
-					if(!fakeDef.types.contains(partItem.definition.generic.type)){
-						fakeDef.types.add(partItem.definition.generic.type);
+			if(packItem instanceof ItemPartGun){
+				ItemPartGun gunItem = (ItemPartGun) packItem;
+				if(gunItem.definition.gun.handHeld){
+					if(!fakeDef.types.contains(gunItem.definition.generic.type)){
+						fakeDef.types.add(gunItem.definition.generic.type);
 					}
 				}
 			}
@@ -134,11 +134,11 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 				//If we don't have a gun yet, try to get the current one if the player is holding one.
 				if(activeGun == null){
 					AItemBase heldItem = player.getHeldItem();
-					if(heldItem instanceof ItemPart){
-						ItemPart heldPart = (ItemPart) heldItem;
-						if(heldPart.isHandHeldGun()){
+					if(heldItem instanceof ItemPartGun){
+						ItemPartGun heldGun = (ItemPartGun) heldItem;
+						if(heldGun.definition.gun.handHeld){
 							gunStack = player.getHeldStack();
-							addPartFromItem(heldPart, new WrapperNBT(gunStack), new Point3d(), false);
+							addPartFromItem(heldGun, new WrapperNBT(gunStack), new Point3d(), false);
 							hotbarSelected = player.getHotbarIndex();
 						}
 					}
