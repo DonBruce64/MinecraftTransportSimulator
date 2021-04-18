@@ -3,7 +3,10 @@ package minecrafttransportsimulator;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.logging.log4j.Logger;
 
@@ -17,11 +20,14 @@ import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.items.instances.ItemPartPropeller;
 import minecrafttransportsimulator.items.instances.ItemPartSeat;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.APackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.common.ForgeChunkManager;
@@ -82,29 +88,44 @@ public class MasterLoader{
 			packDef.packItem = "wrench";
 			PackParserSystem.packMap.put(resourceDomain, packDef);
 			
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/fuelhose.json"), "UTF-8"), "fuelhose", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_en.json"), "UTF-8"), "handbook_en", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/handbook_ru.json"), "UTF-8"), "handbook_ru", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/jumpercable.json"), "UTF-8"), "jumpercable", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/jumperpack.json"), "UTF-8"), "jumperpack", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/key.json"), "UTF-8"), "key", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/paintgun.json"), "UTF-8"), "paintgun", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/partscanner.json"), "UTF-8"), "partscanner", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/ticket.json"), "UTF-8"), "ticket", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/wrench.json"), "UTF-8"), "wrench", resourceDomain);
-			PackParserSystem.addItemDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/items/y2kbutton.json"), "UTF-8"), "y2kbutton", resourceDomain);
-			PackParserSystem.addPartDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/parts/jerrycan.json"), "UTF-8"), "jerrycan", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/fuelpump.json"), "UTF-8"), "fuelpump", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/vehiclebench.json"), "UTF-8"), "vehiclebench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/enginebench.json"), "UTF-8"), "enginebench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/propellerbench.json"), "UTF-8"), "propellerbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/wheelbench.json"), "UTF-8"), "wheelbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/seatbench.json"), "UTF-8"), "seatbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/gunbench.json"), "UTF-8"), "gunbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/custombench.json"), "UTF-8"), "custombench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/instrumentbench.json"), "UTF-8"), "instrumentbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/decorbench.json"), "UTF-8"), "decorbench", resourceDomain);
-			PackParserSystem.addDecorDefinition(new InputStreamReader(MasterLoader.class.getResourceAsStream("/assets/" + resourceDomain + "/jsondefs/decors/itembench.json"), "UTF-8"), "itembench", resourceDomain);
+			Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
+			defaultItems.put("fuelhose", ItemClassification.ITEM);
+			defaultItems.put("handbook_en", ItemClassification.ITEM);
+			defaultItems.put("handbook_ru", ItemClassification.ITEM);
+			defaultItems.put("jumpercable", ItemClassification.ITEM);
+			defaultItems.put("jumperpack", ItemClassification.ITEM);
+			defaultItems.put("key", ItemClassification.ITEM);
+			defaultItems.put("jumperpack", ItemClassification.ITEM);
+			defaultItems.put("paintgun", ItemClassification.ITEM);
+			defaultItems.put("partscanner", ItemClassification.ITEM);
+			defaultItems.put("ticket", ItemClassification.ITEM);
+			defaultItems.put("wrench", ItemClassification.ITEM);
+			defaultItems.put("y2kbutton", ItemClassification.ITEM);
+			defaultItems.put("jerrycan", ItemClassification.PART);
+			defaultItems.put("fuelpump", ItemClassification.DECOR);
+			defaultItems.put("vehiclebench", ItemClassification.DECOR);
+			defaultItems.put("enginebench", ItemClassification.DECOR);
+			defaultItems.put("propellerbench", ItemClassification.DECOR);
+			defaultItems.put("wheelbench", ItemClassification.DECOR);
+			defaultItems.put("seatbench", ItemClassification.DECOR);
+			defaultItems.put("gunbench", ItemClassification.DECOR);
+			defaultItems.put("custombench", ItemClassification.DECOR);
+			defaultItems.put("instrumentbench", ItemClassification.DECOR);
+			defaultItems.put("decorbench", ItemClassification.DECOR);
+			defaultItems.put("itembench", ItemClassification.DECOR);
+			
+			String prefixFolders = "/assets/" + resourceDomain + "/jsondefs/";
+			for(Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()){
+				String systemName = defaultItem.getKey();
+				ItemClassification classification = defaultItem.getValue();
+				InputStreamReader reader = new InputStreamReader(MasterLoader.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), "UTF-8");
+				AJSONItem itemDef = JSONParser.parseStream(reader, classification.representingClass, packDef.packID, systemName);
+				itemDef.packID = packDef.packID;
+				itemDef.systemName = systemName;
+				itemDef.classification = classification;
+				itemDef.prefixFolders = prefixFolders;
+				PackParserSystem.registerItem(itemDef);
+			}
 		}catch(Exception e){
 			e.printStackTrace();
 		}

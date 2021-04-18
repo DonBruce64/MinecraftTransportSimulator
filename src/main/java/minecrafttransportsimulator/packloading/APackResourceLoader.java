@@ -4,7 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 
 /**
  * Class responsible for loading pack resource files from pack archives.  This happens both during load
@@ -12,28 +20,13 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  *
  * @author don_bruce
  */
-public final class PackResourceLoader{
+public abstract class APackResourceLoader{
 	
-    public static String getPackResource(AJSONItem definition, ResourceType type, String name){
-    	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
-    		case DEFAULT : {
-    			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + name + type.normalSuffix;
-    		}
-    		case LAYERED : {
-    			return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + definition.prefixFolders + name + type.normalSuffix;
-    		}
-    		case MODULAR : {
-    			return "/assets/" + definition.packID + "/" + definition.classification.toDirectory() + definition.prefixFolders + name + type.modularSuffix;
-    		}
-    	}
-    	return null;
-    }
-    
-    public enum PackStructure{
-    	DEFAULT,
-    	LAYERED,
-    	MODULAR;
-    }
+	/**
+	 *  Returns the requested resource for the passed-in definition.  Name in this case is used
+	 *  for the file-name, and may be different than the definition system name.
+	 */
+    public abstract String getPackResource(AJSONItem definition, ResourceType type, String name);
     
     public enum ResourceType{
     	OBJ("objmodels/", ".obj", ".obj"),
@@ -41,9 +34,9 @@ public final class PackResourceLoader{
     	ITEM_PNG("textures/items/", ".png", "_item.png"),
     	ITEM_JSON("models/item/", ".json", "_item.json");
     	
-    	private final String prefixFolder;
-    	private final String normalSuffix;
-    	private final String modularSuffix;
+    	public final String prefixFolder;
+    	public final String normalSuffix;
+    	public final String modularSuffix;
     	
     	private ResourceType(String prefixFolder, String normalSuffix, String modularSuffix){
     		this.prefixFolder = prefixFolder;
@@ -53,15 +46,21 @@ public final class PackResourceLoader{
     }
     
     public enum ItemClassification{
-    	VEHICLE,
-    	PART,
-    	INSTRUMENT,
-    	POLE,
-    	ROAD,
-    	DECOR,
-    	BULLET,
-    	ITEM,
-    	SKIN;
+    	VEHICLE(JSONVehicle.class),
+    	PART(JSONPart.class),
+    	INSTRUMENT(JSONInstrument.class),
+    	POLE(JSONPoleComponent.class),
+    	ROAD(JSONRoadComponent.class),
+    	DECOR(JSONDecor.class),
+    	BULLET(JSONBullet.class),
+    	ITEM(JSONItem.class),
+    	SKIN(JSONSkin.class);
+    	
+    	public final Class<? extends AJSONItem> representingClass;
+    	
+    	private ItemClassification(Class<? extends AJSONItem> representingClass){
+    		this.representingClass = representingClass;
+    	}
     	
     	public static List<String> getAllTypesAsStrings(){
         	List<String> assetTypes = new ArrayList<String>();

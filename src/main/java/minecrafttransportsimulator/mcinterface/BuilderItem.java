@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Multimap;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -233,6 +232,8 @@ public class BuilderItem extends Item{
 		for(Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()){
 			AItemBase item = entry.getKey();
 			BuilderItem mcItem = entry.getValue();
+			
+			//First check if the creative tab is set/created.
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
 				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(tabID) != null){
@@ -245,10 +246,8 @@ public class BuilderItem extends Item{
 			}
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
-			//TODO remove when packs don't register their own items.
-			if(tabID.equals(MasterLoader.MODID)){
-				event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
-			}else if(item instanceof AItemPack){
+			//Register the item.
+			if(item instanceof AItemPack){
 				if(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
 					event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
 				}

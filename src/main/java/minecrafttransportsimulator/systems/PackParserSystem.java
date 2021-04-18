@@ -41,9 +41,9 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.packloading.APackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
-import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
+import minecrafttransportsimulator.packloading.PackResourceLoaderDefault.PackStructure;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -145,7 +145,9 @@ public final class PackParserSystem{
      * Called to load and parse all packs.  this must be done after the initial checking for
      * packs to ensure we see all possible dependencies.  This method checks to make
      * sure the pack's dependent parameters are valid and the pack can be loaded prior to
-     * performing any actual loading operations.
+     * performing any actual loading operations.  Note that all packs in this routine
+     * assume the default loader.  If you want to use a custom loader, you should manually
+     * create and register your pack items and use {@link #registerItem(AJSONItem)}.
      */
     private static void parseAllPacks(){
     	List<String> packIDs = new ArrayList<String>(packMap.keySet());
@@ -244,28 +246,12 @@ public final class PackParserSystem{
 									InterfaceCore.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
-								Class<? extends AJSONItem> jsonClass = null;
-								if(classification != null){
-									switch(classification){
-										case VEHICLE : jsonClass = JSONVehicle.class; break;
-										case PART : jsonClass = JSONPart.class; break;
-										case INSTRUMENT : jsonClass = JSONInstrument.class; break;
-										case POLE : jsonClass = JSONPoleComponent.class; break;
-										case ROAD : jsonClass = JSONRoadComponent.class; break;
-										case DECOR : jsonClass = JSONDecor.class; break;
-										case BULLET : jsonClass = JSONBullet.class; break;
-										case ITEM : jsonClass = JSONItem.class; break;
-										case SKIN : jsonClass = JSONSkin.class; break;
-									}
-								}else{
-									InterfaceCore.logError("Could not determine what type of JSON to create for asset: " + fileName + ".  Check your folder paths.");
-									continue;
-								}
 								
 								//Create the JSON instance.
+								String systemName = fileName.substring(0, fileName.length() - ".json".length());
 								AJSONItem definition;
 								try{
-									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), jsonClass, packDef.packID, fileName.substring(0, fileName.length() - ".json".length()));
+									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), classification.representingClass, packDef.packID, systemName);
 								}catch(Exception e){
 									InterfaceCore.logError("Could not parse: " + packDef.packID + ":" + fileName);
 						    		InterfaceCore.logError(e.getMessage());
@@ -275,7 +261,11 @@ public final class PackParserSystem{
 								//Remove the classification folder from the assetPath.  We don't use this for the resource-loading code.
 								//Instead, this will be loaded by referencing the definition.  This also allows us to omit the path
 								//if we are loading a non-default pack format.
-								registerItem(packDef, definition, fileName.substring(0, fileName.length() - ".json".length()), assetPath.substring(classification.toDirectory().length()), classification);
+								definition.packID = packDef.packID;
+								definition.systemName = systemName;
+								definition.classification = classification;
+								definition.prefixFolders = assetPath.substring(classification.toDirectory().length()); 
+								registerItem(definition);
 							}
 						}
 					}
@@ -297,8 +287,11 @@ public final class PackParserSystem{
      * must exist somewhere in a jar in the classpath, however.  This simply bypasses the requirement that the
      * JSON file exists.  For this reason, prefixFolders is able to be defined to specify where those assets are,
      * while resourceLoader is used to specify the loader to use to load those assets.
+     * <br><br>
+     * Note that no matter what method you you use, {@link AJSONItem#packID}, {@link AJSONItem#systemName},
+     * {@link AJSONItem#classification}, and {@link AJSONItem#prefixFolders} MUST be set before calling this method.
      */
-    public static void registerItem(JSONPack packDef, AJSONItem itemDef, String systemName, String prefixFolders, ItemClassification classification){
+    public static void registerItem(AJSONItem itemDef){
     	//Create all required items.
 		if(itemDef instanceof AJSONMultiModelProvider){
 			//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
@@ -308,31 +301,19 @@ public final class PackParserSystem{
 				if(!skinMap.containsKey(skinDef.skin.packID)){
 					skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
 				}
-				itemDef.packID = packDef.packID;
 				skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
 			}else{
-				//Set code-based definition values prior to parsing all definitions out.
-		    	itemDef.packID = packDef.packID;
-		    	itemDef.systemName = systemName;
-		    	itemDef.prefixFolders = prefixFolders;
-		    	itemDef.classification = classification;
 				parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
 			}
 		}else{
 			AItemPack<?> item;
-			switch(classification){
+			switch(itemDef.classification){
 				case INSTRUMENT : item = new ItemInstrument((JSONInstrument) itemDef); break;
 				case ITEM : item = new ItemItem((JSONItem) itemDef); break;
 				default : {
-					throw new IllegalArgumentException("No corresponding classification found for asset: " + prefixFolders + " Contact the mod author!");
+					throw new IllegalArgumentException("No corresponding classification found for asset: " + itemDef.prefixFolders + " Contact the mod author!");
 				}
 			}
-			
-			//Set code-based definition values.
-	    	item.definition.packID = packDef.packID;
-	    	item.definition.systemName = systemName;
-	    	item.definition.prefixFolders = prefixFolders;
-	    	item.definition.classification = classification;
 	    	
 	    	//Put the item in the map in the registry.
 	    	if(!packItemMap.containsKey(item.definition.packID)){

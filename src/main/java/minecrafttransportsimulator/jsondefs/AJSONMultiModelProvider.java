@@ -2,10 +2,10 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.packloading.APackResourceLoader.ResourceType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-import minecrafttransportsimulator.packloading.PackResourceLoader;
-import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
+import minecrafttransportsimulator.packloading.PackResourceLoaderDefault;
 
 public abstract class AJSONMultiModelProvider extends AJSONItem{
 
@@ -16,11 +16,18 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
     public JSONRendering rendering;
 	
     @SuppressWarnings("deprecation")
+    /**
+	 *  Returns the OBJ model location in the classpath for this definition.
+	 */
 	public String getModelLocation(){
-		return PackResourceLoader.getPackResource(this, ResourceType.OBJ, general.modelName != null ? general.modelName : systemName);
+		return PackResourceLoaderDefault.INSTANCE.getPackResource(this, ResourceType.OBJ, general.modelName != null ? general.modelName : systemName);
 	}
     
+    /**
+	 *  Returns the OBJ model texture location in the classpath for this definition.
+	 *  Sub-name is passed-in as different sub-names have different textures.
+	 */
 	public String getTextureLocation(String currentSubName){
-		return PackResourceLoader.getPackResource(this, ResourceType.PNG, systemName + currentSubName);
+		return PackResourceLoaderDefault.INSTANCE.getPackResource(this, ResourceType.PNG, systemName + currentSubName);
 	}
 }
