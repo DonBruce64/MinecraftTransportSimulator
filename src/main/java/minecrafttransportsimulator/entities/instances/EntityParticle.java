@@ -16,7 +16,6 @@ import minecrafttransportsimulator.rendering.components.InterfaceRender;
  * @author don_bruce
  */
 public class EntityParticle extends AEntityB_Existing{
-	private static final Point3d ZERO_FOR_CONSTRUCTOR = new Point3d();
 	
 	//Constant properties.
 	public final JSONParticle definition;

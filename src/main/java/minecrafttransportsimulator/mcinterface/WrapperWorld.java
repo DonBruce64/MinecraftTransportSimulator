@@ -18,6 +18,7 @@ import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -959,6 +960,7 @@ public class WrapperWorld{
     public static void on(WorldEvent.Unload event){
     	if(worldWrappers.containsKey(event.getWorld())){
 	    	AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
+	    	AEntityC_Definable.removaAllEntities(worldWrappers.get(event.getWorld()));
 	    	worldWrappers.remove(event.getWorld());
 	    	for(EntityPlayer player : event.getWorld().playerEntities){
 	    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());

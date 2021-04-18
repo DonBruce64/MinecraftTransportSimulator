@@ -17,6 +17,7 @@ import minecrafttransportsimulator.sound.SoundInstance;
  * @author don_bruce
  */
 public abstract class AEntityB_Existing extends AEntityA_Base{
+	protected static final Point3d ZERO_FOR_CONSTRUCTOR = new Point3d();
 	
 	public final Point3d position;
 	public final Point3d prevPosition;

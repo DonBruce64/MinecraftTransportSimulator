@@ -28,8 +28,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 public abstract class AEntityA_Base{
 	/**Mapping of created entities.  Keyed to world instances and then their {@link #lookupID}**/
 	private static final Map<WrapperWorld, HashMap<Integer, AEntityA_Base>> entityMaps = new HashMap<WrapperWorld, HashMap<Integer, AEntityA_Base>>();
-	/**Map of created entities.  Contains all entities in the world, including those without {@link #lookupID}s**/
-	private static final Map<WrapperWorld, Set<AEntityA_Base>> createdEntities = new HashMap<WrapperWorld, Set<AEntityA_Base>>();
 	/**Internal ID counter.**/
 	private static int lookupIDCounter = 0;
 	
@@ -63,14 +61,6 @@ public abstract class AEntityA_Base{
 			this.uniqueUUID = UUID.randomUUID().toString();
 			this.lookupID = -1;
 		}
-		
-		//Add us to the main entity list.
-		Set<AEntityA_Base> worldEntities = createdEntities.get(world);
-		if(worldEntities == null){
-			worldEntities = new HashSet<AEntityA_Base>();
-			createdEntities.put(world, worldEntities);
-		}
-		worldEntities.add(this);
 	}
 	
 	/**
@@ -107,8 +97,8 @@ public abstract class AEntityA_Base{
 	}
 	
 	/**
-	 * Call to get all entities from the world.  This includes tracked 
-	 * entities only.
+	 * Call to get all tracked entities from the world.  Does not include
+	 * un-tracked, client-only entities.
 	 * 
 	 */
 	public static Collection<AEntityA_Base> getEntities(WrapperWorld world){
@@ -118,17 +108,6 @@ public abstract class AEntityA_Base{
 		}else{
 			return null;
 		}
-	}
-	
-	/**
-	 * Call to get all renderable entities from the world.  This includes
-	 * both tracked and un-tracked entities.  This list may be null on the
-	 * first frame before any entities have been spawned, and entities
-	 * may be removed from this list at any time, so watch out for CMEs!
-	 * 
-	 */
-	public static Collection<AEntityA_Base> getRenderableEntities(WrapperWorld world){
-		return createdEntities.get(world);
 	}
 	
 	/**
@@ -145,7 +124,6 @@ public abstract class AEntityA_Base{
 				entity.remove();
 			}
 			entityMaps.remove(world);
-			createdEntities.remove(world);
 		}
 	}
 	
@@ -178,7 +156,6 @@ public abstract class AEntityA_Base{
 		if(shouldSync()){
 			entityMaps.get(world).remove(lookupID);
 		}
-		createdEntities.get(world).remove(this);
 	}
 	
 	/**

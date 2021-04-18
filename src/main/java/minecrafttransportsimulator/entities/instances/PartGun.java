@@ -1,7 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -65,6 +68,7 @@ public class PartGun extends APart{
 	private long lastTimeFired;
 	private long timeToFire;
 	private final double anglePerTickSpeed;
+	private final Set<EntityBullet> activeBullets = new HashSet<EntityBullet>();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 		
 	public PartGun(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
@@ -406,6 +410,16 @@ public class PartGun extends APart{
 		if(cooldownTimeRemaining > 0){
 			--cooldownTimeRemaining;
 		}
+		
+		//Update active bullets.
+		Iterator<EntityBullet> iterator = activeBullets.iterator();
+		while(iterator.hasNext()){
+			EntityBullet bullet = iterator.next();
+			bullet.update();
+			if(!bullet.isValid){
+				iterator.remove();
+			}
+		}
 	}
 	
 	/**
@@ -504,15 +518,14 @@ public class PartGun extends APart{
 			spreadAngle.add(internalOrientation);
 			
 			//Set the bullet's direction the the provider's orientation.
-			Point3d bulletDirection = new Point3d(0D, 0D, 1D).rotateFine(spreadAngle);
-			bulletDirection.rotateFine(localAngles).rotateFine(entityOn.angles);
+			Point3d bulletVelocity = new Point3d(0D, 0D, 1D).rotateFine(spreadAngle);
+			bulletVelocity.rotateFine(localAngles).rotateFine(entityOn.angles);
 			
 			//If we have a gun with a muzzle velocity, set the bullet's velocity to that.  Otherwise set it to the vehicle's velocity.
-			Point3d bulletVelocity;
 			if(definition.gun.muzzleVelocity > 0){
-				bulletVelocity = bulletDirection.copy().multiply(definition.gun.muzzleVelocity/20D/10D);
+				bulletVelocity.multiply(definition.gun.muzzleVelocity/20D/10D);
 			}else{
-				bulletVelocity = motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR);
+				bulletVelocity.add(motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
 			}
 			
 			//Get the bullet's initial position, adjusted for barrel length and gun orientation.
@@ -527,20 +540,20 @@ public class PartGun extends APart{
 				//Try to find the entity the controller is looking at.
 				WrapperEntity entityTarget = world.getEntityLookingAt(lastController, 2000F);
 				if(entityTarget != null){
-					new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this, entityTarget);
+					activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget));
 				}else{
 					//No entity found, try blocks.
 					Point3d lineOfSight = lastController.getLineOfSight(2000F);
 					Point3d blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 					if(blockTarget != null){
-						new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this, blockTarget);
+						activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this, blockTarget));
 					}else{
 						//No block found, just fire missile off in direction facing.
-						new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this);
+						activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this));
 					}
 				}
 			}else{
-				new EntityBullet(bulletPosition, bulletDirection, bulletVelocity, this);
+				activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this));
 			}
 			
 			//Set last firing time to current time.

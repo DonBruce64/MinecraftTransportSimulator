@@ -46,8 +46,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 	private static final AnimationsBullet animator = new AnimationsBullet();
 	private static RenderBullet renderer;
 	
-    public EntityBullet(Point3d position, Point3d angles, Point3d motion, PartGun gun){
-    	super(gun.world, position, motion, angles, gun.loadedBullet);
+    public EntityBullet(Point3d position, Point3d motion, PartGun gun){
+    	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
         this.box = new BoundingBox(position, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D);
@@ -59,15 +59,17 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
         }else{
         	velocityToAddEachTick = new Point3d();
         }
+        angles.set(getPitch(), getYaw(), 0);
+        prevAngles.setTo(angles);
     }
     
-    public EntityBullet(Point3d position, Point3d angles, Point3d motion, PartGun gun, Point3d blockTargetPos){
-    	this(position, angles, motion, gun);
+    public EntityBullet(Point3d position, Point3d motion,  PartGun gun, Point3d blockTargetPos){
+    	this(position, motion, gun);
     	this.targetPosition = blockTargetPos;
     }
     
-    public EntityBullet(Point3d position, Point3d angles, Point3d motion, PartGun gun, WrapperEntity externalEntityTargeted){
-    	this(position, angles, motion, gun);
+    public EntityBullet(Point3d position, Point3d motion, PartGun gun, WrapperEntity externalEntityTargeted){
+    	this(position, motion, gun);
     	AEntityA_Base entity = externalEntityTargeted.getBaseEntity();
 		if(entity != null){
 			if(entity instanceof AEntityE_Multipart){
@@ -92,6 +94,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 	
 	@Override
 	public void update(){
+		super.update();
+		
 		//Get possible damage.
 		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, gun, null);
 		
@@ -128,13 +132,14 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 					//If we didn't, see if we hit a part instead.
 					if(armorBoxHit != null){
 						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, armorBoxHit, entity));
-						isValid = false;
+						remove();
+						return;
 					}else{
 						for(BoundingBox hitBox : hitBoxes){
 							if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
 								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
-								isValid = false;
-								break;
+								remove();
+								return;
 							}
 						}
 					}
@@ -142,13 +147,9 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 					//Must of hit a normal entity.  Set our box to the entity's box and attack it.
 					box.globalCenter.setTo(entity.getPosition());
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, entity));
-					isValid = false;
+					remove();
+					return;
 				}
-			}
-			
-			//If we hit something, don't process anything further.
-			if(!isValid){
-				return;
 			}
 		}
 		
@@ -157,7 +158,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		if(hitPos != null){
 			box.globalCenter.setTo(hitPos);
 			InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
-			isValid = false;
+			remove();
 			return;
 		}
 		
@@ -167,14 +168,14 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 				double distanceUntilImpact = position.distanceTo(targetPosition);
 				if(distanceUntilImpact <= definition.bullet.proximityFuze){
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
-					isValid = false;
+					remove();
 					return;
 				}
 			}
 			Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
 			if(projectedImpactPoint != null){
 				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
-				isValid = false;
+				remove();
 				return;
 			}
 		}
@@ -183,7 +184,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		if(definition.bullet.airBurstDelay != 0) {
 			if(ticksExisted > definition.bullet.airBurstDelay){
 				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
-				isValid = false;
+				remove();
 				return;
 			}
 		}
@@ -196,6 +197,12 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 				motion.add(motion.copy().normalize().multiply(-definition.bullet.slowdownSpeed));
 			}
 			motion.y -= gun.definition.gun.gravitationalVelocity;
+
+			//Check to make sure we haven't gone too many ticks.
+			if(ticksExisted > definition.bullet.burnTime + 200){
+				remove();
+				return;
+			}
 		}else{
 			if(ticksExisted < definition.bullet.accelerationTime){
 				//Add velocity requested watch tick we are accelerating.
@@ -282,9 +289,12 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			}	
 		}
 		
-		//Send our updated motion to the super to update the position.
+		//Add our updated motion to the position.
+		//Then set the angles to match the motion.
 		//Doing this last lets us damage on the first update tick.
-		super.update();
+		angles.set(getPitch(), getYaw(), 0);
+		position.add(motion);
+		
 	}
 	
 	@Override

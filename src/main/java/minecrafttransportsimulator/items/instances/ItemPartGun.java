@@ -22,7 +22,7 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 
 	@Override
 	public boolean isPartValidForPackDef(JSONPartDefinition placementDefinition, String subNameToPlaceOn, boolean checkMinMax){
-		return super.isPartValidForPackDef(placementDefinition, subNameToPlaceOn, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.propeller.diameter && placementDefinition.maxValue >= definition.propeller.diameter));
+		return super.isPartValidForPackDef(placementDefinition, subNameToPlaceOn, checkMinMax) && (!checkMinMax || (placementDefinition.minValue <= definition.gun.diameter && placementDefinition.maxValue >= definition.gun.diameter));
 	}
 	
 	@Override

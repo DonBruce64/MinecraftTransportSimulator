@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
@@ -56,7 +55,7 @@ public class InterfaceEventsModelLoader{
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event){
 		//Register the global entity rendering class.
@@ -64,7 +63,7 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager){
 			return new Render<BuilderEntityRenderForwarder>(manager){
-				Collection<AEntityA_Base> entities = new HashSet<AEntityA_Base>();
+				Collection<AEntityC_Definable<?>> entities = new HashSet<AEntityC_Definable<?>>();
 				@Override
 				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
@@ -75,16 +74,13 @@ public class InterfaceEventsModelLoader{
 					//Get all entities in the world, and render them manually for this one builder.
 					//Only do this if the player the builder is following is the client player.
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing)){
-						Collection<AEntityA_Base> allEntities = AEntityA_Base.getEntities(WrapperWorld.getWrapperFor(builder.world));
+						Collection<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
 						if(allEntities != null){
 							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
 							entities.clear();
 							entities.addAll(allEntities);
-							for(AEntityA_Base entity : entities){
-								if(entity instanceof AEntityC_Definable){
-									AEntityC_Definable definableEntity = (AEntityC_Definable<?>) entity;
-									definableEntity.getRenderer().render(definableEntity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
-								}
+							for(AEntityC_Definable<?> entity : entities){
+								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 							}
 						}
 					}

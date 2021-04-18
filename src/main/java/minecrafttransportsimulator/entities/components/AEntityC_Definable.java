@@ -1,9 +1,12 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -37,6 +40,8 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityB_Existing{
+	/**Map of created entities that can be rendered in the world, including those without {@link #lookupID}s.**/
+	private static final Map<WrapperWorld, Set<AEntityC_Definable<?>>> renderableEntities = new HashMap<WrapperWorld, Set<AEntityC_Definable<?>>>();
 	
 	/**The pack definition for this entity.  May contain extra sections if the super-classes
 	 * have them in their respective JSONs.
@@ -108,9 +113,45 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 *  Helper method for populating sound and particle maps.
+	 * Call to get all renderable entities from the world.  This includes
+	 * both tracked and un-tracked entities.  This list may be null on the
+	 * first frame before any entities have been spawned, and entities
+	 * may be removed from this list at any time, so watch out for CMEs!
+	 * 
+	 */
+	public static Collection<AEntityC_Definable<?>> getRenderableEntities(WrapperWorld world){
+		return renderableEntities.get(world);
+	}
+	
+	/**
+	 * Call this if you need to remove all entities from the world.  Used mainly when
+	 * a world is un-loaded because no players are in it anymore.
+	 */
+	public static void removaAllEntities(WrapperWorld world){
+		Collection<AEntityC_Definable<?>> existingEntities = renderableEntities.get(world);
+		if(existingEntities != null){
+			//Need to copy the entities so we don't CME the map keys.
+			Set<AEntityA_Base> entities = new HashSet<AEntityA_Base>();
+			entities.addAll(existingEntities);
+			for(AEntityA_Base entity : entities){
+				entity.remove();
+			}
+			renderableEntities.remove(world);
+		}
+	}
+	
+	/**
+	 *  Helper method for populating rendering, sound, and particle maps.
 	 */
 	private void populateMaps(){
+		//Add us to the entity rendering list..
+		Set<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
+		if(worldEntities == null){
+			worldEntities = new HashSet<AEntityC_Definable<?>>();
+			renderableEntities.put(world, worldEntities);
+		}
+		worldEntities.add(this);
+		
 		allSoundDefs.clear();
 		soundActiveClocks.clear();
 		soundVolumeClocks.clear();
@@ -157,6 +198,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
 			}
 		}
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		renderableEntities.get(world).remove(this);
 	}
 	
 	/**
