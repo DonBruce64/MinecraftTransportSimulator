@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.rendering.components.AAnimationsBase;
@@ -22,7 +23,8 @@ public final class AnimationsPoleComponent extends AAnimationsBase<ATileEntityPo
 		//Check connector variables.
 		if(variable.startsWith("neighbor_present_")){
 			Axis axis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase());
-			return component.world.getBlock(component.core.position).equals(component.world.getBlock(axis.getOffsetPoint(component.position))) ? 1 : 0;
+			ABlockBase componentBlock = component.world.getBlock(component.core.position);
+			return componentBlock != null && componentBlock.equals(component.world.getBlock(axis.getOffsetPoint(component.position))) ? 1 : 0;
 		}
 		//Check solid block variables.
 		if(variable.startsWith("solid_present_")){
