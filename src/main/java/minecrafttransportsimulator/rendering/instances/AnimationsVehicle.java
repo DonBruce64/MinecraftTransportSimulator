@@ -27,7 +27,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 	 *  Part number is 0-indexed to conform to the list indexes internal to vehicle parts.
 	 */
 	public static int getPartNumber(String variable){
-		if(variable.substring(variable.length() - 1).matches("[0-9]+")){
+		if(variable.matches("^.*_[0-9]+$")){
 			return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
 		}else{
 			return -1;
