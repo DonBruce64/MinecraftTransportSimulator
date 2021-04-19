@@ -104,27 +104,20 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
 	    			
 	    			//Update AABBs.
-	        		//We need to update a wrapper class here as normal entities only allow a single collision box.
-	        		//We also need to know if we need to increase the max world collision bounds to detect this entity.
+	        		//We need to know if we need to increase the max world collision bounds to detect this entity.
 	        		//Only do this after the first tick of the entity, as we might have some states that need updating
 	        		//on that first tick that would cause bad maths.
 	        		//We also do this only every second, as it prevents excess checks.
-	        		interactionBoxes = new WrapperAABBCollective(this, interactable instanceof AEntityE_Multipart ? ((AEntityE_Multipart<?>) interactable).allInteractionBoxes : interactable.interactionBoxes);
-	        		collisionBoxes = new WrapperAABBCollective(this, interactable instanceof AEntityE_Multipart ? ((AEntityE_Multipart<?>) interactable).allCollisionBoxes : interactable.collisionBoxes);
+	        		interactionBoxes = new WrapperAABBCollective(this, interactable.getInteractionBoxes());
+	        		collisionBoxes = new WrapperAABBCollective(this, interactable.getCollisionBoxes());
 	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
-	    	    		double furthestWidthRadius = 0;
-	    	    		double furthestHeightRadius = 0;
-	    	    		for(BoundingBox box : interactionBoxes.boxes){
-	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.x - interactable.position.x + box.widthRadius));
-	    	    			furthestHeightRadius = (float) Math.max(furthestHeightRadius, Math.abs(box.globalCenter.y - interactable.position.y + box.heightRadius));
-	    	    			furthestWidthRadius = (float) Math.max(furthestWidthRadius, Math.abs(box.globalCenter.z - interactable.position.z + box.depthRadius));
-	    	    		}
-	    	    		setSize((float) furthestWidthRadius*2F, (float) furthestHeightRadius*2F);
-	    	    		
-	    	    		//Make sure the collision bounds for MC are big enough to collide with this entity.
-	    				if(World.MAX_ENTITY_RADIUS < furthestWidthRadius || World.MAX_ENTITY_RADIUS < furthestHeightRadius){
-	    					World.MAX_ENTITY_RADIUS = Math.max(furthestWidthRadius, furthestHeightRadius);
-	    				}
+	        			if(entity.boundingBox != null){
+	        				setSize((float) entity.boundingBox.widthRadius*2F, (float) entity.boundingBox.heightRadius*2F);
+	        				//Make sure the collision bounds for MC are big enough to collide with this entity.
+		    				if(World.MAX_ENTITY_RADIUS < entity.boundingBox.widthRadius || World.MAX_ENTITY_RADIUS < entity.boundingBox.heightRadius){
+		    					World.MAX_ENTITY_RADIUS = Math.max(entity.boundingBox.widthRadius, entity.boundingBox.heightRadius);
+		    				}
+	        			}
 	        		}
 	        		
 	        		//Check that riders are still present prior to updating them.

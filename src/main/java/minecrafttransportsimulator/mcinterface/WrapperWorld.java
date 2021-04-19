@@ -588,7 +588,7 @@ public class WrapperWorld{
 				}
 			}
 			if(collisionMotion.z > 0){
-				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
+				boxCollisionDepth = mcBox.maxZ - colBox.minZ;
 				if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
 					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
 				}

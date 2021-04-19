@@ -3,6 +3,8 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -27,6 +29,7 @@ public class VehicleGroundDeviceBox{
 	private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
 	
 	public boolean canRollOnGround;
+	public boolean contactedEntity;
 	public boolean isCollided;
 	public boolean isCollidedLiquid;
 	public boolean isGrounded;
@@ -201,10 +204,10 @@ public class VehicleGroundDeviceBox{
 		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
 			contactPoint.setTo(solidBox.localCenter).add(0D, -solidBox.heightRadius, 0D);
-			
 			solidBox.globalCenter.setTo(solidBox.localCenter).rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
-			isCollided = !solidBox.collidingBlockPositions.isEmpty();
+			contactedEntity = checkEntityCollisions(vehicleMotionOffset);
+			isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
 			collisionDepth = solidBox.currentCollisionDepth.y;
 			PartGroundDevice.groundOperationOffset.set(0 , -0.5, 0);
 			if(isCollided){
@@ -212,8 +215,9 @@ public class VehicleGroundDeviceBox{
 			}else{
 				solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
+				contactedEntity = checkEntityCollisions(groundCollisionOffset);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundDetectionOffset);
-				isGrounded = !solidBox.collidingBlockPositions.isEmpty();
+				isGrounded = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
 			}
 			
 			if(isGrounded){
@@ -222,8 +226,9 @@ public class VehicleGroundDeviceBox{
 				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
 				solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
 				vehicle.world.updateBoundingBoxCollisions(solidBox, groundCollisionOffset, false);
+				contactedEntity = checkEntityCollisions(groundCollisionOffset);
 				solidBox.globalCenter.subtract(PartGroundDevice.groundOperationOffset);
-				isAbleToDoGroundOperations = !solidBox.collidingBlockPositions.isEmpty();
+				isAbleToDoGroundOperations = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
 			}
 		}
 		
@@ -281,6 +286,45 @@ public class VehicleGroundDeviceBox{
 		if(groundedGroundDevices != null && isAbleToDoGroundOperations){
 			groundedGroundDevices.addAll(groundDevices);
 		}
+	}
+	
+	/**
+	 * Helper method for checking for entity collisions.
+	 */
+	private boolean checkEntityCollisions(Point3d collisionMotion){
+		boolean didCollision = false;
+		for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicle.world)){
+			if(entity instanceof AEntityD_Interactable && !entity.equals(vehicle)){
+				AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+				if(interactable.canBeCollidedWith() && !interactable.collidedEntities.contains(vehicle) && interactable.boundingBox.intersects(solidBox)){
+					//We know we could have hit this entity.  Check if we actually did.
+					BoundingBox collidingBox = null;
+					double boxCollisionDepth = 0;
+					for(BoundingBox box : interactable.getCollisionBoxes()){
+						if(box.intersects(solidBox)){
+							if(collisionMotion.y > 0){
+								boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
+								if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
+									solidBox.currentCollisionDepth.y = boxCollisionDepth;
+									collidingBox = box;
+								}
+							}else{
+								boxCollisionDepth = box.globalCenter.y + box.heightRadius - (solidBox.globalCenter.y - solidBox.heightRadius);
+								if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
+									solidBox.currentCollisionDepth.y = boxCollisionDepth;
+									collidingBox = box;
+								}
+							}
+						}
+					}
+					if(collidingBox != null){
+						vehicle.collidedEntities.add(interactable);
+						didCollision = true;
+					}
+				}
+			}
+		}
+		return didCollision;
 	}
 	
 	/**

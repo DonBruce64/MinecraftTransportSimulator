@@ -19,7 +19,6 @@ public class EntityParticle extends AEntityB_Existing{
 	
 	//Constant properties.
 	public final JSONParticle definition;
-	public final BoundingBox box;
 	public final int maxAge;
 	
 	private final Color startColor;
@@ -45,7 +44,7 @@ public class EntityParticle extends AEntityB_Existing{
 		}
 		
 		this.definition = definition;
-		this.box = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
+		this.boundingBox = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
 		this.maxAge = generateMaxAge();
 		if(definition.color != null){
 			if(definition.toColor != null){
@@ -128,9 +127,9 @@ public class EntityParticle extends AEntityB_Existing{
 		}
 		
 		//Check collision movement.  If we hit a block, don't move.
-		touchingBlocks = box.updateMovingCollisions(world, motion);
+		touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
 		if(touchingBlocks){
-			motion.add(-box.currentCollisionDepth.x*Math.signum(motion.x), -box.currentCollisionDepth.y*Math.signum(motion.y), -box.currentCollisionDepth.z*Math.signum(motion.z));
+			motion.add(-boundingBox.currentCollisionDepth.x*Math.signum(motion.x), -boundingBox.currentCollisionDepth.y*Math.signum(motion.y), -boundingBox.currentCollisionDepth.z*Math.signum(motion.z));
 		}
 		position.add(motion);
 		

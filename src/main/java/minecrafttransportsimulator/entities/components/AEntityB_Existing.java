@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -27,6 +28,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
+	public BoundingBox boundingBox;
 	public double airDensity;
 	public double velocity;
 	
@@ -45,6 +47,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
+		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false, false, false, 0);
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
 	}
 	
@@ -59,6 +62,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = new Point3d();
 		this.prevRotation = rotation.copy();
+		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false, false, false, 0);
 		this.radio = null;
 	}
 	
@@ -106,6 +110,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public boolean shouldSavePosition(){
 		return true;
+	}
+	
+	/**
+	 *  Returns true if this entity can be collided with.  Normally this is false, but there
+	 *  are times where entities should affect collision.
+	 */
+	public boolean canBeCollidedWith(){
+		return false;
 	}
 	
 	/**

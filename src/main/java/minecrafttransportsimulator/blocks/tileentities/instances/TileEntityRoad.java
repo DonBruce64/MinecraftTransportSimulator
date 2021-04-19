@@ -47,7 +47,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Static variables based on core definition.
-	public final BoundingBox boundingBox;
 	public BezierCurve dynamicCurve;
 	public final List<RoadLane> lanes;
 

@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -274,6 +275,21 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
     		}
     	}
     }
+	
+	@Override
+    public Collection<BoundingBox> getCollisionBoxes(){
+    	return allCollisionBoxes;
+    }
+	
+	@Override
+    public Collection<BoundingBox> getInteractionBoxes(){
+    	return allInteractionBoxes;
+    }
+	
+	@Override
+	public boolean canBeCollidedWith(){
+		return true;
+	}
 	
 	/**
 	 * Called to update the parts on this entity.  This should be called after all movement on the
@@ -765,6 +781,16 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			//Conditions to add have been met, add boxes.
 			allInteractionBoxes.addAll(part.interactionBoxes);
 		}
+		
+		//Update master bounding box.
+		boundingBox.widthRadius = 0;
+		boundingBox.heightRadius = 0;
+		for(BoundingBox box : allInteractionBoxes){
+			boundingBox.widthRadius = (float) Math.max(boundingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
+			boundingBox.heightRadius = (float) Math.max(boundingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
+			boundingBox.widthRadius = (float) Math.max(boundingBox.widthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
+		}
+		boundingBox.depthRadius = boundingBox.widthRadius;
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,6 +49,11 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	
 	/**Map of door boxes.  Key is the box, value is the JSON entry that it was created from.**/
 	public final Map<BoundingBox, JSONDoor> doorBoxes = new HashMap<BoundingBox, JSONDoor>();
+	
+	/**Set of entities that this entity collided with this tick.  Any entity that is in this set 
+	 * should NOT do collision checks with this entity, or infinite loops will occur.
+	 * This set should be cleared after all collisions have been checked.**/
+	public final Set<AEntityD_Interactable<?>> collidedEntities = new HashSet<AEntityD_Interactable<?>>();
 	
 	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
 	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
@@ -132,6 +138,20 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			}
 		}
 	}
+	
+	/**
+   	 *  Returns a collection of BoundingBoxes that make up this entity's collision bounds.
+   	 */
+    public Collection<BoundingBox> getCollisionBoxes(){
+    	return collisionBoxes;
+    }
+    
+    /**
+   	 *  Returns a collection of BoundingBoxes that make up this entity's interaction bounds.
+   	 */
+    public Collection<BoundingBox> getInteractionBoxes(){
+    	return interactionBoxes;
+    }
 	
 	/**
 	 *  Called to update the passed-in rider.  This gets called after the update loop,

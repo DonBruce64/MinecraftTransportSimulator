@@ -63,7 +63,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public final Point3d localOffset;
 	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
-	public final BoundingBox boundingBox;
 		
 	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, data);

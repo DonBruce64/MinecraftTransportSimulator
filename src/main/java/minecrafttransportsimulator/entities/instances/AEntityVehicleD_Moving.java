@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -73,13 +74,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3d clientDeltaRApplied = new Point3d();
 	private final Point3d roadMotion = new Point3d();
 	private final Point3d roadRotation = new Point3d();
+	private final Point3d collisionMotion = new Point3d();
+	private final Point3d collisionRotation = new Point3d();
 	private final Point3d motionApplied = new Point3d();
 	private final Point3d rotationApplied = new Point3d();
 	private final Point3d tempBoxPosition = new Point3d();
 	private final Point3d tempBoxRotation = new Point3d();
 	private final Point3d normalizedGroundVelocityVector = new Point3d();
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
-  	public final VehicleGroundDeviceCollection groundDeviceCollective;
+	private AEntityD_Interactable<?> lastCollidedEntity;
+  	public VehicleGroundDeviceCollection groundDeviceCollective;
 	
 	public AEntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -469,6 +473,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	private void moveVehicle(){
 		//First, update the vehicle ground device boxes.
+		collidedEntities.clear();
 		groundDeviceCollective.updateCollisions();
 		
 		//If we aren't on a road, try to find one.
@@ -613,10 +618,51 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 			}
 		}
+		
+		//If we collided with any entities, move us with them.
+		//This allows for transports without mounting.
+		if(!collidedEntities.isEmpty()){
+			for(AEntityD_Interactable<?> interactable : collidedEntities){
+				if(interactable instanceof AEntityVehicleD_Moving){
+					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
+					
+					//Set angluar movement delta.
+					collisionRotation.setTo(mainVehicle.angles).subtract(mainVehicle.prevAngles);
+					
+					//Get vector from collided box to this entity.
+					Point3d centerOffset = position.copy().subtract(mainVehicle.prevPosition);
+					
+					//Add rotation contribution to offset.
+					collisionMotion.setTo(centerOffset).rotateFine(collisionRotation).subtract(centerOffset);
+					
+					//Add linear contribution to offset.
+					collisionMotion.add(mainVehicle.position).subtract(mainVehicle.prevPosition);
+					
+					//If we just contacted an entity, adjust our motion to match that entity's motion.
+					//We take our motion, and then remove it so it's the delta to that entity.
+					//This ensures that if we're moving and land on an entity, we don't run off.
+					if(lastCollidedEntity == null){
+						lastCollidedEntity = interactable;
+						motion.subtract(lastCollidedEntity.motion);
+					}
+					
+					//Only check one for now.  We could do multiple, but then we'd have to do maths.
+					break;
+				}
+			}
+		}else{
+			if(lastCollidedEntity != null){
+				//Add-back to our motion by adding the entity's motion.
+				motion.add(lastCollidedEntity.motion);
+				lastCollidedEntity = null;
+			}
+		}
 
 		//Now that that the movement has been checked, move the vehicle.
-		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion);
-		rotationApplied.setTo(rotation).add(roadRotation);
+		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
+		rotationApplied.setTo(rotation).add(roadRotation).add(collisionRotation);
+		collisionMotion.set(0, 0, 0);
+		collisionRotation.set(0, 0, 0);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied);

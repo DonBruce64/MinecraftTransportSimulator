@@ -34,7 +34,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class EntityBullet extends AEntityC_Definable<JSONBullet>{	
 	private final PartGun gun;
 	public final int bulletNumber;
-	private final BoundingBox box;
 	private final double initialVelocity;
 	private final double anglePerTickSpeed;
 	private final Point3d velocityToAddEachTick;
@@ -50,7 +49,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
-        this.box = new BoundingBox(position, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D);
+        this.boundingBox = new BoundingBox(position, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D);
         this.initialVelocity = motion.length();
         this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
         if(definition.bullet.accelerationTime > 0){
@@ -97,7 +96,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		super.update();
 		
 		//Get possible damage.
-		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, box, gun, null);
+		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
 		
 		//Check for collided entities and attack them.
 		//If we collide with an armored vehicle, try to penetrate it.
@@ -145,8 +144,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 					}
 				}else{
 					//Must of hit a normal entity.  Set our box to the entity's box and attack it.
-					box.globalCenter.setTo(entity.getPosition());
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, entity));
+					boundingBox.globalCenter.setTo(entity.getPosition());
+					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, entity));
 					remove();
 					return;
 				}
@@ -156,8 +155,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		//Didn't hit an entity.  Check for blocks.
 		Point3d hitPos = world.getBlockHit(position, motion);
 		if(hitPos != null){
-			box.globalCenter.setTo(hitPos);
-			InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
+			boundingBox.globalCenter.setTo(hitPos);
+			InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
 			remove();
 			return;
 		}
@@ -167,14 +166,14 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			if(targetPosition != null){
 				double distanceUntilImpact = position.distanceTo(targetPosition);
 				if(distanceUntilImpact <= definition.bullet.proximityFuze){
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
+					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
 					remove();
 					return;
 				}
 			}
 			Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
 			if(projectedImpactPoint != null){
-				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
+				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
 				remove();
 				return;
 			}
@@ -183,7 +182,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		//Didn't hit a block either. Check the air-burst time, if it was used.
 		if(definition.bullet.airBurstDelay != 0) {
 			if(ticksExisted > definition.bullet.airBurstDelay){
-				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, box, null));
+				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
 				remove();
 				return;
 			}

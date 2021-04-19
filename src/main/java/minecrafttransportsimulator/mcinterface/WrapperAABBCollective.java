@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.annotation.Nullable;
 
@@ -19,10 +19,10 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public class WrapperAABBCollective extends AxisAlignedBB{
-	public final List<BoundingBox> boxes;
+	public final Collection<BoundingBox> boxes;
 	public BoundingBox lastBoxRayTraced;
 	
-	public WrapperAABBCollective(BuilderEntityExisting entity, List<BoundingBox> boxes){
+	public WrapperAABBCollective(BuilderEntityExisting entity, Collection<BoundingBox> boxes){
 		super(	entity.posX - entity.width/2D,
 				entity.posY - entity.height/2D,
 				entity.posZ - entity.width/2D,
