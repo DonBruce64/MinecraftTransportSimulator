@@ -147,7 +147,11 @@ public class GUIPanelGround extends AGUIPanel{
 					}else if(selectorState == 1 && leftSide){
 						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
 					}else if(selectorState == 2 && leftSide){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+						}else{
+							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						}
 					}
 				}
 				
@@ -315,8 +319,12 @@ public class GUIPanelGround extends AGUIPanel{
 		//Set the state of the engine selectors.
 		for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
 			if(vehicle.engines.containsKey(engineEntry.getKey())){
-				PartEngine.EngineStates engineState = vehicle.engines.get(engineEntry.getKey()).state;
-				engineEntry.getValue().selectorState = !engineState.magnetoOn ? 0 : (!engineState.esOn ? 1 : 2);
+				PartEngine engine = vehicle.engines.get(engineEntry.getKey());
+				if(engine.definition.engine.disableAutomaticStarter){
+					engineEntry.getValue().selectorState = engine.state.magnetoOn ? 2 : 0;
+				}else{
+					engineEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+				}
 			}
 		}
 		

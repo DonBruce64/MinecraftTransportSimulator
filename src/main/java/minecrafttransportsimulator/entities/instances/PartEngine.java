@@ -102,6 +102,20 @@ public class PartEngine extends APart{
 	
 	@Override
 	public void attack(Damage damage){
+		if(definition.engine.disableAutomaticStarter){
+			//Check if this is a hand-start command.
+			if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
+				if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
+					if(!state.magnetoOn){
+						setMagnetoStatus(true);
+						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.MAGNETO_ON));
+					}
+					handStartEngine();
+					InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
+					return;
+				}
+			}
+		}
 		if(!isCreative){
 			if(damage.isExplosion){
 				hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;

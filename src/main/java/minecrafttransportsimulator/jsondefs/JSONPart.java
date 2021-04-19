@@ -101,6 +101,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Should the engine change gears on its own.  This only affects cars and will prevent users from shifting into higher or lower gears using shiftUp and shiftDown. Instead, the engine will attempt to choose the best gear for the situation.  Note that MTS's automatic transmission system isn't the best and may get confused when gear ratios are close together.  For this reason, it is recommended to either use manual transmissions on vehicles with more than 5-6 gears, or to define the RPM at which a gear is shifted up or down via upShiftRPM and downShiftRPM.")
     	public boolean isAutomatic;
 		
+		@JSONDescription("If true, the automatic starter will be distabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
+    	public boolean disableAutomaticStarter;
+		
     	public boolean isSteamPowered;
 		
 		@JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
@@ -266,6 +269,9 @@ public class JSONPart extends AJSONPartProvider{
     public class JSONPartGun{
 		@JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
     	public boolean autoReload;
+
+		@JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
+        public boolean handHeld;
 		
 		@JSONDescription("If set, the gun will only be able to be fired once per button press.")
     	public boolean isSemiAuto;
@@ -275,6 +281,12 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("The same as above, just for pitch.  You'll likely want this on all turret-mounted guns to prevent the entire turret from moving.")
     	public boolean pitchIsInternal;
+		
+		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
+    	public boolean fireSolo;
+		
+		@JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
+    	public boolean resetPosition;
 		
 		@JSONDescription("The capacity of the gun, in number of bullets.")
     	public int capacity;
@@ -297,9 +309,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How much spread the bullet will have when fired.  0 is no spread, higher values have higher spread.")
     	public float bulletSpreadFactor;
 		
-		@JSONDescription("An optional list of positions. Bullets will be fired the defined positions (or the origin if no positions are defined) plus one barrel-length in the +Z axis in the direction the gun is rotated. There are 2 possible cases when using muzzlePositions:\nIf there are the same number of muzzlePositions as the capacity of the gun, the gun will cycle through each of the muzzle positions in order. The order will be the same every time, and reloading will reset the order proportionate to how many bullets were reloaded. This is useful for rocket pods, missile launchers, and bombs.\nIf the number of muzzlePositions doesn't match the capacity, the gun will cycle through the positions, resetting to the first muzzle once the last one has been used. This is useful for guns with multiple barrels, like anti-air/flak guns and some airplane turrets. If only one muzzle position is defined, it will use the same position every time.")
-    	public List<Point3d> muzzlePositions;
-		
 		@JSONDescription("The minimum pitch this gun can angle downwards when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
     	public float minPitch;
 		
@@ -315,7 +324,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The diameter of this gun.  This defines what ammo diameter may be used with it, and is what corresponds to the min-max parameters in the vehicle JSON.  It is also used to calculate rotation speed.  Units are in mm.")
     	public float diameter;
 		
-		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns (unless their travel speed is specified), but greater accuracy at long ranges.  Units are in meters.")
+		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns (unless their travel speed is specified).  Units are in meters.")
     	public float length;
 		
 		@JSONDescription("The minimum case length of bullets that can go into this gun.  Useful for preventing extra-long bullets from going into a gun that normally fires short ones.  Units are in mm.")
@@ -327,20 +336,11 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How fast, in degrees/tick, the gun can rotate.  This is normally auto-calculated from the gun's length, but it may be specified here if desired.")
     	public float travelSpeed;
 		
-		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
-    	public boolean fireSolo;
-		
-		@JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
-    	public boolean resetPosition;
-		
 		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultPitch;
 		
 		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultYaw;
-        
-		@JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand.  All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling.  Instead, they will be activated when the player sneaks.  This is intended to allow for scopes and the like.")
-        public boolean handHeld;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
@@ -349,6 +349,9 @@ public class JSONPart extends AJSONPartProvider{
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
 		public Point3d handHeldAimedOffset;
+        
+		@JSONDescription("An optional list of positions. Bullets will be fired the defined positions (or the origin if no positions are defined) plus one barrel-length in the +Z axis in the direction the gun is rotated. There are 2 possible cases when using muzzlePositions:\nIf there are the same number of muzzlePositions as the capacity of the gun, the gun will cycle through each of the muzzle positions in order. The order will be the same every time, and reloading will reset the order proportionate to how many bullets were reloaded. This is useful for rocket pods, missile launchers, and bombs.\nIf the number of muzzlePositions doesn't match the capacity, the gun will cycle through the positions, resetting to the first muzzle once the last one has been used. This is useful for guns with multiple barrels, like anti-air/flak guns and some airplane turrets. If only one muzzle position is defined, it will use the same position every time.")
+    	public List<Point3d> muzzlePositions;
     }
     
     public class JSONPartInteractable{

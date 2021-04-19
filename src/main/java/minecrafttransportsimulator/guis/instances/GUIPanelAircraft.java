@@ -367,7 +367,9 @@ public class GUIPanelAircraft extends AGUIPanel{
 		//Set the states of the starter selectors.
 		for(Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()){
 			if(vehicle.engines.containsKey(starterEntry.getKey())){
-				starterEntry.getValue().selectorState = vehicle.engines.get(starterEntry.getKey()).state.magnetoOn ? (vehicle.engines.get(starterEntry.getKey()).state.esOn ? 2 : 1) : 0;
+				PartEngine engine = vehicle.engines.get(starterEntry.getKey());
+				starterEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+				starterEntry.getValue().visible = !engine.definition.engine.disableAutomaticStarter;
 			}
 		}
 				
