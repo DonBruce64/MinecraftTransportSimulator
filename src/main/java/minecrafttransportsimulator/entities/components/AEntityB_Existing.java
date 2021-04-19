@@ -113,10 +113,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**
-	 *  Returns true if this entity can be collided with.  Normally this is false, but there
+	 *  Returns true if this entity can collide with the passed-in entity.  Normally this is false, but there
 	 *  are times where entities should affect collision.
 	 */
-	public boolean canBeCollidedWith(){
+	public boolean canCollideWith(AEntityB_Existing entityToCollide){
 		return false;
 	}
 	

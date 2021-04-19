@@ -14,6 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -186,6 +187,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	@Override
 	public boolean needsChunkloading(){
 		return rearFollower != null || (towedByVehicle != null && towedByVehicle.rearFollower != null);
+	}
+	
+	@Override
+	public boolean canCollideWith(AEntityB_Existing entityToCollide){
+		return !entityToCollide.equals(towedByVehicle) && !entityToCollide.equals(towedVehicle); 
 	}
 	
 	/**
@@ -625,7 +631,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			for(AEntityD_Interactable<?> interactable : collidedEntities){
 				if(interactable instanceof AEntityVehicleD_Moving){
 					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
-					
 					//Set angluar movement delta.
 					collisionRotation.setTo(mainVehicle.angles).subtract(mainVehicle.prevAngles);
 					
