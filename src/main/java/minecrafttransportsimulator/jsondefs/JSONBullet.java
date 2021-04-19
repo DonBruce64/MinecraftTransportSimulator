@@ -12,7 +12,7 @@ public class JSONBullet extends AJSONMultiModelProvider{
     
     public class Bullet{
     	@JSONRequired
-		@JSONDescription("A list of strings describing the bullet.  This defines how it inflicts damage on whatever it hits.")
+		@JSONDescription("A list of types describing the bullet.  This defines how it inflicts damage on whatever it hits.")
     	public List<BulletType> types;
 		
 		@JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")

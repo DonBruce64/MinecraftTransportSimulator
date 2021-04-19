@@ -50,6 +50,8 @@ public class GUIConfig extends AGUIBase{
 	
 	//Joystick component selection variables.
 	private int scrollSpot = 0;
+	private int selectedJoystickAxisCount = 0;
+	private int selectedJoystickButtonCount = 0;
 	private String selectedJoystick;
 	private GUIComponentButton componentListUpButton;
 	private GUIComponentButton componentListDownButton;
@@ -211,7 +213,11 @@ public class GUIConfig extends AGUIBase{
 		joystickSelectionButtons.clear();
 		for(String joystick : InterfaceInput.getAllJoysticks()){
 			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, String.format(" %-30.28s", joystick), 20, false){@Override
-			public void onClicked(){selectedJoystick = joystickSelectionButtons.get(this);}};
+			public void onClicked(){
+				selectedJoystick = joystickSelectionButtons.get(this);
+				selectedJoystickAxisCount = InterfaceInput.getJoystickAxisCount(selectedJoystick);
+				selectedJoystickButtonCount = InterfaceInput.getJoystickButtonCount(selectedJoystick);
+			}};
 			joystickSelectionButtons.put(button, joystick);
 			addButton(button);
 			
@@ -405,10 +411,15 @@ public class GUIConfig extends AGUIBase{
 		boolean onComponentSelectScreen = selectedJoystick != null && joystickComponentId == -1;
 		for(byte i=0; i<9; ++i){
 			GUIComponentButton button = joystickComponentSelectionButtons.get(i);
-			button.visible = onComponentSelectScreen && i + scrollSpot < InterfaceInput.getJoystickInputCount(selectedJoystick);
+			button.visible = onComponentSelectScreen && i + scrollSpot < selectedJoystickAxisCount + selectedJoystickButtonCount;
 			if(button.visible){
 				//Set basic button text.
-				button.text = String.format(" %02d  %-15.15s", i+scrollSpot+1, InterfaceInput.getJoystickInputName(selectedJoystick, i+scrollSpot));
+				int controlIndex = i+scrollSpot;
+				if(controlIndex < selectedJoystickAxisCount){
+					button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceInput.getJoystickAxisName(selectedJoystick, controlIndex));
+				}else{
+					button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceInput.getJoystickButtonName(selectedJoystick, controlIndex - selectedJoystickAxisCount));
+				}
 				
 				//If this joystick is assigned to a control, append that to the text string.
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
@@ -427,7 +438,7 @@ public class GUIConfig extends AGUIBase{
 		deadzone_text.visible = onComponentSelectScreen;
 		if(onComponentSelectScreen){
 			componentListUpButton.enabled = scrollSpot - 9 >= 0;
-			componentListDownButton.enabled = scrollSpot + 9 < InterfaceInput.getJoystickInputCount(selectedJoystick);
+			componentListDownButton.enabled = scrollSpot + 9 < selectedJoystickAxisCount + selectedJoystickButtonCount;
 			deadzone_lessButton.enabled = ConfigSystem.configObject.clientControls.joystickDeadZone.value > 0;
 			deadzone_moreButton.enabled = ConfigSystem.configObject.clientControls.joystickDeadZone.value < 1;
 			deadzone_text.enabled = false;
@@ -467,7 +478,7 @@ public class GUIConfig extends AGUIBase{
 		axisMinBoundsTextBox.visible = calibrating;
 		axisMaxBoundsTextBox.visible = calibrating;
 		if(calibrating){
-			float pollData = InterfaceInput.getJoystickInputValue(selectedJoystick, joystickComponentId);
+			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, joystickComponentId);
 			if(pollData < 0){
 				axisMinBoundsTextBox.setText(String.valueOf(Math.min(Double.valueOf(axisMinBoundsTextBox.getText()), pollData)));
 			}else{
@@ -523,8 +534,14 @@ public class GUIConfig extends AGUIBase{
 
 		@Override
 		public void onClicked(){
-			joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
-			assigningDigital = !InterfaceInput.isJoystickInputAnalog(selectedJoystick, joystickComponentId);
+			int controlIndex = joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
+			if(controlIndex < selectedJoystickAxisCount){
+				joystickComponentId = controlIndex;
+				assigningDigital = false;
+			}else{
+				joystickComponentId = controlIndex - selectedJoystickAxisCount;
+				assigningDigital = true;
+			}
 		}
 		
 		@Override
@@ -534,20 +551,18 @@ public class GUIConfig extends AGUIBase{
 				//We need to manually draw the joystick state here.  Do so via built-in rectangle render method
 				//as that is render-safe so we won't mess up any texture operations.
 				int buttonIndex = joystickComponentSelectionButtons.indexOf(this);
-				float pollData = InterfaceInput.getJoystickInputValue(selectedJoystick, buttonIndex+scrollSpot);
-				if(InterfaceInput.isJoystickInputAnalog(selectedJoystick, buttonIndex+scrollSpot)){
+				int controlIndex = buttonIndex + scrollSpot;
+				if(controlIndex < selectedJoystickAxisCount){
+					float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
 					InterfaceGUI.renderRectangle(x + 85, y + 2, 40, height - 4, Color.BLACK);
 					if(Math.abs(pollData) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
 						InterfaceGUI.renderRectangle(x + 85 + 20, y + 2, (int) (pollData*20), height - 4, Color.RED);
 					}
 				}else{
-					if(pollData == 0){
-						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.BLACK);
-					}else if(pollData == 1){
+					if(InterfaceInput.getJoystickButtonValue(selectedJoystick, controlIndex - selectedJoystickAxisCount)){
 						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.RED);
 					}else{
-						//For digitals with fractions like hats.
-						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.YELLOW);
+						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.BLACK);
 					}
 				}
 			}

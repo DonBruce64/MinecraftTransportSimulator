@@ -17,7 +17,7 @@ public class JSONParticle{
 	@JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
 	public boolean spawnEveryTick;
 	
-	@JSONDescription("A string in hexadecimal format representing the particle's color.  Defualts to white if not set, which essentially does no color modification.")
+	@JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
 	public String color;
 	
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial color to this value.  Defaults to be the same as the initial color.")
@@ -29,7 +29,7 @@ public class JSONParticle{
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial transparency to this value.  If transparency is set and non-zero, then this defaults to 0.0.  Othwerise, it is used as-is.")
 	public float toTransparency;
 	
-	@JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this and toScale are not set.")
+	@JSONDescription("How big to spawn each particle.  A value of 1.0 will result in 1 pixel of the particle texture per 1 pixel in-game.  This is the default if this is not set.")
 	public float scale;
 	
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
@@ -47,7 +47,7 @@ public class JSONParticle{
 	@JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
 	public Point3d terminalVelocity;
 	
-	@JSONDescription("Integer representing how many of this particle to spawn at a time. Defaults to 1.")
+	@JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
 	public int quantity;
 	
 	@JSONDescription("How long, in ticks, the particle should remain.  If not set on a defined type, the age will be auto-calculated the same way it would be for a Vanilla particle.  Defaults to 200 on any other types.")

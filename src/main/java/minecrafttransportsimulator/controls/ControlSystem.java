@@ -392,6 +392,13 @@ public final class ControlSystem{
 		}else{
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
 				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+				if(powered.locationRiderMap.containsValue(clientPlayer)){
+					if(powered.slipping){
+						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, (float) Math.max(powered.velocity, 1));
+					}else{
+						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, 0);
+					}
+				}
 			}else{
 				//Depending on what we are pressing, send out packets.
 				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
@@ -642,19 +649,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(isMomentary){
 				if(wasPressedLastCall){
-					wasPressedLastCall = InterfaceInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0; 
+					wasPressedLastCall = InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex); 
 					return false;
 				}else{
-					wasPressedLastCall = InterfaceInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
+					wasPressedLastCall = InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex);
 					return wasPressedLastCall;
 				}
 			}else{
-				return InterfaceInput.getJoystickInputValue(config.joystickName, config.buttonIndex) > 0;
+				return InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex);
 			}
 		}
 		
 		private float getMultistateValue(){
-			return InterfaceInput.getJoystickInputValue(config.joystickName, config.buttonIndex);
+			return InterfaceInput.getJoystickAxisValue(config.joystickName, config.buttonIndex);
 		}
 		
 		//Return type is short to allow for easier packet transmission.

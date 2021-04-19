@@ -1,17 +1,18 @@
 package minecrafttransportsimulator.controls;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.lwjgl.input.Controller;
+import org.lwjgl.input.Controllers;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
-import net.java.games.input.Controller;
-import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;
@@ -41,6 +42,7 @@ public class InterfaceInput{
 	private static boolean joystickEnabled = false;
 	private static boolean joystickInhibited = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
+	private static final Set<Controller> rumblingControllers = new HashSet<Controller>();
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	/**
@@ -54,22 +56,24 @@ public class InterfaceInput{
 		
 		//Populate the joystick device map.
 		//Joystick will be enabled if at least one controller is found.  If none are found, we likely have an error.
-		for(Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()){
-			joystickEnabled = true;
-			if(joystick.getType() != null && joystick.getName() != null){
-				if(!joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && !joystick.getType().equals(Controller.Type.UNKNOWN)){
-					if(joystick.getComponents().length != 0){
-						String joystickName = joystick.getName();
-						//Add an index on this joystick to be sure we don't override multi-component units.
-						if(!joystickNameCounters.containsKey(joystickName)){
-							joystickNameCounters.put(joystickName, 0);
-						}
-						joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-						joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+		try{
+			if(!Controllers.isCreated()){
+				Controllers.create();
+			}
+			for(int i=0; i<Controllers.getControllerCount(); ++i){
+				Controller joystick = Controllers.getController(i);
+				joystickEnabled = true;
+				if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
+					String joystickName = joystick.getName();
+					//Add an index on this joystick to be sure we don't override multi-component units.
+					if(!joystickNameCounters.containsKey(joystickName)){
+						joystickNameCounters.put(joystickName, 0);
 					}
+					joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+					joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
 				}
 			}
-		}
+		}catch(Exception e){}
 	}
 	
 	/**
@@ -120,45 +124,68 @@ public class InterfaceInput{
 	}
 	
 	/**
-	 *  Returns the number of inputs the passed-in joystick has.
+	 *  Returns the number of axis the passed-in joystick has.
 	 */
-	public static int getJoystickInputCount(String joystickName){
-		return joystickMap.get(joystickName).getComponents().length;
+	public static int getJoystickAxisCount(String joystickName){
+		return joystickMap.get(joystickName).getAxisCount();
 	}
 	
 	/**
-	 *  Returns the name of the passed-in input.
+	 *  Returns the number of buttons the passed-in joystick has.
 	 */
-	public static String getJoystickInputName(String joystickName, int buttonIndex){
-		return joystickMap.get(joystickName).getComponents()[buttonIndex].getName();
+	public static int getJoystickButtonCount(String joystickName){
+		return joystickMap.get(joystickName).getButtonCount();
 	}
 	
 	/**
-	 *  Returns true if the passed-in input is analog.
+	 *  Returns the name of the passed-in axis.
 	 */
-	public static boolean isJoystickInputAnalog(String joystickName, int buttonIndex){
-		return joystickMap.get(joystickName).getComponents()[buttonIndex].isAnalog();
+	public static String getJoystickAxisName(String joystickName, int axisIndex){
+		return joystickMap.get(joystickName).getAxisName(axisIndex);
 	}
 	
 	/**
-	 *  Returns true if the given joystick button is currently pressed.
+	 *  Returns the name of the passed-in axis.
 	 */
-	public static boolean isJoystickButtonPressed(String joystickName, int buttonIndex){
-		joystickMap.get(joystickName).poll();
-		return joystickMap.get(joystickName).getComponents()[buttonIndex].getPollData() > 0;
+	public static String getJoystickButtonName(String joystickName, int buttonIndex){
+		return joystickMap.get(joystickName).getButtonName(buttonIndex);
 	}
 	
 	/**
-	 *  Returns the current value of the joystick axis.  Note that this is used
-	 *  for both analog axis, and fake-digital buttons like Xbox D-pads.
+	 *  Returns the current value of the joystick axis.
 	 */
-	public static float getJoystickInputValue(String joystickName, int axisIndex){
+	public static float getJoystickAxisValue(String joystickName, int axisIndex){
 		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
 		if(joystickMap.containsKey(joystickName)){
 			joystickMap.get(joystickName).poll();
-			return joystickMap.get(joystickName).getComponents()[axisIndex].getPollData();
+			return joystickMap.get(joystickName).getAxisValue(axisIndex);
 		}else{
 			return 0;
+		}
+	}
+	
+	/**
+	 *  Returns the current button-state for the joystick axis.
+	 */
+	public static boolean getJoystickButtonValue(String joystickName, int buttonIndex){
+		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
+		if(joystickMap.containsKey(joystickName)){
+			joystickMap.get(joystickName).poll();
+			return joystickMap.get(joystickName).isButtonPressed(buttonIndex);
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 *  Sets rumble level.  Passed-in value should be between 0-1.
+	 */
+	public static void setJoystickRumble(String joystickName, float strength){
+		Controller joystick = joystickMap.get(joystickName);
+		if(rumblingControllers.contains(joystick) ^ strength > 0){
+			for(int i=0; i<joystick.getRumblerCount(); ++i){
+				joystick.setRumblerStrength(i, strength);
+			}
 		}
 	}
 	
