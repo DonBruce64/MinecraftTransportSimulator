@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -42,7 +41,7 @@ public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Ph
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
 		vehicle.addToServerDeltas(motion, rotation);
 		return false;
 	}

@@ -258,7 +258,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			return true;
 		}else{
 			collisionBlockOffsets.clear();
-			player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockingblocks"));
+			player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockingblocks"));
 			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return false;
 		}

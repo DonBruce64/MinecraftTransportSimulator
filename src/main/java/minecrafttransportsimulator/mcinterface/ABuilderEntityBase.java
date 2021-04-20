@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -17,7 +18,7 @@ import net.minecraft.world.World;
 public abstract class ABuilderEntityBase extends Entity{
 	
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
-	private boolean requestDataFromServer;
+	private boolean needDataFromServer;
 	/**This flag is true once we load from NBT.  Used to prevent duplicate-loading.  If this builder is spawned
 	 * manually, this should be set.**/
 	public boolean loadedFromNBT;
@@ -33,7 +34,7 @@ public abstract class ABuilderEntityBase extends Entity{
 	public ABuilderEntityBase(World world){
 		super(world);
 		if(world.isRemote){
-			requestDataFromServer = true;
+			needDataFromServer = true;
 		}
 	}
     
@@ -57,9 +58,9 @@ public abstract class ABuilderEntityBase extends Entity{
     		//As we are on a client we need to send a packet to the server to request NBT data.
     		///Although we could call this in the constructor, Minecraft changes the
     		//entity IDs after spawning and that fouls things up.
-    		if(requestDataFromServer){
-    			InterfacePacket.sendToServer(new PacketEntityCSHandshake(this.getEntityId(), null));
-    			requestDataFromServer = false;
+    		if(needDataFromServer){
+    			InterfacePacket.sendToServer(new PacketEntityCSHandshakeClient(InterfaceClient.getClientPlayer(), this));
+    			needDataFromServer = false;
     		}
     	}else{
     		//Builder ticked on the server.  If we don't have NBT, it's invalid.
@@ -79,7 +80,7 @@ public abstract class ABuilderEntityBase extends Entity{
 	    		for(WrapperPlayer player : playersRequestingData){
 	    			WrapperNBT data = new WrapperNBT();
 	    			writeToNBT(data.tag);
-	    			player.sendPacket(new PacketEntityCSHandshake(getEntityId(), data));
+	    			player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
 	    		}
 	    		playersRequestingData.clear();
     		}

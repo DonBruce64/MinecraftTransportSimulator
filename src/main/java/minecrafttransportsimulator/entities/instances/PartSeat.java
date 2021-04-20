@@ -33,11 +33,11 @@ public final class PartSeat extends APart{
 				//If it's an entity that can be leashed, dismount the entity and leash it.
 				if(riderForSeat instanceof WrapperPlayer){
 					if(!player.equals(riderForSeat)){
-						player.sendPacket(new PacketPlayerChatMessage("interact.failure.seattaken"));
+						player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.seattaken"));
 					}
 				}else if(!riderForSeat.leashTo(player)){
 					//Can't leash up this entity, so mark the seat as taken.
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.seattaken"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.seattaken"));
 				}
 			}else{
 				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
@@ -77,7 +77,7 @@ public final class PartSeat extends APart{
 				}
 			}
 		}else{
-			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+			player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 		}
 		return true;
     }

@@ -9,7 +9,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshake;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
@@ -39,6 +40,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -76,7 +78,8 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketBeaconListingChange.class);
 		
 		//Entity packets.
-		registerPacket(packetIndex++, PacketEntityCSHandshake.class);
+		registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
+		registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
 		registerPacket(packetIndex++, PacketEntityColorChange.class);
 		registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		registerPacket(packetIndex++, PacketEntityTextChange.class);
@@ -118,6 +121,7 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
 		registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 		registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
+		registerPacket(packetIndex++, PacketVehicleTrailerConnection.class);
 		
 		//World packets.
 		registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
@@ -166,14 +170,6 @@ public class InterfacePacket{
 	 */
 	private static WrapperWorld getServerWorld(MessageContext ctx){
 		return WrapperWorld.getWrapperFor(ctx.getServerHandler().player.world);
-	}
-	
-	/**
-	 *  Gets the player this packet was sent by based on its context.
-	 *  Used for handling packets arriving on the server.
-	 */
-	private static WrapperPlayer getServerPlayer(MessageContext ctx){
-		return WrapperPlayer.getWrapperFor(ctx.getServerHandler().player);
 	}
 	
 	
@@ -226,9 +222,9 @@ public class InterfacePacket{
 					//by the JVM when this method is created.  Failure to do this will result in network faults.
 					//For this, we use abstract methods that are extended in our sub-classes.
 					if(ctx.side.isServer()){
-						message.packet.handle(getServerWorld(ctx), getServerPlayer(ctx));
+						message.packet.handle(getServerWorld(ctx));
 					}else{
-						message.packet.handle(InterfaceClient.getClientWorld(), InterfaceClient.getClientPlayer());
+						message.packet.handle(InterfaceClient.getClientWorld());
 					}
 				}
 			});

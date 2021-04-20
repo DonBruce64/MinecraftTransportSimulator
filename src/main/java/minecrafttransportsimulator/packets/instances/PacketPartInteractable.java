@@ -13,7 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to send signals to interactable parts.  This is either used used to link the interactable with
  * a vehicle or part tank for fluid-pumping operations, trigger a GUI to appear on the interactable, or transfer
@@ -24,14 +24,14 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketPartInteractable extends APacketEntity<PartInteractable>{
+public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, WrapperPlayer>{
 	private final int linkedID;
 	private final Point3d linkedOffset;
 	private final int interactableSlot;
 	private final int playerSlot;
 	
-	public PacketPartInteractable(PartInteractable interactable){
-		super(interactable);
+	public PacketPartInteractable(PartInteractable interactable, WrapperPlayer player){
+		super(interactable, player);
 		if(interactable.linkedVehicle != null){
 			this.linkedID = interactable.linkedVehicle.lookupID;
 			this.linkedOffset = null;
@@ -46,8 +46,8 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 		this.playerSlot = -1;
 	}
 	
-	public PacketPartInteractable(PartInteractable interactable, int interactableSlot, int playerSlot){
-		super(interactable);
+	public PacketPartInteractable(PartInteractable interactable, WrapperPlayer player, int interactableSlot, int playerSlot){
+		super(interactable, player);
 		if(interactable.linkedVehicle != null){
 			this.linkedID = interactable.linkedVehicle.lookupID;
 			this.linkedOffset = null;
@@ -85,7 +85,7 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartInteractable interactable){
+	public boolean handle(WrapperWorld world, PartInteractable interactable, WrapperPlayer player){
 		if(linkedID != -1){
 			AEntityA_Base linkedEntity = AEntityA_Base.getEntity(world, linkedID);
 			if(linkedEntity != null){
@@ -102,9 +102,9 @@ public class PacketPartInteractable extends APacketEntity<PartInteractable>{
 			playerInventory.decrementSlot(playerSlot, interactable.addStackToInventory(playerInventory.getStackInSlot(playerSlot)));
 		}else{
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
-				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting, player));
+				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting));
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
-				InterfaceGUI.openGUI(new GUIInteractableCrate(interactable, player));
+				InterfaceGUI.openGUI(new GUIInteractableCrate(interactable));
 			}
 		}
 		return true;

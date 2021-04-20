@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -31,7 +30,7 @@ public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartGroundDevice groundDevice){
+	public boolean handle(WrapperWorld world, PartGroundDevice groundDevice){
 		groundDevice.setFlatState(flat);
 		return true;
 	}

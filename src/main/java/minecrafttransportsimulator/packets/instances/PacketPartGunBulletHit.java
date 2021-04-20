@@ -10,7 +10,6 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -31,8 +30,8 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 	private final double bulletVelocity;
 	private final ItemBullet bulletItem;
 	private final int bulletNumber;
-	private final int hitEntityID;
-	private final int controllerEntityID;
+	private final String hitEntityID;
+	private final String controllerEntityID;
 
 	public PacketPartGunBulletHit(PartGun gun, EntityBullet bullet, BoundingBox box, WrapperEntity hitEntity){
 		super(gun);
@@ -41,8 +40,8 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		this.bulletVelocity = bullet.velocity;
 		this.bulletItem = bullet.getItem();
 		this.bulletNumber = bullet.bulletNumber;
-		this.hitEntityID = hitEntity != null ? hitEntity.getID() : -1;
-		this.controllerEntityID = gun.lastController != null ? gun.lastController.getID() : -1;
+		this.hitEntityID = hitEntity != null ? hitEntity.getID() : null;
+		this.controllerEntityID = gun.lastController != null ? gun.lastController.getID() : null;
 	}
 	
 	public PacketPartGunBulletHit(ByteBuf buf){
@@ -52,8 +51,8 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		this.bulletVelocity = buf.readDouble();
 		this.bulletItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
 		this.bulletNumber = buf.readInt();
-		this.hitEntityID = buf.readInt();
-		this.controllerEntityID = buf.readInt();
+		this.hitEntityID = buf.readBoolean() ? readStringFromBuffer(buf) : null;
+		this.controllerEntityID = buf.readBoolean() ? readStringFromBuffer(buf) : null;
 	}
 
 	@Override
@@ -66,12 +65,18 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		writeStringToBuffer(bulletItem.definition.systemName, buf);
 		writeStringToBuffer(bulletItem.subName, buf);
 		buf.writeInt(bulletNumber);
-		buf.writeInt(hitEntityID);
-		buf.writeInt(controllerEntityID);
+		buf.writeBoolean(hitEntityID != null);
+		if(hitEntityID != null){
+			writeStringToBuffer(hitEntityID, buf);
+		}
+		buf.writeBoolean(controllerEntityID != null);
+		if(controllerEntityID != null){
+			writeStringToBuffer(controllerEntityID, buf);
+		}
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartGun gun){
+	public boolean handle(WrapperWorld world, PartGun gun){
 		if(!world.isClient()){
 			//Get the bullet definition, and the position the bullet hit.  Also get the gun that fired the bullet.
 			//We need this to make sure that this isn't a duplicate packet from another client.
@@ -86,7 +91,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 					world.spawnExplosion(globalCenter, blastSize, bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY));
 				}else{
 					//If we hit an entity, apply damage to them.
-					if(hitEntityID != -1){
+					if(hitEntityID != null){
 						WrapperEntity entityHit = world.getEntity(hitEntityID);
 						if(entityHit != null){
 							BoundingBox hitBox = null;

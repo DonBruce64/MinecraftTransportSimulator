@@ -89,9 +89,9 @@ public class GUIPartBench extends AGUIBase{
 	boolean displayVehicleInfo = false;
 	
 
-	public GUIPartBench(JSONCraftingBench definition, WrapperPlayer player){
+	public GUIPartBench(JSONCraftingBench definition){
 		this.definition = definition;
-		this.player = player;
+		this.player = InterfaceClient.getClientPlayer();
 		if(lastOpenedItem.containsKey(definition)){
 			currentItem = lastOpenedItem.get(definition);
 			currentPack = currentItem.definition.packID;
@@ -196,7 +196,7 @@ public class GUIPartBench extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				InterfacePacket.sendToServer(new PacketPlayerCraftItem(currentItem));
+				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem));
 			}
 		});
 		

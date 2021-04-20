@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -36,7 +35,7 @@ public class PacketTileEntityFuelPumpConnection extends APacketEntity<TileEntity
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFuelPump pump){
+	protected boolean handle(WrapperWorld world, TileEntityFuelPump pump){
 		EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) AEntityA_Base.getEntity(world, linkedID);
 		if(vehicle != null){
 			if(connect){

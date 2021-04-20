@@ -4,9 +4,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to add/remove riders from an entity.  This packet only appears on clients after the
  * server has added or removed a rider from the entity.  If a position is given, then this rider should
@@ -14,26 +13,22 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable<?>>{
-	private final int riderID;
+public class PacketEntityRiderChange extends APacketEntityInteract<AEntityD_Interactable<?>, WrapperEntity>{
 	private final Point3d position;
 	
 	public PacketEntityRiderChange(AEntityD_Interactable<?> entity, WrapperEntity rider, Point3d position){
-		super(entity);
-		this.riderID = rider.getID();
+		super(entity, rider);
 		this.position = position;
 	}
 	
 	public PacketEntityRiderChange(ByteBuf buf){
 		super(buf);
-		this.riderID = buf.readInt();
 		position = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(riderID);
 		buf.writeBoolean(position != null);
 		if(position != null){
 			writePoint3dToBuffer(position, buf);
@@ -41,11 +36,11 @@ public class PacketEntityRiderChange extends APacketEntity<AEntityD_Interactable
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, AEntityD_Interactable<?> entity){
+	protected boolean handle(WrapperWorld world, AEntityD_Interactable<?> entity, WrapperEntity rider){
 		if(position != null){
-			entity.addRider(world.getEntity(riderID), position);
+			entity.addRider(rider, position);
 		}else{
-			entity.removeRider(world.getEntity(riderID), null);
+			entity.removeRider(rider, null);
 		}
 		return true;
 	}

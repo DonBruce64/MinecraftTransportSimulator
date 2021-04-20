@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsOverlay;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -19,13 +19,13 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketVehicleInstruments extends APacketEntity<EntityVehicleF_Physics>{
+public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
 	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, int slot, ItemInstrument instrument){
-		super(vehicle);
+	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player, int slot, ItemInstrument instrument){
+		super(vehicle, player);
 		this.slot = slot;
 		if(instrument != null){
 			this.instrumentPackID = instrument.definition.packID;
@@ -52,7 +52,7 @@ public class PacketVehicleInstruments extends APacketEntity<EntityVehicleF_Physi
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){

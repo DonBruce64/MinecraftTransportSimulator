@@ -57,7 +57,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
 					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.toofar"));
 					}
 				}
 				connectedVehicle.beingFueled = false;
@@ -78,7 +78,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 					connectedVehicle = null;
 					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.complete"));
+							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.complete"));
 						}
 					}
 				}
@@ -89,7 +89,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				connectedVehicle = null;
 				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage("interact.fuelpump.empty"));
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.empty"));
 					}
 				}
 			}

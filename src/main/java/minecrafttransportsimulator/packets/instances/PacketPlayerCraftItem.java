@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.APacketPlayer;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to craft items from crafting benches.  This goes to the server which verifies the
@@ -16,11 +16,11 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketPlayerCraftItem extends APacketBase{
+public class PacketPlayerCraftItem extends APacketPlayer{
 	private final AItemPack<?> itemToCraft;
 	
-	public PacketPlayerCraftItem(AItemPack<?> itemToCraft){
-		super(null);
+	public PacketPlayerCraftItem(WrapperPlayer player, AItemPack<?> itemToCraft){
+		super(player);
 		this.itemToCraft = itemToCraft;
 	}
 	

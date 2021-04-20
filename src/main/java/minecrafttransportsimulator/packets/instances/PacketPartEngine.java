@@ -6,7 +6,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -99,7 +98,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartEngine engine){
+	public boolean handle(WrapperWorld world, PartEngine engine){
 		switch(packetType){
 			case MAGNETO_OFF: engine.setMagnetoStatus(false); break;
 			case MAGNETO_ON: engine.setMagnetoStatus(true); break;

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -30,6 +31,7 @@ public class GUIInteractableCrate extends AGUIBase{
 	private final int maxRowIncrements;
 	
 	private final PartInteractable interactable;
+	private final WrapperPlayer player;
 	private final WrapperInventory playerInventory;
 	private final List<ItemSelectionButton> interactableSlotButtons = new ArrayList<ItemSelectionButton>();
 	private final List<GUIComponentItem> interactableSlotIcons = new ArrayList<GUIComponentItem>();
@@ -39,8 +41,9 @@ public class GUIInteractableCrate extends AGUIBase{
 	//Runtime variables.
 	private int rowOffset;
 	
-	public GUIInteractableCrate(PartInteractable interactable, WrapperPlayer player){
+	public GUIInteractableCrate(PartInteractable interactable){
 		this.interactable = interactable;
+		this.player = InterfaceClient.getClientPlayer();
 		this.playerInventory = player.getInventory();
 		this.maxRowIncrements = interactable.inventory.size() > MAX_ITEMS_PER_SCREEN ? (interactable.inventory.size() - MAX_ITEMS_PER_SCREEN)/9 + 1 : 0;
 	}
@@ -98,7 +101,7 @@ public class GUIInteractableCrate extends AGUIBase{
 			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 8 + ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + ITEM_BUTTON_SIZE*(i/9)){
 				@Override
 				public void onClicked(){
-					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, interactableSlotButtons.indexOf(this), -1));
+					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, player, interactableSlotButtons.indexOf(this), -1));
 				}
 			};
 			addButton(itemButton);
@@ -119,7 +122,7 @@ public class GUIInteractableCrate extends AGUIBase{
 			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 7 + ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
 				@Override
 				public void onClicked(){
-					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, -1, playerSlotButtons.indexOf(this)));
+					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, player, -1, playerSlotButtons.indexOf(this)));
 				}
 			};
 			addButton(itemButton);

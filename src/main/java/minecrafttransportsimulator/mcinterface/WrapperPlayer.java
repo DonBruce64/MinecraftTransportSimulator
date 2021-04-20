@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -18,6 +19,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**Wrapper for the player entity class.  This class wraps the player into a more
  * friendly instance that allows for common operations, like checking if the player
@@ -26,6 +30,7 @@ import net.minecraft.util.text.TextComponentString;
  *
  * @author don_bruce
  */
+@EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity{
 	private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
@@ -60,18 +65,6 @@ public class WrapperPlayer extends WrapperEntity{
 	public double getSeatOffset(){
 		//Player legs are 12 pixels.
 		return -12D/16D;
-	}
-	
-	/**
-	 *  Returns the player's global UUID.  This is an ID that's unique to every player on Minecraft.
-	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.
-	 *  <br><br>
-	 *  NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
-	 *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
-	 *  when combined with their changing of entity IDs, makes server-client lookup impossible.
-	 */
-	public String getUUID(){
-		return EntityPlayer.getUUID(player.getGameProfile()).toString();
 	}
 
 	/**
@@ -188,4 +181,17 @@ public class WrapperPlayer extends WrapperEntity{
 			player.displayGUIChest((IInventory) tile.tile);
 		}
 	}
+	
+	/**
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	Iterator<EntityPlayer> iterator = playerWrappers.keySet().iterator();
+    	while(iterator.hasNext()){
+    		if(iterator.next().world.equals(event.getWorld())){
+    			iterator.remove();
+    		}
+    	}
+    }
 }

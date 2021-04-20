@@ -5,7 +5,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -91,7 +90,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityRoad road){
+	protected boolean handle(WrapperWorld world, TileEntityRoad road){
 		RoadLane lane = road.lanes.get(laneNumber);
 		if(otherPosition != null){
 			//Connecting to another curve.  Create connection from this curve to the other one.

@@ -6,7 +6,6 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -56,7 +55,7 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityRoad road){
+	protected boolean handle(WrapperWorld world, TileEntityRoad road){
 		road.collisionBlockOffsets.clear();
 		road.collisionBlockOffsets.addAll(collisionBlockOffsets);
 		road.collidingBlockOffsets.clear();

@@ -12,12 +12,14 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerConnection;
 import minecrafttransportsimulator.rendering.components.LightType;
 
 
@@ -231,7 +233,7 @@ public class GUIPanelGround extends AGUIPanel{
 					for(int j=0; j<trailerNumber; ++ j){
 						currentVehicle = currentVehicle.towedVehicle;
 					}
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(currentVehicle, PacketVehicleControlDigital.Controls.TRAILER, true));
+					InterfacePacket.sendToServer(new PacketVehicleTrailerConnection(currentVehicle, InterfaceClient.getClientPlayer()));
 				}
 				
 				@Override

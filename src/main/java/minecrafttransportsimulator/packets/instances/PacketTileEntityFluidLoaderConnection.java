@@ -6,7 +6,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluid
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -42,7 +41,7 @@ public class PacketTileEntityFluidLoaderConnection extends APacketEntity<TileEnt
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityFluidLoader loader){
+	protected boolean handle(WrapperWorld world, TileEntityFluidLoader loader){
 		AEntityE_Multipart<?> entity = (AEntityE_Multipart<?>) AEntityA_Base.getEntity(world, linkedID);
 		if(entity != null){
 			if(connect){

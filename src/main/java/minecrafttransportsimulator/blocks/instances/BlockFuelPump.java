@@ -76,12 +76,12 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
     			if(nearestVehicle != null){
     				if(tank.getFluidLevel() == 0){
     					//No fuel in the pump.
-    					player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.nofuel"));
+    					player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.nofuel"));
     				}else{
         				//Check to make sure this vehicle can take this fuel pump's fuel type.
     					if(!nearestVehicle.fuelTank.getFluid().isEmpty()){
     						if(!tank.getFluid().equals(nearestVehicle.fuelTank.getFluid())){
-    							player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.wrongtype"));
+    							player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.wrongtype"));
     							return true;
     						}
     					}
@@ -94,22 +94,22 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
     								pump.connectedVehicle.beingFueled = true;
     								tank.resetAmountDispensed();
     								InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, true));
-    								player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.connect"));
+    								player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.connect"));
     	    						return true;
     							}
     						}
     					}
-    					player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.wrongengines"));
+    					player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.wrongengines"));
     				}
     			}else{
-    				player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.toofar"));
+    				player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.toofar"));
     			}
     		}else{
     			//Connected vehicle exists, disconnect it.
     			InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(pump, false));
     			pump.connectedVehicle.beingFueled = false;
     			pump.connectedVehicle = null;
-    			player.sendPacket(new PacketPlayerChatMessage("interact.fuelpump.disconnect"));
+    			player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelpump.disconnect"));
     		}
 		}
 		return true;

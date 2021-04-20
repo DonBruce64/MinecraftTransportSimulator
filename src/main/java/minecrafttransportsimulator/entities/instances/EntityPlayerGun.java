@@ -61,7 +61,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			WrapperPlayer foundPlayer = null;
 			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 				if(entity instanceof WrapperPlayer){
-					if(((WrapperPlayer) entity).getUUID().equals(playerUUID)){
+					if(((WrapperPlayer) entity).getID().equals(playerUUID)){
 						foundPlayer = (WrapperPlayer) entity;
 						break;
 					}
@@ -79,9 +79,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		hotbarSelected = player.getHotbarIndex();
 		
 		if(world.isClient()){
-			playerClientGuns.put(player.getUUID(), this);
+			playerClientGuns.put(player.getID(), this);
 		}else{
-			playerServerGuns.put(player.getUUID(), this);
+			playerServerGuns.put(player.getID(), this);
 		}
 	}
 	
@@ -205,9 +205,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 		super.remove();
 		if(player != null){
 			if(world.isClient()){
-				playerClientGuns.remove(player.getUUID());
+				playerClientGuns.remove(player.getID());
 			}else{
-				playerServerGuns.remove(player.getUUID());
+				playerServerGuns.remove(player.getID());
 			}
 		}
 	}
@@ -247,7 +247,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	public void save(WrapperNBT data){
 		super.save(data);
 		if(player != null){
-			data.setString("playerUUID", player.getUUID());
+			data.setString("playerUUID", player.getID());
 		}
 	}
 }

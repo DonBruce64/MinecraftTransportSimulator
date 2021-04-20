@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpState;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -69,7 +68,7 @@ public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEn
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntitySignalController controller){
+	protected boolean handle(WrapperWorld world, TileEntitySignalController controller){
 		controller.currentOpMode = currentOpMode;
 		controller.mainDirectionXAxis = mainDirectionXAxis;
 		controller.greenMainTime = greenMainTime;

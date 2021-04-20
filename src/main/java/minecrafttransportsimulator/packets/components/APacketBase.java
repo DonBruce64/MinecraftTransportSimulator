@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import net.minecraft.network.PacketBuffer;
 
@@ -40,11 +39,9 @@ public abstract class APacketBase{
 	
 	/**
 	 *  This is called to handle the logic of this packet.  An instance of
-	 *  the world is passed-in here for referencing objects, as well as
-	 *  an instance of the player that sent the packet if on a server,
-	 *  or the current player if on a client.
+	 *  the world is passed-in here for referencing objects.
 	 */
-	public abstract void handle(WrapperWorld world, WrapperPlayer player);
+	public abstract void handle(WrapperWorld world);
 	
 	/**
 	 *  Helper method to write a string to the buffer.

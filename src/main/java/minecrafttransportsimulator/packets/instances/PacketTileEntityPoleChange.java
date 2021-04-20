@@ -10,7 +10,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -26,15 +26,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
+public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, WrapperPlayer>{
 	private final Axis axis;
 	private final boolean addition;
 	private final boolean removal;
 	private final WrapperNBT data;
 	
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, boolean addition, boolean removal, WrapperNBT data){
-		super(pole);
+	public PacketTileEntityPoleChange(TileEntityPole pole, WrapperPlayer player, Axis axis, boolean addition, boolean removal, WrapperNBT data){
+		super(pole, player);
 		this.axis = axis;
 		this.addition = addition;
 		this.removal = removal;
@@ -69,7 +69,7 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, TileEntityPole pole){
+	protected boolean handle(WrapperWorld world, TileEntityPole pole, WrapperPlayer player){
 		ATileEntityPole_Component component = pole.components.get(axis);
 		
 		//Check if we can do editing.
@@ -107,7 +107,7 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 						InterfaceGUI.openGUI(new GUITextEditor(component));
 					}else{
 						//Player clicked a component  with editable text.  Fire back a packet ONLY to the player who sent this to have them open the sign GUI.
-						player.sendPacket(new PacketTileEntityPoleChange(pole, axis, false, false, null));
+						player.sendPacket(new PacketTileEntityPoleChange(pole, player, axis, false, false, null));
 					}
 				}
 				return false;

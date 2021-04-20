@@ -93,7 +93,7 @@ public class GUIPaintGun extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
-				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, currentItem));
+				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
 				InterfaceGUI.closeGUI();
 			}
 		});

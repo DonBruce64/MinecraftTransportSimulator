@@ -6,7 +6,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -95,7 +94,7 @@ public class PacketVehicleTrailerChange extends APacketEntity<EntityVehicleF_Phy
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
 		if(linkedID != -1){
 			EntityVehicleF_Physics trailer = AEntityA_Base.getEntity(world, linkedID);
 			if(trailer != null){

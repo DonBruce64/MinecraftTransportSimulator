@@ -9,7 +9,7 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet sent to entities to update their their subName (color).  This gets sent from
@@ -18,11 +18,11 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketEntityColorChange extends APacketEntity<AEntityC_Definable<?>>{
+public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Definable<?>, WrapperPlayer>{
 	private final AItemSubTyped<?> newItem;
 	
-	public PacketEntityColorChange(AEntityC_Definable<?> entity, AItemSubTyped<?> newItem){
-		super(entity);
+	public PacketEntityColorChange(AEntityC_Definable<?> entity, WrapperPlayer player, AItemSubTyped<?> newItem){
+		super(entity, player);
 		this.newItem = newItem;
 	}
 	
@@ -40,7 +40,7 @@ public class PacketEntityColorChange extends APacketEntity<AEntityC_Definable<?>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityC_Definable<?> entity){
+	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(newItem, false, true)){
 			//Remove livery materials (if required) and set new subName.

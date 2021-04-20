@@ -5,7 +5,6 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -41,7 +40,7 @@ public class PacketEntityTextChange extends APacketEntity<AEntityC_Definable<?>>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityC_Definable<?> entity){
+	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity){
 		entity.updateText(textLines);
 		return true;
 	}

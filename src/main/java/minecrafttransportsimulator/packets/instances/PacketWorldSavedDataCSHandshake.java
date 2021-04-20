@@ -5,7 +5,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.mcinterface.WrapperWorld.InterfaceWorldSavedData;
-import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used to request world NBT data from the server, and to send that data back to clients.
  * Used when world data is requested on a client, as MC is too dumb to let us simply set a flag to
@@ -13,11 +13,11 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  * 
  * @author don_bruce
  */
-public class PacketWorldSavedDataCSHandshake extends APacketBase{
+public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
 	private final WrapperNBT data;
 	
-	public PacketWorldSavedDataCSHandshake(WrapperNBT data){
-		super(null);
+	public PacketWorldSavedDataCSHandshake(WrapperPlayer player, WrapperNBT data){
+		super(player);
 		this.data = data;
 	}
 	
@@ -55,7 +55,7 @@ public class PacketWorldSavedDataCSHandshake extends APacketBase{
 				world.getData();
 			}
 			world.savedDataAccessor.writeToNBT(savedData.tag);
-			player.sendPacket(new PacketWorldSavedDataCSHandshake(savedData));
+			player.sendPacket(new PacketWorldSavedDataCSHandshake(player, savedData));
 		}
 	}
 }

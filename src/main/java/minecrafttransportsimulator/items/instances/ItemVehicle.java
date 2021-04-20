@@ -154,7 +154,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				if(coreBox.updateCollidingBlocks(vehicle.world, new Point3d(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't be spawned.  Bail out.
 					vehicle.remove();
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.nospace"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.nospace"));
 					return false;
 				}
 			}

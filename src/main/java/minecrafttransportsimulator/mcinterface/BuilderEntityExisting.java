@@ -396,7 +396,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player) && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
 	    		if(boxClicked != null){
-		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, true));
+		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, WrapperPlayer.getWrapperFor(event.getEntityPlayer()), boxClicked, true));
 	    		}else{
 	    			InterfaceCore.logError("A entity was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
 	    		}
@@ -421,7 +421,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player)){
 	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
     			if(boxClicked != null){
-    				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, boxClicked, false));
+    				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity,  WrapperPlayer.getWrapperFor(event.getEntityPlayer()), boxClicked, false));
         		}else{
         			InterfaceCore.logError("A entity was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
         		}

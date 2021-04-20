@@ -52,7 +52,7 @@ public final class PartInteractable extends APart{
 	public boolean interact(WrapperPlayer player){
 		if(!entityOn.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
-				player.sendPacket(new PacketPartInteractable(this));
+				player.sendPacket(new PacketPartInteractable(this, player));
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)){
 				player.openCraftingGUI();
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
@@ -66,7 +66,7 @@ public final class PartInteractable extends APart{
 				tank.interactWith(player);
 			}	
 		}else{
-			player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehiclelocked"));
+			player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 		}
 		return true;
     }
@@ -136,7 +136,7 @@ public final class PartInteractable extends APart{
 				linkedPart = null;
 				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage(linkedMessage));
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, linkedMessage));
 					}
 				}
 			}

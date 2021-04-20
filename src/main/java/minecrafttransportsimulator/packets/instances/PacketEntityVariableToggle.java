@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -32,7 +31,7 @@ public class PacketEntityVariableToggle extends APacketEntity<AEntityC_Definable
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityC_Definable<?> entity){
+	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity){
 		if(entity.variablesOn.contains(variableName)){
 			entity.variablesOn.remove(variableName);
 		}else{

@@ -61,7 +61,7 @@ public class CameraSystem{
 		AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
 		AEntityE_Multipart<?> multipart = ridingEntity instanceof AEntityE_Multipart ? (AEntityE_Multipart<?>) ridingEntity : null;
 		PartSeat sittingSeat = multipart != null ? (PartSeat) multipart.getPartAtLocation(multipart.locationRiderMap.inverse().get(player)) : null;
-		EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getUUID());
+		EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 		
     	if(InterfaceClient.inFirstPerson()){
     		//Force custom cameras for some states.

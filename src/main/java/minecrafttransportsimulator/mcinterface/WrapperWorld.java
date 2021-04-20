@@ -90,7 +90,7 @@ public class WrapperWorld{
 	private WrapperWorld(World world){
 		this.world = world;
 		if(world.isRemote){
-			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake((WrapperNBT)null));
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(InterfaceClient.getClientPlayer(), (WrapperNBT)null));
 		}
 	}
 	
@@ -193,9 +193,13 @@ public class WrapperWorld{
 	 *  If the entity is a player, an instance of {@link WrapperPlayer}
 	 *  is returned instead.
 	 */
-	public WrapperEntity getEntity(int id){
-		Entity entity = world.getEntityByID(id);
-		return WrapperEntity.getWrapperFor(entity);
+	public WrapperEntity getEntity(String entityID){
+		for(Entity entity : world.loadedEntityList){
+			if(entity.getCachedUniqueIdString().equals(entityID)){
+				return WrapperEntity.getWrapperFor(entity);
+			}
+		}
+		return null;
 	}
 	
 	/**

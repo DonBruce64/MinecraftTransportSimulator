@@ -2,7 +2,6 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -23,7 +22,7 @@ public class PacketPartSeat extends APacketEntity<PartSeat>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartSeat seat){
+	public boolean handle(WrapperWorld world, PartSeat seat){
 		seat.setNextActiveGun();
 		return true;
 	}

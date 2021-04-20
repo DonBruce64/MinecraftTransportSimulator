@@ -76,7 +76,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								}else if(player.isSneaking()){
 									InterfaceGUI.openGUI(new GUITextEditor(vehicle));
 								}else{
-									InterfaceGUI.openGUI(new GUIInstruments(vehicle, player));
+									InterfaceGUI.openGUI(new GUIInstruments(vehicle));
 								}
 							}
 						}else{
@@ -117,7 +117,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						}
 					}
 				}else{
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
 				}
 				return CallbackType.NONE;
 			}
@@ -138,7 +138,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						}
 					}
 				}else{
-					player.sendPacket(new PacketPlayerChatMessage("interact.failure.vehicleowned"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
 				}
 				return CallbackType.NONE;
 			}
@@ -148,14 +148,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						if(player.isSneaking()){
 							//Try to change ownership of the vehicle.
 							if(vehicle.ownerUUID.isEmpty()){
-								vehicle.ownerUUID = player.getUUID();
-								player.sendPacket(new PacketPlayerChatMessage("interact.key.info.own"));
+								vehicle.ownerUUID = player.getID();
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.own"));
 							}else{
 								if(!ownerState.equals(PlayerOwnerState.USER)){
 									vehicle.ownerUUID = "";
-									player.sendPacket(new PacketPlayerChatMessage("interact.key.info.unown"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unown"));
 								}else{
-									player.sendPacket(new PacketPlayerChatMessage("interact.key.failure.alreadyowned"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.alreadyowned"));
 								}
 							}
 						}else{
@@ -167,7 +167,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							if(keyVehicleUUID.isEmpty()){
 								//Check if we are the owner before making this a valid key.
 								if(!vehicle.ownerUUID.isEmpty() && ownerState.equals(PlayerOwnerState.USER)){
-									player.sendPacket(new PacketPlayerChatMessage("interact.key.failure.notowner"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
 									return CallbackType.NONE;
 								}
 								
@@ -179,18 +179,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//Try to lock or unlock this vehicle.
 							//If we succeed, send callback to clients to change locked state.
 							if(!keyVehicleUUID.equals(vehicle.uniqueUUID)){
-								player.sendPacket(new PacketPlayerChatMessage("interact.key.failure.wrongkey"));
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.wrongkey"));
 							}else{
 								if(vehicle.locked){
 									vehicle.locked = false;
-									player.sendPacket(new PacketPlayerChatMessage("interact.key.info.unlock"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unlock"));
 									//If we aren't in this vehicle, and we clicked a seat, start riding the vehicle.
 									if(part instanceof PartSeat && player.getEntityRiding() == null){
 										part.interact(player);
 									}
 								}else{
 									vehicle.locked = true;
-									player.sendPacket(new PacketPlayerChatMessage("interact.key.info.lock"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.lock"));
 								}
 								return CallbackType.ALL;
 							}
@@ -226,9 +226,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								if(interactable.tank != null){
 									if(interactable.linkedPart == null && interactable.linkedVehicle == null){
 										firstPartClicked = interactable;
-										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.firstlink"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.firstlink"));
 									}else{
-										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.alreadylinked"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.alreadylinked"));
 									}
 								}
 							}
@@ -240,36 +240,36 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 										if(part.position.distanceTo(firstPartClicked.position) < 15){
 											if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 												firstPartClicked.linkedPart = interactable;
-												InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked));
-												player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
+												InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
+												player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.secondlink"));
 												firstPartClicked = null;
 											}else{
 												firstPartClicked = null;
-												player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.differentfluids"));
+												player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.differentfluids"));
 											}
 										}else{
 											firstPartClicked = null;
-											player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.toofar"));
+											player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.toofar"));
 										}
 									}else{
 										firstPartClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.alreadylinked"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.alreadylinked"));
 									}
 								}
 							}else if(part == null){
 								if(vehicle.position.distanceTo(firstPartClicked.position) < 15){
 									if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 										firstPartClicked.linkedVehicle = vehicle;
-										InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked));
-										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.secondlink"));
+										InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.secondlink"));
 										firstPartClicked = null;
 									}else{
 										firstPartClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.differentfluids"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.differentfluids"));
 									}
 								}else{
 									firstPartClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage("interact.fuelhose.toofar"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.toofar"));
 								}
 							}
 						}
@@ -285,25 +285,25 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							if(engine.linkedEngine == null){
 								if(firstEngineClicked == null){
 									firstEngineClicked = engine;
-									player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.firstlink"));
+									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.firstlink"));
 								}else if(!firstEngineClicked.equals(engine)){
 									if(firstEngineClicked.entityOn.equals(engine.entityOn)){
 										firstEngineClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.samevehicle"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.samevehicle"));
 									}else if(engine.position.distanceTo(firstEngineClicked.position) < 15){
 										engine.linkedEngine = firstEngineClicked;
 										firstEngineClicked.linkedEngine = engine;
 										InterfacePacket.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
 										InterfacePacket.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
 										firstEngineClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.secondlink"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.secondlink"));
 									}else{
 										firstEngineClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.toofar"));
+										player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.toofar"));
 									}
 								}
 							}else{
-								player.sendPacket(new PacketPlayerChatMessage("interact.jumpercable.alreadylinked"));
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.alreadylinked"));
 							}
 						}
 					}
@@ -315,7 +315,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//Use jumper on vehicle.
 					vehicle.electricPower = 12;
 					if(!vehicle.world.isClient()){
-						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage("interact.jumperpack.success"), player);
+						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage(player, "interact.jumperpack.success"), player);
 						if(!player.isCreative()){
 							player.getInventory().removeStack(player.getHeldStack(), 1);
 						}

@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -71,7 +70,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, PartGun gun){
+	public boolean handle(WrapperWorld world, PartGun gun){
 		if(controlPulse){
 			gun.firing = triggerState && gun.active;
 			return true;

@@ -9,6 +9,7 @@ import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -27,8 +28,8 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
 		}else if(decor.definition.decor.crafting != null){
-			if(world.isClient()){
-				InterfaceGUI.openGUI(new GUIPartBench(decor.definition.decor.crafting, player));
+			if(world.isClient() && player.equals(InterfaceClient.getClientPlayer())){
+				InterfaceGUI.openGUI(new GUIPartBench(decor.definition.decor.crafting));
 			}
 			return true;
 		}else if(!decor.text.isEmpty()){

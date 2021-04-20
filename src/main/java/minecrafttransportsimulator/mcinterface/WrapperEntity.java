@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -24,12 +25,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**Wrapper for the base Entity class.  This class mainly allows for interaction with position
  * and motion variables for entities, as well as setting their riding statuses.
  *
  * @author don_bruce
  */
+@EventBusSubscriber
 public class WrapperEntity{
 	private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 	
@@ -82,11 +87,17 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Returns the entity's ID.  Useful for packets where you need to tell
-	 *  which entity to apply an action to.
+	 *  Returns the entity's global UUID.  This is an ID that's unique to every player on Minecraft.
+	 *  Useful for assigning ownership where the entity ID of a player might change between sessions.
+	 *  Also should be used during packets to ensure the proper entity is retrieved, as some mods (and
+	 *  most Sponge servers) will muck up the entity ID maps and IDs will not be synchronized.
+	 *  <br><br>
+	 *  NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
+	 *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
+	 *  when combined with their changing of entity IDs, makes server-client lookup impossible.
 	 */
-	public int getID(){
-		return entity.getEntityId();
+	public String getID(){
+		return entity.getCachedUniqueIdString();
 	}
 	
 	/**
@@ -402,4 +413,17 @@ public class WrapperEntity{
 			}
 		}
 	}
+	
+	/**
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     */
+    @SubscribeEvent
+    public static void on(WorldEvent.Unload event){
+    	Iterator<Entity> iterator = entityWrappers.keySet().iterator();
+    	while(iterator.hasNext()){
+    		if(iterator.next().world.equals(event.getWorld())){
+    			iterator.remove();
+    		}
+    	}
+    }
 }

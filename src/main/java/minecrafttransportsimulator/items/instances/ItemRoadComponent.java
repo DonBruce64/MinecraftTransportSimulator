@@ -80,10 +80,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						RoadClickData clickedRoadData = clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false);
 						JSONRoadGeneric roadDefinition = clickedRoadData.roadClicked.definition.road;
 						if((roadDefinition.isDynamic ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
-							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatchend"));
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatchend"));
 							return true;
 						}else if(clickedRoadData.lanesOccupied){
-							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.alreadyconnected"));
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.alreadyconnected"));
 							return true;
 						}
 						
@@ -92,7 +92,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					}else{
 						lastRoadClickedData.remove(player);
 					}
-					player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.set"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.set"));
 				}else if(!player.isSneaking() && lastPositionClicked.containsKey(player)){
 					//Clicked with the road not-sneaking with valid points.  Check end-points to make sure we aren't too long.
 					if(position.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_COLLISION_DISTANCE){
@@ -119,10 +119,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							//Check the road we clicked, if it exists, and make sure we aren't doing a bad connection.
 							JSONRoadGeneric roadDefinition = startingRoadData.roadClicked.definition.road;
 							if((roadDefinition.isDynamic ? roadDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.lanemismatch"));
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatch"));
 								return true;
 							}else if(startingRoadData.lanesOccupied){
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.alreadyconnected"));
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.alreadyconnected"));
 								return true;
 							}
 							
@@ -145,7 +145,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							}
 							
 							if(!foundSpot){
-								player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
+								player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));
 								return true;
 							}
 						}else{
@@ -174,7 +174,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						
 						//Check if the start and end position are the same.
 						if(startPosition.equals(endPosition)){
-							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.sameblock"));
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.sameblock"));
 							return true;
 						}
 						
@@ -208,10 +208,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								lastRotationClicked.put(player, startRotation + 180D);
 							}
 						}else{
-							player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));
 						}
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.toofar"));
+						player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.toofar"));
 					}
 					return true;
 				}
@@ -236,7 +236,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						lastRotationClicked.put(player, Math.round(player.getYaw()/15)*15 + 180D);
 					}
 				}else{
-					player.sendPacket(new PacketPlayerChatMessage("interact.roadcomponent.blockedplacement"));
+					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));
 				}
 				return true;
 			}

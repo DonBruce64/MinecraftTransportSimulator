@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used for sending the player chat messages from the server.  Mainly for informing them
  * about things they did to a vehicle they interacted with.  Do NOT send this packet to the server
@@ -11,11 +11,11 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  * 
  * @author don_bruce
  */
-public class PacketPlayerChatMessage extends APacketBase{
+public class PacketPlayerChatMessage extends APacketPlayer{
 	private final String chatMessage;
 	
-	public PacketPlayerChatMessage(String chatMessage){
-		super(null);
+	public PacketPlayerChatMessage(WrapperPlayer player, String chatMessage){
+		super(player);
 		this.chatMessage = chatMessage;
 	}
 	

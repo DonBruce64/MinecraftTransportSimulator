@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -36,7 +34,7 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, WrapperPlayer player, EntityVehicleF_Physics vehicle){
+	protected boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
 		switch(controlType){
 			case P_BRAKE : {
 				vehicle.parkingBrakeOn = controlState;
@@ -45,37 +43,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 			case HORN : {
 				vehicle.hornOn = controlState;
 				break;
-			}
-			case TRAILER : {
-				if(vehicle.towedVehicle != null){
-					vehicle.changeTrailer(null, null, null, null, null);
-					player.sendPacket(new PacketPlayerChatMessage("interact.trailer.disconnect"));
-				}else{
-					boolean matchingConnection = false;
-					boolean trailerInRange = false;
-					for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-						if(entity instanceof EntityVehicleF_Physics && !entity.equals(vehicle)){
-							switch(vehicle.tryToConnect((EntityVehicleF_Physics) entity)){
-								case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage("interact.trailer.connect")); return false;
-								case TRAILER_TOO_FAR : matchingConnection = true; break;
-								case TRAILER_WRONG_HITCH : trailerInRange = true; break;
-								case NO_TRAILER_NEARBY : break;
-							}
-						}
-					}
-					
-					//Send packet based on what we found.
-					if(!matchingConnection && !trailerInRange){
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.notfound"));
-					}else if(matchingConnection && !trailerInRange){
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.toofar"));
-					}else if(!matchingConnection && trailerInRange){
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wronghitch"));
-					}else{
-						player.sendPacket(new PacketPlayerChatMessage("interact.trailer.wrongplacement"));
-					}					
-				}
-				return false;
 			}
 			case SHIFT_UP : {
 				boolean didShift = false;
@@ -139,7 +106,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 		HORN,
 		SHIFT_UP,
 		SHIFT_DN,
-		TRAILER,
 		REVERSE,
 		GEAR,
 		AUTOPILOT,

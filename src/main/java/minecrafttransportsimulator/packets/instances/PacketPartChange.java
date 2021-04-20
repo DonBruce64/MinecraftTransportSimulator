@@ -7,7 +7,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -80,7 +79,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, WrapperPlayer player, AEntityE_Multipart<?> entity){
+	public boolean handle(WrapperWorld world, AEntityE_Multipart<?> entity){
 		if(partItem == null){
 			entity.removePart(entity.getPartAtLocation(partOffset), null);
 		}else{
