@@ -112,6 +112,7 @@ public class JSONConfig{
 									fluids.put("lava", 1.0);
 									fluids.put("diesel", 1.0);
 									fluids.put("biodiesel", 0.8);
+									fluids.put("creosote", 0.7);
 									fluids.put("oil", 0.5);
 									break;
 								}
