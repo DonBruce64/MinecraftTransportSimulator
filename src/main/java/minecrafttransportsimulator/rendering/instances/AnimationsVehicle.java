@@ -152,6 +152,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("p_brake"): return vehicle.parkingBrakeOn ? 1 : 0;
 			case("reverser"): return vehicle.reverseThrust ? 1 : 0;
 			case("horn"): return vehicle.hornOn ? 1 : 0;
+			case("autopilot"): return vehicle.autopilot ? 1 : 0;
 			case("locked"): return vehicle.locked ? 1 : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
 			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;

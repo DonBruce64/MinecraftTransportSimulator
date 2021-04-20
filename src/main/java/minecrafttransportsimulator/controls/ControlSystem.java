@@ -358,7 +358,7 @@ public final class ControlSystem{
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
-				if(!powered.cruiseControl || powered.throttle < throttleLevel){
+				if(!powered.autopilot || powered.throttle < throttleLevel){
 					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 				}
 			}else{
@@ -376,7 +376,7 @@ public final class ControlSystem{
 					}
 				}else{
 					//Don't send gas off packet if we have cruise on.
-					if(!powered.cruiseControl){
+					if(!powered.autopilot){
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
 					}
 				}

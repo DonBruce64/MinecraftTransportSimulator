@@ -79,17 +79,9 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				if(controlState){
 					vehicle.autopilot = true;
 					vehicle.altitudeSetting = vehicle.position.y;
+					vehicle.speedSetting = vehicle.velocity;
 				}else{
 					vehicle.autopilot = false;
-				}
-				break;
-			}
-			case CRUISECONTROL : {
-				if(controlState){
-					vehicle.cruiseControl = true;
-					vehicle.cruiseControlSpeed = vehicle.velocity;
-				}else{
-					vehicle.cruiseControl = false;
 				}
 				break;
 			}
@@ -109,7 +101,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 		REVERSE,
 		GEAR,
 		AUTOPILOT,
-		CRUISECONTROL,
 		FLAPS,
 		TRIM_ROLL,
 		TRIM_PITCH,

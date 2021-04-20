@@ -53,12 +53,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public short flapCurrentAngle;
 	
 	//External state control.
-	public boolean autopilot;
-	public boolean cruiseControl;
 	public boolean turningLeft;
 	public boolean turningRight;
+	public boolean autopilot;
 	public byte turningCooldown;
-	public double cruiseControlSpeed;
+	public double speedSetting;
 	public double altitudeSetting;
 	
 	//Internal states.
@@ -118,9 +117,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		this.rudderTrim = (short) data.getInteger("rudderTrim");
 		
 		this.autopilot = data.getBoolean("autopilot");
-		this.cruiseControl = data.getBoolean("cruiseControl");
 		this.altitudeSetting = data.getDouble("altitudeSetting");
-		this.cruiseControlSpeed = data.getDouble("cruiseControlSpeed");
+		this.speedSetting = data.getDouble("speedSetting");
 	}
 	
 	@Override
@@ -476,13 +474,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	protected void dampenControlSurfaces(){
-		if(cruiseControl){
-			if(velocity < cruiseControlSpeed){
+		if(!definition.motorized.isAircraft && autopilot){
+			if(velocity < speedSetting){
 				if(throttle < MAX_THROTTLE){
 					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
 					++throttle;
 				}
-			}else if(velocity > cruiseControlSpeed){
+			}else if(velocity > speedSetting){
 				if(throttle > 0){
 					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
 					--throttle;
@@ -536,25 +534,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 				}
 			}
-		}else{
+		}else if(definition.motorized.isAircraft && autopilot){
 			//Normal aircraft.  Do autopilot operations if required.
-			if(autopilot){
-				//If we are not flying at a steady elevation, angle the elevator to compensate
-				if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
-					++elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
-				}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
-					--elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
-				}
-				//Keep the roll angle at 0.
-				if(-angles.z > aileronTrim + 1 && aileronTrim < MAX_AILERON_TRIM){
-					++aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
-				}else if(-angles.z < aileronTrim - 1 && aileronTrim > -MAX_AILERON_TRIM){
-					--aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
-				}
+			//If we are not flying at a steady elevation, angle the elevator to compensate
+			if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
+				++elevatorTrim;
+				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+			}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
+				--elevatorTrim;
+				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+			}
+			//Keep the roll angle at 0.
+			if(-angles.z > aileronTrim + 1 && aileronTrim < MAX_AILERON_TRIM){
+				++aileronTrim;
+				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+			}else if(-angles.z < aileronTrim - 1 && aileronTrim > -MAX_AILERON_TRIM){
+				--aileronTrim;
+				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 			}
 		}
 		
@@ -650,8 +646,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		data.setInteger("rudderTrim", rudderTrim);
 
 		data.setBoolean("autopilot", autopilot);
-		data.setBoolean("cruiseControl", cruiseControl);
 		data.setDouble("altitudeSetting", altitudeSetting);
-		data.setDouble("cruiseControlSpeed", cruiseControlSpeed);
+		data.setDouble("speedSetting", speedSetting);
 	}
 }

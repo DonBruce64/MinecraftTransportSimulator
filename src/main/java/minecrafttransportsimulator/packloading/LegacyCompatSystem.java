@@ -289,6 +289,12 @@ public final class LegacyCompatSystem{
 			definition.motorized.brakingFactor = 1.0F;
 		}
 		
+		//Move cruiseControl to autopilot.
+		if(definition.motorized.hasCruiseControl){
+			definition.motorized.hasAutopilot = true;
+			definition.motorized.hasCruiseControl = false;
+		}
+		
 		try{
 			performAnimationLegacyCompats(definition.rendering);
 		}catch(Exception e){
