@@ -22,7 +22,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new EntityFluidTank(world, data, 15000);
+    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), 15000);
     }
 	
 	@Override
@@ -114,6 +114,8 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		tank.save(data);
+		WrapperNBT tankData = new WrapperNBT();
+		tank.save(tankData);
+		data.setData("tank", tankData);
 	}
 }
