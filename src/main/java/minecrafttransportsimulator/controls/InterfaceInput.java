@@ -261,7 +261,7 @@ public class InterfaceInput{
      */
     @SubscribeEvent
     public static void on(InputEvent.KeyInputEvent event){
-        if(configKey.isPressed() && InterfaceGUI.isGUIActive(null)){
+        if(configKey.isPressed() && InterfaceGUI.getActiveGUI() == null){
         	InterfaceGUI.openGUI(new GUIConfig());
         }
     }

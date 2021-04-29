@@ -154,7 +154,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	
 	@Override
 	public boolean update(){
-		if(super.update() && (!isBeingTowed() || overrideTowingChecks)){
+		//Need to put the towing checks first, as we don't want to call super if they're false.
+		if((!isBeingTowed() || overrideTowingChecks) && super.update()){
 			//See if we need to link connections.
 			//We need to wait on this in case the entity didn't load at the same time.
 			//That being said, it may be the vehicle we are loading is in another chunk.
@@ -438,7 +439,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 */
 	protected void updateAnglesToTowed(){
 		//Need to set angles for mounted/restricted connections.
-		if(towedByConnection.connection.mounted || towedByConnection.connection.restricted){
+		if(towedByConnection.otherConnection.mounted || towedByConnection.otherConnection.restricted){
 			angles.y = angles.y;
 			prevAngles.y = angles.y;
 			

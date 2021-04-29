@@ -21,13 +21,13 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
  * @author don_bruce
  */
 public abstract class AGUIPanel extends AGUIBase{
-	public static final int PANEL_WIDTH = 400;
-	public static final int PANEL_HEIGHT = 140;
+	protected static final int PANEL_WIDTH = 400;
+	protected static final int PANEL_HEIGHT = 140;
 	protected static final int GAP_BETWEEN_SELECTORS = 12;
 	protected static final int SELECTOR_SIZE = 20;
 	protected static final int SELECTOR_TEXTURE_SIZE = 20;
 	
-	protected final EntityVehicleF_Physics vehicle;
+	public final EntityVehicleF_Physics vehicle;
 	protected final boolean haveReverseThrustOption;
 	protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<SwitchEntry>();
 	protected int xOffset;

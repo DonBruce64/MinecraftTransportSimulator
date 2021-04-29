@@ -157,10 +157,10 @@ public final class ControlSystem{
 	
 	private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
-			if(InterfaceGUI.isGUIActive(null)){
-				InterfaceGUI.openGUI(new GUIRadio(vehicle.radio));
-			}else if(InterfaceGUI.isGUIActive(GUIRadio.class)){
+			if(InterfaceGUI.getActiveGUI() instanceof GUIRadio){
 				InterfaceGUI.closeGUI();
+			}else if(InterfaceGUI.getActiveGUI() == null){
+				InterfaceGUI.openGUI(new GUIRadio(vehicle.radio));
 			}
 		}
 	}
@@ -184,10 +184,10 @@ public final class ControlSystem{
 		}		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
-			if(InterfaceGUI.isGUIActive(null)){
-				InterfaceGUI.openGUI(new GUIPanelAircraft(aircraft));
-			}else if(InterfaceGUI.isGUIActive(GUIPanelAircraft.class)){
+			if(InterfaceGUI.getActiveGUI() instanceof GUIPanelAircraft){
 				InterfaceGUI.closeGUI();
+			}else if(InterfaceGUI.getActiveGUI() == null){
+				InterfaceGUI.openGUI(new GUIPanelAircraft(aircraft));
 			}
 		}
 		
@@ -241,7 +241,7 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.isGUIActive(null)){
+			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
 				long mousePosition = InterfaceInput.getTrackedMouseInfo();
 				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
@@ -298,10 +298,10 @@ public final class ControlSystem{
 		}
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
-			if(InterfaceGUI.isGUIActive(null)){
-				InterfaceGUI.openGUI(new GUIPanelGround(powered));
-			}else if(InterfaceGUI.isGUIActive(GUIPanelGround.class)){
+			if(InterfaceGUI.getActiveGUI() instanceof GUIPanelGround){
 				InterfaceGUI.closeGUI();
+			}else if(InterfaceGUI.getActiveGUI() == null){
+				InterfaceGUI.openGUI(new GUIPanelGround(powered));
 			}
 		}
 		
@@ -385,7 +385,7 @@ public final class ControlSystem{
 		
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.isGUIActive(null)){
+			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
 				long mousePosition = InterfaceInput.getTrackedMouseInfo();
 				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
 			}

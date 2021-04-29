@@ -427,7 +427,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		}else{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
-			if(towedByConnection.connection.mounted){
+			if(towedByConnection.otherConnection.mounted){
 				Point3d hitchRotatedOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.angles).add(towedByConnection.otherEntity.position);
 				Point3d hookupRotatedOffset = towedByConnection.getOffset().rotateFine(angles).add(position);
 				motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
@@ -449,7 +449,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				tractorHitchPrevOffset.normalize();
 				tractorHitchCurrentOffset.normalize();
 				double rotationDelta;
-				if(towedByConnection.connection.restricted){
+				if(towedByConnection.otherConnection.restricted){
 					rotationDelta = towedByConnection.otherEntity.angles.y - angles.y;
 				}else{
 					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffset.dotProduct(tractorHitchCurrentOffset)));

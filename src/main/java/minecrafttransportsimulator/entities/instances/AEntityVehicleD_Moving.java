@@ -576,7 +576,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					return;
 				}
 				
-			}else if(towedByConnection == null || !towedByConnection.connection.mounted){
+			}else if(towedByConnection == null || !towedByConnection.otherConnection.mounted){
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){

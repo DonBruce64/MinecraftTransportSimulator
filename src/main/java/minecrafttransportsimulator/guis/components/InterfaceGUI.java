@@ -266,15 +266,10 @@ public class InterfaceGUI{
 	}
 	
 	/**
-	 *  Returns true if the passed-in GUI is currently active.
-	 *  If null is passed-in, then this method returns true if no GUI is active.
+	 *  Returns the currently-active GUI, or null if no GUI is active.
 	 */
-	public static boolean isGUIActive(Class<? extends AGUIBase> guiClass){
-		if(guiClass == null){
-			return Minecraft.getMinecraft().currentScreen == null;
-		}else{
-			return Minecraft.getMinecraft().currentScreen == null ? false : (Minecraft.getMinecraft().currentScreen instanceof BuilderGUI ? ((BuilderGUI) Minecraft.getMinecraft().currentScreen).gui.getClass().equals(guiClass) : false);
-		}
+	public static AGUIBase getActiveGUI(){
+		return Minecraft.getMinecraft().currentScreen instanceof BuilderGUI ? ((BuilderGUI) Minecraft.getMinecraft().currentScreen).gui : null;
 	}
 	
 	/**
