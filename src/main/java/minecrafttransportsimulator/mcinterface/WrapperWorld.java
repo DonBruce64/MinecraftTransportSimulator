@@ -963,8 +963,9 @@ public class WrapperWorld{
     @SubscribeEvent
     public static void on(WorldEvent.Unload event){
     	if(worldWrappers.containsKey(event.getWorld())){
-	    	AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
-	    	AEntityC_Definable.removaAllEntities(worldWrappers.get(event.getWorld()));
+    		//Need to remove C before A as A removes the world mapping that C will call.
+    		AEntityC_Definable.removaAllEntities(worldWrappers.get(event.getWorld()));
+    		AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
 	    	worldWrappers.remove(event.getWorld());
 	    	for(EntityPlayer player : event.getWorld().playerEntities){
 	    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());
