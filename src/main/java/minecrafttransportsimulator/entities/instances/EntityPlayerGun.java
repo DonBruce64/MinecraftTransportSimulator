@@ -76,11 +76,18 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			}
 		}
 		
-		hotbarSelected = player.getHotbarIndex();
-		
+
+		//Don't load duplicates.  However, do load saved guns.
+		//These come after the player joins the world, so replace them.
 		if(world.isClient()){
+			if(playerClientGuns.containsKey(player.getID())){
+				playerClientGuns.get(player.getID()).remove();
+			}
 			playerClientGuns.put(player.getID(), this);
 		}else{
+			if(playerServerGuns.containsKey(player.getID())){
+				playerServerGuns.get(player.getID()).remove();
+			}
 			playerServerGuns.put(player.getID(), this);
 		}
 	}
@@ -124,6 +131,25 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 				
 				//Get the current gun.
 				activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+				
+				//If we have a gun, but the player's held stack is null, get it now.
+				//This happens if we load a gun as a saved part.
+				if(activeGun != null && gunStack == null){
+					AItemBase heldItem = player.getHeldItem();
+					if(heldItem instanceof ItemPartGun){
+						ItemPartGun heldGun = (ItemPartGun) heldItem;
+						if(heldGun.definition.gun.handHeld){
+							gunStack = player.getHeldStack();
+							hotbarSelected = player.getHotbarIndex();
+						}
+					}
+					if(activeGun != null && gunStack == null){
+						//Either the player's held item changed, or the pack did.
+						//Held gun is invalid, so don't use or save it.
+						removePart(activeGun, null);
+						activeGun = null;
+					}
+				}
 				
 				if(!world.isClient()){
 					//Check to make sure if we had a gun, that it didn't change.

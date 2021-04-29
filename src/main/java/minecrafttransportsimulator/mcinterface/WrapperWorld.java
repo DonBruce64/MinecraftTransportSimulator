@@ -938,21 +938,21 @@ public class WrapperWorld{
    public static void on(EntityJoinWorldEvent event){
 	   if(event.getEntity() instanceof EntityPlayer && !event.getWorld().isRemote){
 		   EntityPlayer player = (EntityPlayer) event.getEntity();
-			//If we don't have a follower, spawn one now.
-			if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
-				BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
-				//Need to force spawn, as player might not yet have loaded the chunks.
-				forwarder.forceSpawn = true;
-				event.getWorld().spawnEntity(forwarder);
-			}
-       	
-			//If we don't have an associated gun entity, spawn one now.
-			if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
-	       		WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
+		   //If we don't have a follower, spawn one now.
+		   if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
+			   BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
+			   //Need to force spawn, as player might not yet have loaded the chunks.
+			   forwarder.forceSpawn = true;
+			   event.getWorld().spawnEntity(forwarder);
+		   }
+   	
+		   //If we don't have an associated gun entity, spawn one now.
+		   if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
+			   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
 	       		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
 	       		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
 	       		worldWrapper.spawnEntity(entity);
-			}
+		   }
 	   }
    }
 	
