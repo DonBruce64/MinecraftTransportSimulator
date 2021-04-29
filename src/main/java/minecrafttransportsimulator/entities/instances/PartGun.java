@@ -148,244 +148,246 @@ public class PartGun extends APart{
     }
 	
 	@Override
-	public void update(){
-		super.update();
-		
-		//Get the current controller and item reference for this gun.
-		WrapperEntity controller = getController();
-		ItemPartGun gunItem = getItem();
-		WrapperPlayer playerHolding;
-		if(entityOn instanceof EntityPlayerGun){
-			playerHolding = ((EntityPlayerGun) entityOn).player;
-			if(playerHolding == null){
-				this.isValid = false;
-				return;
-			}
-		}else{
-			playerHolding = null;
-		}
-		
-		//We flag ourselves as inactive if there are no controllers and the seat isn't set to us if we're not hand-held.
-		//We aren't making sentry turrets here.... yet.
-		//If this gun type can only have one selected at a time, check that this has the selected index.
-		if(controller != null){
-			if(playerHolding != null){
-				active = true;
+	public boolean update(){
+		if(super.update()){
+			//Get the current controller and item reference for this gun.
+			WrapperEntity controller = getController();
+			ItemPartGun gunItem = getItem();
+			WrapperPlayer playerHolding;
+			if(entityOn instanceof EntityPlayerGun){
+				playerHolding = ((EntityPlayerGun) entityOn).player;
+				if(playerHolding == null){
+					//Can't just remove this as we'll get a CME here.
+					//TODO perhaps make updates with an iterator?
+					this.isValid = false;
+					return false;
+				}
 			}else{
-				PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-				active = !placementDefinition.isSpare && controller != null && controllerSeat != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
+				playerHolding = null;
 			}
-		}else{
-			active = false;
-		}
-		
-		//Adjust aim to face direction controller is facing.
-		//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
-		//Pitch and yaw only depend on where the controller is looking, and where the gun is pointed.
-		//This allows for guns to be mounted anywhere on a vehicle and at any angle.
-		if(active || definition.gun.resetPosition){
-			boolean lockedOn = active;
-			//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
-			//We also get a flag to see if the gun is currently pointed to the hostile mob.
-			//If not, then we don't fire the gun, as that'd waste ammo.
-			if(active && !(controller instanceof WrapperPlayer)){
-				WrapperEntity hostile = world.getNearestHostile(controller, 48);
-				if(hostile != null){
-					//Need to aim for the middle of the mob, not their base (feet).
-					Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
-					//Make the gunner account for bullet delay and movement of the hostile.
-					//This makes them track better when the target is moving.
-					double ticksToTarget = hostilePosition.distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
-					hostilePosition.add(hostile.getVelocity().copy().multiply(ticksToTarget));
-					double yawHostile = Math.toDegrees(Math.atan2(hostilePosition.x - position.x, hostilePosition.z - position.z));
-					double pitchHostile = -Math.toDegrees(Math.atan2(hostilePosition.y - position.y, Math.hypot(hostilePosition.x - position.x, hostilePosition.z - position.z)));
-					controller.setYaw(yawHostile);
-					controller.setHeadYaw(yawHostile);
-					controller.setPitch(pitchHostile);
-					firing = true;
+			
+			//We flag ourselves as inactive if there are no controllers and the seat isn't set to us if we're not hand-held.
+			//We aren't making sentry turrets here.... yet.
+			//If this gun type can only have one selected at a time, check that this has the selected index.
+			if(controller != null){
+				if(playerHolding != null){
+					active = true;
 				}else{
-					firing = false;
-				}
-			}
-			
-			//Get the target yaw and pitch, then set the orientation.
-			//We need to wait here before setting the prev to the current in case 
-			//our provider needs to know the prev rotation for its calculations.
-			double targetYaw;
-			double targetPitch;
-			if(playerHolding != null){
-				targetYaw = 0;
-				targetPitch = 0;
-			}else if(active){
-				//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
-				//This is because if the gun moves based on those animations, we shouldn't take them into account.
-				//For pitch, we need to find the relative angle of the player to the entity's 0-pitch plane.
-				//When the player rotates their head, they don't do so relative to the pitch of the entity the gun is on, 
-				//so a yaw change can result in a pitch change.
-				double partYawContribution = definition.gun.yawIsInternal ? localAngles.y : localAngles.y - prevOrientation.y;
-				double partPitchContribution = definition.gun.pitchIsInternal ? localAngles.x : localAngles.x - prevOrientation.x;
-				double entityPitchContribution = (entityOn.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
-				double entityRollContribution = (entityOn.angles.z + localAngles.z)*Math.sin(Math.toRadians(partYawContribution));
-				targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
-				targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
-			}else{
-				targetYaw = defaultYaw;
-				targetPitch = defaultPitch;
-			}
-			prevOrientation.setTo(currentOrientation);
-			
-			//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-			double deltaYaw = -currentOrientation.getClampedYDelta(targetYaw);
-			if(deltaYaw < 0){
-				if(deltaYaw < -anglePerTickSpeed){
-					deltaYaw = -anglePerTickSpeed;
-					lockedOn = false;
-				}
-				currentOrientation.y += deltaYaw; 
-			}else if(deltaYaw > 0){
-				if(deltaYaw > anglePerTickSpeed){
-					deltaYaw = anglePerTickSpeed;
-					lockedOn = false;
-				}
-				currentOrientation.y += deltaYaw;
-			}
-			//Apply yaw clamps.
-			//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
-			//We need to do special logic for this type of gun.
-			if(minYaw == -180  && maxYaw == 180){
-				if(currentOrientation.y > 180 ){
-					currentOrientation.y -= 360;
-					prevOrientation.y -= 360;
-				}else if(currentOrientation.y < -180){
-					currentOrientation.y += 360;
-					prevOrientation.y += 360;
+					PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
+					active = !placementDefinition.isSpare && controller != null && controllerSeat != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
 				}
 			}else{
-				if(currentOrientation.y > maxYaw){
-					currentOrientation.y = maxYaw;
+				active = false;
+			}
+			
+			//Adjust aim to face direction controller is facing.
+			//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
+			//Pitch and yaw only depend on where the controller is looking, and where the gun is pointed.
+			//This allows for guns to be mounted anywhere on a vehicle and at any angle.
+			if(active || definition.gun.resetPosition){
+				boolean lockedOn = active;
+				//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
+				//We also get a flag to see if the gun is currently pointed to the hostile mob.
+				//If not, then we don't fire the gun, as that'd waste ammo.
+				if(active && !(controller instanceof WrapperPlayer)){
+					WrapperEntity hostile = world.getNearestHostile(controller, 48);
+					if(hostile != null){
+						//Need to aim for the middle of the mob, not their base (feet).
+						Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
+						//Make the gunner account for bullet delay and movement of the hostile.
+						//This makes them track better when the target is moving.
+						double ticksToTarget = hostilePosition.distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
+						hostilePosition.add(hostile.getVelocity().copy().multiply(ticksToTarget));
+						double yawHostile = Math.toDegrees(Math.atan2(hostilePosition.x - position.x, hostilePosition.z - position.z));
+						double pitchHostile = -Math.toDegrees(Math.atan2(hostilePosition.y - position.y, Math.hypot(hostilePosition.x - position.x, hostilePosition.z - position.z)));
+						controller.setYaw(yawHostile);
+						controller.setHeadYaw(yawHostile);
+						controller.setPitch(pitchHostile);
+						firing = true;
+					}else{
+						firing = false;
+					}
 				}
-				if(currentOrientation.y < minYaw){
-					currentOrientation.y = minYaw;
+				
+				//Get the target yaw and pitch, then set the orientation.
+				//We need to wait here before setting the prev to the current in case 
+				//our provider needs to know the prev rotation for its calculations.
+				double targetYaw;
+				double targetPitch;
+				if(playerHolding != null){
+					targetYaw = 0;
+					targetPitch = 0;
+				}else if(active){
+					//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
+					//This is because if the gun moves based on those animations, we shouldn't take them into account.
+					//For pitch, we need to find the relative angle of the player to the entity's 0-pitch plane.
+					//When the player rotates their head, they don't do so relative to the pitch of the entity the gun is on, 
+					//so a yaw change can result in a pitch change.
+					double partYawContribution = definition.gun.yawIsInternal ? localAngles.y : localAngles.y - prevOrientation.y;
+					double partPitchContribution = definition.gun.pitchIsInternal ? localAngles.x : localAngles.x - prevOrientation.x;
+					double entityPitchContribution = (entityOn.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
+					double entityRollContribution = (entityOn.angles.z + localAngles.z)*Math.sin(Math.toRadians(partYawContribution));
+					targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
+					targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
+				}else{
+					targetYaw = defaultYaw;
+					targetPitch = defaultPitch;
+				}
+				prevOrientation.setTo(currentOrientation);
+				
+				//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
+				double deltaYaw = -currentOrientation.getClampedYDelta(targetYaw);
+				if(deltaYaw < 0){
+					if(deltaYaw < -anglePerTickSpeed){
+						deltaYaw = -anglePerTickSpeed;
+						lockedOn = false;
+					}
+					currentOrientation.y += deltaYaw; 
+				}else if(deltaYaw > 0){
+					if(deltaYaw > anglePerTickSpeed){
+						deltaYaw = anglePerTickSpeed;
+						lockedOn = false;
+					}
+					currentOrientation.y += deltaYaw;
+				}
+				//Apply yaw clamps.
+				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
+				//We need to do special logic for this type of gun.
+				if(minYaw == -180  && maxYaw == 180){
+					if(currentOrientation.y > 180 ){
+						currentOrientation.y -= 360;
+						prevOrientation.y -= 360;
+					}else if(currentOrientation.y < -180){
+						currentOrientation.y += 360;
+						prevOrientation.y += 360;
+					}
+				}else{
+					if(currentOrientation.y > maxYaw){
+						currentOrientation.y = maxYaw;
+					}
+					if(currentOrientation.y < minYaw){
+						currentOrientation.y = minYaw;
+					}
+				}
+				
+				//Adjust pitch.
+				double deltaPitch = targetPitch - currentOrientation.x;
+				if(deltaPitch < 0){
+					if(deltaPitch < -anglePerTickSpeed){
+						deltaPitch = -anglePerTickSpeed;
+						lockedOn = false;
+					}
+					currentOrientation.x += deltaPitch; 
+				}else if(deltaPitch > 0){
+					if(deltaPitch > anglePerTickSpeed){
+						deltaPitch = anglePerTickSpeed;
+						lockedOn = false;
+					}
+					currentOrientation.x += deltaPitch;
+				}
+				//Apply pitch clamps.
+				if(currentOrientation.x < maxPitch){
+					currentOrientation.x = maxPitch;
+				}
+				if(currentOrientation.x > minPitch){
+					currentOrientation.x = minPitch;
+				}
+				
+				//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
+				//This keeps NPCs from wasting ammo.
+				if(!(controller instanceof WrapperPlayer)){
+					if(!lockedOn || currentOrientation.y == minYaw || currentOrientation.y == maxYaw || currentOrientation.x == minPitch || currentOrientation.x == maxPitch){
+						firing = false;
+					}
+				}
+				
+				//Set internal orientation for use in other functions as this has changed.
+				internalOrientation.setTo(currentOrientation);
+				if(!definition.gun.yawIsInternal){
+					internalOrientation.y = 0;
+				}
+				if(!definition.gun.pitchIsInternal){
+					internalOrientation.x = 0;
+				}
+			}else{
+				firing = false;
+			}
+			
+			//Increment or decrement windup.
+			if(firing && windupTimeCurrent < definition.gun.windupTime){
+				++windupTimeCurrent;
+			}else if(!firing && windupTimeCurrent > 0){
+				--windupTimeCurrent;
+			}
+			windupRotation += windupTimeCurrent;
+			
+			//If this gun is being told to fire, and we have bullets and are wound up, fire.
+			//Don't spawn bullets on the server, as they will cause lots of lag and network traffic.
+			//Instead, spawn them on the clients, and then send back hit data to the server.
+			//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
+			//easier on MC to leave clients to handle lots of bullets than the server and network systems.
+			//We still need to run the gun code on the server, however, as we need to mess with inventory.
+			firedThisTick = false;
+			if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
+				//First update gun number so we know if we need to apply a cam offset.
+				//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
+				//Make sure to add-on an offset to our firing point to allow for multi-gun units.
+				List<APart> allGuns = entityOn.partsByItem.get(gunItem);
+				long millisecondCamOffset = definition.gun.fireSolo ? 0 : (long) (definition.gun.fireDelay*(1000D/20D)*(allGuns.indexOf(this))/allGuns.size());
+				cooldownTimeRemaining = definition.gun.fireDelay;
+				timeToFire = System.currentTimeMillis() + millisecondCamOffset;
+				lastController = controller;
+				firedThisCommand = true;
+				firedThisTick = true;
+				if(!world.isClient()){
+					//Only remove bullets from the server.  We remove them from the client when they spawn.
+					--bulletsLeft;
+					++bulletsFired;
+					if(bulletsLeft == 0){
+						loadedBullet = null;
+					}
 				}
 			}
 			
-			//Adjust pitch.
-			double deltaPitch = targetPitch - currentOrientation.x;
-			if(deltaPitch < 0){
-				if(deltaPitch < -anglePerTickSpeed){
-					deltaPitch = -anglePerTickSpeed;
-					lockedOn = false;
-				}
-				currentOrientation.x += deltaPitch; 
-			}else if(deltaPitch > 0){
-				if(deltaPitch > anglePerTickSpeed){
-					deltaPitch = anglePerTickSpeed;
-					lockedOn = false;
-				}
-				currentOrientation.x += deltaPitch;
-			}
-			//Apply pitch clamps.
-			if(currentOrientation.x < maxPitch){
-				currentOrientation.x = maxPitch;
-			}
-			if(currentOrientation.x > minPitch){
-				currentOrientation.x = minPitch;
+			//Reset fire command bit if we aren't firing.
+			if(!firing){
+				firedThisCommand = false;
 			}
 			
-			//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
-			//This keeps NPCs from wasting ammo.
-			if(!(controller instanceof WrapperPlayer)){
-				if(!lockedOn || currentOrientation.y == minYaw || currentOrientation.y == maxYaw || currentOrientation.x == minPitch || currentOrientation.x == maxPitch){
-					firing = false;
-				}
-			}
-			
-			//Set internal orientation for use in other functions as this has changed.
-			internalOrientation.setTo(currentOrientation);
-			if(!definition.gun.yawIsInternal){
-				internalOrientation.y = 0;
-			}
-			if(!definition.gun.pitchIsInternal){
-				internalOrientation.x = 0;
-			}
-		}else{
-			firing = false;
-		}
-		
-		//Increment or decrement windup.
-		if(firing && windupTimeCurrent < definition.gun.windupTime){
-			++windupTimeCurrent;
-		}else if(!firing && windupTimeCurrent > 0){
-			--windupTimeCurrent;
-		}
-		windupRotation += windupTimeCurrent;
-		
-		//If this gun is being told to fire, and we have bullets and are wound up, fire.
-		//Don't spawn bullets on the server, as they will cause lots of lag and network traffic.
-		//Instead, spawn them on the clients, and then send back hit data to the server.
-		//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
-		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
-		//We still need to run the gun code on the server, however, as we need to mess with inventory.
-		firedThisTick = false;
-		if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
-			//First update gun number so we know if we need to apply a cam offset.
-			//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
-			//Make sure to add-on an offset to our firing point to allow for multi-gun units.
-			List<APart> allGuns = entityOn.partsByItem.get(gunItem);
-			long millisecondCamOffset = definition.gun.fireSolo ? 0 : (long) (definition.gun.fireDelay*(1000D/20D)*(allGuns.indexOf(this))/allGuns.size());
-			cooldownTimeRemaining = definition.gun.fireDelay;
-			timeToFire = System.currentTimeMillis() + millisecondCamOffset;
-			lastController = controller;
-			firedThisCommand = true;
-			firedThisTick = true;
-			if(!world.isClient()){
-				//Only remove bullets from the server.  We remove them from the client when they spawn.
-				--bulletsLeft;
-				++bulletsFired;
-				if(bulletsLeft == 0){
-					loadedBullet = null;
-				}
-			}
-		}
-		
-		//Reset fire command bit if we aren't firing.
-		if(!firing){
-			firedThisCommand = false;
-		}
-		
-		//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
-		//While the reload method checks for reload time, we check here to save on code processing.
-		//No sense in looking for bullets if we can't load them anyways.
-		if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
-			if(playerHolding != null){
-				if(definition.gun.autoReload || bulletsLeft == 0){
-					//Check the player's inventory for bullets.
-					WrapperInventory inventory = playerHolding.getInventory();
-					for(int i=0; i<inventory.getSize(); ++i){
-						AItemBase item = inventory.getItemInSlot(i);
-						if(item instanceof ItemBullet){
-							if(tryToReload((ItemBullet) item)){
-								//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-								inventory.decrementSlot(i, 1);
-								return;
+			//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
+			//While the reload method checks for reload time, we check here to save on code processing.
+			//No sense in looking for bullets if we can't load them anyways.
+			if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
+				if(playerHolding != null){
+					if(definition.gun.autoReload || bulletsLeft == 0){
+						//Check the player's inventory for bullets.
+						WrapperInventory inventory = playerHolding.getInventory();
+						for(int i=0; i<inventory.getSize(); ++i){
+							AItemBase item = inventory.getItemInSlot(i);
+							if(item instanceof ItemBullet){
+								if(tryToReload((ItemBullet) item)){
+									//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
+									inventory.decrementSlot(i, 1);
+									return true;
+								}
 							}
 						}
 					}
-				}
-			}else{
-				if(definition.gun.autoReload){
-					//Iterate through all the inventory slots in crates to try to find matching ammo.
-					for(APart part : entityOn.parts){
-						if(part instanceof PartInteractable){
-							if(part.definition.interactable.feedsVehicles){
-								for(ItemStack stack : ((PartInteractable) part).inventory){
-									Item item = stack.getItem();
-									if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
-										if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
-											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-											stack.shrink(1);
-											return;
+				}else{
+					if(definition.gun.autoReload){
+						//Iterate through all the inventory slots in crates to try to find matching ammo.
+						for(APart part : entityOn.parts){
+							if(part instanceof PartInteractable){
+								if(part.definition.interactable.feedsVehicles){
+									for(ItemStack stack : ((PartInteractable) part).inventory){
+										Item item = stack.getItem();
+										if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
+											if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
+												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+												stack.shrink(1);
+												return true;
+											}
 										}
 									}
 								}
@@ -394,31 +396,34 @@ public class PartGun extends APart{
 					}
 				}
 			}
-		}
-		
-		//If we are reloading, decrement the reloading timer.
-		//If we are done reloading, add the new bullets.
-		//This comes after the reloading block as we need a 0/1 state-change for the various animations.
-		if(reloadTimeRemaining > 0){
-			--reloadTimeRemaining;
-		}else if(bulletsReloading != 0){
-			bulletsLeft += bulletsReloading;
-			bulletsReloading = 0;
-		}
-		
-		//Decrement cooldown time blocking gun from firing, if we have any.
-		if(cooldownTimeRemaining > 0){
-			--cooldownTimeRemaining;
-		}
-		
-		//Update active bullets.
-		Iterator<EntityBullet> iterator = activeBullets.iterator();
-		while(iterator.hasNext()){
-			EntityBullet bullet = iterator.next();
-			bullet.update();
-			if(!bullet.isValid){
-				iterator.remove();
+			
+			//If we are reloading, decrement the reloading timer.
+			//If we are done reloading, add the new bullets.
+			//This comes after the reloading block as we need a 0/1 state-change for the various animations.
+			if(reloadTimeRemaining > 0){
+				--reloadTimeRemaining;
+			}else if(bulletsReloading != 0){
+				bulletsLeft += bulletsReloading;
+				bulletsReloading = 0;
 			}
+			
+			//Decrement cooldown time blocking gun from firing, if we have any.
+			if(cooldownTimeRemaining > 0){
+				--cooldownTimeRemaining;
+			}
+			
+			//Update active bullets.
+			Iterator<EntityBullet> iterator = activeBullets.iterator();
+			while(iterator.hasNext()){
+				EntityBullet bullet = iterator.next();
+				bullet.update();
+				if(!bullet.isValid){
+					iterator.remove();
+				}
+			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 	

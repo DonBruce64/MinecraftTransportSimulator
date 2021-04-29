@@ -114,90 +114,94 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		//Make sure player is still valid and haven't left the server.
-		if(player != null && player.isValid()){
-			//Set our position to the player's position.  We may update this later if we have a gun.
-			position.setTo(player.getPosition());
-			motion.setTo(player.getVelocity());
-			
-			//Get the current gun.
-			activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
-			
-			if(!world.isClient()){
-				//Check to make sure if we had a gun, that it didn't change.
-				if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
-					saveGun(true);
-				}
+	public boolean update(){
+		if(super.update()){
+			//Make sure player is still valid and haven't left the server.
+			if(player != null && player.isValid()){
+				//Set our position to the player's position.  We may update this later if we have a gun.
+				position.setTo(player.getPosition());
+				motion.setTo(player.getVelocity());
 				
-				//If we don't have a gun yet, try to get the current one if the player is holding one.
-				if(activeGun == null){
-					AItemBase heldItem = player.getHeldItem();
-					if(heldItem instanceof ItemPartGun){
-						ItemPartGun heldGun = (ItemPartGun) heldItem;
-						if(heldGun.definition.gun.handHeld){
-							gunStack = player.getHeldStack();
-							addPartFromItem(heldGun, new WrapperNBT(gunStack), new Point3d(), false);
-							hotbarSelected = player.getHotbarIndex();
+				//Get the current gun.
+				activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+				
+				if(!world.isClient()){
+					//Check to make sure if we had a gun, that it didn't change.
+					if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
+						saveGun(true);
+					}
+					
+					//If we don't have a gun yet, try to get the current one if the player is holding one.
+					if(activeGun == null){
+						AItemBase heldItem = player.getHeldItem();
+						if(heldItem instanceof ItemPartGun){
+							ItemPartGun heldGun = (ItemPartGun) heldItem;
+							if(heldGun.definition.gun.handHeld){
+								gunStack = player.getHeldStack();
+								addPartFromItem(heldGun, new WrapperNBT(gunStack), new Point3d(), false);
+								hotbarSelected = player.getHotbarIndex();
+							}
 						}
 					}
 				}
+				
+				//If we have a gun, do updates to it.
+				//Only change firing command on servers to prevent de-syncs.
+				//Packets will get sent to clients to change them.
+				if(activeGun != null){
+					//Set our position relative to the the player's hand.
+					//Center point is at the player's arm, with offset being where the offset is.
+					Point3d heldVector;
+					if(player.isSneaking()){
+						heldVector = activeGun.definition.gun.handHeldAimedOffset;
+					}else{
+						heldVector = activeGun.definition.gun.handHeldNormalOffset;
+					}
+					angles.set(player.getPitch(), player.getHeadYaw(), 0);
+					
+					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
+					//Sneaking lowers arm by 0.2 blocks.
+					//First rotate point based on pitch.  This is for only the arm movement.
+					Point3d armRotation = new Point3d(angles.x, 0, 0);
+					position.setTo(heldVector).rotateFine(armRotation);
+					
+					//Now rotate based on player yaw.  We need to take the arm offset into account here.
+					armRotation.set(0, angles.y, 0);
+					position.add(-0.3125, 0, 0).rotateFine(armRotation);
+					
+					//Now add the player's position and model center point offsets.
+					position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
+					
+					//If the player is riding something, add to our position the vehicle's motion.
+					//This is because the player gets moved with the vehicle.
+					if(player.getEntityRiding() != null){
+						position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
+					}
+					
+					if(!world.isClient()){
+						//Save gun data if we stopped firing the prior tick.
+						if(activeGun.firing){
+							didGunFireLastTick = true;
+						}else if(!activeGun.firing && didGunFireLastTick){
+							saveGun(false);
+						}
+					}else{
+						//Check for player input.  Only do this for the main player.
+						if(player.equals(InterfaceClient.getClientPlayer())){
+							ControlSystem.controlPlayerGun(this);
+						}
+					}
+				}
+			}else{
+				remove();
 			}
 			
-			//If we have a gun, do updates to it.
-			//Only change firing command on servers to prevent de-syncs.
-			//Packets will get sent to clients to change them.
-			if(activeGun != null){
-				//Set our position relative to the the player's hand.
-				//Center point is at the player's arm, with offset being where the offset is.
-				Point3d heldVector;
-				if(player.isSneaking()){
-					heldVector = activeGun.definition.gun.handHeldAimedOffset;
-				}else{
-					heldVector = activeGun.definition.gun.handHeldNormalOffset;
-				}
-				angles.set(player.getPitch(), player.getHeadYaw(), 0);
-				
-				//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
-				//Sneaking lowers arm by 0.2 blocks.
-				//First rotate point based on pitch.  This is for only the arm movement.
-				Point3d armRotation = new Point3d(angles.x, 0, 0);
-				position.setTo(heldVector).rotateFine(armRotation);
-				
-				//Now rotate based on player yaw.  We need to take the arm offset into account here.
-				armRotation.set(0, angles.y, 0);
-				position.add(-0.3125, 0, 0).rotateFine(armRotation);
-				
-				//Now add the player's position and model center point offsets.
-				position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
-				
-				//If the player is riding something, add to our position the vehicle's motion.
-				//This is because the player gets moved with the vehicle.
-				if(player.getEntityRiding() != null){
-					position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
-				}
-				
-				if(!world.isClient()){
-					//Save gun data if we stopped firing the prior tick.
-					if(activeGun.firing){
-						didGunFireLastTick = true;
-					}else if(!activeGun.firing && didGunFireLastTick){
-						saveGun(false);
-					}
-				}else{
-					//Check for player input.  Only do this for the main player.
-					if(player.equals(InterfaceClient.getClientPlayer())){
-						ControlSystem.controlPlayerGun(this);
-					}
-				}
-			}
+			//Update the gun now, if we have one.
+			updatePostMovement();
+			return true;
 		}else{
-			remove();
+			return false;
 		}
-		
-		//Update the gun now, if we have one.
-		updateParts();
 	}
 	
 	@Override

@@ -46,7 +46,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		activeFollowers.put(playerFollowing.getUniqueID(), this);
 		//Need to set this as we don't spawn this builder normally.
 		loadedFromNBT = true;
-		System.out.println(this.getPositionVector());
 	}
 	
     @Override

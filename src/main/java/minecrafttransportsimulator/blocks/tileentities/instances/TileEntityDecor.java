@@ -34,16 +34,19 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-
-		//TODO Convert block-based rotation to internal variable rotation.  This is required for compats moving forwards.
-		if(!converted){
-			if(!world.isAir(position)){
-				this.angles.y = -world.getBlockRotation(position);
-				this.prevAngles.y = angles.y;
-				converted = true;
+	public boolean update(){
+		if(super.update()){
+			//TODO Convert block-based rotation to internal variable rotation.  This is required for compats moving forwards.
+			if(!converted){
+				if(!world.isAir(position)){
+					this.angles.y = -world.getBlockRotation(position);
+					this.prevAngles.y = angles.y;
+					converted = true;
+				}
 			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 	

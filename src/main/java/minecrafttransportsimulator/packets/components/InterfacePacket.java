@@ -39,8 +39,8 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital
 import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerConnection;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -83,6 +83,8 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketEntityColorChange.class);
 		registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		registerPacket(packetIndex++, PacketEntityTextChange.class);
+		registerPacket(packetIndex++, PacketEntityTrailerChange.class);
+		registerPacket(packetIndex++, PacketEntityTrailerConnection.class);
 		registerPacket(packetIndex++, PacketEntityVariableToggle.class);
 		
 		//Fluid tank packets.
@@ -120,8 +122,6 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
 		registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-		registerPacket(packetIndex++, PacketVehicleTrailerChange.class);
-		registerPacket(packetIndex++, PacketVehicleTrailerConnection.class);
 		
 		//World packets.
 		registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);

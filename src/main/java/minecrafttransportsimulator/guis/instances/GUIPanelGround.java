@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -15,11 +16,11 @@ import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerConnection;
 import minecrafttransportsimulator.rendering.components.LightType;
 
 
@@ -218,29 +219,28 @@ public class GUIPanelGround extends AGUIPanel{
 	
 	@Override
 	protected void setupGeneralComponents(int guiLeft, int guiTop){
-		//Create the 8 trailer selectors.  Note that not all may be rendered.
+		//Create up to 8 trailer selectors.  Note that not all may be rendered.
+		trailerSelectors.clear();
 		for(int i=0; i<8; ++i){
 			//Go to next column if we are on our 4th trailer selector.
 			if(i == 4){
 				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 			}
 			
-			GUIComponentSelector trailerSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.trailer") + "#" + i, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(boolean leftSide){
-					int trailerNumber = trailerSelectors.indexOf(this);
-					EntityVehicleF_Physics currentVehicle = vehicle;
-					for(int j=0; j<trailerNumber; ++ j){
-						currentVehicle = currentVehicle.towedVehicle;
+			if(trailerSwitchDefs.size() > i){
+				SwitchEntry switchDef = trailerSwitchDefs.get(i);
+				GUIComponentSelector trailerSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, switchDef.connectionGroup.groupName, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						InterfacePacket.sendToServer(new PacketEntityTrailerConnection(switchDef.entityOn, InterfaceClient.getClientPlayer(), switchDef.connectionGroupIndex));
 					}
-					InterfacePacket.sendToServer(new PacketVehicleTrailerConnection(currentVehicle, InterfaceClient.getClientPlayer()));
-				}
-				
-				@Override
-				public void onReleased(){}
-			};
-			trailerSelectors.add(trailerSelector);
-			addSelector(trailerSelector);
+					
+					@Override
+					public void onReleased(){}
+				};
+				trailerSelectors.add(trailerSelector);
+				addSelector(trailerSelector);
+			}
 		}
 		
 		//If we have gear, add a selector for it.
@@ -273,6 +273,7 @@ public class GUIPanelGround extends AGUIPanel{
 			}
 		}
 		int variableNumber = 0;
+		customSelectors.clear();
 		for(String customVariable : customVariables){
 			GUIComponentSelector customSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (variableNumber%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, customVariable, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, CUSTOM_TEXTURE_WIDTH_OFFSET, CUSTOM_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
@@ -350,14 +351,20 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//Iterate through trailers and set the visibility of the trailer selectors based on their state.
-		EntityVehicleF_Physics currentVehicle = vehicle;
 		for(int i=0; i<trailerSelectors.size(); ++i){
-			if(currentVehicle != null && currentVehicle.hasHitch()){
-				trailerSelectors.get(i).visible = true;
-				trailerSelectors.get(i).selectorState = currentVehicle.towedVehicle != null ? 0 : 1;
-				currentVehicle = currentVehicle.towedVehicle;
+			GUIComponentSelector trailerSelector = trailerSelectors.get(i);
+			SwitchEntry switchDef = trailerSwitchDefs.get(i);
+			trailerSelector.visible = true;
+			if(switchDef.connectionGroup.hookup){
+				trailerSelector.selectorState = switchDef.entityOn.towedByConnection != null ? 0 : 1;
 			}else{
-				trailerSelectors.get(i).visible = false;
+				trailerSelector.selectorState = 1;
+				for(EntityConnection connection : switchDef.entityOn.towingConnections){
+					if(connection.groupIndex == switchDef.connectionGroupIndex){
+						trailerSelector.selectorState = 0;
+						break;
+					}
+				}
 			}
 		}
 		

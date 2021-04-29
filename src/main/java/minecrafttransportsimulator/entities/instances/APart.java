@@ -124,40 +124,47 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		prevMotion.setTo(entityOn.prevMotion);
-		motion.setTo(entityOn.motion);
-		prevLocalOffset.setTo(localOffset);
-		variablesOn.clear();
-		variablesOn.addAll(entityOn.variablesOn);
-		isDisabled = updateLocals();
-		//If we have a parent part, we need to change our offsets to be relative to it.
-		if(parentPart != null && placementDefinition.isSubPart){
-			//Get parent offset and rotation.  The parent will have been updated already as it has
-			//to be placed on the vehicle before us, and as such will be before us in the parts list.
-			//Our initial offset needs to be relative to the position of the part on the parent, so 
-			//we need to start with that delta.
-			localOffset.subtract(parentPart.placementOffset);
+	public boolean update(){
+		if(super.update()){
+			prevMotion.setTo(entityOn.prevMotion);
+			motion.setTo(entityOn.motion);
+			prevLocalOffset.setTo(localOffset);
+			variablesOn.clear();
+			variablesOn.addAll(entityOn.variablesOn);
+			isDisabled = updateLocals();
+			//If we have a parent part, we need to change our offsets to be relative to it.
+			if(parentPart != null && placementDefinition.isSubPart){
+				//Get parent offset and rotation.  The parent will have been updated already as it has
+				//to be placed on the vehicle before us, and as such will be before us in the parts list.
+				//Our initial offset needs to be relative to the position of the part on the parent, so 
+				//we need to start with that delta.
+				localOffset.subtract(parentPart.placementOffset);
+				
+				//Rotate our current relative offset by the rotation of the parent to get the correct
+				//offset between us and our parent's position in our parent's coordinate system.
+				localOffset.rotateFine(parentPart.localAngles);
+				
+				//Add our parent's angles to our own so we have a cumulative rotation.
+				//This has the potential for funny rotations if we're both rotated, as we should
+				//apply this rotation about our parent's rotated axis, not our own, but for most situations,
+				//it's close enough.
+				localAngles.add(parentPart.localAngles);
+				
+				//Now that we have the proper relative offset, add our parent's offset to get our net offset.
+				//This is our final offset point.
+				localOffset.add(parentPart.localOffset);
+			}
 			
-			//Rotate our current relative offset by the rotation of the parent to get the correct
-			//offset between us and our parent's position in our parent's coordinate system.
-			localOffset.rotateFine(parentPart.localAngles);
+			//Set position and rotation to our net offset pos on the entity.
+			position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
+			angles.setTo(localAngles).add(entityOn.angles);
 			
-			//Add our parent's angles to our own so we have a cumulative rotation.
-			//This has the potential for funny rotations if we're both rotated, as we should
-			//apply this rotation about our parent's rotated axis, not our own, but for most situations,
-			//it's close enough.
-			localAngles.add(parentPart.localAngles);
-			
-			//Now that we have the proper relative offset, add our parent's offset to get our net offset.
-			//This is our final offset point.
-			localOffset.add(parentPart.localOffset);
+			//Update post-movement things.
+			updatePostMovement();
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Set position and rotation to our net offset pos on the entity.
-		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
-		angles.setTo(localAngles).add(entityOn.angles);
 	}
 	
 	@Override

@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
-import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -13,16 +13,12 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingS
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.jsondefs.JSONConnection;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleTrailerChange;
 import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -46,20 +42,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean slipping;
 	public boolean skidSteerActive;
 	public double groundVelocity;
-	
-	//Towing data.
-	public EntityVehicleF_Physics towedVehicle;
-	public EntityVehicleF_Physics towedByVehicle;
-	public JSONConnection activeHitchConnection;
-	public JSONConnection activeHookupConnection;
-	public APart activeHitchPart;
-	public APart activeHookupPart;
-	private String towedVehicleSavedID;
-	private String towedByVehicleSavedID;
-	private int activeHitchConnectionSavedIndex;
-	private Point3d activeHitchPartSavedOffset;
-	private int activeHookupConnectionSavedIndex;
-	private Point3d activeHookupPartSavedOffset;
 	
 	//Road-following data.
 	protected RoadFollowingState frontFollower;
@@ -91,13 +73,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
 		
-		this.towedVehicleSavedID = data.getString("towedVehicleSavedID");
-		this.towedByVehicleSavedID = data.getString("towedByVehicleSavedID");
-		this.activeHitchConnectionSavedIndex = data.getInteger("activeHitchConnectionSavedIndex");
-		this.activeHookupConnectionSavedIndex = data.getInteger("activeHookupConnectionSavedIndex");
-		this.activeHitchPartSavedOffset = data.getPoint3d("activeHitchPartSavedOffset");
-		this.activeHookupPartSavedOffset = data.getPoint3d("activeHookupPartSavedOffset");
-		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
@@ -106,68 +81,35 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void update(){
-		//Before calling super, see if we need to link a towed or towed by vehicle.
-		//We need to wait on this in case the vehicle didn't load at the same time.
-		if(!towedVehicleSavedID.isEmpty() || !towedByVehicleSavedID.isEmpty()){
-			try{
-				if(!towedVehicleSavedID.isEmpty()){
-					towedVehicle = AEntityA_Base.getEntity(world, towedVehicleSavedID);
-					if(towedVehicle != null){
-						if(!activeHitchPartSavedOffset.isZero()){
-							activeHitchPart = getPartAtLocation(activeHitchPartSavedOffset);
-							activeHitchConnection = activeHitchPart.definition.connections.get(activeHitchConnectionSavedIndex);
-						}else{
-							activeHitchConnection = definition.connections.get(activeHitchConnectionSavedIndex);
-						}
-						towedVehicleSavedID = "";
+	public boolean update(){
+		if(super.update()){
+			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
+			//This is required to move the GDBs if the GDs move.
+			for(APart part : parts){
+				if(part instanceof PartGroundDevice){
+					if(!part.localOffset.equals(part.prevLocalOffset) || part.scale != part.prevScale){
+						groundDeviceCollective.updateBounds();
+						break;
 					}
 				}
-				if(!towedByVehicleSavedID.isEmpty()){
-					towedByVehicle = AEntityA_Base.getEntity(world, towedByVehicleSavedID);
-					if(!activeHookupPartSavedOffset.isZero()){
-						activeHookupPart = getPartAtLocation(activeHookupPartSavedOffset);
-						activeHookupConnection = activeHookupPart.definition.connections.get(activeHookupConnectionSavedIndex);
-					}else{
-						activeHookupConnection = definition.connections.get(activeHookupConnectionSavedIndex);
-					}
-					towedByVehicleSavedID = "";
-				}
-			}catch(Exception e){
-				InterfaceCore.logError("Could not connect trailer to vehicle.  Did the JSON change?");
-				towedVehicle = null;
-				activeHitchConnection = null;
-				towedByVehicle = null;
-				activeHookupConnection = null;
-				towedVehicleSavedID = "";
-				towedByVehicleSavedID = "";
 			}
-		}
-		super.update();
-		
-		//Update our GDB members if any of our ground devices don't have the same total offset as placement.
-		//This is required to move the GDBs if the GDs move.
-		for(APart part : parts){
-			if(part instanceof PartGroundDevice){
-				if(!part.localOffset.equals(part.prevLocalOffset) || part.scale != part.prevScale){
-					groundDeviceCollective.updateBounds();
-					break;
+			
+			//Now do update calculations and logic.
+			if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
+				getForcesAndMotions();
+				performGroundOperations();
+				moveVehicle();
+				if(!world.isClient()){
+					dampenControlSurfaces();
 				}
 			}
+			
+			//Update parts after all movement is done.
+			updatePostMovement();
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Now do update calculations and logic.
-		if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
-			getForcesAndMotions();
-			performGroundOperations();
-			moveVehicle();
-			if(!world.isClient()){
-				dampenControlSurfaces();
-			}
-		}
-		
-		//Update parts after all movement is done.
-		updateParts();
 	}
 	
 	@Override
@@ -186,12 +128,38 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	@Override
 	public boolean needsChunkloading(){
-		return rearFollower != null || (towedByVehicle != null && towedByVehicle.rearFollower != null);
+		return rearFollower != null || (towedByConnection != null && towedByConnection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.otherBaseEntity).rearFollower != null);
 	}
 	
 	@Override
 	public boolean canCollideWith(AEntityB_Existing entityToCollide){
-		return !entityToCollide.equals(towedByVehicle) && !entityToCollide.equals(towedVehicle); 
+		if(towedByConnection != null && entityToCollide.equals(towedByConnection.otherBaseEntity)){
+			return false;
+		}else if(!towingConnections.isEmpty()){
+			for(EntityConnection connection : towingConnections){
+				if(entityToCollide.equals(connection.otherBaseEntity)){
+					return false;
+				}
+			}
+		}
+		return true; 
+	}
+	
+	@Override
+	public void connectTrailer(EntityConnection connection){
+		super.connectTrailer(connection);
+		if(connection.otherBaseEntity instanceof AEntityVehicleD_Moving){
+			((AEntityVehicleD_Moving) connection.otherBaseEntity).parkingBrakeOn = false;
+			((AEntityVehicleD_Moving) connection.otherBaseEntity).brake = 0;
+		}
+	}
+	
+	@Override
+	public void disconnectTrailer(EntityConnection connection){
+		super.disconnectTrailer(connection);
+		if(connection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) connection.otherBaseEntity).definition.motorized.isTrailer){
+			((AEntityVehicleD_Moving) connection.otherBaseEntity).parkingBrakeOn = true;
+		}
 	}
 	
 	/**
@@ -287,7 +255,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					vectorDelta = 180 + vectorDelta;
 				}
 			}
-			if (this.towedByVehicle == null){
+			if (this.towedByConnection == null){
 				double overSteerForce = velocity;
 				//used to reduce overSteer force at low speeds to reduce jank
 				if (overSteerForce >= 1){
@@ -318,7 +286,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are slipping while turning, spawn block particles.
 				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is.
-				if(towedByVehicle == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : towedByVehicle.slipping){
+				if(towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.otherBaseEntity).slipping)){
 					slipping = true;
 					for(byte i=0; i<4; ++i){
 						groundDeviceCollective.spawnSlippingParticles();
@@ -484,7 +452,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		
 		//If we aren't on a road, try to find one.
 		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
-		if(towedByVehicle != null || definition.motorized.isAircraft){
+		if(towedByConnection != null || definition.motorized.isAircraft){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
@@ -572,7 +540,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
 			//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
 			//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
-			if(towedByVehicle == null){
+			if(towedByConnection == null){
 				groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
 				if(groundCollisionBoost > 0){
 					//If adding our boost would make motion.y positive, set our boost to the positive component.
@@ -598,17 +566,17 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
 			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
 			if(isCollisionBoxCollided()){
-				if(towedByVehicle != null){
+				if(towedByConnection != null){
 					Point3d initalMotion = motion.copy();
 					if(correctCollidingMovement()){
 						return;
 					}
-					towedByVehicle.motion.add(motion).subtract(initalMotion);
+					towedByConnection.otherBaseEntity.motion.add(motion).subtract(initalMotion);
 				}else if(correctCollidingMovement()){
 					return;
 				}
 				
-			}else if(towedByVehicle == null || (towedByVehicle.activeHitchConnection != null && !towedByVehicle.activeHitchConnection.mounted)){
+			}else if(towedByConnection == null || !towedByConnection.connection.mounted){
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
@@ -860,217 +828,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		return false;
 	}
 	
-	/**
-	 * Returns true if this vehicle, or any of its parts, have hitches on them.
-	 */
-	public boolean hasHitch(){
-		if(definition.connections != null){
-			for(JSONConnection connection : definition.connections){
-				if(!connection.hookup){
-					return true;
-				}
-			}
-		}
-		for(APart part : parts){
-			if(part.definition.connections != null){
-				for(JSONConnection connection : part.definition.connections){
-					if(!connection.hookup){
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
 	
-	/**
-	 * Returns the current hitch offset for this vehicle.
-	 * If this vehicle doesn't have a current active hitch, null is returned.
-	 */
-	public Point3d getHitchOffset(){
-		if(activeHitchConnection != null){
-			if(activeHitchPart != null){
-				return activeHitchConnection.pos.copy().rotateFine(activeHitchPart.localAngles).add(activeHitchPart.localOffset); 
-			}else{
-				return activeHitchConnection.pos;
-			}
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 * Returns the current hookup offset for this vehicle.
-	 * If this vehicle doesn't have a current active hookup, null is returned.
-	 */
-	public Point3d getHookupOffset(){
-		if(activeHookupConnection != null){
-			if(activeHookupPart != null){
-				return activeHookupConnection.pos.copy().rotateFine(activeHookupPart.localAngles).add(activeHookupPart.localOffset); 
-			}else{
-				return activeHookupConnection.pos;
-			}
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 * Tries to connect the passed-in vehicle to this vehicle.
-	 */
-	public TrailerConnectionResult tryToConnect(AEntityVehicleD_Moving trailer){
-		//Init variables.
-		boolean matchingConnection = false;
-		boolean trailerInRange = false;
-		
-		//Make sure we have hitches to check before doing this logic.
-		if(hasHitch()){
-			//First make sure the vehicle is in-range.  This is done by checking if the vehicle is even remotely close enough.
-			double trailerDistance = position.distanceTo(trailer.position);
-			if(trailerDistance < 25){
-				//Check all connections.
-				
-				//First check vehicle-vehicle connections.
-				switch(tryToConnectConnections(definition.connections, trailer.definition.connections, this, trailer, null, null)){
-					case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
-					case TRAILER_TOO_FAR : matchingConnection = true; break;
-					case TRAILER_WRONG_HITCH : trailerInRange = true; break;
-					case NO_TRAILER_NEARBY : break;
-				}
-				
-				//Check part-vehicle and part-part connections.
-				for(APart vehiclePart : parts){
-					//Part-vehicle
-					switch(tryToConnectConnections(vehiclePart.definition.connections, trailer.definition.connections, this, trailer, vehiclePart, null)){
-						case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
-						case TRAILER_TOO_FAR : matchingConnection = true; break;
-						case TRAILER_WRONG_HITCH : trailerInRange = true; break;
-						case NO_TRAILER_NEARBY : break;
-					}
-					
-					//Part-part;
-					for(APart trailerPart : trailer.parts){
-						switch(tryToConnectConnections(vehiclePart.definition.connections, trailerPart.definition.connections, this, trailer, vehiclePart, trailerPart)){
-							case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
-							case TRAILER_TOO_FAR : matchingConnection = true; break;
-							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
-							case NO_TRAILER_NEARBY : break;
-						}
-					}
-				}
-				
-				//Check vehicle-part connections.
-				for(APart trailerPart : trailer.parts){
-					switch(tryToConnectConnections(definition.connections, trailerPart.definition.connections, this, trailer, null, trailerPart)){
-						case TRAILER_CONNECTED : return TrailerConnectionResult.TRAILER_CONNECTED;
-						case TRAILER_TOO_FAR : matchingConnection = true; break;
-						case TRAILER_WRONG_HITCH : trailerInRange = true; break;
-						case NO_TRAILER_NEARBY : break;
-					}
-				}
-			}
-		}
-		
-		//Return results.
-		if(matchingConnection && !trailerInRange){
-			return TrailerConnectionResult.TRAILER_TOO_FAR;
-		}else if(!matchingConnection && trailerInRange){
-			return TrailerConnectionResult.TRAILER_WRONG_HITCH;
-		}else{
-			return TrailerConnectionResult.NO_TRAILER_NEARBY;
-		}
-	}
-	
-	/**
-	 * Helper block for checking if two connection sets can connect.
-	 */
-	private static TrailerConnectionResult tryToConnectConnections(List<JSONConnection> firstConnections, List<JSONConnection> secondConnections, AEntityVehicleD_Moving firstVehicle, AEntityVehicleD_Moving secondVehicle, APart optionalFirstPart, APart optionalSecondPart){
-		//Check to make sure wer're being fed actual connections.
-		if(firstConnections != null && secondConnections != null){
-			//Create status variables.
-			boolean matchingConnection = false;
-			boolean trailerInRange = false;
-			for(JSONConnection firstConnection : firstConnections){
-				for(JSONConnection secondConnection : secondConnections){
-					if(!firstConnection.hookup && secondConnection.hookup){
-						Point3d hitchPos = firstConnection.pos.copy();
-						if(optionalFirstPart != null){
-							hitchPos.rotateCoarse(optionalFirstPart.localAngles).add(optionalFirstPart.localOffset);
-						}
-						hitchPos.rotateCoarse(firstVehicle.angles).add(firstVehicle.position);
-						Point3d hookupPos = secondConnection.pos.copy();
-						if(optionalSecondPart != null){
-							hookupPos.rotateCoarse(optionalSecondPart.localAngles).add(optionalSecondPart.localOffset);
-						}
-						hookupPos.rotateCoarse(secondVehicle.angles).add(secondVehicle.position);
-						
-						if(hitchPos.distanceTo(hookupPos) < 10){
-							boolean validType = firstConnection.type.equals(secondConnection.type);
-							boolean validDistance = hitchPos.distanceTo(hookupPos) < 2;
-							if(validType && validDistance){
-								firstVehicle.changeTrailer(secondVehicle, firstConnection, secondConnection, optionalFirstPart, optionalSecondPart);
-								return TrailerConnectionResult.TRAILER_CONNECTED;
-							}else if(validType){
-								matchingConnection = true;
-							}else if(validDistance){
-								trailerInRange = true;
-							}
-						}
-					}
-				}
-			}
-			
-			if(matchingConnection && !trailerInRange){
-				return TrailerConnectionResult.TRAILER_TOO_FAR;
-			}else if(!matchingConnection && trailerInRange){
-				return TrailerConnectionResult.TRAILER_WRONG_HITCH;
-			}
-		}
-		return TrailerConnectionResult.NO_TRAILER_NEARBY;
-	}
-	
-	/**
-	 * Method block for connecting this vehicle to another vehicle.
-	 * This vehicle will be considered towed by the other vehicle, and will
-	 * do different physics to follow the other vehicle than it normally would.
-	 * The passed-in vehicle should be the trailer we want to tow, or null if 
-	 * we should be disconnecting from any trailer we are currently towing.
-	 * Hitch and hookup index should be part of our and the trailer's respective
-	 * definitions.
-	 */
-	public void changeTrailer(AEntityVehicleD_Moving trailer, JSONConnection hitchConnection, JSONConnection hookupConnection, APart optionalHitchPart, APart optionalHookupPart){
-		if(trailer == null){
-			towedVehicle.towedByVehicle = null;
-			towedVehicle.activeHookupConnection = null;
-			towedVehicle.parkingBrakeOn = true;
-			towedVehicle = null;
-		}else{
-			towedVehicle = (EntityVehicleF_Physics) trailer;
-			activeHitchConnection = hitchConnection;
-			activeHitchPart = optionalHitchPart;
-			trailer.towedByVehicle = (EntityVehicleF_Physics) this;
-			trailer.activeHookupConnection = hookupConnection; 
-			trailer.activeHookupPart = optionalHookupPart;
-			trailer.parkingBrakeOn = false;
-			if(activeHitchConnection.mounted){
-				trailer.angles.setTo(angles);
-				trailer.prevAngles.setTo(prevAngles);
-				if(activeHitchPart != null){
-					trailer.angles.add(activeHitchPart.localAngles);
-					trailer.prevAngles.add(activeHitchPart.localAngles);
-				}
-				AEntityVehicleD_Moving trailerTrailer = trailer.towedVehicle;
-				while(trailerTrailer != null){
-					trailerTrailer.angles.setTo(angles);
-					trailerTrailer.prevAngles.setTo(prevAngles);
-					trailerTrailer = trailerTrailer.towedVehicle;
-				}
-			}
-		}
-		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketVehicleTrailerChange((EntityVehicleF_Physics) this, hitchConnection, hookupConnection, optionalHitchPart, optionalHookupPart));
-		}
-	}
 	
 	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded){
 		serverDeltaM.add(motionAdded);
@@ -1102,41 +860,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * Used to move control surfaces back to neutral position.
 	 */
 	protected abstract void dampenControlSurfaces();
+	
     
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
-		if(towedVehicle != null){
-			data.setString("towedVehicleSavedID", towedVehicle.uniqueUUID);
-			if(activeHitchPart != null){
-				data.setPoint3d("activeHitchPartSavedOffset", activeHitchPart.placementOffset);
-				data.setInteger("activeHitchConnectionSavedIndex", activeHitchPart.definition.connections.indexOf(activeHitchConnection));
-			}else{
-				data.setInteger("activeHitchConnectionSavedIndex", definition.connections.indexOf(activeHitchConnection));
-			}
-		}
-		if(towedByVehicle != null){
-			data.setString("towedByVehicleSavedID", towedByVehicle.uniqueUUID);
-			if(activeHookupPart != null){
-				data.setPoint3d("activeHookupPartSavedOffset", activeHookupPart.placementOffset);
-				data.setInteger("activeHookupConnectionSavedIndex", activeHookupPart.definition.connections.indexOf(activeHookupConnection));
-			}else{
-				data.setInteger("activeHookupConnectionSavedIndex", definition.connections.indexOf(activeHookupConnection));
-			}
-		}
+		
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
-	}
-	
-	/**
-	 * Emum for easier functions for trailer connections.
-	 */
-	public static enum TrailerConnectionResult{
-		NO_TRAILER_NEARBY,
-		TRAILER_TOO_FAR,
-		TRAILER_WRONG_HITCH,
-		TRAILER_CONNECTED;
 	}
 }

@@ -20,14 +20,12 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -44,11 +42,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_Physics>{	
 	//VEHICLE MAPS.  Maps are keyed by system name.
 	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
-	
-	//CONNECTOR MAPS.  Maps are keyed by model name.
-	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
-	//Connector data to prevent re-binding textures.
-	private static String lastBoundConnectorTexture;
 	
 	@Override
 	public String getTexture(EntityVehicleF_Physics vehicle){
@@ -71,9 +64,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	
 	@Override
 	public void renderAdditionalModels(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){
-		//Render all connectors.
-		renderConnectors(vehicle);
-		
 		//Set shading back to normal now that all model bits have been rendered.
 		GL11.glShadeModel(GL11.GL_FLAT);
 		
@@ -104,84 +94,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	protected void resetModelCache(String modelLocation){
 		super.resetModelCache(modelLocation);
 		vehicleInstrumentTransforms.remove(modelLocation);
-	}
-	
-	/**
-	 *  Renders all connectors on the vehicle.  These come from connected connections, be them from the
-	 *  vehicle or parts.  All connector models are cached in DisplayLists for efficiency.  The actual
-	 *  model is based on the pack with the connector.  So if a pack A vehicle is towing a pack B vehicle,
-	 *  then pack A's connector model is used on the hitch, and pack B's connector model is used on the hookup.
-	 */
-	private static void renderConnectors(EntityVehicleF_Physics vehicle){
-		lastBoundConnectorTexture = "";
-		if(vehicle.activeHookupConnection != null && vehicle.activeHookupConnection.connectors != null){
-			for(JSONConnectionConnector connector : vehicle.activeHookupConnection.connectors){
-				GL11.glPushMatrix();
-				if(vehicle.activeHookupPart != null){
-					GL11.glTranslated(vehicle.activeHookupPart.localOffset.x, vehicle.activeHookupPart.localOffset.y, vehicle.activeHookupPart.localOffset.z);
-					if(!vehicle.activeHookupPart.localAngles.isZero()){
-						GL11.glRotated(vehicle.activeHookupPart.localAngles.y, 0, 1, 0);
-						GL11.glRotated(vehicle.activeHookupPart.localAngles.x, 1, 0, 0);
-						GL11.glRotated(vehicle.activeHookupPart.localAngles.z, 0, 0, 1);
-					}
-					renderConnector(connector, vehicle.activeHookupPart.definition.packID);
-				}else{
-					renderConnector(connector, vehicle.definition.packID);
-				}
-				GL11.glPopMatrix();
-			}
-		}
-		if(vehicle.activeHitchConnection != null && vehicle.activeHitchConnection.connectors != null){
-			for(JSONConnectionConnector connector : vehicle.activeHitchConnection.connectors){
-				GL11.glPushMatrix();
-				if(vehicle.activeHitchPart != null){
-					GL11.glTranslated(vehicle.activeHitchPart.localOffset.x, vehicle.activeHitchPart.localOffset.y, vehicle.activeHitchPart.localOffset.z);
-					if(!vehicle.activeHitchPart.localAngles.isZero()){
-						GL11.glRotated(vehicle.activeHitchPart.localAngles.y, 0, 1, 0);
-						GL11.glRotated(vehicle.activeHitchPart.localAngles.x, 1, 0, 0);
-						GL11.glRotated(vehicle.activeHitchPart.localAngles.z, 0, 0, 1);
-					}
-					renderConnector(connector, vehicle.activeHitchPart.definition.packID);
-				}else{
-					renderConnector(connector, vehicle.definition.packID);
-				}
-				GL11.glPopMatrix();
-			}
-		}
-	}
-	
-	/**
-	 *  Renders a single connector.  Used to isolate connector rendering from the above method.
-	 */
-	private static void renderConnector(JSONConnectionConnector connector, String connectorPackID){
-		String connectorName = "/assets/" + connectorPackID + "/connectors/" + connector.modelName;
-		String modelLocation = connectorName + ".obj";
-		String textureLocation = connectorName + ".png";
-		if(!connectorDisplayLists.containsKey(modelLocation)){
-			connectorDisplayLists.put(modelLocation, OBJParser.generateDisplayList(OBJParser.parseOBJModel(modelLocation)));
-		}
-		
-		//Get the total connector distance, and the spacing between the connectors.
-		double connectorDistance = connector.startingPos.distanceTo(connector.endingPos);
-		int numberConnectors = (int) Math.floor(connectorDistance/connector.segmentLength);
-		double segmentDistance = (connectorDistance%connector.segmentLength)/numberConnectors + connector.segmentLength;
-		
-		//Get the rotation required to go from the start to end point.
-		Point3d vector = connector.endingPos.copy().subtract(connector.startingPos).normalize();
-		double yRotation = Math.toDegrees(Math.atan2(vector.x, vector.z));
-		double xRotation = Math.toDegrees(Math.acos(vector.y));
-		
-		GL11.glTranslated(connector.startingPos.x, connector.startingPos.y, connector.startingPos.z);
-		GL11.glRotated(yRotation, 0, 1, 0);
-		GL11.glRotated(xRotation, 1, 0, 0);
-		if(!textureLocation.equals(lastBoundConnectorTexture)){
-			InterfaceRender.bindTexture(textureLocation);
-			lastBoundConnectorTexture = textureLocation;
-		}
-		for(int i=0; i<numberConnectors; ++i){
-			GL11.glCallList(connectorDisplayLists.get(modelLocation));
-			GL11.glTranslated(0, segmentDistance, 0);
-		}
 	}
 	
 	/**

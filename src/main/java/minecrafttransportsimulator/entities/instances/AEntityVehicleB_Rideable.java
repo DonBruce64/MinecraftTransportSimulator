@@ -202,7 +202,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	 * Calculates the current mass of the vehicle.
 	 * Includes core mass, player weight, and cargo.
 	 */
-	protected float getCurrentMass(){
+	protected int getCurrentMass(){
 		int currentMass = definition.motorized.emptyMass + 100*locationRiderMap.values().size();
 		for(APart part : parts){
 			if(part instanceof PartInteractable){

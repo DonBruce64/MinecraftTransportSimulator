@@ -8,10 +8,12 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 
@@ -23,6 +25,16 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
 	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
 	
+	//CONNECTOR MAPS.  Maps are keyed by model name.
+	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
+	
+	//Connecter temp list for rendering all connectors in batches.
+	private static final List<EntityConnection> connections = new ArrayList<EntityConnection>();
+	
+	//Connector data to prevent re-binding textures.
+	private static String lastBoundConnectorTexture;
+	
+	//Static map for caching created render instances to know which ones to send events to.
 	private static final List<ARenderEntity<?>> createdRenderers = new ArrayList<ARenderEntity<?>>();
 	
 	public ARenderEntity(){
@@ -90,6 +102,9 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Render any additional model bits before we render text.
 			renderAdditionalModels(entity, blendingEnabled, partialTicks);
 			
+			//Render any connectors.
+			renderConnectors(entity);
+			
 			//Render any static text.
 			if(!blendingEnabled){
 				InterfaceRender.renderTextMarkings(entity, null);
@@ -104,7 +119,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			InterfaceRender.resetStates();
 			
 			//Render bounding boxes for parts and collision points.
-			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes() && entity instanceof AEntityD_Interactable){
+			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
 				//Set states for box render.
 				InterfaceRender.setLightingState(false);
 				InterfaceRender.setTextureState(false);
@@ -184,6 +199,68 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  on them that need to render with the main entity.
 	 */
 	protected void renderSupplementalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
+	
+	/**
+	 *  Renders all connectors on the entity.  These come from connected connections.
+	 *  All connector models are cached in DisplayLists for efficiency.  The actual
+	 *  model is based on the pack with the connector.  So if a pack A entity is towing a pack B entity,
+	 *  then pack A's connector model is used on the hitch, and pack B's connector model is used on the hookup.
+	 */
+	private void renderConnectors(RenderedEntity entity){
+		if(entity instanceof AEntityD_Interactable){
+			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+			lastBoundConnectorTexture = "";
+			connections.clear();
+			if(interactable.towedByConnection != null){
+				connections.add(interactable.towedByConnection);
+			}
+			connections.addAll(interactable.towingConnections);
+			
+			for(EntityConnection connection : connections){
+				if(connection.connection.connectors != null){
+					for(JSONConnectionConnector connector : connection.connection.connectors){
+						GL11.glPushMatrix();
+						renderConnector(connector, interactable.definition.packID);
+						GL11.glPopMatrix();
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 *  Renders a single connector.  Used to isolate connector rendering from the above method.
+	 */
+	private static void renderConnector(JSONConnectionConnector connector, String connectorPackID){
+		String connectorName = "/assets/" + connectorPackID + "/connectors/" + connector.modelName;
+		String modelLocation = connectorName + ".obj";
+		String textureLocation = connectorName + ".png";
+		if(!connectorDisplayLists.containsKey(modelLocation)){
+			connectorDisplayLists.put(modelLocation, OBJParser.generateDisplayList(OBJParser.parseOBJModel(modelLocation)));
+		}
+		
+		//Get the total connector distance, and the spacing between the connectors.
+		double connectorDistance = connector.startingPos.distanceTo(connector.endingPos);
+		int numberConnectors = (int) Math.floor(connectorDistance/connector.segmentLength);
+		double segmentDistance = (connectorDistance%connector.segmentLength)/numberConnectors + connector.segmentLength;
+		
+		//Get the rotation required to go from the start to end point.
+		Point3d vector = connector.endingPos.copy().subtract(connector.startingPos).normalize();
+		double yRotation = Math.toDegrees(Math.atan2(vector.x, vector.z));
+		double xRotation = Math.toDegrees(Math.acos(vector.y));
+		
+		GL11.glTranslated(connector.startingPos.x, connector.startingPos.y, connector.startingPos.z);
+		GL11.glRotated(yRotation, 0, 1, 0);
+		GL11.glRotated(xRotation, 1, 0, 0);
+		if(!textureLocation.equals(lastBoundConnectorTexture)){
+			InterfaceRender.bindTexture(textureLocation);
+			lastBoundConnectorTexture = textureLocation;
+		}
+		for(int i=0; i<numberConnectors; ++i){
+			GL11.glCallList(connectorDisplayLists.get(modelLocation));
+			GL11.glTranslated(0, segmentDistance, 0);
+		}
+	}
 	
 	/**
 	 *  Renders the bounding boxes for the entity collision.

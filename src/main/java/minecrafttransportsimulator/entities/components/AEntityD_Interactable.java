@@ -15,15 +15,20 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base entity class containing riders and their positions on this entity.  Used for
@@ -87,6 +92,18 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 **/
 	public String ownerUUID;
 	
+	/**Internal flag to prevent this entity from updating until the entity that is towing it has.  If we don't
+	 * do this, then there may be a 1-tick de-sync between towing and towed entities if the towed entity gets
+	 * updated before the one towing it.
+	 **/
+	private boolean overrideTowingChecks;
+	
+	//Connection data.
+	public EntityConnection towedByConnection;
+	public final Set<EntityConnection> towingConnections = new HashSet<EntityConnection>();
+	private EntityConnection savedTowedByConnection;
+	private final Set<EntityConnection> savedTowingConnections = new HashSet<EntityConnection>();
+	
 	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
@@ -118,23 +135,117 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Add collision and door boxes to interaction list.
 		interactionBoxes.addAll(collisionBoxes);
 		interactionBoxes.addAll(doorBoxes.keySet());
+		
+
+		//Load towing data.
+		WrapperNBT towData = data.getData("towedByConnection");
+		if(towData != null){
+			this.savedTowedByConnection = new EntityConnection(towData);
+		}
+		
+		int towingConnectionCount = data.getInteger("towingConnectionCount");
+		for(int i=0; i<towingConnectionCount; ++i){
+			towData = data.getData("towingConnection" + i);
+			if(towData != null){
+				this.savedTowingConnections.add(new EntityConnection(towData));
+			}
+		}
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		
-		//Update collision boxes.
-		for(BoundingBox box : collisionBoxes){
-			box.updateToEntity(this, null);
+	public boolean update(){
+		if(super.update() && (!isBeingTowed() || overrideTowingChecks)){
+			//See if we need to link connections.
+			//We need to wait on this in case the entity didn't load at the same time.
+			//That being said, it may be the vehicle we are loading is in another chunk.
+			//As such we wait only some time, and if we caon't find all entities, we remove
+			//them from the listing of entities to find.
+			//Only do this once a second, and if we hit 5 seconds, bail.
+			if(savedTowedByConnection != null){
+				if(ticksExisted%20 == 0){
+					if(ticksExisted <= 100){
+						if(savedTowedByConnection.setConnection(world)){
+							towedByConnection = savedTowedByConnection;
+							savedTowedByConnection = null;
+						}
+					}else{
+						savedTowedByConnection = null;
+						InterfaceCore.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+					}
+				}
+			}
+			if(!savedTowingConnections.isEmpty()){
+				if(ticksExisted%20 == 0){
+					if(ticksExisted <= 100){
+						Iterator<EntityConnection> iterator = savedTowingConnections.iterator();
+						while(iterator.hasNext()){
+							EntityConnection savedTowingConnection = iterator.next();
+							if(savedTowingConnection.setConnection(world)){
+								towingConnections.add(savedTowingConnection);
+								iterator.remove();
+							}
+						}
+					}else{
+						savedTowingConnections.clear();
+						InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+					}
+				}
+			}
+			
+			//Do validity checks for towing variables.  We could do this whenever we disconnect,
+			//but there are tons of ways this could happen.  The trailer could blow up, the 
+			//part-hitch could have been blown up, the trailer could have gotten wrenched, the
+			//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
+			//thing towing us could have done! 
+			if(towedByConnection != null){
+				if(!towedByConnection.otherEntity.isValid){
+					towedByConnection = null;
+				}
+			}
+			if(!towingConnections.isEmpty()){
+				//First functional expression here in the whole codebase, history in the making!
+				towingConnections.removeIf(connection -> !connection.otherEntity.isValid);
+			}
+			
+			//Update collision boxes.
+			for(BoundingBox box : collisionBoxes){
+				box.updateToEntity(this, null);
+			}
+			
+			//Update door boxes.
+			for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
+				if(variablesOn.contains(doorEntry.getValue().name)){
+					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
+				}else{
+					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
+				}
+			}
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Update door boxes.
-		for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
-			if(variablesOn.contains(doorEntry.getValue().name)){
-				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
-			}else{
-				doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
+	}
+	
+	/**
+	 * Called to check if this entity is being towed.  IF so, updates will be held until the towing entity
+	 * has updated.  At that point, they will be performed once {@link #updatePostMovement()} is called.
+	 */
+	public boolean isBeingTowed(){
+		return towedByConnection != null;
+	}
+	
+	/**
+	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
+	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
+	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
+	 */
+	public void updatePostMovement(){
+		//If we are towing entities, update them now.
+		if(!towingConnections.isEmpty()){
+			for(EntityConnection connection : towingConnections){
+				connection.otherBaseEntity.overrideTowingChecks = true;
+				connection.otherBaseEntity.update();
+				connection.otherBaseEntity.overrideTowingChecks = false;
 			}
 		}
 	}
@@ -245,14 +356,150 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	public void attack(Damage damage){}
 	
 	/**
-	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper
-	 *  should be written to at this point with any data needing to be saved.
+	 * Checks if the other entity can be connected to this entity.  The other entity may be a trailer we
+	 * want to connect, or it may be a trailer that has requested to connect to us.  In either case, we
+	 * are the main entity and will start towing the trailer if the connection is successful.
+	 * For connection indexes, a -1 will allow for any index, while a value other than -1 will try to connect
+	 * using only that connection group.
+	 * 
 	 */
+	public EntityConnectionResult checkIfCanConnect(AEntityD_Interactable<?> otherEntity, int ourGroupIndex, int otherGroupIndex){
+		//Init variables.
+		boolean matchingConnection = false;
+		boolean trailerInRange = false;
+		
+		//First make sure the entity is in-range.  This is done by checking if the entity is even remotely close enough.
+		double trailerDistance = position.distanceTo(otherEntity.position);
+		if(trailerDistance < 25){
+			//Check all connection groups on the other entity to see if we can connect to them.
+			//If we specified a index, skip all others.
+			if(definition.connectionGroups != null && !definition.connectionGroups.isEmpty() && otherEntity.definition.connectionGroups != null && !otherEntity.definition.connectionGroups.isEmpty()){
+				for(JSONConnectionGroup connectionGroup : definition.connectionGroups){
+					if(ourGroupIndex == -1 || definition.connectionGroups.indexOf(connectionGroup) == ourGroupIndex){
+						for(JSONConnectionGroup otherConnectionGroup : otherEntity.definition.connectionGroups){
+							if(otherGroupIndex == -1 || otherEntity.definition.connectionGroups.indexOf(otherConnectionGroup) == otherGroupIndex){
+								//We can potentially connect these two entities.  See if we actually can.
+								//Only check hitches to hookups, as since we are requesting to tow a trailer it needs a hookup and we need a hitch..
+								if(!connectionGroup.hookup && otherConnectionGroup.hookup){
+									for(JSONConnection firstConnection : connectionGroup.connections){
+										Point3d firstPos = firstConnection.pos.copy().rotateCoarse(angles).add(position);
+										double maxDistance = firstConnection.distance > 0 ? firstConnection.distance : 2;
+										for(JSONConnection secondConnection : otherConnectionGroup.connections){
+											Point3d secondPos = secondConnection.pos.copy().rotateCoarse(otherEntity.angles).add(otherEntity.position);
+											if(firstPos.distanceTo(secondPos) < maxDistance + 10){
+												boolean validType = firstConnection.type.equals(secondConnection.type);
+												boolean validDistance = firstPos.distanceTo(secondPos) < maxDistance;
+												if(validType && validDistance){
+													connectTrailer(new EntityConnection(this, definition.connectionGroups.indexOf(connectionGroup), connectionGroup.connections.indexOf(firstConnection), otherEntity, otherEntity.definition.connectionGroups.indexOf(otherConnectionGroup), otherConnectionGroup.connections.indexOf(secondConnection)));
+													return EntityConnectionResult.TRAILER_CONNECTED;
+												}else if(validType){
+													matchingConnection = true;
+												}else if(validDistance){
+													trailerInRange = true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		//Return results.
+		if(matchingConnection && !trailerInRange){
+			return EntityConnectionResult.TRAILER_TOO_FAR;
+		}else if(!matchingConnection && trailerInRange){
+			return EntityConnectionResult.TRAILER_WRONG_HITCH;
+		}else{
+			return EntityConnectionResult.NO_TRAILER_NEARBY;
+		}
+	}
+	
+	/**
+	 * Method block for connecting a trailer to this entity.
+	 * The connection should contain this entity's information as the main,
+	 * and the trailer's information as the "other".
+	 */
+	public void connectTrailer(EntityConnection connection){
+		towingConnections.add(connection);
+		connection.otherEntity.towedByConnection = connection.getInverse();
+		connection.otherBaseEntity.updateAnglesToTowed();
+		
+		if(!world.isClient()){
+			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(this, connection, true));
+		}
+	}
+	
+	/**
+	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
+	 */
+	protected void updateAnglesToTowed(){
+		//Need to set angles for mounted/restricted connections.
+		if(towedByConnection.connection.mounted || towedByConnection.connection.restricted){
+			angles.y = angles.y;
+			prevAngles.y = angles.y;
+			
+			//Also set trailer yaw.
+			for(EntityConnection connection : towingConnections){
+				connection.otherBaseEntity.updateAnglesToTowed();
+			}
+		}
+	}
+	
+	/**
+	 * Method block for disconnecting the passed-in trailer from this vehicle.
+	 */
+	public void disconnectTrailer(EntityConnection connection){
+		towingConnections.removeIf(otherConnection -> otherConnection.otherEntity.equals(connection.otherEntity));
+		connection.otherEntity.towedByConnection = null;
+		if(!world.isClient()){
+			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(this, connection, false));
+		}
+	}
+	
+	/**
+	 * Method-block for disconnecting all connections from this entity.  Used when this
+	 * entity is removed from the world to prevent lingering connections.  Mainly done in item form,
+	 * as during removal it will be marked invalid, so all entities connected to it will automatically
+	 * disconnect; this just ensures it won't try to re-connect to those entities if re-spawned.
+	 * As such, this method does NOT send packets to clients as it's assumed the entity will be gone
+	 * on those clients by the time the packet arrives.
+	 */
+	public void disconnectAllConnections(){
+		towingConnections.clear();
+		towedByConnection = null;
+	}
+	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);
 		data.setString("ownerUUID", ownerUUID);
+		
+		//Save towing data.
+		if(towedByConnection != null){
+			data.setData("towedByConnection", towedByConnection.getData());
+		}
+		
+		int towingConnectionIndex = 0;
+		for(EntityConnection towingEntry : towingConnections){
+			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.getData());
+		}
+		data.setInteger("towingConnectionCount", towingConnectionIndex);
+		
+	}
+	
+	/**
+	 * Emum for easier functions for trailer connections.
+	 */
+	public static enum EntityConnectionResult{
+		NO_TRAILER_NEARBY,
+		TRAILER_TOO_FAR,
+		TRAILER_WRONG_HITCH,
+		TRAILER_CONNECTED;
 	}
 }

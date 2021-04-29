@@ -1,11 +1,18 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
@@ -22,6 +29,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	
 	protected final EntityVehicleF_Physics vehicle;
 	protected final boolean haveReverseThrustOption;
+	protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<SwitchEntry>();
 	protected int xOffset;
 
 
@@ -44,6 +52,40 @@ public abstract class AGUIPanel extends AGUIBase{
 				}
 			}
 			haveReverseThrustOption = foundReversingPart;
+		}
+		setupTowingButtons(vehicle);
+	}
+	
+	private void setupTowingButtons(AEntityD_Interactable<?> entity){
+		//Add trailer switch defs to allow switches to be displayed.
+		//These depend on our connections, and our part's connections.
+		//This method allows for recursion for connected trailers.
+		if(entity.definition.connectionGroups != null){
+			for(JSONConnectionGroup connectionGroup : entity.definition.connectionGroups){
+				if(connectionGroup.canIntiateConnections){
+					trailerSwitchDefs.add(new SwitchEntry(entity, connectionGroup));
+				}
+			}
+			
+			//Also check things we are towing, if we are set to do so.
+			for(EntityConnection connection : entity.towingConnections){
+				if(connection.otherEntity.definition.connectionGroups.get(connection.otherGroupIndex).canIntiateSubConnections){
+					setupTowingButtons(connection.otherBaseEntity);
+				}
+			}
+		}
+		
+		//Check parts, if we have any.
+		if(entity instanceof AEntityE_Multipart){
+			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+				if(part.definition.connectionGroups != null){
+					for(JSONConnectionGroup connectionGroup : part.definition.connectionGroups){
+						if(connectionGroup.canIntiateConnections){
+							trailerSwitchDefs.add(new SwitchEntry(part, connectionGroup));
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -116,5 +158,17 @@ public abstract class AGUIPanel extends AGUIBase{
 	@Override
 	public String getTexture(){
 		return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
+	}
+	
+	protected static class SwitchEntry{
+		protected final AEntityD_Interactable<?> entityOn;
+		protected final JSONConnectionGroup connectionGroup;
+		protected final int connectionGroupIndex;
+		
+		private SwitchEntry(AEntityD_Interactable<?> entityOn, JSONConnectionGroup connectionGroup){
+			this.entityOn = entityOn;
+			this.connectionGroup = connectionGroup;
+			this.connectionGroupIndex = entityOn.definition.connectionGroups.indexOf(connectionGroup);
+		}
 	}
 }

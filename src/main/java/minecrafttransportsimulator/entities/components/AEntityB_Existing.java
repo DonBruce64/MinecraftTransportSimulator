@@ -67,17 +67,21 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		if(world.isClient()){
-			updateSounds();
+	public boolean update(){
+		if(super.update()){
+			if(world.isClient()){
+				updateSounds();
+			}
+			prevPosition.setTo(position);
+			prevMotion.setTo(motion);
+			prevAngles.setTo(angles);
+			prevRotation.setTo(rotation);
+			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+			velocity = motion.length();
+			return true;
+		}else{
+			return false;
 		}
-		prevPosition.setTo(position);
-		prevMotion.setTo(motion);
-		prevAngles.setTo(angles);
-		prevRotation.setTo(rotation);
-		airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-		velocity = motion.length();
 	}
 	
 	@Override

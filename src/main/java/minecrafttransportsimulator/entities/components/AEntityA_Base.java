@@ -129,10 +129,15 @@ public abstract class AEntityA_Base{
 	
 	 /**
 	 * Called to update this entity.  This  may not be called if the entity extending this class
-	 * is not slated for updates in some sort of system.
+	 * is not slated for updates in some sort of system.  Note the boolean return value.  This
+	 * is designed for allowing super() calls to tell the calling method if further update logic
+	 * should be disabled.  So, if you have an entity that moves, and then extend the class and
+	 * do post-movement logic in the overridden update call, you should skip that logic if the
+	 * super call returns false.  This allows for dynamic updates without a bunch of re-routing.
 	 */
-	public void update(){
+	public boolean update(){
 		++ticksExisted;
+		return true;
 	}
 	
 	/**

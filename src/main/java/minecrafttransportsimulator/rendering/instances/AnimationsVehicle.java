@@ -155,14 +155,14 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("autopilot"): return vehicle.autopilot ? 1 : 0;
 			case("locked"): return vehicle.locked ? 1 : 0;
 			case("door"): return vehicle.parkingBrakeOn && vehicle.velocity < 0.25 ? 1 : 0;
-			case("trailer"): return vehicle.towedVehicle != null ? 1 : 0;
-			case("trailer_pitch"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.x - vehicle.angles.x : 0;
-			case("trailer_yaw"): return vehicle.towedVehicle != null ?  vehicle.towedVehicle.angles.y - vehicle.angles.y : 0;
-			case("trailer_roll"): return vehicle.towedVehicle != null ? vehicle.towedVehicle.angles.z - vehicle.angles.z : 0;
-			case("hookup"): return vehicle.towedByVehicle != null ? 1 : 0;
-			case("hookup_pitch"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.x - vehicle.angles.x : 0;
-			case("hookup_yaw"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.y - vehicle.angles.y : 0;
-			case("hookup_roll"): return vehicle.towedByVehicle != null ? vehicle.towedByVehicle.angles.z - vehicle.angles.z : 0;
+			case("hookup_connected"): return vehicle.towedByConnection != null ? 1 : 0;
+			case("hookup_pitch"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.x - vehicle.angles.x : 0;
+			case("hookup_yaw"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.y - vehicle.angles.y : 0;
+			case("hookup_roll"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.z - vehicle.angles.z : 0;
+			case("trailer_connected"): return vehicle.towingConnections.isEmpty() ? 1 : 0;
+			case("trailer_pitch"): return !vehicle.towingConnections.isEmpty() ? vehicle.towingConnections.iterator().next().otherEntity.angles.x - vehicle.angles.x : 0;
+			case("trailer_yaw"): return !vehicle.towingConnections.isEmpty() ?  vehicle.towingConnections.iterator().next().otherEntity.angles.y - vehicle.angles.y : 0;
+			case("trailer_roll"): return !vehicle.towingConnections.isEmpty() ? vehicle.towingConnections.iterator().next().otherEntity.angles.z - vehicle.angles.z : 0;
 			case("fueling"): return vehicle.beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.
@@ -189,9 +189,9 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("beacon_glideslope_actual"): return vehicle.selectedBeacon != null ? Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
 			case("beacon_glideslope_delta"): return vehicle.selectedBeacon != null ? vehicle.selectedBeacon.glideSlope - Math.toDegrees(Math.asin((vehicle.position.y - vehicle.selectedBeacon.position.y)/vehicle.position.distanceTo(vehicle.selectedBeacon.position))) : 0;
 			
-			//Missile incoming variables.
-			//Variable is in the form of missile_X_variablename.
 			default: {
+				//Missile incoming variables.
+				//Variable is in the form of missile_X_variablename.
 				if(variable.startsWith("missile_")){
 					String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
 					int missileNumber = getPartNumber(variable.substring(0, variable.lastIndexOf('_')));

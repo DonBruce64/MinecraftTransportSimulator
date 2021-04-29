@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -61,12 +63,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public double altitudeSetting;
 	
 	//Internal states.
-	private boolean updateThisCycle;
 	public boolean isVTOL;
 	private double pitchDirectionFactor;
 	private double currentWingArea;
 	public double trackAngle;
-	private final List<EntityVehicleF_Physics> towedVehiclesCheckedForWeights = new ArrayList<EntityVehicleF_Physics>();
+	private final Set<EntityVehicleF_Physics> towedVehiclesCheckedForWeights = new HashSet<EntityVehicleF_Physics>();
 	
 	//Coefficients.
 	private double wingLiftCoeff;
@@ -122,80 +123,82 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	public void update(){
-		//If we are a towed trailer, and we aren't scheduled for an update, skip this cycle.
-		//Instead, we get called to update from the vehicle we are being towed by.
-		//If we are updating from that vehicle, we'll have the flag set to not return here.
-		if(towedByVehicle != null && !updateThisCycle){
-			return;
-		}else{
-			updateThisCycle = false;
-		}
-		
-		//Do movement and all other updates.
-		super.update();
-		
-		//Turn on brake lights and indicator lights.
-		if(brake > 0){
-			variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
-			if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+	public boolean update(){
+		if(super.update()){
+			//Turn on brake lights and indicator lights.
+			if(brake > 0){
+				variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
+				if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+					variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
+				}else{
+					variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
+				}
+				if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
+					variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
+				}else{
+					variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
+				}
+			}else{
+				variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
 				variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-			}else{
-				variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
-			}
-			if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
 				variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-			}else{
-				variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
 			}
+			
+			//Set backup light state.
+			variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
+			for(PartEngine engine : engines.values()){
+				if(engine.currentGear < 0){
+					variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
+					break;
+				}
+			}
+			
+			//Adjust flaps to current setting.
+			if(flapCurrentAngle < flapDesiredAngle){
+				++flapCurrentAngle;
+			}else if(flapCurrentAngle > flapDesiredAngle){
+				--flapCurrentAngle;
+			}
+			return true;
 		}else{
-			variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
-			variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-			variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-		}
-		
-		//Set backup light state.
-		variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
-		for(PartEngine engine : engines.values()){
-			if(engine.currentGear < 0){
-				variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
-				break;
-			}
-		}
-		
-		//Adjust flaps to current setting.
-		if(flapCurrentAngle < flapDesiredAngle){
-			++flapCurrentAngle;
-		}else if(flapCurrentAngle > flapDesiredAngle){
-			--flapCurrentAngle;
-		}
-		
-		//If we are towing a vehicle, update it now.
-		if(towedVehicle != null){
-			towedVehicle.updateThisCycle = true;
-			towedVehicle.update();
+			return false;
 		}
 	}
 	
 	@Override
-	protected float getCurrentMass(){
+	protected int getCurrentMass(){
 		//Need to use a list here to make sure we don't end up with infinite recursion due to bad trailer linkings.
 		//This could lock up a world if not detected!
-		if(towedVehicle != null){
-			if(towedVehiclesCheckedForWeights.contains(this)){
-				InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
-				towedVehicle.towedByVehicle = null;
-				towedVehicle = null;
-				return super.getCurrentMass();
-			}else{
-				towedVehiclesCheckedForWeights.add(this);
-				float combinedMass = super.getCurrentMass() + towedVehicle.getCurrentMass();
-				towedVehiclesCheckedForWeights.clear();
-				return combinedMass;
+		int combinedMass = super.getCurrentMass();
+		if(!towingConnections.isEmpty()){
+			Iterator<EntityConnection> iterator = towingConnections.iterator();
+			while(iterator.hasNext()){
+				EntityConnection connection = iterator.next();
+				//Only check once per base entity.
+				if(connection.otherBaseEntity instanceof EntityVehicleF_Physics){
+					if(towedVehiclesCheckedForWeights.contains(connection.otherBaseEntity)){
+						InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+						connection.otherEntity.towedByConnection = null;
+						iterator.remove();
+					}else{
+						towedVehiclesCheckedForWeights.add((EntityVehicleF_Physics) connection.otherBaseEntity);
+						combinedMass += ((EntityVehicleF_Physics) connection.otherBaseEntity).getCurrentMass();
+						//Check all parts, as they can be towing other vehicles.
+						for(APart part : parts){
+							if(!part.towingConnections.isEmpty()){
+								for(EntityConnection partConnection : part.towingConnections){
+									if(partConnection.otherBaseEntity instanceof EntityVehicleF_Physics){
+										combinedMass += ((EntityVehicleF_Physics) partConnection.otherBaseEntity).getCurrentMass();
+									}
+								}
+							}
+						}
+						towedVehiclesCheckedForWeights.clear();
+					}
+				}
 			}
-		}else{
-			return super.getCurrentMass();
 		}
+		return combinedMass;
 	}
 	
 	@Override
@@ -220,7 +223,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	protected void getForcesAndMotions(){
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
-		if(towedByVehicle == null){
+		if(towedByConnection == null){
 			//Set moments.
 			momentRoll = definition.motorized.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
 			momentPitch = 2D*currentMass;
@@ -423,51 +426,52 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			rotation.add(rotorRotation);
 		}else{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
-			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be..
-			if(towedByVehicle.activeHitchConnection != null){
-				if(towedByVehicle.activeHitchConnection.mounted){
-					Point3d hitchRotatedOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position);
-					Point3d hookupRotatedOffset = getHookupOffset().copy().rotateFine(angles).add(position);
-					motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
-					rotation.setTo(towedByVehicle.angles).subtract(angles);
-					if(towedByVehicle.activeHitchPart != null){
-						rotation.add(towedByVehicle.activeHitchPart.localAngles);
-					}
+			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
+			if(towedByConnection.connection.mounted){
+				Point3d hitchRotatedOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.angles).add(towedByConnection.otherEntity.position);
+				Point3d hookupRotatedOffset = towedByConnection.getOffset().rotateFine(angles).add(position);
+				motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
+				rotation.setTo(towedByConnection.otherEntity.angles).subtract(angles);
+			}else{
+				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
+				//Yaw is applied based on the current and next position of the truck's hookup.
+				//Motion is applied after yaw corrections to ensure the trailer follows the truck.
+				//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
+				Point3d tractorHitchPrevOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.prevAngles).add(towedByConnection.otherEntity.prevPosition).subtract(prevPosition);
+				Point3d tractorHitchCurrentOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.angles).add(towedByConnection.otherEntity.position).subtract(position);
+				Point3d tractorHitchOffset = tractorHitchCurrentOffset.copy();
+				
+				//Calculate how much yaw we need to apply to rotate the trailer.
+				//This is only done for the X and Z motions.
+				//If we are restricted, make yaw match the hookup.
+				tractorHitchPrevOffset.y = 0;
+				tractorHitchCurrentOffset.y = 0;
+				tractorHitchPrevOffset.normalize();
+				tractorHitchCurrentOffset.normalize();
+				double rotationDelta;
+				if(towedByConnection.connection.restricted){
+					rotationDelta = towedByConnection.otherEntity.angles.y - angles.y;
 				}else{
-					//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
-					//Yaw is applied based on the current and next position of the truck's hookup.
-					//Motion is applied after yaw corrections to ensure the trailer follows the truck.
-					//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-					Point3d tractorHitchPrevOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.prevAngles).add(towedByVehicle.prevPosition).subtract(prevPosition);
-					Point3d tractorHitchCurrentOffset = towedByVehicle.getHitchOffset().copy().rotateFine(towedByVehicle.angles).add(towedByVehicle.position).subtract(position);
-					Point3d tractorHitchOffset = tractorHitchCurrentOffset.copy();
-					
-					//Now calculate how much yaw we need to apply to rotate the trailer.
-					//This is only done for the X and Z motions.
-					tractorHitchPrevOffset.y = 0;
-					tractorHitchCurrentOffset.y = 0;
-					tractorHitchPrevOffset.normalize();
-					tractorHitchCurrentOffset.normalize();
-					double rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffset.dotProduct(tractorHitchCurrentOffset)));
+					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffset.dotProduct(tractorHitchCurrentOffset)));
 					rotationDelta *= Math.signum(tractorHitchPrevOffset.crossProduct(tractorHitchCurrentOffset).y);
-					
-					//If the rotation is valid, add it.
-					//We need to fake-add the yaw for the motion calculation here, hence the odd temp setting of the angles.
-					Point3d trailerHookupOffset;
-					if(!Double.isNaN(rotationDelta)){
-						rotation.y = rotationDelta;
-						angles.y += rotationDelta;
-						trailerHookupOffset = getHookupOffset().copy().rotateFine(angles);
-						angles.y -= rotationDelta;
-					}else{
-						trailerHookupOffset = getHookupOffset().copy().rotateFine(angles);
-					}
-					
-					//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
-					motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset).multiply(1/SPEED_FACTOR));
-					rotation.x = 0;
-					rotation.z = 0;
 				}
+				
+				//If the rotation is valid, add it.
+				//We need to fake-add the yaw for the motion calculation here, hence the odd temp setting of the angles.
+				Point3d trailerHookupOffset;
+				if(!Double.isNaN(rotationDelta)){
+					rotation.y = rotationDelta;
+					angles.y += rotationDelta;
+					trailerHookupOffset = towedByConnection.getOffset().rotateFine(angles);
+					angles.y -= rotationDelta;
+				}else{
+					trailerHookupOffset = towedByConnection.getOffset().rotateFine(angles);
+				}
+				
+				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
+				motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset).multiply(1/SPEED_FACTOR));
+				rotation.x = 0;
+				rotation.z = 0;
 			}
 		}
 	}

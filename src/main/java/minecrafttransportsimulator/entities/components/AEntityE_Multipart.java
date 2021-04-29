@@ -107,69 +107,70 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		
-		//If we have any NBT parts, add them now.
-		if(!partsFromNBT.isEmpty()){
-			for(APart part : partsFromNBT){
-				addPart(part, false);
+	public boolean update(){
+		if(super.update()){
+			//If we have any NBT parts, add them now.
+			if(!partsFromNBT.isEmpty()){
+				for(APart part : partsFromNBT){
+					addPart(part, false);
+				}
+				partsFromNBT.clear();
 			}
-			partsFromNBT.clear();
-		}
-		
-		//Update part slot box positions.
-		for(BoundingBox box : allPartSlotBoxes.keySet()){
-			JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
-			boolean updatedToSubPart = false;
-			for(APart part : parts){
-				if(part.definition.parts != null){
-					for(JSONPartDefinition subPartDef : part.definition.parts){
-						if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
-							//Need to find the delta between our 0-degree position and our current position.
-							Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
-							box.updateToEntity(this, delta);
-							updatedToSubPart = true;
-							break;
+			
+			//Update part slot box positions.
+			for(BoundingBox box : allPartSlotBoxes.keySet()){
+				JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
+				boolean updatedToSubPart = false;
+				for(APart part : parts){
+					if(part.definition.parts != null){
+						for(JSONPartDefinition subPartDef : part.definition.parts){
+							if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
+								//Need to find the delta between our 0-degree position and our current position.
+								Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
+								box.updateToEntity(this, delta);
+								updatedToSubPart = true;
+								break;
+							}
+						}
+					}
+				}
+				if(!updatedToSubPart){
+					box.updateToEntity(this, null);
+				}
+			}
+			
+			//Populate active part slot list.
+			//Only do this on clients; servers reference the main list to handle clicks.
+			//Boxes added on clients depend on what the player is holding.
+			//We add these before part boxes so the player can click them before clicking a part.
+			if(world.isClient()){
+				activePartSlotBoxes.clear();
+				WrapperPlayer player = InterfaceClient.getClientPlayer();
+				AItemBase heldItem = player.getHeldItem();
+				if(heldItem instanceof AItemPart){
+					for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
+						AItemPart heldPart = (AItemPart) heldItem;
+						//Does the part held match this packPart?
+						if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
+							//Are there any doors blocking us from clicking this part?
+							if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
+								//Part matches.  Add the box.  Set the box bounds to the generic box, or the
+								//special bounds of the generic part if we're holding one.
+								BoundingBox box = partSlotBoxEntry.getKey();
+								box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+								box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+								box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+								activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+							}
 						}
 					}
 				}
 			}
-			if(!updatedToSubPart){
-				box.updateToEntity(this, null);
-			}
+			
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Populate active part slot list.
-		//Only do this on clients; servers reference the main list to handle clicks.
-		//Boxes added on clients depend on what the player is holding.
-		//We add these before part boxes so the player can click them before clicking a part.
-		if(world.isClient()){
-			activePartSlotBoxes.clear();
-			WrapperPlayer player = InterfaceClient.getClientPlayer();
-			AItemBase heldItem = player.getHeldItem();
-			if(heldItem instanceof AItemPart){
-				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
-					AItemPart heldPart = (AItemPart) heldItem;
-					//Does the part held match this packPart?
-					if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
-						//Are there any doors blocking us from clicking this part?
-						if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
-							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
-							//special bounds of the generic part if we're holding one.
-							BoundingBox box = partSlotBoxEntry.getKey();
-							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
-							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
-						}
-					}
-				}
-			}
-		}
-		
-		//Update all-box lists now that all other lists are populated.
-		recalculateBoxes();
 	}
 	
 	@Override
@@ -291,13 +292,23 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		return true;
 	}
 	
-	/**
-	 * Called to update the parts on this entity.  This should be called after all movement on the
-	 * entity has been performed, as parts need to do their actions based on the updated movement
-	 * of the entity.  Calling this before the entity finishes moving will lead to the parts "lagging"
-	 * behind the entity.
-	 */
-	public void updateParts(){
+	@Override
+	public boolean isBeingTowed(){
+		if(super.isBeingTowed()){
+			return true;
+		}else{
+			for(APart part : parts){
+				if(part.towedByConnection != null){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public void updatePostMovement(){
+		super.updatePostMovement();
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -306,6 +317,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				removePart(part, iterator);
 			}
 		}
+		
+		//Update all-box lists now that all parts are updated.
+		//If we don't do this, then the box size might get de-synced.
+		recalculateBoxes();
 	}
 	
 	/**

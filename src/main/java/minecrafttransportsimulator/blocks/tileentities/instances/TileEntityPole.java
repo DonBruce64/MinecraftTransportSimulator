@@ -75,22 +75,26 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		//Update positions for our components.
-		for(Axis axis : Axis.values()){
-			if(components.containsKey(axis)){
-				ATileEntityPole_Component component = components.get(axis);
-				if(axis.equals(Axis.NONE)){
-					component.position.setTo(position);
-					component.angles.setTo(angles);
-				}else{
-					component.position.set(0, 0, definition.pole.radius + 0.001).rotateY(axis.yRotation).add(position);
-					component.angles.set(0, axis.yRotation, 0).add(angles);
+	public boolean update(){
+		if(super.update()){
+			//Update positions for our components.
+			for(Axis axis : Axis.values()){
+				if(components.containsKey(axis)){
+					ATileEntityPole_Component component = components.get(axis);
+					if(axis.equals(Axis.NONE)){
+						component.position.setTo(position);
+						component.angles.setTo(angles);
+					}else{
+						component.position.set(0, 0, definition.pole.radius + 0.001).rotateY(axis.yRotation).add(position);
+						component.angles.set(0, axis.yRotation, 0).add(angles);
+					}
+					component.prevPosition.setTo(component.position);
+					component.prevAngles.setTo(component.angles);
 				}
-				component.prevPosition.setTo(component.position);
-				component.prevAngles.setTo(component.angles);
 			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 	

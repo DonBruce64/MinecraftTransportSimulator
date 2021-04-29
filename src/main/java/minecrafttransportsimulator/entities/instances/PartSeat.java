@@ -48,6 +48,11 @@ public final class PartSeat extends APart{
 					//Didn't find an animal.  Just mount the player.
 					//Don't mount them if they are sneaking, however.  This will confuse MC.
 					if(!player.isSneaking()){
+						//Check if the rider is riding something before adding them.
+						//If they aren't riding us our the entity we are on, we need to remove them.
+						if(player.getEntityRiding() != null && !entityOn.equals(player.getEntityRiding())){
+							player.getEntityRiding().removeRider(player, null);
+						}
 						entityOn.addRider(player, placementOffset);
 						//If this seat can control a gun, and isn't controlling one, set it now.
 						//This prevents the need to select a gun when initially mounting.
@@ -160,10 +165,14 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		if(!canControlGuns && activeGun != null){
-			canControlGuns = true;
+	public boolean update(){
+		if(super.update()){
+			if(!canControlGuns && activeGun != null){
+				canControlGuns = true;
+			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 	

@@ -64,78 +64,82 @@ public class EntityParticle extends AEntityB_Existing{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		//Set movement.
-		if(definition.movementVelocity != null){
-			motion.add(definition.movementVelocity);
-			if(motion.x > definition.terminalVelocity.x){
-				motion.x = definition.terminalVelocity.x;
+	public boolean update(){
+		if(super.update()){
+			//Set movement.
+			if(definition.movementVelocity != null){
+				motion.add(definition.movementVelocity);
+				if(motion.x > definition.terminalVelocity.x){
+					motion.x = definition.terminalVelocity.x;
+				}
+				if(motion.x < -definition.terminalVelocity.x){
+					motion.x = -definition.terminalVelocity.x;
+				}
+				if(motion.y > definition.terminalVelocity.y){
+					motion.y = definition.terminalVelocity.y;
+				}
+				if(motion.y < -definition.terminalVelocity.y){
+					motion.y = -definition.terminalVelocity.y;
+				}
+				if(motion.z > definition.terminalVelocity.z){
+					motion.z = definition.terminalVelocity.z;
+				}
+				if(motion.z < -definition.terminalVelocity.z){
+					motion.z = -definition.terminalVelocity.z;
+				}
+			}else{
+				switch(definition.type){
+					case SMOKE: {
+						//Update the motions to make the smoke float up.
+						motion.x *= 0.9;
+						motion.y += 0.004;
+						motion.z *= 0.9;
+						break;
+					}
+					case FLAME: {
+						//Flame just slowly drifts in the direction it was going.
+						motion.multiply(0.96);
+						break;
+					}
+					case DRIP: {
+						//Keep moving until we touch a block, then stop.
+						if(!touchingBlocks){
+							motion.multiply(0.96).add(0D, -0.06D, 0D);
+						}else{
+							motion.multiply(0.0);
+						}
+						break;
+					}
+					case BUBBLE: {
+						//Bubbles float up until they break the surface of the water, then they pop.
+						if(!world.isBlockLiquid(position)){
+							remove();
+						}else{
+							motion.multiply(0.85).add(0, 0.002D, 0);
+						}
+						break;
+					}
+					case BREAK: {
+						//Breaking particles aren't affected by motion.
+						break;
+					}
+				}
 			}
-			if(motion.x < -definition.terminalVelocity.x){
-				motion.x = -definition.terminalVelocity.x;
+			
+			//Check collision movement.  If we hit a block, don't move.
+			touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
+			if(touchingBlocks){
+				motion.add(-boundingBox.currentCollisionDepth.x*Math.signum(motion.x), -boundingBox.currentCollisionDepth.y*Math.signum(motion.y), -boundingBox.currentCollisionDepth.z*Math.signum(motion.z));
 			}
-			if(motion.y > definition.terminalVelocity.y){
-				motion.y = definition.terminalVelocity.y;
+			position.add(motion);
+			
+			//Check age to see if we are on our last tick.
+			if(++age == maxAge){
+				remove();
 			}
-			if(motion.y < -definition.terminalVelocity.y){
-				motion.y = -definition.terminalVelocity.y;
-			}
-			if(motion.z > definition.terminalVelocity.z){
-				motion.z = definition.terminalVelocity.z;
-			}
-			if(motion.z < -definition.terminalVelocity.z){
-				motion.z = -definition.terminalVelocity.z;
-			}
+			return true;
 		}else{
-			switch(definition.type){
-				case SMOKE: {
-					//Update the motions to make the smoke float up.
-					motion.x *= 0.9;
-					motion.y += 0.004;
-					motion.z *= 0.9;
-					break;
-				}
-				case FLAME: {
-					//Flame just slowly drifts in the direction it was going.
-					motion.multiply(0.96);
-					break;
-				}
-				case DRIP: {
-					//Keep moving until we touch a block, then stop.
-					if(!touchingBlocks){
-						motion.multiply(0.96).add(0D, -0.06D, 0D);
-					}else{
-						motion.multiply(0.0);
-					}
-					break;
-				}
-				case BUBBLE: {
-					//Bubbles float up until they break the surface of the water, then they pop.
-					if(!world.isBlockLiquid(position)){
-						isValid = false;
-					}else{
-						motion.multiply(0.85).add(0, 0.002D, 0);
-					}
-					break;
-				}
-				case BREAK: {
-					//Breaking particles aren't affected by motion.
-					break;
-				}
-			}
-		}
-		
-		//Check collision movement.  If we hit a block, don't move.
-		touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
-		if(touchingBlocks){
-			motion.add(-boundingBox.currentCollisionDepth.x*Math.signum(motion.x), -boundingBox.currentCollisionDepth.y*Math.signum(motion.y), -boundingBox.currentCollisionDepth.z*Math.signum(motion.z));
-		}
-		position.add(motion);
-		
-		//Check age to see if we are on our last tick.
-		if(++age == maxAge){
-			isValid = false;
+			return false;
 		}
 	}
 	

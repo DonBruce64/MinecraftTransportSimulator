@@ -8,5 +8,5 @@ public interface ITileEntityTickable{
 	/**
 	 *  Called every tick for updates.
 	 */
-	public void update();
+	public boolean update();
 }

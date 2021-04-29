@@ -195,8 +195,8 @@ public class EntityFluidTank extends AEntityA_Base{
 	/**
 	 *  Gets the weight of the fluid in this tank.
 	 */
-	public double getWeight(){
-		return fluidLevel/50D;
+	public int getWeight(){
+		return (int) (fluidLevel/50D);
 	}
 	
 	/**

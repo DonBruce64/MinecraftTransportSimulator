@@ -9,12 +9,14 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -177,6 +179,8 @@ public final class LegacyCompatSystem{
 				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 			}
 		}
+		
+		performVehicleConnectionLegacyCompats(definition);
 		
 		//Do compats for sounds.
 		if(definition.rendering.sounds == null){
@@ -505,6 +509,8 @@ public final class LegacyCompatSystem{
 				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 			}
 		}
+		
+		performVehicleConnectionLegacyCompats(definition);
 		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
@@ -1290,6 +1296,41 @@ public final class LegacyCompatSystem{
 					performVehiclePartDefLegacyCompats(additionalPartDef);
 				}
 			}
+		}
+	}
+	
+	private static void performVehicleConnectionLegacyCompats(AJSONInteractableEntity interactableDef){
+		if(interactableDef.connections != null){
+			interactableDef.connectionGroups = new ArrayList<JSONConnectionGroup>();
+			JSONConnectionGroup hitchGroup = null;
+			JSONConnectionGroup hookupGroup = null;
+			for(JSONConnection connection : interactableDef.connections){
+				if(connection.hookup){
+					if(hookupGroup == null){
+						hookupGroup = new JSONConnectionGroup();
+						hookupGroup.connections = new ArrayList<JSONConnection>();
+						hookupGroup.groupName = "HOOKUP";
+						hookupGroup.hookup = true;
+					}
+					connection.hookup = false;
+					hookupGroup.connections.add(connection);
+				}else{
+					if(hitchGroup == null){
+						hitchGroup = new JSONConnectionGroup();
+						hitchGroup.connections = new ArrayList<JSONConnection>();
+						hitchGroup.groupName = "TRAILER";
+						hitchGroup.canIntiateConnections = true;
+					}
+					hitchGroup.connections.add(connection);
+				}
+			}
+			if(hookupGroup != null){
+				interactableDef.connectionGroups.add(hookupGroup);
+			}
+			if(hitchGroup != null){
+				interactableDef.connectionGroups.add(hitchGroup);
+			}
+			interactableDef.connections = null;
 		}
 	}
     

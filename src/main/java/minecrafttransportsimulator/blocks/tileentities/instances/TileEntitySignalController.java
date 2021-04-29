@@ -55,123 +55,128 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	}
 	
 	@Override
-	public void update(){
-		//Check every 1 seconds to make sure controlled components are in their correct states.
-		//This could have changed due to chunkloading.  We also check light redstone state here.
-		if(world.getTick()%20 == 0){
-			updateState(currentOpState, false);
-		}
-		
-		int currentTime = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
-		int redstoneSignal = world.getRedstonePower(position.copy().add(0, -1, 0));
-		//If we aren't in remote control mode, do checks for state changes.
-		if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
-			if(!currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
-				//If we aren't in redstone signal mode, check lights.
-				if(lightsOn ^ redstoneSignal == 0){
-					lightsOn = !lightsOn;
-					updateState(currentOpState, false);
-				}
+	public boolean update(){
+		if(super.update()){
+			//Check every 1 seconds to make sure controlled components are in their correct states.
+			//This could have changed due to chunkloading.  We also check light redstone state here.
+			if(world.getTick()%20 == 0){
+				updateState(currentOpState, false);
 			}
 			
-			//If we are in the idle op sate, check if we need to start a cycle.
-			if(currentOpState.equals(OpState.GREEN_MAIN_RED_CROSS)){
-				if(currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
-					//We're a triggered signal, check for vehicles.
-					//Check only once every two seconds to prevent lag.
-					if(currentTime%2 == 0){
-						//Get a bounding box for all lights in the controller system.
-						double minX = Double.MAX_VALUE;
-						double maxX = Double.MIN_VALUE;
-						double minZ = Double.MAX_VALUE;
-						double maxZ = Double.MIN_VALUE;
-						for(Point3d controllerSignalPos : componentLocations){
-							minX = Math.min(minX, controllerSignalPos.x);
-							maxX = Math.max(maxX, controllerSignalPos.x);
-							minZ = Math.min(minZ, controllerSignalPos.z);
-							maxZ = Math.max(maxZ, controllerSignalPos.z);
-						}
-						
-						//Take 16 off to expand the detection boxes for the axis.
-						if(mainDirectionXAxis){
-							minZ -= 16;
-							maxZ += 16;
-						}else{
-							minX -= 16;
-							maxX += 16;
-						}
-						
-						//Now we have min-max, check for any vehicles in the area.
-						//We need to check along the non-primary axis, but we don't care about Y.
-						for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-							if(entity instanceof EntityVehicleF_Physics){
-								EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-								if(vehicle.position.x > minX && vehicle.position.x < maxX && vehicle.position.z > minZ && vehicle.position.z < maxZ){
-									updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
-									break;
+			int currentTime = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
+			int redstoneSignal = world.getRedstonePower(position.copy().add(0, -1, 0));
+			//If we aren't in remote control mode, do checks for state changes.
+			if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
+				if(!currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
+					//If we aren't in redstone signal mode, check lights.
+					if(lightsOn ^ redstoneSignal == 0){
+						lightsOn = !lightsOn;
+						updateState(currentOpState, false);
+					}
+				}
+				
+				//If we are in the idle op sate, check if we need to start a cycle.
+				if(currentOpState.equals(OpState.GREEN_MAIN_RED_CROSS)){
+					if(currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
+						//We're a triggered signal, check for vehicles.
+						//Check only once every two seconds to prevent lag.
+						if(currentTime%2 == 0){
+							//Get a bounding box for all lights in the controller system.
+							double minX = Double.MAX_VALUE;
+							double maxX = Double.MIN_VALUE;
+							double minZ = Double.MAX_VALUE;
+							double maxZ = Double.MIN_VALUE;
+							for(Point3d controllerSignalPos : componentLocations){
+								minX = Math.min(minX, controllerSignalPos.x);
+								maxX = Math.max(maxX, controllerSignalPos.x);
+								minZ = Math.min(minZ, controllerSignalPos.z);
+								maxZ = Math.max(maxZ, controllerSignalPos.z);
+							}
+							
+							//Take 16 off to expand the detection boxes for the axis.
+							if(mainDirectionXAxis){
+								minZ -= 16;
+								maxZ += 16;
+							}else{
+								minX -= 16;
+								maxX += 16;
+							}
+							
+							//Now we have min-max, check for any vehicles in the area.
+							//We need to check along the non-primary axis, but we don't care about Y.
+							for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
+								if(entity instanceof EntityVehicleF_Physics){
+									EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
+									if(vehicle.position.x > minX && vehicle.position.x < maxX && vehicle.position.z > minZ && vehicle.position.z < maxZ){
+										updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+										break;
+									}
 								}
 							}
 						}
-					}
-				}else if(currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
-					//If redstone is active, start sequence.
-					if(redstoneSignal > 0){
-						updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+					}else if(currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
+						//If redstone is active, start sequence.
+						if(redstoneSignal > 0){
+							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+						}
+					}else{
+						//Not a triggered signal, we must be timed.
+						if(timeOperationStarted + greenMainTime <= currentTime){
+							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+						}
 					}
 				}else{
-					//Not a triggered signal, we must be timed.
-					if(timeOperationStarted + greenMainTime <= currentTime){
-						updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
+					//In the middle of a cycle.  Do logic.
+					switch(currentOpState){
+						case GREEN_MAIN_RED_CROSS : break; //Not gonna happen, we tested for this.
+						case YELLOW_MAIN_RED_CROSS : {
+							if(timeOperationStarted + yellowMainTime <= currentTime){
+								updateState(OpState.RED_MAIN_RED_CROSS, true);
+							}
+							break;
+						}
+						case RED_MAIN_RED_CROSS : {
+							if(timeOperationStarted + allRedTime <= currentTime){
+								updateState(OpState.RED_MAIN_GREEN_CROSS, true);
+							}
+							break;
+						}
+						case RED_MAIN_GREEN_CROSS : {
+							if(timeOperationStarted + greenCrossTime <= currentTime){
+								updateState(OpState.RED_MAIN_YELLOW_CROSS, true);
+							}
+							break;
+						}
+						case RED_MAIN_YELLOW_CROSS : {
+							if(timeOperationStarted + yellowCrossTime <= currentTime){
+								updateState(OpState.RED_MAIN2_RED_CROSS2, true);
+							}
+							break;
+						}
+						case RED_MAIN2_RED_CROSS2 : {
+							if(timeOperationStarted + allRedTime <= currentTime){
+								updateState(OpState.GREEN_MAIN_RED_CROSS, true);
+							}
+							break;
+						}
 					}
 				}
 			}else{
-				//In the middle of a cycle.  Do logic.
-				switch(currentOpState){
-					case GREEN_MAIN_RED_CROSS : break; //Not gonna happen, we tested for this.
-					case YELLOW_MAIN_RED_CROSS : {
-						if(timeOperationStarted + yellowMainTime <= currentTime){
-							updateState(OpState.RED_MAIN_RED_CROSS, true);
-						}
-						break;
-					}
-					case RED_MAIN_RED_CROSS : {
-						if(timeOperationStarted + allRedTime <= currentTime){
-							updateState(OpState.RED_MAIN_GREEN_CROSS, true);
-						}
-						break;
-					}
-					case RED_MAIN_GREEN_CROSS : {
-						if(timeOperationStarted + greenCrossTime <= currentTime){
-							updateState(OpState.RED_MAIN_YELLOW_CROSS, true);
-						}
-						break;
-					}
-					case RED_MAIN_YELLOW_CROSS : {
-						if(timeOperationStarted + yellowCrossTime <= currentTime){
-							updateState(OpState.RED_MAIN2_RED_CROSS2, true);
-						}
-						break;
-					}
-					case RED_MAIN2_RED_CROSS2 : {
-						if(timeOperationStarted + allRedTime <= currentTime){
-							updateState(OpState.GREEN_MAIN_RED_CROSS, true);
-						}
-						break;
-					}
+				//We are remotely-controlled.  Adjust state to redstone.
+				//First three bits are the state of the controller, the last bit is the light state.
+				int stateOpCode = redstoneSignal & 7;
+				boolean lightOnSignal = redstoneSignal >> 3 > 0;
+				if(lightsOn ^ lightOnSignal){
+					lightsOn = !lightsOn;
+					updateState(currentOpState, false);
+				}
+				if(currentOpState.ordinal() != stateOpCode && stateOpCode < OpState.values().length){
+					updateState(OpState.values()[stateOpCode], false);
 				}
 			}
+			return true;
 		}else{
-			//We are remotely-controlled.  Adjust state to redstone.
-			//First three bits are the state of the controller, the last bit is the light state.
-			int stateOpCode = redstoneSignal & 7;
-			boolean lightOnSignal = redstoneSignal >> 3 > 0;
-			if(lightsOn ^ lightOnSignal){
-				lightsOn = !lightsOn;
-				updateState(currentOpState, false);
-			}
-			if(currentOpState.ordinal() != stateOpCode && stateOpCode < OpState.values().length){
-				updateState(OpState.values()[stateOpCode], false);
-			}
+			return false;
 		}
 	}
 	

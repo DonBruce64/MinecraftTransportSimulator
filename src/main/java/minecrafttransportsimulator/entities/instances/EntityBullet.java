@@ -91,209 +91,211 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		}
     }
 	
-	@Override
-	public void update(){
-		super.update();
-		
-		//Get possible damage.
-		Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
-		
-		//Check for collided entities and attack them.
-		//If we collide with an armored vehicle, try to penetrate it.
-		Map<WrapperEntity, Collection<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
-		if(!attackedEntities.isEmpty()){
-			double armorPenetrated = 0;
-			for(WrapperEntity entity : attackedEntities.keySet()){
-				Collection<BoundingBox> hitBoxes = attackedEntities.get(entity);
-				if(hitBoxes != null){
-					AEntityA_Base baseEntity = entity.getBaseEntity();
-					BoundingBox armorBoxHit = null;
-					
-					//Check all boxes for armor and see if we penetrated them.
-					Iterator<BoundingBox> hitBoxIterator = hitBoxes.iterator();
-					while(hitBoxIterator.hasNext()){
-						BoundingBox hitBox = hitBoxIterator.next();
-						if(hitBox.armorThickness > 0){
-							if(hitBox.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
-								armorPenetrated += hitBox.armorThickness;
-								hitBoxIterator.remove();
-							}else{
-								armorBoxHit = hitBox;
+    @Override
+	public boolean update(){
+		if(super.update()){
+			//Get possible damage.
+			Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
+			
+			//Check for collided entities and attack them.
+			//If we collide with an armored vehicle, try to penetrate it.
+			Map<WrapperEntity, Collection<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
+			if(!attackedEntities.isEmpty()){
+				double armorPenetrated = 0;
+				for(WrapperEntity entity : attackedEntities.keySet()){
+					Collection<BoundingBox> hitBoxes = attackedEntities.get(entity);
+					if(hitBoxes != null){
+						AEntityA_Base baseEntity = entity.getBaseEntity();
+						BoundingBox armorBoxHit = null;
+						
+						//Check all boxes for armor and see if we penetrated them.
+						Iterator<BoundingBox> hitBoxIterator = hitBoxes.iterator();
+						while(hitBoxIterator.hasNext()){
+							BoundingBox hitBox = hitBoxIterator.next();
+							if(hitBox.armorThickness > 0){
+								if(hitBox.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
+									armorPenetrated += hitBox.armorThickness;
+									hitBoxIterator.remove();
+								}else{
+									armorBoxHit = hitBox;
+								}
+							}else if(baseEntity instanceof AEntityE_Multipart){
+								if(((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
+									break;
+								}
 							}
-						}else if(baseEntity instanceof AEntityE_Multipart){
-							if(((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
-								break;
+						}	
+						
+						//If we hit an armor box, set that to what we attacked.
+						//If we didn't, see if we hit a part instead.
+						if(armorBoxHit != null){
+							InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, armorBoxHit, entity));
+							remove();
+							return false;
+						}else{
+							for(BoundingBox hitBox : hitBoxes){
+								if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
+									InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
+									remove();
+									return false;
+								}
 							}
 						}
-					}	
-					
-					//If we hit an armor box, set that to what we attacked.
-					//If we didn't, see if we hit a part instead.
-					if(armorBoxHit != null){
-						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, armorBoxHit, entity));
-						remove();
-						return;
 					}else{
-						for(BoundingBox hitBox : hitBoxes){
-							if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
-								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
-								remove();
-								return;
-							}
-						}
+						//Must of hit a normal entity.  Set our box to the entity's box and attack it.
+						boundingBox.globalCenter.setTo(entity.getPosition());
+						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, entity));
+						remove();
+						return false;
 					}
-				}else{
-					//Must of hit a normal entity.  Set our box to the entity's box and attack it.
-					boundingBox.globalCenter.setTo(entity.getPosition());
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, entity));
-					remove();
-					return;
 				}
 			}
-		}
-		
-		//Didn't hit an entity.  Check for blocks.
-		Point3d hitPos = world.getBlockHit(position, motion);
-		if(hitPos != null){
-			boundingBox.globalCenter.setTo(hitPos);
-			InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
-			remove();
-			return;
-		}
-		
-		//Check proximity fuze against our target or any blocks that might be out front
-		if(definition.bullet.proximityFuze != 0){
-			if(targetPosition != null){
-				double distanceUntilImpact = position.distanceTo(targetPosition);
-				if(distanceUntilImpact <= definition.bullet.proximityFuze){
+			
+			//Didn't hit an entity.  Check for blocks.
+			Point3d hitPos = world.getBlockHit(position, motion);
+			if(hitPos != null){
+				boundingBox.globalCenter.setTo(hitPos);
+				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+				remove();
+				return false;
+			}
+			
+			//Check proximity fuze against our target or any blocks that might be out front
+			if(definition.bullet.proximityFuze != 0){
+				if(targetPosition != null){
+					double distanceUntilImpact = position.distanceTo(targetPosition);
+					if(distanceUntilImpact <= definition.bullet.proximityFuze){
+						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+						remove();
+						return false;
+					}
+				}
+				Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
+				if(projectedImpactPoint != null){
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
 					remove();
-					return;
+					return false;
 				}
 			}
-			Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
-			if(projectedImpactPoint != null){
-				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
-				remove();
-				return;
+			
+			//Didn't hit a block either. Check the air-burst time, if it was used.
+			if(definition.bullet.airBurstDelay != 0) {
+				if(ticksExisted > definition.bullet.airBurstDelay){
+					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+					remove();
+					return false;
+				}
 			}
-		}
-		
-		//Didn't hit a block either. Check the air-burst time, if it was used.
-		if(definition.bullet.airBurstDelay != 0) {
-			if(ticksExisted > definition.bullet.airBurstDelay){
-				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
-				remove();
-				return;
-			}
-		}
-		
-		//Nothing was hit, as we haven't returned yet.  Adjust motion to compensate for bullet movement and gravity.
-		//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
-		//And if the bullet is still accelerating, increase the velocity appropriately.
-		if(ticksExisted > definition.bullet.burnTime){
-			if(definition.bullet.slowdownSpeed > 0){
-				motion.add(motion.copy().normalize().multiply(-definition.bullet.slowdownSpeed));
-			}
-			motion.y -= gun.definition.gun.gravitationalVelocity;
-
-			//Check to make sure we haven't gone too many ticks.
-			if(ticksExisted > definition.bullet.burnTime + 200){
-				remove();
-				return;
-			}
-		}else{
-			if(ticksExisted < definition.bullet.accelerationTime){
-				//Add velocity requested watch tick we are accelerating.
-				motion.add(velocityToAddEachTick);
-			}
-			if(targetPosition != null){
-				//We have a target.  Go to it.
-				//If the target is an external entity, update target position.
-				if(externalEntityTargeted != null){
-					if(externalEntityTargeted.isValid()){
-						targetPosition.setTo(externalEntityTargeted.getPosition());
-					}else{
-						//Entity is dead.  Don't target it anymore.
-						externalEntityTargeted = null;
-						targetPosition = null;
-					}
-				}else if(engineTargeted != null){
-					//Don't need to update the position variable for engines, as it auto-syncs.
-					//Do need to check if the engine is still warm and valid, however.
-					if(!engineTargeted.isValid || engineTargeted.temp <= PartEngine.COLD_TEMP){
-						List<APart> vehicleParts = engineTargeted.entityOn.parts;
-						engineTargeted = null;
-						double closestEngineDistance = Double.MAX_VALUE;
-						for(APart part : vehicleParts){
-							if(part instanceof PartEngine){
-								PartEngine engine = (PartEngine) part;
-								if(engine.isValid && engine.temp > PartEngine.COLD_TEMP){
-									double engineDistance = position.distanceTo(engine.position);
-									if(engineDistance < closestEngineDistance){
-										engineTargeted = engine;
-										targetPosition = engineTargeted.position;
-										closestEngineDistance = engineDistance;
+			
+			//Nothing was hit, as we haven't returned yet.  Adjust motion to compensate for bullet movement and gravity.
+			//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
+			//And if the bullet is still accelerating, increase the velocity appropriately.
+			if(ticksExisted > definition.bullet.burnTime){
+				if(definition.bullet.slowdownSpeed > 0){
+					motion.add(motion.copy().normalize().multiply(-definition.bullet.slowdownSpeed));
+				}
+				motion.y -= gun.definition.gun.gravitationalVelocity;
+	
+				//Check to make sure we haven't gone too many ticks.
+				if(ticksExisted > definition.bullet.burnTime + 200){
+					remove();
+					return false;
+				}
+			}else{
+				if(ticksExisted < definition.bullet.accelerationTime){
+					//Add velocity requested watch tick we are accelerating.
+					motion.add(velocityToAddEachTick);
+				}
+				if(targetPosition != null){
+					//We have a target.  Go to it.
+					//If the target is an external entity, update target position.
+					if(externalEntityTargeted != null){
+						if(externalEntityTargeted.isValid()){
+							targetPosition.setTo(externalEntityTargeted.getPosition());
+						}else{
+							//Entity is dead.  Don't target it anymore.
+							externalEntityTargeted = null;
+							targetPosition = null;
+						}
+					}else if(engineTargeted != null){
+						//Don't need to update the position variable for engines, as it auto-syncs.
+						//Do need to check if the engine is still warm and valid, however.
+						if(!engineTargeted.isValid || engineTargeted.temp <= PartEngine.COLD_TEMP){
+							List<APart> vehicleParts = engineTargeted.entityOn.parts;
+							engineTargeted = null;
+							double closestEngineDistance = Double.MAX_VALUE;
+							for(APart part : vehicleParts){
+								if(part instanceof PartEngine){
+									PartEngine engine = (PartEngine) part;
+									if(engine.isValid && engine.temp > PartEngine.COLD_TEMP){
+										double engineDistance = position.distanceTo(engine.position);
+										if(engineDistance < closestEngineDistance){
+											engineTargeted = engine;
+											targetPosition = engineTargeted.position;
+											closestEngineDistance = engineDistance;
+										}
 									}
 								}
 							}
 						}
 					}
-				}
-				
-				if(targetPosition != null){
-					targetDistance = position.distanceTo(targetPosition);
-					double yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
-					double pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
-					//Remain flat if not yet at desired angle of attack
-					//Or climb up if needed to get above the target
-					if (pitchTarget > 0 && pitchTarget < definition.bullet.angleOfAttack){
-						if(position.y < targetPosition.y + 0.5*definition.bullet.angleOfAttack){
-							pitchTarget = -definition.bullet.angleOfAttack;
-						}else{
-							pitchTarget = 0D;
-						}
-					}
 					
-					double deltaYaw = yawTarget - this.getYaw();
-					double deltaPitch = pitchTarget - this.getPitch();
-					//Adjust deltaYaw as necessary, then apply it
-					while(deltaYaw > 180)deltaYaw -= 360;
-					while(deltaYaw < -180)deltaYaw += 360;
-					if(deltaYaw < 0){
-						if(deltaYaw < -anglePerTickSpeed){
-							deltaYaw = -anglePerTickSpeed;
+					if(targetPosition != null){
+						targetDistance = position.distanceTo(targetPosition);
+						double yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
+						double pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
+						//Remain flat if not yet at desired angle of attack
+						//Or climb up if needed to get above the target
+						if (pitchTarget > 0 && pitchTarget < definition.bullet.angleOfAttack){
+							if(position.y < targetPosition.y + 0.5*definition.bullet.angleOfAttack){
+								pitchTarget = -definition.bullet.angleOfAttack;
+							}else{
+								pitchTarget = 0D;
+							}
 						}
-						motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
-					}else if(deltaYaw > 0){
-						if(deltaYaw > anglePerTickSpeed){
-							deltaYaw = anglePerTickSpeed;
+						
+						double deltaYaw = yawTarget - this.getYaw();
+						double deltaPitch = pitchTarget - this.getPitch();
+						//Adjust deltaYaw as necessary, then apply it
+						while(deltaYaw > 180)deltaYaw -= 360;
+						while(deltaYaw < -180)deltaYaw += 360;
+						if(deltaYaw < 0){
+							if(deltaYaw < -anglePerTickSpeed){
+								deltaYaw = -anglePerTickSpeed;
+							}
+							motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
+						}else if(deltaYaw > 0){
+							if(deltaYaw > anglePerTickSpeed){
+								deltaYaw = anglePerTickSpeed;
+							}
+							motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
 						}
-						motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
+						
+						//Axis for pitch is orthogonal to the horizontal velocity vector
+						if(deltaPitch < 0){
+							if(deltaPitch < -anglePerTickSpeed){
+								deltaPitch = -anglePerTickSpeed;
+							}
+							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
+						}else if(deltaPitch > 0){
+							if(deltaPitch > anglePerTickSpeed){
+								deltaPitch = anglePerTickSpeed;
+							}
+							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
+						}
 					}
-					
-					//Axis for pitch is orthogonal to the horizontal velocity vector
-					if(deltaPitch < 0){
-						if(deltaPitch < -anglePerTickSpeed){
-							deltaPitch = -anglePerTickSpeed;
-						}
-						motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
-					}else if(deltaPitch > 0){
-						if(deltaPitch > anglePerTickSpeed){
-							deltaPitch = anglePerTickSpeed;
-						}
-						motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
-					}
-				}
-			}	
+				}	
+			}
+			
+			//Add our updated motion to the position.
+			//Then set the angles to match the motion.
+			//Doing this last lets us damage on the first update tick.
+			angles.set(getPitch(), getYaw(), 0);
+			position.add(motion);
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Add our updated motion to the position.
-		//Then set the angles to match the motion.
-		//Doing this last lets us damage on the first update tick.
-		angles.set(getPitch(), getYaw(), 0);
-		position.add(motion);
-		
 	}
 	
 	@Override

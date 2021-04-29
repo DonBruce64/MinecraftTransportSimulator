@@ -89,6 +89,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//Make sure to remove the part before spawning the item.  Some parts
 							//care about this order and won't spawn items unless they've been removed.
 							if(!part.placementDefinition.isPermanent){
+								part.disconnectAllConnections();
 								vehicle.removePart(part, null);
 								AItemPart droppedItem = part.getItem();
 								if(droppedItem != null){
@@ -101,18 +102,16 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//Attacker is a sneaking player with a wrench.
 							//Remove this vehicle if possible.
 							if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
-								//Make sure we disconnect any trailers linked to this vehicle.  We don't want to save those.
-								if(vehicle.towedVehicle != null){
-									vehicle.changeTrailer(null, null, null, null, null);
+								vehicle.disconnectAllConnections();
+								for(APart vehiclePart : vehicle.parts){
+									vehiclePart.disconnectAllConnections();
 								}
-								if(vehicle.towedByVehicle != null){
-									vehicle.towedByVehicle.changeTrailer(null, null, null, null, null);
-								}
+								
 								ItemVehicle vehicleItem = vehicle.getItem();
 								WrapperNBT vehicleData = new WrapperNBT();
 								vehicle.save(vehicleData);
 								vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
-								vehicle.isValid = false;
+								vehicle.remove();
 							}
 						}
 					}

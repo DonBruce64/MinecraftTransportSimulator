@@ -92,99 +92,97 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		
-		//If we have space for fuel, and we have tanks with it, transfer it.
-		if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
-			for(APart part : parts){
-				if(part instanceof PartInteractable && part.definition.interactable.feedsVehicles){
-					EntityFluidTank tank = ((PartInteractable) part).tank;
-					if(tank != null){
-						double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
-						if(amountFilled > 0){
-							fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
+	public boolean update(){
+		if(super.update()){
+			//If we have space for fuel, and we have tanks with it, transfer it.
+			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
+				for(APart part : parts){
+					if(part instanceof PartInteractable && part.definition.interactable.feedsVehicles){
+						EntityFluidTank tank = ((PartInteractable) part).tank;
+						if(tank != null){
+							double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
+							if(amountFilled > 0){
+								fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
+							}
 						}
 					}
 				}
 			}
-		}
-		
-		//Check to make sure the selected beacon is still correct.
-		//It might not be valid if it has been removed from the world,
-		//or one might have been placed that matches our selection.
-		if(definition.motorized.isAircraft && ticksExisted%20 == 0){
-			selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
-		}
-		
-		//Do trailer-specific logic, if we are one and towed.
-		//Otherwise, do normal update logic for DRLs.
-		if(definition.motorized.isTrailer){
-			//Check to make sure vehicle isn't dead for some reason.
-			if(towedByVehicle != null && !towedByVehicle.isValid){
-				towedByVehicle = null;
-			}else{
+			
+			//Check to make sure the selected beacon is still correct.
+			//It might not be valid if it has been removed from the world,
+			//or one might have been placed that matches our selection.
+			if(definition.motorized.isAircraft && ticksExisted%20 == 0){
+				selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
+			}
+			
+			//Do trailer-specific logic, if we are one and towed.
+			//Otherwise, do normal update logic for DRLs.
+			if(definition.motorized.isTrailer){
 				//If we are being towed update our light variables to match the vehicle we are being towed by.
 				//Also set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
-				if(towedByVehicle != null){
+				if(towedByConnection != null){
 					for(LightType light : LightType.values()){
-						if(towedByVehicle.variablesOn.contains(light.lowercaseName)){
+						if(towedByConnection.otherBaseEntity.variablesOn.contains(light.lowercaseName)){
 							variablesOn.add(light.lowercaseName);
 						}else{
 							variablesOn.remove(light.lowercaseName);
 						}
 					}
 					parkingBrakeOn = false;
-					brake = towedByVehicle.brake;
+					brake = ((AEntityVehicleE_Powered) towedByConnection.otherBaseEntity).brake;
 				}else{
 					parkingBrakeOn = true;
 				}
+			}else{
+				//Turn on the DRLs if we have an engine on.
+				variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
+				for(PartEngine engine : engines.values()){
+					if(engine.state.running){
+						variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
+						break;
+					}
+				}
 			}
+			
+			//Set electric usage based on light status.
+			if(electricPower > 2){
+				for(LightType light : LightType.values()){
+					if(light.hasBeam && light.isInCollection(variablesOn)){
+						electricUsage += 0.0005F;
+					}
+				}
+			}
+			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+			electricFlow = electricUsage;
+			electricUsage = 0;
+			
+			//Adjust gear variables.
+			if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
+				++gearMovementTime;
+			}else if(!gearUpCommand && gearMovementTime > 0){
+				--gearMovementTime;
+			}
+			
+			//Check that missiles are still valid.
+			//If they are, update their distances. Otherwise, remove them.
+			Iterator<EntityBullet> iterator = missilesIncoming.iterator();
+			while(iterator.hasNext()){
+				if(!iterator.next().isValid){
+					iterator.remove();
+				}
+			}
+			missilesIncoming.sort(new Comparator<EntityBullet>(){
+				@Override
+				public int compare(EntityBullet missle1, EntityBullet missile2){
+					return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
+				}
+			});
+			return true;
 		}else{
-			//Turn on the DRLs if we have an engine on.
-			variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
-			for(PartEngine engine : engines.values()){
-				if(engine.state.running){
-					variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
-					break;
-				}
-			}
+			return false;
 		}
-		
-		//Set electric usage based on light status.
-		if(electricPower > 2){
-			for(LightType light : LightType.values()){
-				if(light.hasBeam && light.isInCollection(variablesOn)){
-					electricUsage += 0.0005F;
-				}
-			}
-		}
-		electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
-		electricFlow = electricUsage;
-		electricUsage = 0;
-		
-		//Adjust gear variables.
-		if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
-			++gearMovementTime;
-		}else if(!gearUpCommand && gearMovementTime > 0){
-			--gearMovementTime;
-		}
-		
-		//Check that missiles are still valid.
-		//If they are, update their distances. Otherwise, remove them.
-		Iterator<EntityBullet> iterator = missilesIncoming.iterator();
-		while(iterator.hasNext()){
-			if(!iterator.next().isValid){
-				iterator.remove();
-			}
-		}
-		missilesIncoming.sort(new Comparator<EntityBullet>(){
-			@Override
-			public int compare(EntityBullet missle1, EntityBullet missile2){
-				return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
-			}
-		});
 	}
 	
 	@Override
@@ -262,17 +260,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			}
 			world.spawnExplosion(location, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
-		
-		//If we are being towed, unhook us from our tower.
-		if(towedByVehicle != null){
-			towedByVehicle.towedVehicle = null;
-			towedByVehicle = null;
-		}
 	}
 	
 	@Override
-	protected float getCurrentMass(){
-		return (float) (super.getCurrentMass() + fuelTank.getWeight());
+	protected int getCurrentMass(){
+		return super.getCurrentMass() + fuelTank.getWeight();
 	}
 	
 	@Override

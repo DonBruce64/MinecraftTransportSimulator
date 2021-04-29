@@ -58,9 +58,13 @@ public class Radio extends AEntityB_Existing{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		position.setTo(provider.position);
+	public boolean update(){
+		if(super.update()){
+			position.setTo(provider.position);
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**

@@ -38,37 +38,41 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	}
 	
 	@Override
-	public void update(){
-		super.update();
-		//Set vectors to current velocity and orientation.
-		headingVector.set(0D, 0D, 1D).rotateFine(angles);
-		verticalVector.set(0D, 1D, 0D).rotateFine(angles);
-		sideVector.setTo(verticalVector.crossProduct(headingVector));
-		normalizedVelocityVector.setTo(motion).normalize();
-		axialVelocity = Math.abs(motion.dotProduct(headingVector));
-		
-		//Update mass.
-		currentMass = getCurrentMass();
-		
-		//Auto-close any open doors that should be closed.
-		//Only do this once a second to prevent lag.
-		if(definition.doors != null && velocity > 0.5 && ticksExisted%20 == 0){
-			Iterator<String> variableIterator = variablesOn.iterator();
-			while(variableIterator.hasNext()){
-				String openDoorName = variableIterator.next();
-				for(JSONDoor doorDef : definition.doors){
-					if(doorDef.name.equals(openDoorName)){
-						if(doorDef.closeOnMovement){
-							variableIterator.remove();
+	public boolean update(){
+		if(super.update()){
+			//Set vectors to current velocity and orientation.
+			headingVector.set(0D, 0D, 1D).rotateFine(angles);
+			verticalVector.set(0D, 1D, 0D).rotateFine(angles);
+			sideVector.setTo(verticalVector.crossProduct(headingVector));
+			normalizedVelocityVector.setTo(motion).normalize();
+			axialVelocity = Math.abs(motion.dotProduct(headingVector));
+			
+			//Update mass.
+			currentMass = getCurrentMass();
+			
+			//Auto-close any open doors that should be closed.
+			//Only do this once a second to prevent lag.
+			if(definition.doors != null && velocity > 0.5 && ticksExisted%20 == 0){
+				Iterator<String> variableIterator = variablesOn.iterator();
+				while(variableIterator.hasNext()){
+					String openDoorName = variableIterator.next();
+					for(JSONDoor doorDef : definition.doors){
+						if(doorDef.name.equals(openDoorName)){
+							if(doorDef.closeOnMovement){
+								variableIterator.remove();
+							}
+							break;
 						}
-						break;
 					}
 				}
 			}
+			
+			//Set hardness hit this tick to 0 to reset collision force calculations.
+			hardnessHitThisTick = 0;
+			return true;
+		}else{
+			return false;
 		}
-		
-		//Set hardness hit this tick to 0 to reset collision force calculations.
-		hardnessHitThisTick = 0;
 	}
 	
 	/**

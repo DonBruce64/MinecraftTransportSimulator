@@ -356,7 +356,7 @@ public class JSONParser{
 					vehicleDefinition.parts = loadedDefinition.parts;
 					vehicleDefinition.collision = loadedDefinition.collision;
 					vehicleDefinition.doors = loadedDefinition.doors;
-					vehicleDefinition.connections = loadedDefinition.connections;
+					vehicleDefinition.connectionGroups = loadedDefinition.connectionGroups;
 					vehicleDefinition.rendering = loadedDefinition.rendering;
 					break;
 				}
@@ -375,7 +375,7 @@ public class JSONParser{
 					partDefinition.parts = loadedDefinition.parts;
 					partDefinition.collision = loadedDefinition.collision;
 					partDefinition.doors = loadedDefinition.doors;
-					partDefinition.connections = loadedDefinition.connections;
+					partDefinition.connectionGroups = loadedDefinition.connectionGroups;
 					partDefinition.rendering = loadedDefinition.rendering;
 					break;
 				}
