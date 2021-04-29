@@ -159,7 +159,7 @@ public final class AnimationsVehicle extends AAnimationsBase<EntityVehicleF_Phys
 			case("hookup_pitch"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.x - vehicle.angles.x : 0;
 			case("hookup_yaw"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.y - vehicle.angles.y : 0;
 			case("hookup_roll"): return vehicle.towedByConnection != null ? vehicle.towedByConnection.otherEntity.angles.z - vehicle.angles.z : 0;
-			case("trailer_connected"): return vehicle.towingConnections.isEmpty() ? 1 : 0;
+			case("trailer_connected"): return !vehicle.towingConnections.isEmpty() ? 1 : 0;
 			case("trailer_pitch"): return !vehicle.towingConnections.isEmpty() ? vehicle.towingConnections.iterator().next().otherEntity.angles.x - vehicle.angles.x : 0;
 			case("trailer_yaw"): return !vehicle.towingConnections.isEmpty() ?  vehicle.towingConnections.iterator().next().otherEntity.angles.y - vehicle.angles.y : 0;
 			case("trailer_roll"): return !vehicle.towingConnections.isEmpty() ? vehicle.towingConnections.iterator().next().otherEntity.angles.z - vehicle.angles.z : 0;
