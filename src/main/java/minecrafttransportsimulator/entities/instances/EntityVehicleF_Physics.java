@@ -12,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -125,34 +124,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public boolean update(){
 		if(super.update()){
-			//Turn on brake lights and indicator lights.
-			if(brake > 0){
-				variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
-				if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
-					variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-				}else{
-					variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
-				}
-				if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
-					variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-				}else{
-					variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-				}
-			}else{
-				variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
-				variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-				variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-			}
-			
-			//Set backup light state.
-			variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
-			for(PartEngine engine : engines.values()){
-				if(engine.currentGear < 0){
-					variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
-					break;
-				}
-			}
-			
 			//Adjust flaps to current setting.
 			if(flapCurrentAngle < flapDesiredAngle){
 				++flapCurrentAngle;

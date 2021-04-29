@@ -133,6 +133,12 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					parkingBrakeOn = false;
 					brake = ((AEntityVehicleE_Powered) towedByConnection.otherBaseEntity).brake;
 				}else{
+					//Remove all lights besides the generic one.
+					for(LightType light : LightType.values()){
+						if(!light.equals(LightType.GENERICLIGHT)){
+							variablesOn.remove(light.lowercaseName);
+						}
+					}
 					parkingBrakeOn = true;
 				}
 			}else{
@@ -144,19 +150,55 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 						break;
 					}
 				}
+				
+				//Turn on brake lights and indicator lights.
+				if(brake > 0){
+					variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
+					if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+						variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
+					}else{
+						variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
+					}
+					if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
+						variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
+					}else{
+						variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
+					}
+				}else{
+					variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
+					variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
+					variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
+				}
+				
+				//Set backup light state.
+				variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
+				for(PartEngine engine : engines.values()){
+					if(engine.currentGear < 0){
+						variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
+						break;
+					}
+				}
+				
 			}
 			
 			//Set electric usage based on light status.
-			if(electricPower > 2){
-				for(LightType light : LightType.values()){
-					if(light.hasBeam && light.isInCollection(variablesOn)){
-						electricUsage += 0.0005F;
+			//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
+			if(definition.motorized.isTrailer){
+				if(towedByConnection != null){
+					electricPower = ((AEntityVehicleE_Powered) towedByConnection.otherBaseEntity).electricPower;
+				}
+			}else{
+				if(electricPower > 2){
+					for(LightType light : LightType.values()){
+						if(light.hasBeam && light.isInCollection(variablesOn)){
+							electricUsage += 0.0005F;
+						}
 					}
 				}
+				electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+				electricFlow = electricUsage;
+				electricUsage = 0;
 			}
-			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
-			electricFlow = electricUsage;
-			electricUsage = 0;
 			
 			//Adjust gear variables.
 			if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
