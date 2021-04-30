@@ -12,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.instances.AnimationsVehicle;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -101,7 +100,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private Point3d rotorRotation = new Point3d();//degrees
 	
 	//Animator for vehicles
-	private static final AnimationsVehicle animator = new AnimationsVehicle();
 	private static RenderVehicle renderer;;
 
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
@@ -594,9 +592,100 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
     }
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsVehicle getAnimator(){
-		return animator;
+	public double getRawVariableValue(String variable, float partialTicks){
+		//If we have a variable with a suffix, we need to get that part first and pass
+		//it into this method rather than trying to run through the code now.
+		int partNumber = getVariableNumber(variable);
+		if(partNumber != -1){
+			return getSpecificPartAnimation(this, variable, partNumber, partialTicks);
+		}
+
+		//Not a part variable that needs forwarding.  Try vehicle variables.
+		switch(variable){
+			//Vehicle world state cases.
+			case("yaw"): return angles.y;
+			case("heading"): int heading = (int)-angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
+			case("pitch"): return angles.x;
+			case("roll"): return angles.z;
+			case("altitude"): return position.y;
+			case("speed"): return axialVelocity*EntityVehicleF_Physics.SPEED_FACTOR*20;
+			case("acceleration"): return motion.length() - prevMotion.length();
+
+			//Vehicle state cases.
+			case("throttle"): return throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
+			case("brake"): return brake/(double)EntityVehicleF_Physics.MAX_BRAKE;
+			case("fuel"): return fuelTank.getFluidLevel()/fuelTank.getMaxLevel();
+			case("electric_power"): return electricPower;
+			case("electric_usage"): return electricFlow*20D;
+			case("p_brake"): return parkingBrakeOn ? 1 : 0;
+			case("reverser"): return reverseThrust ? 1 : 0;
+			case("horn"): return hornOn ? 1 : 0;
+			case("autopilot"): return autopilot ? 1 : 0;
+			case("locked"): return locked ? 1 : 0;
+			case("door"): return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
+			case("hookup_connected"): return towedByConnection != null ? 1 : 0;
+			case("hookup_pitch"): return towedByConnection != null ? towedByConnection.otherEntity.angles.x - angles.x : 0;
+			case("hookup_yaw"): return towedByConnection != null ? towedByConnection.otherEntity.angles.y - angles.y : 0;
+			case("hookup_roll"): return towedByConnection != null ? towedByConnection.otherEntity.angles.z - angles.z : 0;
+			case("trailer_connected"): return !towingConnections.isEmpty() ? 1 : 0;
+			case("trailer_pitch"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().otherEntity.angles.x - angles.x : 0;
+			case("trailer_yaw"): return !towingConnections.isEmpty() ?  towingConnections.iterator().next().otherEntity.angles.y - angles.y : 0;
+			case("trailer_roll"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().otherEntity.angles.z - angles.z : 0;
+			case("fueling"): return beingFueled ? 1 : 0;
+			
+			//State cases generally used on aircraft.
+			case("aileron"): return aileronAngle/10D;
+			case("elevator"): return elevatorAngle/10D;
+			case("rudder"): return rudderAngle/10D;
+			case("flaps_setpoint"): return flapDesiredAngle/10D;
+			case("flaps_actual"): return flapCurrentAngle/10D;
+			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
+			case("trim_aileron"): return aileronTrim/10D;
+			case("trim_elevator"): return elevatorTrim/10D;
+			case("trim_rudder"): return rudderTrim/10D;
+			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
+			case("lift_reserve"): return -trackAngle;
+			case("turn_coordinator"): return ((angles.z - prevAngles.z)/10 + angles.y - prevAngles.y)/0.15D*25;
+			case("turn_indicator"): return (angles.y - prevAngles.y)/0.15F*25F;
+			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector);
+			case("gear_setpoint"): return gearUpCommand ? 1 : 0;
+			case("gear_moving"): return (gearUpCommand ? gearMovementTime == definition.motorized.gearSequenceDuration : gearMovementTime == 0) ? 1 : 0;
+			case("beacon_direction"): return selectedBeacon != null ? angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;
+			case("beacon_bearing_setpoint"): return selectedBeacon != null ? selectedBeacon.bearing : 0;
+			case("beacon_bearing_delta"): return selectedBeacon != null ? selectedBeacon.getBearingDelta(this) : 0;
+			case("beacon_glideslope_setpoint"): return selectedBeacon != null ? selectedBeacon.glideSlope : 0;
+			case("beacon_glideslope_actual"): return selectedBeacon != null ? Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y)/position.distanceTo(selectedBeacon.position))) : 0;
+			case("beacon_glideslope_delta"): return selectedBeacon != null ? selectedBeacon.glideSlope - Math.toDegrees(Math.asin((position.y - selectedBeacon.position.y)/position.distanceTo(selectedBeacon.position))) : 0;
+			
+			default: {
+				//Missile incoming variables.
+				//Variable is in the form of missile_X_variablename.
+				if(variable.startsWith("missile_")){
+					String missileVariable = variable.substring(variable.lastIndexOf("_") + 1);
+					int missileNumber = getVariableNumber(variable.substring(0, variable.lastIndexOf('_')));
+					if(missileNumber != -1){
+						if(missilesIncoming.size() <= missileNumber){
+							return 0;
+						}else{
+							switch(missileVariable){
+								case("distance"): return missilesIncoming.get(missileNumber).targetDistance;
+								case("direction"): {
+									Point3d missilePos = missilesIncoming.get(missileNumber).position;
+									return Math.toDegrees(Math.atan2(-missilePos.z + position.z, -missilePos.x + position.x)) + 90 + angles.y;
+								}
+							}
+						}
+					}else if(missileVariable.equals("incoming")){
+						return missilesIncoming.isEmpty() ? 0 : 1;
+					}
+				}
+			}
+		}
+		
+		//Not a vehicle variable or a part variable.  We could have an error, but likely we have an older pack,
+		//a closed door, a missing part, a custom variable that's not on, or something else entirely.
+		//Just return super here.
+		return super.getRawVariableValue(variable, partialTicks);
 	}
 	
 	@Override

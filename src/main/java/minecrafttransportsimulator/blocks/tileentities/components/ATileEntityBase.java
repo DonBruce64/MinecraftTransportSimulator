@@ -40,6 +40,17 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     	return ConfigSystem.configObject.clientRendering.blockBeams.value;
     }
 	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		//Check generic block variables.
+		switch(variable){
+			case("redstone_active"): return world.getRedstonePower(position) > 0 ? 1 : 0;	
+			case("redstone_level"): return world.getRedstonePower(position);
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
 	/**
 	 *  Returns all items that make up this TE.  Used to spawn
 	 *  items when broken.  Note that such items do NOT save

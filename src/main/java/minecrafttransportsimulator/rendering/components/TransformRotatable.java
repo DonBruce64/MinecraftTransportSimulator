@@ -23,7 +23,7 @@ public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> e
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//Get rotation.
-		double rotation = entity.getAnimator().getAnimatedVariableValue(entity, definition, offset, getClock(entity), partialTicks);
+		double rotation = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
 		
 		//Do rotation.
 		if(rotation != 0){

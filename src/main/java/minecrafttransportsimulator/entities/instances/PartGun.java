@@ -467,6 +467,39 @@ public class PartGun extends APart{
 			return false;
 		}
 	}
+	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		//Check for an instance of a gun_muzzle_# variable, since these requires additional parsing
+		if(variable.startsWith("gun_muzzle_")){
+			//Get the rest of the variable after gun_muzzle_
+			String muzzleVariable = variable.substring("gun_muzzle_".length());
+			//Parse one or more digits, then take off one because we are zero-indexed
+			int muzzleNumber = Integer.parseInt(muzzleVariable.substring(0, muzzleVariable.indexOf('_'))) - 1;
+			switch(muzzleVariable.substring(muzzleVariable.indexOf('_') + 1)) {
+				case("firing"): return (muzzleNumber == currentMuzzle ? 1 : 0) * cooldownTimeRemaining/(double)definition.gun.fireDelay;
+			}
+		}
+		switch(variable){
+			case("gun_inhand"): return entityOn instanceof EntityPlayerGun ? 1 : 0;	
+			case("gun_active"): return active ? 1 : 0;
+			case("gun_firing"): return firing ? 1 : 0;
+			case("gun_fired"): return firedThisTick ? 1 : 0;
+			case("gun_pitch"): return prevOrientation.x + (currentOrientation.x - prevOrientation.x)*partialTicks;
+			case("gun_yaw"): return prevOrientation.y + (currentOrientation.y - prevOrientation.y)*partialTicks;
+			case("gun_pitching"): return prevOrientation.x != currentOrientation.x ? 1 : 0;
+			case("gun_yawing"): return prevOrientation.y != currentOrientation.y ? 1 : 0;
+			case("gun_cooldown"): return cooldownTimeRemaining > 0 ? 1 : 0;
+			case("gun_windup_time"): return windupTimeCurrent;
+			case("gun_windup_rotation"): return windupRotation;
+			case("gun_windup_complete"): return windupTimeCurrent == definition.gun.windupTime ? 1 : 0;
+			case("gun_reload"): return reloadTimeRemaining > 0 ? 1 : 0;
+			case("gun_ammo_count"): return bulletsLeft;
+			case("gun_ammo_percent"): return bulletsLeft/definition.gun.capacity;
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
 
 	/**
 	 *  Returns the controller for the gun.

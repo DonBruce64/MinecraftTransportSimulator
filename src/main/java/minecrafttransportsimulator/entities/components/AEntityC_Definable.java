@@ -25,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.components.AAnimationsBase;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
@@ -286,7 +285,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
 								DurationDelayClock clock = particleActiveClocks.get(particleDef).get(animation);
-								double variableValue = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, partialTicks);
+								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, clock, partialTicks);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -298,7 +297,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
+								double variableValue = getAnimatedVariableValue(animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
 								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -307,7 +306,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
+								double variableValue = getAnimatedVariableValue(animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
 								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -348,6 +347,97 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
     	}
     }
+	
+	/**
+	 *  Returns the raw value for the passed-in variable.  If the variable is not present, NaM
+	 *  should be returned (calling functions need to account for this!).
+	 *  This should be extended on all sub-classes for them to provide their own variables.
+	 *  For all cases of this, the sub-classed variables should be checked first.  If none are
+	 *  found, then the super() method should be called to return those as a default.
+	 */
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("tick"): return world.getTick();
+			case("tick_sin"): return Math.sin(Math.toRadians(world.getTick()));
+			case("tick_cos"): return Math.cos(Math.toRadians(world.getTick()));
+			case("time"): return world.getTime();
+			case("rain_strength"): return (int) world.getRainStrength(position);
+			case("rain_sin"): {
+				int rainStrength = (int) world.getRainStrength(position); 
+				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5: 0;
+			}
+			case("rain_cos"): {
+				int rainStrength = (int) world.getRainStrength(position); 
+				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5 : 0;
+			}	
+			case("light_sunlight"): return world.getLightBrightness(position, false);
+			case("light_total"): return world.getLightBrightness(position, true);
+			case("ground_distance"): return world.getHeight(position);
+		}
+		
+		//Check if this is a cycle variable.
+		if(variable.startsWith("cycle")){
+			int ticksCycle = Integer.valueOf(variable.substring(variable.indexOf('_') + 1, variable.lastIndexOf('_')));
+			int startTick = Integer.valueOf(variable.substring(variable.lastIndexOf('_') + 1));
+			return world.getTick()%ticksCycle >= startTick ? 1 : 0;
+		}
+		
+		//Check if this is a generic variable.  This contains lights in most cases.
+		if(variablesOn.contains(variable)){
+			return 1;
+		}
+		
+		//Didn't find a variable.  Return NaN.
+		return Double.NaN;
+	}
+	
+	/**
+	 *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
+	 *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
+	 *  this functionality is not required.  The passed-in clock may be null to prevent duration/delay functionality.
+	 *  Returns the value of the variable, or 0 if the variable is not valid.
+	 */
+	public final double getAnimatedVariableValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
+		double value = getRawVariableValue(animation.variable, partialTicks);
+		if(Double.isNaN(value)){
+			value = 0;
+		}
+		if(clock == null || !clock.isUseful){
+			return clampAndScale(value, animation, offset);
+		}else{
+			return clampAndScale(clock.getFactoredState(this, value), animation, offset);
+		}
+	}
+	
+	/**
+	 *  Helper method to clamp and scale the passed-in variable value based on the passed-in animation, 
+	 *  returning it in the proper form.
+	 */
+	private static double clampAndScale(double value, JSONAnimationDefinition animation, double offset){
+		if(animation.axis != null){
+			value = animation.axis.length()*(animation.absolute ? Math.abs(value) : value) + animation.offset + offset;
+			if(animation.clampMin != 0 && value < animation.clampMin){
+				value = animation.clampMin;
+			}else if(animation.clampMax != 0 && value > animation.clampMax){
+				value = animation.clampMax;
+			}
+		}
+		return animation.absolute ? Math.abs(value) : value;
+	}
+	
+	/**
+	 *  Helper method to get the index of the passed-in variable.  Indexes are defined by
+	 *  variable names ending in _xx, where xx is a number.  The defined number is assumed
+	 *  to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
+	 *  define a number, then -1 is returned.
+	 */
+	public static int getVariableNumber(String variable){
+		if(variable.matches("^.*_[0-9]+$")){
+			return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
+		}else{
+			return -1;
+		}
+	}
     
     /**
 	 *  Gets the renderer for this entity.  No actual rendering should be done in this method, 
@@ -357,12 +447,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  renderer in this method and pass it back as the return.
 	 */
 	public abstract <RendererInstance extends ARenderEntity<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> RendererInstance getRenderer();
-	
-	 /**
-	 *  Returns the animator for this entity. Unlike the renderer, animator is used on both
-	 *  the client and the server, so all methods inside here need to be server-safe.
-	 */
-	public abstract <AnimatorInstance extends AAnimationsBase<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> AnimatorInstance getAnimator();
     
     @Override
     public void updateSounds(){
@@ -383,7 +467,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
 								DurationDelayClock clock = soundActiveClocks.get(soundDef).get(animation);
-								double variableValue = animation.offset + getAnimator().getAnimatedVariableValue(this, animation, 0, clock, 0);
+								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, clock, 0);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -395,7 +479,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
+								double variableValue = getAnimatedVariableValue(animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
 								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -404,7 +488,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
+								double variableValue = getAnimatedVariableValue(animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
 								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -490,7 +574,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							case TRANSLATION :{
 								if(!inhibitAnimations){
 									definedVolume = true;
-									sound.volume += Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
+									sound.volume += Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
 								}
 								break;
 							}
@@ -502,7 +586,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 									animation.axis.x = 0;
 									double parabolaParamH = animation.axis.z;
 									animation.axis.z = 0;
-									double parabolaValue = Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0);
+									double parabolaValue = Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0);
 									sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
 									
 									animation.axis.x = parabolaParamA;
@@ -512,7 +596,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case INHIBITOR :{
 								if(!inhibitAnimations){
-									double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
+									double variableValue = getAnimatedVariableValue(animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
 									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 										inhibitAnimations = true;
 									}
@@ -521,7 +605,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case ACTIVATOR :{
 								if(inhibitAnimations){
-									double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
+									double variableValue = getAnimatedVariableValue(animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
 									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 										inhibitAnimations = false;
 									}
@@ -559,7 +643,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						switch(animation.animationType){
 							case TRANSLATION :{
 								if(!inhibitAnimations){
-									sound.pitch += Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
+									sound.pitch += Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
 								}
 								break;
 							}
@@ -570,7 +654,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 									animation.axis.x = 0;
 									double parabolaParamH = animation.axis.z;
 									animation.axis.z = 0;
-									double parabolaValue = Math.signum(animation.axis.y)*getAnimator().getAnimatedVariableValue(this, animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0);
+									double parabolaValue = Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0);
 									sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
 									
 									animation.axis.x = parabolaParamA;
@@ -580,7 +664,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case INHIBITOR :{
 								if(!inhibitAnimations){
-									double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
+									double variableValue = getAnimatedVariableValue(animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
 									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 										inhibitAnimations = true;
 									}
@@ -589,7 +673,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case ACTIVATOR :{
 								if(inhibitAnimations){
-									double variableValue = getAnimator().getAnimatedVariableValue(this, animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
+									double variableValue = getAnimatedVariableValue(animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
 									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 										inhibitAnimations = false;
 									}

@@ -365,6 +365,9 @@ public final class LegacyCompatSystem{
 			if(definition.engine.idleRPM == 0){
 				definition.engine.idleRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
 			}
+			if(definition.engine.maxSafeRPM == 0){
+				definition.engine.maxSafeRPM = definition.engine.maxRPM < 15000 ? definition.engine.maxRPM - (definition.engine.maxRPM - 2500)/2 : (int) (definition.engine.maxRPM/1.1);
+			}
 			
 			//If we don't have matching up-shift and down-shift numbers, we are an engine that came before multiple reverse gears.
 			if(definition.engine.upShiftRPM != null){

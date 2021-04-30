@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -249,8 +248,8 @@ public class PartEngine extends APart{
 						hours += 0.001*getTotalWearFactor();
 						
 						//Add extra hours if we are running the engine too fast.
-						if(rpm > getSafeRPM(definition.engine)){
-							hours += (rpm - getSafeRPM(definition.engine))/getSafeRPM(definition.engine)*getTotalWearFactor();
+						if(rpm > definition.engine.maxSafeRPM){
+							hours += (rpm - definition.engine.maxSafeRPM)/definition.engine.maxSafeRPM*getTotalWearFactor();
 						}
 					}
 					
@@ -297,7 +296,7 @@ public class PartEngine extends APart{
 						
 						//If the engine has high hours, give a chance for a backfire.
 						if(hours > 100 && !world.isClient()){
-							if(Math.random() < hours/1000*(getSafeRPM(definition.engine)/(rpm+getSafeRPM(definition.engine)/2))){
+							if(Math.random() < hours/1000*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/2))){
 								backfireEngine();
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 							}
@@ -323,7 +322,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : getSafeRPM(definition.engine)*0.5F*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM*0.5F*(1.0F + vehicleOn.throttle/100F))){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -339,7 +338,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears) : getSafeRPM(definition.engine)*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM*0.25*(1.0F + vehicleOn.throttle/100F))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -480,7 +479,7 @@ public class PartEngine extends APart{
 					if(state.running){
 						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM*1.25 - hours*10) + definition.engine.idleRPM*1.25;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(rpm > getSafeRPM(definition.engine) && definition.engine.jetPowerFactor == 0){
+						if(rpm > definition.engine.maxSafeRPM && definition.engine.jetPowerFactor == 0){
 							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
 						}
 					}else if(!state.esOn && !state.hsOn){
@@ -556,6 +555,68 @@ public class PartEngine extends APart{
 		}
 	}
 	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("engine_isautomatic"): return definition.engine.isAutomatic ? 1 : 0;	
+			case("engine_rotation"): return getEngineRotation(partialTicks);
+			case("engine_sin"): return Math.sin(Math.toRadians(getEngineRotation(partialTicks)));
+			case("engine_cos"): return Math.cos(Math.toRadians(getEngineRotation(partialTicks)));
+			case("engine_driveshaft_rotation"): return getDriveshaftRotation(partialTicks);
+			case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks)));
+			case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks)));
+			case("engine_rpm"): return definition.engine.maxRPM;
+			case("engine_rpm_safe"): return definition.engine.maxSafeRPM;
+			case("engine_rpm_max"): return definition.engine.maxRPM;
+			case("engine_rpm_percent"): return rpm/definition.engine.maxRPM;
+			case("engine_rpm_percent_safe"): return rpm/definition.engine.maxSafeRPM;
+			case("engine_fuel_flow"): return fuelFlow*20D*60D/1000D;
+			case("engine_temp"): return temp;
+			case("engine_pressure"): return pressure;
+			case("engine_gear"): return currentGear;
+			case("engine_gearshift"): return getGearshiftRotation();
+			case("engine_gearshift_hvertical"): return getGearshiftPosition_Vertical();
+			case("engine_gearshift_hhorizontal"): return getGearshiftPosition_Horizontal();
+			case("engine_clutch_upshift"): return upshiftCountdown > 0 ? 1 : 0;
+			case("engine_clutch_downshift"): return downshiftCountdown > 0 ? 1 : 0;
+			case("engine_badshift"): return badShift ? 1 : 0;
+			case("engine_magneto"): return state.magnetoOn ? 1 : 0;
+			case("engine_starter"): return state.esOn || state.hsOn ? 1 : 0;
+			case("engine_running"): return state.running ? 1 : 0;
+			case("engine_powered"): return state.running || internalFuel > 0 ? 1 : 0;
+			case("engine_backfired"): return backfired ? 1 : 0;
+			case("engine_jumper_cable"): return linkedEngine != null ? 1 : 0;
+			case("engine_hours"): return hours;
+			case("engine_oilleak"): return oilLeak ? 1 : 0;
+			case("engine_fuelleak"): return fuelLeak ? 1 : 0;
+		}
+		if(variable.startsWith("engine_piston_")){
+			if(state.running){
+				String pistonVariable = variable.substring("engine_piston_".length());
+				int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+				pistonVariable.substring(pistonVariable.indexOf("_"));
+				int totalPistons = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+				long engineCycleTime = (long) (2D*(1D/(rpm/60D/1000D)));
+				
+				if(engineCycleTime != 0){
+					long currentEngineTime = (long) ((ticksExisted + partialTicks)*50D);
+					long engineTimeInCycle = currentEngineTime%engineCycleTime;
+					
+					long pistonCycleTime = totalPistons > 1 ? engineCycleTime/totalPistons : engineCycleTime/2;
+					long camMin = (pistonNumber - 1)*pistonCycleTime;
+					long camMax = camMin + pistonCycleTime;
+					if(camMax > engineCycleTime){
+						return engineTimeInCycle < camMin && engineTimeInCycle > camMax ? 1 : 0;
+					}else{
+						return engineTimeInCycle > camMin && engineTimeInCycle < camMax ? 1 : 0;	
+					}
+				}
+			}
+			return 0;
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
 	
 	
 	//--------------------START OF ENGINE STATE CHANGE METHODS--------------------
@@ -778,11 +839,6 @@ public class PartEngine extends APart{
 	
 	
 	//--------------------START OF ENGINE PROPERTY METHODS--------------------
-	
-	public static int getSafeRPM(JSONPartEngine engineDef){
-		return engineDef.maxSafeRPM != 0 ? engineDef.maxSafeRPM : (engineDef.maxRPM < 15000 ? engineDef.maxRPM - (engineDef.maxRPM - 2500)/2 : (int) (engineDef.maxRPM/1.1));
-	}
-	
 	public float getTotalFuelConsumption(){
 		return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
 	}
@@ -865,7 +921,7 @@ public class PartEngine extends APart{
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
-			double safeRPMFactor = rpm/getSafeRPM(definition.engine);
+			double safeRPMFactor = rpm/definition.engine.maxSafeRPM;
 			double coreContribution = Math.max(10*airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
 			
 			//The fan portion is calculated similarly to how propellers are calculated.

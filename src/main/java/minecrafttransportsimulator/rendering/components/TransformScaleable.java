@@ -23,7 +23,7 @@ public class TransformScaleable<AnimationEntity extends AEntityC_Definable<?>> e
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		double scaling = entity.getAnimator().getAnimatedVariableValue(entity, definition, offset, getClock(entity), partialTicks);
+		double scaling = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
 		scalingValue.setTo(scalingAxis).multiply(scaling);
 		if(scalingAxis.x == 0){
 			scalingValue.x = 1.0;

@@ -17,7 +17,6 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.instances.AnimationsPole;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -30,7 +29,6 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implements ITileEntityTickable{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	private static final AnimationsPole animator = new AnimationsPole();
 	private static RenderPole renderer;
 	
 	private float maxTotalLightLevel;
@@ -134,12 +132,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 			}
 		}
 		return drops;
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsPole getAnimator(){
-		return animator;
 	}
 	
 	@Override

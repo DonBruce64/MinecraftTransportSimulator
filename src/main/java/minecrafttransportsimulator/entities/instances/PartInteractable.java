@@ -147,6 +147,17 @@ public final class PartInteractable extends APart{
 		}
 	}
 	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("interactable_count"): return getInventoryCount();
+			case("interactable_percent"): return getInventoryPercent();
+			case("interactable_capacity"): return getInventoryCapacity();
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
 	public int getInventoryCount(){
 		int count = 0;
 		for(ItemStack stack : inventory){

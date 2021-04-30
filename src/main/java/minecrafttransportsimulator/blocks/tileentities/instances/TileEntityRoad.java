@@ -25,7 +25,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
-import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -57,7 +56,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public final List<Point3d> collidingBlockOffsets;
 	
 	public static final int MAX_COLLISION_DISTANCE = 32;
-	private static final AnimationsDecor animator = new AnimationsDecor();
 	private static RenderRoad renderer;
 	
 	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperNBT data){
@@ -262,12 +260,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return false;
 		}
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsDecor getAnimator(){
-		return animator;
 	}
 	
 	@Override

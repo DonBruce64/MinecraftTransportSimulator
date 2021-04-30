@@ -7,6 +7,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
@@ -59,9 +60,12 @@ public final class RenderInstrument{
 					GL11.glScalef(component.scale, component.scale, component.scale);
 				}
 				if(component.textObject != null){
-					int variablePartNumber = AnimationsVehicle.getPartNumber(component.textObject.fieldName);
+					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.fieldName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
-					double textNumeric = vehicle.getAnimator().getRawVariableValue(vehicle, addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
+					double textNumeric = vehicle.getRawVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
+					if(Double.isNaN(textNumeric)){
+						textNumeric = 0;
+					}
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn){
 						InterfaceRender.setLightingState(false);
@@ -88,7 +92,7 @@ public final class RenderInstrument{
 							//We also need to set the partNumber to 1 if we have a part number of 0 and we're
 							//doing a part-specific animation.
 							//Skip adding a suffix if one already exists.
-							int variablePartNumber = AnimationsVehicle.getPartNumber(animation.variable);
+							int variablePartNumber = AEntityC_Definable.getVariableNumber(animation.variable);
 							final boolean addSuffix = variablePartNumber == -1 && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
 							if(partNumber == 0 && addSuffix){
 								partNumber = 1;
@@ -97,7 +101,7 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double variableValue = vehicle.getAnimator().getAnimatedVariableValue(vehicle, animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							double variableValue = vehicle.getAnimatedVariableValue(animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}

@@ -62,9 +62,9 @@ public class PartPropeller extends APart{
 					--currentPitch;
 				}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
 					++currentPitch;
-				}else if(connectedEngine.rpm < PartEngine.getSafeRPM(connectedEngine.definition.engine)*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
+				}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
 					--currentPitch;
-				}else if(connectedEngine.rpm > PartEngine.getSafeRPM(connectedEngine.definition.engine)*0.85 && currentPitch < definition.propeller.pitch){
+				}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
 					++currentPitch;
 				}
 			}
@@ -124,6 +124,18 @@ public class PartPropeller extends APart{
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(currentPitch / (definition.propeller.diameter*0.75D*Math.PI)));
+			case("propeller_pitch_in"): return currentPitch;
+			case("propeller_pitch_percent"): return 1D*(currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
+			case("propeller_rotation"): return getRenderingRotation(partialTicks, true).z;
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
 	}
 	
 	@Override

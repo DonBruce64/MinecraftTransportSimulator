@@ -17,7 +17,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
-import minecrafttransportsimulator.rendering.instances.AnimationsPart;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -31,7 +30,6 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
  */
 public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	private static final Point3d ZERO_POINT = new Point3d();
-	private static final AnimationsPart animator = new AnimationsPart();
 	private static RenderPart renderer;
 	
 	//JSON properties.
@@ -202,7 +200,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
 							Point3d appliedTranslation = animation.axis.copy().normalize().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
@@ -211,7 +209,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
 							Point3d appliedRotation = animation.axis.copy().normalize().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
@@ -231,7 +229,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
 							//Instead, we save it and use it later.
-							scale *= animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							scale *= getAnimatedVariableValue(animation, 0, clock, 0);
 							//Update bounding box, as scale changes width/height.
 							boundingBox.widthRadius = getWidth()/2D;
 							boundingBox.heightRadius = getHeight()/2D;
@@ -241,7 +239,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
 							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
 								disablePart = true;
 							}
@@ -250,7 +248,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -259,7 +257,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							double variableValue = animator.getAnimatedVariableValue(this, animation, 0, clock, 0);
+							double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = false;
 							}
@@ -384,9 +382,42 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsPart getAnimator(){
-		return animator;
+	public double getRawVariableValue(String variable, float partialTicks){
+		//If the variable is prefixed with "parent_", then we need to get our parent's value.
+		if(variable.startsWith("parent_")){
+			return parentPart.getRawVariableValue(variable.substring("parent_".length()), partialTicks);
+		}else if(definition.parts != null){
+			//Check sub-parts for the part with the specified index.
+			int partNumber = getVariableNumber(variable);
+			if(partNumber != -1){
+				return AEntityE_Multipart.getSpecificPartAnimation(this, variable, partNumber, partialTicks);
+			}
+		}
+		
+		//Check for generic part variables.
+		switch(variable){
+			case("part_present"): return 1;
+		}
+		
+		//No variables, check super variables before doing generic forwarding.
+		//We need this here for position-specific values, as some of the
+		//super variables care about position, so we can't forward those.
+		double value = super.getRawVariableValue(variable, partialTicks);
+		if(!Double.isNaN(value)){
+			return value;
+		}
+		
+		//We didn't find any part-specific or generic animations.
+		//We could, however, be wanting the animations of our parent part, but didn't specify a _parent prefix.
+		//If we have a parent part, get it, and try this loop again.
+		if(parentPart != null){
+			return parentPart.getRawVariableValue(variable, partialTicks);
+		}
+
+		//If we are down here, we must have not found a part variable, and don't have a parent part to do default forwarding.
+		//This means we might be requesting a variable on the entity this part is placed on.
+		//Try to get the parent variable, and return whatever we get, NaN or otherwise.
+		return entityOn.getRawVariableValue(variable, partialTicks);
 	}
 	
 	@Override

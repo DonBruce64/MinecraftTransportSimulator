@@ -7,7 +7,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.instances.AnimationsDecor;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
 /**Decor tile entity.  Contains the definition so we know how
@@ -19,7 +18,6 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	
-	private static final AnimationsDecor animator = new AnimationsDecor();
 	private static RenderDecor renderer;
 	
 	private boolean converted;
@@ -48,12 +46,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 		}else{
 			return false;
 		}
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsDecor getAnimator(){
-		return animator;
 	}
 	
 	@Override

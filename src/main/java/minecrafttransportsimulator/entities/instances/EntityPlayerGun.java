@@ -18,7 +18,6 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.instances.AnimationsPlayerGun;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
@@ -41,7 +40,6 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
 	
-	private static final AnimationsPlayerGun animator = new AnimationsPlayerGun();
 	private static RenderPlayerGun renderer;
 	
 	public EntityPlayerGun(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
@@ -256,12 +254,6 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			removePart(activeGun, null);
 			activeGun = null;
 		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsPlayerGun getAnimator(){
-		return animator;
 	}
 	
 	@Override

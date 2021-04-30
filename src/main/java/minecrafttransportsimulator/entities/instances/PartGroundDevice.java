@@ -147,6 +147,20 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("ground_rotation"): return getRenderingRotation(partialTicks, true).x;
+			case("ground_onground"): return vehicleOn != null && vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this) ? 1 : 0;
+			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
+			case("ground_isflat"): return isFlat ? 1 : 0;
+			case("ground_contacted"): return contactThisTick ? 1 : 0;
+			case("ground_slipping"): return skipAngularCalcs ? 1 : 0;
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
+	@Override
 	public float getWidth(){
 		return (float) (definition.ground.width*scale);
 	}

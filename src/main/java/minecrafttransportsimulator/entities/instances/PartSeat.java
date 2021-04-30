@@ -4,6 +4,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -183,6 +184,50 @@ public final class PartSeat extends APart{
 		if(rider != null){
 			entityOn.removeRider(rider, null);
 		}
+	}
+	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		double value = super.getRawVariableValue(variable, partialTicks);
+		if(!Double.isNaN(value)){
+			return value;
+		}
+		
+		WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
+		switch(variable){
+			case("seat_occupied"): return riderForSeat != null ? 1 : 0;
+			case("seat_occupied_client"): return InterfaceClient.getClientPlayer().equals(riderForSeat) ? 1 : 0;
+			case("seat_rider_yaw"): {
+				if(riderForSeat != null){
+					double riderYaw = riderForSeat.getHeadYaw() - entityOn.angles.y;
+					while(riderYaw < -180) riderYaw += 360;
+					while(riderYaw > 180) riderYaw -= 360;
+					return riderYaw;
+				}else{
+					return 0;
+				}
+			}
+			case("seat_rider_pitch"): {
+				if(riderForSeat != null) {
+					double pitch = entityOn.angles.x;
+	            	double roll = entityOn.angles.z;
+	            	double riderYaw = riderForSeat.getHeadYaw() - entityOn.angles.y;
+	            	while(pitch > 180){pitch -= 360;}
+	    			while(pitch < -180){pitch += 360;}
+	    			while(roll > 180){roll -= 360;}
+	    			while(roll < -180){roll += 360;}
+
+	            	double rollRollComponent = -Math.sin(Math.toRadians(riderYaw))*roll;
+	            	double pitchRollComponent = Math.cos(Math.toRadians(riderYaw))*pitch;
+	            	return riderForSeat.getPitch() - (rollRollComponent + pitchRollComponent);
+            	}
+				else {
+					return 0;
+				}
+			}
+		}
+		
+		return Double.NaN;
 	}
 	
 	@Override

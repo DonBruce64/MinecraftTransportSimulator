@@ -112,6 +112,17 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	}
 	
 	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("fuelpump_active"): return connectedVehicle != null ? 1 : 0;	
+			case("fuelpump_stored"): return getTank().getFluidLevel();
+			case("fuelpump_dispensed"): return getTank().getAmountDispensed();
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
+	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
 		WrapperNBT tankData = new WrapperNBT();

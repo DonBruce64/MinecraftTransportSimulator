@@ -808,6 +808,71 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		boundingBox.depthRadius = boundingBox.widthRadius;
 	}
 	
+	/**
+	 * Helper method to return the value of an animation for a specific part, as
+	 * determined by the index of that part.
+	 */
+	public static double getSpecificPartAnimation(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber, float partialTicks){
+		//Iterate through our parts to find the index of the pack def for the part we want.
+		String partType = variable.substring(0, variable.indexOf("_"));
+		JSONPartDefinition foundDef = null;
+		for(JSONPartDefinition partDef : entityAnimating.definition.parts){
+			//If this part is the one we want, get it or add to our index.
+			for(String defPartType : partDef.types){
+				if(partType.equals("part") || defPartType.startsWith(partType)){
+					if(partNumber == 0){
+						foundDef = partDef;
+					}else{
+						--partNumber;
+					}
+					break;
+				}
+			}
+			
+			//Also check additional parts if we have them.
+			if(foundDef == null && partDef.additionalParts != null){
+				for(JSONPartDefinition additionalDef : partDef.additionalParts){
+					for(String defPartType : additionalDef.types){
+						if(partType.equals("part") || defPartType.startsWith(partType)){
+							if(partNumber == 0){
+								foundDef = additionalDef;
+							}else{
+								--partNumber;
+							}
+							break;
+						}
+					}
+					if(foundDef != null){
+						break;
+					}
+				}
+			}
+			
+			//If we found our part, try to get it.
+			if(foundDef != null){
+				//Get the part at this location.  If it's of the same type as what we need, use it for animation.
+				//If it's not, or it doesn't exist, return 0 as it hasn't been placed yet.
+				APart foundPart;
+				if(entityAnimating instanceof APart){
+					APart part = (APart) entityAnimating;
+					foundPart = part.entityOn.getPartAtLocation(part.getPackForSubPart(foundDef).pos);
+				}else{
+					AEntityE_Multipart<?> provider = (AEntityE_Multipart<?>) entityAnimating;
+					foundPart = provider.getPartAtLocation(foundDef.pos);
+				}
+				if(foundPart != null){
+					return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+				}else{
+					return 0;
+				}
+			}
+		}
+		
+		//No valid sub-part definitions found.  This is an error, but not one we should crash for.  Return 0.
+		return 0;
+	}
+		
+	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);

@@ -15,7 +15,6 @@ import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartGunBulletHit;
-import minecrafttransportsimulator.rendering.instances.AnimationsBullet;
 import minecrafttransportsimulator.rendering.instances.RenderBullet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -42,7 +41,6 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 	private WrapperEntity externalEntityTargeted;
 	private PartEngine engineTargeted;
 	
-	private static final AnimationsBullet animator = new AnimationsBullet();
 	private static RenderBullet renderer;
 	
     public EntityBullet(Point3d position, Point3d motion, PartGun gun){
@@ -314,12 +312,6 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 	
 	private double getPitch(){
 		return -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public AnimationsBullet getAnimator(){
-		return animator;
 	}
 	
 	@Override

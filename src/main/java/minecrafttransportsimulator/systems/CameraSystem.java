@@ -138,7 +138,7 @@ public class CameraSystem{
 					if(camera.animations != null){
 						boolean inhibitAnimations = false;
         				for(JSONAnimationDefinition animation : camera.animations){
-        					double variableValue = cameraProvider.getAnimator().getAnimatedVariableValue(cameraProvider, animation, 0, null, partialTicks);
+        					double variableValue = cameraProvider.getAnimatedVariableValue(animation, 0, null, partialTicks);
         					switch(animation.animationType){
 	        					case TRANSLATION :{
             						if(!inhibitAnimations && variableValue != 0){
@@ -283,7 +283,7 @@ public class CameraSystem{
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-					double value = entity.getAnimator().getAnimatedVariableValue(entity, animation, 0, null, partialTicks);
+					double value = entity.getAnimatedVariableValue(animation, 0, null, partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;
 					}
