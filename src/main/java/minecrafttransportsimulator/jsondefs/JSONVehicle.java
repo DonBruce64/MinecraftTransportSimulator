@@ -41,6 +41,9 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("Make this true to allow your plane to come equipped with autopilot. Perhaps not the best thing to have on WWII fighters, but right at home on jet airliners. No, this won't work on cars.  This is MTS, not TMS (Tesla Motors Simulator).")
     	public boolean hasAutopilot;
     	
+    	@JSONDescription("If set, this vehicle will be able to selecte and connect to beacons for directional wayfinding.")
+    	public boolean hasRadioNav;
+    	
     	@JSONDescription("Does the plane have flaps?  If so, set this to true.  Note that many older airplanes (pre-1950) were not equipped with flaps so just because you don't have any on your model does not mean it will fail to function.")
     	public boolean hasFlaps;
     	

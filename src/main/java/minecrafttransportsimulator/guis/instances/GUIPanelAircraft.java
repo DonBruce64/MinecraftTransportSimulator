@@ -289,21 +289,23 @@ public class GUIPanelAircraft extends AGUIPanel{
 			++variableNumber;
 		}
 		
-		//Add beacon text box.  This is stacked below the custom selectors.
-		beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
-			@Override
-			public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
-				super.handleKeyTyped(typedChar, typedCode, control);
-				//Update the vehicle beacon state.
-				InterfacePacket.sendToServer(new PacketVehicleBeaconChange(vehicle, getText()));
-			}
-		};
-		addTextBox(beaconBox);
-		
-		//Add beacon text box label.
-		GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
-		beaconLabel.setBox(beaconBox);
-		labels.add(beaconLabel);
+		if(vehicle.definition.motorized.hasRadioNav){
+			//Add beacon text box.  This is stacked below the custom selectors.
+			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
+				@Override
+				public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
+					super.handleKeyTyped(typedChar, typedCode, control);
+					//Update the vehicle beacon state.
+					InterfacePacket.sendToServer(new PacketVehicleBeaconChange(vehicle, getText()));
+				}
+			};
+			addTextBox(beaconBox);
+			
+			//Add beacon text box label.
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			beaconLabel.setBox(beaconBox);
+			labels.add(beaconLabel);
+		}
 		
 		//If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle
 		if(vehicle.definition.motorized.gearSequenceDuration != 0 && !trailerSwitchDefs.isEmpty()){
@@ -437,7 +439,9 @@ public class GUIPanelAircraft extends AGUIPanel{
 		}
 		
 		//Set the beaconBox text color depending on if we have an active beacon.
-		beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
+		if(beaconBox != null){
+			beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
+		}
 		
 		//Iterate through custom selectors and set their states.
 		for(GUIComponentSelector customSelector : customSelectors){

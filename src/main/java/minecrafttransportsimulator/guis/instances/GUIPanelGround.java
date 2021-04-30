@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -12,7 +13,9 @@ import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -20,6 +23,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnecti
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
 
@@ -57,6 +61,7 @@ public class GUIPanelGround extends AGUIPanel{
 	private GUIComponentSelector reverseSelector;
 	private GUIComponentSelector cruiseControlSelector;
 	private GUIComponentSelector gearSelector;
+	private GUIComponentTextBox beaconBox;
 	private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
 	private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
@@ -128,6 +133,24 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onReleased(){}
 			};
 			addSelector(emergencySelector);
+		}
+		
+		if(vehicle.definition.motorized.hasRadioNav){
+			//Add beacon text box.  This is at the bottom of the light column where the siren used to be.
+			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
+				@Override
+				public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
+					super.handleKeyTyped(typedChar, typedCode, control);
+					//Update the vehicle beacon state.
+					InterfacePacket.sendToServer(new PacketVehicleBeaconChange(vehicle, getText()));
+				}
+			};
+			addTextBox(beaconBox);
+			
+			//Add beacon text box label.
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			beaconLabel.setBox(beaconBox);
+			labels.add(beaconLabel);
 		}
 	}
 	
@@ -366,6 +389,11 @@ public class GUIPanelGround extends AGUIPanel{
 					}
 				}
 			}
+		}
+		
+		//Set the beaconBox text color depending on if we have an active beacon.
+		if(beaconBox != null){
+			beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
 		}
 		
 		//Iterate through custom selectors and set their states.
