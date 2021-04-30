@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -119,12 +118,12 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     public void readFromNBT(NBTTagCompound tag){
 		super.readFromNBT(tag);
 		if(tileEntity == null && tag.hasKey("teid")){
-			//Restore the TE from saved state.
-			IBlockTileEntity<?> teBlock = BuilderBlock.tileEntityMap.get(tag.getString("teid"));
-			if(teBlock != null){
-				tileEntity = (TileEntityType) teBlock.createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
-			}else{
-				this.invalidate();
+			try{
+				tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
+			}catch(Exception e){
+				InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+				InterfaceCore.logError(e.getMessage());
+				invalidate();
 			}
 		}
     }
