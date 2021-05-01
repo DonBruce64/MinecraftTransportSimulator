@@ -1,11 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.EntityConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -140,31 +139,25 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		//This could lock up a world if not detected!
 		int combinedMass = super.getCurrentMass();
 		if(!towingConnections.isEmpty()){
-			Iterator<EntityConnection> iterator = towingConnections.iterator();
-			while(iterator.hasNext()){
-				EntityConnection connection = iterator.next();
+			EntityVehicleF_Physics otherVehicle = null;
+			for(TrailerConnection connection : towingConnections){
 				//Only check once per base entity.
-				if(connection.otherBaseEntity instanceof EntityVehicleF_Physics){
-					if(towedVehiclesCheckedForWeights.contains(connection.otherBaseEntity)){
+				if(connection.hookupBaseEntity instanceof EntityVehicleF_Physics){
+					otherVehicle = (EntityVehicleF_Physics) connection.hookupBaseEntity;
+					if(towedVehiclesCheckedForWeights.contains(otherVehicle)){
 						InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
-						connection.otherEntity.towedByConnection = null;
-						iterator.remove();
+						break;
 					}else{
-						towedVehiclesCheckedForWeights.add((EntityVehicleF_Physics) connection.otherBaseEntity);
-						combinedMass += ((EntityVehicleF_Physics) connection.otherBaseEntity).getCurrentMass();
-						//Check all parts, as they can be towing other vehicles.
-						for(APart part : parts){
-							if(!part.towingConnections.isEmpty()){
-								for(EntityConnection partConnection : part.towingConnections){
-									if(partConnection.otherBaseEntity instanceof EntityVehicleF_Physics){
-										combinedMass += ((EntityVehicleF_Physics) partConnection.otherBaseEntity).getCurrentMass();
-									}
-								}
-							}
-						}
+						towedVehiclesCheckedForWeights.add(otherVehicle);
+						combinedMass += otherVehicle.getCurrentMass();
+						otherVehicle = null;
 						towedVehiclesCheckedForWeights.clear();
 					}
 				}
+			}
+			//If we still have a vehicle reference, we didn't exit cleanly and need to disconnect it.
+			if(otherVehicle != null){
+				disconnectTrailer(otherVehicle.towedByConnection);
 			}
 		}
 		return combinedMass;
@@ -396,18 +389,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		}else{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
-			if(towedByConnection.otherConnection.mounted){
-				Point3d hitchRotatedOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.angles).add(towedByConnection.otherEntity.position);
-				Point3d hookupRotatedOffset = towedByConnection.getOffset().rotateFine(angles).add(position);
+			if(towedByConnection.hitchConnection.mounted){
+				Point3d hitchRotatedOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchEntity.position);
+				Point3d hookupRotatedOffset = towedByConnection.getHookupOffset().rotateFine(angles).add(position);
 				motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
-				rotation.setTo(towedByConnection.otherEntity.angles).subtract(angles);
+				//TODO whatever maths we apply to the part rendering we need to apply here.
+				rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 				//Yaw is applied based on the current and next position of the truck's hookup.
 				//Motion is applied after yaw corrections to ensure the trailer follows the truck.
 				//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-				Point3d tractorHitchPrevOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.prevAngles).add(towedByConnection.otherEntity.prevPosition).subtract(prevPosition);
-				Point3d tractorHitchCurrentOffset = towedByConnection.getOtherOffset().rotateFine(towedByConnection.otherEntity.angles).add(towedByConnection.otherEntity.position).subtract(position);
+				Point3d tractorHitchPrevOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.prevAngles).add(towedByConnection.hitchEntity.prevPosition).subtract(prevPosition);
+				Point3d tractorHitchCurrentOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchEntity.position).subtract(position);
 				Point3d tractorHitchOffset = tractorHitchCurrentOffset.copy();
 				
 				//Calculate how much yaw we need to apply to rotate the trailer.
@@ -418,8 +412,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				tractorHitchPrevOffset.normalize();
 				tractorHitchCurrentOffset.normalize();
 				double rotationDelta;
-				if(towedByConnection.otherConnection.restricted){
-					rotationDelta = towedByConnection.otherEntity.angles.y - angles.y;
+				if(towedByConnection.hitchConnection.restricted){
+					rotationDelta = towedByConnection.hitchEntity.angles.y - angles.y;
 				}else{
 					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffset.dotProduct(tractorHitchCurrentOffset)));
 					rotationDelta *= Math.signum(tractorHitchPrevOffset.crossProduct(tractorHitchCurrentOffset).y);
@@ -431,10 +425,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				if(!Double.isNaN(rotationDelta)){
 					rotation.y = rotationDelta;
 					angles.y += rotationDelta;
-					trailerHookupOffset = towedByConnection.getOffset().rotateFine(angles);
+					trailerHookupOffset = towedByConnection.getHookupOffset().rotateFine(angles);
 					angles.y -= rotationDelta;
 				}else{
-					trailerHookupOffset = towedByConnection.getOffset().rotateFine(angles);
+					trailerHookupOffset = towedByConnection.getHookupOffset().rotateFine(angles);
 				}
 				
 				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
@@ -624,13 +618,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("locked"): return locked ? 1 : 0;
 			case("door"): return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
 			case("hookup_connected"): return towedByConnection != null ? 1 : 0;
-			case("hookup_pitch"): return towedByConnection != null ? towedByConnection.otherEntity.angles.x - angles.x : 0;
-			case("hookup_yaw"): return towedByConnection != null ? towedByConnection.otherEntity.angles.y - angles.y : 0;
-			case("hookup_roll"): return towedByConnection != null ? towedByConnection.otherEntity.angles.z - angles.z : 0;
+			case("hookup_pitch"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.x - angles.x : 0;
+			case("hookup_yaw"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.y - angles.y : 0;
+			case("hookup_roll"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.z - angles.z : 0;
 			case("trailer_connected"): return !towingConnections.isEmpty() ? 1 : 0;
-			case("trailer_pitch"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().otherEntity.angles.x - angles.x : 0;
-			case("trailer_yaw"): return !towingConnections.isEmpty() ?  towingConnections.iterator().next().otherEntity.angles.y - angles.y : 0;
-			case("trailer_roll"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().otherEntity.angles.z - angles.z : 0;
+			case("trailer_pitch"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().hookupEntity.angles.x - angles.x : 0;
+			case("trailer_yaw"): return !towingConnections.isEmpty() ?  towingConnections.iterator().next().hookupEntity.angles.y - angles.y : 0;
+			case("trailer_roll"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().hookupEntity.angles.z - angles.z : 0;
 			case("fueling"): return beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.

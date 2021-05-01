@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -128,16 +128,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	@Override
 	public boolean needsChunkloading(){
-		return rearFollower != null || (towedByConnection != null && towedByConnection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.otherBaseEntity).rearFollower != null);
+		return rearFollower != null || (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).rearFollower != null);
 	}
 	
 	@Override
 	public boolean canCollideWith(AEntityB_Existing entityToCollide){
-		if(towedByConnection != null && entityToCollide.equals(towedByConnection.otherBaseEntity)){
+		if(towedByConnection != null && entityToCollide.equals(towedByConnection.hitchBaseEntity)){
 			return false;
 		}else if(!towingConnections.isEmpty()){
-			for(EntityConnection connection : towingConnections){
-				if(entityToCollide.equals(connection.otherBaseEntity)){
+			for(TrailerConnection connection : towingConnections){
+				if(entityToCollide.equals(connection.hookupBaseEntity)){
 					return false;
 				}
 			}
@@ -146,19 +146,17 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void connectTrailer(EntityConnection connection){
-		super.connectTrailer(connection);
-		if(connection.otherBaseEntity instanceof AEntityVehicleD_Moving){
-			((AEntityVehicleD_Moving) connection.otherBaseEntity).parkingBrakeOn = false;
-			((AEntityVehicleD_Moving) connection.otherBaseEntity).brake = 0;
-		}
+	public void connectAsTrailer(TrailerConnection connection){
+		super.connectAsTrailer(connection);
+		parkingBrakeOn = false;
+		brake = 0;
 	}
 	
 	@Override
-	public void disconnectTrailer(EntityConnection connection){
-		super.disconnectTrailer(connection);
-		if(connection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) connection.otherBaseEntity).definition.motorized.isTrailer){
-			((AEntityVehicleD_Moving) connection.otherBaseEntity).parkingBrakeOn = true;
+	public void disconnectAsTrailer(){
+		super.disconnectAsTrailer();
+		if(definition.motorized.isTrailer){
+			parkingBrakeOn = true;
 		}
 	}
 	
@@ -286,7 +284,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are slipping while turning, spawn block particles.
 				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is.
-				if(towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.otherBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.otherBaseEntity).slipping)){
+				if(towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).slipping)){
 					slipping = true;
 					for(byte i=0; i<4; ++i){
 						groundDeviceCollective.spawnSlippingParticles();
@@ -571,12 +569,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(correctCollidingMovement()){
 						return;
 					}
-					towedByConnection.otherBaseEntity.motion.add(motion).subtract(initalMotion);
+					towedByConnection.hitchBaseEntity.motion.add(motion).subtract(initalMotion);
 				}else if(correctCollidingMovement()){
 					return;
 				}
 				
-			}else if(towedByConnection == null || !towedByConnection.otherConnection.mounted){
+			}else if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){

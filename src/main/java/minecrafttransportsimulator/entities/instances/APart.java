@@ -8,6 +8,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -176,6 +177,30 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	@Override
 	public boolean shouldSavePosition(){
 		return false;
+	}
+	
+	@Override
+	public void connectTrailer(TrailerConnection connection){
+		super.connectTrailer(connection);
+		entityOn.connectTrailer(connection);
+	}
+	
+	@Override
+	public void disconnectTrailer(TrailerConnection connection){
+		super.disconnectTrailer(connection);
+		entityOn.disconnectTrailer(connection);
+	}
+	
+	@Override
+	public void connectAsTrailer(TrailerConnection connection){
+		super.connectAsTrailer(connection);
+		entityOn.connectAsTrailer(connection);
+	}
+	
+	@Override
+	public void disconnectAsTrailer(){
+		super.disconnectAsTrailer();
+		entityOn.disconnectAsTrailer();
 	}
 	
 	/**

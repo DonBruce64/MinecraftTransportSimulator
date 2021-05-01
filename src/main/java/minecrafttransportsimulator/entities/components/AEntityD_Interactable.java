@@ -15,7 +15,7 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
@@ -99,10 +99,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	private boolean overrideTowingChecks;
 	
 	//Connection data.
-	public EntityConnection towedByConnection;
-	public final Set<EntityConnection> towingConnections = new HashSet<EntityConnection>();
-	private EntityConnection savedTowedByConnection;
-	private final Set<EntityConnection> savedTowingConnections = new HashSet<EntityConnection>();
+	public TrailerConnection towedByConnection;
+	public final Set<TrailerConnection> towingConnections = new HashSet<TrailerConnection>();
+	private TrailerConnection savedTowedByConnection;
+	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	
 	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -140,14 +140,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Load towing data.
 		WrapperNBT towData = data.getData("towedByConnection");
 		if(towData != null){
-			this.savedTowedByConnection = new EntityConnection(towData);
+			this.savedTowedByConnection = new TrailerConnection(towData);
 		}
 		
 		int towingConnectionCount = data.getInteger("towingConnectionCount");
 		for(int i=0; i<towingConnectionCount; ++i){
 			towData = data.getData("towingConnection" + i);
 			if(towData != null){
-				this.savedTowingConnections.add(new EntityConnection(towData));
+				this.savedTowingConnections.add(new TrailerConnection(towData));
 			}
 		}
 	}
@@ -155,7 +155,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	@Override
 	public boolean update(){
 		//Need to put the towing checks first, as we don't want to call super if they're false.
-		if((!isBeingTowed() || overrideTowingChecks) && super.update()){
+		if((towedByConnection == null || overrideTowingChecks) && super.update()){
 			//See if we need to link connections.
 			//We need to wait on this in case the entity didn't load at the same time.
 			//That being said, it may be the vehicle we are loading is in another chunk.
@@ -178,9 +178,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			if(!savedTowingConnections.isEmpty()){
 				if(ticksExisted%20 == 0){
 					if(ticksExisted <= 100){
-						Iterator<EntityConnection> iterator = savedTowingConnections.iterator();
+						Iterator<TrailerConnection> iterator = savedTowingConnections.iterator();
 						while(iterator.hasNext()){
-							EntityConnection savedTowingConnection = iterator.next();
+							TrailerConnection savedTowingConnection = iterator.next();
 							if(savedTowingConnection.setConnection(world)){
 								towingConnections.add(savedTowingConnection);
 								iterator.remove();
@@ -199,13 +199,13 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
 			//thing towing us could have done! 
 			if(towedByConnection != null){
-				if(!towedByConnection.otherEntity.isValid){
+				if(!towedByConnection.hitchEntity.isValid){
 					towedByConnection = null;
 				}
 			}
 			if(!towingConnections.isEmpty()){
 				//First functional expression here in the whole codebase, history in the making!
-				towingConnections.removeIf(connection -> !connection.otherEntity.isValid);
+				towingConnections.removeIf(connection -> !connection.hookupEntity.isValid);
 			}
 			
 			//Update collision boxes.
@@ -228,14 +228,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	/**
-	 * Called to check if this entity is being towed.  IF so, updates will be held until the towing entity
-	 * has updated.  At that point, they will be performed once {@link #updatePostMovement()} is called.
-	 */
-	public boolean isBeingTowed(){
-		return towedByConnection != null;
-	}
-	
-	/**
 	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
 	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
 	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
@@ -243,10 +235,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	public void updatePostMovement(){
 		//If we are towing entities, update them now.
 		if(!towingConnections.isEmpty()){
-			for(EntityConnection connection : towingConnections){
-				connection.otherBaseEntity.overrideTowingChecks = true;
-				connection.otherBaseEntity.update();
-				connection.otherBaseEntity.overrideTowingChecks = false;
+			for(TrailerConnection connection : towingConnections){
+				connection.hookupBaseEntity.overrideTowingChecks = true;
+				connection.hookupBaseEntity.update();
+				connection.hookupBaseEntity.overrideTowingChecks = false;
 			}
 		}
 	}
@@ -364,40 +356,37 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * using only that connection group.
 	 * 
 	 */
-	public EntityConnectionResult checkIfCanConnect(AEntityD_Interactable<?> otherEntity, int ourGroupIndex, int otherGroupIndex){
+	public EntityConnectionResult checkIfTrailerCanConnect(AEntityD_Interactable<?> hookupEntity, int hitchGroupIndex, int hookupGroupIndex){
 		//Init variables.
 		boolean matchingConnection = false;
 		boolean trailerInRange = false;
 		
 		//First make sure the entity is in-range.  This is done by checking if the entity is even remotely close enough.
-		double trailerDistance = position.distanceTo(otherEntity.position);
+		double trailerDistance = position.distanceTo(hookupEntity.position);
 		if(trailerDistance < 25){
 			//Check all connection groups on the other entity to see if we can connect to them.
 			//If we specified a index, skip all others.
-			if(definition.connectionGroups != null && !definition.connectionGroups.isEmpty() && otherEntity.definition.connectionGroups != null && !otherEntity.definition.connectionGroups.isEmpty()){
-				for(JSONConnectionGroup connectionGroup : definition.connectionGroups){
-					if(ourGroupIndex == -1 || definition.connectionGroups.indexOf(connectionGroup) == ourGroupIndex){
-						for(JSONConnectionGroup otherConnectionGroup : otherEntity.definition.connectionGroups){
-							if(otherGroupIndex == -1 || otherEntity.definition.connectionGroups.indexOf(otherConnectionGroup) == otherGroupIndex){
+			if(definition.connectionGroups != null && !definition.connectionGroups.isEmpty() && hookupEntity.definition.connectionGroups != null && !hookupEntity.definition.connectionGroups.isEmpty()){
+				for(JSONConnectionGroup hitchConnectionGroup : definition.connectionGroups){
+					if(!hitchConnectionGroup.hookup && (hitchGroupIndex == -1 || definition.connectionGroups.indexOf(hitchConnectionGroup) == hitchGroupIndex)){
+						for(JSONConnectionGroup hookupConnectionGroup : hookupEntity.definition.connectionGroups){
+							if(hookupConnectionGroup.hookup && (hookupGroupIndex == -1 || hookupEntity.definition.connectionGroups.indexOf(hookupConnectionGroup) == hookupGroupIndex)){
 								//We can potentially connect these two entities.  See if we actually can.
-								//Only check hitches to hookups, as since we are requesting to tow a trailer it needs a hookup and we need a hitch..
-								if(!connectionGroup.hookup && otherConnectionGroup.hookup){
-									for(JSONConnection firstConnection : connectionGroup.connections){
-										Point3d firstPos = firstConnection.pos.copy().rotateCoarse(angles).add(position);
-										double maxDistance = firstConnection.distance > 0 ? firstConnection.distance : 2;
-										for(JSONConnection secondConnection : otherConnectionGroup.connections){
-											Point3d secondPos = secondConnection.pos.copy().rotateCoarse(otherEntity.angles).add(otherEntity.position);
-											if(firstPos.distanceTo(secondPos) < maxDistance + 10){
-												boolean validType = firstConnection.type.equals(secondConnection.type);
-												boolean validDistance = firstPos.distanceTo(secondPos) < maxDistance;
-												if(validType && validDistance){
-													connectTrailer(new EntityConnection(this, definition.connectionGroups.indexOf(connectionGroup), connectionGroup.connections.indexOf(firstConnection), otherEntity, otherEntity.definition.connectionGroups.indexOf(otherConnectionGroup), otherConnectionGroup.connections.indexOf(secondConnection)));
-													return EntityConnectionResult.TRAILER_CONNECTED;
-												}else if(validType){
-													matchingConnection = true;
-												}else if(validDistance){
-													trailerInRange = true;
-												}
+								for(JSONConnection hitchConnection : hitchConnectionGroup.connections){
+									Point3d hitchPos = hitchConnection.pos.copy().rotateCoarse(angles).add(position);
+									double maxDistance = hitchConnection.distance > 0 ? hitchConnection.distance : 2;
+									for(JSONConnection hookupConnection : hookupConnectionGroup.connections){
+										Point3d hookupPos = hookupConnection.pos.copy().rotateCoarse(hookupEntity.angles).add(hookupEntity.position);
+										if(hitchPos.distanceTo(hookupPos) < maxDistance + 10){
+											boolean validType = hitchConnection.type.equals(hookupConnection.type);
+											boolean validDistance = hitchPos.distanceTo(hookupPos) < maxDistance;
+											if(validType && validDistance){
+												connectTrailer(new TrailerConnection(this, definition.connectionGroups.indexOf(hitchConnectionGroup), hitchConnectionGroup.connections.indexOf(hitchConnection), hookupEntity, hookupEntity.definition.connectionGroups.indexOf(hookupConnectionGroup), hookupConnectionGroup.connections.indexOf(hookupConnection)));
+												return EntityConnectionResult.TRAILER_CONNECTED;
+											}else if(validType){
+												matchingConnection = true;
+											}else if(validDistance){
+												trailerInRange = true;
 											}
 										}
 									}
@@ -421,44 +410,44 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	
 	/**
 	 * Method block for connecting a trailer to this entity.
-	 * The connection should contain this entity's information as the main,
-	 * and the trailer's information as the "other".
 	 */
-	public void connectTrailer(EntityConnection connection){
+	public void connectTrailer(TrailerConnection connection){
 		towingConnections.add(connection);
-		connection.otherEntity.towedByConnection = connection.getInverse();
-		connection.otherBaseEntity.updateAnglesToTowed();
-		
+		connection.hookupEntity.connectAsTrailer(connection);
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(this, connection, true));
+			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(connection, true));
 		}
 	}
 	
 	/**
-	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
+	 * Method block for disconnecting the trailer with the passed-in connection from this entity.
 	 */
-	protected void updateAnglesToTowed(){
-		//Need to set angles for mounted/restricted connections.
-		if(towedByConnection.otherConnection.mounted || towedByConnection.otherConnection.restricted){
-			angles.y = angles.y;
-			prevAngles.y = angles.y;
-			
-			//Also set trailer yaw.
-			for(EntityConnection connection : towingConnections){
-				connection.otherBaseEntity.updateAnglesToTowed();
-			}
+	public void disconnectTrailer(TrailerConnection connection){
+		towingConnections.removeIf(otherConnection -> otherConnection.hookupEntity.equals(connection.hookupEntity));
+		connection.hookupEntity.disconnectAsTrailer();
+		if(!world.isClient()){
+			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(connection, false));
 		}
 	}
 	
 	/**
-	 * Method block for disconnecting the passed-in trailer from this vehicle.
+	 * Method block for connecting this entity as a trailer to another entity.
+	 * Do NOT call this to actually connect the trailer.  Instead, call {@link #connectTrailer(TrailerConnection)}
+	 * on the towing entity to haul this trailer.  This method is purely for maintaining states.
 	 */
-	public void disconnectTrailer(EntityConnection connection){
-		towingConnections.removeIf(otherConnection -> otherConnection.otherEntity.equals(connection.otherEntity));
-		connection.otherEntity.towedByConnection = null;
-		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTrailerChange(this, connection, false));
-		}
+	public void connectAsTrailer(TrailerConnection connection){
+		towedByConnection = connection;
+		updateAnglesToTowed();
+	}
+	
+	/**
+	 * Method block for disconnecting this entity trailer.
+	 * Do NOT call this to actually connect the trailer.  Instead, call {@link #disconnectTrailer(TrailerConnection)}
+	 * on the towing entity to disconnect this trailer.  This method is purely for maintaining states.
+	 * No parameter for this block as there's only one hookup option.
+	 */
+	public void disconnectAsTrailer(){
+		towedByConnection = null;
 	}
 	
 	/**
@@ -474,6 +463,25 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		towedByConnection = null;
 	}
 	
+	/**
+	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
+	 */
+	protected void updateAnglesToTowed(){
+		//Need to set angles for mounted/restricted connections.
+		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
+			angles.y = towedByConnection.hitchEntity.angles.y;
+			if(towedByConnection.hitchConnection.mounted){
+				angles.add(towedByConnection.hitchConnection.rot);
+			}
+			prevAngles.y = angles.y;
+			
+			//Also set trailer yaw.
+			for(TrailerConnection trailerConnection : towingConnections){
+				trailerConnection.hookupBaseEntity.updateAnglesToTowed();
+			}
+		}
+	}
+	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
@@ -487,7 +495,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}
 		
 		int towingConnectionIndex = 0;
-		for(EntityConnection towingEntry : towingConnections){
+		for(TrailerConnection towingEntry : towingConnections){
 			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.getData());
 		}
 		data.setInteger("towingConnectionCount", towingConnectionIndex);

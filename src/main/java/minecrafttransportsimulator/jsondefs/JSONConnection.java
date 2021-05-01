@@ -15,6 +15,9 @@ public class JSONConnection{
 	@JSONDescription("The position of this connection on the vehicle.")
 	public Point3d pos;
 	
+	@JSONDescription("The rotation of this connection.  Required when using mounted connections.  Has no effect on other connections.")
+	public Point3d rot;
+	
 	@JSONDescription("If true, then connecting vehicles will be mounted to this point rather than dragged.  Useful for things like flat-bed trailers, where you want the vehicle to stay in one place.")
 	public boolean mounted;
 	

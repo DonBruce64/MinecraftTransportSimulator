@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -382,8 +382,8 @@ public class GUIPanelGround extends AGUIPanel{
 				trailerSelector.selectorState = switchDef.entityOn.towedByConnection != null ? 0 : 1;
 			}else{
 				trailerSelector.selectorState = 1;
-				for(EntityConnection connection : switchDef.entityOn.towingConnections){
-					if(connection.groupIndex == switchDef.connectionGroupIndex){
+				for(TrailerConnection connection : switchDef.entityOn.towingConnections){
+					if(connection.hitchEntity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == switchDef.connectionGroupIndex){
 						trailerSelector.selectorState = 0;
 						break;
 					}

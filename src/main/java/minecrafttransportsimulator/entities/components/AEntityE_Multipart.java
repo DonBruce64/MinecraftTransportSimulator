@@ -293,22 +293,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public boolean isBeingTowed(){
-		if(super.isBeingTowed()){
-			return true;
-		}else{
-			for(APart part : parts){
-				if(part.towedByConnection != null){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
-	@Override
 	public void updatePostMovement(){
-		super.updatePostMovement();
+		//Update parts prior to doing our post-movements.
+		//This is required for trailers, as they may attached to parts.
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -317,6 +304,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				removePart(part, iterator);
 			}
 		}
+		super.updatePostMovement();
 		
 		//Update all-box lists now that all parts are updated.
 		//If we don't do this, then the box size might get de-synced.

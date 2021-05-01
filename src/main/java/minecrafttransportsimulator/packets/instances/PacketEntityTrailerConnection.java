@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -31,8 +31,8 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			this.connect = entity.towedByConnection == null;
 		}else{
 			boolean foundConnection = false;
-			for(EntityConnection connection : entity.towingConnections){
-				if(connection.groupIndex == connectionGroupIndex){
+			for(TrailerConnection connection : entity.towingConnections){
+				if(entity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == connectionGroupIndex){
 					foundConnection = true;
 				}
 			}
@@ -62,8 +62,8 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			boolean trailerInRange = false;
 			if(fromTrailer){
 				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
-					if(testEntity instanceof AEntityD_Interactable && shouldConnect(entity, (AEntityD_Interactable<?>) testEntity)){
-						switch(((AEntityD_Interactable<?>) testEntity).checkIfCanConnect(entity, -1, connectionGroupIndex)){
+					if(testEntity instanceof AEntityD_Interactable && shouldConnect((AEntityD_Interactable<?>) testEntity, entity)){
+						switch(((AEntityD_Interactable<?>) testEntity).checkIfTrailerCanConnect(entity, -1, connectionGroupIndex)){
 							case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.connect")); return false;
 							case TRAILER_TOO_FAR : matchingConnection = true; break;
 							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
@@ -74,7 +74,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			}else{
 				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
 					if(testEntity instanceof AEntityD_Interactable  && shouldConnect(entity, (AEntityD_Interactable<?>) testEntity)){
-						switch(entity.checkIfCanConnect((AEntityD_Interactable<?>) testEntity, connectionGroupIndex, -1)){
+						switch(entity.checkIfTrailerCanConnect((AEntityD_Interactable<?>) testEntity, connectionGroupIndex, -1)){
 							case TRAILER_CONNECTED : player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.connect")); return false;
 							case TRAILER_TOO_FAR : matchingConnection = true; break;
 							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
@@ -96,28 +96,36 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			}
 		}else{
 			if(fromTrailer){
-				entity.towedByConnection.otherEntity.disconnectTrailer(entity.towedByConnection.getInverse());
+				entity.towedByConnection.hitchEntity.disconnectTrailer(entity.towedByConnection);
 			}else{
-				for(EntityConnection connection : entity.towingConnections){
-					if(connection.groupIndex == connectionGroupIndex){
+				for(TrailerConnection connection : entity.towingConnections){
+					if(entity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == connectionGroupIndex){
 						entity.disconnectTrailer(connection);
+						player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.disconnect"));
 						break;
 					}
 				}
 			}
-			player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.disconnect"));
 		}
 		return false;
 	}
 	
-	private static boolean shouldConnect(AEntityD_Interactable<?> entity1, AEntityD_Interactable<?> entity2){
-		if(entity1.equals(entity2)){
+	private static boolean shouldConnect(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
+		if(hookupEntity.towedByConnection != null){
+			return false; //Entity is already hooked up.
+		}else if(hookupEntity.equals(hitchEntity)){
 			return false; //Entity is the same.
-		}else if(entity1 instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) entity1).parts.contains(entity2)){
-			return false; //Entity2 is a part on entity1.
-		}else if(entity2 instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) entity2).parts.contains(entity1)){
-			return false; //Entity1 is a part on entity2.
+		}else if(hookupEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hookupEntity).parts.contains(hitchEntity)){
+			return false; //Hitch is a part on hookup.
+		}else if(hitchEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hitchEntity).parts.contains(hookupEntity)){
+			return false; //Hookup is a part on hitch.
 		}else{
+			//Check to make sure the hookupEntity isn't towing the hitchEntity.
+			for(TrailerConnection connection : hookupEntity.towingConnections){
+				if(connection.hookupEntity.equals(hitchEntity) || connection.hookupBaseEntity.equals(hitchEntity)){
+					return false;
+				}
+			}
 			return true;
 		} 
 	}

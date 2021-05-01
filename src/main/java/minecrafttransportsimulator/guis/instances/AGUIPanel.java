@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -68,9 +68,9 @@ public abstract class AGUIPanel extends AGUIBase{
 			}
 			
 			//Also check things we are towing, if we are set to do so.
-			for(EntityConnection connection : entity.towingConnections){
-				if(connection.otherEntity.definition.connectionGroups.get(connection.otherGroupIndex).canIntiateSubConnections){
-					setupTowingButtons(connection.otherBaseEntity);
+			for(TrailerConnection connection : entity.towingConnections){
+				if(connection.hookupConnectionGroup.canIntiateSubConnections){
+					setupTowingButtons(connection.hookupBaseEntity);
 				}
 			}
 		}

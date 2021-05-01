@@ -304,7 +304,7 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
-			Point3d activeHookup = vehicle.towedByConnection.getOffset();
+			Point3d activeHookup = vehicle.towedByConnection.getHookupOffset();
 			if(activeHookup.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 					side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);

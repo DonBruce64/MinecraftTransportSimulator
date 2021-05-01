@@ -8,7 +8,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.EntityConnection;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -30,7 +30,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
 	
 	//Connecter temp list for rendering all connectors in batches.
-	private static final List<EntityConnection> connections = new ArrayList<EntityConnection>();
+	private static final List<TrailerConnection> connections = new ArrayList<TrailerConnection>();
 	
 	//Connector data to prevent re-binding textures.
 	private static String lastBoundConnectorTexture;
@@ -215,13 +215,18 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			lastBoundConnectorTexture = "";
 			connections.clear();
 			if(interactable.towedByConnection != null){
-				connections.add(interactable.towedByConnection);
+				if(interactable.towedByConnection.hookupConnection.connectors != null){
+					for(JSONConnectionConnector connector : interactable.towedByConnection.hookupConnection.connectors){
+						GL11.glPushMatrix();
+						renderConnector(connector, interactable.definition.packID);
+						GL11.glPopMatrix();
+					}
+				}
 			}
-			connections.addAll(interactable.towingConnections);
 			
-			for(EntityConnection connection : connections){
-				if(connection.connection.connectors != null){
-					for(JSONConnectionConnector connector : connection.connection.connectors){
+			for(TrailerConnection connection : interactable.towingConnections){
+				if(connection.hitchConnection.connectors != null){
+					for(JSONConnectionConnector connector : connection.hitchConnection.connectors){
 						GL11.glPushMatrix();
 						renderConnector(connector, interactable.definition.packID);
 						GL11.glPopMatrix();

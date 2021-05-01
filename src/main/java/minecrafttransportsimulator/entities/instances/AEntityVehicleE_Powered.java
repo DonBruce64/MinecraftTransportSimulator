@@ -124,14 +124,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				//If we aren't being towed, set the parking brake.
 				if(towedByConnection != null){
 					for(LightType light : LightType.values()){
-						if(towedByConnection.otherBaseEntity.variablesOn.contains(light.lowercaseName)){
+						if(towedByConnection.hitchBaseEntity.variablesOn.contains(light.lowercaseName)){
 							variablesOn.add(light.lowercaseName);
 						}else{
 							variablesOn.remove(light.lowercaseName);
 						}
 					}
 					parkingBrakeOn = false;
-					brake = ((AEntityVehicleE_Powered) towedByConnection.otherBaseEntity).brake;
+					brake = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake;
 				}else{
 					//Remove all lights besides the generic one.
 					for(LightType light : LightType.values()){
@@ -185,7 +185,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
 			if(definition.motorized.isTrailer){
 				if(towedByConnection != null){
-					electricPower = ((AEntityVehicleE_Powered) towedByConnection.otherBaseEntity).electricPower;
+					electricPower = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).electricPower;
 				}
 			}else{
 				if(electricPower > 2){

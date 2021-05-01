@@ -145,6 +145,9 @@ public final class LegacyCompatSystem{
 				connection.hookup = false;
 				connection.type = hitchName;
 				connection.pos = definition.motorized.hitchPos;
+				if(connection.mounted){
+					connection.rot = new Point3d();
+				}
 				definition.connections.add(connection);
 			}
 			definition.motorized.hitchPos = null;
