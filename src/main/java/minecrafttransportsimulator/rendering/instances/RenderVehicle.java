@@ -44,11 +44,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
 	
 	@Override
-	public String getTexture(EntityVehicleF_Physics vehicle){
-		return vehicle.definition.getTextureLocation(vehicle.subName);
-	}
-	
-	@Override
 	public void parseModel(EntityVehicleF_Physics vehicle, String modelLocation){
 		super.parseModel(vehicle, modelLocation);
 		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
@@ -116,7 +111,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 				
 				//Do transforms if required.
-				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.getModelLocation()).get(i);
+				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.getModelLocation(vehicle.subName)).get(i);
 				boolean doRender = true;
 				if(transform != null){
 					doRender = transform.doPreRenderTransforms(vehicle, blendingEnabled, 0);

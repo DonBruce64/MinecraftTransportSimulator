@@ -15,12 +15,17 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 	@JSONDescription("The rendering properties for this object.")
     public JSONRendering rendering;
 	
-    @SuppressWarnings("deprecation")
     /**
 	 *  Returns the OBJ model location in the classpath for this definition.
 	 */
-	public String getModelLocation(){
-		return PackResourceLoader.getPackResource(this, ResourceType.OBJ, general.modelName != null ? general.modelName : systemName);
+	public String getModelLocation(String currentSubName){
+		for(JSONSubDefinition subDefinition : definitions){
+			if(subDefinition.subName.equals(currentSubName)){
+				return PackResourceLoader.getPackResource(this, ResourceType.OBJ, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+			}
+		}
+		//We'll never get here.
+		return null;
 	}
     
     /**
@@ -28,6 +33,12 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 	 *  Sub-name is passed-in as different sub-names have different textures.
 	 */
 	public String getTextureLocation(String currentSubName){
-		return PackResourceLoader.getPackResource(this, ResourceType.PNG, systemName + currentSubName);
+		for(JSONSubDefinition subDefinition : definitions){
+			if(subDefinition.subName.equals(currentSubName)){
+				return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + currentSubName);
+			}
+		}
+		//We'll never get here.
+		return null;
 	}
 }

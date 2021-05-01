@@ -8,12 +8,6 @@ import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	
 	@Override
-	public String getTexture(TileEntityPole pole){
-		//We never render, so we'll never call this method.
-		return null;
-	}
-	
-	@Override
 	public boolean disableMainRendering(TileEntityPole pole, float partialTicks){
 		return true;
 	}

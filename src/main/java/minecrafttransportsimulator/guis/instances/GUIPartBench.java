@@ -416,7 +416,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Enable render based on what component we have.
 		if(currentItem instanceof AItemSubTyped){
-			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation();
+			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subName);
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
 			//Don't spin signs.  That gets annoying.

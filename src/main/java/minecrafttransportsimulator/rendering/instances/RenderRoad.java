@@ -55,7 +55,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation());
+						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation(componentItem.subName));
 						GL11.glBegin(GL11.GL_TRIANGLES);
 						
 						//If we are a dynamic curve, cache the dynamic vertex paths.
@@ -298,12 +298,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			GL11.glEnd();
 			InterfaceRender.resetStates();
 		}
-	}
-	
-	@Override
-	public String getTexture(TileEntityRoad road){
-		//We never render, so we'll never call this method.
-		return null;
 	}
 	
 	@Override

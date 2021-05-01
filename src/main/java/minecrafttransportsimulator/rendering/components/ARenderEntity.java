@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 
@@ -77,7 +78,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 	        //Render the main model.
 	        InterfaceRender.setTexture(getTexture(entity));
-	        String modelLocation = entity.definition.getModelLocation();
+	        String modelLocation = entity.definition.getModelLocation(entity.subName);
 	        if(!objectLists.containsKey(modelLocation)){
 	        	parseModel(entity, modelLocation);
 	        }
@@ -142,9 +143,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	
 	/**
 	 *  Returns the texture that should be bound to this entity.  This may change between render passes, but only ONE texture
-	 *  may be used for any given entity render operation!
+	 *  may be used for any given entity render operation!  By default this returns the JSON-defined texture.
 	 */
-	public abstract String getTexture(RenderedEntity entity);
+	public String getTexture(RenderedEntity entity){
+		return entity.definition.getTextureLocation(entity.subName);
+	}
 	
 	/**
 	 *  Called to parse out this model for the modelObjects.  This can be used to set-up any additional caches.
@@ -310,7 +313,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Returns true if this entity has the passed-in light on it.
 	 */
 	public boolean doesEntityHaveLight(RenderedEntity entity, LightType light){
-		for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(entity.definition.getModelLocation())){
+		for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(entity.definition.getModelLocation(entity.subName))){
 			for(ATransform<RenderedEntity> transform : modelObject.transforms){
 				if(transform instanceof TransformLight){
 					if(((TransformLight<RenderedEntity>) transform).type.equals(light)){
@@ -328,9 +331,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  the list of created objects.
 	 */
 	public static void clearObjectCaches(AJSONMultiModelProvider definition){
-		String modelLocation = definition.getModelLocation();
-		for(ARenderEntity<?> render : createdRenderers){
-			render.resetModelCache(modelLocation);
+		for(JSONSubDefinition subDef : definition.definitions){
+			String modelLocation = definition.getModelLocation(subDef.subName);
+			for(ARenderEntity<?> render : createdRenderers){
+				render.resetModelCache(modelLocation);
+			}
 		}
 	}
 }

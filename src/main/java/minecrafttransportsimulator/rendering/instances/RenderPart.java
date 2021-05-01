@@ -13,11 +13,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 		
 	@Override
 	public String getTexture(APart part){
-		if(!part.definition.generic.useVehicleTexture){
-			return part.definition.getTextureLocation(part.subName);
-		}else{
-			return part.entityOn.definition.getTextureLocation(part.entityOn.subName);
-		}
+		return part.definition.generic.useVehicleTexture ? part.entityOn.definition.getTextureLocation(part.entityOn.subName) : super.getTexture(part);
 	}
 	
 	@Override

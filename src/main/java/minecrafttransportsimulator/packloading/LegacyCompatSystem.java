@@ -12,6 +12,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -63,6 +64,14 @@ public final class LegacyCompatSystem{
 			performItemLegacyCompats((JSONItem) definition);
 		}else if(definition instanceof JSONSkin){
 			performSkinLegacyCompats((JSONSkin) definition);
+		}
+		//This goes after we've made default definitions.
+		if(definition.general.modelName != null){
+			AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+			for(JSONSubDefinition subDef : provider.definitions){
+				subDef.modelName = definition.general.modelName;
+			}
+			definition.general.modelName = null;
 		}
 	}
 	

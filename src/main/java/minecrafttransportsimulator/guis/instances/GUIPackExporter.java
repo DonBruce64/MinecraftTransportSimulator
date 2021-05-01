@@ -227,7 +227,7 @@ public class GUIPackExporter extends AGUIBase{
 		//Set label text and default entries.
 		int labelBoxIndex = 0;
 		dataEntryLabels.get(labelBoxIndex).text = "Model:";
-		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getModelLocation());
+		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getModelLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";

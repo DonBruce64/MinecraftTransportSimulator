@@ -38,7 +38,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		PartGroundDevice tread = (PartGroundDevice) entity;
 		if(tread.definition.ground != null && tread.definition.ground.isTread && !tread.placementDefinition.isSpare){
 			AEntityC_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
-			String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(); 
+			String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.subName); 
 			Map<Float, List<Double[]>> objectMap = treadPoints.get(treadPathModel);
 			if(objectMap == null){
 				objectMap = new HashMap<Float, List<Double[]>>();
@@ -50,7 +50,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 				//Search through rotatable parts on the model and grab the rollers.
 				Map<Integer, TransformTreadRoller<EntityVehicleF_Physics>> parsedRollers = new HashMap<Integer, TransformTreadRoller<EntityVehicleF_Physics>>();
 				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(treadPathModel);
-				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : OBJParser.generateRenderables((EntityVehicleF_Physics) tread.entityOn, tread.entityOn.definition.getModelLocation(), parsedModel, tread.entityOn.definition.rendering.animatedObjects)){
+				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : OBJParser.generateRenderables((EntityVehicleF_Physics) tread.entityOn, tread.entityOn.definition.getModelLocation(tread.entityOn.subName), parsedModel, tread.entityOn.definition.rendering.animatedObjects)){
 					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
 						if(transform instanceof TransformTreadRoller){
 							TransformTreadRoller<EntityVehicleF_Physics> treadTransform = (TransformTreadRoller<EntityVehicleF_Physics>) transform;

@@ -49,7 +49,7 @@ public class GUITextEditor extends AGUIBase{
 			//Add the render to render the sign.
 			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
-			modelRender.modelLocation = entity.definition.getModelLocation();
+			modelRender.modelLocation = entity.definition.getModelLocation(entity.subName);
 			modelRender.textureLocation = entity.definition.getTextureLocation(entity.subName);
 			
 			//Set text and text objects.
