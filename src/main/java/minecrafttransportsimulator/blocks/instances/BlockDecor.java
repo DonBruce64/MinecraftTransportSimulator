@@ -13,6 +13,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 	
@@ -31,14 +33,22 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 			if(world.isClient() && player.equals(InterfaceClient.getClientPlayer())){
 				InterfaceGUI.openGUI(new GUIPartBench(decor.definition.decor.crafting));
 			}
-			return true;
 		}else if(!decor.text.isEmpty()){
 			if(world.isClient()){
 				InterfaceGUI.openGUI(new GUITextEditor(decor));
 			}
-			return true;
 		}
-		return false;
+		if(!world.isClient()){
+			decor.variablesOn.add("clicked");
+			if(decor.variablesOn.contains("activated")){
+				decor.variablesOn.remove("activated");
+			}else{
+				decor.variablesOn.add("activated");
+			}
+			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(decor, "clicked"));
+			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(decor, "activated"));
+		}
+		return true;
 	}
     
     @Override
