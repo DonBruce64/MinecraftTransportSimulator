@@ -565,7 +565,7 @@ public class PartEngine extends APart{
 			case("engine_driveshaft_rotation"): return getDriveshaftRotation(partialTicks);
 			case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks)));
 			case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks)));
-			case("engine_rpm"): return definition.engine.maxRPM;
+			case("engine_rpm"): return rpm;
 			case("engine_rpm_safe"): return definition.engine.maxSafeRPM;
 			case("engine_rpm_max"): return definition.engine.maxRPM;
 			case("engine_rpm_percent"): return rpm/definition.engine.maxRPM;
