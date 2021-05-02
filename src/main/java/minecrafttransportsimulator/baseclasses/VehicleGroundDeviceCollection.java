@@ -3,6 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
@@ -304,18 +305,23 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
-			Point3d activeHookup = vehicle.towedByConnection.hookupConnection.pos;
-			if(activeHookup.z > 0){
+			Point3d hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
+			if(vehicle.towedByConnection.hookupEntity instanceof APart){
+				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
+				hookupPoint = hookupPoint.rotateFine(hookupPart.localAngles).add(hookupPart.localOffset);
+			}
+			//System.out.println(activeHookup);
+			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 					side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 					side2Delta = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-					groundedSideOffset = Math.hypot(activeHookup.y, activeHookup.z);
+					groundedSideOffset = Math.hypot(hookupPoint.y, hookupPoint.z);
 					testBox1 = rearLeftGDB;
 					testBox2 = rearRightGDB;
 				}else if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
 					side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
 					side2Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-					groundedSideOffset = -Math.hypot(activeHookup.y, activeHookup.z);
+					groundedSideOffset = -Math.hypot(hookupPoint.y, hookupPoint.z);
 					side1Delta -= groundedSideOffset;
 					side2Delta -= groundedSideOffset;
 					testBox1 = rearLeftGDB;
@@ -326,13 +332,13 @@ public class VehicleGroundDeviceCollection{
 				if(!frontLeftGDB.isGrounded && !frontRightGDB.isGrounded){
 					side1Delta = Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.z);
 					side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.z);
-					groundedSideOffset = -Math.hypot(activeHookup.y, activeHookup.z);
+					groundedSideOffset = -Math.hypot(hookupPoint.y, hookupPoint.z);
 					testBox1 = frontLeftGDB;
 					testBox2 = frontRightGDB;
 				}else if(frontLeftGDB.isCollided || frontRightGDB.isCollided){
 					side1Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.z);
 					side2Delta = -Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.z);
-					groundedSideOffset = Math.hypot(activeHookup.y, activeHookup.z);
+					groundedSideOffset = Math.hypot(hookupPoint.y, hookupPoint.z);
 					side1Delta -= groundedSideOffset;
 					side2Delta -= groundedSideOffset;
 					testBox1 = frontLeftGDB;

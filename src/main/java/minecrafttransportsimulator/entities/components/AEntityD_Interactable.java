@@ -165,9 +165,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			if(savedTowedByConnection != null){
 				if(ticksExisted%20 == 0){
 					if(ticksExisted <= 100){
-						if(savedTowedByConnection.setConnection(world)){
-							towedByConnection = savedTowedByConnection;
+						try{
+							if(savedTowedByConnection.setConnection(world)){
+								towedByConnection = savedTowedByConnection;
+								savedTowedByConnection = null;
+							}
+						}catch(Exception e){
 							savedTowedByConnection = null;
+							InterfaceCore.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
 						}
 					}else{
 						savedTowedByConnection = null;
@@ -181,9 +186,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 						Iterator<TrailerConnection> iterator = savedTowingConnections.iterator();
 						while(iterator.hasNext()){
 							TrailerConnection savedTowingConnection = iterator.next();
-							if(savedTowingConnection.setConnection(world)){
-								towingConnections.add(savedTowingConnection);
+							try{
+								if(savedTowingConnection.setConnection(world)){
+									towingConnections.add(savedTowingConnection);
+									iterator.remove();
+								}
+							}catch(Exception e){
 								iterator.remove();
+								InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 							}
 						}
 					}else{
