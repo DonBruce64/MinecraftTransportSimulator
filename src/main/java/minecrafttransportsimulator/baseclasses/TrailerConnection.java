@@ -69,12 +69,20 @@ public class TrailerConnection{
 		return hitchConnection != null && hookupConnection != null;
 	}
 	
-	public Point3d getHitchOffset(){
-		return hitchConnection.pos.copy();
+	public Point3d getHitchCurrentPosition(){
+		return hitchConnection.pos.copy().rotateFine(hitchEntity.angles).add(hitchEntity.position);
 	}
 	
-	public Point3d getHookupOffset(){
-		return hookupConnection.pos.copy();
+	public Point3d getHitchPrevPosition(){
+		return hitchConnection.pos.copy().rotateFine(hitchEntity.prevAngles).add(hitchEntity.prevPosition);
+	}
+	
+	public Point3d getHookupCurrentPosition(){
+		return hookupConnection.pos.copy().rotateFine(hookupEntity.angles).add(hookupEntity.position);
+	}
+	
+	public Point3d getHookupPrevPosition(){
+		return hookupConnection.pos.copy().rotateFine(hookupEntity.prevAngles).add(hookupEntity.prevPosition);
 	}
 	
 	public WrapperNBT getData(){

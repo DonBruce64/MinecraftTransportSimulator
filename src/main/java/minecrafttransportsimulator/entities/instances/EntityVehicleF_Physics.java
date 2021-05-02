@@ -390,8 +390,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
 			if(towedByConnection.hitchConnection.mounted){
-				Point3d hitchRotatedOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchEntity.position);
-				Point3d hookupRotatedOffset = towedByConnection.getHookupOffset().rotateFine(angles).add(position);
+				Point3d hitchRotatedOffset = towedByConnection.getHitchCurrentPosition();
+				Point3d hookupRotatedOffset = towedByConnection.getHookupCurrentPosition();
 				motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
 				//TODO whatever maths we apply to the part rendering we need to apply here.
 				rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
@@ -400,23 +400,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//Yaw is applied based on the current and next position of the truck's hookup.
 				//Motion is applied after yaw corrections to ensure the trailer follows the truck.
 				//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-				Point3d tractorHitchPrevOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.prevAngles).add(towedByConnection.hitchEntity.prevPosition).subtract(prevPosition);
-				Point3d tractorHitchCurrentOffset = towedByConnection.getHitchOffset().rotateFine(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchEntity.position).subtract(position);
-				Point3d tractorHitchOffset = tractorHitchCurrentOffset.copy();
+				Point3d tractorHitchPrevOffsetXZ = towedByConnection.getHitchPrevPosition().subtract(prevPosition);
+				Point3d tractorHitchCurrentOffsetXZ = towedByConnection.getHitchCurrentPosition().subtract(position);
+				Point3d tractorHitchCurrentOffset = tractorHitchCurrentOffsetXZ.copy();
 				
 				//Calculate how much yaw we need to apply to rotate the trailer.
 				//This is only done for the X and Z motions.
 				//If we are restricted, make yaw match the hookup.
-				tractorHitchPrevOffset.y = 0;
-				tractorHitchCurrentOffset.y = 0;
-				tractorHitchPrevOffset.normalize();
-				tractorHitchCurrentOffset.normalize();
+				tractorHitchPrevOffsetXZ.y = 0;
+				tractorHitchCurrentOffsetXZ.y = 0;
+				tractorHitchPrevOffsetXZ.normalize();
+				tractorHitchCurrentOffsetXZ.normalize();
 				double rotationDelta;
 				if(towedByConnection.hitchConnection.restricted){
 					rotationDelta = towedByConnection.hitchEntity.angles.y - angles.y;
 				}else{
-					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffset.dotProduct(tractorHitchCurrentOffset)));
-					rotationDelta *= Math.signum(tractorHitchPrevOffset.crossProduct(tractorHitchCurrentOffset).y);
+					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffsetXZ.dotProduct(tractorHitchCurrentOffsetXZ)));
+					rotationDelta *= Math.signum(tractorHitchPrevOffsetXZ.crossProduct(tractorHitchCurrentOffsetXZ).y);
 				}
 				
 				//If the rotation is valid, add it.
@@ -425,14 +425,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				if(!Double.isNaN(rotationDelta)){
 					rotation.y = rotationDelta;
 					angles.y += rotationDelta;
-					trailerHookupOffset = towedByConnection.getHookupOffset().rotateFine(angles);
+					trailerHookupOffset = towedByConnection.getHookupCurrentPosition().subtract(position);
 					angles.y -= rotationDelta;
 				}else{
-					trailerHookupOffset = towedByConnection.getHookupOffset().rotateFine(angles);
+					trailerHookupOffset = towedByConnection.getHookupCurrentPosition().subtract(position);
 				}
 				
 				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
-				motion.setTo(tractorHitchOffset.subtract(trailerHookupOffset).multiply(1/SPEED_FACTOR));
+				motion.setTo(tractorHitchCurrentOffset.subtract(trailerHookupOffset).multiply(1/SPEED_FACTOR));
 				rotation.x = 0;
 				rotation.z = 0;
 			}

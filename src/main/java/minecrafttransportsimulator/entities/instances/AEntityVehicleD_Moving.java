@@ -205,7 +205,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	private void performGroundOperations(){
 		//Get braking force and apply it to the motions.
-		float brakingFactor = getBrakingForce()*definition.motorized.brakingFactor;
+		float brakingFactor = towedByConnection == null ? getBrakingForce()*definition.motorized.brakingFactor : 0;
 		if(brakingFactor > 0){
 			double brakingForce = 20F*brakingFactor/currentMass;
 			if(brakingForce > velocity){
