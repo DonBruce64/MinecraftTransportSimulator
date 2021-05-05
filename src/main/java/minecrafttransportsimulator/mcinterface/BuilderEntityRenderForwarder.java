@@ -73,14 +73,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		//Catch unloaded entities from when the chunk goes away.
 		setDead();
 	}
-
-    @Override
-    public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
-    	//Overridden due to stupid tracker behavior.
-    	//Client-side render changes calls put in its place.
-    	setRenderDistanceWeight(100);
-    	this.ignoreFrustumCheck = true;
-    }
     
     @Override
     public boolean shouldRenderInPass(int pass){
