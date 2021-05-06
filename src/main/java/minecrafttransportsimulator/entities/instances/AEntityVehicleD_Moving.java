@@ -427,7 +427,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double turningForce = steeringAngle/turningDistance;
 				//Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
 				if(groundVelocity > 0.35D){
-					turningForce *= Math.pow(0.3F, (groundVelocity*(1 - definition.motorized.downForce) - 0.35D));
+					turningForce *= Math.pow(0.3F, (groundVelocity*(1 - definition.motorized.downForce) - 0.35D)) / (SPEED_FACTOR/0.5);
 				}
 				//Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
 				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
