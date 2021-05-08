@@ -5,7 +5,7 @@
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
-		"itemTypes" : ["part"],
-		"partTypes" : ["gun_", "bullet"]
+		"itemTypes" : ["part", "bullet"],
+		"partTypes" : ["gun_"]
 	}
 }
