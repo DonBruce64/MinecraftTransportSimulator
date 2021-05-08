@@ -40,7 +40,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	
 	public BuilderEntityRenderForwarder(EntityPlayer playerFollowing){
 		super(playerFollowing.world);
-		setSize(0.05F, 0.05F);
+		setSize(0.25F, 0.25F);
 		this.playerFollowing = playerFollowing;
 		this.setPosition(playerFollowing.posX, playerFollowing.posY, playerFollowing.posZ);
 		activeFollowers.put(playerFollowing.getUniqueID(), this);
@@ -52,7 +52,10 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     public void onEntityUpdate(){
     	super.onEntityUpdate();
     	if(playerFollowing != null && !playerFollowing.isDead && playerFollowing.world == this.world){
-    		Vec3d playerEyesVec = playerFollowing.getLookVec();
+    		//Need to move the fake entity forwards to account for the partial ticks interpolation MC does.
+    		//If we don't do this, and we move faster than 1 block per tick, we'll get flickering.
+    		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
+    		Vec3d playerEyesVec = playerFollowing.getLookVec().scale(Math.max(1, playerVelocity/2));
     		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
     	}else if(!world.isRemote){
     		setDead();

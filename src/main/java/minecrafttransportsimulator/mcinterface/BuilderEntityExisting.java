@@ -137,7 +137,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	        		if(!collisionBoxes.boxes.isEmpty()){
 		        		for(Entity mcEntity : world.loadedEntityList){
 		        			//Don't try and move builders or entities riding others.  That's excess collision checks.
-		        			if(!(mcEntity instanceof BuilderEntityExisting) && mcEntity.getRidingEntity() == null){
+		        			if(!(mcEntity instanceof ABuilderEntityBase) && mcEntity.getRidingEntity() == null){
 		        				//Check each box individually.  Need to do this to know which delta to apply.
 		        				for(BoundingBox box : collisionBoxes.boxes){
 			        				if(mcEntity.getEntityBoundingBox().intersects(box.convert().expand(0, 0.25, 0))){
