@@ -2,13 +2,11 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
-import net.minecraft.item.Item;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -30,10 +28,9 @@ public class BuilderParticle extends Particle{
 		this.setSize(particle.getSize(), particle.getSize());
 		this.setBoundingBox(new AxisAlignedBB(posX - width/2F, posY - height/2F, posZ - width/2F, posX + width/2F, posY + height/2F, posZ + width/2F));
 		if(particle.definition.type.equals(ParticleType.BREAK)){
-			BlockPos belowPos = new BlockPos(particle.position.x, particle.position.y, particle.position.z);
+			BlockPos belowPos = new BlockPos(particle.position.x, particle.position.y - 1, particle.position.z);
 			IBlockState belowState = world.getBlockState(belowPos);
-			Block blockBelow = world.getBlockState(belowPos).getBlock();
-			this.setParticleTexture(Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getParticleIcon(Item.getItemFromBlock(blockBelow), blockBelow.getMetaFromState(belowState)));
+			this.setParticleTexture(Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(belowState));
 		}
 	}
     
@@ -55,6 +52,21 @@ public class BuilderParticle extends Particle{
 			motionX = particle.motion.x;
 			motionY = particle.motion.y;
 	        motionZ = particle.motion.z;
+	        
+	        /* Sets the packed UV index for this texture.
+			 * The packed UV index is a single integer divided by 16, with the
+			 * quotient of the value being the U value, and the remainder
+			 * being the V value.  So for example, a texture index of 22
+			 * would have a quotient of 1, and a remainder of 6, so would have
+			 * a UV of 1,6.
+			 */
+			switch(particle.definition.type){
+				case SMOKE: setParticleTextureIndex(7 - particle.age*8/particle.maxAge); break;//Smoke gets smaller as it ages.
+				case FLAME: setParticleTextureIndex(48); break;
+				case DRIP: setParticleTextureIndex(particle.touchingBlocks ? 113 : 112); break;//Drips become flat when they hit the ground.
+				case BUBBLE: setParticleTextureIndex(32); break;
+				case BREAK: break;//Do nothing, as breaking particles don't use the normal texture.
+			}
 		}
     }
     
@@ -82,20 +94,6 @@ public class BuilderParticle extends Particle{
 		particleBlue = particle.getBlue();
 		particleAlpha = particle.getAlpha();
     	particleScale = particle.getScale(partialTicks);
-    	/* Sets the packed UV index for this texture.
-		 * The packed UV index is a single integer divided by 16, with the
-		 * quotient of the value being the U value, and the remainder
-		 * being the V value.  So for example, a texture index of 22
-		 * would have a quotient of 1, and a remainder of 6, so would have
-		 * a UV of 1,6.
-		 */
-		switch(particle.definition.type){
-			case SMOKE: setParticleTextureIndex((int)(7 - 8F*particle.age/particle.maxAge)); break;//Smoke gets smaller as it ages.
-			case FLAME: setParticleTextureIndex(48); break;
-			case DRIP: setParticleTextureIndex(particle.touchingBlocks ? 113 : 112); break;//Drips become flat when they hit the ground.
-			case BUBBLE: setParticleTextureIndex(32); break;
-			case BREAK: break;//Do nothing, as breaking particles don't use the normal texture.
-		}
     	super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
     }
 }
