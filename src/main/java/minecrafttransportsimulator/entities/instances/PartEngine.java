@@ -883,14 +883,13 @@ public class PartEngine extends APart{
 									if(wheelForce >= 0){
 										wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
 									}else{
-										wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
 									}
 								}else{
 									if(wheelForce >= 0){
-										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+										wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
 									}else{
-										
-										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+										wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
 									}
 								}
 								wheel.skipAngularCalcs = true;
