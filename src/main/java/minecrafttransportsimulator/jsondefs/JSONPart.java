@@ -309,17 +309,17 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How much spread the bullet will have when fired.  0 is no spread, higher values have higher spread.")
     	public float bulletSpreadFactor;
 		
-		@JSONDescription("The minimum pitch this gun can angle downwards when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
-    	public float minPitch;
-		
-		@JSONDescription("The maximum pitch this gun can angle upwards when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
-    	public float maxPitch;
-		
 		@JSONDescription("The minimum yaw this gun can turn counter-clockwise when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
     	public float minYaw;
 		
 		@JSONDescription("The maximum yaw this gun can turn clockwise when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
     	public float maxYaw;
+		
+		@JSONDescription("The minimum pitch this gun can angle downwards when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
+    	public float minPitch;
+		
+		@JSONDescription("The maximum pitch this gun can angle upwards when controlled.  Note that if this is 0, and it is specified in the part JSON section on the vehicle, the vehicle's parameter will override this parameter.")
+    	public float maxPitch;
 		
 		@JSONDescription("The diameter of this gun.  This defines what ammo diameter may be used with it, and is what corresponds to the min-max parameters in the vehicle JSON.  It is also used to calculate rotation speed.  Units are in mm.")
     	public float diameter;
@@ -333,14 +333,17 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Like minCaseLength, but the maximum.")
     	public float maxCaseLength;
 		
-		@JSONDescription("How fast, in degrees/tick, the gun can rotate.  This is normally auto-calculated from the gun's length, but it may be specified here if desired.")
-    	public float travelSpeed;
+		@JSONDescription(" How fast, in degrees/tick, the gun can rotate in the yaw direction.  This is normally auto-calculated from the gun's length and diameter, but it may be specified here if desired.")
+    	public float yawSpeed;
 		
-		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
-    	public float defaultPitch;
+		@JSONDescription("Like yawSpeed, but for pitch.")
+    	public float pitchSpeed;
 		
 		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
     	public float defaultYaw;
+		
+		@JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
+    	public float defaultPitch;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")

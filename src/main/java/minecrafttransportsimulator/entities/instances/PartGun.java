@@ -67,7 +67,6 @@ public class PartGun extends APart{
 	public WrapperEntity lastController;
 	private long lastTimeFired;
 	private long timeToFire;
-	private final double anglePerTickSpeed;
 	private final Set<EntityBullet> activeBullets = new HashSet<EntityBullet>();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 		
@@ -131,7 +130,6 @@ public class PartGun extends APart{
 		if(loadedBullet == null){
 			bulletsLeft = 0;
 		}
-		this.anglePerTickSpeed = definition.gun.travelSpeed != 0 ? definition.gun.travelSpeed : (50/definition.gun.diameter + 1/definition.gun.length);
 	}
 	
 	@Override
@@ -238,14 +236,14 @@ public class PartGun extends APart{
 				//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
 				double deltaYaw = -currentOrientation.getClampedYDelta(targetYaw);
 				if(deltaYaw < 0){
-					if(deltaYaw < -anglePerTickSpeed){
-						deltaYaw = -anglePerTickSpeed;
+					if(deltaYaw < -definition.gun.yawSpeed){
+						deltaYaw = -definition.gun.yawSpeed;
 						lockedOn = false;
 					}
 					currentOrientation.y += deltaYaw; 
 				}else if(deltaYaw > 0){
-					if(deltaYaw > anglePerTickSpeed){
-						deltaYaw = anglePerTickSpeed;
+					if(deltaYaw > definition.gun.yawSpeed){
+						deltaYaw = definition.gun.yawSpeed;
 						lockedOn = false;
 					}
 					currentOrientation.y += deltaYaw;
@@ -273,14 +271,14 @@ public class PartGun extends APart{
 				//Adjust pitch.
 				double deltaPitch = targetPitch - currentOrientation.x;
 				if(deltaPitch < 0){
-					if(deltaPitch < -anglePerTickSpeed){
-						deltaPitch = -anglePerTickSpeed;
+					if(deltaPitch < -definition.gun.pitchSpeed){
+						deltaPitch = -definition.gun.pitchSpeed;
 						lockedOn = false;
 					}
 					currentOrientation.x += deltaPitch; 
 				}else if(deltaPitch > 0){
-					if(deltaPitch > anglePerTickSpeed){
-						deltaPitch = anglePerTickSpeed;
+					if(deltaPitch > definition.gun.pitchSpeed){
+						deltaPitch = definition.gun.pitchSpeed;
 						lockedOn = false;
 					}
 					currentOrientation.x += deltaPitch;

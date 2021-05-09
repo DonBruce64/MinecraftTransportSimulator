@@ -505,6 +505,16 @@ public final class LegacyCompatSystem{
 			if(definition.generic.type.startsWith("seat") && definition.seat == null){
 				definition.seat = definition.new JSONPartSeat();
 			}
+			
+			//If the part is a gun, set yaw and pitch speed if not set.
+			if(definition.generic.type.startsWith("gun")){
+				if(definition.gun.yawSpeed == 0){
+					definition.gun.yawSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
+				}
+				if(definition.gun.pitchSpeed == 0){
+					definition.gun.pitchSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
+				}
+			}
 		}
 		
 		if(definition.parts != null){
