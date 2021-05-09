@@ -864,8 +864,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
+		List<APart> allParts = new ArrayList<APart>();
+		allParts.addAll(parts);
+		allParts.addAll(partsFromNBT);
 		int totalParts = 0;
-		for(APart part : parts){
+		for(APart part : allParts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
 				WrapperNBT partData = new WrapperNBT();
