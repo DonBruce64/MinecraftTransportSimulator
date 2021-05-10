@@ -38,6 +38,10 @@ import net.minecraftforge.fml.relauncher.Side;
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsPlayerRendering{
 	private static final Map<EntityPlayer, ItemStack> tempHeldItemStorage = new HashMap<EntityPlayer, ItemStack>();
+	private static float playerOffsetYawTemp;
+	private static float playerPrevOffsetYawTemp;
+	private static float playerHeadYawTemp;
+	private static float playerPrevHeadYawTemp;
 	public static boolean renderCurrentRiderSitting;
 	public static boolean renderCurrentRiderControlling;
 	
@@ -51,6 +55,10 @@ public class InterfaceEventsPlayerRendering{
     	ModelPlayer playerModel = event.getRenderer().getMainModel();
     	renderCurrentRiderSitting = false;
     	renderCurrentRiderControlling = false;
+    	playerOffsetYawTemp = player.renderYawOffset;
+    	playerPrevOffsetYawTemp = player.prevRenderYawOffset;
+    	playerHeadYawTemp = player.rotationYawHead;
+    	playerPrevHeadYawTemp = player.prevRotationYawHead;    	
     	
     	if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
 	    	//If we are holding a gun, disable the third-person item icon.
@@ -112,11 +120,15 @@ public class InterfaceEventsPlayerRendering{
 	            	}
 	            }
 	            
-        		//Set the player yaw offset to 0.  This is needed as we are rotating the player manually.
+        		//Set the player yaw offset to 0.  This forces their body to always face the front of the seat.
+	            //This isn't the player's normal yaw, which is the direction they are facing.
 	            player.renderYawOffset = 0;
+	            player.prevRenderYawOffset = 0;
 	            
 	            //Set the player's head yaw to the delta between their yaw and their angled yaw.
+	            //This needs to be relative as we're going to render relative to the seat here, not the world.
 	            player.rotationYawHead = (float) (player.rotationYaw + entityAngles.y + ridingAngles.y);
+	            player.prevRotationYawHead =  player.rotationYawHead;
 	            
 	            //Now add the rotations.
 	            //We have to do this via OpenGL, as changing the player's pitch doesn't make them tilt in the seat, and roll doesn't exist for them.
@@ -168,6 +180,12 @@ public class InterfaceEventsPlayerRendering{
     	AEntityB_Existing ridingEntity = null;
     	Point3d rightArmAngles = null;
 		Point3d leftArmAngles = null;
+		
+		//Set variables back to their previous values.
+    	player.renderYawOffset = playerOffsetYawTemp;
+    	player.prevRenderYawOffset = playerPrevOffsetYawTemp;
+    	player.rotationYawHead = playerHeadYawTemp;
+    	player.prevRotationYawHead = playerPrevHeadYawTemp;
 		
 		//Get riding entity.
 		if(player.getRidingEntity() instanceof BuilderEntityExisting){
@@ -256,6 +274,8 @@ public class InterfaceEventsPlayerRendering{
     	if(player.getRidingEntity() instanceof BuilderEntityExisting){
     		GL11.glPopMatrix();
         }
+    	
+    	
     }
     
     /**
