@@ -4,8 +4,8 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.entities.components.IFluidTankProvider;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -24,7 +24,7 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem> & IFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements ITickable, IFluidTank, IFluidHandler{
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem> & ITileEntityFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements ITickable, IFluidTank, IFluidHandler{
 	
 	public BuilderTileEntityFluidTank(){
 		super();

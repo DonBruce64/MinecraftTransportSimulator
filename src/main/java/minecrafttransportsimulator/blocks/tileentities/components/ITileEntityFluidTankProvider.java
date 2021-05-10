@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.entities.components;
+package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
@@ -10,7 +10,7 @@ import minecrafttransportsimulator.entities.instances.EntityFluidTank;
  *
  * @author don_bruce
  */
-public interface IFluidTankProvider{
+public interface ITileEntityFluidTankProvider{
 	/**
 	 *  Gets the tank for this interface.
 	 */

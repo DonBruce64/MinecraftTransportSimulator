@@ -15,8 +15,8 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.entities.components.IFluidTankProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -94,7 +94,7 @@ public class BuilderBlock extends Block{
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
 		Class<? extends ATileEntityBase<?>> teClass = ((IBlockTileEntity<?>) mcBlock).getTileEntityClass();
-		if(IFluidTankProvider.class.isAssignableFrom(teClass)){
+		if(ITileEntityFluidTankProvider.class.isAssignableFrom(teClass)){
 			return getTileEntityTankWrapper(mcBlock);
 		}else{
 			return getTileEntityGenericWrapper(mcBlock);
@@ -119,7 +119,7 @@ public class BuilderBlock extends Block{
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	private static <TileEntityType extends ATileEntityBase<?> & IFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
+	private static <TileEntityType extends ATileEntityBase<?> & ITileEntityFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block){
 		return new BuilderTileEntityFluidTank<TileEntityType>();
 	}
 	

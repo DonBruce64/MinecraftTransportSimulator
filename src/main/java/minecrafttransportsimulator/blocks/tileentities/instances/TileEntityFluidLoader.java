@@ -2,10 +2,10 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.entities.components.IFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 
-public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntityTickable, IFluidTankProvider{
+public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntityTickable, ITileEntityFluidTankProvider{
 	public PartInteractable connectedPart;
 	public boolean unloadMode;
 	public boolean loading;
