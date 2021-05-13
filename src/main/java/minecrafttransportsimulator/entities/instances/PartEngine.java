@@ -327,7 +327,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM*0.5F*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM)*0.5F*(1.0F + vehicleOn.throttle/100F)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -343,7 +343,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : definition.engine.maxSafeRPM*0.25*(1.0F + vehicleOn.throttle/100F))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
