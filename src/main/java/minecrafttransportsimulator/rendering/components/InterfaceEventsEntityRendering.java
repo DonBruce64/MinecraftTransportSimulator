@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
+import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
@@ -19,24 +20,27 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
  * to handle them being in vehicles, as well as ensuring their model adapts to any objects they may be holding.
- * Note that this does NOT affect modifications to what the player sees; this only affects how the player looks
- * and what parts of him are visible and where.
+ * This also handles the final world rendering pass, which may render entities.
  *
  * @author don_bruce
  */
 @EventBusSubscriber(Side.CLIENT)
-public class InterfaceEventsPlayerRendering{
+public class InterfaceEventsEntityRendering{
 	private static final Map<EntityPlayer, ItemStack> tempHeldItemStorage = new HashMap<EntityPlayer, ItemStack>();
 	private static float playerOffsetYawTemp;
 	private static float playerPrevOffsetYawTemp;
@@ -44,6 +48,45 @@ public class InterfaceEventsPlayerRendering{
 	private static float playerPrevHeadYawTemp;
 	public static boolean renderCurrentRiderSitting;
 	public static boolean renderCurrentRiderControlling;
+	
+	/**
+	 *  World last event.  This occurs at the end of rendering in a special pass of -1.
+	 *  We normally don't do anything here.  The exception is if the {@link BuilderEntityRenderForwarder}
+	 *  didn't get rendered.  In this case, we manually render it.  The rendering pipelines
+	 *  of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
+	 */
+    @SubscribeEvent
+    public static void on(RenderWorldLastEvent event){
+    	float partialTicks = event.getPartialTicks();
+    	
+    	//Enable lighting as pass -1 has that disabled.
+    	RenderHelper.enableStandardItemLighting();
+    	InterfaceRender.setLightingState(true);
+    	
+    	//Render pass 0 and 1 here manually.
+    	for(int pass=0; pass<2; ++pass){
+    		if(pass == 1){
+    			InterfaceRender.setBlend(true);
+    			GlStateManager.depthMask(false);
+    		}
+    		
+    		for(Entity entity : Minecraft.getMinecraft().world.loadedEntityList){
+	            if(entity instanceof BuilderEntityRenderForwarder){
+	            	BuilderEntityRenderForwarder forwarder = (BuilderEntityRenderForwarder) entity;
+	    			Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(forwarder).doRender(forwarder, 0, 0, 0, 0, partialTicks);
+	            }
+    		}
+			
+			if(pass == 1){
+    			InterfaceRender.setBlend(false);
+    			GlStateManager.depthMask(true);
+    		}
+    	}
+		
+		//Turn lighting back off.
+		RenderHelper.disableStandardItemLighting();
+		InterfaceRender.setLightingState(false);
+    }
 	
 	 /**
      * Pre-post methods for adjusting player angles while seated.

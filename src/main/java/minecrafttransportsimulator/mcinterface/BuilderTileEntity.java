@@ -4,7 +4,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.rendering.components.RenderTickData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -30,9 +29,6 @@ import net.minecraft.world.World;
 public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
 	public TileEntityType tileEntity;
 	
-	/**Render data to help us render on the proper tick and time.  Not final and may be null until we get a world reference.**/
-	public RenderTickData renderData;
-	
 	public BuilderTileEntity(){
 		//Blank constructor for MC.
 	}
@@ -43,13 +39,6 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		//This means the world isn't set when we create this TE, leading to NPEs.
         this.setWorld(world);
     }
-	
-	@Override
-	public void setWorld(World world){
-		super.setWorld(world);
-		//Create render data if we are on the client.
-		this.renderData = world.isRemote ? new RenderTickData(world) : null;
-	}
 	
 	@Override
 	public void invalidate(){

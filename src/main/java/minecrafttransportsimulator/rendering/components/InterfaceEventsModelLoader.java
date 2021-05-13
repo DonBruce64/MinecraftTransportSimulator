@@ -80,7 +80,7 @@ public class InterfaceEventsModelLoader{
 				public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks){
 					//Get all entities in the world, and render them manually for this one builder.
 					//Only do this if the player the builder is following is the client player.
-					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing)){
+					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)){
 						Collection<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
 						if(allEntities != null){
 							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.

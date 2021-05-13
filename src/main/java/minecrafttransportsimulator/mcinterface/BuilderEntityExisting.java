@@ -19,7 +19,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.rendering.components.InterfaceEventsPlayerRendering;
+import minecrafttransportsimulator.rendering.components.InterfaceEventsEntityRendering;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -289,7 +289,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     
     @Override
     public boolean shouldRiderSit(){
-    	return entity != null ? InterfaceEventsPlayerRendering.renderCurrentRiderSitting : super.shouldRiderSit();
+    	return entity != null ? InterfaceEventsEntityRendering.renderCurrentRiderSitting : super.shouldRiderSit();
     }
     
     @Override
