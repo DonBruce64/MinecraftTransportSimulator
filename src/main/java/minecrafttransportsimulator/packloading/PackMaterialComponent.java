@@ -39,9 +39,9 @@ public class PackMaterialComponent{
 					if(oreDictMaterial.getMetadata() == OreDictionary.WILDCARD_VALUE){
 						//Just get the first material here.
 						//We can't loop over all valid ones as there's not a finite list anywhere.
-						possibleMaterials.add(new ItemStack(oreDictMaterial.getItem(), 1));
+						possibleMaterials.add(new ItemStack(oreDictMaterial.getItem(), qty));
 					}else{
-						possibleMaterials.add(oreDictMaterial);
+						possibleMaterials.add(new ItemStack(oreDictMaterial.getItem(), qty, oreDictMaterial.getMetadata()));
 					}
 				}
 			}

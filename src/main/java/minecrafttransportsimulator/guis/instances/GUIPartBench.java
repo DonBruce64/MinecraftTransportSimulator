@@ -19,10 +19,8 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -98,7 +96,7 @@ public class GUIPartBench extends AGUIBase{
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
 			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-				if(isItemValid(packItem)){
+				if(packItem.isBenchValid(definition)){
 					currentItem = packItem;
 					currentPack = packItem.definition.packID;
 					return;
@@ -288,7 +286,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
 				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
-					if(isItemValid(packItem)){
+					if(packItem.isBenchValid(definition)){
 						nextPack = packIDs.get(i);
 						break;
 					}
@@ -302,7 +300,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
 				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
-					if(isItemValid(packItem)){
+					if(packItem.isBenchValid(definition)){
 						prevPack = packIDs.get(i);
 						break;
 					}
@@ -325,7 +323,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentItem == null){
 			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(currentPack)){
 				if(currentItem == null || (currentItem.definition instanceof AJSONMultiModelProvider && nextSubItem == null)){
-					if(isItemValid(packItem)){
+					if(packItem.isBenchValid(definition)){
 						if(currentItem == null){
 							currentItem = packItem;
 							currentItemIndex = packItems.indexOf(currentItem);
@@ -345,7 +343,7 @@ public class GUIPartBench extends AGUIBase{
 		nextSubItem = null;
 		if(currentItemIndex < packItems.size()){
 			for(int i=currentItemIndex+1; i<packItems.size() && nextItem == null; ++i){
-				if(isItemValid(packItems.get(i))){
+				if(packItems.get(i).isBenchValid(definition)){
 					//If we are for subTyped item, and this item is the same sub-item classification, 
 					//set nextSubItem and continue on.
 					if(currentItem.definition instanceof AJSONMultiModelProvider){
@@ -368,7 +366,7 @@ public class GUIPartBench extends AGUIBase{
 		prevSubItem = null;
 		if(currentItemIndex > 0){
 			for(int i=currentItemIndex-1; i>=0 && (prevItem == null || currentItem.definition instanceof AJSONMultiModelProvider); --i){
-				if(isItemValid(packItems.get(i))){
+				if(packItems.get(i).isBenchValid(definition)){
 					//If we are for a subTyped item, and we didn't switch items, and this item
 					//is the same sub-item classification, set prevSubItem and continue on.
 					//If we did switch, we want the first subItem in the set of items to
@@ -428,35 +426,6 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Now update the last saved item.
 		lastOpenedItem.put(definition, currentItem);
-	}
-	
-	private boolean isItemValid(AItemPack<?> item){
-		boolean hasMaterials = !item.definition.general.materials.isEmpty();
-		if(!hasMaterials && item instanceof AItemSubTyped){
-			AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) item;
-			for(JSONSubDefinition subDefinition : subTypedItem.definition.definitions){
-				if(subDefinition.subName.equals(subTypedItem.subName)){
-					hasMaterials = !subDefinition.extraMaterials.isEmpty();
-				}
-			}
-		}
-		
-		if(hasMaterials){
-			if(definition.items != null){
-				return definition.items.contains(item.definition.packID + ":" + item.definition.systemName);
-			}else if(definition.itemTypes.contains(item.definition.classification.toString().toLowerCase())){
-				if(item.definition instanceof JSONPart && definition.partTypes != null){
-					for(String partType : definition.partTypes){
-						if(((JSONPart) item.definition).generic.type.contains(partType)){
-							return true;
-						}
-					}
-				}else{
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	
 	private String getVehicleInfoText(){

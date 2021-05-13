@@ -5,13 +5,11 @@ buildscript {
 	}
 	dependencies {
 		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
 	}
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "1.12.2-20.0.0-BETA26"
+version = "1.12.2-20.0.0-BETA31"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 
@@ -22,37 +20,48 @@ compileJava {
 }
 
 minecraft {
-	version = "1.12.2-14.23.5.2768"
+	version = "1.12.2-14.23.5.2847"
 	runDir = "run"
 	mappings = "stable_39"
 	makeObfSourceJar = false
-}
-
-//Shadow plugin code for radio.
-reobf {
-  shadowJar {}
-}
-
-shadowJar {
-	classifier ''
-	//Need to shadow javazoom (jlayer) for MP3 support.
-	relocate 'javazoom', 'minecrafttransportsimulator.shadowed.javazoom'
-	//Need to jcraft for internal OGG support.
-	relocate 'jcraft', 'minecrafttransportsimulator.shadowed.jcraft'
-	exclude 'dummyThing'
 }
 
 repositories {
 	maven { 
 		url 'https://mvnrepository.com/artifact/org.jcraft/jorbis'
 	}
+  maven {
+    // location of the maven that hosts JEI files
+    name = "Progwml6 maven"
+    url = "https://dvs1.progwml6.com/files/maven/"
+  }
+}
+
+//Configuration that holds jars to include in the jar
+configurations {
+    extraLibs
 }
 
 dependencies {
-  compile group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
-	compile group: 'org.jcraft', name: 'jorbis', version: '0.0.17'
+	//Set sound code bits as extraLibs so they are included into the jar.
+  extraLibs group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
+	extraLibs group: 'org.jcraft', name: 'jorbis', version: '0.0.17'
+	
+	// compile against the JEI API but do not include it at runtime
+  deobfProvided "mezz.jei:jei_1.12.2:4.16.1.302:api"
+  // at runtime, use the full JEI jar
+  runtime "mezz.jei:jei_1.12.2:4.16.1.302"
+	
+	//Compile all extraLib jars.
+	configurations.compile.extendsFrom(configurations.extraLibs)
 }
 
+//Pack-in the extraLibs specified in the dependencies into the jar.
+jar {
+    from {
+            configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+        }
+}
 
 //Do file stuffs.  I think this just updates mcmod.info?
 processResources {
