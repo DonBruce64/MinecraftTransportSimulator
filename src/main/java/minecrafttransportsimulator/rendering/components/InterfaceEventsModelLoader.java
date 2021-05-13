@@ -25,6 +25,7 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.IResourcePack;
@@ -67,6 +68,12 @@ public class InterfaceEventsModelLoader{
 				@Override
 				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
+				}
+				
+				@Override
+				public boolean shouldRender(BuilderEntityRenderForwarder builder, ICamera camera, double camX, double camY, double camZ){
+					//Always render the forwarder, no matter where the camera is.
+					return true;
 				}
 				
 				@Override

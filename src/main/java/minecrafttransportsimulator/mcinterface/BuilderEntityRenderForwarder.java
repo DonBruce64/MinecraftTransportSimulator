@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.MasterLoader;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -81,6 +82,15 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     public boolean shouldRenderInPass(int pass){
         //Need to render in pass 1 to render transparent things in the world like light beams.
     	return true;
+    }
+    
+    @Override
+    public boolean isRidingOrBeingRiddenBy(Entity entity){
+    	//Always return true if this is the client player.
+    	//This fools MC into rendering us all the time, no matter where we are.
+    	//Normally the renderer override method will handle that, but Optifine/Shaders
+    	//might muck with that so this is to be doubly-sure.
+    	return world.isRemote && entity.equals(playerFollowing);
     }
 
 	@Override
