@@ -8,6 +8,8 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 @JSONDescription("Bullets are special JSONs, as they're not a part, but they work with parts.  They're not an actual item like food, but they normally are only in item form.  Rather, they are an item that turns itself into a model with logic when fired from a gun.")
 public class JSONBullet extends AJSONMultiModelProvider{
 	
+	@JSONRequired
+	@JSONDescription("Bullet-specific properties.")
 	public Bullet bullet;
     
     public class Bullet{
