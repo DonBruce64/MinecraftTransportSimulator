@@ -5,24 +5,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
  * 
  * @author don_bruce
  */
-public final class OBJParser{
+public final class OBJParser extends AModelParser{
 	
-	public static Map<String, Float[][]> parseOBJModel(String modelLocation){
+	@Override
+	protected String getModelSuffix(){
+		return "obj";
+	}
+	
+	@Override
+	protected Map<String, Float[][]> parseModelInternal(String modelLocation){
 		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
 		try{
@@ -219,76 +218,5 @@ public final class OBJParser{
 		}
 		
 		return compiledArray.toArray(new Float[compiledArray.size()][8]);
-	}
-	
-	/**
-	 *  Checks the passed-in model for any {@link RenderableModelObject}s and returns them
-	 *  as a list.  They are also removed from the passed-in model, to ready it
-	 *  for post-processing and potential DisplayList creation.  These are cross-checked
-	 *  with the passed-in definition to ensure the proper constructors are created.
-	 *  The passed-in definition may be null to prevent this check and the removal of components
-	 *  due to dynamic JSON definitions.
-	 */
-	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AnimationEntity entity, String modelLocation, Map<String, Float[][]> parsedModel, List<JSONAnimatedObject> animatedObjects){
-		//For anything that has a definition as an animation, add it to an animated list.
-		//If we find a definition, we remove the object so it doesn't get packed into the main DisplayList.
-		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
-		if(animatedObjects != null){
-			for(JSONAnimatedObject definition : animatedObjects){
-				if(parsedModel.containsKey(definition.objectName)){
-					modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, definition.objectName, definition, parsedModel.get(definition.objectName), entity));
-					parsedModel.remove(definition.objectName);
-				}
-			}
-		}
-		
-		//Now check for any non-animated model objects.
-		Iterator<Entry<String, Float[][]>> iterator = parsedModel.entrySet().iterator();
-		while(iterator.hasNext()){
-			Entry<String, Float[][]> entry = iterator.next();
-			RenderableModelObject<AnimationEntity> modelObject = new RenderableModelObject<AnimationEntity>(modelLocation, entry.getKey(), null, entry.getValue(), entity);
-			if(!modelObject.transforms.isEmpty()){
-				modelObjects.add(modelObject);
-				iterator.remove();
-			}
-		}
-		
-		return modelObjects;
-	}
-	
-	/**
-	 *  Generates an OpenGL DisplayList from the passed-in vertex array, returning the index.
-	 */
-	public static int generateDisplayList(Float[][] vertices){
-		int displayListIndex = GL11.glGenLists(1);
-		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[] vertex : vertices){
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-		}
-		GL11.glEnd();
-		GL11.glEndList();
-		return displayListIndex;
-	}
-	
-	/**
-	 *  Generates an OpenGL DisplayList from the passed-in OBJ model array, returning the index.
-	 */
-	public static int generateDisplayList(Map<String, Float[][]> parsedModel){
-		int displayListIndex = GL11.glGenLists(1);
-		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-			for(Float[] vertex : entry.getValue()){
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-			}
-		}
-		GL11.glEnd();
-		GL11.glEndList();
-		return displayListIndex;
 	}
 }

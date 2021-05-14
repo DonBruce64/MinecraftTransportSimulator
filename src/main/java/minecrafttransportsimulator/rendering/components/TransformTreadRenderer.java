@@ -20,15 +20,16 @@ import minecrafttransportsimulator.entities.instances.PartGroundDevice;
  */
 public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	
-	private final int displayListIndex;
+	private final int cachedVertexIndex;
 	
 	/**Map of tread points, keyed by the vehicle the tread is on, or the parent part of the part, if this tread is a subPart.
 	 * Second map key is the tread spacing.  This can be shared for two different treads of the same spacing as they render the same.**/
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
 	
-	public TransformTreadRenderer(int displayListIndex){
+	public TransformTreadRenderer(int cachedVertexIndex){
 		super(null);
-		this.displayListIndex = displayListIndex;
+		//Need to save this as we render multiple instances of our model object for this transform.
+		this.cachedVertexIndex = cachedVertexIndex;
 	}
 	
 	@Override
@@ -46,210 +47,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 			List<Double[]> points = objectMap.get(tread.definition.ground.spacing);
 			
 			if(points == null){
-				//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
-				//Search through rotatable parts on the model and grab the rollers.
-				Map<Integer, TransformTreadRoller<EntityVehicleF_Physics>> parsedRollers = new HashMap<Integer, TransformTreadRoller<EntityVehicleF_Physics>>();
-				Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(treadPathModel);
-				for(RenderableModelObject<EntityVehicleF_Physics> modelObject : OBJParser.generateRenderables((EntityVehicleF_Physics) tread.entityOn, tread.entityOn.definition.getModelLocation(tread.entityOn.subName), parsedModel, tread.entityOn.definition.rendering.animatedObjects)){
-					for(ATransform<EntityVehicleF_Physics> transform : modelObject.transforms){
-						if(transform instanceof TransformTreadRoller){
-							TransformTreadRoller<EntityVehicleF_Physics> treadTransform = (TransformTreadRoller<EntityVehicleF_Physics>) transform;
-							if(!treadTransform.isLeft){
-								parsedRollers.put(treadTransform.rollerNumber, treadTransform);
-							}
-						}
-					}
-				}
-				
-				//Now that we have all the rollers, we can start calculating points.
-				//First calculate the endpoints on the rollers by calling the calculation method.
-				//We also transfer the rollers to an ordered array for convenience later.
-				List<TransformTreadRoller<EntityVehicleF_Physics>> rollers = new ArrayList<TransformTreadRoller<EntityVehicleF_Physics>>();
-				for(int i=0; i<parsedRollers.size(); ++ i){
-					if(!parsedRollers.containsKey(i)){
-						throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + entityTreadAttachedTo.definition.packID + ":" + entityTreadAttachedTo.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
-					}
-					if(i < parsedRollers.size() - 1){
-						parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
-					}else{
-						parsedRollers.get(i).calculateEndpoints(parsedRollers.get(0));
-					}
-					rollers.add(parsedRollers.get(i));
-				}
-				
-				//TODO remove when DPL converts his treads.
-				//If we have no rollers, bail.
-				if(rollers.isEmpty()){
-					points = new ArrayList<Double[]>();
-					objectMap.put(tread.definition.ground.spacing, points);
-					treadPoints.put(treadPathModel, objectMap);
-					return false;
-				}
-				
-				//We need to ensure the endpoints are all angle-aligned.
-				//It's possible to have a start angle of -181 and end angle of
-				//181, which is really just 2 degress of angle (179-181).
-				//To do this, we set the end angle of roller 0 and start
-				//angle of roller 1 to be around 180, or downward-facing.
-				//From there, we add angles to align things.
-				//At the end, we should have an end angle of 540, or 180 + 360.
-				rollers.get(0).endAngle = 180;
-				for(int i=1; i<rollers.size(); ++i){
-					TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
-					roller.startAngle = rollers.get(i - 1).endAngle;
-					//End angle should be 0-360 greater than start angle, or within
-					//30 degrees less, as is the case for concave rollers. 
-					while(roller.endAngle < roller.startAngle - 30){
-						roller.endAngle += 360;
-					}
-					while(roller.endAngle > roller.startAngle + 360){
-						roller.endAngle += 360;
-					}
-				}
-				//Set the end angle of the last roller, or start angle of the first roller, manually.
-				//Need to get it between the value of 360 + 0-180 as that's where we will connect.
-				while(rollers.get(0).startAngle < 0){
-					rollers.get(0).startAngle += 360;
-				}
-				if(rollers.get(0).startAngle > 180){
-					rollers.get(0).startAngle -= 360;
-				}
-				rollers.get(0).startAngle += 360;
-				rollers.get(rollers.size() - 1).endAngle = rollers.get(0).startAngle;
-				
-				
-				//Now that the endpoints are set, we can calculate the path.
-				//Do this by following the start and end points at small increments.
-				//First calculate the total path length, and determine the optimum spacing.
-				//This is the closest value to the definition's tread spacing.
-				double totalPathLength = 0;
-				for(int i=0; i<rollers.size(); ++i){
-					//Get roller and add roller path contribution.
-					TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
-					totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
-					
-					//Get next roller and add distance path contribution.
-					//For points that start and end at an angle of around 0 (top of rollers) we add droop.
-					//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
-					TransformTreadRoller<EntityVehicleF_Physics> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
-					double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
-					if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-						totalPathLength += 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
-					}else{
-						totalPathLength += straightPathLength;
-					}
-				}
-				
-				double deltaDist = tread.definition.ground.spacing + (totalPathLength%tread.definition.ground.spacing)/(totalPathLength/tread.definition.ground.spacing);
-				double leftoverPathLength = 0;
-				double yPoint = 0;
-				double zPoint = 0; 
-				points = new ArrayList<Double[]>();
-				for(int i=0; i<rollers.size(); ++i){
-					TransformTreadRoller<EntityVehicleF_Physics> roller = rollers.get(i);
-					//Follow the curve of the roller from the start and end point.
-					//Do this until we don't have enough roller path left to make a point.
-					//If we have any remaining path from a prior operation, we
-					//need to offset our first point on the roller path to account for it.
-					//It can very well be that this remainder will be more than the path length
-					//of the roller.  If so, we just skip the roller entirely.
-					//For the first roller we need to do some special math, as the angles will be inverted
-					//For start and end due to the tread making a full 360 path.				
-					double rollerPathLength = 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
-					double currentAngle = roller.startAngle;
-					
-					//Add the first point here, and add more as we follow the path.
-					if(i == 0){
-						yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-						zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
-						points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
-					}
-					
-					//If we have any leftover straight path, account for it here to keep spacing consistent.
-					//We will need to interpolate the point that the straight path would have gone to, but
-					//take our rotation angle into account.  Only do this if we have enough of a path to do so.
-					//If not, we should just skip this roller as we can't put any points on it.
-					if(deltaDist - leftoverPathLength < rollerPathLength){
-						if(leftoverPathLength > 0){
-							//Make a new point that's along a line from the last point and the start of this roller.
-							//Then increment currentAngle to account for the new point made.
-							//Add an angle relative to the point on the roller.
-							Double[] lastPoint = points.get(points.size() - 1);
-							yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-							zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
-							double pointDist = Math.hypot(yPoint - lastPoint[0], zPoint - lastPoint[1]);
-							double normalizedY = (yPoint - lastPoint[0])/pointDist;
-							double normalizedZ = (zPoint - lastPoint[1])/pointDist;
-							double rollerAngleSpan = 360D*((deltaDist - leftoverPathLength)/roller.circumference);
-							
-							points.add(new Double[]{lastPoint[0] + deltaDist*normalizedY, lastPoint[1] + deltaDist*normalizedZ, lastPoint[2] + rollerAngleSpan});
-							currentAngle += rollerAngleSpan;
-							rollerPathLength -= (deltaDist - leftoverPathLength);
-							leftoverPathLength = 0;
-						}
-						
-						while(rollerPathLength > deltaDist){
-							//Go to and add the next point on the roller path.
-							rollerPathLength -= deltaDist;
-							currentAngle += 360D*(deltaDist/roller.circumference);
-							yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-							zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
-							points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
-						}
-						
-						//Done following roller.  Set angle to end angle.
-						currentAngle = roller.endAngle;
-					}
-					
-					//If we have any leftover roller path, account for it here to keep spacing consistent.
-					//We may also have leftover straight path length if we didn't do anything on a roller.
-					//If we have roller length, make sure to offset it to account for the curvature of the roller.
-					//If we don't do this, the line won't start at the end of the prior roller.
-					//If we are on the last roller, we need to get the first roller to complete the loop.
-					//For points that start and end at an angle of around 0 (top of rollers) we add droop.
-					//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
-					//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
-					TransformTreadRoller<EntityVehicleF_Physics> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
-					double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
-					double extraPathLength = rollerPathLength + leftoverPathLength;
-					double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
-					double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
-					if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-						double hyperbolicPathLength = 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
-						double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
-						double hyperbolicPathMaxY = tread.placementDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
-						double hyperbolicFunctionCurrent = 0;
-						while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
-							//Go to and add the next point on the hyperbolic path.
-							if(extraPathLength > 0){
-								hyperbolicFunctionCurrent += extraPathLength*hyperbolicFunctionStep;
-								extraPathLength = 0;
-							}else{
-								hyperbolicFunctionCurrent += hyperbolicFunctionStep;
-							}
-							yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + tread.placementDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant) - hyperbolicPathMaxY;
-							zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
-							points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant))});
-						}
-						leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
-					}else{
-						while(straightPathLength + extraPathLength > deltaDist){
-							//Go to and add the next point on the straight path.
-							if(extraPathLength > 0){
-								yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
-								zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
-								straightPathLength -= (deltaDist - extraPathLength);
-								extraPathLength = 0;
-							}else{
-								yPoint += normalizedY*deltaDist;
-								zPoint += normalizedZ*deltaDist;
-								straightPathLength -= deltaDist;
-							}
-							points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
-						}
-						leftoverPathLength = straightPathLength;
-					}
-				}
+				points = generatePoints(entityTreadAttachedTo, treadPathModel, objectMap, tread);
 				objectMap.put(tread.definition.ground.spacing, points);
 				treadPoints.put(treadPathModel, objectMap);
 			}
@@ -315,7 +113,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					GL11.glPushMatrix();
 					GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
 					GL11.glRotated(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
-					GL11.glCallList(displayListIndex);
+					InterfaceRender.renderVertices(cachedVertexIndex);
 					GL11.glPopMatrix();
 					GL11.glTranslated(0, yDelta, zDelta);
 				}else{
@@ -324,7 +122,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					//Once there, render the tread.  Then translate the remainder of the way to prepare
 					//to render the next tread.
 					GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
-					GL11.glCallList(displayListIndex);
+					InterfaceRender.renderVertices(cachedVertexIndex);
 					GL11.glTranslated(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 				}
 			}
@@ -334,6 +132,204 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 			return super.shouldRender(entity, blendingEnabled, partialTicks);
 		}
 		return false;
+	}
+	
+	private static <TreadEntity extends AEntityC_Definable<?>> List<Double[]> generatePoints(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> objectMap, PartGroundDevice tread){
+		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
+		//Search through rotatable parts on the model and grab the rollers.
+		Map<Integer, TransformTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, TransformTreadRoller<TreadEntity>>();
+		for(RenderableModelObject<TreadEntity> modelObject : OBJParser.generateRenderables(entityTreadAttachedTo, treadPathModel, null)){
+			for(ATransform<TreadEntity> transform : modelObject.transforms){
+				if(transform instanceof TransformTreadRoller){
+					TransformTreadRoller<TreadEntity> treadTransform = (TransformTreadRoller<TreadEntity>) transform;
+					if(!treadTransform.isLeft){
+						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
+					}
+				}
+			}
+		}
+		
+		//Now that we have all the rollers, we can start calculating points.
+		//First calculate the endpoints on the rollers by calling the calculation method.
+		//We also transfer the rollers to an ordered array for convenience later.
+		List<TransformTreadRoller<TreadEntity>> rollers = new ArrayList<TransformTreadRoller<TreadEntity>>();
+		for(int i=0; i<parsedRollers.size(); ++ i){
+			if(!parsedRollers.containsKey(i)){
+				throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + entityTreadAttachedTo.definition.packID + ":" + entityTreadAttachedTo.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
+			}
+			if(i < parsedRollers.size() - 1){
+				parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
+			}else{
+				parsedRollers.get(i).calculateEndpoints(parsedRollers.get(0));
+			}
+			rollers.add(parsedRollers.get(i));
+		}
+		
+		//We need to ensure the endpoints are all angle-aligned.
+		//It's possible to have a start angle of -181 and end angle of
+		//181, which is really just 2 degress of angle (179-181).
+		//To do this, we set the end angle of roller 0 and start
+		//angle of roller 1 to be around 180, or downward-facing.
+		//From there, we add angles to align things.
+		//At the end, we should have an end angle of 540, or 180 + 360.
+		rollers.get(0).endAngle = 180;
+		for(int i=1; i<rollers.size(); ++i){
+			TransformTreadRoller<?> roller = rollers.get(i);
+			roller.startAngle = rollers.get(i - 1).endAngle;
+			//End angle should be 0-360 greater than start angle, or within
+			//30 degrees less, as is the case for concave rollers. 
+			while(roller.endAngle < roller.startAngle - 30){
+				roller.endAngle += 360;
+			}
+			while(roller.endAngle > roller.startAngle + 360){
+				roller.endAngle += 360;
+			}
+		}
+		//Set the end angle of the last roller, or start angle of the first roller, manually.
+		//Need to get it between the value of 360 + 0-180 as that's where we will connect.
+		while(rollers.get(0).startAngle < 0){
+			rollers.get(0).startAngle += 360;
+		}
+		if(rollers.get(0).startAngle > 180){
+			rollers.get(0).startAngle -= 360;
+		}
+		rollers.get(0).startAngle += 360;
+		rollers.get(rollers.size() - 1).endAngle = rollers.get(0).startAngle;
+		
+		
+		//Now that the endpoints are set, we can calculate the path.
+		//Do this by following the start and end points at small increments.
+		//First calculate the total path length, and determine the optimum spacing.
+		//This is the closest value to the definition's tread spacing.
+		double totalPathLength = 0;
+		for(int i=0; i<rollers.size(); ++i){
+			//Get roller and add roller path contribution.
+			TransformTreadRoller<?> roller = rollers.get(i);
+			totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+			
+			//Get next roller and add distance path contribution.
+			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+			//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
+			TransformTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
+			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+			if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+				totalPathLength += 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
+			}else{
+				totalPathLength += straightPathLength;
+			}
+		}
+		
+		double deltaDist = tread.definition.ground.spacing + (totalPathLength%tread.definition.ground.spacing)/(totalPathLength/tread.definition.ground.spacing);
+		double leftoverPathLength = 0;
+		double yPoint = 0;
+		double zPoint = 0; 
+		List<Double[]> points = new ArrayList<Double[]>();
+		for(int i=0; i<rollers.size(); ++i){
+			TransformTreadRoller<?> roller = rollers.get(i);
+			//Follow the curve of the roller from the start and end point.
+			//Do this until we don't have enough roller path left to make a point.
+			//If we have any remaining path from a prior operation, we
+			//need to offset our first point on the roller path to account for it.
+			//It can very well be that this remainder will be more than the path length
+			//of the roller.  If so, we just skip the roller entirely.
+			//For the first roller we need to do some special math, as the angles will be inverted
+			//For start and end due to the tread making a full 360 path.				
+			double rollerPathLength = 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+			double currentAngle = roller.startAngle;
+			
+			//Add the first point here, and add more as we follow the path.
+			if(i == 0){
+				yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+				zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+				points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
+			}
+			
+			//If we have any leftover straight path, account for it here to keep spacing consistent.
+			//We will need to interpolate the point that the straight path would have gone to, but
+			//take our rotation angle into account.  Only do this if we have enough of a path to do so.
+			//If not, we should just skip this roller as we can't put any points on it.
+			if(deltaDist - leftoverPathLength < rollerPathLength){
+				if(leftoverPathLength > 0){
+					//Make a new point that's along a line from the last point and the start of this roller.
+					//Then increment currentAngle to account for the new point made.
+					//Add an angle relative to the point on the roller.
+					Double[] lastPoint = points.get(points.size() - 1);
+					yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					double pointDist = Math.hypot(yPoint - lastPoint[0], zPoint - lastPoint[1]);
+					double normalizedY = (yPoint - lastPoint[0])/pointDist;
+					double normalizedZ = (zPoint - lastPoint[1])/pointDist;
+					double rollerAngleSpan = 360D*((deltaDist - leftoverPathLength)/roller.circumference);
+					
+					points.add(new Double[]{lastPoint[0] + deltaDist*normalizedY, lastPoint[1] + deltaDist*normalizedZ, lastPoint[2] + rollerAngleSpan});
+					currentAngle += rollerAngleSpan;
+					rollerPathLength -= (deltaDist - leftoverPathLength);
+					leftoverPathLength = 0;
+				}
+				
+				while(rollerPathLength > deltaDist){
+					//Go to and add the next point on the roller path.
+					rollerPathLength -= deltaDist;
+					currentAngle += 360D*(deltaDist/roller.circumference);
+					yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
+				}
+				
+				//Done following roller.  Set angle to end angle.
+				currentAngle = roller.endAngle;
+			}
+			
+			//If we have any leftover roller path, account for it here to keep spacing consistent.
+			//We may also have leftover straight path length if we didn't do anything on a roller.
+			//If we have roller length, make sure to offset it to account for the curvature of the roller.
+			//If we don't do this, the line won't start at the end of the prior roller.
+			//If we are on the last roller, we need to get the first roller to complete the loop.
+			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
+			//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
+			//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
+			TransformTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
+			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
+			double extraPathLength = rollerPathLength + leftoverPathLength;
+			double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
+			double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
+			if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
+				double hyperbolicPathLength = 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
+				double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
+				double hyperbolicPathMaxY = tread.placementDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
+				double hyperbolicFunctionCurrent = 0;
+				while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
+					//Go to and add the next point on the hyperbolic path.
+					if(extraPathLength > 0){
+						hyperbolicFunctionCurrent += extraPathLength*hyperbolicFunctionStep;
+						extraPathLength = 0;
+					}else{
+						hyperbolicFunctionCurrent += hyperbolicFunctionStep;
+					}
+					yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + tread.placementDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant) - hyperbolicPathMaxY;
+					zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
+					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant))});
+				}
+				leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
+			}else{
+				while(straightPathLength + extraPathLength > deltaDist){
+					//Go to and add the next point on the straight path.
+					if(extraPathLength > 0){
+						yPoint = roller.endY + normalizedY*(deltaDist - extraPathLength);
+						zPoint = roller.endZ + normalizedZ*(deltaDist - extraPathLength);
+						straightPathLength -= (deltaDist - extraPathLength);
+						extraPathLength = 0;
+					}else{
+						yPoint += normalizedY*deltaDist;
+						zPoint += normalizedZ*deltaDist;
+						straightPathLength -= deltaDist;
+					}
+					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+				}
+				leftoverPathLength = straightPathLength;
+			}
+		}
+		return points;
 	}
 	
 	@Override

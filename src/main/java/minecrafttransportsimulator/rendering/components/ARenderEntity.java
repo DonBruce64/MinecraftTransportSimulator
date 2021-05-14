@@ -8,8 +8,8 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -27,7 +27,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
 	
 	//CONNECTOR MAPS.  Maps are keyed by model name.
-	private static final Map<String, Integer> connectorDisplayLists = new HashMap<String, Integer>();
+	private static final Map<String, Integer> connectorParsedVertexLists = new HashMap<String, Integer>();
 	
 	//Connecter temp list for rendering all connectors in batches.
 	private static final List<TrailerConnection> connections = new ArrayList<TrailerConnection>();
@@ -154,8 +154,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Make sure you call super to ensure the model caches get parsed!
 	 */
 	public void parseModel(RenderedEntity entity, String modelLocation){
-		Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(modelLocation);
-		objectLists.put(modelLocation, OBJParser.generateRenderables(entity, modelLocation, parsedModel, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null));
+		objectLists.put(modelLocation, AModelParser.generateRenderables(entity, modelLocation, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null));
 	}
 	
 	/**
@@ -243,8 +242,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 		String connectorName = "/assets/" + connectorPackID + "/connectors/" + connector.modelName;
 		String modelLocation = connectorName + ".obj";
 		String textureLocation = connectorName + ".png";
-		if(!connectorDisplayLists.containsKey(modelLocation)){
-			connectorDisplayLists.put(modelLocation, OBJParser.generateDisplayList(OBJParser.parseOBJModel(modelLocation)));
+		if(!connectorParsedVertexLists.containsKey(modelLocation)){
+			connectorParsedVertexLists.put(modelLocation, InterfaceRender.cacheVertices(AModelParser.parseModel(modelLocation).values()));
 		}
 		
 		//Get the total connector distance, and the spacing between the connectors.
@@ -265,7 +264,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			lastBoundConnectorTexture = textureLocation;
 		}
 		for(int i=0; i<numberConnectors; ++i){
-			GL11.glCallList(connectorDisplayLists.get(modelLocation));
+			InterfaceRender.renderVertices(connectorParsedVertexLists.get(modelLocation));
 			GL11.glTranslated(0, segmentDistance, 0);
 		}
 	}

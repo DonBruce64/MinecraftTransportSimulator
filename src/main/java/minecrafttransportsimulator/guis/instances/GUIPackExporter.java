@@ -16,7 +16,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.JSONParser;
@@ -43,7 +43,7 @@ public class GUIPackExporter extends AGUIBase{
 	private List<GUIComponentLabel> dataEntryLabels = new ArrayList<GUIComponentLabel>();
 	private GUIComponentButton backButton;
 	private GUIComponentButton confirmButton;
-	private GUIComponentOBJModel componentItemModel;
+	private GUIComponent3DModel componentItemModel;
 	
 	public GUIPackExporter(EntityVehicleF_Physics vehicleClicked){
 		this.vehicleClicked = vehicleClicked;
@@ -220,7 +220,7 @@ public class GUIPackExporter extends AGUIBase{
 		}
 		
 		//Add item icon model component.
-		componentItemModel = new GUIComponentOBJModel(guiLeft + 208, guiTop + 205, 1.0F, true, false, true);
+		componentItemModel = new GUIComponent3DModel(guiLeft + 208, guiTop + 205, 1.0F, true, false, true);
 		componentItemModel.scale = 6.0F;
 		addOBJModel(componentItemModel);
 		

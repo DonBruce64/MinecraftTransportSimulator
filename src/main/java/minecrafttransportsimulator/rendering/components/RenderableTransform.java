@@ -7,7 +7,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
-/**This class represents a set of transforms that can be applied prior to rendering an object.
+/**This class represents a set of transforms that should be applied prior to rendering an object.
  * No rendering is performed in this class, as such rendering may change and is left to the calling class.
  * Rather, this class is a way to collect a series of {@link ATransform} objects via passing-in a list
  * of {@link JSONAnimatedObject}s at construction.  These will be used to apply the appropriate transforms,

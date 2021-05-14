@@ -9,7 +9,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -45,7 +45,7 @@ public class GUIPaintGun extends AGUIBase{
 	private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
 	
 	//Renders for the item.
-	private GUIComponentOBJModel modelRender;
+	private GUIComponent3DModel modelRender;
 	
 	//Runtime variables.	
 	private AItemSubTyped<?> currentItem;
@@ -87,7 +87,7 @@ public class GUIPaintGun extends AGUIBase{
 		}
 		
 		//Create the OBJ render.
-		addOBJModel(modelRender = new GUIComponentOBJModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
+		addOBJModel(modelRender = new GUIComponent3DModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
 		
 		//Create the confirm button.
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){

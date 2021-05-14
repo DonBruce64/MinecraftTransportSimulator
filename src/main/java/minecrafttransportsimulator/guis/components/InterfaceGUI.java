@@ -278,7 +278,7 @@ public class InterfaceGUI{
 	public static void closeGUI(){
 		//Set current screen to null and clear out the OBJ DisplayLists if we have any.
 		Minecraft.getMinecraft().displayGuiScreen(null);
-		GUIComponentOBJModel.clearDisplayListCaches();
+		GUIComponent3DModel.clearModelCaches();
 	}
 	
 	/**

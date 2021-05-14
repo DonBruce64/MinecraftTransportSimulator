@@ -15,13 +15,13 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnec
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
+import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 import minecrafttransportsimulator.rendering.components.InterfaceRender;
-import minecrafttransportsimulator.rendering.components.OBJParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
-	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadDisplayListMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
+	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadCachedVertexMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
 	
 	@Override
 	public void renderAdditionalModels(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
@@ -32,8 +32,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		
 		//If we haven't rendered the road yet, do so now.
 		//We cache it in a DisplayList, as there are a LOT of transforms done each component.
-		if(!roadDisplayListMap.containsKey(road)){
-			roadDisplayListMap.put(road, new HashMap<RoadComponent, Integer>());
+		if(!roadCachedVertexMap.containsKey(road)){
+			roadCachedVertexMap.put(road, new HashMap<RoadComponent, Integer>());
 		}
 		
 		//If the road is inactive, we render everything as a hologram.
@@ -46,16 +46,16 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			}
 		}
 		
-		Map<RoadComponent, Integer> displayListMap = roadDisplayListMap.get(road);
+		Map<RoadComponent, Integer> cachedVertexMap = roadCachedVertexMap.get(road);
 		for(RoadComponent component : road.components.keySet()){
 			ItemRoadComponent componentItem = road.components.get(component);
 			
-			if(!displayListMap.containsKey(component)){
+			if(!cachedVertexMap.containsKey(component)){
 				int displayListIndex = GL11.glGenLists(1);
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						Map<String, Float[][]> parsedModel = OBJParser.parseOBJModel(componentItem.definition.getModelLocation(componentItem.subName));
+						Map<String, Float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
 						GL11.glBegin(GL11.GL_TRIANGLES);
 						
 						//If we are a dynamic curve, cache the dynamic vertex paths.
@@ -155,13 +155,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 						break;
 				}
 				GL11.glEndList();
-				displayListMap.put(component, displayListIndex);
+				cachedVertexMap.put(component, displayListIndex);
 			}
 			
 			if(road.isActive()){
 				InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 			}
-			GL11.glCallList(displayListMap.get(component));
+			GL11.glCallList(cachedVertexMap.get(component));
 		}
 		
 		//If we are inactive render the blocking blocks and the main block.

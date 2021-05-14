@@ -11,7 +11,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
@@ -70,7 +70,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Renders for the item.
 	private GUIComponentItem itemRender;
-	private GUIComponentOBJModel modelRender;
+	private GUIComponent3DModel modelRender;
 	
 	//Runtime variables.
 	private String prevPack;
@@ -178,7 +178,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Create both the item and OBJ renders.  We choose which to display later.
 		addItem(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null));
-		addOBJModel(modelRender = new GUIComponentOBJModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
+		addOBJModel(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 		
 		
 		//Create the info switching button.

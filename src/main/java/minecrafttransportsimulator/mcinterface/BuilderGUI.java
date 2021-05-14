@@ -11,7 +11,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
@@ -121,7 +121,7 @@ public class BuilderGUI extends GuiScreen{
 		
 		//Now render any OBJModels we may have.
 		//CHeck to make sure the texture exists before binding.
-		for(GUIComponentOBJModel objModel : gui.objModels){
+		for(GUIComponent3DModel objModel : gui.objModels){
 			if(objModel.textureLocation != null){
 				InterfaceRender.bindTexture(objModel.textureLocation);
 			}

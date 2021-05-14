@@ -13,7 +13,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentOBJModel;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -47,7 +47,7 @@ public class GUITextEditor extends AGUIBase{
 		textInputBoxes.clear();
 		if(entity instanceof TileEntityPole_Sign){
 			//Add the render to render the sign.
-			GUIComponentOBJModel modelRender = new GUIComponentOBJModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
+			GUIComponent3DModel modelRender = new GUIComponent3DModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
 			modelRender.modelLocation = entity.definition.getModelLocation(entity.subName);
 			modelRender.textureLocation = entity.definition.getTextureLocation(entity.subName);

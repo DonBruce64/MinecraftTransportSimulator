@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,61 @@ public class InterfaceRender{
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
 	
+	/**
+	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
+	 *  but no matter which version is used, the returned value is assured to be unique for each
+	 *  call to this function.  This should be used in tandem with {@link #renderVertices(int)},
+	 *  which will render the cached vertices from this function.  Note that the vertex format
+	 *  is expected to be the same returned b {@link AModelParser#parseModel(String)}
+	 */
+	public static int cacheVertices(Float[][] vertices){
+		int displayListIndex = GL11.glGenLists(1);
+		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[] vertex : vertices){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+		GL11.glEndList();
+		return displayListIndex;
+	}
+	
+	/**
+	 *  Like {@link #cacheVertices(Float[][])}, but in this takes
+	 *  a list of vertex float arrays rather than a single one.
+	 *  Used for caching whole models rather than individual objects.
+	 */
+	public static int cacheVertices(Collection<Float[][]> vertices){
+		int displayListIndex = GL11.glGenLists(1);
+		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[][] vertexGroup : vertices){
+			for(Float[] vertex : vertexGroup){
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
+				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+			}
+		}
+		GL11.glEnd();
+		GL11.glEndList();
+		return displayListIndex;
+	}
+	
+	/**
+	 *  Renders a set of vertices previously cached with {@link #cacheVertices(Float[][])}
+	 */
+	public static void renderVertices(int index){
+		GL11.glCallList(index);
+	}
+	
+	/**
+	 *  Deletes the cached vertices with the specified index.
+	 */
+	public static void deleteVertices(int index){
+		GL11.glDeleteLists(index, 1);
+	}
 	
 	/**
 	 *  Returns true if bounding boxes should be rendered.

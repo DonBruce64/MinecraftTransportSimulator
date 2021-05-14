@@ -13,34 +13,35 @@ import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
-/**This class represents an object that can be rendered from an OBJ model.  This object is a set of
+/**This class represents an object that can be rendered from an model.  This object is a set of
  * faces that are rendered during the main rendering routine.  Various transforms may be performed on
  * this object via the extended rendering classes.  These transforms are applied to the mesh prior
- * to rendering, either manipulating the mesh directly, or manipulating the OpenGL state.
+ * to rendering, either manipulating the mesh directly, or manipulating the OpenGL state.  In all
+ * cases, there will be at least one transform on any model object.  This being if it's solid or translucent.
+ * Other transforms are added as required.
  *
  * @author don_bruce
  */
 public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>> extends RenderableTransform<AnimationEntity>{
-	private final String modelName;
 	private final String objectName;
 	public final String applyAfter;
+	public final int cachedVertexIndex;
 	
-	private static final Map<String, Map<String, Integer>> displayLists = new HashMap<String, Map<String, Integer>>();
+	private static final Map<String, Map<String, Integer>> cachedVertexIndexLists = new HashMap<String, Map<String, Integer>>();
 	
 	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, AnimationEntity entity){
 		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
 		
 		//Cache the displayList, if we haven't already.
-		if(!displayLists.containsKey(modelName) || !displayLists.get(modelName).containsKey(objectName)){
-			int displayListIndex = OBJParser.generateDisplayList(vertices);
-			if(!displayLists.containsKey(modelName)){
-				displayLists.put(modelName, new HashMap<String, Integer>());
+		if(!cachedVertexIndexLists.containsKey(modelName) || !cachedVertexIndexLists.get(modelName).containsKey(objectName)){
+			if(!cachedVertexIndexLists.containsKey(modelName)){
+				cachedVertexIndexLists.put(modelName, new HashMap<String, Integer>());
 			}
-			displayLists.get(modelName).put(objectName, displayListIndex);
+			cachedVertexIndexLists.get(modelName).put(objectName, InterfaceRender.cacheVertices(vertices));
 		}
+		this.cachedVertexIndex = cachedVertexIndexLists.get(modelName).get(objectName);
 		
 		//Set all parameters for the appropriate transforms.
-		this.modelName = modelName;
 		this.objectName = objectName;
 		if(definition != null){
 			this.applyAfter = definition.applyAfter;
@@ -53,7 +54,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				PartGroundDevice grounder = (PartGroundDevice) entity;
 				if(grounder.definition.ground != null && grounder.definition.ground.isTread){
 					//Found tread-based ground device.  Need a transform for tread rendering.
-					transforms.add(new TransformTreadRenderer<AnimationEntity>(displayLists.get(modelName).get(objectName)));
+					transforms.add(new TransformTreadRenderer<AnimationEntity>(cachedVertexIndexLists.get(modelName).get(objectName)));
 				}
 			}
 		}
@@ -95,7 +96,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(doPreRenderTransforms(entity, blendingEnabled, partialTicks)){
 			if(renderModelWithBlendState(entity, blendingEnabled)){
 				//Render the model.
-				GL11.glCallList(displayLists.get(modelName).get(objectName));
+				InterfaceRender.renderVertices(cachedVertexIndex);
 			}
 			
 			//Do post-render logic.
