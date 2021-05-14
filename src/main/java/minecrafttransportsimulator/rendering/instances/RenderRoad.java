@@ -15,9 +15,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnec
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{

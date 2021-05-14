@@ -13,7 +13,7 @@ import java.util.Map;
  * 
  * @author don_bruce
  */
-public final class OBJParser extends AModelParser{
+public final class ModelParserOBJ extends AModelParser{
 	
 	@Override
 	protected String getModelSuffix(){
@@ -25,7 +25,7 @@ public final class OBJParser extends AModelParser{
 		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
 		try{
-			reader = new BufferedReader(new InputStreamReader(OBJParser.class.getResourceAsStream(modelLocation)));
+			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
 		}catch(Exception e){
 			throw new NullPointerException("Attempted to parse the OBJ model at: " + modelLocation + " but could not find it.  Check the path and try again.");
 		}

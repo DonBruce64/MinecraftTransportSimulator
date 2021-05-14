@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.mcinterface;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -17,9 +17,6 @@ import java.util.Set;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.PackParserSystem;

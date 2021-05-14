@@ -6,8 +6,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
 
 public final class RenderPart extends ARenderEntity<APart>{
 		

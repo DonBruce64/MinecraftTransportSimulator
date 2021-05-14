@@ -8,20 +8,20 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  * 
  * @author don_bruce
  */
-public class RadioBeacon{
+public class NavBeacon{
 	public final String name;
 	public final double glideSlope;
 	public final double bearing;
 	public final Point3d position;
 	
-	public RadioBeacon(WrapperNBT data){
+	public NavBeacon(WrapperNBT data){
 		this.name = data.getString("name");
 		this.glideSlope = data.getDouble("glideSlope");
 		this.bearing = data.getDouble("bearing");
 		this.position = data.getPoint3dCompact("location");
 	}
 	
-	public RadioBeacon(String name, double glideSlope, double bearing, Point3d position){
+	public NavBeacon(String name, double glideSlope, double bearing, Point3d position){
 		this.name = name;
 		this.glideSlope = glideSlope;
 		this.bearing = bearing;

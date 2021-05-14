@@ -11,6 +11,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This transform is designed to render tread paths on whatever part
  * it is placed on.  Used in conjunction with {@link TransformTreadRoller}
@@ -138,7 +139,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
 		//Search through rotatable parts on the model and grab the rollers.
 		Map<Integer, TransformTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, TransformTreadRoller<TreadEntity>>();
-		for(RenderableModelObject<TreadEntity> modelObject : OBJParser.generateRenderables(entityTreadAttachedTo, treadPathModel, null)){
+		for(RenderableModelObject<TreadEntity> modelObject : ModelParserOBJ.generateRenderables(entityTreadAttachedTo, treadPathModel, null)){
 			for(ATransform<TreadEntity> transform : modelObject.transforms){
 				if(transform instanceof TransformTreadRoller){
 					TransformTreadRoller<TreadEntity> treadTransform = (TransformTreadRoller<TreadEntity>) transform;

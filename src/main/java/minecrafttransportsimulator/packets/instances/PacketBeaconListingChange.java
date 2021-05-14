@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.BeaconManager;
-import minecrafttransportsimulator.baseclasses.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 /**This packet is sent from the server to all clients when the list of beacons changes.  This
  * allows clients to stay in-sync with the beacons currently in the world.
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  */
 public class PacketBeaconListingChange extends APacketBase{
 	private final String beaconName;
-	private final RadioBeacon beacon;
+	private final NavBeacon beacon;
 	
 	public PacketBeaconListingChange(String beaconName){
 		super(null);
@@ -22,7 +22,7 @@ public class PacketBeaconListingChange extends APacketBase{
 		this.beacon = null;
 	}
 	
-	public PacketBeaconListingChange(RadioBeacon beacon){
+	public PacketBeaconListingChange(NavBeacon beacon){
 		super(null);
 		this.beaconName = null;
 		this.beacon = beacon;
@@ -35,7 +35,7 @@ public class PacketBeaconListingChange extends APacketBase{
 			this.beacon = null;
 		}else{
 			this.beaconName = null;
-			this.beacon = new RadioBeacon(readDataFromBuffer(buf));
+			this.beacon = new NavBeacon(readDataFromBuffer(buf));
 		}
 	}
 	
@@ -56,9 +56,9 @@ public class PacketBeaconListingChange extends APacketBase{
 	@Override
 	public void handle(WrapperWorld world){
 		if(beaconName != null){
-			BeaconManager.removeBeacon(world, beaconName);
+			NavBeaconSystem.removeBeacon(world, beaconName);
 		}else{
-			BeaconManager.addBeacon(world, beacon);
+			NavBeaconSystem.addBeacon(world, beacon);
 		}
 	}
 }

@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class represents an object that can be rendered from an model.  This object is a set of
  * faces that are rendered during the main rendering routine.  Various transforms may be performed on

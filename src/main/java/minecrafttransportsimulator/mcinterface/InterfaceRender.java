@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.mcinterface;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -24,10 +24,8 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.BuilderParticle;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.rendering.components.AModelParser;
+import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;

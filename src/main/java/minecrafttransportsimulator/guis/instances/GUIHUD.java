@@ -4,7 +4,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}

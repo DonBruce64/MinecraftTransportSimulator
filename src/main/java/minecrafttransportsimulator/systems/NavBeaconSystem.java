@@ -1,8 +1,9 @@
-package minecrafttransportsimulator.baseclasses;
+package minecrafttransportsimulator.systems;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -13,13 +14,13 @@ import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
  * 
  * @author don_bruce
  */
-public final class BeaconManager{
-	private static final Map<WrapperWorld, Map<String, RadioBeacon>> worldBeacons = new HashMap<WrapperWorld, Map<String, RadioBeacon>>();
+public final class NavBeaconSystem{
+	private static final Map<WrapperWorld, Map<String, NavBeacon>> worldBeacons = new HashMap<WrapperWorld, Map<String, NavBeacon>>();
 	
 	/**
 	 *  Returns the beacon with the specified name from the world, or null if it does not exist.
 	 */
-	public static RadioBeacon getBeacon(WrapperWorld world, String name){
+	public static NavBeacon getBeacon(WrapperWorld world, String name){
 		if(!worldBeacons.containsKey(world)){
 			//No beacons for this world.  Load data.
 			loadBeacons(world);
@@ -35,7 +36,7 @@ public final class BeaconManager{
 	/**
 	 *  Adds the beacon with the specified name to the world.
 	 */
-	public static void addBeacon(WrapperWorld world, RadioBeacon beacon){
+	public static void addBeacon(WrapperWorld world, NavBeacon beacon){
 		//Don't add un-named beacons.
 		if(!beacon.name.isEmpty()){
 			worldBeacons.get(world).put(beacon.name, beacon);
@@ -66,10 +67,10 @@ public final class BeaconManager{
 	private static void loadBeacons(WrapperWorld world){
 		WrapperNBT data = world.getData();
 		if(data != null){
-			Map<String, RadioBeacon> beacons = new HashMap<String, RadioBeacon>();
+			Map<String, NavBeacon> beacons = new HashMap<String, NavBeacon>();
 			int beaconCount = data.getInteger("radioBeaconCount");
 			for(int i=0; i<beaconCount; ++i){
-				RadioBeacon beacon = new RadioBeacon(data.getData("radioBeacon_" + i));
+				NavBeacon beacon = new NavBeacon(data.getData("radioBeacon_" + i));
 				beacons.put(beacon.name, beacon);
 			}
 			worldBeacons.put(world, beacons);
@@ -84,7 +85,7 @@ public final class BeaconManager{
 		if(worldBeacons.containsKey(world)){
 			WrapperNBT worldData = new WrapperNBT();
 			int beaconIndex=0;
-			for(RadioBeacon beacon : worldBeacons.get(world).values()){
+			for(NavBeacon beacon : worldBeacons.get(world).values()){
 				WrapperNBT beaconData = new WrapperNBT();
 				beacon.save(beaconData);
 				worldData.setData("radioBeacon_" + beaconIndex++, beaconData);

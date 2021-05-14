@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.controls;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +13,7 @@ import org.lwjgl.input.Mouse;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;

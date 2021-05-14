@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;

@@ -24,7 +24,7 @@ public abstract class AModelParser{
 	}
 	
 	static{
-		new OBJParser();
+		new ModelParserOBJ();
 	}
 
 	/**

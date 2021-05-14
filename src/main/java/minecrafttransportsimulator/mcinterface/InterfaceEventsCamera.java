@@ -1,9 +1,8 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.mcinterface;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.systems.CameraSystem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;

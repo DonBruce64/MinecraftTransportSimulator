@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,9 +11,6 @@ import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
-import minecrafttransportsimulator.mcinterface.BuilderEntityRenderForwarder;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;

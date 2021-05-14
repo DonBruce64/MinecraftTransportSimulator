@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
@@ -9,6 +8,7 @@ import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
 	
@@ -28,7 +28,7 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
     public void onBroken(WrapperWorld world, Point3d position){
     	TileEntityBeacon beacon = world.getTileEntity(position);
     	if(beacon != null){
-	    	BeaconManager.removeBeacon(world, beacon.beaconName);
+	    	NavBeaconSystem.removeBeacon(world, beacon.beaconName);
     	}
     }
     

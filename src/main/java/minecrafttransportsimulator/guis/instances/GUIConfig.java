@@ -7,11 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.controls.ControlSystem;
-import minecrafttransportsimulator.controls.ControlSystem.ControlsJoystick;
-import minecrafttransportsimulator.controls.ControlSystem.ControlsKeyboard;
-import minecrafttransportsimulator.controls.ControlSystem.ControlsKeyboardDynamic;
-import minecrafttransportsimulator.controls.InterfaceInput;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -19,7 +14,12 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigBoolean;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic;
 
 public class GUIConfig extends AGUIBase{
 	//Global variables.

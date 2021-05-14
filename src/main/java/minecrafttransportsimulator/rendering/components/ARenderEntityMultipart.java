@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Entity rendering class for muliparts.  
  *

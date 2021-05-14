@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class is a collection for a set of four vehicle ground device points.  This allows for less
  * boilerplate code when we need to do operations on all four points in a vehicle.

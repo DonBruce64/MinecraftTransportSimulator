@@ -2,12 +2,12 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 /**Beacon tile entity.  Contains code for handling interfacing with
  * the global world saved data and information of the beacon states.
@@ -52,7 +52,7 @@ public class TileEntityBeacon extends TileEntityDecor{
 		if(beaconName.isEmpty()){
 			setBeaconToDefault();
 		}else{
-			RadioBeacon beacon = BeaconManager.getBeacon(world, beaconName);
+			NavBeacon beacon = NavBeaconSystem.getBeacon(world, beaconName);
 			if(beacon != null){
 				text.put(nameTextObject, beacon.name);
 				text.put(glideslopeTextObject, String.valueOf(beacon.glideSlope));
@@ -65,14 +65,14 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	@Override
 	public void updateText(List<String> textLines){
-		BeaconManager.removeBeacon(world, beaconName);
+		NavBeaconSystem.removeBeacon(world, beaconName);
 		try{
 			beaconName = textLines.get(0);
 			text.put(nameTextObject, beaconName);
 			text.put(glideslopeTextObject, textLines.get(1));
 			text.put(bearingTextObject, textLines.get(2));
-			RadioBeacon beacon = new RadioBeacon(text.get(nameTextObject), Double.valueOf(text.get(glideslopeTextObject)), Double.valueOf(text.get(bearingTextObject)), position);
-			BeaconManager.addBeacon(world, beacon);
+			NavBeacon beacon = new NavBeacon(text.get(nameTextObject), Double.valueOf(text.get(glideslopeTextObject)), Double.valueOf(text.get(bearingTextObject)), position);
+			NavBeaconSystem.addBeacon(world, beacon);
 		}catch(Exception e){
 			//Don't save this beacon.  It's entered invalid.
 			setBeaconToDefault();

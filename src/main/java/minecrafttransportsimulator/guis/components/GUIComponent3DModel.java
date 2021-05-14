@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
 
 /**Custom #D model render class.  This allows for rendering a parsed model into a GUI.
  * Mainly used to render vehicles, though can be used for other models if desired.

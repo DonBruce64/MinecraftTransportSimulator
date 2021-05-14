@@ -8,7 +8,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Basic particle class.  This mimic's MC's particle logic, except we can manually set
  * movement logic.  Particles may be spawned by calling {@link InterfaceRender#spawnParticle(EntityParticle)}

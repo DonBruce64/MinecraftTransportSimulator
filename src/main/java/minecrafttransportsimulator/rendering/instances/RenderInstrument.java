@@ -14,8 +14,8 @@ import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
-import minecrafttransportsimulator.rendering.components.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},

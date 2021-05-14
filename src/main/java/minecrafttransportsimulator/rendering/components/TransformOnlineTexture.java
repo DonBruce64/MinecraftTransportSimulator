@@ -4,6 +4,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class represents a section of a model that uses a texture from an online source.
  * The only transform this applies is binding the PNG from the URL to the model prior to rendering.

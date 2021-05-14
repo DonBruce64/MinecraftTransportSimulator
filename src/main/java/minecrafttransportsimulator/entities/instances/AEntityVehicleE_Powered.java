@@ -7,9 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.BeaconManager;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.RadioBeacon;
+import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -23,6 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
+import minecrafttransportsimulator.systems.NavBeaconSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -53,7 +53,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public double electricUsage;
 	public double electricFlow;
 	public String selectedBeaconName;
-	public RadioBeacon selectedBeacon;
+	public NavBeacon selectedBeacon;
 	public EntityFluidTank fuelTank;
 	
 	//Part maps.
@@ -74,7 +74,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
-		this.selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
+		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
 		
 		//Load instruments.
@@ -113,7 +113,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//It might not be valid if it has been removed from the world,
 			//or one might have been placed that matches our selection.
 			if(definition.motorized.isAircraft && ticksExisted%20 == 0){
-				selectedBeacon = BeaconManager.getBeacon(world, selectedBeaconName);
+				selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
 			}
 			
 			//Do trailer-specific logic, if we are one and towed.

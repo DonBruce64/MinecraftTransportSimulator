@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.controls;
+package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -14,6 +14,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -22,8 +23,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Class that handles all control operations.
  * 
