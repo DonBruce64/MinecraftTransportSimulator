@@ -28,8 +28,10 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
@@ -346,79 +348,83 @@ public class JSONParser{
 	 */
 	public static String hotloadJSON(File jsonFile, AJSONItem definitionToOverride){
 		try{
+			final AJSONItem loadedDefinition;
 			switch(definitionToOverride.classification){
 				case VEHICLE : {
 					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
-					JSONVehicle loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
-					vehicleDefinition.general = loadedDefinition.general;
-					vehicleDefinition.definitions = loadedDefinition.definitions;
-					vehicleDefinition.motorized = loadedDefinition.motorized;
-					vehicleDefinition.parts = loadedDefinition.parts;
-					vehicleDefinition.collision = loadedDefinition.collision;
-					vehicleDefinition.doors = loadedDefinition.doors;
-					vehicleDefinition.connectionGroups = loadedDefinition.connectionGroups;
-					vehicleDefinition.rendering = loadedDefinition.rendering;
+					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
+					loadedDefinition = loadedVehicleDefinition;
 					break;
 				}
 				case PART : {
 					JSONPart partDefinition = (JSONPart) definitionToOverride;
-					JSONPart loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
-					partDefinition.general = loadedDefinition.general;
-					partDefinition.engine = loadedDefinition.engine;
-					partDefinition.ground = loadedDefinition.ground;
-					partDefinition.propeller = loadedDefinition.propeller;
-					partDefinition.seat = loadedDefinition.seat;
-					partDefinition.gun = loadedDefinition.gun;
-					partDefinition.interactable = loadedDefinition.interactable;
-					partDefinition.effector = loadedDefinition.effector;
-					partDefinition.generic = loadedDefinition.generic;
-					partDefinition.parts = loadedDefinition.parts;
-					partDefinition.collision = loadedDefinition.collision;
-					partDefinition.doors = loadedDefinition.doors;
-					partDefinition.connectionGroups = loadedDefinition.connectionGroups;
-					partDefinition.rendering = loadedDefinition.rendering;
+					JSONPart loadedPartDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					partDefinition.generic = loadedPartDefinition.generic;
+					partDefinition.engine = loadedPartDefinition.engine;
+					partDefinition.ground = loadedPartDefinition.ground;
+					partDefinition.propeller = loadedPartDefinition.propeller;
+					partDefinition.seat = loadedPartDefinition.seat;
+					partDefinition.gun = loadedPartDefinition.gun;
+					partDefinition.interactable = loadedPartDefinition.interactable;
+					partDefinition.effector = loadedPartDefinition.effector;
+					loadedDefinition = loadedPartDefinition;
 					break;
 				}
 				case INSTRUMENT : {
 					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
-					JSONInstrument loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
-					instrumentDefinition.general = loadedDefinition.general;
-					instrumentDefinition.components = loadedDefinition.components;
+					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					instrumentDefinition.components = loadedInstrumentDefinition.components;
+					loadedDefinition = loadedInstrumentDefinition;
 					break;
 				}
 				case DECOR : {
 					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
-					JSONDecor loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
-					decorDefinition.general = loadedDefinition.general;
-					decorDefinition.definitions = loadedDefinition.definitions;
-					decorDefinition.decor = loadedDefinition.decor;
-					decorDefinition.rendering = loadedDefinition.rendering;
+					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					decorDefinition.decor = loadedDecorDefinition.decor;
+					loadedDefinition = loadedDecorDefinition;
 					break;
 				}
 				case POLE : {
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
-					JSONPoleComponent loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
-					poleDefinition.general = loadedDefinition.general;
+					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					loadedDefinition = loadedPoleDefinition;
 					break;
 				}
 				case BULLET : {
 					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
-					JSONBullet loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
-					bulletDefinition.general = loadedDefinition.general;
-					bulletDefinition.bullet = loadedDefinition.bullet;
+					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					bulletDefinition.bullet = loadedBulletDefinition.bullet;
+					loadedDefinition = loadedBulletDefinition;
 					break;
 				}
 				case ITEM : {
 					JSONItem itemDefinition = (JSONItem) definitionToOverride;
-					JSONItem loadedDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
-					itemDefinition.general = loadedDefinition.general;
-					itemDefinition.item = loadedDefinition.item;
-					itemDefinition.booklet = loadedDefinition.booklet;
-					itemDefinition.food = loadedDefinition.food;
-					itemDefinition.weapon = loadedDefinition.weapon;
+					JSONItem loadedItemDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					itemDefinition.item = loadedItemDefinition.item;
+					itemDefinition.booklet = loadedItemDefinition.booklet;
+					itemDefinition.food = loadedItemDefinition.food;
+					itemDefinition.weapon = loadedItemDefinition.weapon;
+					loadedDefinition = loadedItemDefinition;
 					break;
 				}
 				default : return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
+			}
+			
+			//Do generic loading.
+			definitionToOverride.general = loadedDefinition.general;
+			if(definitionToOverride instanceof AJSONMultiModelProvider){
+				((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
+				((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
+				if(definitionToOverride instanceof AJSONInteractableEntity){
+					((AJSONInteractableEntity) definitionToOverride).collision = ((AJSONInteractableEntity) loadedDefinition).collision;
+					((AJSONInteractableEntity) definitionToOverride).doors = ((AJSONInteractableEntity) loadedDefinition).doors;
+					((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;
+					((AJSONInteractableEntity) definitionToOverride).effects = ((AJSONInteractableEntity) loadedDefinition).effects;
+					if(definitionToOverride instanceof AJSONPartProvider){
+						((AJSONPartProvider) definitionToOverride).parts = ((AJSONPartProvider) loadedDefinition).parts;
+					}
+				}
 			}
 		
 			//Reset renderers and send reset commands to entities.
