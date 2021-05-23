@@ -429,7 +429,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	    		boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
 				if(partToAdd.definition.parts != null){
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), addedDuringConstruction, !newPart);
+						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), partToAdd.definition, addedDuringConstruction, !newPart);
 					}
 					
 				}
@@ -664,7 +664,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * The savedParent flag is to let this method add only default permanent parts, as they get
 	 * removed with the part when wrenched, and added back when placed again, and don't save their states.
 	 */
-	public void addDefaultPart(JSONPartDefinition partDef, boolean addedDuringConstruction, boolean savedParent){
+	public void addDefaultPart(JSONPartDefinition partDef, AJSONPartProvider providingDef, boolean addedDuringConstruction, boolean savedParent){
 		if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
 			try{
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
@@ -677,7 +677,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						//If so, we need to check that for default parts.
 						if(partDef.additionalParts != null){
 							for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
-								addDefaultPart(addedPart.placementDefinition.isSubPart ? addedPart.parentPart.getPackForSubPart(additionalPartDef) : additionalPartDef, addedDuringConstruction, savedParent);
+								addDefaultPart(addedPart.placementDefinition.isSubPart ? addedPart.parentPart.getPackForSubPart(additionalPartDef) : additionalPartDef, providingDef, addedDuringConstruction, savedParent);
 							}
 						}
 						
@@ -685,12 +685,12 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						//We need to make sure to convert them to the right type as they're offset.
 						if(addedPart.definition.parts != null){
 							for(JSONPartDefinition subPartPack : addedPart.definition.parts){
-								addDefaultPart(addedPart.getPackForSubPart(subPartPack), addedDuringConstruction, savedParent);
+								addDefaultPart(addedPart.getPackForSubPart(subPartPack), addedPart.definition, addedDuringConstruction, savedParent);
 							}							
 						}
 					}
 				}catch(NullPointerException e){
-					throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that part doesn't exist in the pack item registry.");
+					throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry.");
 				}
 			}catch(IndexOutOfBoundsException e){
 				throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");

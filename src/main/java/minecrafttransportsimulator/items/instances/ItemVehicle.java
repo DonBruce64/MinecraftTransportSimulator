@@ -62,7 +62,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				
 				//Add default parts via the vehicle's recursion.
 				for(JSONPartDefinition partDef : vehicle.definition.parts){
-					vehicle.addDefaultPart(partDef, true, false);
+					vehicle.addDefaultPart(partDef, vehicle.definition, true, false);
 				}
 				
 				//Add default instruments.
