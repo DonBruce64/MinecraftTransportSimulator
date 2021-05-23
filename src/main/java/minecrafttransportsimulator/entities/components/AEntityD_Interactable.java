@@ -154,7 +154,23 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	
 	@Override
 	public boolean update(){
-		//Need to put the towing checks first, as we don't want to call super if they're false.
+		//Do validity checks for towing variables.  We could do this whenever we disconnect,
+		//but there are tons of ways this could happen.  The trailer could blow up, the 
+		//part-hitch could have been blown up, the trailer could have gotten wrenched, the
+		//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
+		//thing towing us could have done! 
+		if(towedByConnection != null){
+			if(!towedByConnection.hitchEntity.isValid){
+				towedByConnection = null;
+			}
+		}
+		if(!towingConnections.isEmpty()){
+			//First functional expression here in the whole codebase, history in the making!
+			towingConnections.removeIf(connection -> !connection.hookupEntity.isValid);
+		}
+		
+		//Now check if we can do the actual update based on our towing status.
+		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
 			//See if we need to link connections.
 			//We need to wait on this in case the entity didn't load at the same time.
@@ -201,21 +217,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 						InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 					}
 				}
-			}
-			
-			//Do validity checks for towing variables.  We could do this whenever we disconnect,
-			//but there are tons of ways this could happen.  The trailer could blow up, the 
-			//part-hitch could have been blown up, the trailer could have gotten wrenched, the
-			//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
-			//thing towing us could have done! 
-			if(towedByConnection != null){
-				if(!towedByConnection.hitchEntity.isValid){
-					towedByConnection = null;
-				}
-			}
-			if(!towingConnections.isEmpty()){
-				//First functional expression here in the whole codebase, history in the making!
-				towingConnections.removeIf(connection -> !connection.hookupEntity.isValid);
 			}
 			
 			//Update collision boxes.
