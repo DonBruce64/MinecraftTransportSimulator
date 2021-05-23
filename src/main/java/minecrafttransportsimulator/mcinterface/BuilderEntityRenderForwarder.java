@@ -64,6 +64,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     		Vec3d playerEyesVec = playerFollowing.getLookVec().scale(Math.max(1, playerVelocity/2));
     		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
     	}else if(!world.isRemote){
+    		//Forwarder with no player, or no living player.  Player either left, or is dead.  Remove.
     		setDead();
     	}
     }
@@ -74,13 +75,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		if(!world.isRemote && playerFollowing != null){
 			activeFollowers.remove(playerFollowing.getUniqueID());
 		}
-	}
-	
-	@Override
-	public void onRemovedFromWorld(){
-		super.onRemovedFromWorld();
-		//Catch unloaded entities from when the chunk goes away.
-		setDead();
 	}
     
     @Override

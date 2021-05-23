@@ -219,6 +219,16 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 			entity.remove();
 		}
 	}
+	
+	@Override
+	public void onRemovedFromWorld(){
+		super.onRemovedFromWorld();
+		//Catch unloaded entities from when the chunk goes away.
+		if(!isDead){
+			System.out.println("REM");
+			setDead();
+		}
+	}
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){

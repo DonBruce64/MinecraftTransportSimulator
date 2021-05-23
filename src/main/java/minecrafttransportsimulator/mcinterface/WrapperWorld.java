@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -70,6 +71,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 /**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -82,6 +84,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @EventBusSubscriber
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
+	private static final Map<EntityPlayer, Integer> ticksSincePlayerJoin = new HashMap<EntityPlayer, Integer>();
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
@@ -931,27 +934,47 @@ public class WrapperWorld{
 	}
 	
 	/**
-    * Spawn "follower" entities for the player if they don't exist already.
-    * This should be done when the player joins a world.
+    * Mark the player as joining the world so we can spawn followers.
     */
    @SubscribeEvent
    public static void on(EntityJoinWorldEvent event){
 	   if(event.getEntity() instanceof EntityPlayer && !event.getWorld().isRemote){
-		   EntityPlayer player = (EntityPlayer) event.getEntity();
-		   //If we don't have a follower, spawn one now.
-		   if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
-			   BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
-			   //Need to force spawn, as player might not yet have loaded the chunks.
-			   forwarder.forceSpawn = true;
-			   event.getWorld().spawnEntity(forwarder);
-		   }
-   	
-		   //If we don't have an associated gun entity, spawn one now.
-		   if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
-			   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
-	       		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-	       		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
-	       		worldWrapper.spawnEntity(entity);
+		   ticksSincePlayerJoin.put((EntityPlayer) event.getEntity(), 0);
+	   }
+   }
+   
+   /**
+    * Spawn "follower" entities for the player if they don't exist already.
+    * This only happens if the player joined and has been present for 2 seconds.
+    * This delay is done to ensure all chunks are loaded before spawning any followers.
+    */
+   @SubscribeEvent
+   public static void on(TickEvent.WorldTickEvent event){
+	   if(!ticksSincePlayerJoin.isEmpty()){
+		   Iterator<Entry<EntityPlayer, Integer>> iterator = ticksSincePlayerJoin.entrySet().iterator();
+		   while(iterator.hasNext()){
+			   Entry<EntityPlayer, Integer> playerJoinEntry = iterator.next();
+			   EntityPlayer player = playerJoinEntry.getKey();
+			   if(event.world.equals(player.world)){
+				   if(playerJoinEntry.getValue() > 60){
+					   //If we don't have a follower, spawn one now.
+					   if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
+						   BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
+						   player.world.spawnEntity(forwarder);
+					   }
+					
+					   //If we don't have an associated gun entity, spawn one now.
+					   if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
+						   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
+				       		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+				       		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
+				       		worldWrapper.spawnEntity(entity);
+					   }
+					   iterator.remove();
+				   }else{
+					   playerJoinEntry.setValue(playerJoinEntry.getValue() + 1);
+				   }
+			   }
 		   }
 	   }
    }
