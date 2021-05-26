@@ -422,23 +422,21 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					ridableLocations.add(partToAdd.placementOffset);
 				}
     		}else{
-	    		addPart(partToAdd, true);
+    			//Need to know if we are a new part or not.
+    			boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
+    			if(newPart){
+					//Add any default instruments this new part may have.
+    				partToAdd.addDefaultInstruments();
+				}
+    			
+    			//Now add the part as all instruments are on it.
+    			addPart(partToAdd, true);
 				
 				//Add default parts.  We need to do this after we send a packet so our slots are valid.
-				//Also need to make sure to convert the part placement defs to the right type as they're offset.
-	    		boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
+				//Need to make sure to convert the part placement defs to the right type as they're offset.
 				if(partToAdd.definition.parts != null){
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
 						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), partToAdd.definition, addedDuringConstruction, !newPart);
-					}
-				}
-				if(newPart){
-					//Add any default instruments this new part may have.
-					try{
-						partToAdd.addDefaultInstruments();
-					}catch(Exception e){
-						partToAdd.remove();
-						throw e;
 					}
 				}
     		}
