@@ -1,86 +1,41 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpState;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
+/**Packet sent to signal controllers when the confirm button is clicked in the controller GUI to update their state.
+ * This packet arrives on the server and sets the states of the controller as if it was loaded from NBT.  These states
+ * are then loaded and sent to all clients to keep them in-sync.  While the NBT has some overhead due to saving non-essential
+ * variables, it's far less work than the alternative of specifying the entire parameter list.
+ * 
+ * @author don_bruce
+ */
 public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEntitySignalController>{
-	private final OpMode currentOpMode;
-	private final boolean mainDirectionXAxis;
-	private final short greenMainTime;
-	private final short greenCrossTime;
-	private final short yellowMainTime;
-	private final short yellowCrossTime;
-	private final short allRedTime;
-    private final List<Point3d> componentLocations;
+	private final WrapperNBT controllerData;
 	
 	public PacketTileEntitySignalControllerChange(TileEntitySignalController controller){
 		super(controller);
-		this.currentOpMode = controller.currentOpMode;
-		this.mainDirectionXAxis = controller.mainDirectionXAxis;
-		this.greenMainTime = (short) controller.greenMainTime;
-		this.greenCrossTime = (short) controller.greenCrossTime;
-		this.yellowMainTime = (short) controller.yellowMainTime;
-		this.yellowCrossTime = (short) controller.yellowCrossTime;
-		this.allRedTime = (short) controller.allRedTime;
-	    this.componentLocations = controller.componentLocations;
+		this.controllerData = new WrapperNBT();
+		controller.save(controllerData);
 	}
 	
 	public PacketTileEntitySignalControllerChange(ByteBuf buf){
 		super(buf);
-		this.currentOpMode = OpMode.values()[buf.readByte()];
-		this.mainDirectionXAxis = buf.readBoolean();
-		this.greenMainTime = buf.readShort();
-		this.greenCrossTime = buf.readShort();
-		this.yellowMainTime = buf.readShort();
-		this.yellowCrossTime = buf.readShort();
-		this.allRedTime = buf.readShort();
-		
-		byte components = buf.readByte();
-		this.componentLocations = new ArrayList<Point3d>();
-		for(byte i=0; i<components; ++i){
-			componentLocations.add(readPoint3dCompactFromBuffer(buf));
-		}
+		this.controllerData = readDataFromBuffer(buf);
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeByte(currentOpMode.ordinal());
-		buf.writeBoolean(mainDirectionXAxis);
-		buf.writeShort(greenMainTime);
-		buf.writeShort(greenCrossTime);
-		buf.writeShort(yellowMainTime);
-		buf.writeShort(yellowCrossTime);
-		buf.writeShort(allRedTime);
-		
-		buf.writeByte(componentLocations.size());
-		for(Point3d componentLocation : componentLocations){
-			writePoint3dCompactToBuffer(componentLocation, buf);
-		}
+		writeDataToBuffer(controllerData, buf);
 	}
 	
 	@Override
 	protected boolean handle(WrapperWorld world, TileEntitySignalController controller){
-		controller.currentOpMode = currentOpMode;
-		controller.mainDirectionXAxis = mainDirectionXAxis;
-		controller.greenMainTime = greenMainTime;
-		controller.greenCrossTime = greenCrossTime;
-		controller.yellowMainTime = yellowMainTime;
-		controller.yellowCrossTime = yellowCrossTime;
-		controller.allRedTime = allRedTime;
-		controller.componentLocations.clear();
-		controller.componentLocations.addAll(componentLocations);
-		
-		//Reset controller opstate.
-		controller.updateState(OpState.GREEN_MAIN_RED_CROSS, true);
+		controller.initializeController(controllerData);
 		return true;
 	}
 }

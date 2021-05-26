@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.awt.Color;
-import java.util.HashSet;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -10,7 +8,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_TrafficSignal;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.OpMode;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -25,12 +22,24 @@ import net.minecraft.item.ItemStack;
 public class GUISignalController extends AGUIBase{
 	
 	//Buttons.
+	private GUIComponentButton rightHandDriveButton;
 	private GUIComponentButton orientationButton;
-	private GUIComponentButton modeButton;
 	private GUIComponentButton confirmButton;
 	
 	//Input boxes
 	private GUIComponentTextBox scanDistanceText;
+	private GUIComponentTextBox mainLaneWidthText;
+	private GUIComponentTextBox crossLaneWidthText;
+	private GUIComponentTextBox mainLeftLaneCountText;
+	private GUIComponentTextBox mainCenterLaneCountText;
+	private GUIComponentTextBox mainRightLaneCountText;
+	private GUIComponentTextBox crossLeftLaneCountText;
+	private GUIComponentTextBox crossCenterLaneCountText;
+	private GUIComponentTextBox crossRightLaneCountText;
+	private GUIComponentTextBox intersectionCenterPointXText;
+	private GUIComponentTextBox intersectionCenterPointyText;
+	private GUIComponentTextBox intersectionCenterPointZText;
+	
 	private GUIComponentTextBox greenMainTimeText;
 	private GUIComponentTextBox greenCrossTimeText;
 	private GUIComponentTextBox yellowMainTimeText;
@@ -38,36 +47,12 @@ public class GUISignalController extends AGUIBase{
 	private GUIComponentTextBox allRedTimeText;
 	
 	//Labels and items for scan results.
-	private byte trafficSignals;
 	private GUIComponentLabel trafficSignalCount;
-	private GUIComponentItem trafficSignalItem;
-	
-	//These are only used to save the items until we create the components.
-	private ItemStack trafficSignalItemTemp;
-	
-	//Internal controller locations point list.
-	//We set this to prevent the player from seeing changes on their clients.
-	//If we did set the actual locations here, there'd be de-syncs if the player didn't hit confirm.
-	private final Set<Point3d> componentLocations = new HashSet<Point3d>();
 	
 	private final TileEntitySignalController controller;
 	
 	public GUISignalController(TileEntitySignalController controller){
 		this.controller = controller;
-		
-		//Set initial signal counts.
-		for(Point3d location : controller.componentLocations){
-			ATileEntityBase<?> tile = controller.world.getTileEntity(location);
-			if(tile instanceof TileEntityPole){
-				for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
-					if(component instanceof TileEntityPole_TrafficSignal){
-						trafficSignalItemTemp = component.getItem().getNewStack();
-						++trafficSignals;
-						componentLocations.add(location);
-					}
-				}
-			}
-		}
 	}
 	
 	@Override 
@@ -75,9 +60,12 @@ public class GUISignalController extends AGUIBase{
 		addButton(new GUIComponentButton(guiLeft + 25, guiTop + 15, 200, InterfaceCore.translate("gui.trafficsignalcontroller.scan")){
 			@Override
 			public void onClicked(){
-				trafficSignals = 0;
-				componentLocations.clear();
+				controller.componentLocations.clear();
 				int scanDistance = Integer.valueOf(scanDistanceText.getText());
+				double minX = Double.MAX_VALUE;
+				double maxX = Double.MIN_VALUE;
+				double minZ = Double.MAX_VALUE;
+				double maxZ = Double.MIN_VALUE;
 				for(double i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
 					for(double j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
 						for(double k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
@@ -86,15 +74,19 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										trafficSignalItem.stack = component.getItem().getNewStack();
-										++trafficSignals;
-										componentLocations.add(checkPosition);
+										controller.componentLocations.add(checkPosition);
+										minX = Math.min(minX, checkPosition.x);
+										maxX = Math.max(maxX, checkPosition.x);
+										minZ = Math.min(minZ, checkPosition.z);
+										maxZ = Math.max(maxZ, checkPosition.z);
+										break;
 									}
 								}
 							}
 						}
 					}
 				}
+				controller.intersectionCenterPoint.set(minX + (maxX-minX)/2, controller.position.y, minZ + (maxZ - minZ)/2);
 			}
 		});
 		addTextBox(scanDistanceText = new GUIComponentTextBox(guiLeft + 120, guiTop + 40, 40, "25", 10, Color.WHITE, Color.BLACK, 2));
@@ -102,71 +94,22 @@ public class GUISignalController extends AGUIBase{
 		addLabel(new GUIComponentLabel(guiLeft + 30, guiTop + 55, Color.WHITE, InterfaceCore.translate("gui.trafficsignalcontroller.scanfound")));
 		
 		//Traffic signal scan results.
-		addItem(trafficSignalItem = new GUIComponentItem(guiLeft + 120, guiTop + 52, 1.0F, trafficSignalItemTemp));
-		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + trafficSignals));
+		addLabel(trafficSignalCount = new GUIComponentLabel(guiLeft + 135, guiTop + 56, Color.WHITE, " X" + controller.componentLocations.size()));
 		
 		
-		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionXAxis ? "X" : "Z", 15, true){
+		addButton(orientationButton = new GUIComponentButton(guiLeft + 125, guiTop + 70, 100, controller.mainDirectionNorthOrNortheast ? (controller.isDiagonalIntersection ? "NE/SW" : "N/S") : (controller.isDiagonalIntersection ? "SE/NW" : "E/W"), 15, true){
 			@Override
 			public void onClicked(){
-				if(controller.mainDirectionXAxis){
-					controller.mainDirectionXAxis = false;
-					this.text = "Z";
+				if(controller.mainDirectionNorthOrNortheast){
+					controller.mainDirectionNorthOrNortheast = false;
+					this.text = controller.isDiagonalIntersection ? "SE/NW" : "E/W";
 				}else{
-					controller.mainDirectionXAxis = true;
-					this.text = "X";
+					controller.mainDirectionNorthOrNortheast = true;
+					this.text = controller.isDiagonalIntersection ? "NE/SW" : "N/S";
 				}
 			}
 		});
 		addLabel(new GUIComponentLabel(guiLeft + 30, orientationButton.y + 5, Color.WHITE, InterfaceCore.translate("gui.trafficsignalcontroller.primary")).setButton(orientationButton));
-		
-		String modeLabel = "";
-		switch(controller.currentOpMode){
-			case TIMED_CYCLE: {
-				modeLabel = InterfaceCore.translate("gui.trafficsignalcontroller.modetime");
-				break;
-			}
-			case VEHICLE_TRIGGER: {
-				modeLabel = InterfaceCore.translate("gui.trafficsignalcontroller.modetrigger");
-				break;
-			}
-			case REDSTONE_TRIGGER: {
-				modeLabel = InterfaceCore.translate("gui.trafficsignalcontroller.moderedstone");
-				break;
-			}
-			case REMOTE_CONTROL: {
-				modeLabel = InterfaceCore.translate("gui.trafficsignalcontroller.moderemote");
-				break;
-			}
-		}
-		addButton(modeButton = new GUIComponentButton(guiLeft + 125, guiTop + 85, 100, modeLabel, 15, true){
-			@Override
-			public void onClicked(){
-				switch(controller.currentOpMode){
-					case TIMED_CYCLE: {
-						controller.currentOpMode = OpMode.VEHICLE_TRIGGER;
-						this.text = InterfaceCore.translate("gui.trafficsignalcontroller.modetrigger");
-						break;
-					}
-					case VEHICLE_TRIGGER: {
-						controller.currentOpMode = OpMode.REDSTONE_TRIGGER;
-						this.text = InterfaceCore.translate("gui.trafficsignalcontroller.moderedstone");
-						break;
-					}
-					case REDSTONE_TRIGGER: {
-						controller.currentOpMode = OpMode.REMOTE_CONTROL;
-						this.text = InterfaceCore.translate("gui.trafficsignalcontroller.moderemote");
-						break;
-					}
-					case REMOTE_CONTROL: {
-						controller.currentOpMode = OpMode.TIMED_CYCLE;
-						this.text = InterfaceCore.translate("gui.trafficsignalcontroller.modetime");
-						break;
-					}
-				}
-			}
-		});
-		addLabel(new GUIComponentLabel(guiLeft + 30, modeButton.y + 5, Color.WHITE, InterfaceCore.translate("gui.trafficsignalcontroller.signalmode")).setButton(modeButton));
 		
 		addTextBox(greenMainTimeText = new GUIComponentTextBox(guiLeft + 180, guiTop + 105, 40, String.valueOf(controller.greenMainTime), 10, Color.WHITE, Color.BLACK, 3));
 		addLabel(new GUIComponentLabel(guiLeft + 30, greenMainTimeText.y, Color.WHITE, InterfaceCore.translate("gui.trafficsignalcontroller.greenmaintime")).setBox(greenMainTimeText));
@@ -186,19 +129,6 @@ public class GUISignalController extends AGUIBase{
 		addButton(confirmButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 80, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
 			public void onClicked(){
-				//Convert strings to ints and send update packet to server.
-				//Catch bad text if we have any as we don't want that to crash the server.
-				try{
-					controller.greenMainTime = Integer.valueOf(greenMainTimeText.getText());
-					controller.greenCrossTime = Integer.valueOf(greenCrossTimeText.getText());
-					controller.yellowMainTime = Integer.valueOf(yellowMainTimeText.getText());
-					controller.yellowCrossTime = Integer.valueOf(yellowCrossTimeText.getText());
-					controller.allRedTime = Integer.valueOf(allRedTimeText.getText());
-					controller.componentLocations.clear();
-					controller.componentLocations.addAll(componentLocations);
-				}catch(Exception e){
-					return;
-				}
 				InterfacePacket.sendToServer(new PacketTileEntitySignalControllerChange(controller));
 				InterfaceGUI.closeGUI();
 			}
@@ -207,29 +137,23 @@ public class GUISignalController extends AGUIBase{
 	
 	@Override
 	public void setStates(){
-		trafficSignalCount.visible = trafficSignals > 0;
-		
-		trafficSignalCount.text = " X" + trafficSignals;
-		
-		if(trafficSignals > 0){
-			orientationButton.enabled = true;
-			modeButton.enabled = true;
-			greenMainTimeText.enabled = true;
-			greenCrossTimeText.enabled = true;
-			yellowMainTimeText.enabled = true;
-			yellowCrossTimeText.enabled = true;
-			allRedTimeText.enabled = true;
-			confirmButton.enabled = true;
-		}else{
+		trafficSignalCount.text = " X" + controller.componentLocations.size();
+		if(controller.componentLocations.isEmpty()){
 			orientationButton.enabled = false;
-			modeButton.enabled = false;
 			greenMainTimeText.enabled = false;
 			greenCrossTimeText.enabled = false;
 			yellowMainTimeText.enabled = false;
 			yellowCrossTimeText.enabled = false;
 			allRedTimeText.enabled = false;
 			confirmButton.enabled = false;
+		}else{
+			orientationButton.enabled = true;
+			greenMainTimeText.enabled = true;
+			greenCrossTimeText.enabled = true;
+			yellowMainTimeText.enabled = true;
+			yellowCrossTimeText.enabled = true;
+			allRedTimeText.enabled = true;
+			confirmButton.enabled = true;
 		}
-		greenMainTimeText.visible = controller.currentOpMode.equals(OpMode.TIMED_CYCLE);
 	}
 }

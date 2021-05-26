@@ -1,13 +1,15 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -19,160 +21,75 @@ import minecrafttransportsimulator.rendering.components.LightType;
 * @author don_bruce
 */
 public class TileEntitySignalController extends TileEntityDecor implements ITileEntityTickable{	
-	//Mode state.
-	public OpMode currentOpMode = OpMode.TIMED_CYCLE;
+		
+	//Main settings for all operation.
+	public boolean isRightHandDrive;
+	public boolean isDiagonalIntersection;
+	public boolean mainDirectionNorthOrNortheast;
+	public boolean unsavedClientChangesPreset;
 	
-	//Timers and controls for automatic control modes.
-	public boolean lightsOn = true;
-	public boolean mainDirectionXAxis;
-	public OpState currentOpState = OpState.GREEN_MAIN_RED_CROSS;
-	public int timeOperationStarted;
+	//Settings for trigger operation.
+	public int mainLaneWidth;
+	public int crossLaneWidth;
+	public int mainLeftLaneCount;
+	public int mainCenterLaneCount;
+	public int mainRightLaneCount;
+	public int crossLeftLaneCount;
+	public int crossCenterLaneCount;
+	public int crossRightLaneCount;
+	public Point3d intersectionCenterPoint;
+	
+	//Settings for timed operation.
 	public int greenMainTime = 20;
 	public int greenCrossTime = 10;
 	public int yellowMainTime = 2;
 	public int yellowCrossTime = 2;
 	public int allRedTime = 1;
 	
-	//Locations of blocks.
-	public final List<Point3d> componentLocations = new ArrayList<Point3d>();
+	//Locations of blocks where signals are.
+	public final Set<Point3d> componentLocations = new HashSet<Point3d>();
+	private final Set<TileEntityPole> foundPoles = new HashSet<TileEntityPole>();
+	
+	//Signal blocks used in this controller.  Based on components.
+	private final Set<SignalGroup> signalGroups = new HashSet<SignalGroup>();
 	
 	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
-		//Load state data.
-		currentOpMode = OpMode.values()[data.getInteger("currentOpMode")];
-		currentOpState = OpState.values()[data.getInteger("currentOpState")];
-		timeOperationStarted = data.getInteger("timeOperationStarted");
-		mainDirectionXAxis = data.getBoolean("mainDirectionXAxis");
-		if(data.getBoolean("hasCustomTimes")){
-			greenMainTime = data.getInteger("greenMainTime");
-	        greenCrossTime = data.getInteger("greenCrossTime");
-	        yellowMainTime = data.getInteger("yellowMainTime");
-	        yellowCrossTime = data.getInteger("yellowCrossTime");
-	        allRedTime = data.getInteger("allRedTime");
-		}
-        componentLocations.clear();
-        componentLocations.addAll(data.getPoint3dsCompact("componentLocations"));
+		initializeController(data);
 	}
 	
 	@Override
 	public boolean update(){
 		if(super.update()){
 			//Check every 1 seconds to make sure controlled components are in their correct states.
-			//This could have changed due to chunkloading.  We also check light redstone state here.
+			//This could have changed due to chunkloading or the components being destroyed.
 			if(world.getTick()%20 == 0){
-				updateState(currentOpState, false);
-			}
-			
-			int currentTime = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
-			int redstoneSignal = world.getRedstonePower(position.copy().add(0, -1, 0));
-			//If we aren't in remote control mode, do checks for state changes.
-			if(!currentOpMode.equals(OpMode.REMOTE_CONTROL)){
-				if(!currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
-					//If we aren't in redstone signal mode, check lights.
-					if(lightsOn ^ redstoneSignal == 0){
-						lightsOn = !lightsOn;
-						updateState(currentOpState, false);
-					}
-				}
-				
-				//If we are in the idle op sate, check if we need to start a cycle.
-				if(currentOpState.equals(OpState.GREEN_MAIN_RED_CROSS)){
-					if(currentOpMode.equals(OpMode.VEHICLE_TRIGGER)){
-						//We're a triggered signal, check for vehicles.
-						//Check only once every two seconds to prevent lag.
-						if(currentTime%2 == 0){
-							//Get a bounding box for all lights in the controller system.
-							double minX = Double.MAX_VALUE;
-							double maxX = Double.MIN_VALUE;
-							double minZ = Double.MAX_VALUE;
-							double maxZ = Double.MIN_VALUE;
-							for(Point3d controllerSignalPos : componentLocations){
-								minX = Math.min(minX, controllerSignalPos.x);
-								maxX = Math.max(maxX, controllerSignalPos.x);
-								minZ = Math.min(minZ, controllerSignalPos.z);
-								maxZ = Math.max(maxZ, controllerSignalPos.z);
-							}
-							
-							//Take 16 off to expand the detection boxes for the axis.
-							if(mainDirectionXAxis){
-								minZ -= 16;
-								maxZ += 16;
-							}else{
-								minX -= 16;
-								maxX += 16;
-							}
-							
-							//Now we have min-max, check for any vehicles in the area.
-							//We need to check along the non-primary axis, but we don't care about Y.
-							for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-								if(entity instanceof EntityVehicleF_Physics){
-									EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-									if(vehicle.position.x > minX && vehicle.position.x < maxX && vehicle.position.z > minZ && vehicle.position.z < maxZ){
-										updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
-										break;
+				//Check for any missing components, if we are missing some.
+				if(componentLocations.size() > foundPoles.size()){
+					Iterator<Point3d> iterator = componentLocations.iterator();
+					while(iterator.hasNext()){
+						Point3d poleLocation = iterator.next();
+						TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
+						if(pole != null && !foundPoles.contains(pole)){
+							for(Axis axis : Axis.values()){
+								ATileEntityPole_Component component = pole.components.get(axis);
+								if(component instanceof TileEntityPole_TrafficSignal){
+									foundPoles.add(pole);
+									for(SignalGroup signalGroup : signalGroups){
+										if(signalGroup.axis.equals(axis)){
+											signalGroup.setSignals(null, signalGroup.currentLight);
+										}
 									}
 								}
 							}
 						}
-					}else if(currentOpMode.equals(OpMode.REDSTONE_TRIGGER)){
-						//If redstone is active, start sequence.
-						if(redstoneSignal > 0){
-							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
-						}
-					}else{
-						//Not a triggered signal, we must be timed.
-						if(timeOperationStarted + greenMainTime <= currentTime){
-							updateState(OpState.YELLOW_MAIN_RED_CROSS, true);
-						}
-					}
-				}else{
-					//In the middle of a cycle.  Do logic.
-					switch(currentOpState){
-						case GREEN_MAIN_RED_CROSS : break; //Not gonna happen, we tested for this.
-						case YELLOW_MAIN_RED_CROSS : {
-							if(timeOperationStarted + yellowMainTime <= currentTime){
-								updateState(OpState.RED_MAIN_RED_CROSS, true);
-							}
-							break;
-						}
-						case RED_MAIN_RED_CROSS : {
-							if(timeOperationStarted + allRedTime <= currentTime){
-								updateState(OpState.RED_MAIN_GREEN_CROSS, true);
-							}
-							break;
-						}
-						case RED_MAIN_GREEN_CROSS : {
-							if(timeOperationStarted + greenCrossTime <= currentTime){
-								updateState(OpState.RED_MAIN_YELLOW_CROSS, true);
-							}
-							break;
-						}
-						case RED_MAIN_YELLOW_CROSS : {
-							if(timeOperationStarted + yellowCrossTime <= currentTime){
-								updateState(OpState.RED_MAIN2_RED_CROSS2, true);
-							}
-							break;
-						}
-						case RED_MAIN2_RED_CROSS2 : {
-							if(timeOperationStarted + allRedTime <= currentTime){
-								updateState(OpState.GREEN_MAIN_RED_CROSS, true);
-							}
-							break;
-						}
 					}
 				}
-			}else{
-				//We are remotely-controlled.  Adjust state to redstone.
-				//First three bits are the state of the controller, the last bit is the light state.
-				int stateOpCode = redstoneSignal & 7;
-				boolean lightOnSignal = redstoneSignal >> 3 > 0;
-				if(lightsOn ^ lightOnSignal){
-					lightsOn = !lightsOn;
-					updateState(currentOpState, false);
-				}
-				if(currentOpState.ordinal() != stateOpCode && stateOpCode < OpState.values().length){
-					updateState(OpState.values()[stateOpCode], false);
-				}
+			}
+			
+			//All valid poles and components found.  Update signal blocks.
+			for(SignalGroup signalGroup : signalGroups){
+				signalGroup.update();
 			}
 			return true;
 		}else{
@@ -181,77 +98,459 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	}
 	
 	/**
-	 * Method to change signal state.  Can be internally called or externally called.
-	 * If cycleUpdate is true, then this is assumed to be a cycle increment, so the
-	 * timeOperationStarted value is set to the current time.
+	 *  Updates all components and creates the signal groups for an intersection.  Also updates
+	 *  the settings for the controller based on the saved NBT.  Use this whenever the controller
+	 *  settings are changed, either by placing the block the first time, or updating via the GUI.
 	 */
-	public void updateState(OpState state, boolean cycleUpdate){
-		currentOpState = state;
-		if(cycleUpdate){
-			timeOperationStarted = (int) ((world.getTick()/20)%Integer.MAX_VALUE);
-		}
+	public void initializeController(WrapperNBT data){
+		//Load state data.
+		isRightHandDrive = data.getBoolean("isRightHandDrive");
+		mainDirectionNorthOrNortheast = data.getBoolean("mainDirectionNorthOrNortheast");
 		
-		for(Point3d poleLocation : componentLocations){
+		mainLaneWidth = data.getInteger("mainLaneWidth");
+		crossLaneWidth = data.getInteger("crossLaneWidth");
+		mainLeftLaneCount = data.getInteger("mainLeftLaneCount");
+		mainCenterLaneCount = data.getInteger("mainCenterLaneCount");
+		mainRightLaneCount = data.getInteger("mainRightLaneCount");
+		crossLeftLaneCount = data.getInteger("crossLeftLaneCount");
+		crossCenterLaneCount = data.getInteger("crossCenterLaneCount");
+		crossRightLaneCount = data.getInteger("crossRightLaneCount");
+		intersectionCenterPoint = data.getPoint3dCompact("intersectionCenterPoint");
+		
+		if(data.getBoolean("hasCustomTimes")){
+			greenMainTime = data.getInteger("greenMainTime");
+	        greenCrossTime = data.getInteger("greenCrossTime");
+	        yellowMainTime = data.getInteger("yellowMainTime");
+	        yellowCrossTime = data.getInteger("yellowCrossTime");
+	        allRedTime = data.getInteger("allRedTime");
+		}
+				
+        //Set new component locations. 
+		componentLocations.clear();
+        componentLocations.addAll(data.getPoint3dsCompact("componentLocations"));
+        
+        //Get all signal axis to create all groups.
+        Set<Axis> activeAxis = new HashSet<Axis>();
+        for(Point3d poleLocation : componentLocations){
 			TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
 			if(pole != null){
-				for(Axis axis : pole.components.keySet()){
-					ATileEntityPole_Component component = pole.components.get(axis);
-					if(component instanceof TileEntityPole_TrafficSignal){
-						TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
-						signal.variablesOn.clear();
-						signal.variablesOn.add((axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH)) ^ mainDirectionXAxis ? currentOpState.mainLight.lowercaseName : currentOpState.crossLight.lowercaseName);
-					}else if(component instanceof TileEntityPole_StreetLight){
-						TileEntityPole_StreetLight light = (TileEntityPole_StreetLight) component;
-						if(light.variablesOn.contains(LightType.STREETLIGHT.lowercaseName) ^ lightsOn){
-							light.variablesOn.clear();
-							if(lightsOn){
-								light.variablesOn.add(LightType.STREETLIGHT.lowercaseName);
-							}
-							pole.updateLightState();
-						}
+				for(Entry<Axis, ATileEntityPole_Component> componentEntry : pole.components.entrySet()){
+					if(componentEntry.getValue() instanceof TileEntityPole_TrafficSignal){
+						activeAxis.add(componentEntry.getKey());
 					}
 				}
 			}
 		}
+        
+        //Create all applicable signal groups.
+        signalGroups.clear();
+        for(Axis axis : activeAxis){
+        	boolean isAxisMain = mainDirectionNorthOrNortheast ? axis.equals(Axis.NORTH) || axis.equals(Axis.NORTHEAST) || axis.equals(Axis.SOUTH) || axis.equals(Axis.SOUTHWEST) : axis.equals(Axis.EAST) || axis.equals(Axis.SOUTHEAST) || axis.equals(Axis.WEST) || axis.equals(Axis.NORTHWEST); 
+        	signalGroups.add(new SignalGroupCenter(axis, data.getData(axis.name() + SignalDirection.CENTER.name())));
+        	if(isAxisMain ? mainLeftLaneCount > 0 : crossLeftLaneCount > 0)signalGroups.add(new SignalGroupLeft(axis, data.getData(axis.name() + SignalDirection.LEFT.name())));
+        	if(isAxisMain ? mainRightLaneCount > 0 : crossRightLaneCount > 0)signalGroups.add(new SignalGroupRight(axis, data.getData(axis.name() + SignalDirection.RIGHT.name())));
+        }
+        
+        isDiagonalIntersection = activeAxis.contains(Axis.NORTHEAST) || activeAxis.contains(Axis.SOUTHWEST);
 	}
     
 	@Override
     public void save(WrapperNBT data){
 		super.save(data);
-		data.setInteger("currentOpMode", currentOpMode.ordinal());
-		data.setInteger("currentOpState", currentOpState.ordinal());
-		data.setInteger("timeOperationStarted", timeOperationStarted);
-		data.setBoolean("mainDirectionXAxis", mainDirectionXAxis);
+		data.setBoolean("isRightHandDrive", isRightHandDrive);
+		data.setBoolean("mainDirectionNorthOrNortheast", mainDirectionNorthOrNortheast);
+		
+		data.setInteger("mainLaneWidth", mainLaneWidth);
+		data.setInteger("crossLaneWidth", crossLaneWidth);
+		data.setInteger("mainLeftLaneCount", mainLeftLaneCount);
+		data.setInteger("mainCenterLaneCount", mainCenterLaneCount);
+		data.setInteger("mainRightLaneCount", mainRightLaneCount);
+		data.setInteger("crossLeftLaneCount", crossLeftLaneCount);
+		data.setInteger("crossCenterLaneCount", crossCenterLaneCount);
+		data.setInteger("crossRightLaneCount", crossRightLaneCount);
+		data.setPoint3dCompact("intersectionCenterPoint", intersectionCenterPoint);
+		
 		data.setBoolean("hasCustomTimes", true);
         data.setInteger("greenMainTime", greenMainTime);
         data.setInteger("greenCrossTime", greenCrossTime);
         data.setInteger("yellowMainTime", yellowMainTime);
         data.setInteger("yellowCrossTime", yellowCrossTime);
         data.setInteger("allRedTime", allRedTime);
+        
         data.setPoint3dsCompact("componentLocations", componentLocations);
+        for(SignalGroup signalGroup : signalGroups){
+        	WrapperNBT signalGroupData = new WrapperNBT();
+        	signalGroup.save(signalGroupData);
+        	data.setData(signalGroup.axis.name() + signalGroup.direction.name(), signalGroupData);
+        }
     }
 	
-	public static enum OpMode{
-		TIMED_CYCLE,
-		VEHICLE_TRIGGER,
-		REDSTONE_TRIGGER,
-		REMOTE_CONTROL;
+	private abstract class SignalGroup{
+		protected final Axis axis;
+		protected final SignalDirection direction;
+		protected final boolean isMainSignal;
+		protected LightType currentLight;
+		protected LightType requestedLight;
+		protected int currentCooldown;
+		protected Set<SignalGroup> blockingSignals = new HashSet<SignalGroup>();
+		
+		//Parameters for this signal boxes bounds.  These are all based with a south-facing reference.
+		//when checking, the point will be rotated to be in this reference plane.
+		protected final int signalLineWidth;
+		protected final Point3d signalLineCenter;
+		
+		private SignalGroup(Axis axis, SignalDirection direction, WrapperNBT data){
+			this.axis = axis;
+			this.direction = direction;
+			if(mainDirectionNorthOrNortheast){
+				if(isDiagonalIntersection){
+					isMainSignal = axis.equals(Axis.NORTHEAST) || axis.equals(Axis.SOUTHWEST);
+				}else{
+					isMainSignal = axis.equals(Axis.NORTH) || axis.equals(Axis.SOUTH);
+				}
+			}else{
+				if(isDiagonalIntersection){
+					isMainSignal = axis.equals(Axis.SOUTHEAST) || axis.equals(Axis.NORTHWEST);
+				}else{
+					isMainSignal = axis.equals(Axis.EAST) || axis.equals(Axis.WEST);
+				}
+			}
+			
+			String currentLightName = data.getString("currentLight");
+			if(!currentLightName.isEmpty()){
+				currentLight = LightType.valueOf(currentLightName);
+			}
+			String requestedLightName = data.getString("requestedLight");
+			if(!requestedLightName.isEmpty()){
+				requestedLight = LightType.valueOf(requestedLightName);
+			}
+			currentCooldown = data.getInteger("currentCooldown");
+			
+			int totalRoadWidth;
+			double distanceToSignalsFromCenter;
+			if(isMainSignal){
+				totalRoadWidth = (mainLeftLaneCount + mainCenterLaneCount + mainRightLaneCount)*mainLaneWidth;
+				distanceToSignalsFromCenter = (crossLeftLaneCount + crossCenterLaneCount + crossRightLaneCount)*crossLaneWidth/2D;
+			}else{
+				totalRoadWidth = (crossLeftLaneCount + crossCenterLaneCount + crossRightLaneCount)*crossLaneWidth;
+				distanceToSignalsFromCenter = (mainLeftLaneCount + mainCenterLaneCount + mainRightLaneCount)*mainLaneWidth/2D;
+			}
+			switch(direction){
+				case CENTER: {
+					this.signalLineWidth = isMainSignal ? mainCenterLaneCount*mainLaneWidth : crossCenterLaneCount*crossLaneWidth;
+					int leftSegmentWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
+					this.signalLineCenter = new Point3d(-totalRoadWidth/2D + leftSegmentWidth + signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					break;
+				}
+				case LEFT: {
+					this.signalLineWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
+					this.signalLineCenter = new Point3d(-totalRoadWidth/2D + signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					break;
+				}
+				case RIGHT: {
+					this.signalLineWidth = isMainSignal ? mainRightLaneCount*mainLaneWidth : crossRightLaneCount*crossLaneWidth;
+					this.signalLineCenter = new Point3d(totalRoadWidth/2D - signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					break;
+				}
+				default: throw new IllegalStateException("We'll never get here, shut up compiler!");
+			}
+		}
+		
+		protected void update(){
+			if(currentCooldown > 0){
+				//Currently changing lights.  Handle this logic instead of signal-based logic.
+				if(--currentCooldown == 0){
+					LightType nextLight = getNextLight();
+					setSignals(currentLight, nextLight);
+					currentCooldown = getSignalCooldown();
+					if(nextLight.equals(requestedLight)){
+						requestedLight = null;
+					}
+				}
+			}else if(blockingSignals.isEmpty()){
+				//See if we have a vehicle in our intersection bounds and need to change other signals.
+				//We only do this once every 2 seconds, and only if we aren't a main-central intersection.
+				if(!(isMainSignal && direction.equals(SignalDirection.CENTER)) && world.getTick()%40 == 0){
+					for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(world)){
+						if(entity instanceof EntityVehicleF_Physics){
+							Point3d adjustedPos = entity.position.copy().subtract(intersectionCenterPoint).rotateY(-axis.yRotation);
+							if(adjustedPos.x > signalLineCenter.x - signalLineWidth/2D && adjustedPos.x < signalLineCenter.x + signalLineWidth/2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
+								//Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
+								//Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
+								for(SignalGroup otherSignal : signalGroups){
+									if(!otherSignal.equals(this) && this.isSignalBlocking(otherSignal)){
+										blockingSignals.add(otherSignal);
+									}
+								}
+								break;
+							}
+						}
+					}
+				}
+			}else{
+				//Wait until blocking signals are clear, then make ourselves green.
+				//If the blocking signal isn't red, try to make it be red.  If it is red, remove the signal as blocking.
+				Iterator<SignalGroup> iterator = blockingSignals.iterator();
+				while(iterator.hasNext()){
+					SignalGroup blockingSignal = iterator.next();
+					if(blockingSignal.requestedLight == null && blockingSignal.currentCooldown == 0){
+						LightType redLight = blockingSignal.getRedLight();
+						if(!blockingSignal.currentLight.equals(redLight)){
+							blockingSignal.setSignals(blockingSignal.currentLight, blockingSignal.getRedLight());
+						}else{
+							iterator.remove();
+						}
+					}
+				}
+				if(blockingSignals.isEmpty()){
+					//Change our signal state as no signals are blocking.
+					setSignals(currentLight, getGreenLight());
+				}
+			}
+		}
+		
+		protected void setSignals(LightType oldLight, LightType newLight){
+			for(TileEntityPole pole : foundPoles){
+				ATileEntityPole_Component component = pole.components.get(axis);
+				if(component instanceof TileEntityPole_TrafficSignal){
+					if(oldLight != null){
+						component.variablesOn.remove(oldLight.lowercaseName);
+					}
+					component.variablesOn.add(newLight.lowercaseName);
+				}
+			}
+			currentLight = newLight;
+		}
+		
+		protected abstract LightType getNextLight();
+		
+		protected abstract LightType getRedLight();
+		
+		protected abstract LightType getGreenLight();
+		
+		protected abstract int getSignalCooldown();
+		
+		protected abstract boolean isSignalBlocking(SignalGroup otherSignal);
+		
+		protected void save(WrapperNBT data){
+			data.setString("currentLight", currentLight.name());
+			if(requestedLight != null){
+				data.setString("requestedLight", requestedLight.name());
+			}
+			data.setInteger("currentCooldown", currentCooldown);
+		}
 	}
 	
-	public static enum OpState{
-		GREEN_MAIN_RED_CROSS(LightType.GOLIGHT, LightType.STOPLIGHT),
-		YELLOW_MAIN_RED_CROSS(LightType.CAUTIONLIGHT, LightType.STOPLIGHT),
-		RED_MAIN_RED_CROSS(LightType.STOPLIGHT, LightType.STOPLIGHT),
-		RED_MAIN_GREEN_CROSS(LightType.STOPLIGHT, LightType.GOLIGHT),
-		RED_MAIN_YELLOW_CROSS(LightType.STOPLIGHT, LightType.CAUTIONLIGHT),
-		RED_MAIN2_RED_CROSS2(LightType.STOPLIGHT, LightType.STOPLIGHT);
+	private class SignalGroupCenter extends SignalGroup{
 		
-		public final LightType mainLight;
-		public final LightType crossLight;
-		
-		private OpState(LightType mainLight, LightType crossLight){
-			this.mainLight = mainLight;
-			this.crossLight = crossLight;
+		private SignalGroupCenter(Axis axis, WrapperNBT data){
+			super(axis, SignalDirection.CENTER, data);
+			this.requestedLight = LightType.STOPLIGHT;
 		}
+		
+		@Override
+		protected LightType getNextLight(){
+			switch(currentLight){
+				case GOLIGHT: return LightType.CAUTIONLIGHT;
+				case CAUTIONLIGHT: return LightType.STOPLIGHT;
+				case STOPLIGHT: return LightType.GOLIGHT;
+				default: return null;
+			}
+		}
+		
+		@Override
+		protected LightType getRedLight(){
+			return LightType.STOPLIGHT;
+		}
+		
+		@Override
+		protected LightType getGreenLight(){
+			return LightType.GOLIGHT;
+		}
+		
+		@Override
+		protected int getSignalCooldown(){
+			switch(currentLight){
+				case GOLIGHT: return isMainSignal ? greenMainTime : greenCrossTime;
+				case CAUTIONLIGHT: return isMainSignal ? yellowMainTime : yellowCrossTime;
+				case STOPLIGHT: return allRedTime;
+				default: return 0;
+			}
+		}
+		
+		@Override
+		protected boolean isSignalBlocking(SignalGroup otherSignal){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+				case SOUTH : { //Same direction.
+					return false;
+				}
+				case EAST : { //Other signal to the right.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return !isRightHandDrive;
+						case RIGHT: return false;
+					}
+				}
+				case NORTH : { //Opposite direction.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return !isRightHandDrive;
+						case RIGHT: return isRightHandDrive;
+					}
+				}
+				case WEST : { //Other signal to the left.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return false;
+						case RIGHT: return !isRightHandDrive;
+					}
+				}
+				default : return true; //Unknown direction.
+			}
+		}
+	}
+	
+	private class SignalGroupLeft extends SignalGroup{
+		
+		private SignalGroupLeft(Axis axis, WrapperNBT data){
+			super(axis, SignalDirection.LEFT, data);
+			this.requestedLight = LightType.STOPLIGHTLEFT;
+		}
+		
+		@Override
+		protected LightType getNextLight(){
+			switch(currentLight){
+				case GOLIGHTLEFT: return LightType.CAUTIONLIGHTLEFT;
+				case CAUTIONLIGHTLEFT: return LightType.STOPLIGHTLEFT;
+				case STOPLIGHTLEFT: return LightType.GOLIGHTLEFT;
+				default: return null;
+			}
+		}
+		
+		@Override
+		protected LightType getRedLight(){
+			return LightType.STOPLIGHTLEFT;
+		}
+		
+		@Override
+		protected LightType getGreenLight(){
+			return LightType.GOLIGHTLEFT;
+		}
+		
+		@Override
+		protected int getSignalCooldown(){
+			switch(currentLight){
+				case GOLIGHTLEFT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
+				case CAUTIONLIGHTLEFT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
+				case STOPLIGHTLEFT: return allRedTime;
+				default: return 0;
+			}
+		}
+		
+		@Override
+		protected boolean isSignalBlocking(SignalGroup otherSignal){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+				case SOUTH : { //Same direction.
+					return false;
+				}
+				case EAST : { //Other signal to the right.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return isRightHandDrive;
+						case RIGHT: return true;
+					}
+				}
+				case NORTH : { //Opposite direction.
+					switch(otherSignal.direction){
+						case CENTER: return !isRightHandDrive;
+						case LEFT: return true;
+						case RIGHT: return false;
+					}
+				}
+				case WEST : { //Other signal to the left.
+					switch(otherSignal.direction){
+						case CENTER: return isRightHandDrive;
+						case LEFT: return isRightHandDrive;
+						case RIGHT: return true;
+					}
+				}
+				default : return true; //Unknown direction.
+			}
+		}
+	}
+	
+	private class SignalGroupRight extends SignalGroup{
+		
+		private SignalGroupRight(Axis axis, WrapperNBT data){
+			super(axis, SignalDirection.RIGHT, data);
+			this.requestedLight = LightType.STOPLIGHTRIGHT;
+		}
+		
+		@Override
+		protected LightType getNextLight(){
+			switch(currentLight){
+				case GOLIGHTRIGHT: return LightType.CAUTIONLIGHTRIGHT;
+				case CAUTIONLIGHTRIGHT: return LightType.STOPLIGHTRIGHT;
+				case STOPLIGHTRIGHT: return LightType.GOLIGHTRIGHT;
+				default: return null;
+			}
+		}
+		
+		@Override
+		protected LightType getRedLight(){
+			return LightType.STOPLIGHTRIGHT;
+		}
+		
+		@Override
+		protected LightType getGreenLight(){
+			return LightType.GOLIGHTRIGHT;
+		}
+		
+		@Override
+		protected int getSignalCooldown(){
+			switch(currentLight){
+				case GOLIGHTRIGHT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
+				case CAUTIONLIGHTRIGHT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
+				case STOPLIGHTRIGHT: return allRedTime;
+				default: return 0;
+			}
+		}
+		
+		@Override
+		protected boolean isSignalBlocking(SignalGroup otherSignal){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+				case SOUTH : { //Same direction.
+					return false;
+				}
+				case EAST : { //Other signal to the right.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return true;
+						case RIGHT: return !isRightHandDrive;
+					}
+				}
+				case NORTH : { //Opposite direction.
+					switch(otherSignal.direction){
+						case CENTER: return !isRightHandDrive;
+						case LEFT: return false;
+						case RIGHT: return true;
+					}
+				}
+				case WEST : { //Other signal to the left.
+					switch(otherSignal.direction){
+						case CENTER: return false;
+						case LEFT: return true;
+						case RIGHT: return !isRightHandDrive;
+					}
+				}
+				default : return true; //Unknown direction.
+			}
+		}
+	}
+	
+	private static enum SignalDirection{
+		CENTER,
+		LEFT,
+		RIGHT;
 	}
 }
