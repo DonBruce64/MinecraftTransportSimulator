@@ -2,14 +2,14 @@ package minecrafttransportsimulator.guis.components;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Custom instrument render class.  This class is designed to render an instrument into
- * the GUI.  This instrument will render as if it was on the vehicle itself, and will have
- * all lighting effects that vehicle may or may not have.
+ * the GUI.  This instrument will render as if it was on the entity itself, and will have
+ * all lighting effects that entity may or may not have.
  *
  * @author don_bruce
  */
@@ -19,16 +19,16 @@ public class GUIComponentInstrument{
 	public final int instrumentPackIndex;
 	public final JSONInstrumentDefinition packInstrument;
 	public final ItemInstrument instrument;
-	public final EntityVehicleF_Physics vehicle;
+	public final AEntityD_Interactable<?> entity;
 	
 	    	
-	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, EntityVehicleF_Physics vehicle){
-		this.packInstrument = vehicle.definition.motorized.instruments.get(instrumentPackIndex);
-		this.instrument = vehicle.instruments.get(instrumentPackIndex);
+	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityD_Interactable<?> entity){
+		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
+		this.instrument = entity.instruments.get(instrumentPackIndex);
 		this.x = guiLeft + packInstrument.hudX;
 		this.y = guiTop + packInstrument.hudY;
 		this.instrumentPackIndex = instrumentPackIndex;
-		this.vehicle = vehicle;
+		this.entity = entity;
 	}
 
 	
@@ -41,7 +41,7 @@ public class GUIComponentInstrument{
     	GL11.glPushMatrix();
 		GL11.glTranslated(x, y, 0);
 		GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, vehicle, blendingEnabled);
+		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, blendingEnabled);
 		GL11.glPopMatrix();
     }
 }

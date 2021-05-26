@@ -116,10 +116,6 @@ public class JSONVehicle extends AJSONPartProvider{
         @JSONDescription("Same as panelTextColor, but for the text when the vehicle's lights are on.")
         public String panelLitTextColor;
     	
-    	@JSONRequired
-    	@JSONDescription("A list of instruments definitions.  Instrument definitions are used to tell MTS where to render instruments on the vehicle, and where they correspond to on the HUD.  They also are used to tell MTS if the instrument is specific to an engine or not on vehicles that have multiple engines.")
-        public List<JSONInstrumentDefinition> instruments;
-    	
         
     	@Deprecated
     	public boolean isBigTruck;
@@ -137,6 +133,9 @@ public class JSONVehicle extends AJSONPartProvider{
         public Point3d hookupPos;
     	@Deprecated
         public String hookupType;
+    	@SuppressWarnings("hiding")
+		@Deprecated
+        public List<JSONInstrumentDefinition> instruments;
     }
     
     @Deprecated
@@ -165,38 +164,5 @@ public class JSONVehicle extends AJSONPartProvider{
         public boolean hasCruiseControl;
         public float axleRatio;
         public float dragCoefficient;
-    }
-    
-    
-    
-    public class JSONInstrumentDefinition{
-    	@JSONRequired
-    	@JSONDescription("An entry of x, y, and z coordinates that define the center of the instrument on the vehicle.")
-    	public Point3d pos;
-    	
-    	@JSONRequired
-    	@JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this instrument.  By default all instruments face -z, or the rear of the vehicle.  This can be used to change rotation to fit a different spot of the vehicle if desired.")
-        public Point3d rot;
-    	
-    	@JSONDescription("The scale of the instrument.  By default instruments are 128x128.")
-        public float scale;
-    	
-    	@JSONDescription("The x-coordinate for the center of this instrument on the HUD, in pixels.")
-        public int hudX;
-    	
-    	@JSONDescription("The y-coordinate for the center of this instrument on the HUD, in pixels.")
-        public int hudY;
-    	
-    	@JSONDescription("Like scale, but for the HUD and Panel instead.")
-        public float hudScale;
-    	
-    	@JSONDescription("If included and set, then MTS will try to grab this part number for any animation done by this instrument, unless the instrument already has a part number hard-coded.  Note that this will only happen if the animation is for a part, so instruments with non-part animations may safely be put in this slot.  This will also move it to the panel rather than the main HUD.  Useful in multi-engine vehicles.")
-        public int optionalPartNumber;
-    	
-    	@JSONDescription("Normally vehicles come bare-bones, but in the case you want to have the instrument in this position come with the vehicle, you can set this.  If an instrument name is put here, MTS will automatically add said instrument when the vehicle is spawned for the first time.  Note that MTS won't check if the instrument actually exists, so either keep things in-house, or require packs you use as a dependency.  Also note that it is possible to combine this with an inaccessible hudX and hudY coordinate to put the instrument off the HUD.  This will effectively make this instrument permanently attached to the vehicle.")
-        public String defaultInstrument;
-    	
-    	@JSONDescription("This is a list of animatedObjects that can be used to move this instrument on the vehicle based on the animation values.  Note that the instrument animations are applied AFTER the instrument is moved to its initial potion and rotation, and all animations are applied relative to that orientation.  As such, you will have to adjust your parameters to accommodate this.")
-        public List<JSONAnimationDefinition> animations;
     }
 }

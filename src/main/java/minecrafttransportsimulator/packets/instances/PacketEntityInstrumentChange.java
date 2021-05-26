@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -11,7 +11,7 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.rendering.components.InterfaceEventsOverlay;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
-/**Packet used to change instruments on vehicles.  Sent to the server
+/**Packet used to change instruments on entities.  Sent to the server
  * to process the instrument change, and then sent to all clients if
  * the change is able to be made.  Does not check ownership as that's
  * done before {@link GUIInstruments} is opened by checking for
@@ -19,13 +19,13 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
+public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityD_Interactable<?>, WrapperPlayer>{
 	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketVehicleInstruments(EntityVehicleF_Physics vehicle, WrapperPlayer player, int slot, ItemInstrument instrument){
-		super(vehicle, player);
+	public PacketEntityInstrumentChange(AEntityD_Interactable<?> entity, WrapperPlayer player, int slot, ItemInstrument instrument){
+		super(entity, player);
 		this.slot = slot;
 		if(instrument != null){
 			this.instrumentPackID = instrument.definition.packID;
@@ -36,7 +36,7 @@ public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicl
 		}
 	}
 	
-	public PacketVehicleInstruments(ByteBuf buf){
+	public PacketEntityInstrumentChange(ByteBuf buf){
 		super(buf);
 		this.slot = buf.readInt();
 		this.instrumentPackID = readStringFromBuffer(buf);
@@ -52,11 +52,11 @@ public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicl
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle, WrapperPlayer player){
+	public boolean handle(WrapperWorld world, AEntityD_Interactable<?> entity, WrapperPlayer player){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
-		if(!world.isClient() && !player.isCreative() && vehicle.instruments.containsKey(slot)){
-			ItemInstrument instrument = vehicle.instruments.get(slot);
+		if(!world.isClient() && !player.isCreative() && entity.instruments.containsKey(slot)){
+			ItemInstrument instrument = entity.instruments.get(slot);
 			if(!player.isCreative() && !player.getInventory().addItem(instrument, null)){
 				return false;
 			}
@@ -65,7 +65,7 @@ public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicl
 		//If we are removing the instrument, do so now.
 		//Otherwise add the instrument.
 		if(instrumentPackID.isEmpty()){
-			vehicle.instruments.remove(slot);
+			entity.instruments.remove(slot);
 		}else{
 			//Check to make sure player has the instrument they are trying to put in.
 			//This is only done on the server, as checking on the client won't make any difference.
@@ -77,7 +77,7 @@ public class PacketVehicleInstruments extends APacketEntityInteract<EntityVehicl
 					return false;
 				}
 			}
-			vehicle.instruments.put(slot, instrument);
+			entity.instruments.put(slot, instrument);
 		}
 		
 		//If we are on the client, reset the current HUD.  This prevents load-syncinig issues.

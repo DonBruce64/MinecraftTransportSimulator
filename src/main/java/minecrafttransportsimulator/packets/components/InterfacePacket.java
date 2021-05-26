@@ -36,7 +36,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInstruments;
+import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
@@ -81,6 +81,7 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
 		registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
 		registerPacket(packetIndex++, PacketEntityColorChange.class);
+		registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
 		registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		registerPacket(packetIndex++, PacketEntityTextChange.class);
 		registerPacket(packetIndex++, PacketEntityTrailerChange.class);
@@ -119,7 +120,6 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
 		registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		registerPacket(packetIndex++, PacketVehicleControlDigital.class);
-		registerPacket(packetIndex++, PacketVehicleInstruments.class);
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
 		registerPacket(packetIndex++, PacketVehicleServerMovement.class);
 		

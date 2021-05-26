@@ -12,13 +12,11 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
@@ -60,32 +58,17 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 				//Set initial electrical power.
 				vehicle.electricPower = 12;
 				
+				//Add default instruments.
+				try{
+					vehicle.addDefaultInstruments();
+				}catch(Exception e){
+					vehicle.remove();
+					throw e;
+				}
+				
 				//Add default parts via the vehicle's recursion.
 				for(JSONPartDefinition partDef : vehicle.definition.parts){
 					vehicle.addDefaultPart(partDef, vehicle.definition, true, false);
-				}
-				
-				//Add default instruments.
-				for(JSONInstrumentDefinition packInstrument : vehicle.definition.motorized.instruments){
-					if(packInstrument.defaultInstrument != null){
-						try{
-							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
-							String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
-							try{
-								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
-								if(instrument != null){
-									vehicle.instruments.put(vehicle.definition.motorized.instruments.indexOf(packInstrument), instrument);
-									continue;
-								}
-							}catch(NullPointerException e){
-								vehicle.remove();
-								throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + " but that instrument doesn't exist in the pack item registry.");
-							}
-						}catch(IndexOutOfBoundsException e){
-							vehicle.remove();
-							throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
-						}
-					}
 				}
 				
 				//If we have a default fuel, add it now as we SHOULD have an engine to tell

@@ -21,6 +21,7 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -182,6 +183,16 @@ public final class LegacyCompatSystem{
 		if(definition.rendering.panelLitTextColor != null){
 			definition.motorized.panelLitTextColor = definition.rendering.panelLitTextColor;
 			definition.rendering.panelLitTextColor = null;
+		}
+		//Check for old instrument references.
+		if(definition.motorized.instruments != null){
+			definition.instruments = definition.motorized.instruments;
+			definition.motorized.instruments = null;
+			for(JSONInstrumentDefinition def : definition.instruments){
+				if(def.optionalPartNumber != 0){
+					def.placeOnPanel = true;
+				}
+			}
 		}
 		
 		for(JSONPartDefinition partDef : definition.parts){

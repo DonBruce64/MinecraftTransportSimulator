@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -22,9 +22,8 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.components.LightType;
-import minecrafttransportsimulator.systems.NavBeaconSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -57,7 +56,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public EntityFluidTank fuelTank;
 	
 	//Part maps.
-	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
 	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
 	
@@ -76,19 +74,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
-		
-		//Load instruments.
-		for(int i = 0; i<definition.motorized.instruments.size(); ++i){
-			String instrumentPackID = data.getString("instrument" + i + "_packID");
-			String instrumentSystemName = data.getString("instrument" + i + "_systemName");
-			if(!instrumentPackID.isEmpty()){
-				ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
-				//Check to prevent loading of faulty instruments due to updates.
-				if(instrument != null){
-					instruments.put(i, instrument);
-				}
-			}
-		}
 	}
 	
 	@Override
@@ -391,13 +376,5 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		WrapperNBT fuelTankData = new WrapperNBT();
 		fuelTank.save(fuelTankData);
 		data.setData("fuelTank", fuelTankData);
-		
-		String[] instrumentsInSlots = new String[definition.motorized.instruments.size()];
-		for(int i=0; i<instrumentsInSlots.length; ++i){
-			if(instruments.containsKey(i)){
-				data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
-				data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
-			}
-		}
 	}
 }

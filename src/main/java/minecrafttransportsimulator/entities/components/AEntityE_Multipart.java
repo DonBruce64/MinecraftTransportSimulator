@@ -431,7 +431,15 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
 						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), partToAdd.definition, addedDuringConstruction, !newPart);
 					}
-					
+				}
+				if(newPart){
+					//Add any default instruments this new part may have.
+					try{
+						partToAdd.addDefaultInstruments();
+					}catch(Exception e){
+						partToAdd.remove();
+						throw e;
+					}
 				}
     		}
     	}
@@ -508,6 +516,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketPartChange(this, part.placementOffset));
 			}
+		}else if(partsFromNBT.contains(part)){
+			partsFromNBT.remove(part);
 		}
 		
 		//Remove a ride-able location.
@@ -672,6 +682,13 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				try{
 					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), null, partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
+						//Add any default instruments this default part may have.
+						try{
+							addedPart.addDefaultInstruments();
+						}catch(Exception e){
+							addedPart.remove();
+							throw e;
+						}
 						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
@@ -686,7 +703,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						if(addedPart.definition.parts != null){
 							for(JSONPartDefinition subPartPack : addedPart.definition.parts){
 								addDefaultPart(addedPart.getPackForSubPart(subPartPack), addedPart.definition, addedDuringConstruction, savedParent);
-							}							
+							}
 						}
 					}
 				}catch(NullPointerException e){

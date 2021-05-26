@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.guis.instances;
 
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
@@ -27,9 +28,16 @@ public class GUIHUD extends AGUIBase{
 	public final void setupComponents(int guiLeft, int guiTop){
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Integer instrumentNumber : vehicle.instruments.keySet()){
-			//Only add instruments that don't have an optionalPartNumber.
-			if(vehicle.definition.motorized.instruments.get(instrumentNumber).optionalPartNumber == 0){
+			if(!vehicle.definition.instruments.get(instrumentNumber).placeOnPanel){
 				addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+			}
+		}
+		//Now add part instruments.
+		for(APart part : vehicle.parts){
+			for(Integer instrumentNumber : part.instruments.keySet()){
+				if(!part.definition.instruments.get(instrumentNumber).placeOnPanel){
+					addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, part));
+				}
 			}
 		}
 	}

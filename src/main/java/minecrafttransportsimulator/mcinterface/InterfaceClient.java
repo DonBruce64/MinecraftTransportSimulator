@@ -33,7 +33,7 @@ public class InterfaceClient{
 	 */
 	public static boolean isChatOpen(){
 		return Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
-	} 
+	}
 	
 	/**
 	 *  Returns true if the game is in first-person mode.

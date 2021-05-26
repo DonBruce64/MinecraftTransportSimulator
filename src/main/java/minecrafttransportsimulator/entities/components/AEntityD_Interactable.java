@@ -15,13 +15,16 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -29,7 +32,9 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base entity class containing riders and their positions on this entity.  Used for
  * entities that need to keep track of riders and their locations.  This also contains
@@ -81,6 +86,19 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
 	public final BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
+	
+	/**Maps instruments to their place in the JSON.  This is done instead of a list as there may
+	 * be instruments not present, so we'd need to have empty slots in a list for this, and maps
+	 * work better for this from a code standpoint than lists anyways.
+	 **/
+	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
+	
+	/**Maps instrument animations to their respective clocks.  Each animation has its own clock, which
+	 * will be used when the instrument is rendered and animated.  Clocks should be created and added to
+	 * this map as needed.  The map will only be modified when the JSON definition for this entity is
+	 * reloaded, in which case all clocks will be reset as the JSON may have changed animations.
+	 **/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> instrumentAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
@@ -148,6 +166,21 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			towData = data.getData("towingConnection" + i);
 			if(towData != null){
 				this.savedTowingConnections.add(new TrailerConnection(towData));
+			}
+		}
+		
+		//Load instruments.
+		if(definition.instruments != null){
+			for(int i = 0; i<definition.instruments.size(); ++i){
+				String instrumentPackID = data.getString("instrument" + i + "_packID");
+				String instrumentSystemName = data.getString("instrument" + i + "_systemName");
+				if(!instrumentPackID.isEmpty()){
+					ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+					//Check to prevent loading of faulty instruments due to updates.
+					if(instrument != null){
+						instruments.put(i, instrument);
+					}
+				}
 			}
 		}
 	}
@@ -236,6 +269,12 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public void onDefinitionReset(){
+		super.onDefinitionReset();
+		instrumentAnimationClocks.clear();
 	}
 	
 	/**
@@ -358,6 +397,34 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 *  This should ONLY be called on the server; clients will sync via packets.
 	 */
 	public void attack(Damage damage){}
+	
+	/**
+	 * Helper method to add all default instruments to this entity.  These instruments
+	 * should be added when the entity is first placed into the world.
+	 */
+	public void addDefaultInstruments(){
+		if(definition.instruments != null){
+			for(JSONInstrumentDefinition packInstrument : definition.instruments){
+				if(packInstrument.defaultInstrument != null){
+					try{
+						String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
+						String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
+						try{
+							ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+							if(instrument != null){
+								instruments.put(definition.instruments.indexOf(packInstrument), instrument);
+								continue;
+							}
+						}catch(NullPointerException e){
+							throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry.");
+						}
+					}catch(IndexOutOfBoundsException e){
+						throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
+					}
+				}
+			}
+		}
+	}
 	
 	/**
 	 * Checks if the other entity can be connected to this entity.  The other entity may be a trailer we
@@ -511,6 +578,15 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}
 		data.setInteger("towingConnectionCount", towingConnectionIndex);
 		
+		if(definition.instruments != null){
+			String[] instrumentsInSlots = new String[definition.instruments.size()];
+			for(int i=0; i<instrumentsInSlots.length; ++i){
+				if(instruments.containsKey(i)){
+					data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
+					data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
+				}
+			}
+		}
 	}
 	
 	/**

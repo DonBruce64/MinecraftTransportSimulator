@@ -1,14 +1,13 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import java.awt.Color;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -25,7 +24,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument{
-	private static final Map<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>> clocks = new HashMap<EntityVehicleF_Physics, Map<ItemInstrument, Map<Integer, DurationDelayClock>>>();
 	private static final Point3d p1 = new Point3d();
 	private static final Point3d p2 = new Point3d();
 	private static final Point3d p3 = new Point3d();
@@ -33,23 +31,22 @@ public final class RenderInstrument{
 	private static final Point3d r = new Point3d();
 	
 	/**
-     * Renders the passed-in instrument using the vehicle's current state.  Note that this method does NOT take any 
-     * vehicle JSON parameters into account as it does not know which instrument is being rendered.  This means that 
+     * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
+     * entity JSON parameters into account as it does not know which instrument is being rendered.  This means that 
      * any transformations that need to be applied for translation or scaling should be applied prior to calling this
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, EntityVehicleF_Physics vehicle, boolean blendingEnabled){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, boolean blendingEnabled){
 		//First bind the texture file for this insturment's pack.
 		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
 		//Check if the lights are on.  If so, render the overlays.
-		boolean lightsOn = vehicle.renderTextLit();
+		boolean lightsOn = entity.renderTextLit();
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
-			//Only render regular sections on pass 0 or -1, and overlays on pass 1 or -1.
 			//If the overlay lights up, only render it when the lights are on.
 			if((component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value) ? (!component.lightUpTexture || lightsOn) && blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
@@ -62,7 +59,7 @@ public final class RenderInstrument{
 				if(component.textObject != null){
 					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.fieldName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
-					double textNumeric = vehicle.getRawVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
+					double textNumeric = entity.getRawVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
 					if(Double.isNaN(textNumeric)){
 						textNumeric = 0;
 					}
@@ -88,20 +85,26 @@ public final class RenderInstrument{
 						for(JSONAnimationDefinition animation : component.animations){
 							//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
 							//If so, we need to let the animation system know by adding a suffix to the variable.
-							//Otherwise, as we don't pass-in the part, it will assume it's a vehicle variable.
+							//Otherwise, as we don't pass-in the part, it will assume it's an entity variable.
 							//We also need to set the partNumber to 1 if we have a part number of 0 and we're
 							//doing a part-specific animation.
 							//Skip adding a suffix if one already exists.
 							int variablePartNumber = AEntityC_Definable.getVariableNumber(animation.variable);
-							final boolean addSuffix = variablePartNumber == -1 && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
+							final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
 							if(partNumber == 0 && addSuffix){
 								partNumber = 1;
 							}
 							if(addSuffix){
 								animation.variable += "_" + partNumber;
 							}
-							int clockAnimationMapIndex = (partNumber << Byte.SIZE*2) | (i << Byte.SIZE*1) | (component.animations.indexOf(animation));
-							double variableValue = vehicle.getAnimatedVariableValue(animation, 0, getClock(vehicle, instrument, clockAnimationMapIndex), 0);
+							
+							DurationDelayClock animationClock = entity.instrumentAnimationClocks.get(animation);
+							if(animationClock == null){
+								animationClock = new DurationDelayClock(animation);
+								entity.instrumentAnimationClocks.put(animation, animationClock);
+							}
+							
+							double variableValue = entity.getAnimatedVariableValue(animation, 0, animationClock, 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}
@@ -247,30 +250,6 @@ public final class RenderInstrument{
 				GL11.glPopMatrix();
 			}
 		}
-	}
-	
-	/**
-	 *  Returns the current animation clock for the passed-in vehicle/instrument/part/animation set.
-	 *  Clocks are not shared between these three components to allow each to have their own clock.
-	 *  If a clock is not present, one is created.  The index parameter should be a combined 3-byte
-	 *  integer, where the first byte is the part number for the vehicle, the second is the section
-	 *  of the instrument JSON to render, and the third is the animation index.
-	 */
-	private static DurationDelayClock getClock(EntityVehicleF_Physics vehicle, ItemInstrument instrument, int clockAnimationMapIndex){
-		if(!clocks.containsKey(vehicle)){
-			clocks.put(vehicle, new HashMap<ItemInstrument, Map<Integer, DurationDelayClock>>());
-		}
-		Map<ItemInstrument, Map<Integer,DurationDelayClock>> vehicleClocks = clocks.get(vehicle);
-		if(!vehicleClocks.containsKey(instrument)){
-			vehicleClocks.put(instrument, new HashMap<Integer, DurationDelayClock>());
-		}
-		Map<Integer, DurationDelayClock> instrumentClocks = vehicleClocks.get(instrument);
-		if(!instrumentClocks.containsKey(clockAnimationMapIndex)){
-			int instrumentSection = (byte) (clockAnimationMapIndex >> Byte.SIZE);
-			int animationSection = (byte) (clockAnimationMapIndex);
-			instrumentClocks.put(clockAnimationMapIndex, new DurationDelayClock(instrument.definition.components.get(instrumentSection).animations.get(animationSection)));
-		}
-		return instrumentClocks.get(clockAnimationMapIndex);
 	}
 	
     /**

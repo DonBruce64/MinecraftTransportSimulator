@@ -2,9 +2,7 @@ package minecrafttransportsimulator.rendering.instances;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
@@ -21,12 +19,10 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
-import minecrafttransportsimulator.rendering.components.RenderableTransform;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -40,31 +36,9 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_Physics>{	
-	//VEHICLE MAPS.  Maps are keyed by system name.
-	private static final Map<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>> vehicleInstrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<EntityVehicleF_Physics>>>();
-	
-	@Override
-	public void parseModel(EntityVehicleF_Physics vehicle, String modelLocation){
-		super.parseModel(vehicle, modelLocation);
-		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
-		Map<Integer, RenderableTransform<EntityVehicleF_Physics>> instrumentTransforms = new HashMap<Integer, RenderableTransform<EntityVehicleF_Physics>>();
-		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-			JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
-			if(packInstrument.animations != null){
-				instrumentTransforms.put(i, new RenderableTransform<EntityVehicleF_Physics>(packInstrument.animations));
-			}
-		}
-		vehicleInstrumentTransforms.put(modelLocation, instrumentTransforms);
-	}
 	
 	@Override
 	public void renderAdditionalModels(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){
-		//Set shading back to normal now that all model bits have been rendered.
-		GL11.glShadeModel(GL11.GL_FLAT);
-		
-		//Render all instruments on the vehicle.
-		renderInstruments(vehicle, blendingEnabled);
-		
 		//Render holograms for missing parts.
 		if(blendingEnabled){
 			renderPartBoxes(vehicle);
@@ -83,55 +57,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 			GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 		}
 		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-	}
-	
-	@Override
-	protected void resetModelCache(String modelLocation){
-		super.resetModelCache(modelLocation);
-		vehicleInstrumentTransforms.remove(modelLocation);
-	}
-	
-	/**
-	 *  Renders all instruments on the vehicle.  Uses the instrument's render code.
-	 *  We only apply the appropriate translation and rotation.
-	 *  Normalization is required here, as otherwise the normals get scaled with the
-	 *  scaling operations, and shading gets applied funny. 
-	 */
-	private static void renderInstruments(EntityVehicleF_Physics vehicle, boolean blendingEnabled){
-		GL11.glEnable(GL11.GL_NORMALIZE);
-		for(int i=0; i<vehicle.definition.motorized.instruments.size(); ++i){
-			if(vehicle.instruments.containsKey(i)){
-				JSONInstrumentDefinition packInstrument = vehicle.definition.motorized.instruments.get(i);
-				
-				//Translate and rotate to standard position.
-				GL11.glPushMatrix();
-				GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
-				GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
-				GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
-				GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
-				
-				//Do transforms if required.
-				RenderableTransform<EntityVehicleF_Physics> transform = vehicleInstrumentTransforms.get(vehicle.definition.getModelLocation(vehicle.subName)).get(i);
-				boolean doRender = true;
-				if(transform != null){
-					doRender = transform.doPreRenderTransforms(vehicle, blendingEnabled, 0);
-				}
-				
-				if(doRender){
-					//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
-					GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
-					
-					//Render instrument.
-					RenderInstrument.drawInstrument(vehicle.instruments.get(i), packInstrument.optionalPartNumber, vehicle, blendingEnabled);
-				}
-				
-				if(transform != null){
-					transform.doPostRenderTransforms(vehicle, blendingEnabled, 0);
-				}
-				GL11.glPopMatrix();
-			}
-		}
-		GL11.glDisable(GL11.GL_NORMALIZE);
 	}
 	
 	/**

@@ -14,10 +14,12 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
+import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Base Entity rendering class.  
  *
@@ -26,6 +28,9 @@ import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>>{
 	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
 	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
+
+	//Instrument transforms for each instrument slot.
+	private final Map<String, Map<Integer, RenderableTransform<RenderedEntity>>> instrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<RenderedEntity>>>();
 	
 	//CONNECTOR MAPS.  Maps are keyed by model name.
 	private static final Map<String, Integer> connectorParsedVertexLists = new HashMap<String, Integer>();
@@ -107,6 +112,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Render any connectors.
 			renderConnectors(entity);
 			
+			//Render all instruments.  These use flat shading.
+			GL11.glShadeModel(GL11.GL_FLAT);
+			renderInstruments(entity, blendingEnabled);
+			
 			//Render any static text.
 			if(!blendingEnabled){
 				InterfaceRender.renderTextMarkings(entity, null);
@@ -116,7 +125,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			if(mirrored){
 				GL11.glCullFace(GL11.GL_BACK);
 			}
-			GL11.glShadeModel(GL11.GL_FLAT);
 			GL11.glPopMatrix();
 			InterfaceRender.resetStates();
 			
@@ -156,6 +164,20 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 */
 	public void parseModel(RenderedEntity entity, String modelLocation){
 		objectLists.put(modelLocation, AModelParser.generateRenderables(entity, modelLocation, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null));
+		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
+		Map<Integer, RenderableTransform<RenderedEntity>> instrumentSlotTransforms = new HashMap<Integer, RenderableTransform<RenderedEntity>>();
+		if(entity instanceof AEntityD_Interactable){
+			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+			if(interactable.definition.instruments != null){
+				for(int i=0; i<interactable.definition.instruments.size(); ++i){
+					JSONInstrumentDefinition packInstrument = interactable.definition.instruments.get(i);
+					if(packInstrument.animations != null){
+						instrumentSlotTransforms.put(i, new RenderableTransform<RenderedEntity>(packInstrument.animations));
+					}
+				}
+			}
+			instrumentTransforms.put(modelLocation, instrumentSlotTransforms);
+		}
 	}
 	
 	/**
@@ -271,6 +293,54 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
+	 *  Renders all instruments on the entity.  Uses the instrument's render code.
+	 *  We only apply the appropriate translation and rotation.
+	 *  Normalization is required here, as otherwise the normals get scaled with the
+	 *  scaling operations, and shading gets applied funny. 
+	 */
+	protected void renderInstruments(RenderedEntity entity, boolean blendingEnabled){
+		if(entity instanceof AEntityD_Interactable){
+			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+			if(interactable.definition.instruments != null){
+				GL11.glEnable(GL11.GL_NORMALIZE);
+				for(int i=0; i<interactable.definition.instruments.size(); ++i){
+					if(interactable.instruments.containsKey(i)){
+						JSONInstrumentDefinition packInstrument = interactable.definition.instruments.get(i);
+						
+						//Translate and rotate to standard position.
+						GL11.glPushMatrix();
+						GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
+						GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
+						GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
+						GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
+						
+						//Do transforms if required.
+						RenderableTransform<RenderedEntity> transform = instrumentTransforms.get(entity.definition.getModelLocation(entity.subName)).get(i);
+						boolean doRender = true;
+						if(transform != null){
+							doRender = transform.doPreRenderTransforms(entity, blendingEnabled, 0);
+						}
+						
+						if(doRender){
+							//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
+							GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
+							
+							//Render instrument.
+							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, blendingEnabled);
+						}
+						
+						if(transform != null){
+							transform.doPostRenderTransforms(entity, blendingEnabled, 0);
+						}
+						GL11.glPopMatrix();
+					}
+				}
+				GL11.glDisable(GL11.GL_NORMALIZE);
+			}
+		}
+	}
+	
+	/**
 	 *  Renders the bounding boxes for the entity collision.
 	 *  At this point, the rotation done for the rendering 
 	 *  will be un-done, as boxes need to be rendered according to their world state.
@@ -309,9 +379,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  JSON to be re-parsed.
 	 */
 	protected void resetModelCache(String modelLocation){
-		if(objectLists.containsKey(modelLocation)){
-			objectLists.remove(modelLocation);
-		}
+		objectLists.remove(modelLocation);
+		instrumentTransforms.remove(modelLocation);
 	}
 	
 	/**

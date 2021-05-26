@@ -18,6 +18,9 @@ public abstract class AJSONInteractableEntity extends AJSONMultiModelProvider{
     @JSONDescription("A list of Minecraft potion effects that any entities sitting on or in this object will have while in it. These effects behave the same as if they were caused by drinking a potion in game, but without the particles. They will be continuously reapplied to the rider, and will be removed immediately when the rider stops riding this object.")
     public List<JSONPotionEffect> effects;
     
+	@JSONDescription("A list of instruments definitions.  Instrument definitions are used to tell MTS where to render instruments on the object, and where they correspond to on the HUD.  They may also specfy which part the instrument goes to.")
+    public List<JSONInstrumentDefinition> instruments;
+    
     @Deprecated
     public List<JSONConnection> connections;
 }
