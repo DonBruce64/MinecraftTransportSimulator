@@ -73,11 +73,7 @@ public class PartPropeller extends APart{
 			
 			//Adjust angular position and velocity.
 			if(connectedEngine.propellerGearboxRatio != 0){
-				if(connectedEngine.currentGear > 0){
-					angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
-				}else{
-					angularVelocity = (float) (-connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
-				}
+				angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
 			}else if(angularVelocity > .01){
 				angularVelocity -= 0.01;
 			}else if(angularVelocity < -.01){
@@ -169,9 +165,6 @@ public class PartPropeller extends APart{
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
 			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(localAngles.copy().add(entityOn.angles));
-			if(connectedEngine.currentGear < 0){
-				propellerThrustAxis.multiply(-1);
-			}
 			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
@@ -179,7 +172,7 @@ public class PartPropeller extends APart{
 			//here, like perhaps the propeller manufactures reporting the prop pitch to match cruise, but for physics, that don't work,
 			//because the propeller never reaches that speed during cruise due to drag.  So we add a small addition here to compensate.
 			double desiredLinearVelocity = 0.0254D*(currentPitch + 20)*20D*angularVelocity;
-			//Not sure why, but this follows given the fact cruising speed of aircraft is a bit
+			
 			if(desiredLinearVelocity != 0){
 				//Thrust produced by the propeller is the difference between the desired linear velocity and the current linear velocity.
 				//This gets the magnitude of the initial thrust force.

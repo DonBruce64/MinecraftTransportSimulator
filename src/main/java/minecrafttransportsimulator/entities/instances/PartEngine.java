@@ -447,18 +447,17 @@ public class PartEngine extends APart{
 						havePropeller = true;
 						Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(propeller.localAngles.copy().add(vehicleOn.angles));
 						propellerAxialVelocity = vehicleOn.motion.dotProduct(propellerThrustAxis);
-						propellerGearboxRatio = definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : currentGearRatio;
+						propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 						
 						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 						if(wheelFriction == 0 && currentGearRatio != 0){
 							isPropellerInLiquid = propeller.isInLiquid();
 							double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-							double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/Math.abs(propellerGearboxRatio)*Math.signum(currentGearRatio)/60D/20D;
+							double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
 							double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
-							if(currentGearRatio < 0 || propeller.currentPitch < 0){
+							if(currentGear < 0 || propeller.currentPitch < 0){
 								propellerFeedback *= -1;
 							}
-							
 							
 							if(state.running){
 								propellerFeedback += propellerForcePenalty*50;
@@ -472,7 +471,7 @@ public class PartEngine extends APart{
 									rpm += engineRPMDifference/10 - propellerFeedback;
 								}
 							}else if(!state.esOn && !state.hsOn){
-								rpm -= propellerFeedback*propellerGearboxRatio;
+								rpm -= propellerFeedback*Math.abs(propellerGearboxRatio);
 							}
 						}
 					}
