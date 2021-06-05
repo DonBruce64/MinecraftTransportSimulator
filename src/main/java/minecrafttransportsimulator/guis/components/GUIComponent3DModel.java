@@ -100,7 +100,7 @@ public class GUIComponent3DModel{
 				if(!staticScaling){
 					scale = modelScalingFactors.get(modelLocation);
 				}
-				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, scale*scaleFactor);
+				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, -scale*scaleFactor);
 				InterfaceRender.renderVertices(modelParsedVertexLists.get(modelLocation));
 				GL11.glPopMatrix();
 			}
