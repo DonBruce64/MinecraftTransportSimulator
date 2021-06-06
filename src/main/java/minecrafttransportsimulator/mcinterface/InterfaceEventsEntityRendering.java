@@ -150,10 +150,16 @@ public class InterfaceEventsEntityRendering{
 		            		
 		            		//Get seat scale, if we have it.
 		            		if(seat.definition.seat.widthScale != 0){
-		            			playerWidthScale = seat.definition.seat.widthScale; 
+		            			playerWidthScale = seat.definition.seat.widthScale;
+		            		}
+		            		if(seat.placementDefinition.widthScale != 0){
+		            			playerWidthScale *= seat.placementDefinition.widthScale;
 		            		}
 		            		if(seat.definition.seat.heightScale != 0){
 		            			playerHeightScale = seat.definition.seat.heightScale; 
+		            		}
+		            		if(seat.placementDefinition.heightScale != 0){
+		            			playerHeightScale *= seat.placementDefinition.heightScale;
 		            		}
 		            		break;
 						}

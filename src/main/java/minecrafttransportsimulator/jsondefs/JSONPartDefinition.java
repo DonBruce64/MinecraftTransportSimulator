@@ -73,6 +73,12 @@ public class JSONPartDefinition{
     @JSONDescription("If this part is an engine, this is how far above the engine the intake is. Used to prevent the engine from drowning while submerged.  Mainly used in SUVs and military vehicles.")
     public float intakeOffset;
     
+    @JSONDescription("If included, the player's width will be scaled to this value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.  This value is multiplied by any scaling applied by the seat.  So if a seat scales 0.5, and you put 0.5 here, the scale will be 0.5 x 0.5 = 0.25.")
+	public float widthScale;
+	
+	@JSONDescription("If included, the player's height will be scaled to this value when sitting in this seat.  Similar to widthScale, but this parameter will also affect the player's eye height.  Keep this in mind, as the lower you set this the lower they sit!")
+	public float heightScale;
+    
     @JSONDescription("Normally vehicles come bare-bones, but in the case you want to have the part in this position come with the vehicle, you can set this.  If a part name is put here, MTS will automatically add said part when the vehicle is spawned for the first time.  Note that MTS won't check if the part actually exists, so either keep things in-house, or require packs you use as a dependency.  Note that putting this on an additionalPart without the parent part having a defaultPart WILL crash the game!")
     public String defaultPart;
     
