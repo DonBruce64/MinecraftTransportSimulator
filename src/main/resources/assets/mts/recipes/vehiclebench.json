@@ -6,8 +6,8 @@
         "c c"
     ],
     "key":{
-        "a":{"item": "minecraft:planks", "data" : 32767},
-		"b":{"item": "minecraft:fence", "data" : 32767},
+    "a":{"type": "forge:ore_dict", "ore" : "plankWood"},
+		"b":{"type": "forge:ore_dict", "ore" : "fenceWood"},
 		"c":{"item": "minecraft:glass_pane"}
     },
     "result":{

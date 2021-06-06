@@ -8,8 +8,8 @@
     "key":{
         "a":{"item": "minecraft:iron_block"},
 		"b":{"item": "minecraft:diamond"},
-		"c":{"item": "minecraft:dye", "data": 1},
-		"d":{"item": "minecraft:dye", "data": 2}
+		"c":{"type": "forge:ore_dict", "ore" : "dyeRed"},
+		"d":{"type": "forge:ore_dict", "ore" : "dyeGreen"}
     },
     "result":{
         "item": "mts:gunbench"

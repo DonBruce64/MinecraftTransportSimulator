@@ -7,8 +7,8 @@
     ],
     "key":{
         "a":{"item": "minecraft:paper"},
-		"b":{"item": "minecraft:dye", "data": 0},
-		"c":{"item": "minecraft:dye", "data": 11}
+		"b":{"type": "forge:ore_dict", "ore" : "dyeBlack"},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeYellow"}
     },
     "result":{
         "item": "mts:ticket"

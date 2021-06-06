@@ -7,7 +7,7 @@
     ],
     "key":{
 		"a":{"type": "forge:ore_dict", "ore": "ingotIron"},
-		"b":{"item": "minecraft:dye", "data": 1}
+		"b":{"type": "forge:ore_dict", "ore" : "dyeRed"}
     },
     "result":{
         "item": "mts:jerrycan"

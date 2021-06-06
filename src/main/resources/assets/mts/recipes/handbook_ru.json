@@ -8,7 +8,7 @@
     "key":{
         "a":{"item": "minecraft:feather"},
 		"b":{"item": "minecraft:book"},
-		"c":{"item": "minecraft:dye", "data": 0},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeBlack"},
 		"d":{"item": "minecraft:paper"}
     },
     "result":{

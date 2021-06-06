@@ -8,7 +8,7 @@
     "key":{
         "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
 		"b":{"item": "minecraft:iron_bars"},
-		"c":{"item": "minecraft:dye", "data": 1},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeRed"},
 		"d":{"item": "minecraft:iron_block"}
     },
     "result":{

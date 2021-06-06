@@ -8,7 +8,7 @@
     "key":{
         "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
 		"b":{"item": "minecraft:glowstone"},
-		"c":{"item": "minecraft:planks", "data" : 32767},
+		"c":{"type": "forge:ore_dict", "ore" : "plankWood"},
 		"d":{"item": "minecraft:redstone_block"}
     },
     "result":{

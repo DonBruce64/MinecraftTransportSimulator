@@ -8,7 +8,7 @@
     "key":{
 		"a":{"type": "forge:ore_dict", "ore": "ingotIron"},
 		"b":{"item": "mts:jumpercable"},
-		"c":{"item": "minecraft:dye", "data": 11},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeYellow"},
 		"d":{"item": "minecraft:redstone"}
     },
     "result":{

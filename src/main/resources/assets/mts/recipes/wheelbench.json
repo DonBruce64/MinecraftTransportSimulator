@@ -7,7 +7,7 @@
     ],
     "key":{
         "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
-		"b":{"item": "minecraft:planks", "data": 32767},
+		"b":{"type": "forge:ore_dict", "ore" : "plankWood"},
 		"c":{"item": "minecraft:anvil", "data": 0}
     },
     "result":{

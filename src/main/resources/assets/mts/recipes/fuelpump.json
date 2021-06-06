@@ -6,9 +6,9 @@
         "eee"
     ],
     "key":{
-        "a":{"item": "minecraft:dye", "data": 1},
+        "a":{"type": "forge:ore_dict", "ore" : "dyeRed"},
 		"b":{"item": "minecraft:glass_pane"},
-		"c":{"item": "minecraft:dye", "data": 0},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeBlack"},
 		"d":{"type": "forge:ore_dict", "ore": "ingotIron"},
 		"e":{"item": "minecraft:stone_slab", "data" : 0}
     },
