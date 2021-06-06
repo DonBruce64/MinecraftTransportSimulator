@@ -50,7 +50,10 @@ public class ItemPartEngine extends AItemPart{
 			for(byte i=0; i<definition.engine.gearRatios.size() ; i+=5){
 				String gearRatios = "";
 				for(byte j=i; j<i+5 && j<definition.engine.gearRatios.size() ; ++j){
-					gearRatios += String.valueOf(definition.engine.gearRatios.get(j)) + ",  ";
+					gearRatios += String.valueOf(definition.engine.gearRatios.get(j));
+					if(j < definition.engine.gearRatios.size() - 1){
+						gearRatios += ",  ";
+					}
 				}
 				tooltipLines.add(gearRatios);
 			}
