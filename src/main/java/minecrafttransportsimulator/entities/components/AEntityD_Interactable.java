@@ -277,6 +277,46 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		instrumentAnimationClocks.clear();
 	}
 	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		//Check if this is a hookup or hitch variable.
+		if(variable.startsWith("connection")){
+			//Format is (hitch/hookup)_groupIndex_connectionIndex_animationType.
+			TrailerConnection foundConnection = null;
+			String[] variableData = variable.split("_");
+			if(variableData.length == 4){
+				boolean isHookup = false;
+				int groupIndex = Integer.valueOf(variableData[1]) - 1;
+				int connectionIndex = Integer.valueOf(variableData[2]) - 1;
+				if(towedByConnection != null){
+					if(towedByConnection.hookupGroupIndex == groupIndex && towedByConnection.hookupConnectionIndex == connectionIndex){
+						isHookup = true;
+						foundConnection = towedByConnection;
+					}
+				}
+				if(foundConnection != null && !towingConnections.isEmpty()){
+					for(TrailerConnection towingConnection : towingConnections){
+						if(towingConnection.hookupGroupIndex == groupIndex && towingConnection.hookupConnectionIndex == connectionIndex){
+							foundConnection = towingConnection;
+							break;
+						}
+					}
+				}
+				if(foundConnection != null){
+					switch(variableData[3]){
+						case("connected"): return 1;
+						case("pitch"): return isHookup ? foundConnection.hookupEntity.angles.x - angles.x : foundConnection.hitchEntity.angles.x - angles.x;
+						case("yaw"): return isHookup ? foundConnection.hookupEntity.angles.y - angles.y : foundConnection.hitchEntity.angles.y - angles.y;
+						case("roll"): return isHookup ? foundConnection.hookupEntity.angles.z - angles.z : foundConnection.hitchEntity.angles.z - angles.z;
+					}
+				}
+			}
+		}
+		
+		//Not a towing variable, check others.
+		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
 	/**
 	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
 	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.

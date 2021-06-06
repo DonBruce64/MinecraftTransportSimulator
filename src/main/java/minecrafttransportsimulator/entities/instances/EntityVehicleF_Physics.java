@@ -617,14 +617,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("autopilot"): return autopilot ? 1 : 0;
 			case("locked"): return locked ? 1 : 0;
 			case("door"): return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
-			case("hookup_connected"): return towedByConnection != null ? 1 : 0;
-			case("hookup_pitch"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.x - angles.x : 0;
-			case("hookup_yaw"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.y - angles.y : 0;
-			case("hookup_roll"): return towedByConnection != null ? towedByConnection.hitchEntity.angles.z - angles.z : 0;
-			case("trailer_connected"): return !towingConnections.isEmpty() ? 1 : 0;
-			case("trailer_pitch"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().hookupEntity.angles.x - angles.x : 0;
-			case("trailer_yaw"): return !towingConnections.isEmpty() ?  towingConnections.iterator().next().hookupEntity.angles.y - angles.y : 0;
-			case("trailer_roll"): return !towingConnections.isEmpty() ? towingConnections.iterator().next().hookupEntity.angles.z - angles.z : 0;
 			case("fueling"): return beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.

@@ -383,7 +383,7 @@ public class GUIPanelGround extends AGUIPanel{
 			}else{
 				trailerSelector.selectorState = 1;
 				for(TrailerConnection connection : switchDef.entityOn.towingConnections){
-					if(connection.hitchEntity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == switchDef.connectionGroupIndex){
+					if(connection.hitchGroupIndex == switchDef.connectionGroupIndex){
 						trailerSelector.selectorState = 0;
 						break;
 					}

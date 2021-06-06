@@ -32,7 +32,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 		}else{
 			boolean foundConnection = false;
 			for(TrailerConnection connection : entity.towingConnections){
-				if(entity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == connectionGroupIndex){
+				if(connection.hitchGroupIndex == connectionGroupIndex){
 					foundConnection = true;
 				}
 			}
@@ -99,7 +99,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 				entity.towedByConnection.hitchEntity.disconnectTrailer(entity.towedByConnection);
 			}else{
 				for(TrailerConnection connection : entity.towingConnections){
-					if(entity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup) == connectionGroupIndex){
+					if(connection.hitchGroupIndex == connectionGroupIndex){
 						entity.disconnectTrailer(connection);
 						player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.disconnect"));
 						break;

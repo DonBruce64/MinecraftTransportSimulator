@@ -15,10 +15,10 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 public class TrailerConnection{
 	private final String hitchEntityUUID;
 	private final String hookupEntityUUID;
-	private final int hitchGroupIndex;
-	private final int hitchConnectionIndex;
-	private final int hookupGroupIndex;
-	private final int hookupConnectionIndex;
+	public final int hitchGroupIndex;
+	public final int hitchConnectionIndex;
+	public final int hookupGroupIndex;
+	public final int hookupConnectionIndex;
 	public AEntityD_Interactable<?> hitchEntity;
 	public AEntityD_Interactable<?> hitchBaseEntity;
 	public AEntityD_Interactable<?> hookupEntity;

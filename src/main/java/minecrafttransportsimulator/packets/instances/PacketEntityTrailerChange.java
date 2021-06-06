@@ -25,10 +25,10 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 	public PacketEntityTrailerChange(TrailerConnection connection, boolean connect){
 		super(connection.hitchEntity);
 		this.hookupEntityID = connection.hookupEntity.lookupID;
-		this.hitchGroupIndex = connection.hitchEntity.definition.connectionGroups.indexOf(connection.hitchConnectionGroup);
-		this.hitchConnectionIndex = connection.hitchConnectionGroup.connections.indexOf(connection.hitchConnection);
-		this.hookupGroupIndex = connection.hookupEntity.definition.connectionGroups.indexOf(connection.hookupConnectionGroup);
-		this.hookupConnectionIndex = connection.hookupConnectionGroup.connections.indexOf(connection.hookupConnection);
+		this.hitchGroupIndex = connection.hitchGroupIndex;
+		this.hitchConnectionIndex = connection.hitchConnectionIndex;
+		this.hookupGroupIndex = connection.hookupGroupIndex;
+		this.hookupConnectionIndex = connection.hookupConnectionIndex;
 		this.connect = connect;
 	}
 	
