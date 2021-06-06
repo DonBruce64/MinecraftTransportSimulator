@@ -47,14 +47,18 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 			case SHIFT_UP : {
 				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					didShift = engine.shiftUp(controlState);
+					if(engine.shiftUp(controlState) && !didShift){
+						didShift = true;
+					}
 				}
 				return didShift;
 			}
 			case SHIFT_DN : {
 				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					didShift = engine.shiftDown(controlState);
+					if(engine.shiftDown(controlState) && !didShift){
+						didShift = true;
+					}
 				}
 				return didShift;
 			}
