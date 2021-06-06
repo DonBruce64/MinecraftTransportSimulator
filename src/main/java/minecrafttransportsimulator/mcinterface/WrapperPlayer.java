@@ -87,14 +87,14 @@ public class WrapperPlayer extends WrapperEntity{
 	 *  Returns true if this player is in creative mode.
 	 */
 	public boolean isCreative(){
-		return player.capabilities.isCreativeMode;
+		return player.isCreative();
 	}
 	
 	/**
 	 *  Returns true if this player is in spectator mode.
 	 */
 	public boolean isSpectator(){
-		return !player.capabilities.allowEdit;
+		return player.isSpectator();
 	}
 	
 	/**
