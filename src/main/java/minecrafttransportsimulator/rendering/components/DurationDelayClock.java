@@ -5,6 +5,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.rendering.components.AnimationVariableEasing;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
@@ -17,6 +18,7 @@ public class DurationDelayClock{
 	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;
 	private Long timeCommandedReverse = 0L;
+	
 	private final boolean shouldDoFactoring;
 	private boolean startedForwardsMovement = false;
 	private boolean endedForwardsMovement = false;
@@ -90,13 +92,16 @@ public class DurationDelayClock{
 		}
 		
 		double movementFactor = 0;
+		AnimationVariableEasing easing = new AnimationVariableEasing();
 		if(commandForwards){
 			long timedelayed = currentTime - timeCommandedForwards;
 			if(timedelayed >= animation.forwardsDelay*50){
 				long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipForwardsMovement){
 					movedThisUpdate = true;
-					movementFactor = timeMoved/(double)(animation.duration*50);
+					movementFactor =  easing.getEasingValue(animation, timeMoved, value);
+					
+					
 				}else{
 					movementFactor = 1;
 					if(!endedForwardsMovement){
@@ -143,4 +148,5 @@ public class DurationDelayClock{
 		
 		return shouldDoFactoring ? movementFactor : value;
 	}
+	
 }

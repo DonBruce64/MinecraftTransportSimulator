@@ -41,6 +41,9 @@ public class JSONAnimationDefinition{
 	@JSONDescription("The duration of this animation, in ticks.  Causes the animation to be interpolated over the duration for smooth movement.  Useful for things like doors.  Only works for variables that go from 0-1.")
 	public int duration;
 	
+	@JSONDescription("The type of easing interpolation to apply on the animation.")
+	public AnimationEasingType easing;
+	
 	@JSONDescription("How long this animation waits to start after the variable goes to 1, in ticks.  For example, an animation with a forwardsDelay of 20 and a duration of 40 would wait one second before moving, and then take two seconds to move its entire animation.")
 	public int forwardsDelay;
 	
@@ -78,5 +81,13 @@ public class JSONAnimationDefinition{
 		INHIBITOR,
 		@JSONDescription("Like Inhibitor, but in this case this animation will be resumed if it was inhibited.  There is no change if the animation wasn't inhibited to begin with.")
 		ACTIVATOR;
+	}
+	
+	public static enum AnimationEasingType{
+		EASEINQUAD,
+		
+		EASEOUTQUAD,
+		
+		EASEINOUTQUAD
 	}
 }
