@@ -33,10 +33,10 @@ public class AnimationVariableEasing {
 	}
 	
 	public double easeInQuad(JSONAnimationDefinition animation, long timeElapsed, double endValue) {
-		long time = timeElapsed;
 		long duration = animation.duration*50;
-		time = time/duration;
+		double time = timeElapsed/(double)duration;
 		double value = endValue * time * time + 0;
+		
 		System.out.format("Variable: %s | Value: %f | EndValue: %f | ", animation.variable, value, endValue);
 		System.out.format("Duration: " + duration + " | " + "Time Elapsed: " + time + "\n");
 		
@@ -44,18 +44,16 @@ public class AnimationVariableEasing {
 	}
 	
 	public double easeOutQuad(JSONAnimationDefinition animation, long timeElapsed, double endValue) {
-		long time = timeElapsed;
 		long duration = animation.duration*50;
-		time = time/duration;
+		double time = timeElapsed/(double)duration;
 		double value = -endValue * time * (time-2) + 0;
 		
 		return value;
 	}
 	
 	public double easeInOutQuad(JSONAnimationDefinition animation, long timeElapsed, double endValue) {
-		long time = timeElapsed;
 		long duration = animation.duration*50;
-		time = time/(duration/2);
+		double time = timeElapsed/(double)duration;
 		
 		if (time < 1) {
 			double value = endValue/2 * time * time + 0;
