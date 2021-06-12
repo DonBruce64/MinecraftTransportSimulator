@@ -63,6 +63,12 @@ public class GUIPackExporter extends AGUIBase{
 					}
 				}
 				
+				File lastModifiedFile = new File(jsonDir, "lastexported.txt");
+				if(lastModifiedFile.exists()){
+					debug.setText("\nWARNING: Existing export detected!  Exporting will not continue.  Either delete the mts_dev folder, or the lastexported.txt file and try again.");
+					return;
+				}
+				
 				long lastTimeModified = 0;
 				debug.setText("Export dir is: " + jsonDir.getAbsolutePath());
 				for(String packID : PackParserSystem.getAllPackIDs()){
@@ -91,8 +97,8 @@ public class GUIPackExporter extends AGUIBase{
 					}
 					debug.setText(debug.getText() + "\nExported pack: " + packID);
 				}
+				
 				try{
-					File lastModifiedFile = new File(jsonDir, "lastexported.txt");
 					FileWriter writer = new FileWriter(lastModifiedFile);
 					writer.write(String.valueOf(lastTimeModified));
 					writer.flush();
