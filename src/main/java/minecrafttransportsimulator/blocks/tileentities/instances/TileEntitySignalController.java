@@ -29,8 +29,10 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public boolean unsavedClientChangesPreset;
 	
 	//Settings for trigger operation.
-	public int mainLaneWidth;
-	public int crossLaneWidth;
+	public double mainLaneWidth;
+	public double mainRoadWidth;
+	public double crossLaneWidth;
+	public double crossRoadWidth;
 	public int mainLeftLaneCount;
 	public int mainCenterLaneCount;
 	public int mainRightLaneCount;
@@ -108,7 +110,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		mainDirectionNorthOrNortheast = data.getBoolean("mainDirectionNorthOrNortheast");
 		
 		mainLaneWidth = data.getInteger("mainLaneWidth");
+		mainRoadWidth = data.getDouble("mainRoadWidth");
 		crossLaneWidth = data.getInteger("crossLaneWidth");
+		crossRoadWidth = data.getDouble("crossRoadWidth");
 		mainLeftLaneCount = data.getInteger("mainLeftLaneCount");
 		mainCenterLaneCount = data.getInteger("mainCenterLaneCount");
 		mainRightLaneCount = data.getInteger("mainRightLaneCount");
@@ -160,8 +164,10 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		data.setBoolean("isRightHandDrive", isRightHandDrive);
 		data.setBoolean("mainDirectionNorthOrNortheast", mainDirectionNorthOrNortheast);
 		
-		data.setInteger("mainLaneWidth", mainLaneWidth);
-		data.setInteger("crossLaneWidth", crossLaneWidth);
+		data.setDouble("mainLaneWidth", mainLaneWidth);
+		data.setDouble("mainRoadWidth", mainRoadWidth);
+		data.setDouble("crossLaneWidth", crossLaneWidth);
+		data.setDouble("crossRoadWidth", crossRoadWidth);
 		data.setInteger("mainLeftLaneCount", mainLeftLaneCount);
 		data.setInteger("mainCenterLaneCount", mainCenterLaneCount);
 		data.setInteger("mainRightLaneCount", mainRightLaneCount);
@@ -196,7 +202,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		//Parameters for this signal boxes bounds.  These are all based with a south-facing reference.
 		//when checking, the point will be rotated to be in this reference plane.
-		protected final int signalLineWidth;
+		protected final double signalLineWidth;
 		protected final Point3d signalLineCenter;
 		
 		private SignalGroup(Axis axis, SignalDirection direction, WrapperNBT data){
@@ -226,19 +232,19 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			}
 			currentCooldown = data.getInteger("currentCooldown");
 			
-			int totalRoadWidth;
+			double totalRoadWidth;
 			double distanceToSignalsFromCenter;
 			if(isMainSignal){
-				totalRoadWidth = (mainLeftLaneCount + mainCenterLaneCount + mainRightLaneCount)*mainLaneWidth;
+				totalRoadWidth = mainRoadWidth;
 				distanceToSignalsFromCenter = (crossLeftLaneCount + crossCenterLaneCount + crossRightLaneCount)*crossLaneWidth/2D;
 			}else{
-				totalRoadWidth = (crossLeftLaneCount + crossCenterLaneCount + crossRightLaneCount)*crossLaneWidth;
+				totalRoadWidth = crossRoadWidth;
 				distanceToSignalsFromCenter = (mainLeftLaneCount + mainCenterLaneCount + mainRightLaneCount)*mainLaneWidth/2D;
 			}
 			switch(direction){
 				case CENTER: {
 					this.signalLineWidth = isMainSignal ? mainCenterLaneCount*mainLaneWidth : crossCenterLaneCount*crossLaneWidth;
-					int leftSegmentWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
+					double leftSegmentWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
 					this.signalLineCenter = new Point3d(-totalRoadWidth/2D + leftSegmentWidth + signalLineWidth/2D, 0, distanceToSignalsFromCenter);
 					break;
 				}
