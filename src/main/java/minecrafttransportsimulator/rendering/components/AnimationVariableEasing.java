@@ -10,7 +10,10 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  * @author TurboDefender
  */
 public class AnimationVariableEasing {
-
+	
+	/* This is used to return the interpolated animation values
+	 * It call the interpolation methods equivalent to the easing type
+	 */
 	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {
 		
 		double time = timeMoved/(double)(animation.duration*50);
@@ -119,10 +122,9 @@ public class AnimationVariableEasing {
 					case EASEINOUTBOUNCE: {
 						return easeInOutBounce(animation, time);
 					}
-					
-					
+					//Easing type is invalid. Log error
 					default: {
-						InterfaceCore.logError("Easing type " + animation.reverseEasing + " does not exist. Defaulting to linea.");
+						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
 						return linear(animation, timeMoved);
 					}
 				}
@@ -229,9 +231,9 @@ public class AnimationVariableEasing {
 					case EASEINOUTBOUNCE: {
 						return easeInOutBounce(animation, time);
 					}
-					
+					//Easing type is invalid. Log error
 					default: {
-						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " does not exist. Defaulting to linear.");
+						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
 						return linear(animation, timeMoved);
 					}
 				}
@@ -343,9 +345,9 @@ public class AnimationVariableEasing {
 					case EASEINOUTBOUNCE: {
 						return easeInOutBounce(animation, time);
 					}
-					
+					//Easing type is invalid. Log error
 					default: {
-						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " does not exist. Defaulting to linear.");
+						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
 						return linear(animation, timeMoved);
 					}
 				}
