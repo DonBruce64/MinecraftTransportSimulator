@@ -95,6 +95,9 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("The height of the part.")
     	public float height;
+
+    	@JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
+    	public int mass;
     }
     
     public class JSONPartEngine{

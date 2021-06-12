@@ -205,6 +205,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	protected int getCurrentMass(){
 		int currentMass = definition.motorized.emptyMass + 100*locationRiderMap.values().size();
 		for(APart part : parts){
+			currentMass += part.definition.generic.mass;
 			if(part instanceof PartInteractable){
 				currentMass += ((PartInteractable) part).getInventoryWeight();
 			}
