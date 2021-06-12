@@ -87,6 +87,9 @@ public class JSONAnimationDefinition{
 	}
 	
 	public static enum AnimationEasingType{
+		@JSONDescription("Constant velocity")
+		LINEAR,
+		
 		@JSONDescription("Accelerating from zero velocity")
 		EASEINQUAD,
 		

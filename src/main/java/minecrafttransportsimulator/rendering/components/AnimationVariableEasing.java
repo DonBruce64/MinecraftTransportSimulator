@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 
@@ -11,28 +12,16 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 public class AnimationVariableEasing {
 
 	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {
-		if (animation.forwardsEasing != null && !isReverse) {
-			switch(animation.forwardsEasing) {
-				case EASEINQUAD: {
-					return easeInQuad(animation, timeMoved, false);
-				}
-				
-				case EASEOUTQUAD: {
-					return easeOutQuad(animation, timeMoved, false);
-				}
-				
-				case EASEINOUTQUAD: {
-					return easeInOutQuad(animation, timeMoved, false);
-				}
-				
-				default: {
-					return (timeMoved/(double)(animation.duration*50));
-				}
-			}
-			
-		} else if (isReverse) {
+		
+		//Check if the animation is playing in reverse
+		if (isReverse) {
+			//Check if
 			if (animation.reverseEasing != null) {
 				switch(animation.reverseEasing) {
+					case LINEAR: {
+						return linear(animation, timeMoved);
+					}
+					
 					case EASEINQUAD: {
 						return easeOutQuad(animation, timeMoved, true);
 					}
@@ -42,42 +31,76 @@ public class AnimationVariableEasing {
 					}
 					
 					case EASEINOUTQUAD: {
-						return easeInOutQuad(animation, timeMoved, true);
+						return easeInOutQuad(animation, timeMoved);
 					}
 					
 					default: {
-						return (timeMoved/(double)(animation.duration*50));
+						InterfaceCore.logError("Easing type " + animation.reverseEasing + " does not exist. Defaulting to linea.");
+						return linear(animation, timeMoved);
 					}
 				}
 			} else if (animation.forwardsEasing != null) {
 				switch(animation.forwardsEasing) {
+					case LINEAR: {
+						return linear(animation, timeMoved);
+					}
+					
 					case EASEINQUAD: {
-						return easeOutQuad(animation, timeMoved, true);
+						return easeInQuad(animation, timeMoved, false);
 					}
 					
 					case EASEOUTQUAD: {
-						return easeInQuad(animation, timeMoved, true);
+						return easeOutQuad(animation, timeMoved, false);
 					}
 					
 					case EASEINOUTQUAD: {
-						return easeInOutQuad(animation, timeMoved, true);
+						return easeInOutQuad(animation, timeMoved);
 					}
 					
 					default: {
-						return (timeMoved/(double)(animation.duration*50));
+						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " does not exist. Defaulting to linear.");
+						return linear(animation, timeMoved);
 					}
 				}
 			} else {
-				return (timeMoved/(double)(animation.duration*50));
+				return linear(animation, timeMoved);
 			}
-			
 		} else {
-			
-			return (timeMoved/(double)(animation.duration*50));
-			
+			if (animation.forwardsEasing != null) {
+				switch(animation.forwardsEasing) {
+					case LINEAR: {
+						return linear(animation, timeMoved);
+					}
+					
+					case EASEINQUAD: {
+						return easeInQuad(animation, timeMoved, false);
+					}
+					
+					case EASEOUTQUAD: {
+						return easeOutQuad(animation, timeMoved, false);
+					}
+					
+					case EASEINOUTQUAD: {
+						return easeInOutQuad(animation, timeMoved);
+					}
+					
+					default: {
+						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " does not exist. Defaulting to linear.");
+						return linear(animation, timeMoved);
+					}
+				}
+			} else {
+				return linear(animation, timeMoved);
+			}
 		}
 	}
 	
+	public double linear(JSONAnimationDefinition animation, long timeElapsed) {
+		return (timeElapsed/(double)(animation.duration*50));
+	}
+	
+	/*
+	 */
 	public double easeInQuad(JSONAnimationDefinition animation, long timeElapsed, boolean isReverse) {
 		long duration = animation.duration*50;
 		double time = timeElapsed/(double)duration;
@@ -86,7 +109,7 @@ public class AnimationVariableEasing {
 			time = 1-time;
 		}
 		
-		value = 1 * time * time + 0;
+		value = time * time;
 
 		if(isReverse) {
 			System.out.format("Direction: Reverse | Value: %f\n", 1-value);
@@ -106,7 +129,7 @@ public class AnimationVariableEasing {
 			time = 1-time;
 		}
 		
-		value = -1 * time * (time-2) + 0;
+		value = time * (2-time);
 		
 		if(isReverse) {
 			System.out.format("Direction: Reverse | Value: %f\n", 1-value);
@@ -117,21 +140,19 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInOutQuad(JSONAnimationDefinition animation, long timeElapsed, boolean isReverse) {
+	public double easeInOutQuad(JSONAnimationDefinition animation, long timeElapsed) {
 		long duration = animation.duration*50;
-		double time = timeElapsed/((double)duration/2);
+		double time = timeElapsed/(double)duration;
 		
-		if (time < 1) {
+		if (time < .5) {
 			
-			double value = 1/(double)2 * time * time + 0;
+			double value = 2 * time * time;
 			
 			return value;
 			
 		} else {
 			
-			time--;
-			
-			double value = -1/(double)2 * (time * (time - 2) - 1) + 0;
+			double value = -1 + (4 - 2 * time) * time;
 
 			return value;
 		}
