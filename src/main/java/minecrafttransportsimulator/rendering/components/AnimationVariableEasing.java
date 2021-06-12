@@ -30,344 +30,150 @@ public class AnimationVariableEasing {
 		if (isReverse) {
 			//Check if reverseEasing is not omitted
 			if (animation.reverseEasing != null) {
-				switch(animation.reverseEasing) {
-					case LINEAR: {
-						return time;
-					}
-					
-					case EASEINQUAD: {
-						return easeInQuad(time);
-					}
-					
-					case EASEOUTQUAD: {
-						return easeOutQuad(time);
-					}
-					
-					case EASEINOUTQUAD: {
-						return easeInOutQuad(time);
-					}
-					
-					case EASEINCUBIC: {
-						return easeInCubic(time);
-					}
-					
-					case EASEOUTCUBIC: {
-						return easeOutCubic(time);
-					}
-					
-					case EASEINOUTCUBIC: {
-						return easeInOutCubic(time);
-					}
-					
-					case EASEINQUART: {
-						return easeInQuart(time);
-					}
-					
-					case EASEOUTQUART: {
-						return easeOutQuart(time);
-					}
-					
-					case EASEINOUTQUART: {
-						return easeInOutQuart(time);
-					}
-					
-					case EASEINQUINT: {
-						return easeInQuint(time);
-					}
-					
-					case EASEOUTQUINT: {
-						return easeOutQuint(time);
-					}
-					
-					case EASEINOUTQUINT: {
-						return easeInOutQuint(time);
-					}
-					
-					case EASEINCIRC: {
-						return easeInCirc(time);
-					}
-					
-					case EASEOUTCIRC: {
-						return easeOutCirc(time);
-					}
-					
-					case EASEINOUTCIRC: {
-						return easeInOutCirc(time);
-					}
-					
-					case EASEINBACK: {
-						return easeInBack(time);
-					}
-					
-					case EASEOUTBACK: {
-						return easeOutBack(time);
-					}
-					
-					case EASEINOUTBACK: {
-						return easeInOutBack(time);
-					}
-					
-					case EASEINELASTIC: {
-						return easeInElastic(time);
-					}
-					
-					case EASEOUTELASTIC: {
-						return easeOutElastic(time);
-					}
-					
-					case EASEINOUTELASTIC: {
-						return easeInOutElastic(time);
-					}
-					
-					case EASEINBOUNCE: {
-						return easeInBounce(time);
-					}
-					
-					case EASEOUTBOUNCE: {
-						return easeOutBounce(time);
-					}
-					
-					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(time);
-					}
-					//Easing type is invalid. Log error
-					default: {
-						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return time;
-					}
-				}
+				
+				return getEasingType(animation.reverseEasing, time);
+				
 			//If it is, then check if forwardsEasing isn't omitted
 			//We can use it's value to apply an easing type to the reverse animation
 			} else if (animation.forwardsEasing != null) {
-				switch(animation.forwardsEasing) {
-					case LINEAR: {
-						return time;
-					}
-					
-					case EASEINQUAD: {
-						return easeInQuad(time);
-					}
-					
-					case EASEOUTQUAD: {
-						return easeOutQuad(time);
-					}
-					
-					case EASEINOUTQUAD: {
-						return easeInOutQuad(time);
-					}
-					
-					case EASEINCUBIC: {
-						return easeInCubic(time);
-					}
-					
-					case EASEOUTCUBIC: {
-						return easeOutCubic(time);
-					}
-					
-					case EASEINOUTCUBIC: {
-						return easeInOutCubic(time);
-					}
-					
-					case EASEINQUART: {
-						return easeInQuart(time);
-					}
-					
-					case EASEOUTQUART: {
-						return easeOutQuart(time);
-					}
-					
-					case EASEINOUTQUART: {
-						return easeInOutQuart(time);
-					}
-					
-					case EASEINQUINT: {
-						return easeInQuint(time);
-					}
-					
-					case EASEOUTQUINT: {
-						return easeOutQuint(time);
-					}
-					
-					case EASEINOUTQUINT: {
-						return easeInOutQuint(time);
-					}
-					
-					case EASEINCIRC: {
-						return easeInCirc(time);
-					}
-					
-					case EASEOUTCIRC: {
-						return easeOutCirc(time);
-					}
-					
-					case EASEINOUTCIRC: {
-						return easeInOutCirc(time);
-					}
-					
-					case EASEINBACK: {
-						return easeInBack(time);
-					}
-					
-					case EASEOUTBACK: {
-						return easeOutBack(time);
-					}
-					
-					case EASEINOUTBACK: {
-						return easeInOutBack(time);
-					}
-					
-					case EASEINELASTIC: {
-						return easeInElastic(time);
-					}
-					
-					case EASEOUTELASTIC: {
-						return easeOutElastic(time);
-					}
-					
-					case EASEINOUTELASTIC: {
-						return easeInOutElastic(time);
-					}
-					
-					case EASEINBOUNCE: {
-						return easeInBounce(time);
-					}
-					
-					case EASEOUTBOUNCE: {
-						return easeOutBounce(time);
-					}
-					
-					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(time);
-					}
-					//Easing type is invalid. Log error
-					default: {
-						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return time;
-					}
-				}
+				
+				return getEasingType(animation.forwardsEasing, time);
+				
 			//If both are omitted, then apply linear easing
 			} else {
+				
 				return time;
 			}
 		//If animation is playing forwards
 		} else {
 			//Check if forwardsEasing isn't omitted
 			if (animation.forwardsEasing != null) {
-				switch(animation.forwardsEasing) {
-					case LINEAR: {
-						return time;
-					}
-					
-					case EASEINQUAD: {
-						return easeInQuad(time);
-					}
-					
-					case EASEOUTQUAD: {
-						return easeOutQuad(time);
-					}
-					
-					case EASEINOUTQUAD: {
-						return easeInOutQuad(time);
-					}
-					
-					case EASEINCUBIC: {
-						return easeInCubic(time);
-					}
-					
-					case EASEOUTCUBIC: {
-						return easeOutCubic(time);
-					}
-					
-					case EASEINOUTCUBIC: {
-						return easeInOutCubic(time);
-					}
-					
-					case EASEINQUART: {
-						return easeInQuart(time);
-					}
-					
-					case EASEOUTQUART: {
-						return easeOutQuart(time);
-					}
-					
-					case EASEINOUTQUART: {
-						return easeInOutQuart(time);
-					}
-					
-					case EASEINQUINT: {
-						return easeInQuint(time);
-					}
-					
-					case EASEOUTQUINT: {
-						return easeOutQuint(time);
-					}
-					
-					case EASEINOUTQUINT: {
-						return easeInOutQuint(time);
-					}
-					
-					case EASEINCIRC: {
-						return easeInCirc(time);
-					}
-					
-					case EASEOUTCIRC: {
-						return easeOutCirc(time);
-					}
-					
-					case EASEINOUTCIRC: {
-						return easeInOutCirc(time);
-					}
-					
-					case EASEINBACK: {
-						return easeInBack(time);
-					}
-					
-					case EASEOUTBACK: {
-						return easeOutBack(time);
-					}
-					
-					case EASEINOUTBACK: {
-						return easeInOutBack(time);
-					}
-					
-					case EASEINELASTIC: {
-						return easeInElastic(time);
-					}
-					
-					case EASEOUTELASTIC: {
-						return easeOutElastic(time);
-					}
-					
-					case EASEINOUTELASTIC: {
-						return easeInOutElastic(time);
-					}
-					
-					case EASEINBOUNCE: {
-						return easeInBounce(time);
-					}
-					
-					case EASEOUTBOUNCE: {
-						return easeOutBounce(time);
-					}
-					
-					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(time);
-					}
-					//Easing type is invalid. Log error
-					default: {
-						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return time;
-					}
-				}
+				
+				return getEasingType(animation.forwardsEasing, time);
+				
 			//If it is, then apply linear easing
 			} else {
+				
 				return time;
 			}
 		}
 	}
 	
-	/* Below this are methods that calculate the graph of each easing curve
-	 * It returns a value according to the value provided to timeElapsed
+	/* This is used to check the easing type defined in the JSON
+	 * And call the respective easing function to return a value
+	 */
+	public double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
+		switch(direction) {
+		
+			case LINEAR: {
+				return time;
+			}
+			
+			case EASEINQUAD: {
+				return easeInQuad(time);
+			}
+			
+			case EASEOUTQUAD: {
+				return easeOutQuad(time);
+			}
+			
+			case EASEINOUTQUAD: {
+				return easeInOutQuad(time);
+			}
+			
+			case EASEINCUBIC: {
+				return easeInCubic(time);
+			}
+			
+			case EASEOUTCUBIC: {
+				return easeOutCubic(time);
+			}
+			
+			case EASEINOUTCUBIC: {
+				return easeInOutCubic(time);
+			}
+			
+			case EASEINQUART: {
+				return easeInQuart(time);
+			}
+			
+			case EASEOUTQUART: {
+				return easeOutQuart(time);
+			}
+			
+			case EASEINOUTQUART: {
+				return easeInOutQuart(time);
+			}
+			
+			case EASEINQUINT: {
+				return easeInQuint(time);
+			}
+			
+			case EASEOUTQUINT: {
+				return easeOutQuint(time);
+			}
+			
+			case EASEINOUTQUINT: {
+				return easeInOutQuint(time);
+			}
+			
+			case EASEINCIRC: {
+				return easeInCirc(time);
+			}
+			
+			case EASEOUTCIRC: {
+				return easeOutCirc(time);
+			}
+			
+			case EASEINOUTCIRC: {
+				return easeInOutCirc(time);
+			}
+			
+			case EASEINBACK: {
+				return easeInBack(time);
+			}
+			
+			case EASEOUTBACK: {
+				return easeOutBack(time);
+			}
+			
+			case EASEINOUTBACK: {
+				return easeInOutBack(time);
+			}
+			
+			case EASEINELASTIC: {
+				return easeInElastic(time);
+			}
+			
+			case EASEOUTELASTIC: {
+				return easeOutElastic(time);
+			}
+			
+			case EASEINOUTELASTIC: {
+				return easeInOutElastic(time);
+			}
+			
+			case EASEINBOUNCE: {
+				return easeInBounce(time);
+			}
+			
+			case EASEOUTBOUNCE: {
+				return easeOutBounce(time);
+			}
+			
+			case EASEINOUTBOUNCE: {
+				return easeInOutBounce(time);
+			}
+			//Easing type is invalid. Log error
+			default: {
+				InterfaceCore.logError("Easing type " + direction + " is invalid. Defaulting to linear.");
+				return time;
+			}
+		}
+	}
+	
+	/* Below are functions that calculate the graph of each easing curve
+	 * It returns a value according to the time elapsed in an animation
 	 */
 
 	public double easeInQuad(double time) {
