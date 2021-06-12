@@ -99,7 +99,7 @@ public class DurationDelayClock{
 				long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipForwardsMovement){
 					movedThisUpdate = true;
-					movementFactor =  easing.getEasingValue(animation, timeMoved, value);
+					movementFactor =  easing.getEasingValue(animation, timeMoved, false);
 					
 					
 				}else{
@@ -125,7 +125,7 @@ public class DurationDelayClock{
 				long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipReverseMovement){
 					movedThisUpdate = true;
-					movementFactor = timeMoved/(double)(animation.duration*50);
+					movementFactor =  easing.getEasingValue(animation, timeMoved, true);
 				}else{
 					movementFactor = 1;
 					if(!endedReverseMovement){
