@@ -11,6 +11,14 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  */
 public class AnimationVariableEasing {
 	
+	private static final double c1 = 1.70518;
+	private static final double c2 = c1 * 1.525;
+	private static final double c3 = c1 + 1;
+	private static final double c4 = (2 * Math.PI) / 3;
+	private static final double c5 = (2 * Math.PI) / 4.5;
+	private static final double n1 = 7.5625;
+	private static final double d1 = 2.75;
+	
 	/* This is used to return the interpolated animation values
 	 * It call the interpolation methods equivalent to the easing type
 	 */
@@ -24,108 +32,108 @@ public class AnimationVariableEasing {
 			if (animation.reverseEasing != null) {
 				switch(animation.reverseEasing) {
 					case LINEAR: {
-						return linear(animation, timeMoved);
+						return time;
 					}
 					
 					case EASEINQUAD: {
-						return easeInQuad(animation, timeMoved);
+						return easeInQuad(time);
 					}
 					
 					case EASEOUTQUAD: {
-						return easeOutQuad(animation, timeMoved);
+						return easeOutQuad(time);
 					}
 					
 					case EASEINOUTQUAD: {
-						return easeInOutQuad(animation, timeMoved);
+						return easeInOutQuad(time);
 					}
 					
 					case EASEINCUBIC: {
-						return easeInCubic(animation, timeMoved);
+						return easeInCubic(time);
 					}
 					
 					case EASEOUTCUBIC: {
-						return easeOutCubic(animation, timeMoved);
+						return easeOutCubic(time);
 					}
 					
 					case EASEINOUTCUBIC: {
-						return easeInOutCubic(animation, timeMoved);
+						return easeInOutCubic(time);
 					}
 					
 					case EASEINQUART: {
-						return easeInQuart(animation, timeMoved);
+						return easeInQuart(time);
 					}
 					
 					case EASEOUTQUART: {
-						return easeOutQuart(animation, timeMoved);
+						return easeOutQuart(time);
 					}
 					
 					case EASEINOUTQUART: {
-						return easeInOutQuart(animation, timeMoved);
+						return easeInOutQuart(time);
 					}
 					
 					case EASEINQUINT: {
-						return easeInQuint(animation, timeMoved);
+						return easeInQuint(time);
 					}
 					
 					case EASEOUTQUINT: {
-						return easeOutQuint(animation, timeMoved);
+						return easeOutQuint(time);
 					}
 					
 					case EASEINOUTQUINT: {
-						return easeInOutQuint(animation, timeMoved);
+						return easeInOutQuint(time);
 					}
 					
 					case EASEINCIRC: {
-						return easeInCirc(animation, timeMoved);
+						return easeInCirc(time);
 					}
 					
 					case EASEOUTCIRC: {
-						return easeOutCirc(animation, timeMoved);
+						return easeOutCirc(time);
 					}
 					
 					case EASEINOUTCIRC: {
-						return easeInOutCirc(animation, timeMoved);
+						return easeInOutCirc(time);
 					}
 					
 					case EASEINBACK: {
-						return easeInBack(animation, timeMoved);
+						return easeInBack(time);
 					}
 					
 					case EASEOUTBACK: {
-						return easeOutBack(animation, timeMoved);
+						return easeOutBack(time);
 					}
 					
 					case EASEINOUTBACK: {
-						return easeInOutBack(animation, timeMoved);
+						return easeInOutBack(time);
 					}
 					
 					case EASEINELASTIC: {
-						return easeInElastic(animation, timeMoved);
+						return easeInElastic(time);
 					}
 					
 					case EASEOUTELASTIC: {
-						return easeOutElastic(animation, timeMoved);
+						return easeOutElastic(time);
 					}
 					
 					case EASEINOUTELASTIC: {
-						return easeInOutElastic(animation, timeMoved);
+						return easeInOutElastic(time);
 					}
 					
 					case EASEINBOUNCE: {
-						return easeInBounce(animation, time);
+						return easeInBounce(time);
 					}
 					
 					case EASEOUTBOUNCE: {
-						return easeOutBounce(animation, time);
+						return easeOutBounce(time);
 					}
 					
 					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(animation, time);
+						return easeInOutBounce(time);
 					}
 					//Easing type is invalid. Log error
 					default: {
 						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return linear(animation, timeMoved);
+						return time;
 					}
 				}
 			//If it is, then check if forwardsEasing isn't omitted
@@ -133,113 +141,113 @@ public class AnimationVariableEasing {
 			} else if (animation.forwardsEasing != null) {
 				switch(animation.forwardsEasing) {
 					case LINEAR: {
-						return linear(animation, timeMoved);
+						return time;
 					}
 					
 					case EASEINQUAD: {
-						return easeInQuad(animation, timeMoved);
+						return easeInQuad(time);
 					}
 					
 					case EASEOUTQUAD: {
-						return easeOutQuad(animation, timeMoved);
+						return easeOutQuad(time);
 					}
 					
 					case EASEINOUTQUAD: {
-						return easeInOutQuad(animation, timeMoved);
+						return easeInOutQuad(time);
 					}
 					
 					case EASEINCUBIC: {
-						return easeInCubic(animation, timeMoved);
+						return easeInCubic(time);
 					}
 					
 					case EASEOUTCUBIC: {
-						return easeOutCubic(animation, timeMoved);
+						return easeOutCubic(time);
 					}
 					
 					case EASEINOUTCUBIC: {
-						return easeInOutCubic(animation, timeMoved);
+						return easeInOutCubic(time);
 					}
 					
 					case EASEINQUART: {
-						return easeInQuart(animation, timeMoved);
+						return easeInQuart(time);
 					}
 					
 					case EASEOUTQUART: {
-						return easeOutQuart(animation, timeMoved);
+						return easeOutQuart(time);
 					}
 					
 					case EASEINOUTQUART: {
-						return easeInOutQuart(animation, timeMoved);
+						return easeInOutQuart(time);
 					}
 					
 					case EASEINQUINT: {
-						return easeInQuint(animation, timeMoved);
+						return easeInQuint(time);
 					}
 					
 					case EASEOUTQUINT: {
-						return easeOutQuint(animation, timeMoved);
+						return easeOutQuint(time);
 					}
 					
 					case EASEINOUTQUINT: {
-						return easeInOutQuint(animation, timeMoved);
+						return easeInOutQuint(time);
 					}
 					
 					case EASEINCIRC: {
-						return easeInCirc(animation, timeMoved);
+						return easeInCirc(time);
 					}
 					
 					case EASEOUTCIRC: {
-						return easeOutCirc(animation, timeMoved);
+						return easeOutCirc(time);
 					}
 					
 					case EASEINOUTCIRC: {
-						return easeInOutCirc(animation, timeMoved);
+						return easeInOutCirc(time);
 					}
 					
 					case EASEINBACK: {
-						return easeInBack(animation, timeMoved);
+						return easeInBack(time);
 					}
 					
 					case EASEOUTBACK: {
-						return easeOutBack(animation, timeMoved);
+						return easeOutBack(time);
 					}
 					
 					case EASEINOUTBACK: {
-						return easeInOutBack(animation, timeMoved);
+						return easeInOutBack(time);
 					}
 					
 					case EASEINELASTIC: {
-						return easeInElastic(animation, timeMoved);
+						return easeInElastic(time);
 					}
 					
 					case EASEOUTELASTIC: {
-						return easeOutElastic(animation, timeMoved);
+						return easeOutElastic(time);
 					}
 					
 					case EASEINOUTELASTIC: {
-						return easeInOutElastic(animation, timeMoved);
+						return easeInOutElastic(time);
 					}
 					
 					case EASEINBOUNCE: {
-						return easeInBounce(animation, time);
+						return easeInBounce(time);
 					}
 					
 					case EASEOUTBOUNCE: {
-						return easeOutBounce(animation, time);
+						return easeOutBounce(time);
 					}
 					
 					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(animation, time);
+						return easeInOutBounce(time);
 					}
 					//Easing type is invalid. Log error
 					default: {
 						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return linear(animation, timeMoved);
+						return time;
 					}
 				}
 			//If both are omitted, then apply linear easing
 			} else {
-				return linear(animation, timeMoved);
+				return time;
 			}
 		//If animation is playing forwards
 		} else {
@@ -247,113 +255,113 @@ public class AnimationVariableEasing {
 			if (animation.forwardsEasing != null) {
 				switch(animation.forwardsEasing) {
 					case LINEAR: {
-						return linear(animation, timeMoved);
+						return time;
 					}
 					
 					case EASEINQUAD: {
-						return easeInQuad(animation, timeMoved);
+						return easeInQuad(time);
 					}
 					
 					case EASEOUTQUAD: {
-						return easeOutQuad(animation, timeMoved);
+						return easeOutQuad(time);
 					}
 					
 					case EASEINOUTQUAD: {
-						return easeInOutQuad(animation, timeMoved);
+						return easeInOutQuad(time);
 					}
 					
 					case EASEINCUBIC: {
-						return easeInCubic(animation, timeMoved);
+						return easeInCubic(time);
 					}
 					
 					case EASEOUTCUBIC: {
-						return easeOutCubic(animation, timeMoved);
+						return easeOutCubic(time);
 					}
 					
 					case EASEINOUTCUBIC: {
-						return easeInOutCubic(animation, timeMoved);
+						return easeInOutCubic(time);
 					}
 					
 					case EASEINQUART: {
-						return easeInQuart(animation, timeMoved);
+						return easeInQuart(time);
 					}
 					
 					case EASEOUTQUART: {
-						return easeOutQuart(animation, timeMoved);
+						return easeOutQuart(time);
 					}
 					
 					case EASEINOUTQUART: {
-						return easeInOutQuart(animation, timeMoved);
+						return easeInOutQuart(time);
 					}
 					
 					case EASEINQUINT: {
-						return easeInQuint(animation, timeMoved);
+						return easeInQuint(time);
 					}
 					
 					case EASEOUTQUINT: {
-						return easeOutQuint(animation, timeMoved);
+						return easeOutQuint(time);
 					}
 					
 					case EASEINOUTQUINT: {
-						return easeInOutQuint(animation, timeMoved);
+						return easeInOutQuint(time);
 					}
 					
 					case EASEINCIRC: {
-						return easeInCirc(animation, timeMoved);
+						return easeInCirc(time);
 					}
 					
 					case EASEOUTCIRC: {
-						return easeOutCirc(animation, timeMoved);
+						return easeOutCirc(time);
 					}
 					
 					case EASEINOUTCIRC: {
-						return easeInOutCirc(animation, timeMoved);
+						return easeInOutCirc(time);
 					}
 					
 					case EASEINBACK: {
-						return easeInBack(animation, timeMoved);
+						return easeInBack(time);
 					}
 					
 					case EASEOUTBACK: {
-						return easeOutBack(animation, timeMoved);
+						return easeOutBack(time);
 					}
 					
 					case EASEINOUTBACK: {
-						return easeInOutBack(animation, timeMoved);
+						return easeInOutBack(time);
 					}
 					
 					case EASEINELASTIC: {
-						return easeInElastic(animation, timeMoved);
+						return easeInElastic(time);
 					}
 					
 					case EASEOUTELASTIC: {
-						return easeOutElastic(animation, timeMoved);
+						return easeOutElastic(time);
 					}
 					
 					case EASEINOUTELASTIC: {
-						return easeInOutElastic(animation, timeMoved);
+						return easeInOutElastic(time);
 					}
 					
 					case EASEINBOUNCE: {
-						return easeInBounce(animation, time);
+						return easeInBounce(time);
 					}
 					
 					case EASEOUTBOUNCE: {
-						return easeOutBounce(animation, time);
+						return easeOutBounce(time);
 					}
 					
 					case EASEINOUTBOUNCE: {
-						return easeInOutBounce(animation, time);
+						return easeInOutBounce(time);
 					}
 					//Easing type is invalid. Log error
 					default: {
 						InterfaceCore.logError("Easing type " + animation.forwardsEasing + " is invalid. Defaulting to linear.");
-						return linear(animation, timeMoved);
+						return time;
 					}
 				}
 			//If it is, then apply linear easing
 			} else {
-				return linear(animation, timeMoved);
+				return time;
 			}
 		}
 	}
@@ -361,36 +369,22 @@ public class AnimationVariableEasing {
 	/* Below this are methods that calculate the graph of each easing curve
 	 * It returns a value according to the value provided to timeElapsed
 	 */
-	
-	public double linear(JSONAnimationDefinition animation, long timeElapsed) {
-		
-		return (timeElapsed/(double)(animation.duration*50));
-		
-	}
 
-	public double easeInQuad(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double value;
+	public double easeInQuad(double time) {
 		
-		value = time * time;
+		double value = time * time;
 
 		return value;
 	}
 	
-	public double easeOutQuad(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double value;
-		
-		value = time * (2 - time);
+	public double easeOutQuad(double time) {
+
+		double value = time * (2 - time);
 		
 		return value;
 	}
 	
-	public double easeInOutQuad(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInOutQuad(double time) {
 		
 		if (time < 0.5) {
 			
@@ -407,28 +401,21 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInCubic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInCubic(double time) {
 		
 		double value = time * time * time;
 		
 		return value;
 	}
 	
-	public double easeOutCubic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeOutCubic(double time) {
 		
 		double value = --time * time * time + 1;
 		
 		return value;
 	}
 	
-	public double easeInOutCubic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		
+	public double easeInOutCubic(double time) {
 		if (time < 0.5) {
 			
 			double value = 4 * time * time * time;
@@ -445,28 +432,21 @@ public class AnimationVariableEasing {
 		
 	}
 
-	public double easeInQuart(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInQuart(double time) {
 		
 		double value = time * time * time * time;
 		
 		return value;
 	}
 	
-	public double easeOutQuart(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeOutQuart(double time) {
 		
 		double value = 1 - (--time) * time * time * time;
 		
 		return value;
 	}
 	
-	public double easeInOutQuart(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		
+	public double easeInOutQuart(double time) {
 		if (time < 0.5) {
 			
 			double value = 8 * time * time * time * time;
@@ -482,27 +462,20 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInQuint(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInQuint(double time) {
 		
 		double value = time * time * time * time * time;
 		
 		return value;
 	}
 	
-	public double easeOutQuint(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		
+	public double easeOutQuint(double time) {
 		double value = 1 + (--time) * time * time * time * time;
 		
 		return value;
 	}
 	
-	public double easeInOutQuint(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInOutQuint(double time) {
 		
 		if (time < 0.5) {
 			
@@ -519,27 +492,21 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInExpo(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInExpo(double time) {
 		
 		double value = time == 0 ? 0 : Math.pow(2, 10 * time - 10);
 		
 		return value;
 	}
 	
-	public double easeOutExpo(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeOutExpo(double time) {
 		
 		double value = time == 1 ? 1 : 1 - Math.pow(2, -10 * time);
 		
 		return value;
 	}
 	
-	public double easeInOutExpo(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInOutExpo(double time) {
 		
 		if (time == 0) {
 			
@@ -564,27 +531,21 @@ public class AnimationVariableEasing {
 		}
 	}
 
-	public double easeInCirc(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInCirc(double time) {
 		
 		double value = 1 - Math.sqrt(1 - Math.pow(time, 2));
 		
 		return value;
 	}
 	
-	public double easeOutCirc(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeOutCirc(double time) {
 		
 		double value = Math.sqrt(1 - Math.pow(time - 1, 2));
 		
 		return value;
 	}
 	
-	public double easeInOutCirc(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
+	public double easeInOutCirc(double time) {
 		
 		if (time < 0.5) {
 			
@@ -601,33 +562,22 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInBack(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c1 = 1.70518;
-		double c3 = c1 + 1;
+	public double easeInBack(double time) {
+		
 		
 		double value = c3 * time * time * time - c1 * time * time;
 		
 		return value;
 	}
 	
-	public double easeOutBack(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c1 = 1.70518;
-		double c3 = c1 + 1;
+	public double easeOutBack(double time) {
 		
 		double value = 1 + c3 * Math.pow(time - 1, 3) + c1 * Math.pow(time - 1, 2);
 		
 		return value;
 	}
 	
-	public double easeInOutBack(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c1 = 1.70518;
-		double c2 = c1 * 1.525;
+	public double easeInOutBack(double time) {
 		
 		if (time < 0.5) {
 			
@@ -644,10 +594,7 @@ public class AnimationVariableEasing {
 		}
 	}
 
-	public double easeInElastic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c4 = (2 * Math.PI) / 3;
+	public double easeInElastic(double time) {
 		
 		if (time == 0) {
 			
@@ -665,10 +612,7 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeOutElastic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c4 = (2 * Math.PI) / 3;
+	public double easeOutElastic(double time) {
 		
 		if (time == 0) {
 			
@@ -686,10 +630,7 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInOutElastic(JSONAnimationDefinition animation, long timeElapsed) {
-		long duration = animation.duration*50;
-		double time = timeElapsed/(double)duration;
-		double c5 = (2 * Math.PI) / 4.5;
+	public double easeInOutElastic(double time) {
 		
 		if (time == 0) {
 		
@@ -713,9 +654,7 @@ public class AnimationVariableEasing {
 		}
 	}
 
-	public double easeOutBounce(JSONAnimationDefinition animation, double time) {
-		double n1 = 7.5625;
-		double d1 = 2.75;
+	public double easeOutBounce(double time) {
 		
 		if (time < 1 / d1) {
 			
@@ -743,23 +682,23 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	public double easeInBounce(JSONAnimationDefinition animation, double time) {
+	public double easeInBounce(double time) {
 		
-		double value = 1 - easeOutBounce(animation, 1 - time);
+		double value = 1 - easeOutBounce(1 - time);
 		
 		return value;
 	}
 	
-	public double easeInOutBounce(JSONAnimationDefinition animation, double time) {
+	public double easeInOutBounce(double time) {
 		if (time < 0.5) {
 			
-			double value = (1 - easeOutBounce(animation, 1 - 2 * time)) / 2;
+			double value = (1 - easeOutBounce(1 - 2 * time)) / 2;
 			
 			return value;
 			
 		} else {
 			
-			double value = (1 + easeInBounce(animation, 2 * time - 1)) / 2;
+			double value = (1 + easeInBounce(2 * time - 1)) / 2;
 			
 			return value;
 		}
