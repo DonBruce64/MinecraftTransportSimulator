@@ -724,21 +724,18 @@ public class AnimationVariableEasing {
 		} else if (time < 2 / d1) {
 			
 		    double value = n1 * (time -= 1.5 / d1) * time + 0.75;
-		    System.out.format("Value: %f | Time: %f\n", value, time);
 		    
 			return value;
 			
 		} else if (time < 2.5 / d1) {
 			
 		    double value = n1 * (time -= 2.25 / d1) * time + 0.9375;
-		    System.out.format("Value: %f | Time: %f\n", value, time);
 		    
 			return value;
 			
 		} else {
 			
 		    double value = n1 * (time -= 2.625 / d1) * time + 0.984375;
-		    System.out.format("Value: %f | Time: %f\n", value, time);
 		    
 			return value;
 		}
