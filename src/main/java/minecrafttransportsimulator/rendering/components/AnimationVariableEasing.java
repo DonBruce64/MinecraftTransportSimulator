@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 
@@ -19,7 +18,8 @@ public class AnimationVariableEasing {
 	private static final double n1 = 7.5625;
 	private static final double d1 = 2.75;
 	
-	/**This is used to check the easing type defined in the JSON fields
+	/**
+	 * This is used to check the easing type defined in the JSON fields
 	 * and call the respective easing function to return a value
 	 * 
 	 * @param direction The JSON field either {@code forwardsEasing} or {@code reverseEasing}.
@@ -54,11 +54,8 @@ public class AnimationVariableEasing {
 			case EASEOUTBOUNCE: return easeOutBounce(time);
 			case EASEINOUTBOUNCE: return easeInOutBounce(time);
 			
-			//Easing type is invalid. Log error
-			default: {
-				InterfaceCore.logError("Easing type " + direction + " is invalid. Defaulting to linear.");
-				return time;
-			}
+			//Easing type is invalid. Default to linear.
+			default: return time;
 		}
 	}
 	
