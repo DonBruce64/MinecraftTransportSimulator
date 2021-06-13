@@ -44,9 +44,6 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("If set, this vehicle will be able to selecte and connect to beacons for directional wayfinding.")
     	public boolean hasRadioNav;
     	
-    	@JSONDescription("Does the plane have flaps?  If so, set this to true.  Note that many older airplanes (pre-1950) were not equipped with flaps so just because you don't have any on your model does not mean it will fail to function.")
-    	public boolean hasFlaps;
-    	
     	@JSONDescription("Set this to true if you want the vehicle to have skidSteer functionality.  This allows the vehicle to turn in-place when stopped in neutral.  This will also automatically invert the rotation of the wheels and treads to match the steering orientation, so no need to mess with JSON bits.  Do keep in mind, however, that variables tied to the driveshaft won't work, as these use the engine's current gear, which will be 0!")
     	public boolean hasSkidSteer;
     	
@@ -76,6 +73,9 @@ public class JSONVehicle extends AJSONPartProvider{
     	
     	@JSONDescription("The angle which this vehicle will try to tilt to at max turning.  Note that the vehicle may not reach this angle if it isn't going fast enough.  Designed for bikes and boats.")
     	public float maxTiltAngle;
+    	
+    	@JSONDescription("How fast flaps deploy, in degrees/tick.  Only used if the vehicle has flap notches set.")
+        public float flapSpeed;
     	
     	@JSONDescription("How areodynamic this vehicle is.  Not required, but for things like cars this will make a significant difference in your high-speed performance.  So do some research before you slap some random value in here!  If you don't set this parameter, one will be automatically generated.  Planes and non-planes have a different formula, as planes are more areodynamic than most other vehicles.")
     	public float dragCoefficient;
@@ -115,8 +115,12 @@ public class JSONVehicle extends AJSONPartProvider{
         
         @JSONDescription("Same as panelTextColor, but for the text when the vehicle's lights are on.")
         public String panelLitTextColor;
-    	
         
+        @JSONDescription("A listing of notches for flap deployment.  These will be used to determine the requested flap setting for vehicles that have them.  Only functional for vehicles where isAircraft is set to true.  Both 0 and the highest notch should be included")
+        public List<Float> flapNotches;
+    	
+        @Deprecated
+    	public boolean hasFlaps;
     	@Deprecated
     	public boolean isBigTruck;
     	@Deprecated

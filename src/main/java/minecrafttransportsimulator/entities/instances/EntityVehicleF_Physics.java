@@ -47,9 +47,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public byte rudderCooldown;
 	
 	//Flaps.
-	public static final short MAX_FLAP_ANGLE = 350;
-	public short flapDesiredAngle;
-	public short flapCurrentAngle;
+	public static final short MAX_FLAP_ANGLE_REFERENCE = 350;
+	public int flapNotchSelected;
+	public double flapDesiredAngle;
+	public double flapCurrentAngle;
 	
 	//External state control.
 	public boolean turningLeft;
@@ -107,8 +108,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		this.aileronAngle = (short) data.getInteger("aileronAngle");
 		this.elevatorAngle = (short) data.getInteger("elevatorAngle");
 		this.rudderAngle = (short) data.getInteger("rudderAngle");
-		this.flapDesiredAngle = (short) data.getInteger("flapDesiredAngle");
-		this.flapCurrentAngle = (short) data.getInteger("flapCurrentAngle");
+		this.flapNotchSelected = data.getInteger("flapNotchSelected");
+		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
 		this.aileronTrim = (short) data.getInteger("aileronTrim");
 		this.elevatorTrim = (short) data.getInteger("elevatorTrim");
 		this.rudderTrim = (short) data.getInteger("rudderTrim");
@@ -121,11 +122,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public boolean update(){
 		if(super.update()){
-			//Adjust flaps to current setting.
-			if(flapCurrentAngle < flapDesiredAngle){
-				++flapCurrentAngle;
-			}else if(flapCurrentAngle > flapDesiredAngle){
-				--flapCurrentAngle;
+			if(definition.motorized.flapNotches != null){
+				flapDesiredAngle = definition.motorized.flapNotches.get(flapNotchSelected);
+				//Adjust flaps to current setting.
+				if(flapCurrentAngle < flapDesiredAngle){
+					flapCurrentAngle += definition.motorized.flapSpeed;
+				}else if(flapCurrentAngle > flapDesiredAngle){
+					flapCurrentAngle -= definition.motorized.flapSpeed;
+				}
+				if(Math.abs(flapCurrentAngle - flapDesiredAngle) < definition.motorized.flapSpeed){
+					flapCurrentAngle = flapDesiredAngle;
+				}
 			}
 			return true;
 		}else{
@@ -275,11 +282,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			
 			//Get the lift coefficients and states for control surfaces.
 			double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector)));
-			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/(double)MAX_FLAP_ANGLE);
+			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
 			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
 			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
 			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - yawAngleDelta, 2);
-			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE;
+			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE;
 			
 			//Get the drag coefficient and force.
 			if(definition.motorized.isBlimp){
@@ -623,8 +630,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("aileron"): return aileronAngle/10D;
 			case("elevator"): return elevatorAngle/10D;
 			case("rudder"): return rudderAngle/10D;
-			case("flaps_setpoint"): return flapDesiredAngle/10D;
-			case("flaps_actual"): return flapCurrentAngle/10D;
+			case("flaps_setpoint"): return flapDesiredAngle;
+			case("flaps_actual"): return flapCurrentAngle;
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
 			case("trim_aileron"): return aileronTrim/10D;
 			case("trim_elevator"): return elevatorTrim/10D;
@@ -689,8 +696,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		data.setInteger("aileronAngle", aileronAngle);
 		data.setInteger("elevatorAngle", elevatorAngle);
 		data.setInteger("rudderAngle", rudderAngle);
-		data.setInteger("flapDesiredAngle", flapDesiredAngle);
-		data.setInteger("flapCurrentAngle", flapCurrentAngle);
+		data.setInteger("flapNotchSelected", flapNotchSelected);
+		data.setDouble("flapCurrentAngle", flapCurrentAngle);
 		data.setInteger("aileronTrim", aileronTrim);
 		data.setInteger("elevatorTrim", elevatorTrim);
 		data.setInteger("rudderTrim", rudderTrim);

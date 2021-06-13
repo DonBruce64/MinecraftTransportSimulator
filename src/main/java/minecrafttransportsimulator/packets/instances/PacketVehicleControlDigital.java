@@ -89,7 +89,20 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				}
 				break;
 			}
-			case FLAPS : vehicle.flapDesiredAngle = (short) clampAngle(0, EntityVehicleF_Physics.MAX_FLAP_ANGLE, vehicle.flapDesiredAngle + (controlState ? 50 : -50)); break;
+			case FLAPS : {
+				if(controlState){
+					if(vehicle.flapNotchSelected < vehicle.definition.motorized.flapNotches.size() - 1){
+						++vehicle.flapNotchSelected;
+						return true;
+					}
+				}else{
+					if(vehicle.flapNotchSelected > 0){
+						--vehicle.flapNotchSelected;
+						return true;
+					}
+				}
+				return false;
+			}
 			case TRIM_ROLL : vehicle.aileronTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.MAX_AILERON_TRIM, vehicle.aileronTrim + (controlState ? 1 : -1)); break;
 			case TRIM_PITCH : vehicle.elevatorTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, vehicle.elevatorTrim + (controlState ? 1 : -1)); break;
 			case TRIM_YAW : vehicle.rudderTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.MAX_RUDDER_TRIM, vehicle.rudderTrim + (controlState ? 1 : -1)); break;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
@@ -193,6 +194,16 @@ public final class LegacyCompatSystem{
 					def.placeOnPanel = true;
 				}
 			}
+		}
+		
+		//Check for old flaps.
+		if(definition.motorized.hasFlaps){
+			definition.motorized.flapSpeed = 0.1F;
+			definition.motorized.flapNotches = new ArrayList<Float>();
+			for(int i=0; i<=EntityVehicleF_Physics.MAX_FLAP_ANGLE_REFERENCE/10/5; ++i){
+				definition.motorized.flapNotches.add((float) (i*5));
+			}
+			definition.motorized.hasFlaps = false;
 		}
 		
 		for(JSONPartDefinition partDef : definition.parts){
