@@ -254,12 +254,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 			}
 			if (this.towedByConnection == null){
-				double overSteerForce = velocity;
+				double overSteerForce = velocity / 4;
 				//used to reduce overSteer force at low speeds to reduce jank
 				if (overSteerForce >= 1){
 					overSteerForce = 1;
 				}
-				rotation.y = rotation.y + (crossProduct.y * definition.motorized.overSteer) * (overSteerForce - (definition.motorized.overSteer / 12));
+				rotation.y = rotation.y + (crossProduct.y * definition.motorized.overSteer) * overSteerForce;
 			}
 			
 			//If we are offset, adjust our angle.
