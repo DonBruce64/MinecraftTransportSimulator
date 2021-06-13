@@ -357,9 +357,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("tick"): return world.getTick();
-			case("tick_sin"): return Math.sin(Math.toRadians(world.getTick()));
-			case("tick_cos"): return Math.cos(Math.toRadians(world.getTick()));
+			case("tick"): return world.getTick() + partialTicks;
+			case("tick_sin"): return Math.sin(Math.toRadians(world.getTick() + partialTicks));
+			case("tick_cos"): return Math.cos(Math.toRadians(world.getTick() + partialTicks));
 			case("time"): return world.getTime();
 			case("rain_strength"): return (int) world.getRainStrength(position);
 			case("rain_sin"): {
