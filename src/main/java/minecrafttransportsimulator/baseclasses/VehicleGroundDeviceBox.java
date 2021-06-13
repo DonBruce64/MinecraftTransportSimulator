@@ -3,7 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -293,7 +293,13 @@ public class VehicleGroundDeviceBox{
 	 */
 	private boolean checkEntityCollisions(Point3d collisionMotion){
 		boolean didCollision = false;
-		for(AEntityA_Base entity : AEntityA_Base.getEntities(vehicle.world)){
+		//Commented out as LT ents don't support collision yet.
+		/*for(WrapperEntity entity : vehicle.world.getEntitiesClassNamed("com.creativemd.littletiles.common.entity.EntityAnimation")){
+			if(entity.updateBoundingBoxCollisions(solidBox, collisionMotion, false)){
+				didCollision = true;
+			}
+		}*/
+		for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(vehicle.world)){
 			if(entity instanceof AEntityD_Interactable && !entity.equals(vehicle)){
 				AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
 				if(vehicle.canCollideWith(interactable) && !interactable.collidedEntities.contains(vehicle) && interactable.boundingBox.intersects(solidBox)){

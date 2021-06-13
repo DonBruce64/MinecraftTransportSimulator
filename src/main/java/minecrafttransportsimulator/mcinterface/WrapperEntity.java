@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
@@ -272,6 +273,67 @@ public class WrapperEntity{
 	 */
 	public void setPitch(double pitch){
 		entity.rotationPitch = (float)pitch;
+	}
+	
+	/**
+	 * Updates the depths of collision to this entity, if this entity has collision.  Does not otherwise modify the
+	 *  collision depths.  If collision was done and found, then true is returned.  If no collision occurred, false is returned.
+	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
+	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
+	 * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
+	 * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
+	 * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
+	 * collisionDepth be set for that axis.
+	 */
+	public boolean updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
+		boolean didCollision = false;
+		AxisAlignedBB colBox = entity.getCollisionBoundingBox();
+		if(colBox != null){
+			AxisAlignedBB mcBox = box.convert();
+			if(colBox.intersects(mcBox)){
+				double boxCollisionDepth;
+				if(collisionMotion.x > 0){
+					boxCollisionDepth = mcBox.maxX - colBox.minX;
+					if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > 0){
+						box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
+						didCollision = true;
+					}
+				}else if(collisionMotion.x < 0){
+					boxCollisionDepth = colBox.maxX - mcBox.minX;
+					if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < 0){
+						box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
+						didCollision = true;
+					}
+				}
+				if(collisionMotion.y > 0){
+					boxCollisionDepth = mcBox.maxY - colBox.minY;
+					if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > 0){
+						box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
+						didCollision = true;
+					}
+				}else if(collisionMotion.y < 0){
+					boxCollisionDepth = colBox.maxY - mcBox.minY;
+					if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < 0){
+						box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
+						didCollision = true;
+					}
+				}
+				if(collisionMotion.z > 0){
+					boxCollisionDepth = mcBox.maxZ - colBox.minZ;
+					if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
+						box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
+						didCollision = true;
+					}
+				}else if(collisionMotion.z < 0){
+					boxCollisionDepth = colBox.maxZ - mcBox.minZ;
+					if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < 0){
+						box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
+						didCollision = true;
+					}
+				}
+			}
+		}
+		return didCollision;
 	}
 	
 	/**

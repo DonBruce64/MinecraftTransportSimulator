@@ -217,6 +217,19 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns a list of entities with the specified class name in the world.
+	 */
+	public List<WrapperEntity> getEntitiesClassNamed(String className){
+		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
+		for(Entity entity : world.loadedEntityList){
+			if(entity.getClass().getCanonicalName().equals(className)){
+				entities.add(WrapperEntity.getWrapperFor(entity));
+			}
+		}
+		return entities;
+	}
+	
+	/**
 	 *  Returns the nearest hostile entity that can be seen by the passed-in entity.
 	 */
 	public WrapperEntity getNearestHostile(WrapperEntity entityLooking, int searchRadius){
