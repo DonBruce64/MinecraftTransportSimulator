@@ -31,6 +31,43 @@ public class DurationDelayClock{
 		this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY)  || animation.animationType.equals(AnimationComponentType.INHIBITOR)  || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
+	/* Returns the interpolated animation values
+	 * It calls the interpolation methods equivalent to the easing type
+	 */
+	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {
+		double time = timeMoved/(double)(animation.duration*50);
+		
+		//Check if the animation is playing in reverse
+		if (isReverse) {
+			
+			//Check if reverseEasing is not omitted
+			if (animation.reverseEasing != null) {
+				return AnimationVariableEasing.getEasingType(animation.reverseEasing, time);
+				
+			//If it is, then check if forwardsEasing isn't omitted
+			//We can use it's value to apply an easing type to the reverse animation
+			} else if (animation.forwardsEasing != null) {
+				return AnimationVariableEasing.getEasingType(animation.forwardsEasing, time);
+				
+			//If both are omitted, then apply linear easing
+			} else {
+				return time;
+			}
+			
+		//If animation is playing forwards
+		} else {
+			
+			//Check if forwardsEasing isn't omitted
+			if (animation.forwardsEasing != null) {
+				return AnimationVariableEasing.getEasingType(animation.forwardsEasing, time);
+				
+			//If it is, then apply linear easing
+			} else {
+				return time;
+			}
+		}
+	}
+	
 	/**
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
@@ -92,14 +129,13 @@ public class DurationDelayClock{
 		}
 		
 		double movementFactor = 0;
-		AnimationVariableEasing easing = new AnimationVariableEasing();
 		if(commandForwards){
 			long timedelayed = currentTime - timeCommandedForwards;
 			if(timedelayed >= animation.forwardsDelay*50){
 				long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipForwardsMovement){
 					movedThisUpdate = true;
-					movementFactor =  easing.getEasingValue(animation, timeMoved, false);
+					movementFactor =  getEasingValue(animation, timeMoved, false);
 					
 					
 				}else{
@@ -125,7 +161,7 @@ public class DurationDelayClock{
 				long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipReverseMovement){
 					movedThisUpdate = true;
-					movementFactor =  easing.getEasingValue(animation, timeMoved, true);
+					movementFactor =  getEasingValue(animation, timeMoved, true);
 				}else{
 					movementFactor = 1;
 					if(!endedReverseMovement){

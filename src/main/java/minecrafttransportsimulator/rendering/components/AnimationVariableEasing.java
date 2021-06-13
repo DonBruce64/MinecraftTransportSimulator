@@ -19,151 +19,37 @@ public class AnimationVariableEasing {
 	private static final double n1 = 7.5625;
 	private static final double d1 = 2.75;
 	
-	/* This is used to return the interpolated animation values
-	 * It call the interpolation methods equivalent to the easing type
-	 */
-	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {
-		
-		double time = timeMoved/(double)(animation.duration*50);
-		
-		//Check if the animation is playing in reverse
-		if (isReverse) {
-			//Check if reverseEasing is not omitted
-			if (animation.reverseEasing != null) {
-				
-				return getEasingType(animation.reverseEasing, time);
-				
-			//If it is, then check if forwardsEasing isn't omitted
-			//We can use it's value to apply an easing type to the reverse animation
-			} else if (animation.forwardsEasing != null) {
-				
-				return getEasingType(animation.forwardsEasing, time);
-				
-			//If both are omitted, then apply linear easing
-			} else {
-				
-				return time;
-			}
-		//If animation is playing forwards
-		} else {
-			//Check if forwardsEasing isn't omitted
-			if (animation.forwardsEasing != null) {
-				
-				return getEasingType(animation.forwardsEasing, time);
-				
-			//If it is, then apply linear easing
-			} else {
-				
-				return time;
-			}
-		}
-	}
-	
-	/* This is used to check the easing type defined in the JSON
+	/**This is used to check the easing type defined in the JSON
 	 * And call the respective easing function to return a value
 	 */
-	public double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
+	public static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
 		switch(direction) {
-		
-			case LINEAR: {
-				return time;
-			}
+			case LINEAR: return time;
+			case EASEINQUAD: return easeInQuad(time);
+			case EASEOUTQUAD: return easeOutQuad(time);
+			case EASEINOUTQUAD: return easeInOutQuad(time);
+			case EASEINCUBIC: return easeInCubic(time);
+			case EASEOUTCUBIC: return easeOutCubic(time);
+			case EASEINOUTCUBIC: return easeInOutCubic(time);
+			case EASEINQUART: return easeInQuart(time);
+			case EASEOUTQUART: return easeOutQuart(time);
+			case EASEINOUTQUART: return easeInOutQuart(time);
+			case EASEINQUINT: return easeInQuint(time);
+			case EASEOUTQUINT: return easeOutQuint(time);
+			case EASEINOUTQUINT: return easeInOutQuint(time);
+			case EASEINCIRC: return easeInCirc(time);
+			case EASEOUTCIRC: return easeOutCirc(time);
+			case EASEINOUTCIRC: return easeInOutCirc(time);
+			case EASEINBACK: return easeInBack(time);
+			case EASEOUTBACK: return easeOutBack(time);
+			case EASEINOUTBACK: return easeInOutBack(time);
+			case EASEINELASTIC: return easeInElastic(time);
+			case EASEOUTELASTIC: return easeOutElastic(time);
+			case EASEINOUTELASTIC: return easeInOutElastic(time);
+			case EASEINBOUNCE: return easeInBounce(time);
+			case EASEOUTBOUNCE: return easeOutBounce(time);
+			case EASEINOUTBOUNCE: return easeInOutBounce(time);
 			
-			case EASEINQUAD: {
-				return easeInQuad(time);
-			}
-			
-			case EASEOUTQUAD: {
-				return easeOutQuad(time);
-			}
-			
-			case EASEINOUTQUAD: {
-				return easeInOutQuad(time);
-			}
-			
-			case EASEINCUBIC: {
-				return easeInCubic(time);
-			}
-			
-			case EASEOUTCUBIC: {
-				return easeOutCubic(time);
-			}
-			
-			case EASEINOUTCUBIC: {
-				return easeInOutCubic(time);
-			}
-			
-			case EASEINQUART: {
-				return easeInQuart(time);
-			}
-			
-			case EASEOUTQUART: {
-				return easeOutQuart(time);
-			}
-			
-			case EASEINOUTQUART: {
-				return easeInOutQuart(time);
-			}
-			
-			case EASEINQUINT: {
-				return easeInQuint(time);
-			}
-			
-			case EASEOUTQUINT: {
-				return easeOutQuint(time);
-			}
-			
-			case EASEINOUTQUINT: {
-				return easeInOutQuint(time);
-			}
-			
-			case EASEINCIRC: {
-				return easeInCirc(time);
-			}
-			
-			case EASEOUTCIRC: {
-				return easeOutCirc(time);
-			}
-			
-			case EASEINOUTCIRC: {
-				return easeInOutCirc(time);
-			}
-			
-			case EASEINBACK: {
-				return easeInBack(time);
-			}
-			
-			case EASEOUTBACK: {
-				return easeOutBack(time);
-			}
-			
-			case EASEINOUTBACK: {
-				return easeInOutBack(time);
-			}
-			
-			case EASEINELASTIC: {
-				return easeInElastic(time);
-			}
-			
-			case EASEOUTELASTIC: {
-				return easeOutElastic(time);
-			}
-			
-			case EASEINOUTELASTIC: {
-				return easeInOutElastic(time);
-			}
-			
-			case EASEINBOUNCE: {
-				return easeInBounce(time);
-			}
-			
-			case EASEOUTBOUNCE: {
-				return easeOutBounce(time);
-			}
-			
-			case EASEINOUTBOUNCE: {
-				return easeInOutBounce(time);
-			}
 			//Easing type is invalid. Log error
 			default: {
 				InterfaceCore.logError("Easing type " + direction + " is invalid. Defaulting to linear.");
@@ -172,341 +58,178 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	/* Below are functions that calculate the graph of each easing curve
+	/**Below are functions that calculate the graph of each easing curve
 	 * It returns a value according to the time elapsed in an animation
 	 */
-
-	public double easeInQuad(double time) {
-		
-		double value = time * time;
-
-		return value;
+	public 	static double easeInQuad(double time) {
+		return time * time;
 	}
 	
-	public double easeOutQuad(double time) {
-
-		double value = time * (2 - time);
-		
-		return value;
+	public static double easeOutQuad(double time) {
+		return time * (2 - time);
 	}
 	
-	public double easeInOutQuad(double time) {
-		
+	public static double easeInOutQuad(double time) {
 		if (time < 0.5) {
-			
-			double value = 2 * time * time;
-			
-			return value;
-			
+			return 2 * time * time;
 		} else {
-			
-			double value = -1 + (4 - 2 * time) * time;
-
-			return value;
-			
+			return -1 + (4 - 2 * time) * time;
 		}
 	}
 	
-	public double easeInCubic(double time) {
-		
-		double value = time * time * time;
-		
-		return value;
+	public static double easeInCubic(double time) {
+		return time * time * time;
 	}
 	
-	public double easeOutCubic(double time) {
-		
-		double value = --time * time * time + 1;
-		
-		return value;
+	public static double easeOutCubic(double time) {
+		return --time * time * time + 1;
 	}
 	
-	public double easeInOutCubic(double time) {
+	public static double easeInOutCubic(double time) {
 		if (time < 0.5) {
-			
-			double value = 4 * time * time * time;
-			
-			return value;
-
+			return 4 * time * time * time;
 		} else {
-			
-			double value = (time - 1) * (2 * time - 2) * (2 * time - 2) + 1;
-			
-			return value;
-			
+			return (time - 1) * (2 * time - 2) * (2 * time - 2) + 1;
 		}
-		
 	}
 
-	public double easeInQuart(double time) {
-		
-		double value = time * time * time * time;
-		
-		return value;
+	public static double easeInQuart(double time) {
+		return time * time * time * time;
 	}
 	
-	public double easeOutQuart(double time) {
-		
-		double value = 1 - (--time) * time * time * time;
-		
-		return value;
+	public static double easeOutQuart(double time) {
+		return 1 - (--time) * time * time * time;
 	}
 	
-	public double easeInOutQuart(double time) {
+	public static double easeInOutQuart(double time) {
 		if (time < 0.5) {
-			
-			double value = 8 * time * time * time * time;
-			
-			return value;
-
+			return 8 * time * time * time * time;
 		} else {
-			
-			double value = 1 - 8 * (--time) * time * time * time;
-			
-			return value;
-			
+			return 1 - 8 * (--time) * time * time * time;
 		}
 	}
 	
-	public double easeInQuint(double time) {
-		
-		double value = time * time * time * time * time;
-		
-		return value;
+	public static double easeInQuint(double time) {
+		return time * time * time * time * time;
 	}
 	
-	public double easeOutQuint(double time) {
-		double value = 1 + (--time) * time * time * time * time;
-		
-		return value;
+	public static double easeOutQuint(double time) {
+		return 1 + (--time) * time * time * time * time;
 	}
 	
-	public double easeInOutQuint(double time) {
-		
+	public static double easeInOutQuint(double time) {
 		if (time < 0.5) {
-			
-			double value = 16 * time * time * time * time * time;
-			
-			return value;
-
+			return 16 * time * time * time * time * time;
 		} else {
-			
-			double value = 1 + 16 * (--time) * time * time * time * time;
-			
-			return value;
-			
+			return 1 + 16 * (--time) * time * time * time * time;
 		}
 	}
 	
-	public double easeInExpo(double time) {
-		
-		double value = time == 0 ? 0 : Math.pow(2, 10 * time - 10);
-		
-		return value;
+	public static double easeInExpo(double time) {
+		return time == 0 ? 0 : Math.pow(2, 10 * time - 10);
 	}
 	
-	public double easeOutExpo(double time) {
-		
-		double value = time == 1 ? 1 : 1 - Math.pow(2, -10 * time);
-		
-		return value;
+	public static double easeOutExpo(double time) {
+		return time == 1 ? 1 : 1 - Math.pow(2, -10 * time);
 	}
 	
-	public double easeInOutExpo(double time) {
-		
+	public static double easeInOutExpo(double time) {
 		if (time == 0) {
-			
 			return 0;
-			
 		} else if (time == 1) {
-			
 			return 1;
-			
 		} else if (time < 0.5) {
-			
-			double value = Math.pow(2, 20 * time - 10) / 2;
-			
-			return value;
-			
+			return Math.pow(2, 20 * time - 10) / 2;
 		} else {
-			
-			double value = (2 - Math.pow(2, -20 * time + 10)) / 2;
-			
-			return value;
-			
+			return (2 - Math.pow(2, -20 * time + 10)) / 2;
 		}
 	}
 
-	public double easeInCirc(double time) {
-		
-		double value = 1 - Math.sqrt(1 - Math.pow(time, 2));
-		
-		return value;
+	public static double easeInCirc(double time) {
+		return 1 - Math.sqrt(1 - Math.pow(time, 2));
 	}
 	
-	public double easeOutCirc(double time) {
-		
-		double value = Math.sqrt(1 - Math.pow(time - 1, 2));
-		
-		return value;
+	public static double easeOutCirc(double time) {
+		return Math.sqrt(1 - Math.pow(time - 1, 2));
 	}
 	
-	public double easeInOutCirc(double time) {
-		
+	public static double easeInOutCirc(double time) {
 		if (time < 0.5) {
-			
-			double value = (1 - Math.sqrt(1 - Math.pow(2 * time, 2))) / 2;
-			
-			return value;
-			
+			return (1 - Math.sqrt(1 - Math.pow(2 * time, 2))) / 2;
 		} else {
-			
-			double value = (Math.sqrt(1 - Math.pow(-2 * time + 2, 2)) + 1) / 2;
-			
-			return value;
-			
+			return (Math.sqrt(1 - Math.pow(-2 * time + 2, 2)) + 1) / 2;
 		}
 	}
 	
-	public double easeInBack(double time) {
-		
-		
-		double value = c3 * time * time * time - c1 * time * time;
-		
-		return value;
+	public static double easeInBack(double time) {
+		return c3 * time * time * time - c1 * time * time;
 	}
 	
-	public double easeOutBack(double time) {
-		
-		double value = 1 + c3 * Math.pow(time - 1, 3) + c1 * Math.pow(time - 1, 2);
-		
-		return value;
+	public static double easeOutBack(double time) {
+		return 1 + c3 * Math.pow(time - 1, 3) + c1 * Math.pow(time - 1, 2);
 	}
 	
-	public double easeInOutBack(double time) {
-		
+	public static double easeInOutBack(double time) {
 		if (time < 0.5) {
-			
-			double value = (Math.pow(2 * time, 2) * ((c2 + 1) * 2 * time - c2)) / 2;
-			
-			return value;
-			
+			return (Math.pow(2 * time, 2) * ((c2 + 1) * 2 * time - c2)) / 2;
 		} else {
-			
-			double value = (Math.pow(2 * time - 2, 2) * ((c2 + 1) * (time * 2 - 2) + c2) + 2) / 2;
-			
-			return value;
-			
+			return (Math.pow(2 * time - 2, 2) * ((c2 + 1) * (time * 2 - 2) + c2) + 2) / 2;
 		}
 	}
 
-	public double easeInElastic(double time) {
-		
+	public static double easeInElastic(double time) {
 		if (time == 0) {
-			
 			return 0;
-			
 		} else if (time == 1) {
-			
 			return 1;
-			
 		} else {
-			
-			double value = -Math.pow(2, 10 * time - 10) * Math.sin((time * 10 - 10.75) * c4);
-			
-			return value;
+			return -Math.pow(2, 10 * time - 10) * Math.sin((time * 10 - 10.75) * c4);
 		}
 	}
 	
-	public double easeOutElastic(double time) {
-		
+	public static double easeOutElastic(double time) {
 		if (time == 0) {
-			
 			return 0;
-			
 		} else if (time == 1) {
-			
 			return 1;
-			
 		} else {
-			
-			double value = Math.pow(2, -10 * time) * Math.sin((time * 10 - 0.75) * c4) + 1;
-			
-			return value;
+			return Math.pow(2, -10 * time) * Math.sin((time * 10 - 0.75) * c4) + 1;
 		}
 	}
 	
-	public double easeInOutElastic(double time) {
-		
+	public static double easeInOutElastic(double time) {
 		if (time == 0) {
-		
 			return 0;
-		
 		} else if (time == 1) {
-			
 			return 1;
-			
 		} else if (time < 0.5 ){
-			
-			double value = -(Math.pow(2, 20 * time - 10) * Math.sin((20 * time - 11.125) * c5)) /2;
-			
-			return value;
-			
+			return -(Math.pow(2, 20 * time - 10) * Math.sin((20 * time - 11.125) * c5)) /2;
 		} else {
-			
-			double value = (Math.pow(2, -20 * time + 10) * Math.sin((20 * time - 11.125) * c5)) / 2 + 1;
-			
-			return value;
+			return (Math.pow(2, -20 * time + 10) * Math.sin((20 * time - 11.125) * c5)) / 2 + 1;
 		}
 	}
 
-	public double easeOutBounce(double time) {
-		
+	public static double easeOutBounce(double time) {
 		if (time < 1 / d1) {
-			
-			double value = n1 * time * time;
-			
-			return value;
-			
+			return n1 * time * time;
 		} else if (time < 2 / d1) {
-			
-		    double value = n1 * (time -= 1.5 / d1) * time + 0.75;
-		    
-			return value;
-			
+			return n1 * (time -= 1.5 / d1) * time + 0.75;
 		} else if (time < 2.5 / d1) {
-			
-		    double value = n1 * (time -= 2.25 / d1) * time + 0.9375;
-		    
-			return value;
-			
+			return n1 * (time -= 2.25 / d1) * time + 0.9375;
 		} else {
-			
-		    double value = n1 * (time -= 2.625 / d1) * time + 0.984375;
-		    
-			return value;
+			return n1 * (time -= 2.625 / d1) * time + 0.984375;
 		}
 	}
 	
-	public double easeInBounce(double time) {
-		
-		double value = 1 - easeOutBounce(1 - time);
-		
-		return value;
+	public static double easeInBounce(double time) {
+		return 1 - easeOutBounce(1 - time);
 	}
 	
-	public double easeInOutBounce(double time) {
+	public static double easeInOutBounce(double time) {
 		if (time < 0.5) {
-			
-			double value = (1 - easeOutBounce(1 - 2 * time)) / 2;
-			
-			return value;
-			
+			return (1 - easeOutBounce(1 - 2 * time)) / 2;
 		} else {
-			
-			double value = (1 + easeInBounce(2 * time - 1)) / 2;
-			
-			return value;
+			return (1 + easeInBounce(2 * time - 1)) / 2;
 		}
 	}
 }

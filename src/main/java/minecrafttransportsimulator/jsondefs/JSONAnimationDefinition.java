@@ -89,76 +89,52 @@ public class JSONAnimationDefinition{
 	public static enum AnimationEasingType{
 		@JSONDescription("Constant velocity.")
 		LINEAR,
-		
 		@JSONDescription("Accelerating from zero velocity. Qudratic.")
 		EASEINQUAD,
-		
 		@JSONDescription("Decelerating to zero velocity. Qudratic.")
 		EASEOUTQUAD,
-		
 		@JSONDescription("Acceleration until halfway, then deceleration. Qudratic.")
 		EASEINOUTQUAD,
-		
 		@JSONDescription("Accelerating from zero velocity. Cubic.")
 		EASEINCUBIC,
-		
 		@JSONDescription("Decelerating to zero velocity. Cubic.")
 		EASEOUTCUBIC,
-		
 		@JSONDescription("Acceleration until halfway, then deceleration. Cubic.")
 		EASEINOUTCUBIC,
-		
 		@JSONDescription("Accelerating from zero velocity. Qudratic.")
 		EASEINQUART,
-		
 		@JSONDescription("Decelerating to zero velocity. Qudratic.")
 		EASEOUTQUART,
-		
 		@JSONDescription("Acceleration until halfway, then deceleration. Qudratic.")
 		EASEINOUTQUART,
-		
 		@JSONDescription("Accelerating from zero velocity. Quintic.")
 		EASEINQUINT,
-		
 		@JSONDescription("Decelerating to zero velocity. Quintic.")
 		EASEOUTQUINT,
-		
 		@JSONDescription("Acceleration until halfway, then deceleration. Quintic.")
 		EASEINOUTQUINT,
-		
 		@JSONDescription("Accelerating from zero velocity. Circular.")
 		EASEINCIRC,
-		
 		@JSONDescription("Decelerating to zero velocity. Circular.")
 		EASEOUTCIRC,
-		
 		@JSONDescription("Acceleration until halfway, then deceleration. Circular.")
 		EASEINOUTCIRC,
-		
 		@JSONDescription("Pulls back the velocity below 0 and then accelerates.")
 		EASEINBACK,
-		
 		@JSONDescription("Accelerates past 1 and then pulls back the velocity down to 1.")
 		EASEOUTBACK,
-		
 		@JSONDescription("Pulls back the velocity below 0. then accelerates past 1 and then pulls back the velocity down to 1.")
 		EASEINOUTBACK,
-		
 		@JSONDescription("Eases with an elastic effect at the beginning.")
 		EASEINELASTIC,
-		
 		@JSONDescription("Eases with an elastic effect at the end.")
 		EASEOUTELASTIC,
-		
 		@JSONDescription("Eases with an elastic effect at both the beginning and end.")
 		EASEINOUTELASTIC,
-		
 		@JSONDescription("Provides a bouncing animation at the beginning.")
 		EASEINBOUNCE,
-		
 		@JSONDescription("Provides a bouncing animation at the end.")
 		EASEOUTBOUNCE,
-		
 		@JSONDescription("Provides a bouncing animation at both the beginning and end.")
 		EASEINOUTBOUNCE
 	}
